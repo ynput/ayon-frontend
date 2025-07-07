@@ -12,6 +12,24 @@ fragment TaskPropsFragment on TaskNode {
   assignees
   allAttrib
   hasReviewables
+  links {
+    edges {
+      id
+      direction
+      linkType
+      entityType
+      node {
+        id
+        name
+        ... on TaskNode {
+          label
+        }
+        ... on FolderNode {
+          path
+        }
+      }
+    }
+  }
   folder {
     path
   }

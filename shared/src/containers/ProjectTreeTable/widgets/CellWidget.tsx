@@ -7,6 +7,7 @@ import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
+import { LinksWidget } from './LinksWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -40,7 +41,7 @@ const Cell = styled.div`
   }
 `
 
-type WidgetAttributeData = Pick<AttributeData, 'type'>
+type WidgetAttributeData = { type: AttributeData['type'] | 'links' }
 
 export type CellValue = string | number | boolean
 
@@ -161,6 +162,13 @@ export const CellWidget: FC<EditorCellProps> = ({
           : undefined
         const color = firstSelectedOption?.color
         return <CollapsedWidget color={color} />
+      }
+
+      case type === 'links': {
+        const linksValue = value
+          ? (Array.isArray(value) ? value : [value]).map((v) => String(v))
+          : []
+        return <LinksWidget value={linksValue} />
       }
 
       case !!options.length: {

@@ -13,6 +13,7 @@ import { LoadingTasks } from '../types'
 import { ProjectModel } from '../types/project'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
+import { linksToTableData } from '../utils'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -120,6 +121,9 @@ export default function useBuildProjectDataTable({
     // Helper function to create a task row
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
+
+      const links = linksToTableData(task.links, 'task')
+
       return {
         id: task.id,
         entityType: 'task',
@@ -138,7 +142,7 @@ export default function useBuildProjectDataTable({
         ownAttrib: task.ownAttrib,
         path: task.folder.path,
         updatedAt: task.updatedAt,
-        hasReviewables: task.hasReviewables,
+        links: links,
       }
     }
 
@@ -206,6 +210,7 @@ export default function useBuildProjectDataTable({
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
         hasReviewables: folder.hasReviewables || false,
+        links: {}, // TODO: Folder links
       }
 
       rowsById.set(folderId, row)

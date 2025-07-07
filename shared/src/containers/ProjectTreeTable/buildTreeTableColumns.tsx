@@ -11,6 +11,7 @@ import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
+import { LinkTypeModel } from '@shared/api'
 
 const MIN_SIZE = 50
 
@@ -61,6 +62,19 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
+export const getLinkLabel = (
+  link: Pick<LinkTypeModel, 'linkType'>,
+  direction: 'in' | 'out' | string,
+) => `${link.linkType.charAt(0).toUpperCase() + link.linkType.slice(1)} (${direction})`
+
+export const getLinkKey = (link: Pick<LinkTypeModel, 'name'>, direction: 'in' | 'out' | string) =>
+  `${link.name.replaceAll('_', '').replaceAll('-', '').replaceAll('|', '_')}_${direction}`
+
+export const getLinkColumnId = (
+  link: Pick<LinkTypeModel, 'name'>,
+  direction: 'in' | 'out' | string,
+) => `link_${getLinkKey(link, direction)}`
+
 export type DefaultColumns =
   | typeof ROW_SELECTION_COLUMN_ID
   | 'thumbnail'
@@ -74,6 +88,7 @@ export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: num
 
 export type BuildTreeTableColumnsProps = {
   attribs: ProjectTableAttribute[]
+  links: LinkTypeModel[]
   showHierarchy: boolean
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
@@ -83,6 +98,7 @@ export type BuildTreeTableColumnsProps = {
 
 const buildTreeTableColumns = ({
   attribs,
+  links = [],
   showHierarchy,
   options,
   excluded,
@@ -407,8 +423,8 @@ const buildTreeTableColumns = ({
       const columnId = 'attrib_' + attrib.name
       // Check if the specific attribute column is excluded
       // or if all built-in attributes are excluded and this is a built-in attribute
-      if (excluded?.includes(columnId)) return false
-      if (attrib.builtin && excluded?.includes('attrib')) return false
+      if (!isIncluded(columnId)) return false
+      if (attrib.builtin && !isIncluded('attrib')) return false
       return true
     })
     .map((attrib) => {
@@ -459,7 +475,52 @@ const buildTreeTableColumns = ({
       return attribColumn
     })
 
-  const allColumns = [...staticColumns, ...attributeColumns]
+  const linkColumns: ColumnDef<TableRow>[] = links
+    .filter((link) => {
+      // Check if the link type is excluded
+      if (!isIncluded(link.linkType) || !isIncluded('link')) return false
+      return true
+    })
+    .flatMap((link) => {
+      const createLinkColumn = (direction: 'in' | 'out'): ColumnDef<TableRow> => {
+        return {
+          id: getLinkColumnId(link, direction),
+          accessorKey: `links.${getLinkKey(link, direction)}`,
+          header: getLinkLabel(link, direction),
+          minSize: MIN_SIZE,
+          enableSorting: false,
+          enableResizing: true,
+          enablePinning: true,
+          enableHiding: true,
+          cell: ({ row, column, table }) => {
+            const columnIdParsed = column.id.replace('link_', '')
+
+            const { id, value } = getValueIdType(row, columnIdParsed, 'links')
+
+            return (
+              <CellWidget
+                rowId={id}
+                className={clsx('links', { loading: row.original.isLoading })}
+                columnId={column.id}
+                value={value}
+                attributeData={{ type: 'links' }}
+
+                // onChange={(value) =>
+                //   meta?.updateEntities?.(
+                //     { field: column.id, value, type, rowId: row.id },
+                //     { selection: meta?.selection },
+                //   )
+                // }
+              />
+            )
+          },
+        }
+      }
+
+      return [createLinkColumn('in'), createLinkColumn('out')]
+    })
+
+  const allColumns = [...staticColumns, ...attributeColumns, ...linkColumns]
 
   // Add extra columns if provided
   if (extraColumns) {

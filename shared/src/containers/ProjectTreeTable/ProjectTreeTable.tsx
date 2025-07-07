@@ -179,7 +179,13 @@ export const ProjectTreeTable = ({
 
   const isLoading = isLoadingProp || isLoadingData
 
-  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
+  const {
+    statuses = [],
+    folderTypes = [],
+    taskTypes = [],
+    tags = [],
+    linkTypes = [],
+  } = projectInfo || {}
   const options: BuiltInFieldOptions = useMemo(
     () =>
       getTableFieldOptions({
@@ -268,6 +274,7 @@ export const ProjectTreeTable = ({
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       attribs: columnAttribs,
+      links: linkTypes,
       showHierarchy,
       options,
       extraColumns,

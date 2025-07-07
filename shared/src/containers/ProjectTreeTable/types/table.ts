@@ -1,3 +1,4 @@
+import { GetTasksByParentQuery } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 
 export type FolderListItem = {
@@ -17,37 +18,6 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   hasReviewables?: boolean
-}
-
-export type GetTasksByParentQuery = {
-  __typename?: 'Query'
-  project: {
-    __typename?: 'ProjectNode'
-    name: string
-    tasks: {
-      __typename?: 'TasksConnection'
-      edges: Array<{
-        __typename?: 'TaskEdge'
-        node: {
-          __typename?: 'TaskNode'
-          id: string
-          folderId: string
-          label?: string | null
-          name: string
-          ownAttrib: Array<string>
-          status: string
-          tags: Array<string>
-          taskType: string
-          updatedAt: any
-          active: boolean
-          assignees: Array<string>
-          allAttrib: string
-          hasReviewables?: boolean
-          folder: { __typename?: 'FolderNode'; path?: string | null }
-        }
-      }>
-    }
-  }
 }
 
 export type TableRow = {
@@ -70,6 +40,7 @@ export type TableRow = {
   startContent?: JSX.Element
   assignees?: string[]
   attrib?: Record<string, any>
+  links: Record<string, string[]> // links to other entities, e.g. tasks, versions, products
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
