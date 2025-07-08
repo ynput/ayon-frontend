@@ -113,12 +113,14 @@ const ProjectPage = () => {
         name: 'Overview',
         path: `/projects/${projectName}/overview`,
         module: 'overview',
+        articleId: '7885519',
         uriSync: true,
       },
       {
         name: 'Task progress',
         path: `/projects/${projectName}/tasks`,
         module: 'tasks',
+        articleId: '2408349',
         uriSync: true,
       },
       {
@@ -131,6 +133,7 @@ const ProjectPage = () => {
         name: 'Lists',
         path: `/projects/${projectName}/lists`,
         module: 'lists',
+        articleId: '7382645',
       },
       {
         name: 'Review',
@@ -166,6 +169,7 @@ const ProjectPage = () => {
           module: addon.name,
         })),
       { node: 'spacer' },
+      { node: 'help_button' },
       {
         node: (
           <Button

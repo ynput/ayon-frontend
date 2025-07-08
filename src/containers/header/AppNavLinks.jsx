@@ -6,6 +6,7 @@ import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
+import { useFeedback } from '@shared/components'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
@@ -15,6 +16,7 @@ const AppNavLinks = ({ links = [] }) => {
   const isManager = useSelector((state) => state.user.data.isManager)
   const isAdmin = useSelector((state) => state.user.data.isAdmin)
   const uri = useSelector((state) => state.context.uri)
+  const { openSupport } = useFeedback()
 
   const appendUri = (path, shouldAddUri = true) => {
     if (!path) return path
@@ -35,6 +37,30 @@ const AppNavLinks = ({ links = [] }) => {
   const access = {
     manager: isManager || isAdmin,
     admin: isAdmin,
+  }
+
+  const handleHelpButton = () => {
+    if (!module) return
+
+    const currentLink = links.find((link) => link.module === module)
+
+    const label = currentLink.name || module
+
+    if (!currentLink) {
+      // Fallback if no specific link found, should not happen but just in case
+      openSupport('NewMessage', `Can you help me know more about the ${label} page?`)
+      return
+    }
+
+    if (currentLink.articleId) {
+      // If the link has an articleId, open the article
+      openSupport('ShowArticle', currentLink.articleId)
+      return
+    } else {
+      // If the link does not have an articleId, open a new message
+      openSupport('NewMessage', `Can you help me know more about the ${label} page?`)
+      return
+    }
   }
 
   //   if module is matches an item that has accessLevel that is not in access, redirect to
@@ -87,6 +113,16 @@ const AppNavLinks = ({ links = [] }) => {
               // if item is a node a spacer, return spacer
               if (node === 'spacer') {
                 return <Spacer key={idx} />
+              } else if (node === 'help_button') {
+                return (
+                  <Button
+                    icon="info"
+                    variant="text"
+                    onClick={() => {
+                      handleHelpButton()
+                    }}
+                  />
+                )
               } else return <li key={idx}>{node}</li>
             }
 
