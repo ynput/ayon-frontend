@@ -1,4 +1,4 @@
-import { useFeedback } from '@/feedback/FeedbackContext'
+import { useFeedback } from '@shared/components'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'

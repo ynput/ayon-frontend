@@ -17,7 +17,7 @@ import './styles/index.scss'
 
 import short from 'short-uuid'
 import { SocketProvider } from '@context/WebsocketContext'
-import { FeedbackProvider } from './feedback/FeedbackContext'
+import { FeedbackProvider } from '@shared/components'
 
 // generate unique session id
 declare global {

@@ -50,7 +50,6 @@ export const TableContainer = styled.div`
   }
 
   td {
-    height: 34px;
     padding: 1px 0px;
     width: 100%;
   }
@@ -58,7 +57,7 @@ export const TableContainer = styled.div`
 
 export const Cell = styled.div`
   width: 100%;
-  height: 100%;
+  height: 32px;
   user-select: none;
   padding: 0px 4px;
 
@@ -143,6 +142,10 @@ export const HeaderButton = styled(Button)`
   }
 
   &:hover {
+    background-color: var(--md-sys-color-surface-container-hover) !important;
+  }
+
+  &.active {
     background-color: var(--md-sys-color-surface-container-hover) !important;
   }
 `

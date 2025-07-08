@@ -1,12 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import ProjectList from '@containers/projectList'
+import ProjectsList from '@containers/ProjectsList/ProjectsList'
 
 // Wraps every page on projectManager and provides the project list
 // and other useful props
 const ProjectManagerPageContainer = ({
   children,
   isUser,
+  onSelect,
   selection,
   onDeleteProject,
   onNewProject,
@@ -21,16 +22,16 @@ const ProjectManagerPageContainer = ({
         projectName: selection,
         isUser: isUser,
         projectList: (
-          <ProjectList
-            styleSection={{ maxWidth: 300, minWidth: 300 }}
-            autoSelect
-            selection={selection}
-            onDeleteProject={onDeleteProject}
-            onActivateProject={onActivateProject}
-            onNewProject={onNewProject}
-            isProjectManager={!isUser}
-            {...props}
-          />
+          <>
+            <ProjectsList
+              selection={[selection]}
+              onDeleteProject={onDeleteProject}
+              onActivateProject={onActivateProject}
+              onNewProject={onNewProject}
+              onSelect={onSelect}
+              multiSelect={false}
+            />
+          </>
         ),
         onDeleteProject,
         onNewProject,
