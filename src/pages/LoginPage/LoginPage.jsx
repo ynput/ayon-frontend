@@ -111,12 +111,14 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
 
     setIsLoading(true)
 
+    let success = false
     let response = null
     let finalRedirect = null
 
     try {
       console.log('SSO Callback', providerConfig.callback)
       response = await axios.get(providerConfig.callback, { params: qs })
+      success = true
     } catch (err) {
       console.error('SSO Callback error', err.response.data)
       toast.error(
@@ -129,7 +131,7 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
 
     // If we have a response and it contains user data, we're good to go
 
-    if (response?.data?.user) {
+    if (success && response?.data?.user) {
       console.log('SSO Callback response', response.data)
       const data = response.data
       toast.info(data.detail || `Logged in as ${data.user.name}`)
@@ -141,8 +143,11 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
       if (data.redirectUrl) {
         finalRedirect = data.redirectUrl
       }
-    } else {
+    } else if (success) {
+      // successful request, without user data.
+      // This should not happen, but we handle it gracefully
       toast.error('Unable to login using SSO')
+      success = false
     }
 
     // Still, we need to figure out where to redirect the user after login
@@ -165,10 +170,11 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
     localStorage.removeItem('auth-redirect-params')
     setIsLoading(false)
 
-    console.log('Final redirect URL:', finalRedirect)
-
-    // And redirect to the final URL
-    window.location.href = finalRedirect
+    if (success) {
+      // And redirect to the final URL
+      console.log('Final redirect URL:', finalRedirect)
+      window.location.href = finalRedirect
+    }
 
   } // handleSSOCallback
 
