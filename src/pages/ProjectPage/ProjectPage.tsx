@@ -24,10 +24,18 @@ import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 import { RemoteAddonProject } from '@shared/context'
-import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
+import { VersionUploadProvider, UploadVersionDialog, useFeedback } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+
+interface ProjectPage {
+  name: string
+  path: string
+  module: string
+  uriSync?: boolean
+  helpArticleId?: string
+}
 
 const ProjectContextInfo = () => {
   /**
@@ -55,6 +63,8 @@ const ProjectPage = () => {
    * project data to the store, and renders the requested page.
    */
 
+  const location = useLocation()
+  const { openPortal, openSupport } = useFeedback()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
@@ -65,6 +75,7 @@ const ProjectPage = () => {
     { projectName: projectName || '' },
     { skip: !projectName },
   )
+  const [currentProjectPage, setCurrentProjectPage] = useState<ProjectPage>()
 
   const {
     data: addonsData = [],
@@ -106,20 +117,21 @@ const ProjectPage = () => {
     isLoading: boolean
   }
 
-  // get remote project module pages
-  const links = useMemo(
+  const projectPages = useMemo<ProjectPage[]>(
     () => [
       {
         name: 'Overview',
         path: `/projects/${projectName}/overview`,
         module: 'overview',
         uriSync: true,
+        helpArticleId: '7885519',
       },
       {
         name: 'Task progress',
         path: `/projects/${projectName}/tasks`,
         module: 'tasks',
         uriSync: true,
+        helpArticleId: '5526719',
       },
       {
         name: 'Browser',
@@ -131,6 +143,7 @@ const ProjectPage = () => {
         name: 'Lists',
         path: `/projects/${projectName}/lists`,
         module: 'lists',
+        helpArticleId: '7382645',
       },
       {
         name: 'Review',
@@ -149,6 +162,20 @@ const ProjectPage = () => {
         module: 'workfiles',
         uriSync: true,
       },
+    ],
+    [projectName],
+  )
+
+  // Suscribe to route change to set the current project page
+  useEffect(() => {
+    const page = projectPages.find((page) => page.path === location.pathname)
+    setCurrentProjectPage(page)
+  }, [location, projectPages])
+
+  // get remote project module pages
+  const links = useMemo(
+    () => [
+      ...projectPages,
       ...remotePages.map((remote) => ({
         name: remote.name,
         module: remote.module,
@@ -166,6 +193,24 @@ const ProjectPage = () => {
           module: addon.name,
         })),
       { node: 'spacer' },
+      {
+        node: (
+          <Button
+            icon="help"
+            variant="text"
+            onClick={() => {
+              if (currentProjectPage?.helpArticleId) {
+                openPortal('HelpView', currentProjectPage.helpArticleId)
+              } else {
+                openSupport(
+                  'NewMessage',
+                  `Can you help me know more about the Project ${currentProjectPage?.name} page?`,
+                )
+              }
+            }}
+          />
+        ),
+      },
       {
         node: (
           <Button
