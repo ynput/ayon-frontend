@@ -1,4 +1,5 @@
-import { FC, useRef, useState, useLayoutEffect } from 'react'
+import clsx from 'clsx'
+import { FC, useRef, useState, useLayoutEffect, HTMLAttributes } from 'react'
 import styled from 'styled-components'
 
 const ChipsContainer = styled.div`
@@ -9,15 +10,21 @@ const ChipsContainer = styled.div`
   overflow: hidden;
 `
 
-const Chip = styled.div<{ $isLast?: boolean }>`
+const Chip = styled.div`
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-m);
   padding: 2px 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-shrink: ${({ $isLast }) => ($isLast ? 1 : 0)};
-  min-width: ${({ $isLast }) => ($isLast ? '0' : 'auto')};
+  cursor: pointer;
+
+  flex-shrink: 0;
+  min-width: auto;
+  &.last {
+    flex-shrink: 1;
+    min-width: 0;
+  }
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
@@ -38,9 +45,13 @@ const MoreChip = styled(Chip)`
 
 interface ChipsProps {
   values: string[]
+  onChipClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  pt?: {
+    chip?: Partial<HTMLAttributes<HTMLDivElement>>
+  }
 }
 
-export const Chips: FC<ChipsProps> = ({ values }) => {
+export const Chips: FC<ChipsProps> = ({ values, onChipClick, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [visibleValues, setVisibleValues] = useState<string[]>([])
   const [hiddenCount, setHiddenCount] = useState(0)
@@ -118,13 +129,25 @@ export const Chips: FC<ChipsProps> = ({ values }) => {
     }
   }, [values, offscreenChips])
 
+  const handleOnClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // if the target is a chip, call the onChipClick handler
+    if ((e.target as HTMLDivElement).classList.contains('chip') && onChipClick) {
+      onChipClick(e)
+    }
+  }
+
   return (
-    <ChipsContainer ref={containerRef}>
+    <ChipsContainer ref={containerRef} onClick={handleOnClick}>
       {visibleValues.map((value, index) => (
         <Chip
+          {...pt?.chip}
           key={value}
           title={value}
-          $isLast={index === visibleValues.length - 1 && hiddenCount > 0}
+          className={clsx(
+            'chip',
+            { last: index === visibleValues.length - 1 && hiddenCount > 0 },
+            pt?.chip?.className,
+          )}
         >
           {value}
         </Chip>

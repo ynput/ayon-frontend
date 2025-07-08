@@ -67,6 +67,7 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -1037,13 +1038,14 @@ const TableCell = ({
     extendSelection,
     endSelection,
     selectCell,
+    focusCell,
     getCellBorderClasses,
     clearSelection,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
 
-  const { isEditing } = useCellEditing()
+  const { isEditing, setEditingCellId } = useCellEditing()
 
   const borderClasses = getCellBorderClasses(cellId)
 
@@ -1084,8 +1086,19 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check we are not clicking a dropdown chevron or in a dropdown
-        if (target.closest('.expand') || target.closest('.options')) return
+        // if we are clicking on an edit trigger, we need to start editing
+        if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
+          // if the cell is not selected, select it and deselect all others
+          selectCell(cellId, false, false)
+          focusCell(cellId)
+          // start editing the cell
+          setEditingCellId(cellId)
+
+          return
+        }
+
+        // check we are not clicking in a dropdown
+        if (target.closest('.options')) return
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()

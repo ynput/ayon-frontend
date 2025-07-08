@@ -41,6 +41,9 @@ const Cell = styled.div`
   }
 `
 
+// use this class to trigger the editing mode on a single click
+export const EDIT_TRIGGER_CLASS = 'edit-trigger'
+
 type WidgetAttributeData = { type: AttributeData['type'] | 'links' }
 
 export type CellValue = string | number | boolean
@@ -105,6 +108,7 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const handleSingleClick = () => {
     // clicking a cell that is not editing will close the editor on this cell
+    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1079
     if (!isCurrentCellEditing) {
       setEditingCellId(null)
     }
@@ -168,7 +172,7 @@ export const CellWidget: FC<EditorCellProps> = ({
         const linksValue = value
           ? (Array.isArray(value) ? value : [value]).map((v) => String(v))
           : []
-        return <LinksWidget value={linksValue} />
+        return <LinksWidget value={linksValue} cellRef={ref} {...sharedProps} />
       }
 
       case !!options.length: {
