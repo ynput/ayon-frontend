@@ -1,6 +1,7 @@
 export * from './clipboard'
 
 export * from './CellEditingContext'
+export * from './CellEditingProvider'
 export * from './ClipboardContext'
 // column settings context
 export * from './ColumnSettingsProvider'
