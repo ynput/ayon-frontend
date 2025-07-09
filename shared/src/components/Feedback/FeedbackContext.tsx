@@ -378,7 +378,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         break
       default:
         // Default to showing the main widget
-        win.Featurebase('show')
+        console.error(`Unhandled page: ${page}`)
+        win.Featurebase('show') 
         break
     }
   }

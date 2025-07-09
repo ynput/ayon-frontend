@@ -28,6 +28,7 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import { useHelpButtonHandler } from './hooks/useHelpButtonHandler'
 
 const ProjectContextInfo = () => {
   /**
@@ -114,12 +115,14 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/overview`,
         module: 'overview',
         uriSync: true,
+        articleId: '7885519',
       },
       {
         name: 'Task progress',
         path: `/projects/${projectName}/tasks`,
         module: 'tasks',
         uriSync: true,
+        articleId: '2408349',
       },
       {
         name: 'Browser',
@@ -131,6 +134,7 @@ const ProjectPage = () => {
         name: 'Lists',
         path: `/projects/${projectName}/lists`,
         module: 'lists',
+        articleId: '7382645',
       },
       {
         name: 'Review',
@@ -165,21 +169,26 @@ const ProjectPage = () => {
           path: `/projects/${projectName}/addon/${addon.name}`,
           module: addon.name,
         })),
-      { node: 'spacer' },
-      {
-        node: (
-          <Button
-            icon="more_horiz"
-            onClick={() => {
-              setShowContextDialog(true)
-            }}
-            variant="text"
-          />
-        ),
-      },
     ],
     [addonsData, projectName, remotePages, matchedAddons],
   )
+
+  const { handleHelpClick } = useHelpButtonHandler(links)
+
+  const actions = [
+  <Button
+    key="help"
+    icon="help"
+    onClick={handleHelpClick}
+    variant="text"
+  />,
+  <Button
+    key="more"
+    icon="more_horiz"
+    onClick={() => setShowContextDialog(true)}
+    variant="text"
+  />,
+]
 
   //
   // Render page
@@ -273,7 +282,7 @@ const ProjectPage = () => {
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
-      <AppNavLinks links={links} />
+      <AppNavLinks links={links} actions={actions}  />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}
