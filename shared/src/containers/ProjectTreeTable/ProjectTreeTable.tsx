@@ -1088,9 +1088,11 @@ const TableCell = ({
 
         // if we are clicking on an edit trigger, we need to start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
-          // if the cell is not selected, select it and deselect all others
-          selectCell(cellId, false, false)
-          focusCell(cellId)
+          if (!isCellSelected(cellId)) {
+            // if the cell is not selected, select it and deselect all others
+            selectCell(cellId, false, false)
+            focusCell(cellId)
+          }
           // start editing the cell
           setEditingCellId(cellId)
 
