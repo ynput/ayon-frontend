@@ -1,4 +1,4 @@
-import { useMemo, memo, useCallback, useRef, FC } from 'react'
+import { useMemo, useCallback, useRef, FC } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -17,6 +17,7 @@ import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { AttributeData, AttributeEnumItem } from '../types'
+import { useProjectTableContext } from '../context'
 
 const Cell = styled.div`
   position: absolute;
@@ -97,6 +98,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const ref = useRef<HTMLDivElement>(null)
   const type = attributeData?.type
 
+  const { projectName } = useProjectTableContext()
   const { isEditing, setEditingCellId } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
@@ -182,6 +184,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={linksValue}
             valueData={valueData as any}
             cellRef={ref}
+            projectName={projectName}
             {...sharedProps}
           />
         )
