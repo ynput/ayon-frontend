@@ -12,6 +12,7 @@ import { TableGroupBy } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
+import { LinkWidgetData } from './widgets/LinksWidget'
 
 const MIN_SIZE = 50
 
@@ -496,13 +497,22 @@ const buildTreeTableColumns = ({
             const columnIdParsed = column.id.replace('link_', '')
 
             const { id, value } = getValueIdType(row, columnIdParsed, 'links')
+            const cellValue = value?.map((v: any) => v.label)
+            const valueData: LinkWidgetData = {
+              links: value,
+              direction: direction,
+              link: {
+                label: link.linkType,
+              },
+            }
 
             return (
               <CellWidget
                 rowId={id}
                 className={clsx('links', { loading: row.original.isLoading })}
                 columnId={column.id}
-                value={value}
+                value={cellValue}
+                valueData={valueData}
                 attributeData={{ type: 'links' }}
 
                 // onChange={(value) =>

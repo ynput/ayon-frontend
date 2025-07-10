@@ -47,11 +47,13 @@ export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 type WidgetAttributeData = { type: AttributeData['type'] | 'links' }
 
 export type CellValue = string | number | boolean
+export type CellValueData = Record<string, any>
 
 interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   rowId: string
   columnId: string
   value: CellValue | CellValue[]
+  valueData?: CellValueData | CellValueData[] // extra data for the value
   attributeData?: WidgetAttributeData
   options?: AttributeEnumItem[]
   isCollapsed?: boolean
@@ -80,6 +82,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   rowId,
   columnId,
   value,
+  valueData,
   attributeData,
   options = [],
   isCollapsed,
@@ -169,10 +172,19 @@ export const CellWidget: FC<EditorCellProps> = ({
       }
 
       case type === 'links': {
+        // ensure value is an array of strings
         const linksValue = value
           ? (Array.isArray(value) ? value : [value]).map((v) => String(v))
           : []
-        return <LinksWidget value={linksValue} cellRef={ref} {...sharedProps} />
+
+        return (
+          <LinksWidget
+            value={linksValue}
+            valueData={valueData as any}
+            cellRef={ref}
+            {...sharedProps}
+          />
+        )
       }
 
       case !!options.length: {

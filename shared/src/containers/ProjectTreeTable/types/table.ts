@@ -1,5 +1,6 @@
 import { GetTasksByParentQuery } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
+import { LinkValue } from '../utils'
 
 export type FolderListItem = {
   id: string
@@ -40,7 +41,7 @@ export type TableRow = {
   startContent?: JSX.Element
   assignees?: string[]
   attrib?: Record<string, any>
-  links: Record<string, string[]> // links to other entities, e.g. tasks, versions, products
+  links: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
