@@ -501,6 +501,7 @@ const buildTreeTableColumns = ({
             const valueData: LinkWidgetData = {
               links: value,
               direction: direction,
+              entityId: row.original.entityId || row.original.id,
               link: {
                 label: link.linkType,
               },
@@ -514,13 +515,6 @@ const buildTreeTableColumns = ({
                 value={cellValue}
                 valueData={valueData}
                 attributeData={{ type: 'links' }}
-
-                // onChange={(value) =>
-                //   meta?.updateEntities?.(
-                //     { field: column.id, value, type, rowId: row.id },
-                //     { selection: meta?.selection },
-                //   )
-                // }
               />
             )
           },

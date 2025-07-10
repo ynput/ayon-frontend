@@ -4,11 +4,16 @@ export const Container = styled.div`
   padding: var(--padding-m);
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-l);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  overflow: hidden;
 `
 
 export const Header = styled.h4`
   margin: 0;
   padding: 0;
+  flex-shrink: 0;
 
   color: var(--md-sys-color-outline);
 `
@@ -22,6 +27,9 @@ export const LinksList = styled.ul`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 `
 
 export const LinkItem = styled.li`

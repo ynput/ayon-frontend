@@ -16,6 +16,7 @@ const StyledPopUp = styled.div<{ $maxHeight?: number }>`
 
 export type LinkWidgetData = {
   direction: 'in' | 'out'
+  entityId: string
   link: {
     label: string
   }
@@ -38,18 +39,16 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   onChange,
   onCancelEdit,
 }) => {
-  const { direction, link, links = [] } = valueData || {}
   return (
     <>
       <Chips values={value} pt={{ chip: { className: EDIT_TRIGGER_CLASS } }} />
       {isEditing &&
+        valueData &&
         createPortal(
           <LinksManagerDialog
             isEditing={isEditing}
             cellRef={cellRef}
-            linkTypeLabel={link?.label || ''}
-            direction={direction}
-            links={links}
+            valueData={valueData}
             projectName={projectName}
           />,
           document.body,

@@ -14,23 +14,28 @@ export const linksToTableData = (
   entityType: string,
 ): LinksTableData =>
   links.edges.reduce((acc, edge) => {
-    const { linkType, direction, entityType: linkEntityType, node } = edge
+    const { linkType, direction, entityType: linkEntityType, id, node } = edge
     const entityLabel = 'label' in node ? node.label || node.name : node.name
-    const entityData: LinkEntity = { label: entityLabel, id: node.id, entityType: linkEntityType }
+    const entityData: LinkEntity = {
+      label: entityLabel,
+      linkId: id,
+      entityId: node.id,
+      entityType: linkEntityType,
+    }
 
     // we must build the entity link type name based on the direction and entity types
     // e.g. "linkType|inEntityType|outEntityType"
     const linkTypeName = linkTypeToLinkName(linkType, entityType, linkEntityType, direction)
 
-    const id = getLinkKey({ name: linkTypeName }, direction)
+    const tableId = getLinkKey({ name: linkTypeName }, direction)
 
-    if (!acc[id]) {
-      acc[id] = []
+    if (!acc[tableId]) {
+      acc[tableId] = []
     }
 
     // add the entity name to the link type
-    if (!acc[id].includes(entityData)) {
-      acc[id].push(entityData)
+    if (!acc[tableId].includes(entityData)) {
+      acc[tableId].push(entityData)
     }
 
     return acc

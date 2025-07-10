@@ -1,6 +1,7 @@
 import { FC, useRef, useLayoutEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import { LinksManager, LinkEntity } from '.'
+import { LinkWidgetData } from '@shared/containers/ProjectTreeTable/widgets/LinksWidget'
 
 const StyledPopUp = styled.div<{ $maxHeight?: number }>`
   position: fixed;
@@ -14,19 +15,15 @@ const StyledPopUp = styled.div<{ $maxHeight?: number }>`
 export interface LinksManagerDialogProps {
   isEditing: boolean
   cellRef: React.RefObject<HTMLDivElement>
-  linkTypeLabel: string
-  direction?: 'in' | 'out'
-  links: LinkEntity[]
+  valueData: LinkWidgetData
   projectName: string
 }
 
 export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
   isEditing,
   cellRef,
-  linkTypeLabel,
-  direction,
-  links,
   projectName,
+  valueData,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
@@ -111,6 +108,8 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     }
   }, [isEditing, cellRef])
 
+  const { direction, link, links = [], entityId } = valueData || {}
+
   if (!isEditing) return null
   return (
     <StyledPopUp
@@ -124,10 +123,11 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
       className="links-widget-popup"
     >
       <LinksManager
-        linkTypeLabel={linkTypeLabel}
+        linkTypeLabel={link?.label || ''}
         links={links}
         direction={direction}
         projectName={projectName}
+        entityId={entityId}
       />
     </StyledPopUp>
   )
