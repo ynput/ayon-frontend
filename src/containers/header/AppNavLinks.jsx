@@ -7,7 +7,7 @@ import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
 
-const AppNavLinks = ({ links = [] }) => {
+const AppNavLinks = ({ links = [], helpButtons = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams()
@@ -82,14 +82,6 @@ const AppNavLinks = ({ links = [] }) => {
             }
             if (!hasAccess) return null
 
-            // return spacer if item is a spacer, or just the node
-            if (node) {
-              // if item is a node a spacer, return spacer
-              if (node === 'spacer') {
-                return <Spacer key={idx} />
-              } else return <li key={idx}>{node}</li>
-            }
-
             return (
               <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
                 <NavLink to={appendUri(path, uriSync)}>
@@ -104,6 +96,9 @@ const AppNavLinks = ({ links = [] }) => {
           },
         )}
       </ul>
+      {helpButtons.map(({ node }, idx) => (
+        <span key={idx}>{node}</span>
+      ))}
     </Styled.NavBar>
   )
 }

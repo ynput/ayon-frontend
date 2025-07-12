@@ -24,10 +24,20 @@ import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 import { RemoteAddonProject } from '@shared/context'
-import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
+import { VersionUploadProvider, UploadVersionDialog, useFeedback } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import { find } from 'lodash'
+
+type ProjectNavLink = {
+  name: string
+  path: string
+  module: string
+  uriSync?: boolean
+  articleId?: string
+  enabled?: boolean
+}
 
 const ProjectContextInfo = () => {
   /**
@@ -65,6 +75,7 @@ const ProjectPage = () => {
     { projectName: projectName || '' },
     { skip: !projectName },
   )
+  const { openSupport, loaded } = useFeedback()
 
   const {
     data: addonsData = [],
@@ -106,20 +117,21 @@ const ProjectPage = () => {
     isLoading: boolean
   }
 
-  // get remote project module pages
-  const links = useMemo(
+  const links: ProjectNavLink[] = useMemo(
     () => [
       {
         name: 'Overview',
         path: `/projects/${projectName}/overview`,
         module: 'overview',
         uriSync: true,
+        articleId: '7885519',
       },
       {
         name: 'Task progress',
         path: `/projects/${projectName}/tasks`,
         module: 'tasks',
         uriSync: true,
+        articleId: '5526719',
       },
       {
         name: 'Browser',
@@ -131,6 +143,7 @@ const ProjectPage = () => {
         name: 'Lists',
         path: `/projects/${projectName}/lists`,
         module: 'lists',
+        articleId: '7382645',
       },
       {
         name: 'Review',
@@ -165,7 +178,32 @@ const ProjectPage = () => {
           path: `/projects/${projectName}/addon/${addon.name}`,
           module: addon.name,
         })),
-      { node: 'spacer' },
+    ],
+    [addonsData, projectName, remotePages, matchedAddons],
+  )
+
+  const helpButtons = useMemo(
+    () => [
+      {
+        node: (
+          <Button
+            icon="help"
+            onClick={() => {
+              if (!loaded) return
+              const currentModule = find(links, (l) => l.module === module)
+
+              const supportView = currentModule?.articleId ? 'ShowArticle' : 'NewMessage'
+              const supportContent = currentModule?.articleId
+                ? currentModule.articleId
+                : `Can you help me know more about the Project ${
+                    currentModule?.name || module
+                  } page?`
+              openSupport(supportView, supportContent)
+            }}
+            variant="text"
+          />
+        ),
+      },
       {
         node: (
           <Button
@@ -178,7 +216,7 @@ const ProjectPage = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, matchedAddons],
+    [module, openSupport],
   )
 
   //
@@ -273,7 +311,7 @@ const ProjectPage = () => {
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
-      <AppNavLinks links={links} />
+      <AppNavLinks links={links} helpButtons={helpButtons} />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}

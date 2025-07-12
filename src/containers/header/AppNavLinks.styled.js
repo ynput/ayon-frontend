@@ -5,6 +5,11 @@ export const NavBar = styled.nav`
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   background-color: var(--panel-background);
   padding: 0 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--base-gap-small);
 
   ul {
     display: flex;
