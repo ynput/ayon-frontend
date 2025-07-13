@@ -6,6 +6,7 @@ import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
+import HelpButton from '@components/HelpButton'
 
 const AppNavLinks = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
@@ -37,6 +38,10 @@ const AppNavLinks = ({ links = [] }) => {
     admin: isAdmin,
   }
 
+  const currentLink = links.find((link) => link.module === module)
+  const pageTitle = currentLink?.name
+  const helpArticleId = currentLink?.helpArticleId
+
   //   if module is matches an item that has accessLevel that is not in access, redirect to
   useEffect(() => {
     const item = links.find((item) => item.module === `${module}`)
@@ -55,55 +60,60 @@ const AppNavLinks = ({ links = [] }) => {
 
   return (
     <Styled.NavBar className="secondary">
-      <ul>
-        {links.map(
-          (
-            {
-              accessLevels,
-              node,
-              shortcut,
-              path,
-              tooltip,
-              name,
-              enabled = true,
-              startContent,
-              endContent,
-              uriSync,
-              module,
-              ...props
-            } = {},
-            idx,
-          ) => {
-            if (!enabled) return null
-            // if item has restrictions, check if user has access
-            let hasAccess = true
-            if (accessLevels?.length) {
-              hasAccess = accessLevels?.every((restriction) => access[restriction])
-            }
-            if (!hasAccess) return null
+      <Styled.ScrollableNav>
+        <ul>
+          {links.map(
+            (
+              {
+                accessLevels,
+                node,
+                shortcut,
+                path,
+                tooltip,
+                name,
+                enabled = true,
+                startContent,
+                endContent,
+                uriSync,
+                module,
+                ...props
+              } = {},
+              idx,
+            ) => {
+              if (!enabled) return null
+              // if item has restrictions, check if user has access
+              let hasAccess = true
+              if (accessLevels?.length) {
+                hasAccess = accessLevels?.every((restriction) => access[restriction])
+              }
+              if (!hasAccess) return null
 
-            // return spacer if item is a spacer, or just the node
-            if (node) {
-              // if item is a node a spacer, return spacer
-              if (node === 'spacer') {
-                return <Spacer key={idx} />
-              } else return <li key={idx}>{node}</li>
-            }
+              // return spacer if item is a spacer, or just the node
+              if (node) {
+                // if item is a node a spacer, return spacer
+                if (node === 'spacer') {
+                  return <Spacer key={idx} />
+                } else return <li key={idx}>{node}</li>
+              }
 
-            return (
-              <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-                <NavLink to={appendUri(path, uriSync)}>
-                  <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
-                    {startContent && startContent}
-                    {name}
-                    {endContent && endContent}
-                  </Button>
-                </NavLink>
-              </Styled.NavItem>
-            )
-          },
-        )}
-      </ul>
+              return (
+                <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
+                  <NavLink to={appendUri(path, uriSync)}>
+                    <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
+                      {startContent && startContent}
+                      {name}
+                      {endContent && endContent}
+                    </Button>
+                  </NavLink>
+                </Styled.NavItem>
+              )
+            },
+          )}
+        </ul>
+      </Styled.ScrollableNav>
+      <Styled.HelpButtonContainer>
+        <HelpButton pageTitle={pageTitle} helpArticleId={helpArticleId} />
+      </Styled.HelpButtonContainer>
     </Styled.NavBar>
   )
 }

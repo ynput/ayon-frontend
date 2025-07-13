@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import { Button, InputTextarea, Dialog } from '@ynput/ayon-react-components'
 
-
 const PasteContext = createContext()
 
 const PasteProvider = ({ children }) => {

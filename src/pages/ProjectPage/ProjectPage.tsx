@@ -28,6 +28,7 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import { getHelpArticleId } from '@/data/help-articles'
 
 const ProjectContextInfo = () => {
   /**
@@ -113,12 +114,14 @@ const ProjectPage = () => {
         name: 'Overview',
         path: `/projects/${projectName}/overview`,
         module: 'overview',
+        helpArticleId: getHelpArticleId('project-overview-page'),
         uriSync: true,
       },
       {
         name: 'Task progress',
         path: `/projects/${projectName}/tasks`,
         module: 'tasks',
+        helpArticleId: getHelpArticleId('task-progress-page'),
         uriSync: true,
       },
       {
@@ -131,6 +134,7 @@ const ProjectPage = () => {
         name: 'Lists',
         path: `/projects/${projectName}/lists`,
         module: 'lists',
+        helpArticleId: getHelpArticleId('lists'),
       },
       {
         name: 'Review',
