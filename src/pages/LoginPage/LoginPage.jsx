@@ -21,7 +21,7 @@ const clearQueryParams = () => {
   history.pushState({}, '', url.href)
 }
 
-const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
+const LoginPage = ({ isFirstTime = false }) => {
   // get query params from url
   const search = new URLSearchParams(window.location.search)
   const dispatch = useDispatch()
@@ -32,7 +32,8 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
   const featuredMethods = search.getAll('provider')
 
   // if there are none [] then show all
-  const [shownProviders, setShownProviders] = useState(featuredMethods)
+  // if null - use server defaults
+  const [shownProviders, setShownProviders] = useState(featuredMethods.length ? featuredMethods : null)
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -80,8 +81,6 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
 
     // If the query string is empty, we can't proceed. Abort
     if (!qs.toString()) return
-
-    console.log("Got QS")
 
     // Clear the query string (it contains sensitive data now)
     // and we already have it in the qs const
@@ -189,14 +188,18 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
 
   // List of SSO providers to show
 
-  const showAllProviders = !shownProviders.length
-  const showPasswordLogin = showAllProviders || shownProviders.includes('password')
+  const showAllProviders =  Array.isArray(shownProviders) && !shownProviders.length
+
+  let showPasswordLogin = !info?.hidePasswordAuth && !(Array.isArray(shownProviders) && shownProviders.length)
+  if (showAllProviders) showPasswordLogin = true
+  if (shownProviders && shownProviders.includes('password')) showPasswordLogin = true
+
 
   const ssoButtons = useMemo(() => {
     if (!info.ssoOptions?.length) return null
 
     return info.ssoOptions
-      .filter(({ name, hidden }) => !hidden && (shownProviders.includes(name) || showAllProviders))
+      .filter(({ name, hidden }) => !hidden && (shownProviders === null || (shownProviders || []).includes(name) || showAllProviders))
       .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
         const queryDict = { ...args }
         const redirect_uri = `${window.location.origin}/login/${name}`
@@ -278,6 +281,9 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
         <Panel>
           <Styled.Ayon src="/AYON.svg" />
           <Styled.Methods>
+            {!showPasswordLogin && (
+              <div style={{ marginBottom: '8px' }}/>
+            )}
             {showPasswordLogin && (
               <form onSubmit={handleSubmit}>
                 <label id="username">Username</label>
@@ -311,7 +317,7 @@ const LoginPage = ({ isFirstTime = false, isTokenAuth = false }) => {
               Reset password
             </a>
           )}
-          {!showAllProviders && (
+          {!showAllProviders && shownProviders && (
             <Button style={{ width: '100%' }} variant="text" onClick={() => setShownProviders([])}>
               Show all login options
             </Button>

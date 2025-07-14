@@ -291,12 +291,11 @@ const App = () => {
   }
 
 
-
   // User is not logged in
   if (!user.name && !noAdminUser) {
     return (
       <>
-        <LoginPage isFirstTime={isOnboarding} isTokenAuth={isTokenAuth()}/>
+        <LoginPage isFirstTime={isOnboarding} />
         {tooltipComponent}
       </>
     )
@@ -304,7 +303,7 @@ const App = () => {
 
   if (isTokenAuth()) {
     console.log("Initializing token auth flow")
-    return <LoginPage isFirstTime={isOnboarding} isTokenAuth={true}/>
+    return <LoginPage isFirstTime={isOnboarding} />
   }
 
 
