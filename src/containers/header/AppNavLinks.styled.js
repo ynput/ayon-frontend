@@ -5,6 +5,8 @@ export const NavBar = styled.nav`
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   background-color: var(--panel-background);
   padding: 0 8px;
+  display: flex;
+  align-items: center;
 
   ul {
     display: flex;
@@ -22,7 +24,7 @@ export const NavBar = styled.nav`
     margin-bottom: -1px;
 
     /* overflow */
-    width: 100%;
+    flex: 1;
     overflow-x: auto;
     /* hide scroll bar */
     scrollbar-width: none;
@@ -63,4 +65,11 @@ export const NavItem = styled.li`
       border-bottom: 1px solid var(--md-sys-color-background);
     }
   }
+`
+
+export const HelpButtonContainer = styled.div`
+  margin-left: var(--base-gap-small);
+  position: relative;
+  top: 1px;
+  margin-bottom: -1px;
 `

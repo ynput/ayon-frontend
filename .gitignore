@@ -13,3 +13,4 @@ playwright/.auth
 .__mf__temp/
 localSharedImportMap.js
 gen/openapi.json
+ayon-docker/

@@ -7,7 +7,7 @@ import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
 
-const AppNavLinks = ({ links = [] }) => {
+const AppNavLinks = ({ links = [], helpButton = null }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams()
@@ -104,6 +104,7 @@ const AppNavLinks = ({ links = [] }) => {
           },
         )}
       </ul>
+      {helpButton && <Styled.HelpButtonContainer>{helpButton}</Styled.HelpButtonContainer>}
     </Styled.NavBar>
   )
 }

@@ -28,6 +28,7 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import ProjectHelpButton from '@components/ProjectHelpButton'
 
 const ProjectContextInfo = () => {
   /**
@@ -272,8 +273,12 @@ const ProjectPage = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
-      {/* @ts-expect-error - AppNavLinks is jsx */}
-      <AppNavLinks links={links} />
+      <AppNavLinks
+        // @ts-expect-error - AppNavLinks is jsx
+        links={links}
+        // @ts-expect-error - AppNavLinks is jsx
+        helpButton={<ProjectHelpButton currentModule={module} projectName={projectName} />}
+      />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}
