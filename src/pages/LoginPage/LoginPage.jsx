@@ -186,13 +186,19 @@ const LoginPage = ({ isFirstTime = false }) => {
   }, [info.ssoOptions])
 
 
-  // List of SSO providers to show
+  // user clicked show all login options button
 
   const showAllProviders =  Array.isArray(shownProviders) && !shownProviders.length
+
+  // should we show the password login?
 
   let showPasswordLogin = !info?.hidePasswordAuth && !(Array.isArray(shownProviders) && shownProviders.length)
   if (showAllProviders) showPasswordLogin = true
   if (shownProviders && shownProviders.includes('password')) showPasswordLogin = true
+
+  // flag to show the "Show all login options" button
+
+  const showAllButton = !showAllProviders && (shownProviders || !showPasswordLogin)
 
 
   const ssoButtons = useMemo(() => {
@@ -317,7 +323,7 @@ const LoginPage = ({ isFirstTime = false }) => {
               Reset password
             </a>
           )}
-          {!showAllProviders && shownProviders && (
+          {showAllButton && (
             <Button style={{ width: '100%' }} variant="text" onClick={() => setShownProviders([])}>
               Show all login options
             </Button>
