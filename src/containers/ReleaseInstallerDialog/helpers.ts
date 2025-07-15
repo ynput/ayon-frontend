@@ -5,6 +5,7 @@ import type {
   DependencyPackage,
   GetReleaseInfoApiResponse,
   SourceModel,
+  AddonListItem,
 } from '@shared/api'
 import { getPlatformLabel } from '@pages/AccountPage/DownloadsPage/DownloadsPage'
 import { formatDistance } from 'date-fns'
@@ -42,11 +43,15 @@ export const resolveRelease = (releases: ReleaseListItemModel[], selected?: stri
   return releases.find((release) => release.name === selected) || releases[0]
 }
 
-// isProduction then isStaging then isDev then last created
+// isProduction, isStaging, otherwise last created
 export const getHighestBundle = (bundles: BundleModel[]): BundleModel | null => {
   if (!bundles.length) return null
 
-  const selectedBundle = bundles.find((bundle) => bundle.isProduction) || null
+  const selectedBundle =
+    bundles.find((bundle) => bundle.isProduction) ||
+    bundles.find((bundle) => bundle.isStaging) ||
+    bundles[0] ||
+    null
 
   return selectedBundle
 }
@@ -128,11 +133,31 @@ export const getReleaseInstallUrls = (
   return { addonInstalls, installerInstalls, dependencyPackageInstalls }
 }
 
+// gets all server addons from the bundle and installed addons
+const getBundleServerAddons = (bundle?: BundleModel | null, addons: AddonListItem[] = []) => {
+  // get only server addons
+  const serverAddons = addons.filter((addon) => addon.addonType === 'server')
+  // filter bundle addons that are server addons
+  const serverBundleAddons: Record<string, string> = {}
+  for (const [name, version] of Object.entries(bundle?.addons || {})) {
+    // check if the bundle addon is a server addon
+    if (serverAddons.some((addon) => addon.name === name)) {
+      // if it is, add it to the serverBundleAddons
+      serverBundleAddons[name] = version
+    }
+  }
+
+  console.log('Found server addons:', serverBundleAddons)
+
+  return serverBundleAddons
+}
+
 export const createBundleFromRelease = (
   release: GetReleaseInfoApiResponse,
   selectedAddons: string[],
   selectedPlatforms: string[],
   bundleList: BundleModel[],
+  addonsList: AddonListItem[],
 ) => {
   const { installers = [], dependencyPackages = [] } = release
 
@@ -157,8 +182,16 @@ export const createBundleFromRelease = (
 
   const name = getNewBundleName(release.release, bundleList)
 
-  // check if there is already a production bundles
-  const hasProduction = bundleList.some((bundle) => bundle?.isProduction)
+  // get prod bundle, then staging bundle, then latest bundle
+  const bundle = getHighestBundle(bundleList)
+  const hasProduction = bundle?.isProduction || false
+
+  // finds all server addons in the current bundle so that they can be transferred over to the new bundle
+  const serverAddons = getBundleServerAddons(bundle, addonsList)
+  // add server addons to the bundle addons
+  for (const [name, version] of Object.entries(serverAddons)) {
+    bundleAddons[name] = version
+  }
 
   return {
     name,
