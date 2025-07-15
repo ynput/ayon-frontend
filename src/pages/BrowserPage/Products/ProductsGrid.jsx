@@ -8,6 +8,8 @@ import 'react-perfect-scrollbar/dist/css/styles.css'
 import clsx from 'clsx'
 import Shortcuts from '@containers/Shortcuts'
 
+import { useProjectContext } from '@context/ProjectContext'
+
 const StyledGridLayout = styled(PerfectScrollbar)`
   padding: 4px 12px;
   height: 100%;
@@ -73,13 +75,12 @@ const ProductsGrid = ({
   statuses,
   selection = {},
   lastSelected,
-  productTypes,
   onContext,
   groupBy = null,
   multipleFoldersSelected = false,
-  projectName,
 }) => {
   const isNone = data.length === 0
+  const project = useProjectContext()
 
   const handleContext = (e, id) => {
     onContext(e, id)
@@ -246,7 +247,7 @@ const ProductsGrid = ({
                   data-tooltip-delay={300}
                 />
                 <span className="content">
-                  <Icon icon={productTypes[groupName]?.icon || 'inventory_2'} />
+                  <Icon icon={ project.getProductTypeIcon(groupName) || 'inventory_2'} />
                   <h2>{groupName}</h2>
                   <span className="count">{groupData.length}</span>
                 </span>
@@ -268,7 +269,7 @@ const ProductsGrid = ({
                   ))
                 : groupData.map(({ data: product }, index) => {
                     if (!product) return null
-                    const thumbnailUrl = `/api/projects/${projectName}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}`
+                    const thumbnailUrl = `/api/projects/${project.name}/versions/${product.versionId}/thumbnail?updatedAt=${product.versionUpdatedAt}`
                     const status = statuses[product.versionStatus]
 
                     return (
@@ -280,12 +281,12 @@ const ProductsGrid = ({
                         header={product.name}
                         path={multipleFoldersSelected && product.folder}
                         title={product.versionName}
-                        titleIcon={productTypes[product.productType]?.icon || 'layers'}
+                        titleIcon={project.getProductTypeIcon(product.productType) || 'layers'}
                         users={[{ name: product.versionAuthor }]}
-                        imageIcon={productTypes[product.productType]?.icon || 'inventory_2'}
+                        imageIcon={project.getProductTypeIcon(product.productType) || 'inventory_2'}
                         status={status}
                         hidePriority
-                        imageUrl={projectName && thumbnailUrl}
+                        imageUrl={project.name && thumbnailUrl}
                         onClick={(e) => handleSelection(e, product)}
                         isActive={product.id in selection}
                         onContextMenu={(e) => handleContext(e, product.id)}
@@ -308,7 +309,6 @@ ProductsGrid.propTypes = {
   onItemClick: PropTypes.func,
   onContext: PropTypes.func,
   selection: PropTypes.object,
-  productTypes: PropTypes.object,
   statuses: PropTypes.object,
   lastSelected: PropTypes.string,
   groupBy: PropTypes.string,

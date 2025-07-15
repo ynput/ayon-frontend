@@ -9,7 +9,7 @@ import { DetailsDialog } from '@shared/components'
 import { useLocalStorage, useScopedStatuses } from '@shared/hooks'
 import api, { useUpdateEntitiesMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { productTypes, groupResult, confirmDelete } from '@shared/util'
+import { groupResult, confirmDelete } from '@shared/util'
 import { extractIdFromClassList } from '@shared/containers/Feed'
 
 import {
@@ -41,20 +41,25 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
+import { useProjectContext } from '@context/ProjectContext'
 
 const Products = () => {
   const dispatch = useDispatch()
+  const project = useProjectContext()
 
   const { onOpenVersionUpload } = useVersionUploadContext()
 
   // context
   // project redux
+  // TODO: replace with useProjectContext
   const {
     name: projectName,
     statuses: statusesObject,
     tasksOrder = [],
     tasks = {},
   } = useSelector((state) => state.project)
+
+
   // focused redux
   const {
     versions: focusedVersions,
@@ -79,6 +84,7 @@ const Products = () => {
       }
     })
   }, [tasks, tasksOrder])
+
 
   const handleTaskTypeChange = (value) => {
     dispatch(updateBrowserFilters({ productTaskTypes: value }))
@@ -291,7 +297,7 @@ const Products = () => {
 
           const icon = node.data.isGroup
             ? 'folder'
-            : productTypes[node.data.productType]?.icon || 'inventory_2'
+            : project.getProductTypeIcon(node.data.productType) || 'inventory_2'
 
           return (
             <CellWithIcon
@@ -379,7 +385,6 @@ const Products = () => {
       columnsWidths,
       focusedProducts,
       pairing,
-      productTypes,
       selectedVersions,
       handleStatusChange,
       handleStatusOpen,
@@ -779,7 +784,6 @@ const Products = () => {
             onSelectionChange={onSelectionChange}
             onContext={handleContextMenu}
             selection={selection}
-            productTypes={productTypes}
             statuses={statusesObject}
             lastSelected={lastFocused}
             groupBy={grouped || focusedFolders.length > 1 ? 'productType' : null}
