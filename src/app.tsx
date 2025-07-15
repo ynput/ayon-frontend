@@ -239,7 +239,7 @@ const App = () => {
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
-  //const loginComponent = useMemo(() => <LoginPage isFirstTime={isOnboarding} />, [isOnboarding])
+  
 
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
