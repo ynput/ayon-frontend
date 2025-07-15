@@ -302,10 +302,8 @@ const App = () => {
   }
 
   if (isTokenAuth()) {
-    console.log("Initializing token auth flow")
     return <LoginPage isFirstTime={isOnboarding} />
   }
-
 
   // Trial has finished
   if (isTrialing && left?.finished) {
