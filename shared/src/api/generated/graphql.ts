@@ -1509,6 +1509,18 @@ export type DetailsPanelTaskFragmentFragment = { __typename?: 'TaskNode', id: st
 
 export type DetailsPanelVersionFragmentFragment = { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null };
 
+export type GetSearchedTasksQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string } }> } } };
+
 export type GetListItemsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   listId: Scalars['String']['input'];
@@ -2210,6 +2222,36 @@ export const GetProductVersionsDocument = `
   }
 }
     `;
+export const GetSearchedTasksDocument = `
+    query GetSearchedTasks($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    tasks(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          label
+          taskType
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetListItemsDocument = `
     query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String) {
   project(name: $projectName) {
@@ -2609,6 +2651,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
       query: (variables) => ({ document: GetProductVersionsDocument, variables })
+    }),
+    GetSearchedTasks: build.query<GetSearchedTasksQuery, GetSearchedTasksQueryVariables>({
+      query: (variables) => ({ document: GetSearchedTasksDocument, variables })
     }),
     GetListItems: build.query<GetListItemsQuery, GetListItemsQueryVariables>({
       query: (variables) => ({ document: GetListItemsDocument, variables })

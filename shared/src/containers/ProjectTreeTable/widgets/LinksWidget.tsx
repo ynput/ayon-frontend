@@ -17,8 +17,10 @@ const StyledPopUp = styled.div<{ $maxHeight?: number }>`
 export type LinkWidgetData = {
   direction: 'in' | 'out'
   entityId: string
+  entityType: string
   link: {
     label: string
+    outputType: string
   }
   links: LinkEntity[]
 }
@@ -48,8 +50,13 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
           <LinksManagerDialog
             isEditing={isEditing}
             cellRef={cellRef}
-            valueData={valueData}
             projectName={projectName}
+            linkTypeLabel={valueData.link.label || ''}
+            links={valueData.links}
+            direction={valueData.direction}
+            entityId={valueData.entityId}
+            entityType={valueData.entityType}
+            outputType={valueData.link.outputType}
           />,
           document.body,
         )}

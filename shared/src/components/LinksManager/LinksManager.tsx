@@ -3,6 +3,7 @@ import * as Styled from './LinksManager.styled'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import useUpdateLinks from './hooks/useUpdateLinks'
+import AddNewLinks from './AddNewLinks'
 
 export type LinkEntity = {
   linkId: string
@@ -18,14 +19,18 @@ export interface LinksManagerProps {
   links: LinkEntity[] // used to display basic info about the links entity
   projectName: string
   entityId: string // the entity id of the entity that has these links
+  entityType: string // the entity type of the entity that has these links
+  outputType: string // the entity type of the out links
 }
 
 export const LinksManager: FC<LinksManagerProps> = ({
   linkTypeLabel,
   direction,
-  links,
+  links = [],
   projectName,
   entityId,
+  entityType,
+  outputType,
 }) => {
   const linksUpdater = useUpdateLinks({ projectName, entityId })
 
@@ -35,7 +40,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
         {linkTypeLabel} links ({direction})
       </Styled.Header>
       <Styled.LinksList>
-        {links.map((link) => (
+        {links?.map((link) => (
           <Styled.LinkItem key={link.linkId}>
             {link.icon ? (
               <Icon icon={link.icon} />
@@ -52,6 +57,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
           </Styled.LinkItem>
         ))}
       </Styled.LinksList>
+      <AddNewLinks outputType={outputType} projectName={projectName} />
     </Styled.Container>
   )
 }

@@ -1,11 +1,12 @@
 // @ts-nocheck
-import { gqlApi } from '@shared/api/generated'
+import { GetSearchedTasksQuery, gqlApi } from '@shared/api/generated'
 import {
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
 } from './entityQueries'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 const buildEventTileQuery = (type) => {
   return `
@@ -76,6 +77,35 @@ function getNonObjectValue(value) {
   // If no non-object value found, return undefined
   return undefined
 }
+
+export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
+
+// Define page param type for infinite query
+type EntitySearchPageParam = {
+  cursor: string
+}
+
+export type GetSearchedEntitiesResult = {
+  pageInfo: any
+  entities: {
+    id: string
+    name: string
+    label?: string
+    folderType?: string
+    taskType?: string
+    productType?: string
+    entityType: string
+  }[]
+}
+
+export type GetSearchedEntitiesArgs = {
+  projectName: string
+  entityType: string // 'folder' | 'product' | 'version' | 'task' | 'representation' | 'workfile'
+  search?: string
+  sortBy?: string
+}
+
+export const supportedEntityTypes = ['task']
 
 export const formatEntityTiles = (project, entities) => {
   // data = {project: {folders: {edges: [{node: {id}}]}}}
@@ -155,6 +185,112 @@ const injectedApi = gqlApi.injectEndpoints({
       }),
       providesTags: (res, error, { entityId }) => [{ type: 'entity', id: entityId }],
     }),
+    getSearchedEntities: build.infiniteQuery<
+      GetSearchedEntitiesResult,
+      GetSearchedEntitiesArgs,
+      EntitySearchPageParam
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: { cursor: '' },
+        getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+          const pageInfo = lastPage.pageInfo
+          if (!pageInfo.hasNextPage || !pageInfo.endCursor) return undefined
+          return { cursor: pageInfo.endCursor }
+        },
+      },
+      queryFn: async ({ queryArg, pageParam }, api) => {
+        try {
+          const { projectName, entityType, search } = queryArg
+          const { cursor } = pageParam
+
+          // Build query variables
+          const variables: any = {
+            projectName,
+            first: ENTITIES_INFINITE_QUERY_COUNT,
+          }
+
+          // Add cursor-based pagination
+          if (cursor) {
+            variables.after = cursor
+          }
+
+          // Add search parameter based on entity type
+          if (entityType === 'version') {
+            variables.filter = search || ''
+          } else {
+            variables.search = search || ''
+          }
+
+          let result: Promise<GetSearchedTasksQuery>
+
+          // Use the appropriate generated query based on entity type
+          switch (entityType) {
+            case 'folder':
+              throw new Error('Folder search is not implemented yet')
+              // result = await api.dispatch(
+              //   gqlApi.endpoints.GetSearchedFolders.initiate(variables, { forceRefetch: true }),
+              // )
+              break
+            case 'product':
+              throw new Error('Product search is not implemented yet')
+              // result = await api.dispatch(
+              //   gqlApi.endpoints.GetSearchedProducts.initiate(variables, { forceRefetch: true }),
+              // )
+              break
+            case 'task':
+              result = await api.dispatch(
+                gqlApi.endpoints.GetSearchedTasks.initiate(variables, { forceRefetch: true }),
+              )
+              break
+            case 'version':
+              throw new Error('Version search is not implemented yet')
+              // result = await api.dispatch(
+              //   gqlApi.endpoints.GetSearchedVersions.initiate(variables, { forceRefetch: true }),
+              // )
+              break
+            case 'representation':
+              throw new Error('Representation search is not implemented yet')
+            case 'workfile':
+              throw new Error('Workfile search is not implemented yet')
+            default:
+              throw new Error(`Unsupported entity type: ${entityType}`)
+          }
+
+          if (result.error) {
+            throw result.error
+          }
+
+          console.log(result)
+          const projectData = result.data.project
+          if (!projectData) {
+            throw new Error('No project data returned')
+          }
+
+          const entityData = projectData[entityType + 's']
+          if (!entityData) {
+            throw new Error(`No ${entityType} data returned`)
+          }
+
+          // Transform the response to match expected format
+          const entities = entityData.edges.map(({ node }) => ({
+            ...node,
+            entityType: entityType,
+          }))
+
+          return {
+            data: result.data,
+          }
+        } catch (error: any) {
+          console.error('Error in getSearchedEntities queryFn:', error)
+          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+        }
+      },
+      providesTags: (result, _e, { entityType }) =>
+        result?.entities?.map((entity) => ({
+          type: entityType,
+          id: entity.id,
+        })),
+    }),
   }),
   overrideExisting: true,
 })
@@ -171,5 +307,6 @@ export const {
   useGetEntityQuery,
   useLazyGetEntityQuery,
   useGetProductVersionsQuery,
+  useGetSearchedEntitiesInfiniteQuery,
 } = getEntityApi
 export default getEntityApi

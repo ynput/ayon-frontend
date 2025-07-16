@@ -1,0 +1,30 @@
+# Gets all tasks with pagination and search filtering
+query GetSearchedTasks(
+  $projectName: String!
+  $search: String
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    tasks(search: $search, after: $after, first: $first, before: $before, last: $last) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          label
+          taskType
+        }
+      }
+    }
+  }
+}

@@ -502,8 +502,10 @@ const buildTreeTableColumns = ({
               links: value,
               direction: direction,
               entityId: row.original.entityId || row.original.id,
+              entityType: row.original.entityType,
               link: {
                 label: link.linkType,
+                outputType: direction === 'in' ? link.inputType : link.outputType,
               },
             }
 

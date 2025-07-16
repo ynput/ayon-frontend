@@ -1,6 +1,6 @@
 import { FC, useRef, useLayoutEffect, useMemo } from 'react'
 import styled from 'styled-components'
-import { LinksManager, LinkEntity } from '.'
+import { LinksManager, LinkEntity, LinksManagerProps } from '.'
 import { LinkWidgetData } from '@shared/containers/ProjectTreeTable/widgets/LinksWidget'
 
 const StyledPopUp = styled.div<{ $maxHeight?: number }>`
@@ -12,18 +12,16 @@ const StyledPopUp = styled.div<{ $maxHeight?: number }>`
   overflow: hidden;
 `
 
-export interface LinksManagerDialogProps {
+export interface LinksManagerDialogProps extends LinksManagerProps {
   isEditing: boolean
   cellRef: React.RefObject<HTMLDivElement>
-  valueData: LinkWidgetData
-  projectName: string
 }
 
 export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
   isEditing,
   cellRef,
-  projectName,
-  valueData,
+
+  ...props
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
@@ -108,8 +106,6 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     }
   }, [isEditing, cellRef])
 
-  const { direction, link, links = [], entityId } = valueData || {}
-
   if (!isEditing) return null
   return (
     <StyledPopUp
@@ -122,13 +118,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
       $maxHeight={initialPosition.maxHeight}
       className="links-widget-popup"
     >
-      <LinksManager
-        linkTypeLabel={link?.label || ''}
-        links={links}
-        direction={direction}
-        projectName={projectName}
-        entityId={entityId}
-      />
+      <LinksManager {...props} />
     </StyledPopUp>
   )
 }

@@ -1,3 +1,4 @@
+import { InputText } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Container = styled.div`
@@ -62,4 +63,30 @@ export const LinkItem = styled.li`
       color: var(--md-sys-color-outline);
     }
   }
+`
+
+export const AddLinksContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--padding-m);
+`
+
+export const Search = styled.div`
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+
+  .icon {
+    position: absolute;
+    left: 4px;
+  }
+`
+
+export const SearchInput = styled(InputText)`
+  flex: 1;
+  border: none;
+  background-color: unset;
+  padding-left: 28px;
 `
