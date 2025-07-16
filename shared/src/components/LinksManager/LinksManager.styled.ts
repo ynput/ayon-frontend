@@ -105,6 +105,9 @@ export const SearchItems = styled.ul`
   overflow-y: auto;
   padding: var(--padding-m) 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-small);
 `
 
 export const SearchItem = styled.li`
@@ -115,8 +118,51 @@ export const SearchItem = styled.li`
   border-radius: var(--border-radius-m);
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &:focus,
+  &.selected {
     background-color: var(--md-sys-color-surface-container-high-hover);
+  }
+
+  &.loading {
+    cursor: default;
+    opacity: 0.6;
+
+    .icon,
+    .label,
+    .type {
+      background-color: var(--md-sys-color-outline);
+      color: transparent;
+      border-radius: var(--border-radius-s);
+      animation: shimmer 1.5s infinite;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .label {
+      height: 16px;
+      flex: 1;
+    }
+
+    .type {
+      width: 60px;
+      height: 14px;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.3;
+    }
+    100% {
+      opacity: 0.6;
+    }
   }
 
   .icon {
@@ -125,13 +171,12 @@ export const SearchItem = styled.li`
 
   .label {
     flex: 1;
+    display: flex;
+    gap: var(--base-gap-small);
   }
 
-  .add {
-    display: none;
-    user-select: none;
-  }
-  &:hover .add {
-    display: flex;
+  .type {
+    margin-left: 80px;
+    color: var(--md-sys-color-outline);
   }
 `

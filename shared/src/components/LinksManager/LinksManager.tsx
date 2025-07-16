@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
@@ -19,8 +19,10 @@ export interface LinksManagerProps {
   links: LinkEntity[] // used to display basic info about the links entity
   projectName: string
   entityId: string // the entity id of the entity that has these links
+  linkType: string // full link type e.g. workflow|task|task
   entityType: string // the entity type of the entity that has these links
-  outputType: string // the entity type of the out links
+  targetEntityType: string // the entity type of the out links
+  onClose?: () => void
 }
 
 export const LinksManager: FC<LinksManagerProps> = ({
@@ -30,9 +32,11 @@ export const LinksManager: FC<LinksManagerProps> = ({
   projectName,
   entityId,
   entityType,
-  outputType,
+  linkType,
+  targetEntityType,
+  onClose,
 }) => {
-  const linksUpdater = useUpdateLinks({ projectName, entityId })
+  const linksUpdater = useUpdateLinks({ projectName, direction, entityId, linkType })
 
   return (
     <Styled.Container>
@@ -57,7 +61,12 @@ export const LinksManager: FC<LinksManagerProps> = ({
           </Styled.LinkItem>
         ))}
       </Styled.LinksList>
-      <AddNewLinks outputType={outputType} projectName={projectName} />
+      <AddNewLinks
+        targetEntityType={targetEntityType}
+        projectName={projectName}
+        onClose={onClose}
+        onAdd={(id) => linksUpdater.add(id)}
+      />
     </Styled.Container>
   )
 }

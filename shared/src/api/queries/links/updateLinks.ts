@@ -5,7 +5,10 @@ const enhancedApi = linksApi.enhanceEndpoints({
     deleteEntityLink: {
       transformErrorResponse: (error: any) => error.data?.detail || '',
     },
+    createEntityLink: {
+      transformErrorResponse: (error: any) => error.data?.detail || '',
+    },
   },
 })
 
-export const { useDeleteEntityLinkMutation } = enhancedApi
+export const { useDeleteEntityLinkMutation, useCreateEntityLinkMutation } = enhancedApi

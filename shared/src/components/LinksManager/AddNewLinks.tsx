@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useState, useMemo } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import {
@@ -6,27 +6,60 @@ import {
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api/queries/links/getLinks'
 import { getEntityTypeIcon } from '@shared/util'
+import useKeyboardNavigation from './hooks/useKeyboardNavigation'
+import SearchingLoadingItems from './SearchingLoadingItems'
 
 interface AddNewLinksProps {
-  outputType: string
+  targetEntityType: string
   projectName: string
+  onClose?: () => void
+  onAdd?: (targetEntityId: string, linkType?: string) => void
 }
 
-const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, outputType }) => {
+const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, targetEntityType, onClose, onAdd }) => {
   const [search, setSearch] = useState('')
 
   const {
     data: searchData,
     error,
-    isFetching,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useGetSearchedEntitiesLinksInfiniteQuery(
     {
       projectName,
-      entityType: outputType,
+      entityType: targetEntityType,
       search,
     },
-    { skip: !search || !supportedEntityTypes.includes(outputType) },
+    { skip: !search || !supportedEntityTypes.includes(targetEntityType) },
   )
+
+  // Flatten all entities from all pages
+  const entities = useMemo(() => {
+    return searchData?.pages.flatMap((page) => page.entities) || []
+  }, [searchData])
+
+  const handleSelectEntity = (entity: any) => {
+    console.log(`Add ${entity.name}`)
+    onAdd?.(entity.id)
+    // Clear search after adding
+    setSearch('')
+  }
+
+  const handleClose = () => {
+    onClose?.()
+  }
+
+  const { containerRef, getItemProps } = useKeyboardNavigation({
+    entities,
+    onSelect: handleSelectEntity,
+    onClose: handleClose,
+    isActive: Boolean(search && entities.length > 0),
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  })
 
   return (
     <Styled.AddLinksContainer>
@@ -35,24 +68,50 @@ const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, outputType }) => {
         <Styled.SearchInput
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={`Search to add ${outputType}s...`}
+          placeholder={`Search to add ${targetEntityType}s...`}
           autoFocus
         />
       </Styled.Search>
       {search && searchData && (
-        <Styled.SearchItems>
-          {searchData?.pages.map((page) =>
-            page.entities.map((entity) => (
-              <Styled.SearchItem key={entity.id} onClick={() => console.log(`Add ${entity.name}`)}>
-                <Icon icon={getEntityTypeIcon(entity.entityType)} />
-                <span className="label">{entity.label || entity.name}</span>
-                <Icon icon={'add'} className="add" />
-              </Styled.SearchItem>
-            )),
+        <Styled.SearchItems ref={containerRef}>
+          {searchData?.pages.map((page, pageIndex) =>
+            page.entities.map((entity, entityIndex) => {
+              const flatIndex =
+                searchData.pages
+                  .slice(0, pageIndex)
+                  .reduce((acc, p) => acc + p.entities.length, 0) + entityIndex
+              return (
+                <Styled.SearchItem
+                  key={entity.id}
+                  onClick={() => handleSelectEntity(entity)}
+                  tabIndex={0}
+                  {...getItemProps(flatIndex)}
+                >
+                  <Icon icon={getEntityTypeIcon(entity.entityType)} />
+                  <span className="label">
+                    {entity.path
+                      .slice(1, entity.path.length) // Remove leading slash
+                      .split('/')
+                      .flatMap((p) => [p, '/'])
+                      .map((part, index) => (
+                        <span key={index}>{part}</span>
+                      ))}
+                    <strong>{entity.label || entity.name}</strong>
+                  </span>
+                  <span className="type">
+                    {entity.folderType ||
+                      entity.taskType ||
+                      entity.productType ||
+                      entity.entityType}
+                  </span>
+                </Styled.SearchItem>
+              )
+            }),
           )}
+          {(isLoading || isFetchingNextPage || hasNextPage) && <SearchingLoadingItems />}
         </Styled.SearchItems>
       )}
-      {!isFetching && error && <Styled.Error>{error.message}</Styled.Error>}
+      {!isLoading && error && <Styled.Error>{error.message}</Styled.Error>}
     </Styled.AddLinksContainer>
   )
 }

@@ -19,8 +19,9 @@ export type LinkWidgetData = {
   entityId: string
   entityType: string
   link: {
+    linkType: string
     label: string
-    outputType: string
+    targetEntityType: string
   }
   links: LinkEntity[]
 }
@@ -56,7 +57,9 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             direction={valueData.direction}
             entityId={valueData.entityId}
             entityType={valueData.entityType}
-            outputType={valueData.link.outputType}
+            targetEntityType={valueData.link.targetEntityType}
+            linkType={valueData.link.linkType}
+            onClose={onCancelEdit}
           />,
           document.body,
         )}

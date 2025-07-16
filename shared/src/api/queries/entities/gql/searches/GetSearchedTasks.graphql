@@ -30,6 +30,9 @@ query GetSearchedTasks(
           name
           label
           taskType
+          folder {
+            path
+          }
         }
       }
     }

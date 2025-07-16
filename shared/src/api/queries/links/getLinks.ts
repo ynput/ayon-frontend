@@ -8,17 +8,20 @@ type EntitySearchPageParam = {
   cursor: string
 }
 
+export type SearchEntityLink = {
+  id: string
+  name: string
+  entityType: string
+  path: string
+  label: string
+  folderType?: string | undefined
+  taskType?: string | undefined
+  productType?: string | undefined
+}
+
 export type GetSearchedEntitiesLinksResult = {
   pageInfo: any
-  entities: {
-    id: string
-    name: string
-    label?: string | undefined
-    folderType?: string | undefined
-    taskType?: string | undefined
-    productType?: string | undefined
-    entityType: string
-  }[]
+  entities: SearchEntityLink[]
 }
 
 export type GetSearchedEntitiesLinksArgs = {
@@ -101,20 +104,28 @@ const injectedQueries = gqlApi.injectEndpoints({
           const entityData: GetSearchedTasksQuery['project']['tasks'] =
             //   @ts-expect-error - The type of projectData[entityType + 's'] is not known
             projectData[entityType + 's']
+
+          // Transform entity data to search link format
+          const entities: SearchEntityLink[] = entityData?.edges
+            ?.map(({ node }) => {
+              if (entityType === 'task') {
+                return {
+                  entityType: 'task',
+                  id: node.id,
+                  name: node.name,
+                  label: node.label || node.name,
+                  path: node.folder?.path || '',
+                  taskType: node.taskType,
+                }
+              }
+              // Add more entityType cases here if needed
+              return null
+            })
+            .filter(Boolean) as SearchEntityLink[] // Remove nulls, ensure correct type
+
           if (!entityData) {
             throw new Error(`No ${entityType} data returned`)
           }
-
-          // Transform the response to match expected format
-          const entities = entityData.edges.map(({ node }) => ({
-            id: node.id,
-            name: node.name,
-            label: node.label || undefined,
-            folderType: undefined,
-            taskType: node.taskType,
-            productType: undefined,
-            entityType: entityType,
-          }))
 
           return {
             data: {

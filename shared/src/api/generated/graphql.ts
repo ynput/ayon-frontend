@@ -1561,7 +1561,7 @@ export type GetSearchedTasksQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string } }> } } };
+export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
 
 export type GetListItemsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2289,6 +2289,9 @@ export const GetSearchedTasksDocument = `
           name
           label
           taskType
+          folder {
+            path
+          }
         }
       }
     }
