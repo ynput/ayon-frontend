@@ -389,8 +389,9 @@ export type FolderNodeTasksArgs = {
 
 export type FolderType = {
   __typename?: 'FolderType';
-  icon: Scalars['String']['output'];
+  icon?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  shortName?: Maybe<Scalars['String']['output']>;
 };
 
 export type FoldersConnection = {
@@ -463,6 +464,16 @@ export type LinkEdge = {
   /** Linked node */
   node: BaseNode;
   projectName: Scalars['String']['output'];
+};
+
+export type LinkType = {
+  __typename?: 'LinkType';
+  color?: Maybe<Scalars['String']['output']>;
+  inputType: Scalars['String']['output'];
+  linkType: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  outputType: Scalars['String']['output'];
+  style: Scalars['String']['output'];
 };
 
 export type LinksConnection = {
@@ -624,6 +635,7 @@ export type ProjectNode = {
   attrib: ProjectAttribType;
   bundle: ProjectBundleType;
   code: Scalars['String']['output'];
+  config?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   data?: Maybe<Scalars['String']['output']>;
   /** Return a folder node based on its ID */
@@ -636,6 +648,8 @@ export type ProjectNode = {
   /** Return a list of folders. */
   folders: FoldersConnection;
   library: Scalars['Boolean']['output'];
+  /** List of project's link types */
+  linkTypes: Array<LinkType>;
   name: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   product?: Maybe<ProductNode>;
@@ -648,6 +662,10 @@ export type ProjectNode = {
   representation?: Maybe<RepresentationNode>;
   /** Return a list of representations. */
   representations: RepresentationsConnection;
+  /** List of project's statuses */
+  statuses: Array<Status>;
+  /** List of tags in the project */
+  tags: Array<Tag>;
   /** Return a task node based on its ID */
   task?: Maybe<TaskNode>;
   /** List of project's task types */
@@ -736,6 +754,11 @@ export type ProjectNodeFoldersArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type ProjectNodeLinkTypesArgs = {
+  activeOnly?: Scalars['Boolean']['input'];
 };
 
 
@@ -1048,6 +1071,22 @@ export type RepresentationsConnection = {
   pageInfo: PageInfo;
 };
 
+export type Status = {
+  __typename?: 'Status';
+  color?: Maybe<Scalars['String']['output']>;
+  icon?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  scope?: Maybe<Array<Scalars['String']['output']>>;
+  shortName?: Maybe<Scalars['String']['output']>;
+  state?: Maybe<Scalars['String']['output']>;
+};
+
+export type Tag = {
+  __typename?: 'Tag';
+  color?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+};
+
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
   clipIn?: Maybe<Scalars['Int']['output']>;
@@ -1172,7 +1211,10 @@ export type TaskNodeWorkfilesArgs = {
 
 export type TaskType = {
   __typename?: 'TaskType';
+  color?: Maybe<Scalars['String']['output']>;
+  icon?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  shortName?: Maybe<Scalars['String']['output']>;
 };
 
 export type TasksConnection = {
@@ -2232,6 +2274,7 @@ export const GetSearchedTasksDocument = `
       first: $first
       before: $before
       last: $last
+      sortBy: "name"
     ) {
       pageInfo {
         startCursor

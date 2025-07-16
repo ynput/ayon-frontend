@@ -69,6 +69,8 @@ export const AddLinksContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding-top: var(--padding-m);
+
+  max-height: 300px;
 `
 
 export const Search = styled.div`
@@ -89,4 +91,47 @@ export const SearchInput = styled(InputText)`
   border: none;
   background-color: unset;
   padding-left: 28px;
+`
+
+export const Error = styled.div`
+  color: var(--md-sys-color-error);
+  margin-top: var(--base-gap-small);
+`
+
+export const SearchItems = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  padding: var(--padding-m) 0;
+  height: 100%;
+`
+
+export const SearchItem = styled.li`
+  padding: var(--padding-s);
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  border-radius: var(--border-radius-m);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+  }
+
+  .icon {
+    flex-shrink: 0;
+  }
+
+  .label {
+    flex: 1;
+  }
+
+  .add {
+    display: none;
+    user-select: none;
+  }
+  &:hover .add {
+    display: flex;
+  }
 `

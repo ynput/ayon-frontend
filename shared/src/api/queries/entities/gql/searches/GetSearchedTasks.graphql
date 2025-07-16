@@ -9,7 +9,14 @@ query GetSearchedTasks(
 ) {
   project(name: $projectName) {
     name
-    tasks(search: $search, after: $after, first: $first, before: $before, last: $last) {
+    tasks(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: "name"
+    ) {
       pageInfo {
         startCursor
         endCursor
