@@ -59,7 +59,7 @@ import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseIn
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
-import { PowerpackDialog } from '@shared/components'
+import { FeedbackProvider, PowerpackDialog } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
@@ -179,58 +179,60 @@ const App = () => {
         <Favicon />
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
-          <RestartProvider>
-            <RemoteModulesProvider skip={!user.name}>
-              <PowerpackProvider>
-                <ContextMenuProvider>
-                  <DetailsPanelProvider
-                    {...handlerProps}
-                    user={user}
-                    viewer={viewer}
-                    dispatch={dispatch}
-                    useLocation={useLocation}
-                    useNavigate={useNavigate}
-                    useParams={useParams}
-                    useSearchParams={useSearchParams}
-                  >
-                    <GlobalContextMenu />
-                    <PasteProvider>
-                      <PasteModal />
-                      <BrowserRouter>
-                        <NotificationsProvider>
-                          <URIProvider>
-                            <ShortcutsProvider>
-                              <PiPProvider>
-                                <QueryParamProvider
-                                  adapter={ReactRouter6Adapter}
-                                  options={{
-                                    updateType: 'replaceIn',
-                                  }}
-                                >
-                                  <Header />
-                                  <ShareDialog />
-                                  <ViewerDialog />
-                                  <ConfirmDialog />
-                                  <FileUploadPreviewContainer />
-                                  <ReleaseInstallerDialog />
-                                  <CompleteProfilePrompt />
-                                  <AppRoutes isUser={isUser} />
-                                  <DetailsPanelFloating />
-                                  <PowerpackDialog />
-                                  <AppRemoteLoader />
-                                  <TrialBanner />
-                                </QueryParamProvider>
-                              </PiPProvider>
-                            </ShortcutsProvider>
-                          </URIProvider>
-                        </NotificationsProvider>
-                      </BrowserRouter>
-                    </PasteProvider>
-                  </DetailsPanelProvider>
-                </ContextMenuProvider>
-              </PowerpackProvider>
-            </RemoteModulesProvider>
-          </RestartProvider>
+          <FeedbackProvider>
+            <RestartProvider>
+              <RemoteModulesProvider skip={!user.name}>
+                <PowerpackProvider>
+                  <ContextMenuProvider>
+                    <DetailsPanelProvider
+                      {...handlerProps}
+                      user={user}
+                      viewer={viewer}
+                      dispatch={dispatch}
+                      useLocation={useLocation}
+                      useNavigate={useNavigate}
+                      useParams={useParams}
+                      useSearchParams={useSearchParams}
+                    >
+                      <GlobalContextMenu />
+                      <PasteProvider>
+                        <PasteModal />
+                        <BrowserRouter>
+                          <NotificationsProvider>
+                            <URIProvider>
+                              <ShortcutsProvider>
+                                <PiPProvider>
+                                  <QueryParamProvider
+                                    adapter={ReactRouter6Adapter}
+                                    options={{
+                                      updateType: 'replaceIn',
+                                    }}
+                                  >
+                                    <Header />
+                                    <ShareDialog />
+                                    <ViewerDialog />
+                                    <ConfirmDialog />
+                                    <FileUploadPreviewContainer />
+                                    <ReleaseInstallerDialog />
+                                    <CompleteProfilePrompt />
+                                    <AppRoutes isUser={isUser} />
+                                    <DetailsPanelFloating />
+                                    <PowerpackDialog />
+                                    <AppRemoteLoader />
+                                    <TrialBanner />
+                                  </QueryParamProvider>
+                                </PiPProvider>
+                              </ShortcutsProvider>
+                            </URIProvider>
+                          </NotificationsProvider>
+                        </BrowserRouter>
+                      </PasteProvider>
+                    </DetailsPanelProvider>
+                  </ContextMenuProvider>
+                </PowerpackProvider>
+              </RemoteModulesProvider>
+            </RestartProvider>
+          </FeedbackProvider>
         </Suspense>
       </>
     ),
@@ -294,9 +296,11 @@ const App = () => {
   // Trial has finished
   if (isTrialing && left?.finished) {
     return (
-      <BrowserRouter>
-        <TrialEnded orgName={ynputConnect?.orgName} />
-      </BrowserRouter>
+      <FeedbackProvider>
+        <BrowserRouter>
+          <TrialEnded orgName={ynputConnect?.orgName} />
+        </BrowserRouter>
+      </FeedbackProvider>
     )
   }
 
@@ -322,7 +326,7 @@ const App = () => {
     return loadingComponent
   }
 
-  if (serverError && !noAdminUser) return errorComponent
+  if (serverError && !noAdminUser) return <FeedbackProvider>{errorComponent}</FeedbackProvider>
 
   return (
     <>

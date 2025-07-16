@@ -89,6 +89,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         origin: window.location.origin,
         serverVersion: serverVersion,
         frontendVersion: frontendVersion,
+        instanceId: connect?.instanceId,
       },
     }
 
