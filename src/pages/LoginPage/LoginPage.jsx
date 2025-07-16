@@ -9,60 +9,72 @@ import AuthLink from './AuthLink'
 import { useGetSiteInfoQuery } from '@shared/api'
 import LoadingPage from '../LoadingPage'
 import * as Styled from './LoginPage.styled'
-import { useLocalStorage } from '@shared/hooks'
-import { isEmpty, isEqual } from 'lodash'
 import remarkGfm from 'remark-gfm'
 import Markdown from 'react-markdown'
 
-const clearQueryParams = () => {
-  const url = new URL(window.location)
-  url.search = ''
-  console.log('clearQueryParams', url.href)
-  history.pushState({}, '', url.href)
-}
 
 const LoginPage = ({ isFirstTime = false }) => {
+  const dispatch = useDispatch()
+
   // get query params from url
   const search = new URLSearchParams(window.location.search)
-  const dispatch = useDispatch()
+
+  // password form state
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
 
   // which methods are featured (all others are hidden)
-  const featuredMethods = search.getAll('provider')
+  const featuredProviders = search.getAll('provider')
 
-  // if there are none [] then show all
-  // if null - use server defaults
-  const [shownProviders, setShownProviders] = useState(featuredMethods.length ? featuredMethods : null)
+  // has the user requested to see all login providers?
+  const [showAllProviders, setShowAllProviders] = useState(false)
 
+  // site information
   const [isLoading, setIsLoading] = useState(false)
-
   const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
 
-  // we need to store the redirect in local storage to persist it across auth flows
-  const [redirectQueryParams, setRedirectQueryParams] = useLocalStorage(
-    'auth-redirect-params',
-    null,
-  )
+
+  // store the current url in local storage to preserve the redirect across auth flows
 
   useEffect(() => {
-    // preserve the redirect query params across auth flows
-    //
-    const allowedParams = ['auth_redirect']
-    // convert search params to object
-    const searchParams = Array.from(search.entries()).reduce((acc, [key, value]) => {
-      if (allowedParams.includes(key)) {
-        acc[key] = value
-      }
-      return acc
-    }, {})
+    if (window.location.pathname.startsWith('/login')) return
+    console.log('Storing preferred URL in local storage:', window.location.href)
+    localStorage.setItem('auth-preferred-url', window.location.href)
+  }, [])
 
-    if (isEmpty(searchParams) || isEqual(searchParams, redirectQueryParams)) return
 
-    // store the redirect in local storage
-    setRedirectQueryParams(searchParams)
-  }, [search, setRedirectQueryParams, redirectQueryParams])
+  // Password login handler
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!(name && password)) {
+      toast.error('Please enter username and password to login')
+      return
+    }
+
+    let response = null
+
+    try {
+      response = await axios.post('/api/auth/login', { name, password })
+    } catch (err) {
+      console.error('Login error', err.response?.data || err)
+      toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
+      return
+    }
+
+    if (!response || !response.data) {
+      console.error('Login error', response)
+      toast.error('Unable to login, check the console for details')
+      return
+    }
+
+    // clear local storage
+    localStorage.removeItem('auth-preferred-url')
+    toast.info(response.data.detail)
+    dispatch(login({ user: response.data.user, accessToken: response.data.token, }))
+    dispatch(api.util.resetApiState())
+  } // handleSubmit
 
 
 
@@ -81,10 +93,6 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     // If the query string is empty, we can't proceed. Abort
     if (!qs.toString()) return
-
-    // Clear the query string (it contains sensitive data now)
-    // and we already have it in the qs const
-    window.history.replaceState({}, document.title, window.location.pathname)
 
     // Get the provider config
     // We need to handle the situation ssoOptions is undefined.
@@ -153,20 +161,19 @@ const LoginPage = ({ isFirstTime = false }) => {
     // At this point we may have redirect URL from the response, but that 
     // is optional and used sparsely.
 
-    // if we have redirect query params, use them
-    // This is "where was i before?" taken from local storage
-    if (!finalRedirect && redirectQueryParams) {
-      finalRedirect = new URLSearchParams(redirectQueryParams).toString()
+    if (localStorage.getItem('auth-preferred-url')) {
+      finalRedirect = localStorage.getItem('auth-preferred-url')
     }
+
 
     // if we STILL don't have a redirect, just land on the home page
     if (!finalRedirect) {
+      console.log('No redirect URL found, using origin from', window.location)
       finalRedirect = window.location.origin
     }
 
     // Clear everything
-    clearQueryParams()
-    localStorage.removeItem('auth-redirect-params')
+    localStorage.removeItem('auth-preferred-url')
     setIsLoading(false)
 
     if (success) {
@@ -186,27 +193,31 @@ const LoginPage = ({ isFirstTime = false }) => {
   }, [info.ssoOptions])
 
 
-  // user clicked show all login options button
+  //
+  // Render logic (what are we showing?)
+  //
 
-  const showAllProviders =  Array.isArray(shownProviders) && !shownProviders.length
+  // Should we show the password login?
 
-  // should we show the password login?
+  let showPasswordLogin = (
+    showAllProviders
+    || !info?.hidePasswordAuth
+    || (featuredProviders?.length && featuredProviders.includes('password'))
+  ) || null
 
-  let showPasswordLogin = !info?.hidePasswordAuth && !(Array.isArray(shownProviders) && shownProviders.length)
-  if (showAllProviders) showPasswordLogin = true
-  if (shownProviders && shownProviders.includes('password')) showPasswordLogin = true
+  // Should we show "Show all login options" button?
 
-  // flag to show the "Show all login options" button
+  const showAllButton = !showAllProviders && (featuredProviders || !showPasswordLogin)
 
-  const showAllButton = !showAllProviders && (shownProviders || !showPasswordLogin)
-
+  // Create SSO buttons based on the available options
 
   const ssoButtons = useMemo(() => {
     if (!info.ssoOptions?.length) return null
 
     return info.ssoOptions
-      .filter(({ name, hidden }) => !hidden && (shownProviders === null || (shownProviders || []).includes(name) || showAllProviders))
+      .filter(({ name, hidden }) => !hidden && (!featuredProviders?.length || featuredProviders.includes(name) || showAllProviders))
       .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+        console.log('Creating SSO button for', name, 'with args', args)
         const queryDict = { ...args }
         const redirect_uri = `${window.location.origin}/login/${name}`
         queryDict[redirectKey] = redirect_uri
@@ -225,52 +236,16 @@ const LoginPage = ({ isFirstTime = false }) => {
           />
         )
       })
-  }, [info.ssoOptions, shownProviders, showAllProviders])
+  }, [info.ssoOptions, featuredProviders, showAllProviders])
 
-  //
   // Loading state
-  //
 
-  if (isLoading || isLoadingInfo ) return isFirstTime ? null : <LoadingPage />
-
-
-  // Password login handler
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!(name && password)) {
-      toast.error('Please enter username and password to login')
-      return
-    }
-
-    let response = null
-
-    try {
-      response = await axios.post('/api/auth/login', { name, password })
-    } catch (err) {
-      console.error('Login error', err.response?.data || err)
-      toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
-      return
-    }
-
-    if (!response || !response.data) {
-      console.error('Login error', response)
-      toast.error('Unable to login, check the console for details')
-      return
-    }
-
-    // clear local storage
-    localStorage.removeItem('auth-redirect-params')
-    toast.info(response.data.detail)
-    dispatch(login({ user: response.data.user, accessToken: response.data.token, }))
-    dispatch(api.util.resetApiState())
-  } // handleSubmit
+  if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
 
 
   //
   // Render the login page
   //
-
 
   return (
     <main className="center">
@@ -286,11 +261,9 @@ const LoginPage = ({ isFirstTime = false }) => {
         )}
         <Panel>
           <Styled.Ayon src="/AYON.svg" />
+
           <Styled.Methods>
-            {!showPasswordLogin && (
-              <div style={{ marginBottom: '8px' }}/>
-            )}
-            {showPasswordLogin && (
+            {showPasswordLogin ? (
               <form onSubmit={handleSubmit}>
                 <label id="username">Username</label>
                 <InputText
@@ -313,10 +286,15 @@ const LoginPage = ({ isFirstTime = false }) => {
                   <span className="label">Login with password</span>
                 </Button>
               </form>
+            ) : (
+                <>
+                {/* we need a margin between the logo and the SSO buttons */}
+                <div style={{ marginBottom: '8px' }} />
+                </>
             )}
 
             {ssoButtons}
-              
+
           </Styled.Methods>
           {info?.passwordRecoveryAvailable && showPasswordLogin && (
             <a href="/passwordReset" style={{ margin: '8px 0' }}>
@@ -324,7 +302,7 @@ const LoginPage = ({ isFirstTime = false }) => {
             </a>
           )}
           {showAllButton && (
-            <Button style={{ width: '100%' }} variant="text" onClick={() => setShownProviders([])}>
+            <Button style={{ width: '100%' }} variant="text" onClick={() => setShowAllProviders(true)}>
               Show all login options
             </Button>
           )}
