@@ -11,7 +11,6 @@ import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
 import FeedWrapper from '../FeedWrapper'
 import mergeProjectInfo from '../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
-import { productTypes } from '@shared/util'
 import { useDetailsPanelContext } from '@shared/context'
 
 export interface DetailsPanelFloatingProps {}
@@ -65,10 +64,9 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
       folder: projectInfo.folderTypes
         .filter((folder) => !!folder.icon)
         .reduce((acc, folder) => ({ ...acc, [folder.name]: folder.icon }), {}),
-      product: Object.entries(productTypes).reduce(
-        (acc, [key, product]) => ({ ...acc, [key]: product.icon }),
-        {},
-      ),
+      product: projectInfo.productTypes
+        .filter((product) => !!product.icon)
+        .reduce((acc, product) => ({ ...acc, [product.name]: product.icon }), {}),
     }),
     [projectInfo],
   )

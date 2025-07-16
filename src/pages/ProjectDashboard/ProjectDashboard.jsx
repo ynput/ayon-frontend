@@ -10,6 +10,7 @@ import ProjectLatest from './panels/ProjectLatest'
 import ProjectDetails from './panels/ProjectDetails/ProjectDetails'
 import ProjectTeams from './panels/ProjectTeams'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
+import { ProjectContextProvider } from '@shared/context/ProjectContext'
 
 // top grid
 const HeaderGridStyled = styled.div`
@@ -32,6 +33,7 @@ const ProjectDashboard = ({ projectName }) => {
   return (
     <ProjectManagerPageLayout passthrough>
       {projectName && (
+        <ProjectContextProvider projectName={projectName}>
         <Section
           style={{
             display: 'grid',
@@ -55,6 +57,7 @@ const ProjectDashboard = ({ projectName }) => {
           </PanelsContainerStyled>
           <ProjectDetails projectName={projectName} />
         </Section>
+        </ProjectContextProvider>
       )}
     </ProjectManagerPageLayout>
   )

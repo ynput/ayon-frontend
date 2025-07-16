@@ -1,4 +1,4 @@
-import type { ProjectModel, FolderType, TaskType, Status, Tag, LinkTypeModel, ProductType } from '@shared/api'
+import type { ProjectModel, FolderType, TaskType, Status, Tag, LinkTypeModel, ProductTypeOverride } from '@shared/api'
 
 type ProjectInfo = {
   folderTypes: FolderType[]
@@ -6,7 +6,7 @@ type ProjectInfo = {
   statuses: Status[]
   tags: Tag[]
   linkTypes: LinkTypeModel[]
-  productTypes: ProductType[]
+  productTypes: ProductTypeOverride[]
 }
 
 // takes multiple project infos from different projects and merges them into a single object
@@ -36,7 +36,7 @@ const mergeProjectInfo = (
       statuses: model?.statuses || [],
       tags: model?.tags || [],
       linkTypes: model?.linkTypes || [],
-      productTypes: (model?.config?.productTypes?.default || []) as ProductType[],
+      productTypes: (model?.config?.productTypes?.default || []) as ProductTypeOverride[],
     }
   }
 
@@ -98,7 +98,7 @@ const mergeProjectInfo = (
   ;(Object.keys(arrayProps) as Array<keyof typeof arrayProps>).forEach((prop) => {
     if (prop === 'productTypes') {
       // Special handling for productTypes to ensure correct type
-      (result as any)[prop] = mergeArraysByKey(arrayProps[prop] as ProductType[][])
+      (result as any)[prop] = mergeArraysByKey(arrayProps[prop] as ProductTypeOverride[][])
     }
 
     else if (arrayProps[prop].length > 0) {

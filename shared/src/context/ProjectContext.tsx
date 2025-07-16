@@ -1,8 +1,7 @@
 import { createContext, useContext, useCallback, useMemo } from 'react'
-import { ProductType, useGetProjectQuery } from '@shared/api';
+import { useGetProjectQuery } from '@shared/api';
 
-
-import type { FolderType } from '@shared/api/generated/projects';
+import type { FolderType, ProductTypeOverride } from '@shared/api';
 
 
 export interface ProjectContextProps {
@@ -17,12 +16,12 @@ export interface ProjectContextProps {
 
   // Folder types
 
-  folderTypes?: FolderType[];
+  folderTypes: FolderType[];
   getFolderType?: (name: string) => FolderType | undefined;
 
   // Product types
 
-  productTypes?: ProductType[];
+  productTypes: ProductTypeOverride[];
   getProductTypeIcon: (productType: string, baseType?: string ) => string;
   getProductTypeOptions: () => { value: string; label: string, icon: string }[];
 
@@ -47,8 +46,8 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
   // Shorthands to access project data and type casting
   // (we're referencing nested objects. no need to use useMemo for these)
 
-  const productTypes: ProductType[] = // i hate typescript
-    (project?.config as { productTypes?: { default: ProductType[] } })?.productTypes?.default || [];  
+  const productTypes: ProductTypeOverride[] = // i hate typescript
+    (project?.config as { productTypes?: { default: ProductTypeOverride[] } })?.productTypes?.default || [];  
   
   //
   // Magic functions
@@ -112,7 +111,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
 export const useProjectContext = () => {
   const context = useContext(ProjectContext)
   if (context === undefined) {
-    throw new Error('useProject must be used within a ProjectProvider')
+    throw new Error('useProjectContext must be used within a ProjectProviderContext')
   }
   return context
 }

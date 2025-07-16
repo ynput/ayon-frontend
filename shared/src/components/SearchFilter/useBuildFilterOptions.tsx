@@ -1,4 +1,4 @@
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { getAttributeIcon } from '@shared/util'
 import {
   useGetSiteInfoQuery,
   useGetKanbanProjectUsersQuery,
@@ -13,8 +13,8 @@ import type {
   AttributeModel,
   AttributeEnumItem,
   AttributeData,
+  ProductTypeOverride,
 } from '@shared/api'
-import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option } from '@ynput/ayon-react-components'
 import { dateOptions } from './filterDates'
@@ -366,6 +366,29 @@ export const useBuildFilterOptions = ({
 const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option[] => {
   const options: Option[] = []
   if (type === 'product') {
+
+
+    Object.values(projectsInfo).forEach((project) => {
+      // for each project, get all productTypes and add them to the options (if they don't already exist)
+      const productTypes = project?.config?.productTypes?.default || []
+      productTypes.forEach((productType: ProductTypeOverride) => {
+        if (!options.some((option) => option.id === productType.name)) {
+          options.push({
+            id: productType.name,
+            type: 'string',
+            label: productType.name,
+            icon: getAttributeIcon('product', productType.icon),
+            inverted: false,
+            values: [],
+            allowsCustomValues: false,
+          })
+        }
+      })
+
+    })
+
+
+    /*
     Object.values(productTypes).forEach(({ icon, name }) => {
       options.push({
         id: name,
@@ -377,6 +400,8 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: Scope): Option
         allowsCustomValues: false,
       })
     })
+    */
+
   } else if (type === 'task') {
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all task types and add them to the options (if they don't already exist)

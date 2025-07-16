@@ -665,14 +665,14 @@ export type LinkTypeModel = {
   data?: Record<string, any>
 }
 
-export type ProductType = {
+export type ProductTypeOverride = {
   name: string
   color?: string
   icon?: string
 }
 
 export type ProductTypes = {
-  default?: ProductType[]
+  default?: ProductTypeOverride[]
 }
 
 export type ProjectAttribModel2 = {
