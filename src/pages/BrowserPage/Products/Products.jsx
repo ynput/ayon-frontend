@@ -299,6 +299,7 @@ const Products = () => {
             ? 'folder'
             : project.getProductTypeIcon(node.data.productType) || 'inventory_2'
 
+
           return (
             <CellWithIcon
               icon={icon}
@@ -341,6 +342,17 @@ const Products = () => {
         field: 'productType',
         header: 'Product type',
         width: 120,
+        body: (node) => {
+          if (!node.data.productType) return ''
+          const color = project.getProductTypeColor(node.data.productType) || '#cccccc'
+
+          return (
+            <CellWithIcon
+              text={node.data.productType}
+              textStyle={{ color }}
+            />
+          )
+        }
       },
       {
         field: 'taskName',

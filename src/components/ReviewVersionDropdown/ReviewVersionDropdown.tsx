@@ -30,7 +30,6 @@ const ReviewVersionDropdown = ({
   valueProps = {},
   ...props
 }: ReviewVersionDropdownProps) => {
-  console.log('ReviewVersionDropdown rendered with color :', valueColor)
   return (
     <Dropdown
       options={options}

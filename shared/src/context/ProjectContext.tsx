@@ -47,7 +47,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
   // Shorthands to access project data and type casting
   // (we're referencing nested objects. no need to use useMemo for these)
 
-  const productTypes: ProductTypeOverride[] = // i hate typescript
+  const productTypes: ProductTypeOverride[] = 
     (project?.config as { productTypes?: { default: ProductTypeOverride[] } })?.productTypes?.default || [];
 
   //
@@ -72,13 +72,13 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
     return baseType || '';
   }, [productTypes]);
 
-  const getProductTypeColor = useCallback((productType: string): string => {
-    if (!productType) return '';
+  const getProductTypeColor = useCallback((productType: string): string | undefined => {
+    if (!productType) return;
     const type = productTypes.find((type) => type.name === productType);
     if (type) {
-      return type.color || '';
+      return type.color;
     }
-    return '';
+    return;
   }, [productTypes]);
 
 
@@ -90,7 +90,6 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
       icon: type.icon || '',
       color: type.color,
     }));
-    console.log('getProductTypeOptions', result);
     return result;
   }, [productTypes]);
 
