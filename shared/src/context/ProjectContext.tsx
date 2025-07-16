@@ -22,8 +22,8 @@ export interface ProjectContextProps {
   // Product types
 
   productTypes: ProductTypeOverride[];
-  getProductTypeIcon: (productType: string, baseType?: string ) => string;
-  getProductTypeOptions: () => { value: string; label: string, icon: string }[];
+  getProductTypeIcon: (productType: string, baseType?: string) => string;
+  getProductTypeOptions: () => { value: string; label: string, icon?: string, color?: string }[];
 
 }
 
@@ -47,8 +47,8 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
   // (we're referencing nested objects. no need to use useMemo for these)
 
   const productTypes: ProductTypeOverride[] = // i hate typescript
-    (project?.config as { productTypes?: { default: ProductTypeOverride[] } })?.productTypes?.default || [];  
-  
+    (project?.config as { productTypes?: { default: ProductTypeOverride[] } })?.productTypes?.default || [];
+
   //
   // Magic functions
   //
@@ -71,11 +71,14 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
 
   const getProductTypeOptions = useCallback((): { value: string; label: string, icon: string }[] => {
     // Return a list of product type ready to be used in a select input
-    return productTypes.map((type) => ({
+    const result = productTypes.map((type) => ({
       value: type.name,
       label: type.name,
       icon: type.icon || '',
+      color: type.color,
     }));
+    console.log('getProductTypeOptions', result);
+    return result;
   }, [productTypes]);
 
 
@@ -100,7 +103,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
 
 
   return (
-    <ProjectContext.Provider value={{...value, ...functions}}>
+    <ProjectContext.Provider value={{ ...value, ...functions }}>
       {children}
     </ProjectContext.Provider>
   );

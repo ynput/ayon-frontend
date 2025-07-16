@@ -1,8 +1,5 @@
 import { toast } from 'react-toastify'
-import { productTypes } from '@shared/util'
 import { camelCase } from 'lodash'
-
-import type { ProjectContextProps } from '@shared/context/ProjectContext'
 
 export interface ProductCreationData {
   folderId: string
@@ -51,23 +48,15 @@ export const validateProductName = (name: string): ValidationResult => {
 /**
  * Validates a product type
  */
-export const validateProductType = (project: ProjectContextProps, productType: string): ValidationResult => {
-  let isValid = true
-  if (productType) {
-
-
-
-  }
-  return {isValid: false, error: 'Product type is required and must be a valid product type'}
-  if (!productType || !Object.keys(productTypes).includes(productType)) {
-    return {
-      isValid: false,
-      error: 'Product type is required and must be a valid product type',
-    }
-  }
-
-  return isValid ? { isValid: true } : { isValid: false, error: 'Invalid product type' }
-}
+// export const validateProductType = (productType: string): ValidationResult => {
+//   if (!productType || !Object.keys(productTypes).includes(productType)) {
+//     return {
+//       isValid: false,
+//       error: 'Product type is required and must be a valid product type',
+//     }
+//   }
+//   return { isValid: true }
+// }
 
 /**
  * Validates a version number against an existing version
@@ -108,10 +97,11 @@ export const validateFormData = (
       return nameValidation
     }
 
-    const typeValidation = validateProductType(formData.productType)
-    if (!typeValidation.isValid) {
-      return typeValidation
-    }
+    // We do not need this as productType is selected from a dropdown
+    // const typeValidation = validateProductType(formData.productType)
+    // if (!typeValidation.isValid) {
+    //   return typeValidation
+    // }
   }
 
   return { isValid: true }

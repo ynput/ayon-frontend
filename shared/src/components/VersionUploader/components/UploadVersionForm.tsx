@@ -1,10 +1,11 @@
-import { FC, FormEvent, useEffect, useRef } from 'react'
+import { FC, FormEvent, useEffect, useRef, useMemo } from 'react'
 import styled from 'styled-components'
 import { FormLayout, FormRow, InputText, InputNumber, Dropdown } from '@ynput/ayon-react-components'
-import { productTypes } from '@shared/util'
 import type { DropdownRef } from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '@shared/components'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
+import { useProjectContext } from '@shared/context/ProjectContext'
+import { ProductTypeItemTemplate } from './ProductTypePicker'
 
 const StyledForm = styled.form`
   display: flex;
@@ -71,6 +72,10 @@ interface UploadVersionFormProps {
   productId?: string | null
 }
 
+
+
+
+
 export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   formData,
   onChange,
@@ -92,11 +97,15 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     dispatch,
   } = useVersionUploadContext()
 
-  const productTypeOptions = Object.entries(productTypes).map(([key, value]) => ({
-    value: key,
-    label: value.name,
-    icon: value.icon,
-  }))
+  const project = useProjectContext()
+
+  const productTypeOptions = project.getProductTypeOptions()
+  const productTypes = useMemo(() => {
+    return project.productTypes.reduce((acc, type) => {
+      acc[type.name] = type
+      return acc
+    }, {} as Record<string, { name: string; icon?: string; color?: string }>)
+  }, [project.productTypes])
 
   useEffect(() => {
     // Check if the current name starts with the previous product type name

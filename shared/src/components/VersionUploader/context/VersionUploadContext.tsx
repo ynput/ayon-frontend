@@ -14,7 +14,6 @@ import React, {
 } from 'react'
 import { useCreateProductMutation } from '@shared/api'
 import { extractVersionFromFilename } from '@shared/utils/extractVersionFromFilename'
-import { productTypes } from '@shared/util'
 import { toast } from 'react-toastify'
 import {
   validateFormData as validateFormDataHelper,
@@ -69,7 +68,7 @@ interface VersionUploadProviderProps {
 
 const defaultFormData: FormData = {
   version: 1,
-  name: productTypes.review.name,
+  name: 'review',
   productType: 'review',
 }
 
