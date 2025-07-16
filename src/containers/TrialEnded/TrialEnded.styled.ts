@@ -68,3 +68,13 @@ export const TrialEndCard = styled.div`
 export const Logo = styled.img`
   height: 40px;
 `
+
+export const Buttons = styled.div`
+  display: flex;
+  gap: var(--base-gap-medium);
+  width: 100%;
+
+  & > * {
+    flex: 1;
+  }
+`

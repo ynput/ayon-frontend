@@ -1030,6 +1030,7 @@ const TableCell = ({
     extendSelection,
     endSelection,
     selectCell,
+    focusCell,
     getCellBorderClasses,
     clearSelection,
   } = useSelectionCellsContext()
@@ -1077,8 +1078,19 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check we are not clicking a dropdown chevron or in a dropdown
-        if (target.closest('.expand') || target.closest('.options')) return
+        // if selection options from a dropdown skip
+        if (target.closest('.options')) return
+
+        // if selecting dropdown expand icon, make sure it is selected ()
+        if (target.closest('.expand')) {
+          if (!isCellSelected(cellId)) {
+            // select
+            selectCell(cellId, false, false)
+            // focus
+            focusCell(cellId)
+          }
+          return
+        }
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
