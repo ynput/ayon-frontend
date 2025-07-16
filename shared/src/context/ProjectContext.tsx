@@ -23,6 +23,7 @@ export interface ProjectContextProps {
 
   productTypes: ProductTypeOverride[];
   getProductTypeIcon: (productType: string, baseType?: string) => string;
+  getProductTypeColor: (productType: string) => string | undefined;
   getProductTypeOptions: () => { value: string; label: string, icon?: string, color?: string }[];
 
 }
@@ -53,11 +54,14 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
   // Magic functions
   //
 
+  // Folder types
+
 
   const getFolderType = useCallback((name: string): FolderType | undefined => {
     return project?.folderTypes?.find((type: FolderType) => type.name === name);
   }, [project]);
 
+  // Product types
 
   const getProductTypeIcon = useCallback((productType: string, baseType?: string): string => {
     if (!productType) return '';
@@ -66,6 +70,15 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
       return type.icon || '';
     }
     return baseType || '';
+  }, [productTypes]);
+
+  const getProductTypeColor = useCallback((productType: string): string => {
+    if (!productType) return '';
+    const type = productTypes.find((type) => type.name === productType);
+    if (type) {
+      return type.color || '';
+    }
+    return '';
   }, [productTypes]);
 
 
@@ -89,6 +102,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
   const functions = {
     getFolderType,
     getProductTypeIcon,
+    getProductTypeColor,
     getProductTypeOptions,
   }
 

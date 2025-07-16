@@ -6,6 +6,7 @@ type ReviewVersionDropdownProps = {
   options: { value: string; label: string }[]
   value: string | null
   valueIcon?: string
+  valueColor?: string
   onChange: (value: string) => void
   selectRef?: $Any
   prefix?: string
@@ -19,6 +20,7 @@ const ReviewVersionDropdown = ({
   options,
   value,
   valueIcon = '',
+  valueColor,
   onChange,
   selectRef = null,
   prefix = 'Viewing: ',
@@ -28,6 +30,7 @@ const ReviewVersionDropdown = ({
   valueProps = {},
   ...props
 }: ReviewVersionDropdownProps) => {
+  console.log('ReviewVersionDropdown rendered with color :', valueColor)
   return (
     <Dropdown
       options={options}
@@ -47,7 +50,7 @@ const ReviewVersionDropdown = ({
             {...valueProps}
           >
             {prefix}
-            {valueIcon && <Icon icon={valueIcon} />}
+            {valueIcon && <Icon icon={valueIcon} style={valueColor ? {color: valueColor} : {}}/>}
             {options.find((option) => option.value === (selected || value)[0])?.label}
           </Styled.VersionValueTemplate>
         </div>

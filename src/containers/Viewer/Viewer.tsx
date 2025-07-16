@@ -67,6 +67,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           value: id,
           label: product?.productName || 'Unknown product',
           icon: (product?.productType && project.getProductTypeIcon(product.productType)) || 'inventory_2',
+          color: (product?.productType && project.getProductTypeColor(product.productType)),
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -277,6 +278,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
               tooltip="Select a product to view its versions reviewables"
               shortcut={''}
               valueIcon={selectedProduct?.icon || ''}
+              valueColor={selectedProduct?.color}
             />
           )}
         </Styled.PlayerToolbar>
