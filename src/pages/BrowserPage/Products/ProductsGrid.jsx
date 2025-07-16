@@ -7,8 +7,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import clsx from 'clsx'
 import Shortcuts from '@containers/Shortcuts'
-
-import { useProjectContext } from '@context/ProjectContext'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
   padding: 4px 12px;

@@ -41,7 +41,7 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
-import { useProjectContext } from '@context/ProjectContext'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 const Products = () => {
   const dispatch = useDispatch()

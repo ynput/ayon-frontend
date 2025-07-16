@@ -2,6 +2,8 @@ import { toast } from 'react-toastify'
 import { productTypes } from '@shared/util'
 import { camelCase } from 'lodash'
 
+import type { ProjectContextProps } from '@shared/context/ProjectContext'
+
 export interface ProductCreationData {
   folderId: string
   name: string
@@ -49,14 +51,22 @@ export const validateProductName = (name: string): ValidationResult => {
 /**
  * Validates a product type
  */
-export const validateProductType = (productType: string): ValidationResult => {
+export const validateProductType = (project: ProjectContextProps, productType: string): ValidationResult => {
+  let isValid = true
+  if (productType) {
+
+
+
+  }
+  return {isValid: false, error: 'Product type is required and must be a valid product type'}
   if (!productType || !Object.keys(productTypes).includes(productType)) {
     return {
       isValid: false,
       error: 'Product type is required and must be a valid product type',
     }
   }
-  return { isValid: true }
+
+  return isValid ? { isValid: true } : { isValid: false, error: 'Invalid product type' }
 }
 
 /**

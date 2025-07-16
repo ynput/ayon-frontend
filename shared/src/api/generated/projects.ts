@@ -666,7 +666,7 @@ export type LinkTypeModel = {
 }
 
 export type ProductType = {
-  name?: string
+  name: string
   color?: string
   icon?: string
 }

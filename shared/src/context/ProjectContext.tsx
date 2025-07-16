@@ -1,7 +1,8 @@
 import { createContext, useContext, useCallback, useMemo } from 'react'
-import { useGetProjectQuery } from '@shared/api';
+import { ProductType, useGetProjectQuery } from '@shared/api';
 
-import type { FolderType, ProductType } from '@shared/api/generated/projects';
+
+import type { FolderType } from '@shared/api/generated/projects';
 
 
 export interface ProjectContextProps {
