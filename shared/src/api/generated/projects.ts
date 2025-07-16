@@ -717,7 +717,7 @@ export type ProjectModel = {
   linkTypes?: LinkTypeModel[]
   statuses?: Status[]
   tags?: Tag[]
-  config?: object
+  config: Record<string, any>
   attrib?: ProjectAttribModel2
   data?: Record<string, any>
   /** Whether the project is active */

@@ -1,7 +1,7 @@
 import * as Styled from './EntityTooltip.styled'
-import { productTypes } from '@shared/util'
 import { useFeedContext } from '@shared/containers/Feed'
 import { Status } from '@shared/containers/ProjectTreeTable/types/project'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 interface ThumbnailUrlParams {
   entityId?: string
@@ -52,6 +52,7 @@ const EntityTooltip: React.FC<EntityTooltipProps> = ({
   pos: { left = 0, top = 0 } = {},
 }) => {
   const { entityTooltipData, isFetchingTooltip, projectInfo, projectName } = useFeedContext()
+  const project = useProjectContext()
 
   const width = 220
 
@@ -81,8 +82,7 @@ const EntityTooltip: React.FC<EntityTooltipProps> = ({
     updatedAt,
     projectName,
   })
-  const productTypeData = productTypes[productType as keyof typeof productTypes]
-  const productIcon = productTypeData?.icon || 'layers'
+  const productIcon = project.getProductTypeIcon(productType) ||'layers'
 
   const icons: Record<string, string | undefined> = {
     task: taskIcon,

@@ -4,6 +4,7 @@ import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers
 import type { EditingState } from '@shared/containers/Feed'
 import type { Status } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
+import { ProjectContextProvider } from '@shared/context/ProjectContext'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -42,22 +43,24 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   const [editingId, setEditingId] = useState<EditingState>(null)
 
   return (
-    <FeedProvider
-      {...{
-        scope,
-        entities,
-        projectName,
-        entityType,
-        projectInfo,
-        userName,
-        userFullName,
-      }}
-      {...annotationsProps}
-      {...{ editingId, setEditingId }}
-    >
-      <Feed {...props} />
-      <ActivityReferenceTooltip />
-    </FeedProvider>
+    <ProjectContextProvider projectName={projectName}>
+      <FeedProvider
+        {...{
+          scope,
+          entities,
+          projectName,
+          entityType,
+          projectInfo,
+          userName,
+          userFullName,
+        }}
+        {...annotationsProps}
+        {...{ editingId, setEditingId }}
+      >
+        <Feed {...props} />
+        <ActivityReferenceTooltip />
+      </FeedProvider>
+    </ProjectContextProvider>
   )
 }
 
