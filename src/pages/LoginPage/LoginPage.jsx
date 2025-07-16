@@ -39,7 +39,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   useEffect(() => {
     if (window.location.pathname.startsWith('/login')) return
-    console.log('Storing preferred URL in local storage:', window.location.href)
+    console.debug('Storing preferred URL in local storage:', window.location.href)
     localStorage.setItem('auth-preferred-url', window.location.href)
   }, [])
 
@@ -83,7 +83,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     // And abort if there isn't
     const provider = window.location.pathname.split('/')[2]
     if (!provider) return
-    console.log('handleSSOCallback', provider)
+    console.debug('handleSSOCallback', provider)
 
     // If we don't have any SSO options, we can't proceed. Abort
     if (!ssoOptions?.length && provider !== "_token") return
@@ -123,7 +123,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     let finalRedirect = null
 
     try {
-      console.log('SSO Callback', providerConfig.callback)
+      console.debug('SSO Callback', providerConfig.callback)
       response = await axios.get(providerConfig.callback, { params: qs })
       success = true
     } catch (err) {
@@ -139,7 +139,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     // If we have a response and it contains user data, we're good to go
 
     if (success && response?.data?.user) {
-      console.log('SSO Callback response', response.data)
+      console.debug('SSO Callback response', response.data)
       const data = response.data
       toast.info(data.detail || `Logged in as ${data.user.name}`)
 
@@ -165,10 +165,8 @@ const LoginPage = ({ isFirstTime = false }) => {
       finalRedirect = localStorage.getItem('auth-preferred-url')
     }
 
-
     // if we STILL don't have a redirect, just land on the home page
     if (!finalRedirect) {
-      console.log('No redirect URL found, using origin from', window.location)
       finalRedirect = window.location.origin
     }
 
@@ -178,7 +176,6 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     if (success) {
       // And redirect to the final URL
-      console.log('Final redirect URL:', finalRedirect)
       window.location.href = finalRedirect
     }
 
@@ -217,7 +214,6 @@ const LoginPage = ({ isFirstTime = false }) => {
     return info.ssoOptions
       .filter(({ name, hidden }) => !hidden && (!featuredProviders?.length || featuredProviders.includes(name) || showAllProviders))
       .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
-        console.log('Creating SSO button for', name, 'with args', args)
         const queryDict = { ...args }
         const redirect_uri = `${window.location.origin}/login/${name}`
         queryDict[redirectKey] = redirect_uri
