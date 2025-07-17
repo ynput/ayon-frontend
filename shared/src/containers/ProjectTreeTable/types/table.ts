@@ -1,6 +1,7 @@
 import { GetTasksByParentQuery } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'
+import { FolderLink } from '@shared/api/queries/overview/getFoldersLinks'
 
 export type FolderListItem = {
   id: string
@@ -19,6 +20,7 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   hasReviewables?: boolean
+  links: { edges: FolderLink[] }
 }
 
 export type TableRow = {

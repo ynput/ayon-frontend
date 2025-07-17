@@ -22,6 +22,7 @@ import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from './useProjectTableModules'
+import { useGetFoldersLinksQuery } from '@shared/api/queries/overview/getFoldersLinks'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -98,6 +99,8 @@ export const useFetchOverviewData = ({
     },
     { skip: !expandedParentIds.length || !showHierarchy },
   )
+
+  const skipFoldersByTaskFilter = !queryFilters.filterString || !folders.length || !showHierarchy
   // get folders that would be left if the filters were applied for tasks
   const {
     data: foldersByTaskFilter,
@@ -111,9 +114,47 @@ export const useFetchOverviewData = ({
       tasksFoldersQuery: { filter: queryFilters.filter, search: queryFilters.search },
     },
     {
-      skip: !queryFilters.filterString || !folders.length || !showHierarchy,
+      skip: skipFoldersByTaskFilter,
     },
   )
+
+  // create a list of folders that are current visible in the table
+  // root folders are always visible
+  // then a folder is visible if it's parent is expanded
+  const visibleFolders = useMemo(() => {
+    const visibleSet = new Set<string>()
+
+    // Check each folder in the map
+    folders.forEach((folder) => {
+      // if we are filtering by tasks and the folder is not in the end result of filtered folders, skip it
+      if (!skipFoldersByTaskFilter && !foldersByTaskFilter?.includes(folder.id as string)) return
+
+      // Root folders are always visible
+      if (!folder.parentId) {
+        visibleSet.add(folder.id)
+        return
+      }
+
+      // Check if parent is expanded
+      const parentId = folder.parentId as string
+      // @ts-ignore
+      if (expanded[parentId] === true) {
+        visibleSet.add(folder.id)
+      }
+    })
+
+    return visibleSet
+  }, [folders, foldersByTaskFilter, skipFoldersByTaskFilter, expanded])
+
+  // get all links for visible folders
+  const {
+    data: foldersLinks = [],
+    refetch: refetchFoldersLinks,
+    isUninitialized: isUninitializedFoldersLinks,
+  } = useGetFoldersLinksQuery({
+    projectName,
+    folderIds: Array.from(visibleFolders),
+  })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -125,6 +166,7 @@ export const useFetchOverviewData = ({
         ...folder,
         entityId: folder.id,
         entityType: 'folder',
+        links: foldersLinks?.find((link) => link.id === folder.id)?.links || { edges: [] },
       }
       return folderWithExtraData
     }
@@ -211,7 +253,7 @@ export const useFetchOverviewData = ({
     }
 
     return map
-  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders])
+  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders, foldersLinks])
 
   // calculate partial loading states
   const loadingTasksForParents = useMemo(() => {
@@ -413,6 +455,7 @@ export const useFetchOverviewData = ({
     if (!isUninitializedTasksFolders) refetchTasksFolders()
     if (!isUninitializedTasksList) refetchTasksList()
     if (!isUninitializedGroupedTasks) refetchGroupedTasks()
+    if (!isUninitializedFoldersLinks) refetchFoldersLinks()
   }
 
   return {

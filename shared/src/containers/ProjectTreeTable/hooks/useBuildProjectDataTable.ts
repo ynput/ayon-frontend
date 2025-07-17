@@ -190,6 +190,8 @@ export default function useBuildProjectDataTable({
       const folder = foldersMap.get(folderId)
       if (!folder) continue
 
+      const links = linksToTableData(folder.links, 'folder')
+
       // Create row with minimal required properties
       const row: TableRow = {
         id: folderId,
@@ -210,7 +212,7 @@ export default function useBuildProjectDataTable({
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
         hasReviewables: folder.hasReviewables || false,
-        links: {}, // TODO: Folder links
+        links: links,
       }
 
       rowsById.set(folderId, row)

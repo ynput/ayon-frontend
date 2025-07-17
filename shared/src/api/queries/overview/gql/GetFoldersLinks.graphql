@@ -1,0 +1,16 @@
+query GetFoldersLinks($projectName: String!, $folderIds: [String!]) {
+  project(name: $projectName) {
+    folders(ids: $folderIds, last: 100) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}

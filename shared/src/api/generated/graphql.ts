@@ -1659,6 +1659,14 @@ export type GetWorkfileLinkDataQueryVariables = Exact<{
 
 export type GetWorkfileLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', workfile?: { __typename?: 'WorkfileNode', id: string, name: string } | null } };
 
+export type GetFoldersLinksQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetFoldersLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, label?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } }> } } }> } } };
+
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -2527,6 +2535,24 @@ export const GetWorkfileLinkDataDocument = `
   }
 }
     ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+export const GetFoldersLinksDocument = `
+    query GetFoldersLinks($projectName: String!, $folderIds: [String!]) {
+  project(name: $projectName) {
+    folders(ids: $folderIds, last: 100) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    ${OverviewEntityLinkFragmentFragmentDoc}`;
 export const GetTasksByParentDocument = `
     query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $search: String) {
   project(name: $projectName) {
@@ -2856,6 +2882,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetWorkfileLinkData: build.query<GetWorkfileLinkDataQuery, GetWorkfileLinkDataQueryVariables>({
       query: (variables) => ({ document: GetWorkfileLinkDataDocument, variables })
+    }),
+    GetFoldersLinks: build.query<GetFoldersLinksQuery, GetFoldersLinksQueryVariables>({
+      query: (variables) => ({ document: GetFoldersLinksDocument, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })

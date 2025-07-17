@@ -10,10 +10,10 @@ export type LinkValue = LinkEntity[]
 export type LinksTableData = Record<LinkId, LinkValue>
 
 export const linksToTableData = (
-  links: EditorTaskNode['links'],
+  links: EditorTaskNode['links'] | undefined,
   entityType: string,
 ): LinksTableData =>
-  links.edges.reduce((acc, edge) => {
+  links?.edges.reduce((acc, edge) => {
     const { linkType, direction, entityType: linkEntityType, id, node } = edge
     const entityLabel = 'label' in node ? node.label || node.name : node.name
     const entityData: LinkEntity = {
@@ -39,7 +39,7 @@ export const linksToTableData = (
     }
 
     return acc
-  }, {} as LinksTableData)
+  }, {} as LinksTableData) || {}
 
 // converts the link type + in/out entity types to a link name format {linkType}|in|out
 const linkTypeToLinkName = (
