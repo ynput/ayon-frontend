@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react'
-import { v1 as uuid1 } from 'uuid'
+import { getEntityId } from '@shared/util'
 import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
 import { generateLabel } from '@components/NewEntity/NewEntity'
@@ -105,7 +105,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       entityType: entityType,
       data: {
         [`${entityType}Type`]: subType,
-        id: uuid1().replace(/-/g, ''),
+        id: getEntityId(),
         name: checkName(name),
         ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
         ...slicerData,
