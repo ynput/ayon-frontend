@@ -260,7 +260,14 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     // Identify the user
     identifyUser()
     setIdentified(true)
-  }, [user?.name, verification?.userHash, scriptLoaded, window.location.pathname, identified])
+  }, [
+    user?.name,
+    connect?.instanceId,
+    verification?.userHash,
+    scriptLoaded,
+    window.location.pathname,
+    identified,
+  ])
 
   // load messenger widget once verification is done loading
   // we don't need verification but we should use it if we have it
