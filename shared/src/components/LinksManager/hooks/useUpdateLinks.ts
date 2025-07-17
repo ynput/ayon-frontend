@@ -43,6 +43,8 @@ const useUpdateLinks = ({
             patch: {
               target: link.target,
               source: { entityType, entityId },
+              linkType,
+              direction,
             },
           }),
         )

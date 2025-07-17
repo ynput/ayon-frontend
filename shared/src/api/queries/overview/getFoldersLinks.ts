@@ -116,12 +116,15 @@ const injectedQueries = foldersApi.injectEndpoints({
       providesTags: (result, error, arg) =>
         result
           ? [
-              ...result.map((folder) => ({ type: 'Folder' as const, id: folder.id })),
-              { type: 'Folder', id: `PROJECT_${arg.projectName}` },
+              ...result.flatMap((folder) =>
+                folder.links.edges.map((link) => ({ type: 'link', id: link.node.id })),
+              ),
+              { type: 'link', id: `${arg.projectName}` },
             ]
-          : [{ type: 'Folder', id: `PROJECT_${arg.projectName}` }],
+          : [{ type: 'link', id: `${arg.projectName}` }],
     }),
   }),
 })
 
 export const { useGetFoldersLinksQuery } = injectedQueries
+export { injectedQueries as foldersLinksApi }

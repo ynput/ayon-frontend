@@ -1,8 +1,14 @@
-import { gqlApi, linksApi, OverviewEntityLinkFragmentFragment } from '@shared/api/generated'
+import {
+  gqlApi,
+  linksApi,
+  OverviewEntityLinkFragmentFragment,
+  foldersApi,
+} from '@shared/api/generated'
 import { patchOverviewEntities } from '../overview'
 import { RootState } from '@reduxjs/toolkit/query'
-import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { PatchOperation } from '@shared/containers'
+import { FolderWithLinks, foldersLinksApi } from '../overview/getFoldersLinks'
 
 type Entity = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
@@ -119,6 +125,117 @@ const getEntityLinkDeletionPatch = (entity: Entity, linkId: string) => {
   return entityPatch
 }
 
+// Helper function to patch getFoldersLinks cache
+const patchFoldersLinksCache = (
+  {
+    projectName,
+    sourceEntity,
+    targetEntity,
+    linkId,
+    linkType,
+    direction,
+    isDelete = false,
+  }: {
+    projectName: string
+    sourceEntity: Entity
+    targetEntity: Entity
+    linkId: string
+    linkType: string
+    direction: 'in' | 'out'
+    isDelete?: boolean
+  },
+  {
+    state,
+    dispatch,
+  }: {
+    state: RootState<any, any, 'restApi'>
+    dispatch: ThunkDispatch<any, any, UnknownAction>
+  },
+  patches: any[] = [],
+) => {
+  // Helper function to patch a single folder's links
+  const patchFolderLinks = (
+    folderEntity: Entity,
+    otherEntity: Entity,
+    linkDirection: 'in' | 'out',
+  ) => {
+    // Get the getFoldersLinks cache entries for this project using selectInvalidatedBy
+    const tags = [{ type: 'link', id: projectName }]
+    const entries = foldersLinksApi.util.selectInvalidatedBy(state, tags)
+
+    for (const entry of entries) {
+      if (entry.endpointName === 'getFoldersLinks') {
+        console.log(entry)
+        const patch = dispatch(
+          foldersLinksApi.util.updateQueryData(
+            'getFoldersLinks',
+            entry.originalArgs,
+            (draft: FolderWithLinks[]) => {
+              console.log('Patching folder links cache')
+              // Find the folder in the cache
+              const folderInCache = draft.find((folder) => folder.id === folderEntity.entityId)
+              if (!folderInCache)
+                return console.warn(`Folder ${folderEntity.entityId} not found in cache`)
+
+              if (isDelete) {
+                // Remove the link from the folder
+                folderInCache.links.edges = folderInCache.links.edges.filter(
+                  (link) => link.id !== linkId,
+                )
+              } else {
+                console.log('Adding new link to folder')
+                // Add the new link to the folder
+                const newLink: OverviewEntityLinkFragmentFragment = {
+                  id: linkId,
+                  direction: linkDirection,
+                  linkType,
+                  entityType: otherEntity.entityType,
+                  node: {
+                    id: otherEntity.entityId,
+                    name: otherEntity.name,
+                    label: otherEntity.label,
+                  },
+                }
+
+                // Check if link already exists and update it, or add new one
+                const existingLinkIndex = folderInCache.links.edges.findIndex(
+                  (link) => link.id === linkId,
+                )
+
+                if (existingLinkIndex !== -1) {
+                  folderInCache.links.edges[existingLinkIndex] = newLink
+                } else {
+                  console.log(
+                    'Adding new link to folder links cache',
+                    newLink,
+                    current(folderInCache),
+                  )
+                  folderInCache.links.edges.push(newLink)
+                }
+              }
+            },
+          ),
+        )
+
+        patches.push(patch)
+      }
+    }
+  }
+
+  // Check if source entity is a folder and patch its links
+  if (sourceEntity.entityType === 'folder') {
+    // For source entity, use the original direction
+    patchFolderLinks(sourceEntity, targetEntity, direction)
+  }
+
+  // Check if target entity is a folder and patch its links
+  if (targetEntity.entityType === 'folder') {
+    // For target entity, flip the direction
+    const targetDirection = direction === 'in' ? 'out' : 'in'
+    patchFolderLinks(targetEntity, sourceEntity, targetDirection)
+  }
+}
+
 const enhancedApi = linksApi.enhanceEndpoints({
   endpoints: {
     deleteEntityLink: {
@@ -133,6 +250,8 @@ const enhancedApi = linksApi.enhanceEndpoints({
 
         const sourceEntity = patch?.source
         const targetEntity = patch?.target
+        const linkType = patch?.linkType || ''
+        const direction = patch?.direction || 'out'
 
         if (sourceEntity && targetEntity) {
           try {
@@ -142,6 +261,21 @@ const enhancedApi = linksApi.enhanceEndpoints({
 
             // Update existing tasks/entities with the link removal
             patchOverviewEntities([sourcePatch, targetPatch], { state, dispatch }, patches)
+
+            // Update folders links cache if any entity is a folder
+            patchFoldersLinksCache(
+              {
+                projectName,
+                sourceEntity,
+                targetEntity,
+                linkId,
+                linkType,
+                direction,
+                isDelete: true,
+              },
+              { state, dispatch },
+              patches,
+            )
 
             // Wait for the mutation to finish
             await queryFulfilled
@@ -241,6 +375,21 @@ const enhancedApi = linksApi.enhanceEndpoints({
 
             // update existing tasks
             patchOverviewEntities([sourcePatch, targetPatch], { state, dispatch }, patches)
+
+            // Update folders links cache if any entity is a folder
+            patchFoldersLinksCache(
+              {
+                projectName,
+                sourceEntity,
+                targetEntity,
+                linkId,
+                linkType: linkTypeName,
+                direction,
+                isDelete: false,
+              },
+              { state, dispatch },
+              patches,
+            )
 
             // Wait for the mutation to finish (undo patches if it fails)
 
