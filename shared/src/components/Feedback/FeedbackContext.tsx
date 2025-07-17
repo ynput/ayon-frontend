@@ -39,7 +39,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
     undefined,
     {
-      skip: !user?.name || !connect,
+      skip: !user?.name,
     },
   )
 
@@ -254,7 +254,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // verify user
   useEffect(() => {
     // check if we can identify the user
-    if (!user?.name || !connect || !verification || !scriptLoaded) return
+    if (!user?.name || !verification || !scriptLoaded) return
     // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
