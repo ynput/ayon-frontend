@@ -1,8 +1,3 @@
-<<<<<<< HEAD:src/feedback/FeedbackContext.tsx
-import { useGetFeedbackVerificationQuery } from '@queries/cloud/cloud'
-import { useAppSelector } from '@state/store'
-=======
->>>>>>> develop:shared/src/components/Feedback/FeedbackContext.tsx
 import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import {
@@ -38,21 +33,13 @@ type FeedbackProviderProps = {
 export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) => {
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
-<<<<<<< HEAD:src/feedback/FeedbackContext.tsx
-  const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user.name })
-  const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
-    undefined,
-    {
-      skip: !user.name,
-=======
   const { data: user } = useGetCurrentUserQuery()
   const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user?.name })
   const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user?.name })
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
     undefined,
     {
-      skip: !user?.name || !connect,
->>>>>>> develop:shared/src/components/Feedback/FeedbackContext.tsx
+      skip: !user?.name,
     },
   )
 
@@ -267,28 +254,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // verify user
   useEffect(() => {
     // check if we can identify the user
-<<<<<<< HEAD:src/feedback/FeedbackContext.tsx
-    if (!user.name || !verification || !scriptLoaded) return
-=======
-    if (!user?.name || !connect || !verification || !scriptLoaded) return
->>>>>>> develop:shared/src/components/Feedback/FeedbackContext.tsx
+    if (!user?.name || !verification || !scriptLoaded) return
     // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
     identifyUser()
     setIdentified(true)
-<<<<<<< HEAD:src/feedback/FeedbackContext.tsx
-  }, [user.name, verification?.userHash, scriptLoaded, window.location.pathname, identified])
-=======
-  }, [
-    user?.name,
-    connect?.instanceId,
-    verification?.userHash,
-    scriptLoaded,
-    window.location.pathname,
-    identified,
-  ])
->>>>>>> develop:shared/src/components/Feedback/FeedbackContext.tsx
+  }, [user?.name, verification?.userHash, scriptLoaded, window.location.pathname, identified])
 
   // load messenger widget once verification is done loading
   // we don't need verification but we should use it if we have it
