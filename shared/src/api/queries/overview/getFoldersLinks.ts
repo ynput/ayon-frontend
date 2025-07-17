@@ -31,7 +31,10 @@ export type GetFoldersLinksResult = FolderWithLinks[]
 const injectedQueries = foldersApi.injectEndpoints({
   endpoints: (build) => ({
     getFoldersLinks: build.query<GetFoldersLinksResult, GetFoldersLinksArgs>({
-      queryFn: async ({ projectName, folderIds }, { getState, dispatch, queryCacheKey }) => {
+      queryFn: async (
+        { projectName, folderIds },
+        { getState, dispatch, queryCacheKey, forced },
+      ) => {
         try {
           // Get current state to access cached data
           const state = getState() as any
@@ -44,9 +47,9 @@ const injectedQueries = foldersApi.injectEndpoints({
 
           // 1. When fetching new data for folderIds, we should skip folders that are already in the cache.
           const cachedFolderIds = new Set(cachedData.map((folder: FolderWithLinks) => folder.id))
-          const folderIdsToFetch = folderIds.filter((id) => !cachedFolderIds?.has(id))
+          const folderIdsToFetch = folderIds.filter((id) => !cachedFolderIds?.has(id) || forced)
 
-          console.log('folderIdsToFetch', folderIdsToFetch, cachedFolderIds)
+          console.log('folderIdsToFetch', { folderIds, folderIdsToFetch })
 
           // If all folders are already cached, return the cached data
           if (folderIdsToFetch.length === 0) {
@@ -101,11 +104,13 @@ const injectedQueries = foldersApi.injectEndpoints({
       merge: (currentCache, newItems) => {
         if (!currentCache) return newItems
 
-        const currentCacheIds = new Set(currentCache.map((item) => item.id))
-        const uniqueNewItems = newItems.filter((item) => !currentCacheIds.has(item.id))
-
-        // Add unique new items to the existing cache
-        currentCache.push(...uniqueNewItems)
+        const cacheMap = new Map(currentCache.map((item) => [item.id, item]))
+        for (const newItem of newItems) {
+          cacheMap.set(newItem.id, newItem) // Overwrite if exists, add if not
+        }
+        // Update currentCache in-place
+        currentCache.length = 0
+        currentCache.push(...cacheMap.values())
       },
       // Provide tags for potential invalidation
       providesTags: (result, error, arg) =>

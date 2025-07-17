@@ -1,7 +1,6 @@
-import { FC, useRef, useLayoutEffect, useMemo, useState } from 'react'
+import { FC, useRef, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
-import { LinksManager, LinkEntity, LinksManagerProps } from '.'
-import { LinkWidgetData } from '@shared/containers/ProjectTreeTable/widgets/LinksWidget'
+import { LinksManager, LinksManagerProps } from '.'
 import { Container } from './LinksManager.styled'
 
 const StyledPopUp = styled.div<{ $maxHeight?: number }>`

@@ -168,7 +168,7 @@ const injectedQueries = gqlApi.injectEndpoints({
                     id: folderNode.id,
                     name: folderNode.name,
                     label: folderNode.label || folderNode.name,
-                    path: folderNode.path || '',
+                    path: folderNode.parent?.path || '',
                     folderType: folderNode.folderType,
                   }
                 case 'product':

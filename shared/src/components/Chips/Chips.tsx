@@ -45,13 +45,12 @@ const MoreChip = styled(Chip)`
 
 interface ChipsProps {
   values: string[]
-  onChipClick?: (e: React.MouseEvent<HTMLDivElement>) => void
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
   }
 }
 
-export const Chips: FC<ChipsProps> = ({ values, onChipClick, pt }) => {
+export const Chips: FC<ChipsProps> = ({ values, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [visibleValues, setVisibleValues] = useState<string[]>([])
   const [hiddenCount, setHiddenCount] = useState(0)
@@ -129,15 +128,8 @@ export const Chips: FC<ChipsProps> = ({ values, onChipClick, pt }) => {
     }
   }, [values, offscreenChips])
 
-  const handleOnClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // if the target is a chip, call the onChipClick handler
-    if ((e.target as HTMLDivElement).classList.contains('chip') && onChipClick) {
-      onChipClick(e)
-    }
-  }
-
   return (
-    <ChipsContainer ref={containerRef} onClick={handleOnClick}>
+    <ChipsContainer ref={containerRef}>
       {visibleValues.map((value, index) => (
         <Chip
           {...pt?.chip}
@@ -152,7 +144,9 @@ export const Chips: FC<ChipsProps> = ({ values, onChipClick, pt }) => {
           {value}
         </Chip>
       ))}
-      {hiddenCount > 0 && <MoreChip className="more-chip">+{hiddenCount}</MoreChip>}
+      {hiddenCount > 0 && (
+        <MoreChip className={clsx('more-chip', pt?.chip?.className)}>+{hiddenCount}</MoreChip>
+      )}
       {offscreenChips.map((value) => (
         <OffscreenChip key={value} className="offscreen-chip">
           {value}

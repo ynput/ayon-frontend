@@ -1667,7 +1667,7 @@ export type GetSearchedFoldersQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedFoldersQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'FolderEdge', cursor?: string | null, node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, path?: string | null } }> } } };
+export type GetSearchedFoldersQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'FolderEdge', cursor?: string | null, node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, parent?: { __typename?: 'FolderNode', path?: string | null } | null } }> } } };
 
 export type GetSearchedProductsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2596,7 +2596,9 @@ export const GetSearchedFoldersDocument = `
           name
           label
           folderType
-          path
+          parent {
+            path
+          }
         }
       }
     }

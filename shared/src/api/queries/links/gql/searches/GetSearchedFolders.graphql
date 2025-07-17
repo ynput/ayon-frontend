@@ -30,7 +30,9 @@ query GetSearchedFolders(
           name
           label
           folderType
-          path
+          parent {
+            path
+          }
         }
       }
     }

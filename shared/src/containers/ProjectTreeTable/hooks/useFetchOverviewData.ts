@@ -126,9 +126,6 @@ export const useFetchOverviewData = ({
 
     // Check each folder in the map
     folders.forEach((folder) => {
-      // if we are filtering by tasks and the folder is not in the end result of filtered folders, skip it
-      if (!skipFoldersByTaskFilter && !foldersByTaskFilter?.includes(folder.id as string)) return
-
       // Root folders are always visible
       if (!folder.parentId) {
         visibleSet.add(folder.id)
