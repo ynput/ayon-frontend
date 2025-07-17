@@ -93,7 +93,6 @@ const useKeyboardNavigation = ({
           })
           break
         case 'Enter':
-        case ' ':
           event.preventDefault()
           if (selectedIndex >= 0 && selectedIndex < entities.length) {
             onSelect(entities[selectedIndex])

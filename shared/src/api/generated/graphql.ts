@@ -359,6 +359,7 @@ export type FolderNodeProductsArgs = {
   namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -568,6 +569,7 @@ export type ProductNodeVersionsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -751,6 +753,7 @@ export type ProjectNodeFoldersArgs = {
   parentIds?: InputMaybe<Array<Scalars['String']['input']>>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -781,6 +784,7 @@ export type ProjectNodeProductsArgs = {
   namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -801,6 +805,7 @@ export type ProjectNodeRepresentationsArgs = {
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   versionIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -858,6 +863,7 @@ export type ProjectNodeVersionsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -881,6 +887,7 @@ export type ProjectNodeWorkfilesArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1185,6 +1192,7 @@ export type TaskNodeVersionsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1203,6 +1211,7 @@ export type TaskNodeWorkfilesArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
   paths?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1383,6 +1392,7 @@ export type VersionNodeRepresentationsArgs = {
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   last?: InputMaybe<Scalars['Int']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   versionIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1551,18 +1561,6 @@ export type DetailsPanelTaskFragmentFragment = { __typename?: 'TaskNode', id: st
 
 export type DetailsPanelVersionFragmentFragment = { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null };
 
-export type GetSearchedTasksQueryVariables = Exact<{
-  projectName: Scalars['String']['input'];
-  search?: InputMaybe<Scalars['String']['input']>;
-  after?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
-
 export type GetListItemsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   listId: Scalars['String']['input'];
@@ -1658,6 +1656,78 @@ export type GetWorkfileLinkDataQueryVariables = Exact<{
 
 
 export type GetWorkfileLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', workfile?: { __typename?: 'WorkfileNode', id: string, name: string } | null } };
+
+export type GetSearchedFoldersQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetSearchedFoldersQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'FolderEdge', cursor?: string | null, node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, folderType: string, path?: string | null } }> } } };
+
+export type GetSearchedProductsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetSearchedProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
+
+export type GetSearchedRepresentationsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetSearchedRepresentationsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, representations: { __typename?: 'RepresentationsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'RepresentationEdge', cursor?: string | null, node: { __typename?: 'RepresentationNode', id: string, name: string, version: { __typename?: 'VersionNode', name: string, product: { __typename?: 'ProductNode', name: string, folder: { __typename?: 'FolderNode', path?: string | null } } } } }> } } };
+
+export type GetSearchedTasksQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
+
+export type GetSearchedVersionsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetSearchedVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', id: string, name: string, product: { __typename?: 'ProductNode', name: string, folder: { __typename?: 'FolderNode', path?: string | null } } } }> } } };
+
+export type GetSearchedWorkfilesQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetSearchedWorkfilesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, workfiles: { __typename?: 'WorkfilesConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'WorkfileEdge', cursor?: string | null, node: { __typename?: 'WorkfileNode', id: string, name: string, task: { __typename?: 'TaskNode', name: string, folder: { __typename?: 'FolderNode', path?: string | null } } } }> } } };
 
 export type GetFoldersLinksQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2347,40 +2417,6 @@ export const GetProductVersionsDocument = `
   }
 }
     `;
-export const GetSearchedTasksDocument = `
-    query GetSearchedTasks($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
-  project(name: $projectName) {
-    name
-    tasks(
-      search: $search
-      after: $after
-      first: $first
-      before: $before
-      last: $last
-      sortBy: "name"
-    ) {
-      pageInfo {
-        startCursor
-        endCursor
-        hasNextPage
-        hasPreviousPage
-      }
-      edges {
-        cursor
-        node {
-          id
-          name
-          label
-          taskType
-          folder {
-            path
-          }
-        }
-      }
-    }
-  }
-}
-    `;
 export const GetListItemsDocument = `
     query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: String, $filter: String) {
   project(name: $projectName) {
@@ -2535,6 +2571,210 @@ export const GetWorkfileLinkDataDocument = `
   }
 }
     ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+export const GetSearchedFoldersDocument = `
+    query GetSearchedFolders($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    folders(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: "name"
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          label
+          folderType
+          path
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetSearchedProductsDocument = `
+    query GetSearchedProducts($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    products(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: "name"
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          productType
+          folder {
+            path
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetSearchedRepresentationsDocument = `
+    query GetSearchedRepresentations($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    representations(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          version {
+            name
+            product {
+              name
+              folder {
+                path
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetSearchedTasksDocument = `
+    query GetSearchedTasks($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    tasks(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: "name"
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          label
+          taskType
+          folder {
+            path
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetSearchedVersionsDocument = `
+    query GetSearchedVersions($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    versions(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          product {
+            name
+            folder {
+              path
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetSearchedWorkfilesDocument = `
+    query GetSearchedWorkfiles($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+  project(name: $projectName) {
+    name
+    workfiles(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          task {
+            name
+            folder {
+              path
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetFoldersLinksDocument = `
     query GetFoldersLinks($projectName: String!, $folderIds: [String!]) {
   project(name: $projectName) {
@@ -2853,9 +3093,6 @@ const injectedRtkApi = api.injectEndpoints({
     GetProductVersions: build.query<GetProductVersionsQuery, GetProductVersionsQueryVariables>({
       query: (variables) => ({ document: GetProductVersionsDocument, variables })
     }),
-    GetSearchedTasks: build.query<GetSearchedTasksQuery, GetSearchedTasksQueryVariables>({
-      query: (variables) => ({ document: GetSearchedTasksDocument, variables })
-    }),
     GetListItems: build.query<GetListItemsQuery, GetListItemsQueryVariables>({
       query: (variables) => ({ document: GetListItemsDocument, variables })
     }),
@@ -2882,6 +3119,24 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetWorkfileLinkData: build.query<GetWorkfileLinkDataQuery, GetWorkfileLinkDataQueryVariables>({
       query: (variables) => ({ document: GetWorkfileLinkDataDocument, variables })
+    }),
+    GetSearchedFolders: build.query<GetSearchedFoldersQuery, GetSearchedFoldersQueryVariables>({
+      query: (variables) => ({ document: GetSearchedFoldersDocument, variables })
+    }),
+    GetSearchedProducts: build.query<GetSearchedProductsQuery, GetSearchedProductsQueryVariables>({
+      query: (variables) => ({ document: GetSearchedProductsDocument, variables })
+    }),
+    GetSearchedRepresentations: build.query<GetSearchedRepresentationsQuery, GetSearchedRepresentationsQueryVariables>({
+      query: (variables) => ({ document: GetSearchedRepresentationsDocument, variables })
+    }),
+    GetSearchedTasks: build.query<GetSearchedTasksQuery, GetSearchedTasksQueryVariables>({
+      query: (variables) => ({ document: GetSearchedTasksDocument, variables })
+    }),
+    GetSearchedVersions: build.query<GetSearchedVersionsQuery, GetSearchedVersionsQueryVariables>({
+      query: (variables) => ({ document: GetSearchedVersionsDocument, variables })
+    }),
+    GetSearchedWorkfiles: build.query<GetSearchedWorkfilesQuery, GetSearchedWorkfilesQueryVariables>({
+      query: (variables) => ({ document: GetSearchedWorkfilesDocument, variables })
     }),
     GetFoldersLinks: build.query<GetFoldersLinksQuery, GetFoldersLinksQueryVariables>({
       query: (variables) => ({ document: GetFoldersLinksDocument, variables })

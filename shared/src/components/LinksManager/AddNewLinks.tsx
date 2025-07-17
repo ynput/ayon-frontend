@@ -1,10 +1,7 @@
 import { FC, useState, useMemo } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
-import {
-  supportedEntityTypes,
-  useGetSearchedEntitiesLinksInfiniteQuery,
-} from '@shared/api/queries/links/getLinks'
+import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api/queries/links/getLinks'
 import { getEntityTypeIcon } from '@shared/util'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
@@ -32,7 +29,7 @@ const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, targetEntityType, onCl
       entityType: targetEntityType,
       search,
     },
-    { skip: !search || !supportedEntityTypes.includes(targetEntityType) },
+    { skip: !search },
   )
 
   // Flatten all entities from all pages

@@ -173,6 +173,12 @@ export const SearchItem = styled.li`
     flex: 1;
     display: flex;
     gap: var(--base-gap-small);
+
+    & > * {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   .type {

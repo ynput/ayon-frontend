@@ -1,5 +1,14 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { GetSearchedTasksQuery, gqlApi } from '@shared/api/generated'
+import {
+  GetSearchedFoldersDocument,
+  GetSearchedFoldersQuery,
+  GetSearchedProductsQuery,
+  GetSearchedRepresentationsQuery,
+  GetSearchedTasksQuery,
+  GetSearchedVersionsQuery,
+  GetSearchedWorkfilesQuery,
+  gqlApi,
+} from '@shared/api/generated'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
 
@@ -31,7 +40,20 @@ export type GetSearchedEntitiesLinksArgs = {
   sortBy?: string
 }
 
-export const supportedEntityTypes = ['task']
+type GetSearchedEntity =
+  | GetSearchedTasksQuery
+  | GetSearchedFoldersQuery
+  | GetSearchedProductsQuery
+  | GetSearchedVersionsQuery
+  | GetSearchedRepresentationsQuery
+  | GetSearchedWorkfilesQuery
+type SearchedTaskNode = GetSearchedTasksQuery['project']['tasks']['edges'][0]['node']
+type SearchedFolderNode = GetSearchedFoldersQuery['project']['folders']['edges'][0]['node']
+type SearchedProductNode = GetSearchedProductsQuery['project']['products']['edges'][0]['node']
+type SearchedVersionNode = GetSearchedVersionsQuery['project']['versions']['edges'][0]['node']
+type SearchedRepresentationNode =
+  GetSearchedRepresentationsQuery['project']['representations']['edges'][0]['node']
+type SearchedWorkfileNode = GetSearchedWorkfilesQuery['project']['workfiles']['edges'][0]['node']
 
 const injectedQueries = gqlApi.injectEndpoints({
   endpoints: (build) => ({
@@ -71,14 +93,23 @@ const injectedQueries = gqlApi.injectEndpoints({
             variables.search = search || ''
           }
 
-          let result: GetSearchedTasksQuery
-
+          let result: GetSearchedEntity
           // Use the appropriate generated query based on entity type
           switch (entityType) {
             case 'folder':
-              throw new Error('Folder search is not implemented yet')
+              result = await api
+                .dispatch(
+                  gqlApi.endpoints.GetSearchedFolders.initiate(variables, { forceRefetch: true }),
+                )
+                .unwrap()
+              break
             case 'product':
-              throw new Error('Product search is not implemented yet')
+              result = await api
+                .dispatch(
+                  gqlApi.endpoints.GetSearchedProducts.initiate(variables, { forceRefetch: true }),
+                )
+                .unwrap()
+              break
             case 'task':
               result = await api
                 .dispatch(
@@ -87,11 +118,28 @@ const injectedQueries = gqlApi.injectEndpoints({
                 .unwrap()
               break
             case 'version':
-              throw new Error('Version search is not implemented yet')
+              result = await api
+                .dispatch(
+                  gqlApi.endpoints.GetSearchedVersions.initiate(variables, { forceRefetch: true }),
+                )
+                .unwrap()
+              break
             case 'representation':
-              throw new Error('Representation search is not implemented yet')
+              result = await api
+                .dispatch(
+                  gqlApi.endpoints.GetSearchedRepresentations.initiate(variables, {
+                    forceRefetch: true,
+                  }),
+                )
+                .unwrap()
+              break
             case 'workfile':
-              throw new Error('Workfile search is not implemented yet')
+              result = await api
+                .dispatch(
+                  gqlApi.endpoints.GetSearchedWorkfiles.initiate(variables, { forceRefetch: true }),
+                )
+                .unwrap()
+              break
             default:
               throw new Error(`Unsupported entity type: ${entityType}`)
           }
@@ -101,25 +149,73 @@ const injectedQueries = gqlApi.injectEndpoints({
             throw new Error('No project data returned')
           }
 
-          const entityData: GetSearchedTasksQuery['project']['tasks'] =
-            //   @ts-expect-error - The type of projectData[entityType + 's'] is not known
-            projectData[entityType + 's']
+          // @ts-expect-error - TypeScript doesn't know the structure of projectData
+          const entityData = projectData[entityType + 's']
 
           // Transform entity data to search link format
           const entities: SearchEntityLink[] = entityData?.edges
-            ?.map(({ node }) => {
-              if (entityType === 'task') {
-                return {
-                  entityType: 'task',
-                  id: node.id,
-                  name: node.name,
-                  label: node.label || node.name,
-                  path: node.folder?.path || '',
-                  taskType: node.taskType,
-                }
+            ?.map(({ node }: any) => {
+              switch (entityType) {
+                case 'task':
+                  const taskNode = node as SearchedTaskNode
+                  return {
+                    entityType: 'task',
+                    id: taskNode.id,
+                    name: taskNode.name,
+                    label: taskNode.label || taskNode.name,
+                    path: taskNode.folder?.path || '',
+                    taskType: taskNode.taskType,
+                  }
+                case 'folder':
+                  const folderNode = node as SearchedFolderNode
+                  return {
+                    entityType: 'folder',
+                    id: folderNode.id,
+                    name: folderNode.name,
+                    label: folderNode.label || folderNode.name,
+                    path: folderNode.path || '',
+                    folderType: folderNode.folderType,
+                  }
+                case 'product':
+                  const productNode = node as SearchedProductNode
+                  return {
+                    entityType: 'product',
+                    id: productNode.id,
+                    name: productNode.name,
+                    label: productNode.name,
+                    path: productNode.folder?.path,
+                    productType: productNode.productType,
+                  }
+                case 'version':
+                  const versionNode = node as SearchedVersionNode
+                  return {
+                    entityType: 'version',
+                    id: versionNode.id,
+                    name: versionNode.name,
+                    label: versionNode.name,
+                    path: `${versionNode.product.folder.path}/${versionNode.product.name}`,
+                  }
+                case 'representation':
+                  const representationNode = node as SearchedRepresentationNode
+                  return {
+                    entityType: 'representation',
+                    id: representationNode.id,
+                    name: representationNode.name,
+                    label: representationNode.name,
+                    path: `${representationNode.version.product.folder.path}/${representationNode.version.product.name}/${representationNode.version.name}`,
+                  }
+                case 'workfile':
+                  const workfileNode = node as SearchedWorkfileNode
+                  return {
+                    entityType: 'workfile',
+                    id: workfileNode.id,
+                    name: workfileNode.name,
+                    label: workfileNode.name,
+                    path: `${workfileNode.task.folder.path}/${workfileNode.task.name}`,
+                  }
+                default:
+                  return null
               }
-              // Add more entityType cases here if needed
-              return null
             })
             .filter(Boolean) as SearchEntityLink[] // Remove nulls, ensure correct type
 

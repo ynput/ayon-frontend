@@ -1,0 +1,34 @@
+# Gets all tasks with pagination and search filtering
+query GetSearchedVersions(
+  $projectName: String!
+  $search: String
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    versions(search: $search, after: $after, first: $first, before: $before, last: $last) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          product {
+            name
+            folder {
+              path
+            }
+          }
+        }
+      }
+    }
+  }
+}

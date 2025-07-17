@@ -1,0 +1,37 @@
+# Gets all tasks with pagination and search filtering
+query GetSearchedRepresentations(
+  $projectName: String!
+  $search: String
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    representations(search: $search, after: $after, first: $first, before: $before, last: $last) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+          version {
+            name
+            product {
+              name
+              folder {
+                path
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
