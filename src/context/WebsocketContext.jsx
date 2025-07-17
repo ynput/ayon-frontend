@@ -22,7 +22,7 @@ export const SocketProvider = (props) => {
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
   const [logout] = useLogoutMutation()
-  const [getInfo] = useLazyGetSiteInfoQuery()
+  const [getInfo] = useLazyGetSiteInfoQuery({full:false})
 
   const wsOpts = {
     shouldReconnect: () => {

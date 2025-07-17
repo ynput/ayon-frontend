@@ -1,6 +1,6 @@
 import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
-import { current } from '@reduxjs/toolkit'
+import { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
 
 const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {
@@ -221,6 +221,24 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   },
 })
 
+// inject review addon endpoint Create Session From List
+const updateListsInjectedApi = updateListsEnhancedApi.injectEndpoints({
+  endpoints: (build) => ({
+    createSessionFromList: build.mutation<
+      CreateSessionFromListApiResponse,
+      CreateSessionFromListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/addons/review/${queryArg.addonVersion}/${queryArg.projectName}/sessions/fromList`,
+        method: 'POST',
+        body: queryArg.sessionFromListRequest,
+      }),
+      transformErrorResponse: (error: any) => error.data.detail,
+      invalidatesTags: () => [{ type: 'entityList', id: 'LIST' }],
+    }),
+  }),
+})
+
 export const {
   // LIST MUTATIONS
   useCreateEntityListMutation,
@@ -231,5 +249,7 @@ export const {
   useUpdateEntityListItemMutation,
   useCreateEntityListItemMutation,
   useDeleteEntityListItemMutation,
-} = updateListsEnhancedApi
-export { updateListsEnhancedApi as entityListsQueriesRest, gqlApi as entityListsQueriesGql }
+  // REVIEW SESSION MUTATIONS
+  useCreateSessionFromListMutation,
+} = updateListsInjectedApi
+export { updateListsInjectedApi as entityListsQueriesRest, gqlApi as entityListsQueriesGql }

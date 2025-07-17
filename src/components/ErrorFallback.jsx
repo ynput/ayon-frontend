@@ -1,4 +1,5 @@
-import { useFeedback } from '@/feedback/FeedbackContext'
+import { FeedbackProvider, useFeedback } from '@shared/components'
+import { useAppSelector } from '@state/store'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
@@ -32,8 +33,6 @@ const StyledPanel = styled(Panel)`
 `
 
 const ErrorFallback = ({ error }) => {
-  const { openSupport } = useFeedback()
-
   if (error?.toString()?.includes('TypeError: Failed to fetch dynamically imported module:')) {
     return (
       <StyledPanel>
@@ -58,18 +57,34 @@ const ErrorFallback = ({ error }) => {
       <h1>Something went wrong, please send a report to Ynput.</h1>
       <pre>{error?.toString()}</pre>
       <Section direction="row">
-        <Button
-          label={'Send report'}
-          icon="report"
-          onClick={() =>
-            openSupport('NewMessage', `I have encountered an error: ${error?.toString()}`)
-          }
-        />
+        <FeedbackProvider>
+          <SupportButton error={error} />
+        </FeedbackProvider>
         <a href="/">
           <Button label={'Home'} icon="home" variant="filled" />
         </a>
       </Section>
     </StyledPanel>
+  )
+}
+
+const SupportButton = ({ error }) => {
+  const { openSupport } = useFeedback()
+  const user = useAppSelector((state) => state.user)
+  const errorMessage = `I have encountered an error: ${error?.toString()}
+Chrome version: ${navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0] || 'Unknown'}
+Page: ${window.location.href}
+User: ${user?.name || 'Unknown'} - ${
+    user?.data?.isAdmin ? 'Admin' : user?.data?.isManager ? 'Manager' : 'User'
+  } 
+`
+
+  return (
+    <Button
+      label={'Send report'}
+      icon="report"
+      onClick={() => openSupport('NewMessage', errorMessage)}
+    />
   )
 }
 

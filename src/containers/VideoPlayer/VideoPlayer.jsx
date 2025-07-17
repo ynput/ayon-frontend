@@ -198,7 +198,10 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       videoRef.current.muted = false
       setIsPlaying(false)
     }
-    setCurrentTime(0)
+    if (videoRef.current?.duration < currentTime) {
+      console.log('resetting current time to 0')
+      setCurrentTime(0)
+    }
     setBufferedRanges([])
     setLoadError(null)
     seekedToInitialPosition.current = false

@@ -28,6 +28,7 @@ import { ReleaseFormType, switchDialog } from '@state/releaseInstaller'
 import { useRestart } from '@context/RestartContext'
 import { useCreateBundleMutation } from '@queries/bundles/updateBundles'
 import { useNavigate } from 'react-router-dom'
+import { useListAddonsQuery } from '@shared/api'
 
 interface ReleaseInstallerProps {
   onFinish: () => void
@@ -53,6 +54,9 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
   const { data: { bundles = [] } = {}, isLoading: isLoadingBundles } = useListBundlesQuery({
     archived: false,
   })
+
+  // get all installed addons - used for transferring over the server addons for the new bundle
+  const { data: { addons = [] } = {} } = useListAddonsQuery({})
 
   // QUERIES
 
@@ -120,6 +124,7 @@ const ReleaseInstaller: FC<ReleaseInstallerProps> = ({ onFinish }) => {
       releaseForm.addons,
       releaseForm.platforms,
       bundles,
+      addons,
     )
 
     // then create the bundle

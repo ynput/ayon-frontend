@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import isHTMLElement from '@helpers/isHTMLElement'
-import { VersionReviewablesModel } from '@/api/rest/review'
+import { VersionReviewablesModel } from '@shared/api'
 
 type VersionButtonKey = 'selected' | 'previous' | 'next' | 'latest' | 'approved' | 'hero'
 
@@ -54,7 +54,7 @@ const useReviewShortcuts = ({
       action: () => handleShortcut('previous'),
     },
     {
-      key: 'q', //select any version (dropdown)
+      key: 'w', //select any version (dropdown)
       action: () => openSelectDropdown(),
     },
     {

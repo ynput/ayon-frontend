@@ -1,4 +1,4 @@
-import { ynputCloudApi } from '@shared/api'
+import { ynputCloudApi } from '@shared/api/generated'
 
 const enhancedApi = ynputCloudApi.enhanceEndpoints({
   endpoints: {
@@ -23,3 +23,4 @@ export const {
   useDeleteYnputCloudKeyMutation,
   useGetFeedbackVerificationQuery,
 } = enhancedApi
+export { enhancedApi as ynputCloudQueries }

@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 export const Cell = styled.div`
   width: 100%;
-  height: 100%;
+  height: 32px;
   user-select: none;
   padding: 0px 4px;
 
@@ -34,6 +34,12 @@ export const Cell = styled.div`
     .icon {
       color: var(--md-sys-color-on-primary-container);
     }
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
   }
 `
 

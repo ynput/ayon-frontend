@@ -1533,6 +1533,16 @@ export type GetListsQueryVariables = Exact<{
 
 export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, tags: Array<string>, data: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, owner?: string | null, count: number } }> } } };
 
+export type GetListsItemsForReviewSessionQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  ids?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, entityType: string, updatedAt: any, count: number } }> } } };
+
 type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', name: string, label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean };
 
 type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', name: string, status: string, tags: Array<string>, productType: string, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
@@ -2254,6 +2264,34 @@ export const GetListsDocument = `
   }
 }
     `;
+export const GetListsItemsForReviewSessionDocument = `
+    query GetListsItemsForReviewSession($projectName: String!, $first: Int, $after: String, $ids: [String!]) {
+  project(name: $projectName) {
+    entityLists(
+      first: $first
+      after: $after
+      sortBy: "updatedAt"
+      filter: "{\\"conditions\\":[{\\"key\\":\\"entityListType\\",\\"value\\":[\\"generic\\"],\\"operator\\":\\"in\\"}],\\"operator\\":\\"and\\"}"
+      ids: $ids
+    ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          label
+          active
+          entityType
+          updatedAt
+          count
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetTasksByParentDocument = `
     query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $search: String) {
   project(name: $projectName) {
@@ -2559,6 +2597,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetLists: build.query<GetListsQuery, GetListsQueryVariables>({
       query: (variables) => ({ document: GetListsDocument, variables })
+    }),
+    GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
+      query: (variables) => ({ document: GetListsItemsForReviewSessionDocument, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })

@@ -1,5 +1,5 @@
 import { FC, useState } from 'react'
-import SlicerTable, { Container, Header } from '@shared/SimpleTable'
+import SimpleTable, { Container, Header } from '@shared/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
@@ -69,7 +69,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
           data: sliceMap,
         }}
       >
-        <SlicerTable
+        <SimpleTable
           data={sliceTableData}
           isExpandable={isExpandable}
           isLoading={isLoadingSliceTableData}

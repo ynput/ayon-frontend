@@ -91,7 +91,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
             <SaveButton
               label={labels.createButton}
               icon="add"
-              onClick={onSubmit}
+              onClick={() => onSubmit?.()}
               disabled={!form.label || submitLoading}
               saving={submitLoading}
             />

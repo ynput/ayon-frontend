@@ -34,6 +34,7 @@ const NavButton = ({
 
 const VersionSelectorTool = ({ versions, selected, onChange }) => {
   const statuses = useSelector((state) => state.project.statuses) || {}
+
   // get the version before the selected version
   const selectedIndex = versions.findIndex(({ id }) => id === selected)
 
@@ -65,10 +66,16 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
 
   if (selectedIndex === -1) return
 
-  const options = versions.map(({ id, name }) => ({
-    value: id,
-    label: name,
-  }))
+  const options = [...versions]
+    .sort((a, b) => {
+      if (a.name === 'HERO') return -1 // HERO version should always be first
+      if (b.name === 'HERO') return 1
+      return Number(b.version) - Number(a.version)
+    })
+    .map(({ id, name }) => ({
+      value: id,
+      label: name,
+    }))
 
   return (
     <Styled.Tools ref={toolsRef}>

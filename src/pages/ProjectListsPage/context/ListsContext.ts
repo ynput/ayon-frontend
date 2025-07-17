@@ -20,6 +20,7 @@ export interface ListsContextType {
   openNewList: UseNewListReturn['openNewList']
   closeNewList: UseNewListReturn['closeNewList']
   createNewList: UseNewListReturn['createNewList']
+  createReviewSessionList: UseNewListReturn['createReviewSessionList']
   isCreatingList: boolean
   // Updating lists
   renamingList: UseUpdateListReturn['renamingList']
