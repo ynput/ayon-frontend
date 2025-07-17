@@ -14,20 +14,7 @@ fragment TaskPropsFragment on TaskNode {
   hasReviewables
   links {
     edges {
-      id
-      direction
-      linkType
-      entityType
-      node {
-        id
-        name
-        ... on TaskNode {
-          label
-        }
-        ... on FolderNode {
-          path
-        }
-      }
+      ...OverviewEntityLinkFragment
     }
   }
   folder {

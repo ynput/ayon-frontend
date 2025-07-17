@@ -1,0 +1,7 @@
+query GetFolderLinkData($projectName: String!, $folderId: String!) {
+  project(name: $projectName) {
+    folder(id: $folderId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}

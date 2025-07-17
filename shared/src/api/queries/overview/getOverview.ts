@@ -49,16 +49,24 @@ const getOverviewTaskTags = (
 ) => {
   const taskTags = result?.map((task) => ({ type: 'overviewTask', id: task.id })) || []
 
-  if (!parentIds) return taskTags
+  const parentTags = parentIds
+    ? (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
+        type: 'overviewTask',
+        id,
+      }))
+    : []
 
-  const parentTags = (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
-    type: 'overviewTask',
-    id,
-  }))
+  const linksTags = result.flatMap((task) =>
+    task.links?.edges?.map((link) => ({
+      type: 'entityLink',
+      id: link.id,
+    })),
+  )
 
   return [
     ...taskTags,
     ...parentTags,
+    ...linksTags,
     { type: 'overviewTask', id: projectName },
     { type: 'overviewTask', id: 'LIST' },
   ]

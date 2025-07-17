@@ -36,7 +36,14 @@ export const LinksManager: FC<LinksManagerProps> = ({
   targetEntityType,
   onClose,
 }) => {
-  const linksUpdater = useUpdateLinks({ projectName, direction, entityId, linkType })
+  const linksUpdater = useUpdateLinks({
+    projectName,
+    direction,
+    entityId,
+    entityType,
+    targetEntityType,
+    linkType,
+  })
 
   return (
     <Styled.Container>
@@ -56,7 +63,14 @@ export const LinksManager: FC<LinksManagerProps> = ({
               icon={'close'}
               variant="text"
               className="remove"
-              onClick={() => linksUpdater.remove([link.linkId])}
+              onClick={() =>
+                linksUpdater.remove([
+                  {
+                    id: link.linkId,
+                    target: { entityId: link.entityId, entityType: link.entityType },
+                  },
+                ])
+              }
             />
           </Styled.LinkItem>
         ))}

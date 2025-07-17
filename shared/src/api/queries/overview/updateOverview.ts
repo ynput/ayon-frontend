@@ -8,24 +8,48 @@ import type { OperationsResponseModel, OperationModel, OperationsApiArg } from '
 import getOverviewApi from './getOverview'
 import { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api/queries/entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
-import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
 // Helper function to update entities with operation data
 const updateEntityWithOperation = (entity: any, operationData: any) => {
-  const newData = {
-    ...entity,
-    ...operationData,
-    attrib: {
+  // Update top-level properties directly
+  Object.keys(operationData).forEach((key) => {
+    if (key === 'attrib' || key === 'links') return
+    entity[key] = operationData[key]
+  })
+
+  // Handle attrib merging
+  if (operationData.attrib) {
+    entity.attrib = {
       ...entity.attrib,
-      ...(operationData?.attrib || {}),
-    },
+      ...operationData.attrib,
+    }
   }
 
-  // patch data onto the entity
-  Object.assign(entity, newData)
+  // Handle links merging
+  if (operationData.links) {
+    const existingEdges = entity.links?.edges || []
+    const newLinks = operationData.links || []
+
+    // Ensure links structure exists
+    if (!entity.links) entity.links = {}
+
+    // Process links directly
+    entity.links.edges = [...existingEdges]
+
+    newLinks.forEach((newLink: any) => {
+      const existingIndex = entity.links.edges.findIndex((edge: any) => edge.id === newLink.id)
+
+      if (existingIndex !== -1) {
+        entity.links.edges[existingIndex] = { ...entity.links.edges[existingIndex], ...newLink }
+      } else {
+        entity.links.edges.push(newLink)
+      }
+    })
+  }
 }
 
 const getOverviewTaskTags = (tasks: Pick<OperationModel, 'entityId' | 'data'>[]) => {
@@ -87,6 +111,7 @@ export const patchOverviewTasks = (
             } else {
               // Iterate through all pages in the infinite query
               for (const page of draft.pages) {
+                // TODO: task is not found here, why?
                 const task = page.tasks.find((task) => task.id === taskOperation.entityId)
                 if (task) {
                   updateEntityWithOperation(task, taskOperation.data)
@@ -112,7 +137,7 @@ export const patchOverviewTasks = (
               if (
                 taskOperation.type === 'create' &&
                 taskOperation.data &&
-                entry.originalArgs.parentIds.includes(taskOperation.data.folderId)
+                entry.originalArgs.parentIds?.includes(taskOperation.data.folderId)
               ) {
                 const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
                   // @ts-expect-error

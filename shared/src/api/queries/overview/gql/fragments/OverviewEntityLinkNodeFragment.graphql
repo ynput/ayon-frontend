@@ -1,0 +1,11 @@
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  id
+  name
+  ... on TaskNode {
+    label
+  }
+  ... on FolderNode {
+    path
+    label
+  }
+}

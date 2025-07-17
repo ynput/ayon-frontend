@@ -1,0 +1,7 @@
+query GetTaskLinkData($projectName: String!, $taskId: String!) {
+  project(name: $projectName) {
+    task(id: $taskId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}

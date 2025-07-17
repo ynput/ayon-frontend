@@ -1611,6 +1611,54 @@ type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode' };
 
 export type ListItemFragmentFragment = ListItemFragment_FolderNode_Fragment | ListItemFragment_ProductNode_Fragment | ListItemFragment_RepresentationNode_Fragment | ListItemFragment_TaskNode_Fragment | ListItemFragment_VersionNode_Fragment | ListItemFragment_WorkfileNode_Fragment;
 
+export type GetFolderLinkDataQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  folderId: Scalars['String']['input'];
+}>;
+
+
+export type GetFolderLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folder?: { __typename?: 'FolderNode', path?: string | null, label?: string | null, id: string, name: string } | null } };
+
+export type GetProductLinkDataQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  productId: Scalars['String']['input'];
+}>;
+
+
+export type GetProductLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', product?: { __typename?: 'ProductNode', id: string, name: string } | null } };
+
+export type GetRepresentationLinkDataQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  representationId: Scalars['String']['input'];
+}>;
+
+
+export type GetRepresentationLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, name: string } | null } };
+
+export type GetTaskLinkDataQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  taskId: Scalars['String']['input'];
+}>;
+
+
+export type GetTaskLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', task?: { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | null } };
+
+export type GetVersionLinkDataQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  versionId: Scalars['String']['input'];
+}>;
+
+
+export type GetVersionLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', version?: { __typename?: 'VersionNode', id: string, name: string } | null } };
+
+export type GetWorkfileLinkDataQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  workfileId: Scalars['String']['input'];
+}>;
+
+
+export type GetWorkfileLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', workfile?: { __typename?: 'WorkfileNode', id: string, name: string } | null } };
+
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -1619,7 +1667,7 @@ export type GetTasksByParentQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } }> }, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
+export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, label?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } }> }, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
 
 export type GetTasksListQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1634,9 +1682,25 @@ export type GetTasksListQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksListQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } }> }, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
+export type GetTasksListQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, label?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } }> }, folder: { __typename?: 'FolderNode', path?: string | null } } }> } } };
 
-export type TaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } }> }, folder: { __typename?: 'FolderNode', path?: string | null } };
+export type OverviewEntityLinkFragmentFragment = { __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, label?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } };
+
+type OverviewEntityLinkNodeFragment_FolderNode_Fragment = { __typename?: 'FolderNode', path?: string | null, label?: string | null, id: string, name: string };
+
+type OverviewEntityLinkNodeFragment_ProductNode_Fragment = { __typename?: 'ProductNode', id: string, name: string };
+
+type OverviewEntityLinkNodeFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode', id: string, name: string };
+
+type OverviewEntityLinkNodeFragment_TaskNode_Fragment = { __typename?: 'TaskNode', label?: string | null, id: string, name: string };
+
+type OverviewEntityLinkNodeFragment_VersionNode_Fragment = { __typename?: 'VersionNode', id: string, name: string };
+
+type OverviewEntityLinkNodeFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode', id: string, name: string };
+
+export type OverviewEntityLinkNodeFragmentFragment = OverviewEntityLinkNodeFragment_FolderNode_Fragment | OverviewEntityLinkNodeFragment_ProductNode_Fragment | OverviewEntityLinkNodeFragment_RepresentationNode_Fragment | OverviewEntityLinkNodeFragment_TaskNode_Fragment | OverviewEntityLinkNodeFragment_VersionNode_Fragment | OverviewEntityLinkNodeFragment_WorkfileNode_Fragment;
+
+export type TaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node: { __typename?: 'FolderNode', path?: string | null, label?: string | null, id: string, name: string } | { __typename?: 'ProductNode', id: string, name: string } | { __typename?: 'RepresentationNode', id: string, name: string } | { __typename?: 'TaskNode', label?: string | null, id: string, name: string } | { __typename?: 'VersionNode', id: string, name: string } | { __typename?: 'WorkfileNode', id: string, name: string } }> }, folder: { __typename?: 'FolderNode', path?: string | null } };
 
 export type GetProjectLatestQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1906,6 +1970,30 @@ export const ListItemFragmentFragmentDoc = `
   }
 }
     `;
+export const OverviewEntityLinkNodeFragmentFragmentDoc = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  id
+  name
+  ... on TaskNode {
+    label
+  }
+  ... on FolderNode {
+    path
+    label
+  }
+}
+    `;
+export const OverviewEntityLinkFragmentFragmentDoc = `
+    fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}
+    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
 export const TaskPropsFragmentFragmentDoc = `
     fragment TaskPropsFragment on TaskNode {
   id
@@ -1923,27 +2011,14 @@ export const TaskPropsFragmentFragmentDoc = `
   hasReviewables
   links {
     edges {
-      id
-      direction
-      linkType
-      entityType
-      node {
-        id
-        name
-        ... on TaskNode {
-          label
-        }
-        ... on FolderNode {
-          path
-        }
-      }
+      ...OverviewEntityLinkFragment
     }
   }
   folder {
     path
   }
 }
-    `;
+    ${OverviewEntityLinkFragmentFragmentDoc}`;
 export const KanbanFragmentFragmentDoc = `
     fragment KanbanFragment on KanbanNode {
   id
@@ -2398,6 +2473,60 @@ export const GetListsItemsForReviewSessionDocument = `
   }
 }
     `;
+export const GetFolderLinkDataDocument = `
+    query GetFolderLinkData($projectName: String!, $folderId: String!) {
+  project(name: $projectName) {
+    folder(id: $folderId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+export const GetProductLinkDataDocument = `
+    query GetProductLinkData($projectName: String!, $productId: String!) {
+  project(name: $projectName) {
+    product(id: $productId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+export const GetRepresentationLinkDataDocument = `
+    query GetRepresentationLinkData($projectName: String!, $representationId: String!) {
+  project(name: $projectName) {
+    representation(id: $representationId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+export const GetTaskLinkDataDocument = `
+    query GetTaskLinkData($projectName: String!, $taskId: String!) {
+  project(name: $projectName) {
+    task(id: $taskId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+export const GetVersionLinkDataDocument = `
+    query GetVersionLinkData($projectName: String!, $versionId: String!) {
+  project(name: $projectName) {
+    version(id: $versionId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+export const GetWorkfileLinkDataDocument = `
+    query GetWorkfileLinkData($projectName: String!, $workfileId: String!) {
+  project(name: $projectName) {
+    workfile(id: $workfileId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
 export const GetTasksByParentDocument = `
     query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $search: String) {
   project(name: $projectName) {
@@ -2709,6 +2838,24 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
       query: (variables) => ({ document: GetListsItemsForReviewSessionDocument, variables })
+    }),
+    GetFolderLinkData: build.query<GetFolderLinkDataQuery, GetFolderLinkDataQueryVariables>({
+      query: (variables) => ({ document: GetFolderLinkDataDocument, variables })
+    }),
+    GetProductLinkData: build.query<GetProductLinkDataQuery, GetProductLinkDataQueryVariables>({
+      query: (variables) => ({ document: GetProductLinkDataDocument, variables })
+    }),
+    GetRepresentationLinkData: build.query<GetRepresentationLinkDataQuery, GetRepresentationLinkDataQueryVariables>({
+      query: (variables) => ({ document: GetRepresentationLinkDataDocument, variables })
+    }),
+    GetTaskLinkData: build.query<GetTaskLinkDataQuery, GetTaskLinkDataQueryVariables>({
+      query: (variables) => ({ document: GetTaskLinkDataDocument, variables })
+    }),
+    GetVersionLinkData: build.query<GetVersionLinkDataQuery, GetVersionLinkDataQueryVariables>({
+      query: (variables) => ({ document: GetVersionLinkDataDocument, variables })
+    }),
+    GetWorkfileLinkData: build.query<GetWorkfileLinkDataQuery, GetWorkfileLinkDataQueryVariables>({
+      query: (variables) => ({ document: GetWorkfileLinkDataDocument, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })

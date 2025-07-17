@@ -8,14 +8,25 @@ import { toast } from 'react-toastify'
 type Props = {
   projectName: string
   entityId: string
+  entityType: string
+  targetEntityType: string // the entity type of the out links
   linkType: string
   direction?: 'in' | 'out'
 }
 
-type RemoveLinks = (links: string[]) => Promise<void>
+type RemoveLinks = (
+  links: { id: string; target: { entityId: string; entityType: string } }[],
+) => Promise<void>
 type AddLink = (targetEntityId: string) => Promise<void>
 
-const useUpdateLinks = ({ projectName, direction, entityId, linkType }: Props) => {
+const useUpdateLinks = ({
+  projectName,
+  direction,
+  entityId,
+  entityType,
+  targetEntityType,
+  linkType,
+}: Props) => {
   const [deleteLink] = useDeleteEntityLinkMutation()
   const [addLink] = useCreateEntityLinkMutation()
 
@@ -23,8 +34,16 @@ const useUpdateLinks = ({ projectName, direction, entityId, linkType }: Props) =
     async (links) => {
       try {
         //
-        const deletePromises = links.map((linkId) =>
-          deleteLink({ linkId, projectName: projectName }),
+        const deletePromises = links.map((link) =>
+          deleteLink({
+            linkId: link.id,
+            projectName: projectName,
+            // @ts-ignore - patch is purely used for patching the entities
+            patch: {
+              target: link.target,
+              source: { entityType, entityId },
+            },
+          }),
         )
 
         const results = await Promise.all(deletePromises)
@@ -50,6 +69,19 @@ const useUpdateLinks = ({ projectName, direction, entityId, linkType }: Props) =
             input: direction === 'out' ? entityId : targetEntityId,
             output: direction === 'in' ? entityId : targetEntityId,
             linkType,
+            // Store the entity type in the data field for now
+          },
+          // @ts-ignore - patch is purely used for patching the entities
+          patch: {
+            direction,
+            source: {
+              entityType,
+              entityId,
+            },
+            target: {
+              entityId: targetEntityId,
+              entityType: targetEntityType,
+            },
           },
         })
 

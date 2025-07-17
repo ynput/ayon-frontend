@@ -1,0 +1,7 @@
+query GetRepresentationLinkData($projectName: String!, $representationId: String!) {
+  project(name: $projectName) {
+    representation(id: $representationId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
