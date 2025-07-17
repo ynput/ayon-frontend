@@ -17,7 +17,7 @@ import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 const updateEntityWithOperation = (entity: any, operationData: any) => {
   // Update top-level properties directly
   Object.keys(operationData).forEach((key) => {
-    if (key === 'attrib' || key === 'links') return
+    if (key === 'attrib' || key === 'links' || key === 'deleteLinks') return
     entity[key] = operationData[key]
   })
 
@@ -48,6 +48,20 @@ const updateEntityWithOperation = (entity: any, operationData: any) => {
       } else {
         entity.links.edges.push(newLink)
       }
+    })
+  }
+
+  // Handle links deletion
+  if (operationData.deleteLinks) {
+    const linksToDelete = operationData.deleteLinks || []
+
+    // Ensure links structure exists
+    if (!entity.links) entity.links = { edges: [] }
+    if (!entity.links.edges) entity.links.edges = []
+
+    // Remove links by ID
+    linksToDelete.forEach((linkId: string) => {
+      entity.links.edges = entity.links.edges.filter((edge: any) => edge.id !== linkId)
     })
   }
 }
@@ -81,6 +95,64 @@ const getOverviewFolderTags = (folders: Pick<OperationModel, 'entityId' | 'data'
 
 export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'data'> & {
   type?: OperationModel['type']
+}
+
+// Helper function to create a patch operation for deleting links
+export const createLinkDeletionPatch = (
+  entityId: string,
+  entityType: OperationModel['entityType'],
+  linkIds: string[],
+): PatchOperation => {
+  return {
+    entityId,
+    entityType,
+    type: 'update',
+    data: { deleteLinks: linkIds },
+  }
+}
+
+// Utility function to delete specific links by ID from entities
+export const deleteLinksFromEntities = (
+  entities: { entityId: string; entityType: OperationModel['entityType'] }[],
+  linkIds: string[],
+): PatchOperation[] => {
+  return entities.map((entity) =>
+    createLinkDeletionPatch(entity.entityId, entity.entityType, linkIds),
+  )
+}
+
+// Generic helper function to patch entities based on their type
+export const patchOverviewEntities = (
+  entities: PatchOperation[],
+  {
+    state,
+    dispatch,
+  }: {
+    state: RootState<any, any, 'restApi'>
+    dispatch: ThunkDispatch<any, any, UnknownAction>
+  },
+  patches?: any[],
+) => {
+  // Group entities by type
+  const entitiesByType = entities.reduce((acc, entity) => {
+    if (!acc[entity.entityType]) {
+      acc[entity.entityType] = []
+    }
+    acc[entity.entityType].push(entity)
+    return acc
+  }, {} as Record<string, PatchOperation[]>)
+
+  // Patch each entity type using the appropriate function
+  if (entitiesByType.task) {
+    patchOverviewTasks(entitiesByType.task, { state, dispatch }, patches)
+  }
+  if (entitiesByType.folder) {
+    patchOverviewFolders(entitiesByType.folder, { state, dispatch }, patches)
+  }
+  // Add more entity types as needed
+  // if (entitiesByType.product) { ... }
+  // if (entitiesByType.version) { ... }
+  // etc.
 }
 
 export const patchOverviewTasks = (

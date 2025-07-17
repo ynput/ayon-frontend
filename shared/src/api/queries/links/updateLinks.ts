@@ -1,5 +1,5 @@
 import { gqlApi, linksApi, OverviewEntityLinkFragmentFragment } from '@shared/api/generated'
-import { patchOverviewTasks } from '../overview'
+import { patchOverviewEntities } from '../overview'
 import { RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { PatchOperation } from '@shared/containers'
@@ -108,6 +108,17 @@ const getEntityLinkPatch = (source: Entity, target: Entity, link: LinkUpdate) =>
   return entityPatch
 }
 
+// create a patch operation to delete a link from an entity
+const getEntityLinkDeletionPatch = (entity: Entity, linkId: string) => {
+  const entityPatch: PatchOperation = {
+    entityType: entity.entityType,
+    entityId: entity.entityId,
+    type: 'update',
+    data: { deleteLinks: [linkId] },
+  }
+  return entityPatch
+}
+
 const enhancedApi = linksApi.enhanceEndpoints({
   endpoints: {
     deleteEntityLink: {
@@ -115,9 +126,42 @@ const enhancedApi = linksApi.enhanceEndpoints({
       async onQueryStarted(
         // @ts-ignore - patch is purely used for patching the entities
         { linkId, projectName, patch },
-        { dispatch, getState, getCacheEntry },
+        { dispatch, getState, queryFulfilled },
       ) {
-        console.log(patch)
+        const state = getState()
+        let patches: any[] = []
+
+        const sourceEntity = patch?.source
+        const targetEntity = patch?.target
+
+        if (sourceEntity && targetEntity) {
+          try {
+            // Create patch operations to remove the link from both entities
+            const sourcePatch = getEntityLinkDeletionPatch(sourceEntity, linkId)
+            const targetPatch = getEntityLinkDeletionPatch(targetEntity, linkId)
+
+            // Update existing tasks/entities with the link removal
+            patchOverviewEntities([sourcePatch, targetPatch], { state, dispatch }, patches)
+
+            // Wait for the mutation to finish
+            try {
+              await queryFulfilled
+            } catch (error) {
+              // Undo patches if the mutation fails
+              for (const patch of patches) {
+                patch.undo()
+              }
+            }
+          } catch (error) {
+            console.error('Error patching entities during link deletion:', error)
+            // Undo patches if there's an error
+            for (const patch of patches) {
+              patch.undo()
+            }
+          }
+        } else {
+          console.warn('Source or target entity not provided for link deletion')
+        }
       },
     },
     createEntityLink: {
@@ -206,7 +250,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
             )
 
             // update existing tasks
-            patchOverviewTasks([sourcePatch, targetPatch], { state, dispatch }, patches)
+            patchOverviewEntities([sourcePatch, targetPatch], { state, dispatch }, patches)
           } else {
             console.warn('Source entity type not provided, falling back to task query')
             throw new Error('Source entity type not provided')

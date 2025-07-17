@@ -89,7 +89,7 @@ export const Search = styled.div`
 export const SearchInput = styled(InputText)`
   flex: 1;
   border: none;
-  background-color: unset;
+  background-color: var(--md-sys-color-surface-container);
   padding-left: 28px;
 `
 
