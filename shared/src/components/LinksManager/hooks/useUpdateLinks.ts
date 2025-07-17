@@ -2,6 +2,7 @@ import {
   useCreateEntityLinkMutation,
   useDeleteEntityLinkMutation,
 } from '@shared/api/queries/links/updateLinks'
+import { getEntityId } from '@shared/util'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
 
@@ -69,7 +70,7 @@ const useUpdateLinks = ({
             input: direction === 'out' ? entityId : targetEntityId,
             output: direction === 'in' ? entityId : targetEntityId,
             linkType,
-            // Store the entity type in the data field for now
+            id: getEntityId(),
           },
           // @ts-ignore - patch is purely used for patching the entities
           patch: {

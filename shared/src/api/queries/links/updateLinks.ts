@@ -144,14 +144,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
             patchOverviewEntities([sourcePatch, targetPatch], { state, dispatch }, patches)
 
             // Wait for the mutation to finish
-            try {
-              await queryFulfilled
-            } catch (error) {
-              // Undo patches if the mutation fails
-              for (const patch of patches) {
-                patch.undo()
-              }
-            }
+            await queryFulfilled
           } catch (error) {
             console.error('Error patching entities during link deletion:', error)
             // Undo patches if there's an error
@@ -166,12 +159,12 @@ const enhancedApi = linksApi.enhanceEndpoints({
     },
     createEntityLink: {
       transformErrorResponse: (error: any) => error.data?.detail || '',
-      async onCacheEntryAdded(
+      async onQueryStarted(
         // @ts-ignore - patch is purely used for patching the entities
         { projectName, createLinkRequestModel, patch },
-        { dispatch, getState, getCacheEntry, cacheDataLoaded },
+        { dispatch, getState, queryFulfilled },
       ) {
-        const { linkType } = createLinkRequestModel
+        const { linkType, id: linkId } = createLinkRequestModel
         const state = getState()
 
         let patches: any[] = []
@@ -203,16 +196,13 @@ const enhancedApi = linksApi.enhanceEndpoints({
             )
 
             // Wait for both cache data and source entity data to be loaded
-            const res = await Promise.all([cacheDataLoaded, sourcePromise, targetPromise])
-            const sourceEntityData = res[1]
-            const targetEntityData = res[2]
+            const res = await Promise.all([sourcePromise, targetPromise])
+            const sourceEntityData = res[0]
+            const targetEntityData = res[1]
 
             if (!sourceEntityData || !targetEntityData) {
               throw new Error('Source or target entity data not found')
             }
-
-            const cacheEntry = getCacheEntry()
-            const linkId = cacheEntry?.data?.id
 
             if (!linkId) {
               throw new Error('Link ID not found in cache entry')
@@ -251,12 +241,21 @@ const enhancedApi = linksApi.enhanceEndpoints({
 
             // update existing tasks
             patchOverviewEntities([sourcePatch, targetPatch], { state, dispatch }, patches)
+
+            // Wait for the mutation to finish (undo patches if it fails)
+
+            await queryFulfilled
           } else {
             console.warn('Source entity type not provided, falling back to task query')
             throw new Error('Source entity type not provided')
           }
         } catch (error) {
           console.error(error)
+
+          // Undo patches if the mutation fails
+          for (const patch of patches) {
+            patch.undo()
+          }
         }
       },
     },
