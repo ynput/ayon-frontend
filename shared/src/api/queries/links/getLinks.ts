@@ -86,12 +86,7 @@ const injectedQueries = gqlApi.injectEndpoints({
             variables.after = cursor
           }
 
-          // Add search parameter based on entity type
-          if (entityType === 'version') {
-            variables.filter = search || ''
-          } else {
-            variables.search = search || ''
-          }
+          variables.search = search || ''
 
           let result: GetSearchedEntity
           // Use the appropriate generated query based on entity type
@@ -234,11 +229,6 @@ const injectedQueries = gqlApi.injectEndpoints({
           return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
         }
       },
-      //   providesTags: (result, _e, { entityType }) =>
-      //     result?.pages?.flatMap((entity) => ({
-      //       type: entityType,
-      //       id: entity.,
-      //     })) || [{ type: entityType, id: 'LIST' }],
     }),
   }),
 })

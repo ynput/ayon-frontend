@@ -2,6 +2,7 @@ import { FC, useRef, useLayoutEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { LinksManager, LinkEntity, LinksManagerProps } from '.'
 import { LinkWidgetData } from '@shared/containers/ProjectTreeTable/widgets/LinksWidget'
+import { Container } from './LinksManager.styled'
 
 const StyledPopUp = styled.div<{ $maxHeight?: number }>`
   position: fixed;
@@ -18,12 +19,14 @@ type Position = {
 }
 
 export interface LinksManagerDialogProps extends LinksManagerProps {
+  disabled?: boolean
   isEditing: boolean
   cellRef: React.RefObject<HTMLDivElement>
   onClose?: () => void
 }
 
 export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
+  disabled,
   isEditing,
   cellRef,
   onClose,
@@ -83,7 +86,13 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
       }}
       className="links-widget-popup"
     >
-      <LinksManager {...props} onClose={onClose} />
+      {disabled ? (
+        <Container
+          style={{ color: 'var(--md-sys-color-outline)' }}
+        >{`${props.linkTypeLabel} ${props.direction} link is not of type ${props.entityType}`}</Container>
+      ) : (
+        <LinksManager {...props} onClose={onClose} />
+      )}
     </StyledPopUp>
   )
 }

@@ -3,16 +3,16 @@ import { LinksManagerDialog } from '@shared/components/LinksManager/LinksManager
 import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { createPortal } from 'react-dom'
-import styled from 'styled-components'
 
-const StyledPopUp = styled.div<{ $maxHeight?: number }>`
-  position: fixed;
-  z-index: 300;
-  top: 0;
-  left: 0;
-  max-height: ${({ $maxHeight }) => ($maxHeight ? `${$maxHeight}px` : 'none')};
-  overflow: hidden;
-`
+const isLinkEditable = (direction: 'in' | 'out', linkType: string, entityType: string): boolean => {
+  const linkTypeParts = linkType.split('|')
+  const [_name, outType, inType] = linkTypeParts
+  if (direction === 'in') {
+    return entityType === inType
+  } else {
+    return entityType === outType
+  }
+}
 
 export type LinkWidgetData = {
   direction: 'in' | 'out'
@@ -42,6 +42,12 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   onChange,
   onCancelEdit,
 }) => {
+  const isEditable = isLinkEditable(
+    valueData?.direction || 'out',
+    valueData?.link.linkType || '',
+    valueData?.entityType || '',
+  )
+
   return (
     <>
       <Chips values={value} pt={{ chip: { className: EDIT_TRIGGER_CLASS } }} />
@@ -60,6 +66,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             targetEntityType={valueData.link.targetEntityType}
             linkType={valueData.link.linkType}
             onClose={onCancelEdit}
+            disabled={!isEditable}
           />,
           document.body,
         )}
