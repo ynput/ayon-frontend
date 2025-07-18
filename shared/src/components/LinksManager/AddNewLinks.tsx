@@ -1,7 +1,7 @@
 import { FC, useState, useMemo } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
-import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api/queries/links/getLinks'
+import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'

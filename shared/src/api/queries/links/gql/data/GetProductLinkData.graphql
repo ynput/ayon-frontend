@@ -1,7 +1,0 @@
-query GetProductLinkData($projectName: String!, $productId: String!) {
-  project(name: $projectName) {
-    product(id: $productId) {
-      ...OverviewEntityLinkNodeFragment
-    }
-  }
-}

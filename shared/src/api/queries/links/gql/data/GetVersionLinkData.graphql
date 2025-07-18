@@ -1,7 +1,0 @@
-query GetVersionLinkData($projectName: String!, $versionId: String!) {
-  project(name: $projectName) {
-    version(id: $versionId) {
-      ...OverviewEntityLinkNodeFragment
-    }
-  }
-}

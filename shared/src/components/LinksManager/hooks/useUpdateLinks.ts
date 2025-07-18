@@ -1,7 +1,4 @@
-import {
-  useCreateEntityLinkMutation,
-  useDeleteEntityLinkMutation,
-} from '@shared/api/queries/links/updateLinks'
+import { useCreateEntityLinkMutation, useDeleteEntityLinkMutation } from '@shared/api'
 import { getEntityId } from '@shared/util'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'

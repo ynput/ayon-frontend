@@ -1,3 +1,3 @@
 export * from './getOverview'
 export * from './updateOverview'
-export * from './getEntityLinks'
+export * from '../links/getEntityLinks'

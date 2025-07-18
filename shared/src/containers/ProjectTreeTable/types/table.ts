@@ -2,7 +2,7 @@ import { GetTasksByParentQuery } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'
 import { FolderLink } from '@shared/api/queries/overview/getFoldersLinks'
-import { TaskLink } from '@shared/api/queries/overview/getEntityLinks'
+import { TaskLink } from '@shared/api'
 
 export type FolderListItem = {
   id: string

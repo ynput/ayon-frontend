@@ -1,7 +1,0 @@
-query GetWorkfileLinkData($projectName: String!, $workfileId: String!) {
-  project(name: $projectName) {
-    workfile(id: $workfileId) {
-      ...OverviewEntityLinkNodeFragment
-    }
-  }
-}

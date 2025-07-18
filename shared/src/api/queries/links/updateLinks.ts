@@ -1,7 +1,7 @@
 import { gqlApi, linksApi, OverviewEntityLinkFragmentFragment } from '@shared/api/generated'
 import { RootState } from '@reduxjs/toolkit/query'
 import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import { EntityWithLinks, entityLinksApi } from '../overview/getEntityLinks'
+import { EntityWithLinks, entityLinksApi } from './getEntityLinks'
 
 type Entity = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
