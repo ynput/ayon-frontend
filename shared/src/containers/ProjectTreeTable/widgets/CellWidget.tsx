@@ -183,7 +183,7 @@ export const CellWidget: FC<EditorCellProps> = ({
           <LinksWidget
             value={linksValue}
             valueData={valueData as any}
-            cellRef={ref}
+            cellId={cellId}
             projectName={projectName}
             {...sharedProps}
           />

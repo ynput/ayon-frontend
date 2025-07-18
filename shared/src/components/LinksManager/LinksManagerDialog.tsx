@@ -20,14 +20,14 @@ type Position = {
 export interface LinksManagerDialogProps extends LinksManagerProps {
   disabled?: boolean
   isEditing: boolean
-  cellRef: React.RefObject<HTMLDivElement>
+  anchorId: string
   onClose?: () => void
 }
 
 export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
   disabled,
   isEditing,
-  cellRef,
+  anchorId,
   onClose,
   ...props
 }) => {
@@ -37,10 +37,22 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
   const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined)
 
   const updatePosition = () => {
-    if (!isEditing || !cellRef.current) {
+    if (!isEditing) return
+
+    // get the cell element based on the cellId
+    const anchorElement = document.getElementById(anchorId)
+    if (!anchorElement) {
+      // if the anchor element is not found, position in the center of the screen
+      setPosition({
+        top: window.innerHeight / 2,
+        left: window.innerWidth / 2,
+        showAbove: false,
+      })
+      setMaxWidth(undefined)
       return
     }
-    const cellRect = cellRef.current.getBoundingClientRect()
+
+    const cellRect = anchorElement.getBoundingClientRect()
     const screenPadding = 16
     const minHeightThreshold = 250
     const screenWidth = window.innerWidth
@@ -70,7 +82,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
 
   useLayoutEffect(() => {
     updatePosition()
-  }, [isEditing, cellRef])
+  }, [isEditing, anchorId])
 
   if (!isEditing) return null
   return (

@@ -30,14 +30,14 @@ export interface LinksWidgetProps extends WidgetBaseProps {
   value: string[]
   valueData?: LinkWidgetData
   projectName: string
-  cellRef: React.RefObject<HTMLDivElement>
+  cellId: string
 }
 
 export const LinksWidget: FC<LinksWidgetProps> = ({
   value,
   valueData,
   isEditing,
-  cellRef,
+  cellId,
   projectName,
   onChange,
   onCancelEdit,
@@ -60,7 +60,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
         createPortal(
           <LinksManagerDialog
             isEditing={isEditing}
-            cellRef={cellRef}
+            anchorId={cellId}
             projectName={projectName}
             linkTypeLabel={valueData.link.label || ''}
             links={valueData.links}
