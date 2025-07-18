@@ -43,14 +43,22 @@ const MoreChip = styled(Chip)`
   flex-shrink: 0;
 `
 
+const Disabled = styled.div`
+  width: 100%;
+  /* background-color: var(--md-sys-color-surface-container); */
+  text-align: center;
+  color: var(--md-sys-color-outline);
+`
+
 interface ChipsProps {
   values: string[]
+  disabled?: boolean
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
   }
 }
 
-export const Chips: FC<ChipsProps> = ({ values, pt }) => {
+export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [visibleValues, setVisibleValues] = useState<string[]>([])
   const [hiddenCount, setHiddenCount] = useState(0)
@@ -127,6 +135,8 @@ export const Chips: FC<ChipsProps> = ({ values, pt }) => {
       }
     }
   }, [values, offscreenChips])
+
+  if (disabled) return <Disabled>-</Disabled>
 
   return (
     <ChipsContainer ref={containerRef}>

@@ -50,7 +50,11 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
 
   return (
     <>
-      <Chips values={value} pt={{ chip: { className: EDIT_TRIGGER_CLASS } }} />
+      <Chips
+        values={value}
+        pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
+        disabled={!isEditable}
+      />
       {isEditing &&
         valueData &&
         createPortal(
