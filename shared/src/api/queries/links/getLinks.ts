@@ -1,13 +1,12 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import {
-  GetSearchedFoldersDocument,
   GetSearchedFoldersQuery,
   GetSearchedProductsQuery,
   GetSearchedRepresentationsQuery,
   GetSearchedTasksQuery,
   GetSearchedVersionsQuery,
   GetSearchedWorkfilesQuery,
-  gqlApi,
+  gqlLinksApi,
 } from '@shared/api/generated'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
@@ -55,7 +54,7 @@ type SearchedRepresentationNode =
   GetSearchedRepresentationsQuery['project']['representations']['edges'][0]['node']
 type SearchedWorkfileNode = GetSearchedWorkfilesQuery['project']['workfiles']['edges'][0]['node']
 
-const injectedQueries = gqlApi.injectEndpoints({
+const injectedQueries = gqlLinksApi.injectEndpoints({
   endpoints: (build) => ({
     getSearchedEntitiesLinks: build.infiniteQuery<
       GetSearchedEntitiesLinksResult,
@@ -94,35 +93,43 @@ const injectedQueries = gqlApi.injectEndpoints({
             case 'folder':
               result = await api
                 .dispatch(
-                  gqlApi.endpoints.GetSearchedFolders.initiate(variables, { forceRefetch: true }),
+                  gqlLinksApi.endpoints.GetSearchedFolders.initiate(variables, {
+                    forceRefetch: true,
+                  }),
                 )
                 .unwrap()
               break
             case 'product':
               result = await api
                 .dispatch(
-                  gqlApi.endpoints.GetSearchedProducts.initiate(variables, { forceRefetch: true }),
+                  gqlLinksApi.endpoints.GetSearchedProducts.initiate(variables, {
+                    forceRefetch: true,
+                  }),
                 )
                 .unwrap()
               break
             case 'task':
               result = await api
                 .dispatch(
-                  gqlApi.endpoints.GetSearchedTasks.initiate(variables, { forceRefetch: true }),
+                  gqlLinksApi.endpoints.GetSearchedTasks.initiate(variables, {
+                    forceRefetch: true,
+                  }),
                 )
                 .unwrap()
               break
             case 'version':
               result = await api
                 .dispatch(
-                  gqlApi.endpoints.GetSearchedVersions.initiate(variables, { forceRefetch: true }),
+                  gqlLinksApi.endpoints.GetSearchedVersions.initiate(variables, {
+                    forceRefetch: true,
+                  }),
                 )
                 .unwrap()
               break
             case 'representation':
               result = await api
                 .dispatch(
-                  gqlApi.endpoints.GetSearchedRepresentations.initiate(variables, {
+                  gqlLinksApi.endpoints.GetSearchedRepresentations.initiate(variables, {
                     forceRefetch: true,
                   }),
                 )
@@ -131,7 +138,9 @@ const injectedQueries = gqlApi.injectEndpoints({
             case 'workfile':
               result = await api
                 .dispatch(
-                  gqlApi.endpoints.GetSearchedWorkfiles.initiate(variables, { forceRefetch: true }),
+                  gqlLinksApi.endpoints.GetSearchedWorkfiles.initiate(variables, {
+                    forceRefetch: true,
+                  }),
                 )
                 .unwrap()
               break

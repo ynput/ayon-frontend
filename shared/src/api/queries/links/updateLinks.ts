@@ -1,4 +1,4 @@
-import { gqlApi, linksApi, OverviewEntityLinkFragmentFragment } from '@shared/api/generated'
+import { gqlLinksApi, linksApi, OverviewEntityLinkFragmentFragment } from '@shared/api/generated'
 import { RootState } from '@reduxjs/toolkit/query'
 import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EntityWithLinks, entityLinksApi } from './getEntityLinks'
@@ -26,7 +26,7 @@ const getEntityDataByType = async (
   switch (entityType) {
     case 'task': {
       const resTask = await dispatch(
-        gqlApi.endpoints.GetTaskLinkData.initiate({
+        gqlLinksApi.endpoints.GetTaskLinkData.initiate({
           projectName,
           taskId: entityId,
         }),
@@ -35,7 +35,7 @@ const getEntityDataByType = async (
     }
     case 'folder': {
       const resFolder = await dispatch(
-        gqlApi.endpoints.GetFolderLinkData.initiate({
+        gqlLinksApi.endpoints.GetFolderLinkData.initiate({
           projectName,
           folderId: entityId,
         }),
@@ -44,7 +44,7 @@ const getEntityDataByType = async (
     }
     case 'product': {
       const resProduct = await dispatch(
-        gqlApi.endpoints.GetProductLinkData.initiate({
+        gqlLinksApi.endpoints.GetProductLinkData.initiate({
           projectName,
           productId: entityId,
         }),
@@ -53,7 +53,7 @@ const getEntityDataByType = async (
     }
     case 'version': {
       const resVersion = await dispatch(
-        gqlApi.endpoints.GetVersionLinkData.initiate({
+        gqlLinksApi.endpoints.GetVersionLinkData.initiate({
           projectName,
           versionId: entityId,
         }),
@@ -62,7 +62,7 @@ const getEntityDataByType = async (
     }
     case 'representation': {
       const resRepresentation = await dispatch(
-        gqlApi.endpoints.GetRepresentationLinkData.initiate({
+        gqlLinksApi.endpoints.GetRepresentationLinkData.initiate({
           projectName,
           representationId: entityId,
         }),
@@ -71,7 +71,7 @@ const getEntityDataByType = async (
     }
     case 'workfile': {
       const resWorkfile = await dispatch(
-        gqlApi.endpoints.GetWorkfileLinkData.initiate({
+        gqlLinksApi.endpoints.GetWorkfileLinkData.initiate({
           projectName,
           workfileId: entityId,
         }),

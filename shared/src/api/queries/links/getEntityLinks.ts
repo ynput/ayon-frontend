@@ -6,7 +6,7 @@ import {
   GetVersionsLinksQuery,
   GetRepresentationsLinksQuery,
   GetWorkfilesLinksQuery,
-  gqlApi,
+  gqlLinksApi,
   foldersApi,
 } from '@shared/api/generated'
 
@@ -110,7 +110,7 @@ const injectedQueries = foldersApi.injectEndpoints({
 
           // Fetch only the entities that aren't already cached
           const result = await dispatch(
-            (gqlApi.endpoints as any)[endpoint].initiate(
+            (gqlLinksApi.endpoints as any)[endpoint].initiate(
               { projectName, entityIds: entityIdsToFetch },
               { forceRefetch: true },
             ),
