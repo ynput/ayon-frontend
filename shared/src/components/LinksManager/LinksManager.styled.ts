@@ -91,6 +91,7 @@ export const SearchInput = styled(InputText)`
   border: none;
   background-color: var(--md-sys-color-surface-container);
   padding-left: 28px;
+  width: 100%;
 `
 
 export const Error = styled.div`
@@ -117,6 +118,8 @@ export const SearchItem = styled.li`
   gap: var(--base-gap-small);
   border-radius: var(--border-radius-m);
   cursor: pointer;
+  overflow: hidden;
+  min-height: min-content;
 
   &:hover,
   &:focus,
@@ -172,7 +175,8 @@ export const SearchItem = styled.li`
   .label {
     flex: 1;
     display: flex;
-    gap: var(--base-gap-small);
+    column-gap: var(--base-gap-small);
+    flex-wrap: wrap;
 
     & > * {
       white-space: nowrap;
@@ -182,7 +186,7 @@ export const SearchItem = styled.li`
   }
 
   .type {
-    margin-left: 80px;
+    margin-left: 8px;
     color: var(--md-sys-color-outline);
   }
 `

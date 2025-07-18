@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { LinksManager, LinksManagerProps } from '.'
 import { Container } from './LinksManager.styled'
 
-const StyledPopUp = styled.div<{ $maxHeight?: number }>`
+const StyledPopUp = styled.div`
   position: fixed;
   z-index: 300;
   top: 0;
@@ -34,6 +34,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
   const popupRef = useRef<HTMLDivElement>(null)
 
   const [position, setPosition] = useState<Position | null>(null)
+  const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined)
 
   const updatePosition = () => {
     if (!isEditing || !cellRef.current) {
@@ -45,13 +46,11 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
     let left = cellRect.left
-    const estimatedPopupWidth = 300
-    if (left + estimatedPopupWidth > screenWidth - screenPadding) {
-      left = screenWidth - estimatedPopupWidth - screenPadding
-    }
-    if (left < screenPadding) {
-      left = screenPadding
-    }
+
+    // Calculate max width based on left position and screen padding
+    const availableWidth = screenWidth - left - screenPadding
+    setMaxWidth(availableWidth)
+
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
     const spaceAbove = cellRect.top - screenPadding
     let top: number
@@ -82,8 +81,14 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
         left: position?.left,
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
+        maxWidth: maxWidth ? `${maxWidth}px` : 'none',
       }}
       className="links-widget-popup"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onClose?.()
+        }
+      }}
     >
       {disabled ? (
         <Container

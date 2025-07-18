@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useMemo, useRef, useEffect } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
@@ -15,6 +15,7 @@ interface AddNewLinksProps {
 
 const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, targetEntityType, onClose, onAdd }) => {
   const [search, setSearch] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const {
     data: searchData,
@@ -58,14 +59,27 @@ const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, targetEntityType, onCl
     fetchNextPage,
   })
 
+  // Force focus the search input on mount and when searchData or search changes
+  useEffect(() => {
+    // Use setTimeout to ensure focus after render
+    const timeout = setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus()
+      }
+    }, 0)
+    return () => clearTimeout(timeout)
+  }, [searchData, search])
+
   return (
     <Styled.AddLinksContainer>
       <Styled.Search>
         <Icon icon={'search'} />
         <Styled.SearchInput
+          ref={searchInputRef}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={`Search to add ${targetEntityType}s...`}
+          id={`search-${targetEntityType}`}
           autoFocus
         />
       </Styled.Search>
