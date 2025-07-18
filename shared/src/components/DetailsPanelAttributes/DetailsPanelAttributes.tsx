@@ -51,7 +51,6 @@ const readOnlyFields: Array<keyof EntityForm> = [
   'entityType',
   'projectName',
   'path',
-  'name',
   'createdAt',
   'updatedAt',
 ]
@@ -146,6 +145,14 @@ export const DetailsPanelAttributes = ({
   const fields: AttributeField[] = useMemo(() => {
     // Create custom fields as proper AttributeModel objects
     const customFieldsData: AttributeField[] = [
+      {
+        name: 'name',
+        data: {
+          type: 'string',
+          title: 'Name',
+          description: 'The name of the entity, used for identification in the pipeline',
+        },
+      },
       {
         name: 'label',
         data: {
