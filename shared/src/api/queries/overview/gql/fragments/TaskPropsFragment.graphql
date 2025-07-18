@@ -12,11 +12,6 @@ fragment TaskPropsFragment on TaskNode {
   assignees
   allAttrib
   hasReviewables
-  links {
-    edges {
-      ...OverviewEntityLinkFragment
-    }
-  }
   folder {
     path
   }

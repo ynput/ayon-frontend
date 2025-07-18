@@ -1,6 +1,6 @@
-query GetFoldersLinks($projectName: String!, $entityIds: [String!]) {
+query GetWorkfilesLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
-    folders(ids: $entityIds, last: 100) {
+    workfiles(ids: $entityIds, last: 1000) {
       edges {
         node {
           id

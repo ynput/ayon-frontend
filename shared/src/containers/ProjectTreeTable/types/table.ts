@@ -2,6 +2,7 @@ import { GetTasksByParentQuery } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'
 import { FolderLink } from '@shared/api/queries/overview/getFoldersLinks'
+import { TaskLink } from '@shared/api/queries/overview/getEntityLinks'
 
 export type FolderListItem = {
   id: string
@@ -20,7 +21,7 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   hasReviewables?: boolean
-  links: { edges: FolderLink[] }
+  links: FolderLink[]
 }
 
 export type TableRow = {
@@ -57,11 +58,12 @@ export type MatchingFolder = FolderListItem & {
 }
 export type FolderNodeMap = Map<string, MatchingFolder>
 type TaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node']
-export type EditorTaskNode = TaskNode & {
+export type EditorTaskNode = Omit<TaskNode, 'links'> & {
   attrib: Record<string, any>
   entityId: string
   entityType: 'task'
   groups?: { value: string; hasNextPage?: string }[]
+  links: TaskLink[]
 }
 
 export type EditorVersionNode = {

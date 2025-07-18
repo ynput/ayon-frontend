@@ -13,7 +13,7 @@ export const linksToTableData = (
   links: EditorTaskNode['links'] | undefined,
   entityType: string,
 ): LinksTableData =>
-  links?.edges.reduce((acc, edge) => {
+  links?.reduce((acc, edge) => {
     const { linkType, direction, entityType: linkEntityType, id, node } = edge
     const entityLabel = 'label' in node ? node.label || node.name : node.name
     const entityData: LinkEntity = {

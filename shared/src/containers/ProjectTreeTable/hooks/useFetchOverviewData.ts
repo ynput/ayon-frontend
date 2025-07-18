@@ -22,7 +22,7 @@ import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from './useProjectTableModules'
-import { useGetFoldersLinksQuery } from '@shared/api/queries/overview/getFoldersLinks'
+import { useGetEntityLinksQuery } from '@shared/api'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -148,9 +148,10 @@ export const useFetchOverviewData = ({
     data: foldersLinks = [],
     refetch: refetchFoldersLinks,
     isUninitialized: isUninitializedFoldersLinks,
-  } = useGetFoldersLinksQuery({
+  } = useGetEntityLinksQuery({
     projectName,
-    folderIds: Array.from(visibleFolders),
+    entityIds: Array.from(visibleFolders),
+    entityType: 'folder',
   })
 
   // create a map of folders by id for efficient lookups
@@ -163,7 +164,7 @@ export const useFetchOverviewData = ({
         ...folder,
         entityId: folder.id,
         entityType: 'folder',
-        links: foldersLinks?.find((link) => link.id === folder.id)?.links || { edges: [] },
+        links: foldersLinks?.find((link) => link.id === folder.id)?.links || [],
       }
       return folderWithExtraData
     }
@@ -384,6 +385,28 @@ export const useFetchOverviewData = ({
     },
   )
 
+  // Get visible tasks for link fetching
+  const visibleTasks = useMemo(() => {
+    const allTasks = showHierarchy ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
+    return new Set(allTasks.map((task) => task.id))
+  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks, groupBy])
+
+  // Get all links for visible tasks
+  const {
+    data: tasksLinks = [],
+    refetch: refetchTasksLinks,
+    isUninitialized: isUninitializedTasksLinks,
+  } = useGetEntityLinksQuery(
+    {
+      projectName,
+      entityIds: Array.from(visibleTasks),
+      entityType: 'task',
+    },
+    {
+      skip: visibleTasks.size === 0,
+    },
+  )
+
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
       if (group && group in groupPageCounts) {
@@ -411,6 +434,7 @@ export const useFetchOverviewData = ({
       ...task,
       entityId: task.id,
       entityType: 'task' as const,
+      links: tasksLinks?.find((link) => link.id === task.id)?.links || [],
     })
 
     // either show the hierarchy or the flat list of tasks
@@ -442,7 +466,7 @@ export const useFetchOverviewData = ({
     }
 
     return { tasksMap, tasksByFolderMap }
-  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks])
+  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks, tasksLinks])
 
   // reload all data for all queries
   const reloadTableData = () => {
@@ -453,6 +477,7 @@ export const useFetchOverviewData = ({
     if (!isUninitializedTasksList) refetchTasksList()
     if (!isUninitializedGroupedTasks) refetchGroupedTasks()
     if (!isUninitializedFoldersLinks) refetchFoldersLinks()
+    if (!isUninitializedTasksLinks) refetchTasksLinks()
   }
 
   return {

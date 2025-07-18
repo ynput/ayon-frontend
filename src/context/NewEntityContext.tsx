@@ -267,6 +267,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               path: path,
               tags: [],
               attrib: filteredAttribs,
+              links: [], // Add empty links object
             } as MatchingFolder,
           }
           patchOperations.push(folderPatch)
@@ -293,6 +294,8 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               path: '',
               updatedAt: new Date().toISOString(),
               attrib: filteredAttribs,
+              hasReviewables: false, // Add required field
+              links: [], // Add empty links object
               allAttrib: JSON.stringify(filteredAttribs),
             } as EditorTaskNode,
           }

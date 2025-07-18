@@ -34,6 +34,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
       status: item.status,
       hasReviewables: 'hasReviewables' in item ? item.hasReviewables : false, // products don't have this field
       subRows: [],
+      links: {}, // Add empty links object
     }))
   }
   const tableData = useMemo(

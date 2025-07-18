@@ -31,22 +31,22 @@ const updateEntityWithOperation = (entity: any, operationData: any) => {
 
   // Handle links merging
   if (operationData.links) {
-    const existingEdges = entity.links?.edges || []
+    const existingLinks = entity.links || []
     const newLinks = operationData.links || []
 
     // Ensure links structure exists
-    if (!entity.links) entity.links = {}
+    if (!entity.links) entity.links = []
 
     // Process links directly
-    entity.links.edges = [...existingEdges]
+    entity.links = [...existingLinks]
 
     newLinks.forEach((newLink: any) => {
-      const existingIndex = entity.links.edges.findIndex((edge: any) => edge.id === newLink.id)
+      const existingIndex = entity.links.findIndex((link: any) => link.id === newLink.id)
 
       if (existingIndex !== -1) {
-        entity.links.edges[existingIndex] = { ...entity.links.edges[existingIndex], ...newLink }
+        entity.links[existingIndex] = { ...entity.links[existingIndex], ...newLink }
       } else {
-        entity.links.edges.push(newLink)
+        entity.links.push(newLink)
       }
     })
   }
@@ -56,12 +56,11 @@ const updateEntityWithOperation = (entity: any, operationData: any) => {
     const linksToDelete = operationData.deleteLinks || []
 
     // Ensure links structure exists
-    if (!entity.links) entity.links = { edges: [] }
-    if (!entity.links.edges) entity.links.edges = []
+    if (!entity.links) entity.links = []
 
     // Remove links by ID
     linksToDelete.forEach((linkId: string) => {
-      entity.links.edges = entity.links.edges.filter((edge: any) => edge.id !== linkId)
+      entity.links = entity.links.filter((link: any) => link.id !== linkId)
     })
   }
 }

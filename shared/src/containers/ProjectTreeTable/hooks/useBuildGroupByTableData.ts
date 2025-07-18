@@ -7,6 +7,7 @@ import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
+import { linksToTableData } from '../utils'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -119,6 +120,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
         ownAttrib: task.ownAttrib,
         path: task.folder?.path,
         updatedAt: task.updatedAt,
+        links: linksToTableData(task.links, 'task'),
       }
     },
     [getEntityTypeData],
@@ -138,6 +140,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
         subRows: [],
         label: groupData.label,
         group: groupData,
+        links: {},
       })
     }
 
@@ -153,6 +156,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
           subRows: [],
           label: 'Ungrouped',
           group: { value: ungroupedId, label: 'Ungrouped' },
+          links: {},
         }
         // create ungrouped group if it doesn't exist
         groupsMap.set(ungroupedId, ungroupedGroup)
@@ -205,6 +209,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
                 subRows: [],
                 label: `Next page for ${group.value}`,
                 group: { value: group.value, label: group.value },
+                links: {},
               })
             }
           }

@@ -5,7 +5,6 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
     label
   }
   ... on FolderNode {
-    path
     label
   }
 }
