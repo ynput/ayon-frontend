@@ -15,12 +15,21 @@ import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 
 // Helper function to update entities with operation data
 const updateEntityWithOperation = (entity: any, operationData: any) => {
+  // If this is a folder and name is being updated, also update the path
+  let updatedOperationData = { ...operationData }
+  if (operationData?.name && entity.path && entity.entityType !== 'task') {
+    // Construct new path by replacing the last segment with the new name
+    const pathParts = entity.path.split('/')
+    pathParts[pathParts.length - 1] = operationData.name
+    updatedOperationData.path = pathParts.join('/')
+  }
+
   const newData = {
     ...entity,
-    ...operationData,
+    ...updatedOperationData,
     attrib: {
       ...entity.attrib,
-      ...(operationData?.attrib || {}),
+      ...(updatedOperationData?.attrib || {}),
     },
   }
 
@@ -284,6 +293,14 @@ export const patchDetailsPanelEntity = (
 
   // transform the data to match the details panel entity data
   const detailsPanelData = operationDataToDetailsData(operationData, operation.entityType)
+
+  // If this is a folder and name is being updated, also update the path
+  if (operation.entityType === 'folder' && operationData.name && draft.path) {
+    // Construct new path by replacing the last segment with the new name
+    const pathParts = draft.path.split('/')
+    pathParts[pathParts.length - 1] = operationData.name
+    detailsPanelData.path = pathParts.join('/')
+  }
 
   // helper to deep‐clean undefined values
   function cleanUndefined(obj: any): void {
