@@ -3,7 +3,7 @@ import { TableRow } from './types/table'
 import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { CellWidget, EntityNameWidget, GroupHeaderWidget, ThumbnailWidget } from './widgets'
 import { getCellId, getCellValue } from './utils/cellUtils'
-import { TableCellContent } from './ProjectTreeTable.styled'
+import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
@@ -13,6 +13,8 @@ import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
+import { Icon } from '@ynput/ayon-react-components'
+import { getEntityTypeIcon } from '@shared/util'
 
 const MIN_SIZE = 50
 
@@ -487,13 +489,20 @@ const buildTreeTableColumns = ({
         return {
           id: getLinkColumnId(link, direction),
           accessorKey: `links.${getLinkKey(link, direction)}`,
-          header: getLinkLabel(link, direction),
+          header: () => (
+            <LinkColumnHeader>
+              {getLinkLabel(link, direction)}{' '}
+              <Icon
+                icon={getEntityTypeIcon(direction === 'in' ? link.inputType : link.outputType)}
+              />
+            </LinkColumnHeader>
+          ),
           minSize: MIN_SIZE,
           enableSorting: false,
           enableResizing: true,
           enablePinning: true,
           enableHiding: true,
-          cell: ({ row, column, table }) => {
+          cell: ({ row, column }) => {
             const columnIdParsed = column.id.replace('link_', '')
 
             const { id, value } = getValueIdType(row, columnIdParsed, 'links')

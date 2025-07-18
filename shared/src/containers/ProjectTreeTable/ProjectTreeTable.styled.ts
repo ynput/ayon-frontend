@@ -146,6 +146,8 @@ export const HeaderButtons = styled.div`
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
+  background-color: var(--md-sys-color-surface-container-lowest);
+  padding-left: 4px;
 `
 
 type TableCellProps = {
@@ -374,5 +376,15 @@ export const TableContainer = styled.div`
     height: 34px;
     padding: 1px 0px;
     width: 100%;
+  }
+`
+
+export const LinkColumnHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  .icon {
+    font-size: 18px;
+    color: var(--md-sys-color-outline);
   }
 `
