@@ -1,9 +1,14 @@
-import { EntityListItem } from '@shared/api'
-import { TableRow, useGetEntityTypeData, useProjectDataContext } from '@shared/containers'
+import {
+  TableRow,
+  useGetEntityTypeData,
+  useProjectDataContext,
+  linksToTableData,
+} from '@shared/containers'
 import { useMemo } from 'react'
+import type { EntityListItemWithLinks } from './useGetListItemsData'
 
 type Props = {
-  listItemsData: EntityListItem[]
+  listItemsData: EntityListItemWithLinks[]
 }
 
 const useBuildListItemsTableData = ({ listItemsData }: Props) => {
@@ -11,31 +16,36 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo })
 
-  const buildListItemsTableData = (listItemsData: EntityListItem[]): TableRow[] => {
-    return listItemsData.map((item) => ({
-      id: item.id,
-      name: item.name,
-      label:
-        (item.entityType === 'version' ? `${item.product?.name} - ` : '') +
-        (item.label || item.name),
-      entityId: item.entityId,
-      entityType: item.entityType,
-      assignees: item.assignees || [],
-      ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
-      updatedAt: item.updatedAt,
-      attrib: item.attrib,
-      ownAttrib: item.ownAttrib
-        ? [...item.ownAttrib, ...item.ownItemAttrib]
-        : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
-      icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
-        ?.icon,
-      path: extractPath(item, item.entityType),
-      tags: item.tags,
-      status: item.status,
-      hasReviewables: 'hasReviewables' in item ? item.hasReviewables : false, // products don't have this field
-      subRows: [],
-      links: {}, // Add empty links object
-    }))
+  const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
+    return listItemsData.map((item) => {
+      // Process links if they exist
+      const links = linksToTableData(item.links, item.entityType)
+
+      return {
+        id: item.id,
+        name: item.name,
+        label:
+          (item.entityType === 'version' ? `${item.product?.name} - ` : '') +
+          (item.label || item.name),
+        entityId: item.entityId,
+        entityType: item.entityType,
+        assignees: item.assignees || [],
+        ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
+        updatedAt: item.updatedAt,
+        attrib: item.attrib,
+        ownAttrib: item.ownAttrib
+          ? [...item.ownAttrib, ...item.ownItemAttrib]
+          : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
+        icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+          ?.icon,
+        path: extractPath(item, item.entityType),
+        tags: item.tags,
+        status: item.status,
+        hasReviewables: 'hasReviewables' in item ? item.hasReviewables : false, // products don't have this field
+        subRows: [],
+        links: links, // Add processed links
+      }
+    })
   }
   const tableData = useMemo(
     () => buildListItemsTableData(listItemsData),
@@ -48,7 +58,7 @@ export default useBuildListItemsTableData
 
 // util functions
 const extractSubTypes = (
-  item: EntityListItem,
+  item: EntityListItemWithLinks,
   entityType?: string,
 ): {
   subType?: string
@@ -79,7 +89,7 @@ const extractSubTypes = (
   }
 }
 
-const extractPath = (item: EntityListItem, entityType: string): string => {
+const extractPath = (item: EntityListItemWithLinks, entityType: string): string => {
   switch (entityType) {
     case 'folder':
       return item.path || ''
