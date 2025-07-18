@@ -9,7 +9,7 @@ export interface HistoryEntityUpdate extends EntityUpdate {
 
 interface HistoryEntry {
   undo: (HistoryEntityUpdate | HistoryCustomCallback)[]
-  redo: (HistoryEntityUpdate | HistoryCustomCallback)[]
+  redo?: (HistoryEntityUpdate | HistoryCustomCallback)[]
   timestamp: number
 }
 
@@ -20,7 +20,7 @@ type HistoryCustomCallback = () => void
 export interface UseHistoryReturn {
   pushHistory: (
     undo: (HistoryEntityUpdate | HistoryCustomCallback)[],
-    redo: (HistoryEntityUpdate | HistoryCustomCallback)[],
+    redo?: (HistoryEntityUpdate | HistoryCustomCallback)[],
   ) => void
   undo: () => SplitEntitiesByInherited | null
   redo: () => SplitEntitiesByInherited | null
@@ -79,7 +79,9 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
     const newPast = [...past]
     const last = newPast.pop()!
     setPast(newPast)
-    setFuture((f) => [...f, last])
+    if (last.redo) {
+      setFuture((f) => [...f, last])
+    }
 
     return processHistoryActions(last.undo)
   }, [past])
@@ -90,6 +92,7 @@ const useHistory = (maxHistorySize = 50): UseHistoryReturn => {
     const next = newFuture.pop()!
     setFuture(newFuture)
     setPast((p) => [...p, next])
+    if (!next.redo) return null
     return processHistoryActions(next.redo)
   }, [future])
 

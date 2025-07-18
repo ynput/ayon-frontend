@@ -81,6 +81,7 @@ const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, targetEntityType, onCl
           placeholder={`Search to add ${targetEntityType}s...`}
           id={`search-${targetEntityType}`}
           autoFocus
+          autoComplete="off"
         />
       </Styled.Search>
       {search && searchData && (

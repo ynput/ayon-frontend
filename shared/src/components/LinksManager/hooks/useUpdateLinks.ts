@@ -1,5 +1,5 @@
 import { useCreateEntityLinkMutation, useDeleteEntityLinkMutation } from '@shared/api'
-import { getEntityId } from '@shared/util'
+import { useCellEditing } from '@shared/containers'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
 
@@ -14,8 +14,9 @@ type Props = {
 
 type RemoveLinks = (
   links: { id: string; target: { entityId: string; entityType: string } }[],
+  addToHistory?: boolean,
 ) => Promise<void>
-type AddLink = (targetEntityId: string) => Promise<void>
+type AddLink = (targetEntityId: string, linkId: string, addToHistory?: boolean) => Promise<void>
 
 const useUpdateLinks = ({
   projectName,
@@ -25,11 +26,13 @@ const useUpdateLinks = ({
   targetEntityType,
   linkType,
 }: Props) => {
+  const { history } = useCellEditing()
+
   const [deleteLink] = useDeleteEntityLinkMutation()
   const [addLink] = useCreateEntityLinkMutation()
 
   const removeLinks = useCallback<RemoveLinks>(
-    async (links) => {
+    async (links, addToHistory = true) => {
       try {
         //
         const deletePromises = links.map((link) =>
@@ -52,6 +55,14 @@ const useUpdateLinks = ({
           throw errors.map((error) => error || 'Unknown error').join(', ')
         }
         toast.success(`Link${links.length > 1 ? 's' : ''} removed successfully`)
+
+        // add to history stack
+        // if there is a history, push it
+        if (addToHistory && history) {
+          history.pushHistory(
+            links.map((link) => () => addLinks(link.target.entityId, link.id, false)),
+          )
+        }
       } catch (error: any) {
         console.error('Error removing links:', error)
         toast.error(`Failed to remove links: ${error}`)
@@ -61,7 +72,7 @@ const useUpdateLinks = ({
   )
 
   const addLinks = useCallback<AddLink>(
-    async (targetEntityId) => {
+    async (targetEntityId, linkId, addToHistory = true) => {
       try {
         const result = await addLink({
           projectName,
@@ -69,7 +80,7 @@ const useUpdateLinks = ({
             input: direction === 'out' ? entityId : targetEntityId,
             output: direction === 'in' ? entityId : targetEntityId,
             linkType,
-            id: getEntityId(),
+            id: linkId,
           },
           // @ts-ignore - patch is purely used for patching the entities
           patch: {
@@ -90,6 +101,22 @@ const useUpdateLinks = ({
         }
 
         toast.success('Link added successfully')
+
+        // add to history stack
+        if (addToHistory && history) {
+          history.pushHistory([
+            () =>
+              removeLinks(
+                [
+                  {
+                    id: linkId,
+                    target: { entityId: targetEntityId, entityType: targetEntityType },
+                  },
+                ],
+                false,
+              ),
+          ])
+        }
       } catch (error: any) {
         console.error('Error adding link:', error)
         toast.error(`Failed to add link: ${error}`)
