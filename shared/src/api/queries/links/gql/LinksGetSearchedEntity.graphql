@@ -43,6 +43,7 @@ query GetSearchedFolders(
 query GetSearchedProducts(
   $projectName: String!
   $search: String
+  $parentIds: [String!]
   $after: String
   $first: Int
   $before: String
@@ -52,6 +53,7 @@ query GetSearchedProducts(
     name
     products(
       search: $search
+      folderIds: $parentIds
       after: $after
       first: $first
       before: $before
@@ -83,6 +85,7 @@ query GetSearchedProducts(
 query GetSearchedRepresentations(
   $projectName: String!
   $search: String
+  $parentIds: [String!]
   $after: String
   $first: Int
   $before: String
@@ -90,7 +93,14 @@ query GetSearchedRepresentations(
 ) {
   project(name: $projectName) {
     name
-    representations(search: $search, after: $after, first: $first, before: $before, last: $last) {
+    representations(
+      search: $search
+      versionIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
       pageInfo {
         startCursor
         endCursor
@@ -121,6 +131,7 @@ query GetSearchedRepresentations(
 query GetSearchedTasks(
   $projectName: String!
   $search: String
+  $parentIds: [String!]
   $after: String
   $first: Int
   $before: String
@@ -130,6 +141,7 @@ query GetSearchedTasks(
     name
     tasks(
       search: $search
+      folderIds: $parentIds
       after: $after
       first: $first
       before: $before
@@ -162,6 +174,7 @@ query GetSearchedTasks(
 query GetSearchedVersions(
   $projectName: String!
   $search: String
+  $parentIds: [String!]
   $after: String
   $first: Int
   $before: String
@@ -169,7 +182,14 @@ query GetSearchedVersions(
 ) {
   project(name: $projectName) {
     name
-    versions(search: $search, after: $after, first: $first, before: $before, last: $last) {
+    versions(
+      search: $search
+      productIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
       pageInfo {
         startCursor
         endCursor
@@ -197,6 +217,7 @@ query GetSearchedVersions(
 query GetSearchedWorkfiles(
   $projectName: String!
   $search: String
+  $parentIds: [String!]
   $after: String
   $first: Int
   $before: String
@@ -204,7 +225,14 @@ query GetSearchedWorkfiles(
 ) {
   project(name: $projectName) {
     name
-    workfiles(search: $search, after: $after, first: $first, before: $before, last: $last) {
+    workfiles(
+      search: $search
+      taskIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
       pageInfo {
         startCursor
         endCursor

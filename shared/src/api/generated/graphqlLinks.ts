@@ -257,8 +257,10 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  brands?: Maybe<Array<Scalars['String']['output']>>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
@@ -267,8 +269,10 @@ export type FolderAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -277,6 +281,9 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type FolderEdge = {
@@ -604,6 +611,7 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -1096,8 +1104,10 @@ export type Tag = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  brands?: Maybe<Array<Scalars['String']['output']>>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   /** Deadline date and time */
@@ -1106,8 +1116,10 @@ export type TaskAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -1116,6 +1128,9 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type TaskEdge = {
@@ -1582,6 +1597,7 @@ export type GetSearchedFoldersQuery = { __typename?: 'Query', project: { __typen
 export type GetSearchedProductsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   search?: InputMaybe<Scalars['String']['input']>;
+  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1594,6 +1610,7 @@ export type GetSearchedProductsQuery = { __typename?: 'Query', project: { __type
 export type GetSearchedRepresentationsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   search?: InputMaybe<Scalars['String']['input']>;
+  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1606,6 +1623,7 @@ export type GetSearchedRepresentationsQuery = { __typename?: 'Query', project: {
 export type GetSearchedTasksQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   search?: InputMaybe<Scalars['String']['input']>;
+  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1618,6 +1636,7 @@ export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typenam
 export type GetSearchedVersionsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   search?: InputMaybe<Scalars['String']['input']>;
+  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1630,6 +1649,7 @@ export type GetSearchedVersionsQuery = { __typename?: 'Query', project: { __type
 export type GetSearchedWorkfilesQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   search?: InputMaybe<Scalars['String']['input']>;
+  parentIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1876,11 +1896,12 @@ export const GetSearchedFoldersDocument = `
 }
     `;
 export const GetSearchedProductsDocument = `
-    query GetSearchedProducts($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+    query GetSearchedProducts($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
     products(
       search: $search
+      folderIds: $parentIds
       after: $after
       first: $first
       before: $before
@@ -1909,11 +1930,12 @@ export const GetSearchedProductsDocument = `
 }
     `;
 export const GetSearchedRepresentationsDocument = `
-    query GetSearchedRepresentations($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+    query GetSearchedRepresentations($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
     representations(
       search: $search
+      versionIds: $parentIds
       after: $after
       first: $first
       before: $before
@@ -1946,11 +1968,12 @@ export const GetSearchedRepresentationsDocument = `
 }
     `;
 export const GetSearchedTasksDocument = `
-    query GetSearchedTasks($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+    query GetSearchedTasks($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
     tasks(
       search: $search
+      folderIds: $parentIds
       after: $after
       first: $first
       before: $before
@@ -1980,11 +2003,12 @@ export const GetSearchedTasksDocument = `
 }
     `;
 export const GetSearchedVersionsDocument = `
-    query GetSearchedVersions($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+    query GetSearchedVersions($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
     versions(
       search: $search
+      productIds: $parentIds
       after: $after
       first: $first
       before: $before
@@ -2014,11 +2038,12 @@ export const GetSearchedVersionsDocument = `
 }
     `;
 export const GetSearchedWorkfilesDocument = `
-    query GetSearchedWorkfiles($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
+    query GetSearchedWorkfiles($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
     workfiles(
       search: $search
+      taskIds: $parentIds
       after: $after
       first: $first
       before: $before

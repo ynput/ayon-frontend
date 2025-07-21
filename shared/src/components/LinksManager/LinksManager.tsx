@@ -1,9 +1,10 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { getEntityId, getEntityTypeIcon } from '@shared/util'
 import useUpdateLinks from './hooks/useUpdateLinks'
-import AddNewLinks from './AddNewLinks'
+import AddNewLinks, { LinkSearchType } from './AddNewLinks'
+import { EntityPickerDialog, PickerEntityType } from '@shared/containers/EntityPickerDialog'
 
 export type LinkEntity = {
   linkId: string
@@ -45,42 +46,55 @@ export const LinksManager: FC<LinksManagerProps> = ({
     linkType,
   })
 
+  const [searchType, setSearchType] = useState<LinkSearchType>(null)
+
   return (
-    <Styled.Container>
-      <Styled.Header>
-        {linkTypeLabel} links ({direction})
-      </Styled.Header>
-      <Styled.LinksList>
-        {links?.map((link) => (
-          <Styled.LinkItem key={link.linkId}>
-            {link.icon ? (
-              <Icon icon={link.icon} />
-            ) : (
-              <Icon icon={getEntityTypeIcon(link.entityType)} />
-            )}
-            <span className="label">{link.label}</span>
-            <Button
-              icon={'close'}
-              variant="text"
-              className="remove"
-              onClick={() =>
-                linksUpdater.remove([
-                  {
-                    id: link.linkId,
-                    target: { entityId: link.entityId, entityType: link.entityType },
-                  },
-                ])
-              }
-            />
-          </Styled.LinkItem>
-        ))}
-      </Styled.LinksList>
-      <AddNewLinks
-        targetEntityType={targetEntityType}
-        projectName={projectName}
-        onClose={onClose}
-        onAdd={(id) => linksUpdater.add([{ targetEntityId: id, linkId: getEntityId() }])}
-      />
-    </Styled.Container>
+    <>
+      <Styled.Container>
+        <Styled.Header>
+          {linkTypeLabel} links ({direction})
+        </Styled.Header>
+        <Styled.LinksList>
+          {links?.map((link) => (
+            <Styled.LinkItem key={link.linkId}>
+              {link.icon ? (
+                <Icon icon={link.icon} />
+              ) : (
+                <Icon icon={getEntityTypeIcon(link.entityType)} />
+              )}
+              <span className="label">{link.label}</span>
+              <Button
+                icon={'close'}
+                variant="text"
+                className="remove"
+                onClick={() =>
+                  linksUpdater.remove([
+                    {
+                      id: link.linkId,
+                      target: { entityId: link.entityId, entityType: link.entityType },
+                    },
+                  ])
+                }
+              />
+            </Styled.LinkItem>
+          ))}
+        </Styled.LinksList>
+        <AddNewLinks
+          targetEntityType={targetEntityType}
+          projectName={projectName}
+          onClose={onClose}
+          onAdd={(id) => linksUpdater.add([{ targetEntityId: id, linkId: getEntityId() }])}
+          searchType={searchType}
+          onSearchTypeChange={setSearchType}
+        />
+      </Styled.Container>
+      {searchType === 'picker' && (
+        <EntityPickerDialog
+          onClose={() => setSearchType(null)}
+          projectName={projectName}
+          entityType={targetEntityType as PickerEntityType}
+        />
+      )}
+    </>
   )
 }

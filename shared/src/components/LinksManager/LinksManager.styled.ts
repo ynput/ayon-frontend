@@ -1,4 +1,4 @@
-import { InputText } from '@ynput/ayon-react-components'
+import { Button, InputText } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Container = styled.div`
@@ -80,10 +80,15 @@ export const Search = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
 
-  .icon {
+  .input-search {
     position: absolute;
     left: 4px;
   }
+`
+
+export const SearchTypeButton = styled(Button)`
+  min-width: 110px;
+  flex: 1;
 `
 
 export const SearchInput = styled(InputText)`
@@ -92,6 +97,7 @@ export const SearchInput = styled(InputText)`
   background-color: var(--md-sys-color-surface-container);
   padding-left: 28px;
   width: 100%;
+  min-width: 224px;
 `
 
 export const Error = styled.div`

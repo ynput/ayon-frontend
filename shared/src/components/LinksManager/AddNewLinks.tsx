@@ -1,19 +1,30 @@
 import { FC, useState, useMemo, useRef, useEffect } from 'react'
 import * as Styled from './LinksManager.styled'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
 
+export type LinkSearchType = 'search' | 'picker' | null
+
 interface AddNewLinksProps {
   targetEntityType: string
   projectName: string
   onClose?: () => void
+  searchType: LinkSearchType //  used to determine if the search is active
+  onSearchTypeChange: (type: LinkSearchType) => void //  used to handle search type changes
   onAdd?: (targetEntityId: string, linkType?: string) => void
 }
 
-const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, targetEntityType, onClose, onAdd }) => {
+const AddNewLinks: FC<AddNewLinksProps> = ({
+  projectName,
+  targetEntityType,
+  onClose,
+  searchType,
+  onSearchTypeChange,
+  onAdd,
+}) => {
   const [search, setSearch] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -72,17 +83,35 @@ const AddNewLinks: FC<AddNewLinksProps> = ({ projectName, targetEntityType, onCl
 
   return (
     <Styled.AddLinksContainer>
+      <Styled.Header>Add new link</Styled.Header>
       <Styled.Search>
-        <Icon icon={'search'} />
-        <Styled.SearchInput
-          ref={searchInputRef}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={`Search to add ${targetEntityType}s...`}
-          id={`search-${targetEntityType}`}
-          autoFocus
-          autoComplete="off"
-        />
+        {searchType === 'search' ? (
+          <>
+            <Icon icon={'search'} className="input-search" />
+            <Styled.SearchInput
+              ref={searchInputRef}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={`Search to add ${targetEntityType}s...`}
+              id={`search-${targetEntityType}`}
+              autoFocus
+              autoComplete="off"
+            />
+          </>
+        ) : (
+          <>
+            <Styled.SearchTypeButton
+              label="Search"
+              icon="search"
+              onClick={() => onSearchTypeChange('search')}
+            />
+            <Styled.SearchTypeButton
+              label="Pick"
+              icon="table_rows"
+              onClick={() => onSearchTypeChange('picker')}
+            />
+          </>
+        )}
       </Styled.Search>
       {search && searchData && (
         <Styled.SearchItems ref={containerRef}>

@@ -217,8 +217,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
       const clipboardText = await getSelectionData(selected, { fullRow })
-      if (!clipboardText?.trim()) {
-        clipboardError('No data to copy to clipboard.')
+      if (!clipboardText) {
         return
       }
       if (!navigator.clipboard) {

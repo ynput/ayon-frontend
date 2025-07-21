@@ -32,6 +32,7 @@ export const RowExpander = ({
 export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
+  path?: string
   iconColor?: string
   isRowExpandable?: boolean
   isRowExpanded?: boolean
@@ -48,6 +49,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
     {
       value,
       icon,
+      path,
       iconColor,
       isRowExpandable,
       isRowExpanded,
@@ -78,6 +80,17 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         />
         {startContent && startContent}
         {icon && <Icon icon={icon} style={{ color: iconColor }} />}
+        {path && (
+          <span className="path">
+            {path
+              .slice(1, path.length) // Remove leading slash
+              .split('/')
+              .flatMap((p) => [p, '/'])
+              .map((part, index) => (
+                <span key={index}>{part}</span>
+              ))}
+          </span>
+        )}
         <span className="value">{value}</span>
         {endContent && endContent}
       </Styled.Cell>

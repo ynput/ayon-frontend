@@ -36,6 +36,7 @@ export type GetSearchedEntitiesLinksArgs = {
   projectName: string
   entityType: string // 'folder' | 'product' | 'version' | 'task' | 'representation' | 'workfile'
   search?: string
+  parentIds?: string[] // Optional parent IDs to filter entities
   sortBy?: string
 }
 
@@ -71,7 +72,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, entityType, search } = queryArg
+          const { projectName, entityType, search, parentIds } = queryArg
           const { cursor } = pageParam
 
           // Build query variables
@@ -86,6 +87,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
           }
 
           variables.search = search || ''
+          variables.parentIds = parentIds
 
           let result: GetSearchedEntity
           // Use the appropriate generated query based on entity type

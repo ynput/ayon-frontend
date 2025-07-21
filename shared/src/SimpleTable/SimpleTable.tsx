@@ -92,6 +92,7 @@ export type SimpleTableRow = {
   parentId?: string
   name: string
   label: string
+  path?: string
   icon?: string | null
   iconColor?: string
   img?: string | null
@@ -110,6 +111,7 @@ export interface SimpleTableProps {
   forceUpdateTable?: any
   globalFilter?: string
   meta?: Record<string, any>
+  rowHeight?: number // height of each row, used for virtual scrolling
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,
@@ -160,6 +162,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   forceUpdateTable,
   globalFilter,
   meta,
+  rowHeight,
   children,
 }) => {
   const {
@@ -301,6 +304,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             depth: row.depth,
             tabIndex: 0,
             value: getValue<string>(),
+            path: row.original.path,
             icon: row.original.icon || undefined,
             iconColor: row.original.iconColor,
             isRowExpandable: row.getCanExpand(),
@@ -327,7 +331,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
     (updater) => {
       onRowSelectionChange(functionalUpdate(updater, rowSelection))
     },
-    [onRowSelectionChange], // Depends only on the stable setState function from context
+    [onRowSelectionChange, rowSelection], // Depends only on the stable setState function from context
   )
 
   const handleRowPinningChangeCallback: OnChangeFn<RowPinningState> = useCallback(
@@ -335,6 +339,17 @@ const SimpleTable: FC<SimpleTableProps> = ({
       rowPinning && onRowPinningChange?.(functionalUpdate(updater, rowPinning))
     },
     [onRowPinningChange], // Depends only on the stable setState function from context
+  )
+
+  const handleExpandedChange = useCallback(
+    (updater: any) => {
+      setExpanded?.((old) => {
+        const newExpanded = updater instanceof Function ? updater(old) : updater
+        onExpandedChange?.(newExpanded)
+        return newExpanded
+      })
+    },
+    [setExpanded, onExpandedChange],
   )
 
   const table = useReactTable({
@@ -355,13 +370,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
     enableRowPinning: !!onRowPinningChange,
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
-    onExpandedChange: (updater) => {
-      setExpanded?.((old) => {
-        const newExpanded = updater instanceof Function ? updater(old) : updater
-        onExpandedChange?.(newExpanded)
-        return newExpanded
-      })
-    },
+    onExpandedChange: handleExpandedChange,
     getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -389,15 +398,26 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
-    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
+    estimateSize: () => rowHeight || 34, //estimate row height for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
-    measureElement:
-      typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined,
+    measureElement: rowHeight
+      ? () => rowHeight
+      : typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
+      ? (element) => element?.getBoundingClientRect().height
+      : undefined,
     overscan: 5,
   })
+
+  // Memoize the ref callback to prevent infinite re-renders
+  const measureElementRef = useCallback(
+    (node: HTMLElement | null) => {
+      if (node) {
+        rowVirtualizer.measureElement(node)
+      }
+    },
+    [rowVirtualizer],
+  )
 
   return (
     <Styled.TableContainer ref={tableContainerRef} className={clsx({ isLoading })}>
@@ -413,7 +433,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
               return (
                 <tr
                   data-index={virtualRow.index} //needed for dynamic row height measurement
-                  ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                  ref={measureElementRef} //measure dynamic row height
                   key={row.id}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
