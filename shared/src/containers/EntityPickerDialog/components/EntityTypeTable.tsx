@@ -31,7 +31,11 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
 }) => {
   return (
     <Container>
-      <EntityTypeTableHeader search={search} onSearch={onSearch} title={upperFirst(entityType)} />
+      <EntityTypeTableHeader
+        search={search}
+        onSearch={onSearch}
+        title={upperFirst(entityType) + 's'}
+      />
       {!isLoading && !tableData?.length && (
         <EmptyPlaceholder message={`No ${entityType}s found.`} error={error} />
       )}

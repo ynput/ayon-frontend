@@ -1,15 +1,24 @@
 import {
   FolderListItem,
+  FolderModel,
+  FolderType,
   SearchEntityLink,
+  TaskType,
   useGetProjectQuery,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
 import { useHierarchyTable } from '@shared/hooks'
 import { FC, useMemo } from 'react'
 import { PickerEntityType, PickerSearch, PickerSelection } from '../EntityPickerDialog'
-import { buildEntityPickerTableData, buildFolderPickerTableData, entityHierarchies } from '../util'
+import {
+  buildEntityPickerTableData,
+  buildFolderPickerTableData,
+  EntityAnatomy,
+  entityHierarchies,
+} from '../util'
 import { SimpleTableRow } from '@shared/SimpleTable'
 import { matchSorter } from 'match-sorter'
+import { productTypes } from '@shared/util'
 
 type EntityQueryResult = {
   data: (SearchEntityLink | FolderListItem)[]
@@ -70,9 +79,11 @@ export const useGetEntityPickerData = ({
             matchSorter(foldersData, search.folder, {
               keys: ['name', 'label', 'path', 'folderType'],
             }),
+            project?.folderTypes || [],
           )
         : hierarchTable,
-    [foldersData, hierarchTable, search.folder],
+
+    [foldersData, hierarchTable, search.folder, project],
   )
 
   const folder: EntityQueryResult = {
@@ -101,6 +112,7 @@ export const useGetEntityPickerData = ({
     search.task,
     !entityDependencies.includes('task'),
     idSelection.folder,
+    project?.taskTypes,
   )
   const product = useGetEntityTypeData(
     projectName,
@@ -111,6 +123,7 @@ export const useGetEntityPickerData = ({
       entityHierarchies['product'][entityHierarchies['product'].length - 2],
       folder.data,
     ),
+    Object.values(productTypes),
   )
   const version = useGetEntityTypeData(
     projectName,
@@ -159,6 +172,7 @@ const useGetEntityTypeData = (
   search: string | undefined,
   skip: boolean,
   parentIds?: string[],
+  anatomies?: EntityAnatomy[],
 ) => {
   const { data, isFetching, fetchNextPage, error } = useGetSearchedEntitiesLinksInfiniteQuery(
     {
@@ -179,7 +193,10 @@ const useGetEntityTypeData = (
   }, [data])
 
   //   convert to table rows
-  const table = useMemo(() => buildEntityPickerTableData(entities), [entities])
+  const table = useMemo(
+    () => buildEntityPickerTableData(entities, anatomies),
+    [entities, anatomies],
+  )
 
   return {
     data: entities,

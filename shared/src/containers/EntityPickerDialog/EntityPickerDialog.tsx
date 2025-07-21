@@ -7,11 +7,11 @@ import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/SimpleTable'
 import { Dialog, DialogProps } from '@ynput/ayon-react-components'
-import { useGetProjectQuery, useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
-import { useHierarchyTable } from '@shared/hooks'
 import styled from 'styled-components'
-import { buildEntityPickerTableData } from './util'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
+import { upperFirst } from 'lodash'
+
+const COL_MAX_WIDTH = 600
 
 const TablesContainer = styled.div`
   display: grid;
@@ -84,7 +84,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   const setEntitySearch = (searchValue: string | undefined, entityType: PickerEntityType) => {
     setSearch((prev) => ({
       ...prev,
-      [entityType]: searchValue || '',
+      [entityType]: searchValue,
     }))
   }
 
@@ -105,7 +105,13 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
 
   //   based on the entity type, we need to create a new table for each parent
   return (
-    <Dialog {...props} isOpen size="full" style={{ height: '80vh' }}>
+    <Dialog
+      {...props}
+      header={`Select ${upperFirst(entityType)}`}
+      isOpen
+      size="full"
+      style={{ height: '80vh', maxWidth: entityHierarchy.length * COL_MAX_WIDTH }}
+    >
       <TablesContainer>
         {entityHierarchy.map((tableEntityType, index) => (
           <SimpleTableProvider
