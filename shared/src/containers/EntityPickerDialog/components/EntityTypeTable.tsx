@@ -19,6 +19,7 @@ interface EntityTypeTableProps {
   onSearch: (search: string | undefined) => void // Callback to handle search changes
   isFolderHierarchy?: boolean // Whether this is a folder hierarchy table
   isMultiSelect?: boolean // Whether to allow multiple selection
+  onRowSubmit?: (id: string) => void // Callback when a row is submitted (e.g., double-clicked)
 }
 
 const EntityTypeTable: FC<EntityTypeTableProps> = ({
@@ -30,7 +31,16 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   onSearch,
   isFolderHierarchy,
   isMultiSelect,
+  onRowSubmit,
 }) => {
+  const handleDoubleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+    e.preventDefault()
+    const id = e.currentTarget.id
+    if (id) {
+      onRowSubmit?.(id)
+    }
+  }
+
   return (
     <Container>
       <EntityTypeTableHeader
@@ -47,6 +57,11 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
         isExpandable={isFolderHierarchy}
         rowHeight={34}
         isMultiSelect={isMultiSelect}
+        pt={{
+          row: {
+            onDoubleClick: handleDoubleClick,
+          },
+        }}
       />
     </Container>
   )

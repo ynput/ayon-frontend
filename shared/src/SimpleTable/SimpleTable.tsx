@@ -117,6 +117,10 @@ export interface SimpleTableProps {
     row: Row<SimpleTableRow>,
     table: Table<SimpleTableRow>,
   ) => JSX.Element
+  pt?: {
+    cell?: SimpleTableCellTemplateProps
+    row?: React.HTMLAttributes<HTMLTableRowElement>
+  }
 }
 
 // Helper function to get row range for shift-selection
@@ -164,6 +168,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   meta,
   rowHeight,
   children,
+  pt,
 }) => {
   const {
     rowSelection,
@@ -319,7 +324,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
           return cellMeta?.children ? (
             cellMeta.children(props, row, cellTableInstance)
           ) : (
-            <SimpleTableCellTemplate {...props} />
+            <SimpleTableCellTemplate {...props} {...pt?.cell} />
           )
         },
       },
@@ -435,8 +440,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
                   data-index={virtualRow.index} //needed for dynamic row height measurement
                   ref={measureElementRef} //measure dynamic row height
                   key={row.id}
+                  id={row.id}
+                  {...pt?.row}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                    ...pt?.row?.style, // custom styles to be passed
                   }}
                 >
                   {row.getVisibleCells().map((cell) => {

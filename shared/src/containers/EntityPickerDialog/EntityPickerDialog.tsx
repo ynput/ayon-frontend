@@ -158,6 +158,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
               isFolderHierarchy={tableEntityType === 'folder' && !search.folder}
               onSearch={(v) => setEntitySearch(v, tableEntityType)}
               isMultiSelect={tableEntityType === entityType ? !!isMultiSelect : true}
+              onRowSubmit={(id) => (tableEntityType === entityType ? onSubmit([id]) : undefined)}
             />
           </SimpleTableProvider>
         ))}

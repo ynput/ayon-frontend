@@ -37,7 +37,7 @@ export const buildFolderPickerTableData = (
     id: folder.id,
     name: folder.name,
     label: folder.label || folder.name,
-    path: folder.path,
+    path: '/' + folder.path,
     icon: anatomies.find((a) => a.name === folder.folderType)?.icon || getEntityTypeIcon('folder'),
     subRows: [],
     data: {
