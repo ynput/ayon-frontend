@@ -92,5 +92,5 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return tableData
   }, [tableData])
 
-  return { data: tableData, getData: getHierarchyData, isFetching: isFetching }
+  return { data: tableData, folders, getData: getHierarchyData, isFetching: isFetching }
 }

@@ -1,2 +1,2 @@
-export * from './entityRelationships'
+export * from './entityHierarchies'
 export * from './buildEntityPickerTableData'
