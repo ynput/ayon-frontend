@@ -93,6 +93,10 @@ export const LinksManager: FC<LinksManagerProps> = ({
           onClose={() => setSearchType(null)}
           projectName={projectName}
           entityType={targetEntityType as PickerEntityType}
+          onSubmit={(s) =>
+            linksUpdater.add(s.map((id) => ({ targetEntityId: id, linkId: getEntityId() })))
+          }
+          isMultiSelect
         />
       )}
     </>

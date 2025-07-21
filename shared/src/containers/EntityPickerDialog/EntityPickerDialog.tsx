@@ -2,11 +2,11 @@
 // Each entity type has it's own table
 
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
-import { FC, useState, useMemo } from 'react'
+import { FC, useState } from 'react'
 import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/SimpleTable'
-import { Dialog, DialogProps } from '@ynput/ayon-react-components'
+import { Button, Dialog, DialogProps } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
 import { upperFirst } from 'lodash'
@@ -46,12 +46,14 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   projectName: string // The name of the project
   entityType: PickerEntityType // The type of entity to pick
   isMultiSelect?: boolean // Whether to allow multiple selection
+  onSubmit: (selection: string[]) => void // Callback when the user selects an entity/entities
 }
 
 export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   projectName,
   entityType,
   isMultiSelect,
+  onSubmit,
   ...props
 }) => {
   const [rowSelection, setRowSelection] = useState<PickerSelection>({
@@ -88,6 +90,14 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     }))
   }
 
+  // convert row selection into a list of ids for each entity type to make it easier to work with
+  const entitySelection = Object.fromEntries(
+    Object.entries(rowSelection).map(([type, selection]) => [
+      type,
+      Object.keys(selection).filter((id) => selection[id]),
+    ]),
+  ) as Record<PickerEntityType, string[]>
+
   // the expanded state of the folders tree table
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -95,13 +105,23 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     entityType,
     projectName,
     search,
-    selection: rowSelection,
+    selection: entitySelection,
   })
 
-  // Get data for each entity type (skip if not required)
-
-  // Get the complete hierarchy for the target entity type - much simpler!
+  // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]
+
+  const handleSubmit = () => {
+    // check the target entity has a selection
+    if (!entitySelection[entityType]?.length) {
+      return
+    }
+    const selection = isMultiSelect
+      ? entitySelection[entityType]
+      : entitySelection[entityType].slice(0, 1)
+    // Call the onSubmit callback with the selected entity ids
+    onSubmit(selection)
+  }
 
   //   based on the entity type, we need to create a new table for each parent
   return (
@@ -111,9 +131,17 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
       isOpen
       size="full"
       style={{ height: '80vh', maxWidth: entityHierarchy.length * COL_MAX_WIDTH }}
+      footer={
+        <Button
+          label={`Select ${entityType}${isMultiSelect ? 's' : ''}`}
+          variant="filled"
+          disabled={!entitySelection[entityType]?.length}
+          onClick={handleSubmit}
+        />
+      }
     >
       <TablesContainer>
-        {entityHierarchy.map((tableEntityType, index) => (
+        {entityHierarchy.map((tableEntityType) => (
           <SimpleTableProvider
             rowSelection={rowSelection[tableEntityType] || {}}
             onRowSelectionChange={(s) => setEntityRowSelection(s, tableEntityType)}
@@ -129,6 +157,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
               tableData={entityData[tableEntityType]?.table || []}
               isFolderHierarchy={tableEntityType === 'folder' && !search.folder}
               onSearch={(v) => setEntitySearch(v, tableEntityType)}
+              isMultiSelect={tableEntityType === entityType ? !!isMultiSelect : true}
             />
           </SimpleTableProvider>
         ))}

@@ -18,6 +18,7 @@ interface EntityTypeTableProps {
   search?: string // The search term to filter the entities
   onSearch: (search: string | undefined) => void // Callback to handle search changes
   isFolderHierarchy?: boolean // Whether this is a folder hierarchy table
+  isMultiSelect?: boolean // Whether to allow multiple selection
 }
 
 const EntityTypeTable: FC<EntityTypeTableProps> = ({
@@ -28,6 +29,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   search,
   onSearch,
   isFolderHierarchy,
+  isMultiSelect,
 }) => {
   return (
     <Container>
@@ -44,6 +46,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
         isLoading={isLoading}
         isExpandable={isFolderHierarchy}
         rowHeight={34}
+        isMultiSelect={isMultiSelect}
       />
     </Container>
   )

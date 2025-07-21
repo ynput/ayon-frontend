@@ -1,9 +1,6 @@
 import {
   FolderListItem,
-  FolderModel,
-  FolderType,
   SearchEntityLink,
-  TaskType,
   useGetProjectQuery,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
@@ -41,7 +38,7 @@ interface useGetEntityPickerDataProps {
   projectName: string
   entityType: PickerEntityType // which entity type we are picking for
   search: PickerSearch
-  selection: PickerSelection
+  selection: Record<PickerEntityType, string[]>
 }
 
 export const useGetEntityPickerData = ({
@@ -51,13 +48,6 @@ export const useGetEntityPickerData = ({
   selection,
 }: useGetEntityPickerDataProps): EntityPickerDataReturn => {
   const entityDependencies = entityHierarchies[entityType] || []
-  // convert row selection into a list of ids for each entity type to make it easier to work with
-  const idSelection = Object.fromEntries(
-    Object.entries(selection).map(([key, value]) => [
-      key,
-      Object.keys(value).filter((id) => value[id]),
-    ]),
-  )
 
   // Get project data
   const { data: project } = useGetProjectQuery({ projectName })
@@ -96,7 +86,7 @@ export const useGetEntityPickerData = ({
   const getParentIds = (parentType: PickerEntityType, parentData: { id: string }[] = []) => {
     if (parentType === 'product') {
     }
-    const parentSelection = idSelection[parentType]
+    const parentSelection = selection[parentType]
     if (parentSelection?.length > 0) {
       return parentSelection
     } else if (parentData) {
@@ -111,7 +101,7 @@ export const useGetEntityPickerData = ({
     'task',
     search.task,
     !entityDependencies.includes('task'),
-    idSelection.folder,
+    selection.folder,
     project?.taskTypes,
   )
   const product = useGetEntityTypeData(
