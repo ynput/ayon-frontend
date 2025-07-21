@@ -16,6 +16,7 @@ export type EntityUpdate = {
   field: string
   value: CellValue | CellValue[] | null
   isAttrib?: boolean
+  isLink?: boolean // link updates use different endpoint
   meta?: Record<string, any>
 }
 export type UpdateTableEntities = (entities: EntityUpdate[], pushHistory?: boolean) => Promise<void>
@@ -63,9 +64,17 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         return
       }
 
+      // Filter out link updates - they should be handled by useUpdateTableLinks
+      const entityUpdates = entities.filter((e) => !e.isLink)
+
+      // If no entity updates to process, return early
+      if (!entityUpdates.length) {
+        return
+      }
+
       // Record history of previous values before applying update
       if (pushHistory && pushToHistory) {
-        const inverseEntities: HistoryEntityUpdate[] = entities.map(
+        const inverseEntities: HistoryEntityUpdate[] = entityUpdates.map(
           ({ rowId, id, type, field, isAttrib, meta }) => {
             const entityData = getEntityById(id) as Record<string, any>
             if (!entityData) {
@@ -94,7 +103,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             }
           },
         )
-        const historyEntities: HistoryEntityUpdate[] = entities.flatMap(
+        const historyEntities: HistoryEntityUpdate[] = entityUpdates.flatMap(
           ({ rowId, id, type, field, value, isAttrib, meta }) => {
             const entityData = getEntityById(id)
             const entityId = entityData?.entityId || entityData?.id || id
@@ -125,7 +134,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       ]
       // Group operations by entity type for bulk processing
       let operations: OperationWithRowId[] = []
-      for (const entity of entities) {
+      for (const entity of entityUpdates) {
         let { id, type, field, value, isAttrib, meta } = entity
         const entityData = getEntityById(id)
         const entityId = entityData?.entityId || entityData?.id || id
@@ -204,12 +213,14 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         },
       }))
 
-      // now make api call to update all entities
+      // now make api call to update all entities and links
       try {
-        await updateEntities({
-          operations,
-          patchOperations: inheritedDependentsOperations,
-        })
+        if (operations.length) {
+          await updateEntities({
+            operations,
+            patchOperations: inheritedDependentsOperations,
+          })
+        }
       } catch (error: any) {
         console.error('Error updating entities:', error)
         toast.error('Failed to update entities: ' + error?.error)

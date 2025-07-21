@@ -143,7 +143,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
       {visibleValues.map((value, index) => (
         <Chip
           {...pt?.chip}
-          key={value}
+          key={value + index}
           title={value}
           className={clsx(
             'chip',
@@ -157,8 +157,8 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
       {hiddenCount > 0 && (
         <MoreChip className={clsx('more-chip', pt?.chip?.className)}>+{hiddenCount}</MoreChip>
       )}
-      {offscreenChips.map((value) => (
-        <OffscreenChip key={value} className="offscreen-chip">
+      {offscreenChips.map((value, index) => (
+        <OffscreenChip key={value + index} className="offscreen-chip">
           {value}
         </OffscreenChip>
       ))}

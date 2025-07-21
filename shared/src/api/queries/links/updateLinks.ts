@@ -301,12 +301,6 @@ const enhancedApi = linksApi.enhanceEndpoints({
               label: 'label' in targetEntityData ? targetEntityData.label : undefined,
             }
 
-            const link: LinkUpdate = {
-              id: linkId,
-              direction: direction,
-              linkType: linkTypeName,
-            }
-
             // Update entity links cache for both entities
             patchEntityLinksCache(
               {
@@ -323,7 +317,6 @@ const enhancedApi = linksApi.enhanceEndpoints({
             )
 
             // Wait for the mutation to finish (undo patches if it fails)
-
             await queryFulfilled
           } else {
             console.warn('Source entity type not provided, falling back to task query')

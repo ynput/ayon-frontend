@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react'
+import { FC } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { getEntityId, getEntityTypeIcon } from '@shared/util'
@@ -79,7 +79,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
         targetEntityType={targetEntityType}
         projectName={projectName}
         onClose={onClose}
-        onAdd={(id) => linksUpdater.add(id, getEntityId())}
+        onAdd={(id) => linksUpdater.add([{ targetEntityId: id, linkId: getEntityId() }])}
       />
     </Styled.Container>
   )

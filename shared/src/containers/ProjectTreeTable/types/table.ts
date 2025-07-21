@@ -1,8 +1,7 @@
 import { GetTasksByParentQuery } from '@shared/api'
+import type { TaskLink, FolderLink } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'
-import { FolderLink } from '@shared/api/queries/overview/getFoldersLinks'
-import { TaskLink } from '@shared/api'
 
 export type FolderListItem = {
   id: string
@@ -88,6 +87,7 @@ export type EditorVersionNode = {
       id: string
     }
   }
+  links: TaskLink[]
 }
 
 type EditorProductNode = {
@@ -106,6 +106,7 @@ type EditorProductNode = {
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
+  links: TaskLink[]
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>
