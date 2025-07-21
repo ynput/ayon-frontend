@@ -4,8 +4,17 @@ import { setMenuOpen } from '@state/context'
 import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
+import clsx from 'clsx'
 
-const MenuContainer = ({ id, target, targetId = '', children, ...props }) => {
+const MenuContainer = ({
+  id,
+  target,
+  targetId = '',
+  align = 'right',
+  theme = 'light',
+  children,
+  ...props
+}) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const isOpen = useSelector((state) => state.context.menuOpen) === id
@@ -29,6 +38,8 @@ const MenuContainer = ({ id, target, targetId = '', children, ...props }) => {
         handleNavigate,
         target,
         targetId,
+        align,
+        theme,
         children,
         ...props,
       }}
@@ -36,7 +47,15 @@ const MenuContainer = ({ id, target, targetId = '', children, ...props }) => {
   )
 }
 
-const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ...props }) => {
+const MenuInner = ({
+  handleClose,
+  handleNavigate,
+  target,
+  targetId,
+  align = 'right',
+  children,
+  ...props
+}) => {
   const dialogRef = useRef(null)
 
   // when the menu is open, focus the first element
@@ -49,11 +68,16 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
     }
   }, [pos, dialogRef])
 
-  // if target is a element, find it's position bottom and right
-  // then set the style of the dialog to position it there
-
+  // if target is a element, find its position bottom and align (right or left)
   function calculatePos(target) {
     const rect = target.getBoundingClientRect()
+    if (align === 'left') {
+      return {
+        top: rect.bottom + 8 - 42,
+        left: rect.left,
+      }
+    }
+    // default right
     return {
       top: rect.bottom + 8 - 42,
       right: window.innerWidth - rect.right,
@@ -71,7 +95,7 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
     } else {
       console.log('no target or targetId')
     }
-  }, [target, targetId])
+  }, [target, targetId, align])
 
   // attach the handleClose as a prop to each child
   children = React.Children.map(children, (child, i) => {
@@ -98,7 +122,7 @@ const MenuInner = ({ handleClose, handleNavigate, target, targetId, children, ..
       ref={dialogRef}
       id="dialog"
     >
-      <Styled.DialogContent id="content" style={{ ...pos }}>
+      <Styled.DialogContent id="content" style={{ ...pos }} className={clsx(align)}>
         {children}
       </Styled.DialogContent>
     </Styled.Dialog>,

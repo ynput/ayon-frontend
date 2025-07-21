@@ -49,8 +49,7 @@ import { ViewerDialog } from '@containers/Viewer'
 import { login } from '@state/user'
 
 // queries
-import { useLazyGetSiteInfoQuery } from '@shared/api'
-import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
+import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
@@ -60,7 +59,7 @@ import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseIn
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
-import { PowerpackDialog } from '@shared/components'
+import { FeedbackProvider, PowerpackDialog } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
@@ -180,58 +179,60 @@ const App = () => {
         <Favicon />
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
-          <RestartProvider>
-            <RemoteModulesProvider skip={!user.name}>
-              <PowerpackProvider>
-                <ContextMenuProvider>
-                  <DetailsPanelProvider
-                    {...handlerProps}
-                    user={user}
-                    viewer={viewer}
-                    dispatch={dispatch}
-                    useLocation={useLocation}
-                    useNavigate={useNavigate}
-                    useParams={useParams}
-                    useSearchParams={useSearchParams}
-                  >
-                    <GlobalContextMenu />
-                    <PasteProvider>
-                      <PasteModal />
-                      <BrowserRouter>
-                        <NotificationsProvider>
-                          <URIProvider>
-                            <ShortcutsProvider>
-                              <PiPProvider>
-                                <QueryParamProvider
-                                  adapter={ReactRouter6Adapter}
-                                  options={{
-                                    updateType: 'replaceIn',
-                                  }}
-                                >
-                                  <Header />
-                                  <ShareDialog />
-                                  <ViewerDialog />
-                                  <ConfirmDialog />
-                                  <FileUploadPreviewContainer />
-                                  <ReleaseInstallerDialog />
-                                  <CompleteProfilePrompt />
-                                  <AppRoutes isUser={isUser} />
-                                  <DetailsPanelFloating />
-                                  <PowerpackDialog />
-                                  <AppRemoteLoader />
-                                  <TrialBanner />
-                                </QueryParamProvider>
-                              </PiPProvider>
-                            </ShortcutsProvider>
-                          </URIProvider>
-                        </NotificationsProvider>
-                      </BrowserRouter>
-                    </PasteProvider>
-                  </DetailsPanelProvider>
-                </ContextMenuProvider>
-              </PowerpackProvider>
-            </RemoteModulesProvider>
-          </RestartProvider>
+          <FeedbackProvider>
+            <RestartProvider>
+              <RemoteModulesProvider skip={!user.name}>
+                <PowerpackProvider>
+                  <ContextMenuProvider>
+                    <DetailsPanelProvider
+                      {...handlerProps}
+                      user={user}
+                      viewer={viewer}
+                      dispatch={dispatch}
+                      useLocation={useLocation}
+                      useNavigate={useNavigate}
+                      useParams={useParams}
+                      useSearchParams={useSearchParams}
+                    >
+                      <GlobalContextMenu />
+                      <PasteProvider>
+                        <PasteModal />
+                        <BrowserRouter>
+                          <NotificationsProvider>
+                            <URIProvider>
+                              <ShortcutsProvider>
+                                <PiPProvider>
+                                  <QueryParamProvider
+                                    adapter={ReactRouter6Adapter}
+                                    options={{
+                                      updateType: 'replaceIn',
+                                    }}
+                                  >
+                                    <Header />
+                                    <ShareDialog />
+                                    <ViewerDialog />
+                                    <ConfirmDialog />
+                                    <FileUploadPreviewContainer />
+                                    <ReleaseInstallerDialog />
+                                    <CompleteProfilePrompt />
+                                    <AppRoutes isUser={isUser} />
+                                    <DetailsPanelFloating />
+                                    <PowerpackDialog />
+                                    <AppRemoteLoader />
+                                    <TrialBanner />
+                                  </QueryParamProvider>
+                                </PiPProvider>
+                              </ShortcutsProvider>
+                            </URIProvider>
+                          </NotificationsProvider>
+                        </BrowserRouter>
+                      </PasteProvider>
+                    </DetailsPanelProvider>
+                  </ContextMenuProvider>
+                </PowerpackProvider>
+              </RemoteModulesProvider>
+            </RestartProvider>
+          </FeedbackProvider>
         </Suspense>
       </>
     ),
@@ -240,7 +241,7 @@ const App = () => {
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
-  const loginComponent = useMemo(() => <LoginPage isFirstTime={isOnboarding} />, [isOnboarding])
+  
 
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
@@ -282,22 +283,38 @@ const App = () => {
     else window.history.replaceState({}, document.title, '/')
   }
 
+  const isTokenAuth = () => {
+    // User is trying to log in with a token
+    // we need to show the login page, that handles sso 
+    // callbacks in order to parse the token and overwrite
+    // existing session if needed
+    const provider = window.location.pathname.split('/')
+    return provider[1] === 'login' && provider[2] === '_token'
+  }
+
+
   // User is not logged in
   if (!user.name && !noAdminUser) {
     return (
       <>
-        {loginComponent}
+        <LoginPage isFirstTime={isOnboarding} />
         {tooltipComponent}
       </>
     )
   }
 
+  if (isTokenAuth()) {
+    return <LoginPage isFirstTime={isOnboarding} />
+  }
+
   // Trial has finished
   if (isTrialing && left?.finished) {
     return (
-      <BrowserRouter>
-        <TrialEnded orgName={ynputConnect?.orgName} />
-      </BrowserRouter>
+      <FeedbackProvider>
+        <BrowserRouter>
+          <TrialEnded orgName={ynputConnect?.orgName} />
+        </BrowserRouter>
+      </FeedbackProvider>
     )
   }
 
@@ -323,7 +340,7 @@ const App = () => {
     return loadingComponent
   }
 
-  if (serverError && !noAdminUser) return errorComponent
+  if (serverError && !noAdminUser) return <FeedbackProvider>{errorComponent}</FeedbackProvider>
 
   return (
     <>

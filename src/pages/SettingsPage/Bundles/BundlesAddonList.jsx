@@ -286,7 +286,8 @@ const BundlesAddonList = React.forwardRef(
                 <InputText
                   value={addon.dev?.path || ''}
                   style={{ width: '100%' }}
-                  placeholder="/path/to/dev/addon..."
+                  placeholder="/path/to/dev/addon/client"
+                  data-tooltip="Path to the client folder of the addon to run client side code live from source."
                   onChange={(e) =>
                     onDevChange([addon.name], { value: e.target.value, key: 'path' })
                   }

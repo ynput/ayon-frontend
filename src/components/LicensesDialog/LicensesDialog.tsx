@@ -1,11 +1,10 @@
-import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useGetLicensesQuery } from '@queries/market/getMarket'
 import { Button, Dialog, Icon, theme } from '@ynput/ayon-react-components'
 import { FC, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import { copyToClipboard } from '@shared/util'
 import clsx from 'clsx'
-import { YnputCloudInfoModel } from '@shared/api'
+import { useGetYnputCloudInfoQuery, YnputCloudInfoModel } from '@shared/api'
 import { fromUnixTime, format } from 'date-fns'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 
@@ -237,7 +236,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
                 <Icon
                   className="copy-icon"
                   icon="content_copy"
-                  onClick={() => copyToClipboard(cloud[key]?.toString(), true)}
+                  onClick={() => copyToClipboard(cloud[key]?.toString() ?? '', true)}
                 />
               </Row>
             ))}

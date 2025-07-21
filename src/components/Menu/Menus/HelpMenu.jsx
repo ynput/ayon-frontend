@@ -1,6 +1,6 @@
 import React from 'react'
 import Menu from '../MenuComponents/Menu'
-import { useFeedback } from '@/feedback/FeedbackContext'
+import { useFeedback } from '@shared/components'
 
 export const HelpMenu = ({ user, ...props }) => {
   const isUser = user.data.isUser

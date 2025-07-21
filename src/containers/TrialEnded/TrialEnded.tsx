@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@state/store'
 import { useGetActiveUsersCountQuery } from '@shared/api'
 import { useLogoutMutation } from '@queries/auth/logout'
+import { useFeedback } from '@shared/components'
 
 interface TrialEndedProps {
   orgName?: string
@@ -15,6 +16,7 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
   const navigate = useNavigate()
+  const { openSupport } = useFeedback()
 
   //   redirect to '/trialend' if not already there
   useEffect(() => {
@@ -43,13 +45,25 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
           <>
             <p>AYON simplifies your VFX pipeline and boosts efficiency.</p>
             <p>Subscribe to keep using AYON and protect your data!</p>
-            <a
-              href={orgName ? getSubscribeLink(activeUsersCount, orgName) : ''}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button variant="tertiary">Subscribe now</Button>
-            </a>
+            <Styled.Buttons>
+              <Button
+                label="Support"
+                variant="tonal"
+                onClick={() =>
+                  openSupport(
+                    'NewMessage',
+                    'My free trial has ended and I would like to continue using AYON.',
+                  )
+                }
+              />
+              <a
+                href={orgName ? getSubscribeLink(activeUsersCount, orgName) : ''}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button variant="tertiary">Subscribe now</Button>
+              </a>
+            </Styled.Buttons>
           </>
         ) : (
           <p>Please ask your administrator to subscribe to AYON.</p>

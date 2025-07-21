@@ -1,10 +1,13 @@
-import { useGetFeedbackVerificationQuery, useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
-import { useAppSelector } from '@state/store'
 import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import { useGetSiteInfoQuery } from '@shared/api'
+import {
+  useGetCurrentUserQuery,
+  useGetFeedbackVerificationQuery,
+  useGetSiteInfoQuery,
+  useGetYnputCloudInfoQuery,
+} from '@shared/api'
 
-type FeedbackContextType = {
+export type FeedbackContextType = {
   loaded: boolean
   openSupport: (
     page?: 'Home' | 'Messages' | 'Changelog' | 'Help' | 'NewMessage' | 'ShowArticle',
@@ -28,15 +31,15 @@ type FeedbackProviderProps = {
 }
 
 export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) => {
-  const user = useAppSelector((state) => state.user)
   const [scriptLoaded, setScriptLoaded] = useState(false)
 
-  const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user.name })
-  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user.name })
+  const { data: user } = useGetCurrentUserQuery()
+  const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user?.name })
+  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user?.name })
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
     undefined,
     {
-      skip: !user.name || !connect,
+      skip: !user?.name,
     },
   )
 
@@ -65,7 +68,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const frontendVersion = siteInfo?.version?.split('+')[1] || 'unknown'
 
   const identifyUser = () => {
-    if (!user.name || !verification) return
+    if (!user?.name || !verification) return
     const verificationData = cloneDeep(verification)
     // delete any undefined/null properties
     const cleanObject = (obj: any) => {
@@ -86,6 +89,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         origin: window.location.origin,
         serverVersion: serverVersion,
         frontendVersion: frontendVersion,
+        instanceId: connect?.instanceId,
       },
     }
 
@@ -140,7 +144,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     // everyone sees highlights
     const categories: string[] = []
 
-    if (user.data.isAdmin) {
+    if (user?.data?.isAdmin) {
       // admins see everything
       const adminCategories = ['Server', 'Addon', 'Pipeline']
       categories.push(...adminCategories)
@@ -159,7 +163,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         },
         popup: {
           enabled: true,
-          usersName: user.attrib?.fullName,
+          usersName: user?.attrib?.fullName,
           autoOpenForNewUpdates: true,
         },
         category: categories,
@@ -216,6 +220,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }
 
   // Use an environment variable to skip loading Featurebase in certain environments
+  // @ts-expect-error: Vite provides import.meta.env at runtime
   const skipFeaturebase = import.meta.env.VITE_SKIP_FEATUREBASE === 'true'
 
   // Load Featurebase script and initialize widgets
@@ -223,7 +228,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     // if skip flag is set, do not load the script
     if (skipFeaturebase) return
     // if not logged in, do not load the script
-    if (!user.name) return
+    if (!user?.name) return
     if (!siteInfo) return
 
     // if already loaded, do not load again
@@ -243,20 +248,20 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     // Initialize portal widget
     initializePortalWidget()
-  }, [user.name, scriptLoaded, siteInfo])
+  }, [user?.name, scriptLoaded, siteInfo])
 
   const [identified, setIdentified] = useState(false)
   // verify user
   useEffect(() => {
     // check if we can identify the user
-    if (!user.name || !connect || !verification || !scriptLoaded) return
+    if (!user?.name || !verification || !scriptLoaded) return
     // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
     identifyUser()
     setIdentified(true)
   }, [
-    user.name,
+    user?.name,
     connect?.instanceId,
     verification?.userHash,
     scriptLoaded,
@@ -322,7 +327,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     const win = window as any
     if (typeof win.Featurebase === 'function') {
       win.Featurebase('onHide', function () {
-        console.log('hiding')
         // hide the messenger root element
         setMessengerVisibility(false)
       })
@@ -334,6 +338,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     if (typeof win.Featurebase !== 'function') {
       window.alert('Featurebase SDK is not loaded yet. Please try again later.')
       console.warn('Featurebase SDK is not loaded yet.')
+      return
+    }
+
+    if (messengerVisibility) {
+      //  if the messenger is already visible, close it
+      win.Featurebase('hide')
+      setMessengerVisibility(false)
       return
     }
 

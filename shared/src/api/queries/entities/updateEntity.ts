@@ -104,8 +104,18 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
             } else if (entityType === 'folder') {
               const folder = draft.find((folder) => folder.id === entityId)
               if (!folder) throw new Error('Patching progress view: folder not found')
+
+              // If name is being updated, also update the path
+              let updatedPatch = { ...patch }
+              if (patch.name && folder.path) {
+                // Construct new path by replacing the last segment with the new name
+                const pathParts = folder.path.split('/')
+                pathParts[pathParts.length - 1] = patch.name
+                updatedPatch.path = pathParts.join('/')
+              }
+
               // update folder
-              const newFolder = { ...folder, ...patch }
+              const newFolder = { ...folder, ...updatedPatch }
               // update query
               const folderIndex = draft.findIndex((f) => f.id === entityId)
               draft[folderIndex] = newFolder

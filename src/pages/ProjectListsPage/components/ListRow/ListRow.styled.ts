@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 export const Cell = styled.div`
   width: 100%;
-  height: 100%;
+  height: 32px;
   user-select: none;
   padding: 0px 4px;
 

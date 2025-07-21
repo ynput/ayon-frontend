@@ -1,7 +1,6 @@
 import { FC } from 'react'
 import HeaderButton from './HeaderButton'
-import { useFeedback } from '@/feedback/FeedbackContext'
-import { SupportBubble } from '@/feedback/SupportBubble'
+import { useFeedback, SupportBubble } from '@shared/components'
 import clsx from 'clsx'
 
 interface ChatBubbleButtonProps {}

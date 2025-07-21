@@ -24,7 +24,7 @@ const ReviewVersionDropdown = ({
   prefix = 'Viewing: ',
   placeholder = 'Select a version',
   tooltip = 'Viewing version',
-  shortcut = 'Q',
+  shortcut = 'W',
   valueProps = {},
   ...props
 }: ReviewVersionDropdownProps) => {

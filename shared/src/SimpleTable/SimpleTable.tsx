@@ -26,6 +26,7 @@ import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-util
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components'
+import { RowPinningState } from '@tanstack/react-table'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -105,6 +106,7 @@ export interface SimpleTableProps {
   isLoading: boolean
   error?: string
   isExpandable?: boolean // show expand/collapse icons
+  isMultiSelect?: boolean // enable multi-select with shift+click and ctrl/cmd+click
   forceUpdateTable?: any
   globalFilter?: string
   meta?: Record<string, any>
@@ -154,13 +156,21 @@ const SimpleTable: FC<SimpleTableProps> = ({
   isLoading,
   error,
   isExpandable,
+  isMultiSelect = true,
   forceUpdateTable,
   globalFilter,
   meta,
   children,
 }) => {
-  const { rowSelection, expanded, setExpanded, onExpandedChange, onRowSelectionChange } =
-    useSimpleTableContext()
+  const {
+    rowSelection,
+    expanded,
+    setExpanded,
+    onExpandedChange,
+    onRowSelectionChange,
+    rowPinning,
+    onRowPinningChange,
+  } = useSimpleTableContext()
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
 
@@ -196,7 +206,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       if (!currentRow) return
 
-      if (isShift && lastSelectedIdRef.current) {
+      if (isMultiSelect && isShift && lastSelectedIdRef.current) {
         const lastId = lastSelectedIdRef.current
         const anchorRow = allProcessableRows.find((r) => r.id === lastId)
 
@@ -204,19 +214,18 @@ const SimpleTable: FC<SimpleTableProps> = ({
           tableInstance.setRowSelection({ [currentId]: true })
         } else {
           const rowsToToggle = getRowRange(allProcessableRows, currentId, lastId)
-          const isAnchorSelected = anchorRow.getIsSelected()
-          // Calling toggleSelected on each row will trigger onRowSelectionChange for each.
-          // The revised handleRowSelectionChangeCallback will correctly queue these.
-          rowsToToggle.forEach((r) => r.toggleSelected(isAnchorSelected))
+          const newSelection: RowSelectionState = {}
+          rowsToToggle.forEach((r) => (newSelection[r.id] = true))
+          tableInstance.setRowSelection(newSelection)
         }
-      } else if (isCtrlOrMeta) {
+      } else if (isMultiSelect && isCtrlOrMeta) {
         currentRow.toggleSelected()
       } else {
         tableInstance.setRowSelection({ [currentId]: true })
       }
       lastSelectedIdRef.current = currentId
     },
-    [],
+    [isMultiSelect],
   )
 
   // Callback for useRowKeydown's handleRowSelect prop
@@ -321,6 +330,13 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [onRowSelectionChange], // Depends only on the stable setState function from context
   )
 
+  const handleRowPinningChangeCallback: OnChangeFn<RowPinningState> = useCallback(
+    (updater) => {
+      rowPinning && onRowPinningChange?.(functionalUpdate(updater, rowPinning))
+    },
+    [onRowPinningChange], // Depends only on the stable setState function from context
+  )
+
   const table = useReactTable({
     data: tableData,
     columns,
@@ -328,12 +344,15 @@ const SimpleTable: FC<SimpleTableProps> = ({
       expanded,
       rowSelection,
       globalFilter,
+      rowPinning,
     },
     onRowSelectionChange: handleRowSelectionChangeCallback,
+    onRowPinningChange: handleRowPinningChangeCallback,
     filterFns: {
       fuzzy: fuzzyFilter,
     },
     enableRowSelection: true, //enable row selection for all rows
+    enableRowPinning: !!onRowPinningChange,
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     onExpandedChange: (updater) => {
