@@ -53,18 +53,14 @@ interface EntityTypeTableHeaderProps {
   title: string
   search: string | null | undefined
   onSearch: (search: string | undefined) => void
-  onSelectAll?: () => void
   buttonLabels?: ButtonsCustomization
-  hiddenButtons?: ButtonType[]
 }
 
 const EntityTypeTableHeader: FC<EntityTypeTableHeaderProps> = ({
   title,
   search,
   onSearch,
-  onSelectAll,
   buttonLabels = {},
-  hiddenButtons = [],
 }) => {
   const searchButton = {
     icon: 'search',
@@ -78,16 +74,6 @@ const EntityTypeTableHeader: FC<EntityTypeTableHeaderProps> = ({
         <StyledTitle>{title}</StyledTitle>
 
         <StyledButtons className="projects-list-header-buttons">
-          {/* select all button */}
-          {!hiddenButtons.includes('select-all') && onSelectAll && (
-            <HeaderButton
-              icon="checklist"
-              data-tooltip="Select all"
-              onClick={onSelectAll}
-              className="select-all"
-            />
-          )}
-
           {
             <HeaderButton
               icon={searchButton.icon}
