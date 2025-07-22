@@ -52,8 +52,6 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
     { skip: !search },
   )
 
-  console.log('render')
-
   // Flatten all entities from all pages
   const entities = useMemo(() => {
     return searchData?.pages.flatMap((page) => page.entities) || []
