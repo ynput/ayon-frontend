@@ -4,6 +4,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   name
   ... on TaskNode {
     label
+    subType: taskType
     folder {
       path
     }
@@ -11,8 +12,10 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on FolderNode {
     label
     path
+    subType: folderType
   }
   ... on ProductNode {
+    subType: productType
     folder {
       path
     }

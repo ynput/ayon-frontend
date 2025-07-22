@@ -13,7 +13,7 @@ export type LinkEntity = {
   label: string
   path: string
   entityType: string
-  icon?: string
+  icon: string
 }
 
 export interface LinksManagerProps {
@@ -105,7 +105,6 @@ export const LinksManager: FC<LinksManagerProps> = ({
           projectName={projectName}
           onClose={onClose}
           onAdd={(id) => linksUpdater.add([{ targetEntityId: id, linkId: getEntityId() }])}
-          searchType={searchType}
           onSearchTypeChange={setSearchType}
         />
       </Styled.Container>

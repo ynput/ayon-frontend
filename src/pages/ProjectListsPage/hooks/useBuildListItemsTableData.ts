@@ -6,6 +6,7 @@ import {
 } from '@shared/containers'
 import { useMemo } from 'react'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
+import { productTypes } from '@shared/util'
 
 type Props = {
   listItemsData: EntityListItemWithLinks[]
@@ -19,7 +20,11 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
   const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
     return listItemsData.map((item) => {
       // Process links if they exist
-      const links = linksToTableData(item.links, item.entityType)
+      const links = linksToTableData(item.links, item.entityType, {
+        folderTypes: projectInfo?.folderTypes || [],
+        productTypes: Object.values(productTypes || {}),
+        taskTypes: projectInfo?.taskTypes || [],
+      })
 
       return {
         id: item.id,

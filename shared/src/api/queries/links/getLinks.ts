@@ -22,9 +22,8 @@ export type SearchEntityLink = {
   entityType: string
   path: string
   label: string
-  folderType?: string | undefined
-  taskType?: string | undefined
-  productType?: string | undefined
+  icon: string | undefined
+  subType: string | undefined
 }
 
 export type GetSearchedEntitiesLinksResult = {
@@ -170,7 +169,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     name: taskNode.name,
                     label: taskNode.label || taskNode.name,
                     path: taskNode.folder?.path || '',
-                    taskType: taskNode.taskType,
+                    subType: taskNode.subType,
                   }
                 case 'folder':
                   const folderNode = node as SearchedFolderNode
@@ -180,7 +179,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     name: folderNode.name,
                     label: folderNode.label || folderNode.name,
                     path: folderNode.parent?.path || '',
-                    folderType: folderNode.folderType,
+                    subType: folderNode.subType,
                   }
                 case 'product':
                   const productNode = node as SearchedProductNode
@@ -190,7 +189,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     name: productNode.name,
                     label: productNode.name,
                     path: productNode.folder?.path,
-                    productType: productNode.productType,
+                    subType: productNode.subType,
                   }
                 case 'version':
                   const versionNode = node as SearchedVersionNode

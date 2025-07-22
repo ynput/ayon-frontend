@@ -29,7 +29,7 @@ query GetSearchedFolders(
           id
           name
           label
-          folderType
+          subType: folderType
           parent {
             path
           }
@@ -71,7 +71,7 @@ query GetSearchedProducts(
         node {
           id
           name
-          productType
+          subType: productType
           folder {
             path
           }
@@ -160,7 +160,7 @@ query GetSearchedTasks(
           id
           name
           label
-          taskType
+          subType: taskType
           folder {
             path
           }

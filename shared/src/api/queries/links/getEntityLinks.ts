@@ -51,7 +51,11 @@ export type EntityLinkQuery =
   | RepresentationLink
   | WorkfileLink
 export type EntityLink = Pick<EntityLinkQuery, 'direction' | 'entityType' | 'id' | 'linkType'> & {
-  node: Pick<EntityLinkQuery['node'], 'name' | 'id'> & { label?: string | null; path: string }
+  node: Pick<EntityLinkQuery['node'], 'name' | 'id'> & {
+    label?: string | null
+    path: string
+    subType: string | undefined
+  }
 }
 
 // Define the result type for the query - simplified without edges wrapper
@@ -131,6 +135,7 @@ const injectedQueries = foldersApi.injectEndpoints({
                     name: linkEdge.node.name,
                     label: formatEntityLabel(linkEdge.node),
                     path: formatEntityPath(linkEdge.node, linkEdge.entityType),
+                    subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
                   },
                 })) || [], // Flatten the edges structure and format paths
             })) || []

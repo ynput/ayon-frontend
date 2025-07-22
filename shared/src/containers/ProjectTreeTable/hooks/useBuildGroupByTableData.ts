@@ -8,6 +8,7 @@ import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 import { linksToTableData } from '../utils'
+import { productTypes } from '@shared/util'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -120,7 +121,11 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
         ownAttrib: task.ownAttrib,
         path: task.folder?.path,
         updatedAt: task.updatedAt,
-        links: linksToTableData(task.links, 'task'),
+        links: linksToTableData(task.links, 'task', {
+          folderTypes: project?.folderTypes || [],
+          productTypes: Object.values(productTypes) || [],
+          taskTypes: project?.taskTypes || [],
+        }),
       }
     },
     [getEntityTypeData],

@@ -1,11 +1,12 @@
 import { FC, useState, useMemo, useRef, useEffect } from 'react'
 import * as Styled from './LinksManager.styled'
-import { Button, Icon } from '@ynput/ayon-react-components'
-import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
-import { getEntityTypeIcon } from '@shared/util'
+import { Icon } from '@ynput/ayon-react-components'
+import { useGetProjectQuery, useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
 import { upperFirst } from 'lodash'
+import { productTypes } from '@shared/util'
+import { getEntityIcon } from '@shared/containers'
 
 export type LinkSearchType = 'search' | 'picker' | null
 
@@ -13,7 +14,6 @@ interface AddNewLinksProps {
   targetEntityType: string
   projectName: string
   onClose?: () => void
-  searchType: LinkSearchType //  used to determine if the search is active
   onSearchTypeChange: (type: LinkSearchType) => void //  used to handle search type changes
   onAdd?: (targetEntityId: string, linkType?: string) => void
 }
@@ -22,12 +22,19 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
   projectName,
   targetEntityType,
   onClose,
-  searchType,
   onSearchTypeChange,
   onAdd,
 }) => {
   const [search, setSearch] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // TODO: replace with project context
+  const { data: project } = useGetProjectQuery({ projectName })
+  const anatomyForIcons = {
+    folderTypes: project?.folderTypes || [],
+    taskTypes: project?.taskTypes || [],
+    productTypes: Object.values(productTypes),
+  }
 
   const {
     data: searchData,
@@ -44,6 +51,8 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
     },
     { skip: !search },
   )
+
+  console.log('render')
 
   // Flatten all entities from all pages
   const entities = useMemo(() => {
@@ -123,7 +132,7 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
                   tabIndex={0}
                   {...getItemProps(flatIndex)}
                 >
-                  <Icon icon={getEntityTypeIcon(entity.entityType)} />
+                  <Icon icon={getEntityIcon(entity.entityType, entity.subType, anatomyForIcons)} />
                   <span className="label">
                     {entity.path
                       .slice(1, entity.path.length) // Remove leading slash
@@ -134,12 +143,7 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
                       ))}
                     <strong>{entity.label || entity.name}</strong>
                   </span>
-                  <span className="type">
-                    {entity.folderType ||
-                      entity.taskType ||
-                      entity.productType ||
-                      entity.entityType}
-                  </span>
+                  <span className="type">{entity.subType || entity.entityType}</span>
                 </Styled.SearchItem>
               )
             }),

@@ -4,14 +4,27 @@
 import { LinkEntity } from '@shared/components'
 import { getLinkKey } from '../buildTreeTableColumns'
 import { EntityLink } from '@shared/api'
+import { getEntityTypeIcon } from '@shared/util'
 
 export type LinkId = string
 export type LinkValue = LinkEntity[]
 export type LinksTableData = Record<LinkId, LinkValue>
 
+type EntityAnatomy = {
+  name: string
+  icon?: string
+}
+
+type Anatomy = {
+  folderTypes: EntityAnatomy[]
+  productTypes: EntityAnatomy[]
+  taskTypes: EntityAnatomy[]
+}
+
 export const linksToTableData = (
   links: EntityLink[] | undefined,
   entityType: string,
+  anatomy: Anatomy,
 ): LinksTableData =>
   links?.reduce((acc, edge) => {
     const { linkType, direction, entityType: linkEntityType, id, node } = edge
@@ -21,6 +34,7 @@ export const linksToTableData = (
       linkId: id,
       entityId: node.id,
       entityType: linkEntityType,
+      icon: getEntityIcon(linkEntityType, node.subType, anatomy),
     }
 
     // we must build the entity link type name based on the direction and entity types
@@ -51,4 +65,25 @@ const linkTypeToLinkName = (
   const firstType = direction === 'in' ? linkEntityType : baseEntityType
   const secondType = direction === 'in' ? baseEntityType : linkEntityType
   return `${linkType}|${firstType}|${secondType}`
+}
+
+export const getEntityIcon = (
+  entityType: string,
+  subType: string | undefined,
+  anatomy: Anatomy,
+) => {
+  switch (entityType) {
+    case 'folder':
+      return (
+        anatomy.folderTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('folder')
+      )
+    case 'product':
+      return (
+        anatomy.productTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('product')
+      )
+    case 'task':
+      return anatomy.taskTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('task')
+    default:
+      return getEntityTypeIcon(entityType)
+  }
 }

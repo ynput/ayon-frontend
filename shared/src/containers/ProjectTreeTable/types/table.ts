@@ -1,5 +1,5 @@
 import { GetTasksByParentQuery } from '@shared/api'
-import type { TaskLink, FolderLink } from '@shared/api'
+import type { EntityLink } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'
 
@@ -20,7 +20,7 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   hasReviewables?: boolean
-  links: FolderLink[]
+  links: EntityLink[]
 }
 
 export type TableRow = {
@@ -62,7 +62,7 @@ export type EditorTaskNode = Omit<TaskNode, 'links'> & {
   entityId: string
   entityType: 'task'
   groups?: { value: string; hasNextPage?: string }[]
-  links: TaskLink[]
+  links: EntityLink[]
 }
 
 export type EditorVersionNode = {
@@ -87,7 +87,7 @@ export type EditorVersionNode = {
       id: string
     }
   }
-  links: TaskLink[]
+  links: EntityLink[]
 }
 
 type EditorProductNode = {
@@ -106,7 +106,7 @@ type EditorProductNode = {
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
-  links: TaskLink[]
+  links: EntityLink[]
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>

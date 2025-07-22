@@ -14,6 +14,7 @@ import { ProjectModel } from '../types/project'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 import { linksToTableData } from '../utils'
+import { productTypes } from '@shared/util'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -122,7 +123,11 @@ export default function useBuildProjectDataTable({
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
 
-      const links = linksToTableData(task.links, 'task')
+      const links = linksToTableData(task.links, 'task', {
+        folderTypes: projectInfo?.folderTypes || [],
+        productTypes: Object.values(productTypes || {}),
+        taskTypes: projectInfo?.taskTypes || [],
+      })
 
       return {
         id: task.id,
@@ -190,7 +195,11 @@ export default function useBuildProjectDataTable({
       const folder = foldersMap.get(folderId)
       if (!folder) continue
 
-      const links = linksToTableData(folder.links, 'folder')
+      const links = linksToTableData(folder.links, 'folder', {
+        folderTypes: projectInfo?.folderTypes || [],
+        productTypes: Object.values(productTypes || {}),
+        taskTypes: projectInfo?.taskTypes || [],
+      })
 
       // Create row with minimal required properties
       const row: TableRow = {
