@@ -5,6 +5,7 @@ import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
+import { upperFirst } from 'lodash'
 
 export type LinkSearchType = 'search' | 'picker' | null
 
@@ -84,35 +85,29 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
   return (
     <Styled.AddLinksContainer>
       <Styled.Header>Add new link</Styled.Header>
-      <Styled.Search>
-        {searchType === 'search' ? (
-          <>
-            <Icon icon={'search'} className="input-search" />
-            <Styled.SearchInput
-              ref={searchInputRef}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Search to add ${targetEntityType}s...`}
-              id={`search-${targetEntityType}`}
-              autoFocus
-              autoComplete="off"
-            />
-          </>
-        ) : (
-          <>
-            <Styled.SearchTypeButton
-              label="Search"
-              icon="search"
-              onClick={() => onSearchTypeChange('search')}
-            />
-            <Styled.SearchTypeButton
-              label="Pick"
-              icon="table_rows"
-              onClick={() => onSearchTypeChange('picker')}
-            />
-          </>
+      <Styled.SearchButtons>
+        <Styled.Search>
+          <Icon icon={'search'} className="input-search" />
+          <Styled.SearchInput
+            ref={searchInputRef}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={`Search ${targetEntityType}s...`}
+            id={`search-${targetEntityType}`}
+            autoFocus
+            autoComplete="off"
+          />
+        </Styled.Search>
+
+        {!search && (
+          <Styled.PickerButton
+            label={`${upperFirst(targetEntityType)} Picker`}
+            icon="table_rows"
+            onClick={() => onSearchTypeChange('picker')}
+          />
         )}
-      </Styled.Search>
+      </Styled.SearchButtons>
+
       {search && searchData && (
         <Styled.SearchItems ref={containerRef}>
           {searchData?.pages.map((page, pageIndex) =>

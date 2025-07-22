@@ -14,6 +14,7 @@ export const Container = styled.div`
 export const Header = styled.h4`
   margin: 0;
   padding: 0;
+  padding-bottom: var(--padding-s);
   flex-shrink: 0;
 
   color: var(--md-sys-color-outline);
@@ -73,12 +74,21 @@ export const AddLinksContainer = styled.div`
   max-height: 300px;
 `
 
+// wraps the picker and search input
+export const SearchButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--base-gap-small);
+`
+
 export const Search = styled.div`
   position: relative;
   width: 100%;
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
+  padding-top: var(--padding-s);
 
   .input-search {
     position: absolute;
@@ -86,9 +96,10 @@ export const Search = styled.div`
   }
 `
 
-export const SearchTypeButton = styled(Button)`
+export const PickerButton = styled(Button)`
   min-width: 110px;
   flex: 1;
+  width: 100%;
 `
 
 export const SearchInput = styled(InputText)`
