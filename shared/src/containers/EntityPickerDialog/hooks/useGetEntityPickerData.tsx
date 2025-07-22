@@ -21,6 +21,8 @@ type EntityQueryResult = {
   data: (SearchEntityLink | FolderListItem)[]
   table: SimpleTableRow[]
   isLoading: boolean
+  isFetchingNextPage?: boolean
+  hasNextPage?: boolean
   fetchNextPage?: () => void
   error?: string
 }
@@ -54,23 +56,25 @@ export const useGetEntityPickerData = ({
   // convert flat list to table rows for the table
   const {
     data: hierarchTable,
-    folders: foldersData,
+    folders: foldersDataRaw,
     isFetching: isLoadingFolders,
   } = useHierarchyTable({
     projectName,
     folderTypes: project?.folderTypes || [],
   })
 
+  const foldersData = useMemo(() => {
+    if (!search.folder) return foldersDataRaw
+    return matchSorter(foldersDataRaw, search.folder, {
+      keys: ['name', 'label', 'path'],
+    })
+  }, [foldersDataRaw, search.folder])
+
   //   create flat filtered data when searching on folders
   const foldersTable = useMemo(
     () =>
       search.folder
-        ? buildFolderPickerTableData(
-            matchSorter(foldersData, search.folder, {
-              keys: ['name', 'label', 'path', 'folderType'],
-            }),
-            project?.folderTypes || [],
-          )
+        ? buildFolderPickerTableData(foldersData, project?.folderTypes || [])
         : hierarchTable,
 
     [foldersData, hierarchTable, search.folder, project],
@@ -84,8 +88,6 @@ export const useGetEntityPickerData = ({
 
   //   if there is a selection on the parent we user that, otherwise we use all parent ids of parent data
   const getParentIds = (parentType: PickerEntityType, parentData: { id: string }[] = []) => {
-    if (parentType === 'product') {
-    }
     const parentSelection = selection[parentType]
     if (parentSelection?.length > 0) {
       return parentSelection
@@ -101,7 +103,7 @@ export const useGetEntityPickerData = ({
     'task',
     search.task,
     !entityDependencies.includes('task'),
-    selection.folder,
+    getParentIds(entityHierarchies['task'][entityHierarchies['task'].length - 2], foldersData),
     project?.taskTypes,
   )
   const product = useGetEntityTypeData(
@@ -164,18 +166,19 @@ const useGetEntityTypeData = (
   parentIds?: string[],
   anatomies?: EntityAnatomy[],
 ) => {
-  const { data, isFetching, fetchNextPage, error } = useGetSearchedEntitiesLinksInfiniteQuery(
-    {
-      projectName,
-      entityType,
-      search,
-      parentIds,
-    },
-    // skip if this is folder hierarchy (we already have the folders) or if we're waiting for parent selection
-    {
-      skip: skip,
-    },
-  )
+  const { data, isFetching, hasNextPage, fetchNextPage, isFetchingNextPage, error } =
+    useGetSearchedEntitiesLinksInfiniteQuery(
+      {
+        projectName,
+        entityType,
+        search,
+        parentIds,
+      },
+      // skip if this is folder hierarchy (we already have the folders) or if we're waiting for parent selection
+      {
+        skip: skip,
+      },
+    )
 
   // Flatten all entities from all pages
   const entities = useMemo(() => {
@@ -192,6 +195,8 @@ const useGetEntityTypeData = (
     data: entities,
     table: table,
     isLoading: isFetching,
+    isFetchingNextPage,
+    hasNextPage,
     fetchNextPage,
     error: error as string,
   }

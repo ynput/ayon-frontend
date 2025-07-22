@@ -108,6 +108,13 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     selection: entitySelection,
   })
 
+  const handleFetchNextPage = (entityType: PickerEntityType) => {
+    const entityDataForType = entityData[entityType]
+    if (entityDataForType?.hasNextPage && !entityDataForType.isFetchingNextPage) {
+      entityDataForType.fetchNextPage?.()
+    }
+  }
+
   // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]
 
@@ -159,6 +166,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
               onSearch={(v) => setEntitySearch(v, tableEntityType)}
               isMultiSelect={tableEntityType === entityType ? !!isMultiSelect : true}
               onRowSubmit={(id) => (tableEntityType === entityType ? onSubmit([id]) : undefined)}
+              onScrollBottom={() => handleFetchNextPage(tableEntityType)}
             />
           </SimpleTableProvider>
         ))}

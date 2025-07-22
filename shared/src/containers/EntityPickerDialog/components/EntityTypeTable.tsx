@@ -20,6 +20,7 @@ interface EntityTypeTableProps {
   isFolderHierarchy?: boolean // Whether this is a folder hierarchy table
   isMultiSelect?: boolean // Whether to allow multiple selection
   onRowSubmit?: (id: string) => void // Callback when a row is submitted (e.g., double-clicked)
+  onScrollBottom?: () => void // Callback when scrolled to the bottom of the table
 }
 
 const EntityTypeTable: FC<EntityTypeTableProps> = ({
@@ -32,6 +33,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   isFolderHierarchy,
   isMultiSelect,
   onRowSubmit,
+  onScrollBottom,
 }) => {
   const handleDoubleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     e.preventDefault()
@@ -57,6 +59,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
         isExpandable={isFolderHierarchy}
         rowHeight={34}
         isMultiSelect={isMultiSelect}
+        onScrollBottom={onScrollBottom}
         pt={{
           row: {
             onDoubleClick: handleDoubleClick,

@@ -112,6 +112,7 @@ export interface SimpleTableProps {
   globalFilter?: string
   meta?: Record<string, any>
   rowHeight?: number // height of each row, used for virtual scrolling
+  onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,
@@ -167,6 +168,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   globalFilter,
   meta,
   rowHeight,
+  onScrollBottom,
   children,
   pt,
 }) => {
@@ -424,8 +426,30 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [rowVirtualizer],
   )
 
+  // Handle scroll to bottom detection
+  const handleScroll = useCallback(
+    (event: React.UIEvent<HTMLDivElement>) => {
+      if (!onScrollBottom) return
+
+      const target = event.currentTarget
+      const { scrollTop, scrollHeight, clientHeight } = target
+
+      // Check if we're near the bottom (within 100px)
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
+
+      if (isNearBottom && !isLoading) {
+        onScrollBottom()
+      }
+    },
+    [onScrollBottom, isLoading],
+  )
+
   return (
-    <Styled.TableContainer ref={tableContainerRef} className={clsx({ isLoading })}>
+    <Styled.TableContainer
+      ref={tableContainerRef}
+      className={clsx({ isLoading })}
+      onScroll={handleScroll}
+    >
       {!error && (
         <table>
           <tbody
