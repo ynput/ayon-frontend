@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -112,7 +112,7 @@ export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   sliceId: string
-  fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
+  onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
   onOpenNew?: (type: 'folder' | 'task') => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
@@ -131,7 +131,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
 export const ProjectTreeTable = ({
   scope,
   sliceId,
-  fetchMoreOnBottomReached,
+  onScroll,
+  onScrollBottom, // when the user scrolls to the bottom of the table, this callback is called
   onOpenNew,
   readOnly,
   excludedColumns,
@@ -420,6 +421,25 @@ export const ProjectTreeTable = ({
     return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
   }, [dndActiveId, tableData, sortableRows])
 
+  const combinedScrollHandler: UIEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      // Call the original onScroll if provided
+      onScroll?.(e)
+
+      if (onScrollBottom) {
+        const containerRefElement = e.currentTarget
+        if (containerRefElement && !showHierarchy && !groupBy) {
+          const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+          //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+          if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
+            onScrollBottom(e)
+          }
+        }
+      }
+    },
+    [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
+  )
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -430,7 +450,7 @@ export const ProjectTreeTable = ({
         <Styled.TableContainer
           ref={tableContainerRef}
           style={{ height: '100%', padding: 0 }}
-          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+          onScroll={combinedScrollHandler}
           {...pt?.container}
           className={clsx('table-container', pt?.container?.className)}
         >
