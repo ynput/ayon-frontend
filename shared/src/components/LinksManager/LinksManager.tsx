@@ -5,11 +5,13 @@ import { getEntityId, getEntityTypeIcon } from '@shared/util'
 import useUpdateLinks from './hooks/useUpdateLinks'
 import AddNewLinks, { LinkSearchType } from './AddNewLinks'
 import { EntityPickerDialog, PickerEntityType } from '@shared/containers/EntityPickerDialog'
+import { formatEntityPath } from './utils/formatEntityPath'
 
 export type LinkEntity = {
   linkId: string
   entityId: string
   label: string
+  path: string
   entityType: string
   icon?: string
 }
@@ -24,6 +26,7 @@ export interface LinksManagerProps {
   entityType: string // the entity type of the entity that has these links
   targetEntityType: string // the entity type of the out links
   onClose?: () => void
+  onEntityClick?: (entityId: string, entityType: string) => void // a click on an linked entity
 }
 
 export const LinksManager: FC<LinksManagerProps> = ({
@@ -36,6 +39,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
   linkType,
   targetEntityType,
   onClose,
+  onEntityClick,
 }) => {
   const linksUpdater = useUpdateLinks({
     projectName,
@@ -48,6 +52,18 @@ export const LinksManager: FC<LinksManagerProps> = ({
 
   const [searchType, setSearchType] = useState<LinkSearchType>(null)
 
+  const handleRemove = (e: React.MouseEvent<HTMLButtonElement>, link: LinkEntity) => {
+    // prevent clicks higher up
+    e.stopPropagation()
+
+    linksUpdater.remove([
+      {
+        id: link.linkId,
+        target: { entityId: link.entityId, entityType: link.entityType },
+      },
+    ])
+  }
+
   return (
     <>
       <Styled.Container>
@@ -56,25 +72,30 @@ export const LinksManager: FC<LinksManagerProps> = ({
         </Styled.Header>
         <Styled.LinksList>
           {links?.map((link) => (
-            <Styled.LinkItem key={link.linkId}>
+            <Styled.LinkItem
+              key={link.linkId}
+              onClick={() => onEntityClick?.(link.entityId, link.entityType)}
+              data-tooltip={link.path + '/' + link.label}
+            >
               {link.icon ? (
                 <Icon icon={link.icon} />
               ) : (
                 <Icon icon={getEntityTypeIcon(link.entityType)} />
               )}
-              <span className="label">{link.label}</span>
+
+              <span className="title">
+                {formatEntityPath(link.path, link.entityType).map((p, i) => (
+                  <span key={i} className="path">
+                    {p}
+                  </span>
+                ))}
+                <span className="label">{link.label}</span>
+              </span>
               <Button
                 icon={'close'}
                 variant="text"
                 className="remove"
-                onClick={() =>
-                  linksUpdater.remove([
-                    {
-                      id: link.linkId,
-                      target: { entityId: link.entityId, entityType: link.entityType },
-                    },
-                  ])
-                }
+                onClick={(e) => handleRemove(e, link)}
               />
             </Styled.LinkItem>
           ))}

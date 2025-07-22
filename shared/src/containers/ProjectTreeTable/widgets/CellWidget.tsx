@@ -174,15 +174,9 @@ export const CellWidget: FC<EditorCellProps> = ({
       }
 
       case type === 'links': {
-        // ensure value is an array of strings
-        const linksValue = value
-          ? (Array.isArray(value) ? value : [value]).map((v) => String(v))
-          : []
-
         return (
           <LinksWidget
-            value={linksValue}
-            valueData={valueData as any}
+            value={valueData as any}
             cellId={cellId}
             projectName={projectName}
             {...sharedProps}

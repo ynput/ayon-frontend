@@ -45,6 +45,7 @@ export const LinkItem = styled.li`
   gap: var(--base-gap-small);
 
   /* card styling */
+  cursor: pointer;
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-m);
   padding: 4px 4px;
@@ -53,8 +54,20 @@ export const LinkItem = styled.li`
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
 
-  .label {
+  .title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--base-gap-small);
     flex: 1;
+  }
+
+  .path {
+    color: var(--md-sys-color-outline);
+  }
+
+  .label {
+    font-weight: bold;
   }
 
   .remove {

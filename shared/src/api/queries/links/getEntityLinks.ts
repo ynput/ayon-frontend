@@ -9,6 +9,7 @@ import {
   gqlLinksApi,
   foldersApi,
 } from '@shared/api/generated'
+import { formatEntityLabel, formatEntityPath } from './utils/formatEntityLinks'
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -42,13 +43,16 @@ export type RepresentationLink =
 export type WorkfileLink =
   GetWorkfilesLinksQuery['project']['workfiles']['edges'][0]['node']['links']['edges'][0]
 
-export type EntityLink =
+export type EntityLinkQuery =
   | FolderLink
   | TaskLink
   | ProductLink
   | VersionLink
   | RepresentationLink
   | WorkfileLink
+export type EntityLink = Pick<EntityLinkQuery, 'direction' | 'entityType' | 'id' | 'linkType'> & {
+  node: Pick<EntityLinkQuery['node'], 'name' | 'id'> & { label?: string | null; path: string }
+}
 
 // Define the result type for the query - simplified without edges wrapper
 export type EntityWithLinks = {
@@ -117,9 +121,18 @@ const injectedQueries = foldersApi.injectEndpoints({
           ).unwrap()
 
           const newEntities =
-            result.project?.[resultPath]?.edges?.map(({ node }: any) => ({
+            result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => ({
               id: node.id,
-              links: node.links.edges || [], // Flatten the edges structure
+              links:
+                node.links.edges?.map((linkEdge: EntityLinkQuery) => ({
+                  ...linkEdge,
+                  node: {
+                    id: linkEdge.node.id,
+                    name: linkEdge.node.name,
+                    label: formatEntityLabel(linkEdge.node),
+                    path: formatEntityPath(linkEdge.node, linkEdge.entityType),
+                  },
+                })) || [], // Flatten the edges structure and format paths
             })) || []
 
           // Return the new entities - the merge function will handle combining with existing cache

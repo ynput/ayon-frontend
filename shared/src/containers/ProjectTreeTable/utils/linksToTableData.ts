@@ -2,22 +2,22 @@
 // we split the links by direction (in/out) and store them in an object
 
 import { LinkEntity } from '@shared/components'
-import { EditorTaskNode } from '.'
 import { getLinkKey } from '../buildTreeTableColumns'
+import { EntityLink } from '@shared/api'
 
 export type LinkId = string
 export type LinkValue = LinkEntity[]
 export type LinksTableData = Record<LinkId, LinkValue>
 
 export const linksToTableData = (
-  links: EditorTaskNode['links'] | undefined,
+  links: EntityLink[] | undefined,
   entityType: string,
 ): LinksTableData =>
   links?.reduce((acc, edge) => {
     const { linkType, direction, entityType: linkEntityType, id, node } = edge
-    const entityLabel = 'label' in node ? node.label || node.name : node.name
     const entityData: LinkEntity = {
-      label: entityLabel,
+      label: node.label || node.name,
+      path: node.path,
       linkId: id,
       entityId: node.id,
       entityType: linkEntityType,

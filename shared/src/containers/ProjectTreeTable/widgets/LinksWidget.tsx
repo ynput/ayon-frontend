@@ -1,4 +1,4 @@
-import { Chips, LinkEntity } from '@shared/components'
+import { Chips, ChipValue, LinkEntity } from '@shared/components'
 import { LinksManagerDialog } from '@shared/components/LinksManager/LinksManagerDialog'
 import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
@@ -27,48 +27,48 @@ export type LinkWidgetData = {
 }
 
 export interface LinksWidgetProps extends WidgetBaseProps {
-  value: string[]
-  valueData?: LinkWidgetData
+  value?: LinkWidgetData
   projectName: string
   cellId: string
 }
 
 export const LinksWidget: FC<LinksWidgetProps> = ({
   value,
-  valueData,
   isEditing,
   cellId,
   projectName,
-  onChange,
+  onChange: _onChange, // not used in this widget
   onCancelEdit,
 }) => {
   const isEditable = isLinkEditable(
-    valueData?.direction || 'out',
-    valueData?.link.linkType || '',
-    valueData?.entityType || '',
+    value?.direction || 'out',
+    value?.link.linkType || '',
+    value?.entityType || '',
   )
 
   return (
     <>
       <Chips
-        values={value}
+        values={
+          value?.links?.map((v) => ({ label: v.label, tooltip: v.path + '/' + v.label })) || []
+        }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={!isEditable}
       />
       {isEditing &&
-        valueData &&
+        value &&
         createPortal(
           <LinksManagerDialog
             isEditing={isEditing}
             anchorId={cellId}
             projectName={projectName}
-            linkTypeLabel={valueData.link.label || ''}
-            links={valueData.links}
-            direction={valueData.direction}
-            entityId={valueData.entityId}
-            entityType={valueData.entityType}
-            targetEntityType={valueData.link.targetEntityType}
-            linkType={valueData.link.linkType}
+            linkTypeLabel={value.link.label || ''}
+            links={value.links}
+            direction={value.direction}
+            entityId={value.entityId}
+            entityType={value.entityType}
+            targetEntityType={value.link.targetEntityType}
+            linkType={value.link.linkType}
             onClose={onCancelEdit}
             disabled={!isEditable}
           />,

@@ -4,7 +4,6 @@ fragment OverviewEntityLinkFragment on LinkEdge {
   linkType
   entityType
   node {
-    name
     ...OverviewEntityLinkNodeFragment
   }
 }

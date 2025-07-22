@@ -1,13 +1,16 @@
 import { gqlLinksApi, linksApi, OverviewEntityLinkFragmentFragment } from '@shared/api/generated'
 import { RootState } from '@reduxjs/toolkit/query'
 import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
-import { EntityWithLinks, entityLinksApi } from './getEntityLinks'
+import { EntityLink, EntityWithLinks, entityLinksApi } from './getEntityLinks'
+import { upperFirst } from 'lodash'
+import { formatEntityPath } from './utils/formatEntityLinks'
 
 type Entity = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   entityId: string
   name: string
   label?: string | null
+  path: string
 }
 
 type LinkUpdate = {
@@ -143,7 +146,7 @@ const patchEntityLinksCache = (
               } else {
                 console.log(`Adding new link to ${entityToPatch.entityType}`)
                 // Add the new link to the entity
-                const newLink: OverviewEntityLinkFragmentFragment = {
+                const newLink: EntityLink = {
                   id: linkId,
                   direction: linkDirection,
                   linkType,
@@ -152,6 +155,7 @@ const patchEntityLinksCache = (
                     id: otherEntity.entityId,
                     name: otherEntity.name,
                     label: otherEntity.label,
+                    path: otherEntity.path,
                   },
                 }
 
@@ -292,6 +296,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
               entityId: sourceEntityId,
               name: sourceEntityData.name,
               label: 'label' in sourceEntityData ? sourceEntityData.label : undefined,
+              path: formatEntityPath(sourceEntityData, sourceEntityType),
             }
 
             const targetEntity: Entity = {
@@ -299,6 +304,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
               entityId: targetEntityId,
               name: targetEntityData.name,
               label: 'label' in targetEntityData ? targetEntityData.label : undefined,
+              path: formatEntityPath(targetEntityData, targetEntityType),
             }
 
             // Update entity links cache for both entities

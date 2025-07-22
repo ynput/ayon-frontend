@@ -50,8 +50,13 @@ const Disabled = styled.div`
   color: var(--md-sys-color-outline);
 `
 
+export type ChipValue = {
+  label: string
+  tooltip: string
+}
+
 interface ChipsProps {
-  values: string[]
+  values: ChipValue[]
   disabled?: boolean
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
@@ -60,9 +65,9 @@ interface ChipsProps {
 
 export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [visibleValues, setVisibleValues] = useState<string[]>([])
+  const [visibleValues, setVisibleValues] = useState<ChipValue[]>([])
   const [hiddenCount, setHiddenCount] = useState(0)
-  const [offscreenChips, setOffscreenChips] = useState<string[]>([])
+  const [offscreenChips, setOffscreenChips] = useState<ChipValue[]>([])
 
   useLayoutEffect(() => {
     setOffscreenChips(values)
@@ -79,7 +84,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
       if (!chipElements.length) return
 
       let totalWidth = 0
-      const newVisibleValues: string[] = []
+      const newVisibleValues: ChipValue[] = []
 
       const moreChipWidth = moreChipElement?.getBoundingClientRect().width || 60
 
@@ -140,26 +145,26 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
 
   return (
     <ChipsContainer ref={containerRef}>
-      {visibleValues.map((value, index) => (
+      {visibleValues.map((chip, index) => (
         <Chip
           {...pt?.chip}
-          key={value + index}
-          title={value}
+          key={chip.label + index}
+          data-tooltip={chip.tooltip}
           className={clsx(
             'chip',
             { last: index === visibleValues.length - 1 && hiddenCount > 0 },
             pt?.chip?.className,
           )}
         >
-          {value}
+          {chip.label}
         </Chip>
       ))}
       {hiddenCount > 0 && (
         <MoreChip className={clsx('more-chip', pt?.chip?.className)}>+{hiddenCount}</MoreChip>
       )}
-      {offscreenChips.map((value, index) => (
-        <OffscreenChip key={value + index} className="offscreen-chip">
-          {value}
+      {offscreenChips.map((chip, index) => (
+        <OffscreenChip key={chip.label + index} className="offscreen-chip">
+          {chip.label}
         </OffscreenChip>
       ))}
     </ChipsContainer>

@@ -1,10 +1,48 @@
 fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
   id
   name
   ... on TaskNode {
     label
+    folder {
+      path
+    }
   }
   ... on FolderNode {
     label
+    path
+  }
+  ... on ProductNode {
+    folder {
+      path
+    }
+  }
+  ... on VersionNode {
+    product {
+      name
+      folder {
+        path
+      }
+    }
+  }
+  ... on RepresentationNode {
+    version {
+      name
+      product {
+        name
+        folder {
+          path
+        }
+      }
+    }
+  }
+  ... on WorkfileNode {
+    task {
+      name
+      label
+      folder {
+        path
+      }
+    }
   }
 }
