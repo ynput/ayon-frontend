@@ -58,7 +58,7 @@ const AddIcon = styled(Icon)`
   cursor: pointer;
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-hover);
+    background-color: var(--md-sys-color-surface-container-high-hover);
   }
 `
 

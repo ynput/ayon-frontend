@@ -7,7 +7,7 @@ import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
-import { LinksWidget } from './LinksWidget'
+import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -174,11 +174,22 @@ export const CellWidget: FC<EditorCellProps> = ({
       }
 
       case type === 'links': {
+        const linksValue = valueData as LinkWidgetData | undefined
+
+        const isEditable = isLinkEditable(
+          linksValue?.direction || 'out',
+          linksValue?.link.linkType || '',
+          linksValue?.entityType || '',
+        )
+
+        // overwrite readonly state if the cell is currently being edited
+        isReadOnly = !isEditable
         return (
           <LinksWidget
-            value={valueData as any}
+            value={linksValue}
             cellId={cellId}
             projectName={projectName}
+            disabled={!isEditable}
             {...sharedProps}
           />
         )

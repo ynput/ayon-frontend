@@ -4,7 +4,11 @@ import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { createPortal } from 'react-dom'
 
-const isLinkEditable = (direction: 'in' | 'out', linkType: string, entityType: string): boolean => {
+export const isLinkEditable = (
+  direction: 'in' | 'out',
+  linkType: string,
+  entityType: string,
+): boolean => {
   const linkTypeParts = linkType.split('|')
   const [_name, outType, inType] = linkTypeParts
   if (direction === 'in') {
@@ -30,6 +34,7 @@ export interface LinksWidgetProps extends WidgetBaseProps {
   value?: LinkWidgetData
   projectName: string
   cellId: string
+  disabled?: boolean
 }
 
 export const LinksWidget: FC<LinksWidgetProps> = ({
@@ -37,15 +42,10 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   isEditing,
   cellId,
   projectName,
+  disabled,
   onChange: _onChange, // not used in this widget
   onCancelEdit,
 }) => {
-  const isEditable = isLinkEditable(
-    value?.direction || 'out',
-    value?.link.linkType || '',
-    value?.entityType || '',
-  )
-
   return (
     <>
       <Chips
@@ -54,7 +54,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
           []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
-        disabled={!isEditable}
+        disabled={disabled}
       />
       {isEditing &&
         value &&
@@ -71,7 +71,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             targetEntityType={value.link.targetEntityType}
             linkType={value.link.linkType}
             onClose={onCancelEdit}
-            disabled={!isEditable}
+            disabled={disabled}
           />,
           document.body,
         )}
