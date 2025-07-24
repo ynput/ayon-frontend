@@ -5,8 +5,10 @@ import { Container } from './LinksManager.styled'
 
 const StyledPopUp = styled.div`
   position: fixed;
-  z-index: 300;
+  z-index: 310;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 `
 
 type Position = {
@@ -34,6 +36,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
 
   const [position, setPosition] = useState<Position | null>(null)
   const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined)
+  const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
 
   const updatePosition = () => {
     if (!isEditing) return
@@ -48,6 +51,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
         showAbove: false,
       })
       setMaxWidth(undefined)
+      setMaxHeight(undefined)
       return
     }
 
@@ -55,6 +59,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     const screenPadding = 16
     const minHeightThreshold = 250
     const minWidthThreshold = 400
+    const maxMaxHeight = 600
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
 
@@ -86,12 +91,20 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     const spaceAbove = cellRect.top - screenPadding
     let top: number
     let showAbove = false
+    let availableHeight: number
+
     if (spaceBelow < minHeightThreshold && spaceAbove > spaceBelow) {
       showAbove = true
       top = cellRect.top - 4
+      availableHeight = spaceAbove - 4
     } else {
       top = cellRect.bottom + 4
+      availableHeight = spaceBelow - 4
     }
+
+    // Set max height to prevent dialog from going off screen
+    setMaxHeight(Math.min(Math.max(200, availableHeight), maxMaxHeight)) // Minimum 200px height
+
     setPosition({
       top,
       ...position,
@@ -114,6 +127,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
+        maxHeight: maxHeight ? `${maxHeight}px` : 'none',
       }}
       className="links-widget-popup"
       onKeyDown={(e) => {

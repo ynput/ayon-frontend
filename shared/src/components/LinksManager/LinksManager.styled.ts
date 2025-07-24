@@ -7,8 +7,10 @@ export const Container = styled.div`
   border-radius: var(--border-radius-l);
   display: flex;
   flex-direction: column;
-  max-height: 100%;
+  height: 100%; /* Use height instead of max-height to enforce constraints */
   overflow: hidden;
+  flex-grow: 1;
+  min-height: 0; /* Allow flex child to shrink below content size */
 `
 
 export const Header = styled.h4`
@@ -89,9 +91,16 @@ export const LinkItem = styled.li`
 export const AddLinksContainer = styled.div`
   display: flex;
   flex-direction: column;
+  /* hack for search border cutoff */
+  padding: 2px;
+  margin: -2px;
   padding-top: var(--padding-m);
+  flex-shrink: 0; /* Don't shrink this section */
+  min-height: 0; /* Allow internal scrolling */
+  overflow: hidden; /* Prevent this section from expanding beyond bounds */
 
-  max-height: 300px;
+  /* Set a reasonable max-height that allows for search functionality */
+  max-height: 250px;
 `
 
 // wraps the picker and search input
@@ -142,7 +151,8 @@ export const SearchItems = styled.ul`
   margin: 0;
   overflow-y: auto;
   padding: var(--padding-m) 0;
-  height: 100%;
+  flex: 1; /* Take available space instead of height: 100% */
+  min-height: 0; /* Allow shrinking */
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);
