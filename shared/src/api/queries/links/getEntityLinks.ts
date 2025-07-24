@@ -9,7 +9,7 @@ import {
   gqlLinksApi,
   foldersApi,
 } from '@shared/api/generated'
-import { formatEntityLabel, formatEntityPath } from './utils/formatEntityLinks'
+import { formatEntityLabel } from './utils/formatEntityLinks'
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -53,7 +53,7 @@ export type EntityLinkQuery =
 export type EntityLink = Pick<EntityLinkQuery, 'direction' | 'entityType' | 'id' | 'linkType'> & {
   node: Pick<EntityLinkQuery['node'], 'name' | 'id'> & {
     label?: string | null
-    path: string
+    parents: string[]
     subType: string | undefined
   }
 }
@@ -134,10 +134,10 @@ const injectedQueries = foldersApi.injectEndpoints({
                     id: linkEdge.node.id,
                     name: linkEdge.node.name,
                     label: formatEntityLabel(linkEdge.node),
-                    path: formatEntityPath(linkEdge.node, linkEdge.entityType),
+                    parents: linkEdge.node.parents || [],
                     subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
                   },
-                })) || [], // Flatten the edges structure and format paths
+                })) || [], // Flatten the edges structure
             })) || []
 
           // Return the new entities - the merge function will handle combining with existing cache

@@ -15,7 +15,7 @@ export const buildEntityPickerTableData = (
     id: entity.id,
     name: entity.name,
     label: entity.label || entity.name,
-    path: entity.path,
+    parents: entity.parents,
     icon:
       anatomies?.find((a) => a.name === entity[(entity.entityType + 'Type') as keyof typeof entity])
         ?.icon || getEntityTypeIcon(entity.entityType),

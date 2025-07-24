@@ -113,6 +113,7 @@ export type BaseNode = {
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
+  parents: Array<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -523,6 +524,8 @@ export type ProductNode = BaseNode & {
   latestVersion?: Maybe<VersionNode>;
   links: LinksConnection;
   name: Scalars['String']['output'];
+  parents: Array<Scalars['String']['output']>;
+  path?: Maybe<Scalars['String']['output']>;
   productType: Scalars['String']['output'];
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
@@ -1041,6 +1044,8 @@ export type RepresentationNode = BaseNode & {
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
+  parents: Array<Scalars['String']['output']>;
+  path?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
   tags: Array<Scalars['String']['output']>;
@@ -1144,6 +1149,8 @@ export type TaskNode = BaseNode & {
   links: LinksConnection;
   name: Scalars['String']['output'];
   ownAttrib: Array<Scalars['String']['output']>;
+  parents: Array<Scalars['String']['output']>;
+  path?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
   tags: Array<Scalars['String']['output']>;
@@ -1345,6 +1352,8 @@ export type VersionNode = BaseNode & {
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
+  parents: Array<Scalars['String']['output']>;
+  path?: Maybe<Scalars['String']['output']>;
   /** Parent product of the version */
   product: ProductNode;
   productId: Scalars['String']['output'];
@@ -1421,6 +1430,7 @@ export type WorkfileEdge = {
 
 export type WorkfileNode = BaseNode & {
   __typename?: 'WorkfileNode';
+  Parents?: Maybe<Array<Scalars['String']['output']>>;
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
@@ -1431,6 +1441,7 @@ export type WorkfileNode = BaseNode & {
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
+  parents: Array<Scalars['String']['output']>;
   path: Scalars['String']['output'];
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];

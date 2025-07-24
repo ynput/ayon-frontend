@@ -2,14 +2,13 @@ import { gqlLinksApi, linksApi } from '@shared/api/generated'
 import { RootState } from '@reduxjs/toolkit/query'
 import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EntityLink, EntityWithLinks, entityLinksApi } from './getEntityLinks'
-import { formatEntityPath } from './utils/formatEntityLinks'
 
 type Entity = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   entityId: string
   name: string
   label?: string | null
-  path: string
+  parents: string[]
   subType: string | undefined // Optional subtype for folders, products, versions
 }
 
@@ -149,7 +148,7 @@ const patchEntityLinksCache = (
                     id: otherEntity.entityId,
                     name: otherEntity.name,
                     label: otherEntity.label,
-                    path: otherEntity.path,
+                    parents: otherEntity.parents,
                     subType: otherEntity.subType,
                   },
                 }
@@ -291,7 +290,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
               entityId: sourceEntityId,
               name: sourceEntityData.name,
               label: 'label' in sourceEntityData ? sourceEntityData.label : undefined,
-              path: formatEntityPath(sourceEntityData, sourceEntityType),
+              parents: sourceEntityData.parents || [],
               subType: 'subType' in sourceEntityData ? sourceEntityData.subType : undefined,
             }
 
@@ -300,7 +299,7 @@ const enhancedApi = linksApi.enhanceEndpoints({
               entityId: targetEntityId,
               name: targetEntityData.name,
               label: 'label' in targetEntityData ? targetEntityData.label : undefined,
-              path: formatEntityPath(targetEntityData, targetEntityType),
+              parents: targetEntityData.parents || [],
               subType: 'subType' in targetEntityData ? targetEntityData.subType : undefined,
             }
 

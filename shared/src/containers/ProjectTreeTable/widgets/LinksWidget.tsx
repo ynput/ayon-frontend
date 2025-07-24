@@ -50,7 +50,8 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
     <>
       <Chips
         values={
-          value?.links?.map((v) => ({ label: v.label, tooltip: v.path + '/' + v.label })) || []
+          value?.links?.map((v) => ({ label: v.label, tooltip: v.parents.join('/') + v.label })) ||
+          []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={!isEditable}

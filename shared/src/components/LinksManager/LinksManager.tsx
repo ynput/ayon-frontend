@@ -1,17 +1,16 @@
-import { FC, useState } from 'react'
+import { FC, Fragment, useState } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { getEntityId, getEntityTypeIcon } from '@shared/util'
 import useUpdateLinks from './hooks/useUpdateLinks'
 import AddNewLinks, { LinkSearchType } from './AddNewLinks'
 import { EntityPickerDialog, PickerEntityType } from '@shared/containers/EntityPickerDialog'
-import { formatEntityPath } from './utils/formatEntityPath'
 
 export type LinkEntity = {
   linkId: string
   entityId: string
   label: string
-  path: string
+  parents: string[]
   entityType: string
   icon: string
 }
@@ -75,7 +74,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
             <Styled.LinkItem
               key={link.linkId}
               onClick={() => onEntityClick?.(link.entityId, link.entityType)}
-              data-tooltip={link.path + '/' + link.label}
+              data-tooltip={link.parents.join('/') + link.label}
             >
               {link.icon ? (
                 <Icon icon={link.icon} />
@@ -84,10 +83,11 @@ export const LinksManager: FC<LinksManagerProps> = ({
               )}
 
               <span className="title">
-                {formatEntityPath(link.path, link.entityType).map((p, i) => (
-                  <span key={i} className="path">
-                    {p}
-                  </span>
+                {link.parents?.map((part, index) => (
+                  <Fragment key={index}>
+                    <span key={index + '-path'}>{part}</span>
+                    <span key={index + '-separator'}>/</span>
+                  </Fragment>
                 ))}
                 <span className="label">{link.label}</span>
               </span>

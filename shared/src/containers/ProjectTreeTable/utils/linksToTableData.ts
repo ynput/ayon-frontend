@@ -30,7 +30,7 @@ export const linksToTableData = (
     const { linkType, direction, entityType: linkEntityType, id, node } = edge
     const entityData: LinkEntity = {
       label: node.label || node.name,
-      path: node.path,
+      parents: node.parents,
       linkId: id,
       entityId: node.id,
       entityType: linkEntityType,

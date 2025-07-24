@@ -92,7 +92,7 @@ export type SimpleTableRow = {
   parentId?: string
   name: string
   label: string
-  path?: string
+  parents?: string[]
   icon?: string | null
   iconColor?: string
   img?: string | null
@@ -311,7 +311,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             depth: row.depth,
             tabIndex: 0,
             value: getValue<string>(),
-            path: row.original.path,
+            parents: row.original.parents,
             icon: row.original.icon || undefined,
             iconColor: row.original.iconColor,
             isRowExpandable: row.getCanExpand(),

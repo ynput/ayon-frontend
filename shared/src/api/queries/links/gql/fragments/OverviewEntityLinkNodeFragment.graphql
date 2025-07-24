@@ -2,50 +2,13 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   __typename
   id
   name
+  parents
   ... on TaskNode {
     label
     subType: taskType
-    folder {
-      path
-    }
   }
   ... on FolderNode {
     label
-    path
     subType: folderType
-  }
-  ... on ProductNode {
-    subType: productType
-    folder {
-      path
-    }
-  }
-  ... on VersionNode {
-    product {
-      name
-      folder {
-        path
-      }
-    }
-  }
-  ... on RepresentationNode {
-    version {
-      name
-      product {
-        name
-        folder {
-          path
-        }
-      }
-    }
-  }
-  ... on WorkfileNode {
-    task {
-      name
-      label
-      folder {
-        path
-      }
-    }
   }
 }

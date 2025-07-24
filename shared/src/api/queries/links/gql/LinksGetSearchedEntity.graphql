@@ -26,13 +26,9 @@ query GetSearchedFolders(
       edges {
         cursor
         node {
-          id
-          name
-          label
+          ...OverviewEntityLinkNodeFragment
           subType: folderType
-          parent {
-            path
-          }
+          label
         }
       }
     }
@@ -69,12 +65,8 @@ query GetSearchedProducts(
       edges {
         cursor
         node {
-          id
-          name
+          ...OverviewEntityLinkNodeFragment
           subType: productType
-          folder {
-            path
-          }
         }
       }
     }
@@ -110,17 +102,7 @@ query GetSearchedRepresentations(
       edges {
         cursor
         node {
-          id
-          name
-          version {
-            name
-            product {
-              name
-              folder {
-                path
-              }
-            }
-          }
+          ...OverviewEntityLinkNodeFragment
         }
       }
     }
@@ -157,13 +139,9 @@ query GetSearchedTasks(
       edges {
         cursor
         node {
-          id
-          name
+          ...OverviewEntityLinkNodeFragment
           label
           subType: taskType
-          folder {
-            path
-          }
         }
       }
     }
@@ -199,14 +177,7 @@ query GetSearchedVersions(
       edges {
         cursor
         node {
-          id
-          name
-          product {
-            name
-            folder {
-              path
-            }
-          }
+          ...OverviewEntityLinkNodeFragment
         }
       }
     }
@@ -242,14 +213,7 @@ query GetSearchedWorkfiles(
       edges {
         cursor
         node {
-          id
-          name
-          task {
-            name
-            folder {
-              path
-            }
-          }
+          ...OverviewEntityLinkNodeFragment
         }
       }
     }

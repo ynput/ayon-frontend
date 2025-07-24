@@ -20,7 +20,7 @@ export type SearchEntityLink = {
   id: string
   name: string
   entityType: string
-  path: string
+  parents: string[]
   label: string
   icon: string | undefined
   subType: string | undefined
@@ -168,7 +168,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     id: taskNode.id,
                     name: taskNode.name,
                     label: taskNode.label || taskNode.name,
-                    path: taskNode.folder?.path || '',
+                    parents: taskNode.parents || [],
                     subType: taskNode.subType,
                   }
                 case 'folder':
@@ -178,7 +178,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     id: folderNode.id,
                     name: folderNode.name,
                     label: folderNode.label || folderNode.name,
-                    path: folderNode.parent?.path || '',
+                    parents: folderNode.parents || [],
                     subType: folderNode.subType,
                   }
                 case 'product':
@@ -188,7 +188,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     id: productNode.id,
                     name: productNode.name,
                     label: productNode.name,
-                    path: productNode.folder?.path,
+                    parents: productNode.parents || [],
                     subType: productNode.subType,
                   }
                 case 'version':
@@ -198,7 +198,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     id: versionNode.id,
                     name: versionNode.name,
                     label: versionNode.name,
-                    path: `${versionNode.product.folder.path}/${versionNode.product.name}`,
+                    parents: versionNode.parents || [],
                   }
                 case 'representation':
                   const representationNode = node as SearchedRepresentationNode
@@ -207,7 +207,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     id: representationNode.id,
                     name: representationNode.name,
                     label: representationNode.name,
-                    path: `${representationNode.version.product.folder.path}/${representationNode.version.product.name}/${representationNode.version.name}`,
+                    parents: representationNode.parents || [],
                   }
                 case 'workfile':
                   const workfileNode = node as SearchedWorkfileNode
@@ -216,7 +216,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     id: workfileNode.id,
                     name: workfileNode.name,
                     label: workfileNode.name,
-                    path: `${workfileNode.task.folder.path}/${workfileNode.task.name}`,
+                    parents: workfileNode.parents || [],
                   }
                 default:
                   return null

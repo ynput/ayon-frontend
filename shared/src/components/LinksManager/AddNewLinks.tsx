@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useRef, useEffect } from 'react'
+import { FC, useState, useMemo, useRef, useEffect, Fragment } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { useGetProjectQuery, useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
@@ -132,13 +132,12 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
                 >
                   <Icon icon={getEntityIcon(entity.entityType, entity.subType, anatomyForIcons)} />
                   <span className="label">
-                    {entity.path
-                      .slice(1, entity.path.length) // Remove leading slash
-                      .split('/')
-                      .flatMap((p) => [p, '/'])
-                      .map((part, index) => (
-                        <span key={index}>{part}</span>
-                      ))}
+                    {entity.parents?.map((part, index) => (
+                      <Fragment key={index}>
+                        <span key={index + '-path'}>{part}</span>
+                        <span key={index + '-separator'}>/</span>
+                      </Fragment>
+                    ))}
                     <strong>{entity.label || entity.name}</strong>
                   </span>
                   <span className="type">{entity.subType || entity.entityType}</span>
