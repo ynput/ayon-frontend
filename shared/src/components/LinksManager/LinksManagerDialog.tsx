@@ -56,7 +56,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     }
 
     const cellRect = anchorElement.getBoundingClientRect()
-    const screenPadding = 16
+    const screenPadding = 24
     const minHeightThreshold = 250
     const minWidthThreshold = 400
     const maxMaxHeight = 600
@@ -73,7 +73,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
       const spaceToLeft = cellRect.right - screenPadding
       if (spaceToLeft >= minWidthThreshold) {
         // Anchor to the right side of the cell
-        position.right = screenWidth - cellRect.right
+        position.right = Math.max(screenWidth - cellRect.right, screenPadding)
       } else {
         // Not enough space on either side, center and use available width
         position.left = screenPadding
