@@ -6,14 +6,13 @@ import { Container } from './LinksManager.styled'
 const StyledPopUp = styled.div`
   position: fixed;
   z-index: 300;
-  top: 0;
-  left: 0;
   overflow: hidden;
 `
 
 type Position = {
   top: number
-  left: number
+  left?: number
+  right?: number
   showAbove?: boolean
 }
 
@@ -55,13 +54,33 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     const cellRect = anchorElement.getBoundingClientRect()
     const screenPadding = 16
     const minHeightThreshold = 250
+    const minWidthThreshold = 400
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
-    let left = cellRect.left
 
-    // Calculate max width based on left position and screen padding
-    const availableWidth = screenWidth - left - screenPadding
-    setMaxWidth(availableWidth)
+    // Check if we have enough space to the right of the cell
+    const spaceToRight = screenWidth - cellRect.left - screenPadding
+    let position: { left?: number; right?: number } = {}
+    let dialogWidth = minWidthThreshold
+
+    if (spaceToRight < minWidthThreshold) {
+      // Not enough space to the right, anchor to the right side of the cell
+      const spaceToLeft = cellRect.right - screenPadding
+      if (spaceToLeft >= minWidthThreshold) {
+        // Anchor to the right side of the cell
+        position.right = screenWidth - cellRect.right
+      } else {
+        // Not enough space on either side, center and use available width
+        position.left = screenPadding
+        dialogWidth = screenWidth - 2 * screenPadding
+      }
+    } else {
+      // Enough space to the right, position normally
+      position.left = cellRect.left
+      dialogWidth = Math.max(minWidthThreshold, spaceToRight)
+    }
+
+    setMaxWidth(dialogWidth)
 
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
     const spaceAbove = cellRect.top - screenPadding
@@ -75,7 +94,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     }
     setPosition({
       top,
-      left,
+      ...position,
       showAbove,
     })
   }
@@ -91,6 +110,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
       style={{
         top: position?.top,
         left: position?.left,
+        right: position?.right,
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
