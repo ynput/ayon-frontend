@@ -1,3 +1,4 @@
+import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC, useRef, useState, useLayoutEffect, HTMLAttributes } from 'react'
 import styled from 'styled-components'
@@ -41,13 +42,24 @@ const OffscreenChip = styled(Chip)`
 
 const MoreChip = styled(Chip)`
   flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `
 
-const Disabled = styled.div`
-  width: 100%;
-  /* background-color: var(--md-sys-color-surface-container); */
-  text-align: center;
-  color: var(--md-sys-color-outline);
+const AddIcon = styled(Icon)`
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--border-radius-m);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-hover);
+  }
 `
 
 export type ChipValue = {
@@ -141,7 +153,12 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
     }
   }, [values, offscreenChips])
 
-  if (disabled) return <Disabled>-</Disabled>
+  if (disabled) return null
+
+  // for no values return plus button
+  if (!values.length) {
+    return <AddIcon icon="add" className={pt?.chip?.className} />
+  }
 
   return (
     <ChipsContainer ref={containerRef}>
