@@ -5,6 +5,7 @@ import { getEntityId, getEntityTypeIcon } from '@shared/util'
 import useUpdateLinks from './hooks/useUpdateLinks'
 import AddNewLinks, { LinkSearchType } from './AddNewLinks'
 import { EntityPickerDialog, PickerEntityType } from '@shared/containers/EntityPickerDialog'
+import { upperFirst } from 'lodash'
 
 export type LinkEntity = {
   linkId: string
@@ -67,7 +68,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
     <>
       <Styled.Container>
         <Styled.Header>
-          {linkTypeLabel} links ({direction})
+          {upperFirst(linkTypeLabel)} links ({direction})
         </Styled.Header>
         <Styled.LinksList>
           {links?.map((link) => (
@@ -99,6 +100,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
               />
             </Styled.LinkItem>
           ))}
+          {links.length === 0 && <Styled.SubHeader>No links yet</Styled.SubHeader>}
         </Styled.LinksList>
         <AddNewLinks
           targetEntityType={targetEntityType}

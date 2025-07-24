@@ -16,6 +16,13 @@ export const Header = styled.h4`
   padding: 0;
   padding-bottom: var(--padding-s);
   flex-shrink: 0;
+`
+
+export const SubHeader = styled.h5`
+  margin: 0;
+  padding: 0;
+  padding-bottom: var(--padding-s);
+  flex-shrink: 0;
 
   color: var(--md-sys-color-outline);
 `

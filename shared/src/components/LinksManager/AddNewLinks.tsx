@@ -91,7 +91,7 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
 
   return (
     <Styled.AddLinksContainer>
-      <Styled.Header>Add new link</Styled.Header>
+      <Styled.SubHeader>Add new link</Styled.SubHeader>
       <Styled.SearchButtons>
         <Styled.Search>
           <Icon icon={'search'} className="input-search" />
@@ -108,7 +108,7 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
 
         {!search && (
           <Styled.PickerButton
-            label={`${upperFirst(targetEntityType)} Picker`}
+            label={`Pick ${targetEntityType}s`}
             icon="table_rows"
             onClick={() => onSearchTypeChange('picker')}
           />
