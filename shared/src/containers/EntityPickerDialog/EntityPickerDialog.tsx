@@ -10,6 +10,7 @@ import { Button, Dialog, DialogProps } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
 import { upperFirst } from 'lodash'
+import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
 
 const COL_MAX_WIDTH = 600
 
@@ -45,6 +46,7 @@ export type PickerSearch = Record<PickerEntityType, string | undefined>
 interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   projectName: string // The name of the project
   entityType: PickerEntityType // The type of entity to pick
+  initialSelection?: Partial<PickerSelection> // Initial selection of entities
   isMultiSelect?: boolean // Whether to allow multiple selection
   onSubmit: (selection: string[]) => void // Callback when the user selects an entity/entities
 }
@@ -52,18 +54,21 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
 export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   projectName,
   entityType,
+  initialSelection,
   isMultiSelect,
   onSubmit,
   ...props
 }) => {
-  const [rowSelection, setRowSelection] = useState<PickerSelection>({
-    folder: {},
-    task: {},
-    product: {},
-    version: {},
-    representation: {},
-    workfile: {},
-  })
+  const initSelectionState: PickerSelection = {
+    folder: initialSelection?.folder || {},
+    task: initialSelection?.task || {},
+    product: initialSelection?.product || {},
+    version: initialSelection?.version || {},
+    representation: initialSelection?.representation || {},
+    workfile: initialSelection?.workfile || {},
+  }
+
+  const [rowSelection, setRowSelection] = useState<PickerSelection>(initSelectionState)
 
   // helper function to set the row selection for each entity type
   const setEntityRowSelection = (selection: RowSelectionState, entityType: PickerEntityType) => {
@@ -98,9 +103,6 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
     ]),
   ) as Record<PickerEntityType, string[]>
 
-  // the expanded state of the folders tree table
-  const [expanded, setExpanded] = useState<ExpandedState>({})
-
   const entityData = useGetEntityPickerData({
     entityType,
     projectName,
@@ -114,6 +116,11 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
       entityDataForType.fetchNextPage?.()
     }
   }
+
+  const [expanded, setExpanded] = useExpandedWithInitialFolders({
+    foldersSelection: initSelectionState.folder,
+    foldersData: entityData.folder,
+  })
 
   // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]

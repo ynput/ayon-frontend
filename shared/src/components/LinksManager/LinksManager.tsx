@@ -25,6 +25,7 @@ export interface LinksManagerProps {
   linkType: string // full link type e.g. workflow|task|task
   entityType: string // the entity type of the entity that has these links
   targetEntityType: string // the entity type of the out links
+  folderId?: string | null // the folder selected or the parent folder of the selected (used in EntityPickerDialog)
   onClose?: () => void
   onEntityClick?: (entityId: string, entityType: string) => void // a click on an linked entity
 }
@@ -38,6 +39,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
   entityType,
   linkType,
   targetEntityType,
+  folderId,
   onClose,
   onEntityClick,
 }) => {
@@ -114,7 +116,8 @@ export const LinksManager: FC<LinksManagerProps> = ({
         <EntityPickerDialog
           onClose={() => setSearchType(null)}
           projectName={projectName}
-          entityType={targetEntityType as PickerEntityType}
+          entityType={targetEntityType as PickerEntityType} // the type of entity to pick
+          initialSelection={folderId ? { folder: { [folderId]: true } } : undefined} // preselect current folder
           onSubmit={(s) =>
             linksUpdater.add(s.map((id) => ({ targetEntityId: id, linkId: getEntityId() })))
           }

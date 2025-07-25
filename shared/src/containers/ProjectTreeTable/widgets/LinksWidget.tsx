@@ -35,6 +35,7 @@ export interface LinksWidgetProps extends WidgetBaseProps {
   projectName: string
   cellId: string
   disabled?: boolean
+  folderId?: string | null // the folder selected or the parent folder of the selected (used in EntityPickerDialog)
 }
 
 export const LinksWidget: FC<LinksWidgetProps> = ({
@@ -43,6 +44,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   cellId,
   projectName,
   disabled,
+  folderId,
   onChange: _onChange, // not used in this widget
   onCancelEdit,
 }) => {
@@ -72,6 +74,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             linkType={value.link.linkType}
             onClose={onCancelEdit}
             disabled={disabled}
+            folderId={folderId}
           />,
           document.body,
         )}

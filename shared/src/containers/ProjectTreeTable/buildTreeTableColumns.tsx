@@ -216,7 +216,7 @@ const buildTreeTableColumns = ({
                 id={row.id}
                 label={row.original.label}
                 name={row.original.name}
-                path={!showHierarchy ? row.original.path : undefined}
+                path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
                 showHierarchy={showHierarchy}
                 icon={row.original.icon}
                 type={row.original.entityType}
@@ -526,6 +526,7 @@ const buildTreeTableColumns = ({
                 columnId={column.id}
                 value={cellValue}
                 valueData={valueData}
+                folderId={row.original.folderId}
                 attributeData={{ type: 'links' }}
               />
             )

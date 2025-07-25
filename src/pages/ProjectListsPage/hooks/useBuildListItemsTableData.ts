@@ -30,7 +30,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         id: item.id,
         name: item.name,
         label:
-          (item.entityType === 'version' ? `${item.product?.name} - ` : '') +
+          (item.entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
           (item.label || item.name),
         entityId: item.entityId,
         entityType: item.entityType,
@@ -43,7 +43,8 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
           : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
         icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
           ?.icon,
-        path: extractPath(item, item.entityType),
+        folderId: extractFolderId(item, item.entityType),
+        parents: item.parents || [],
         tags: item.tags,
         status: item.status,
         hasReviewables: 'hasReviewables' in item ? item.hasReviewables : false, // products don't have this field
@@ -94,16 +95,16 @@ const extractSubTypes = (
   }
 }
 
-const extractPath = (item: EntityListItemWithLinks, entityType: string): string => {
+const extractFolderId = (item: EntityListItemWithLinks, entityType: string): string => {
   switch (entityType) {
     case 'folder':
-      return item.path || ''
+      return item.folderId || ''
     case 'task':
-      return item.folder?.path || ''
+      return item.folderId || ''
     case 'product':
-      return item.folder?.path || ''
+      return item.folderId || ''
     case 'version':
-      return (item.product?.folder?.path || '') + (item.task?.name || '')
+      return item.product?.folderId || ''
     default:
       return ''
   }

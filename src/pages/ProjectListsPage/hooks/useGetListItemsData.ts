@@ -114,6 +114,7 @@ const useGetListItemsData = ({
     position: 0,
     ownItemAttrib: [],
     links: [], // Add empty links array
+    parents: [],
   })
 
   // Extract tasks from infinite query data correctly

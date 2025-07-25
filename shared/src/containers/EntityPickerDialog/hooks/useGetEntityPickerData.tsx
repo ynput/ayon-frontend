@@ -17,7 +17,7 @@ import { SimpleTableRow } from '@shared/SimpleTable'
 import { matchSorter } from 'match-sorter'
 import { productTypes } from '@shared/util'
 
-type EntityQueryResult = {
+export type EntityQueryResult = {
   data: (SearchEntityLink | FolderListItem)[]
   table: SimpleTableRow[]
   isLoading: boolean

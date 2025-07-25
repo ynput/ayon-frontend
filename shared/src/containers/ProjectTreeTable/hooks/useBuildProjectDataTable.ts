@@ -133,6 +133,7 @@ export default function useBuildProjectDataTable({
         id: task.id,
         entityType: 'task',
         parentId: parentId || task.folderId,
+        folderId: task.folderId,
         name: task.name || '',
         label: task.label || task.name || '',
         icon: typeData?.icon || null,
@@ -145,7 +146,8 @@ export default function useBuildProjectDataTable({
         subType: task.taskType || null,
         attrib: task.attrib,
         ownAttrib: task.ownAttrib,
-        path: task.folder.path,
+        parents: task.parents || [],
+        path: task.parents.join('/') || null, // todo: probably remove this and just use parents
         updatedAt: task.updatedAt,
         links: links,
       }
@@ -206,6 +208,7 @@ export default function useBuildProjectDataTable({
         id: folderId,
         entityType: 'folder',
         parentId: folder.parentId || undefined,
+        folderId: folderId || null, // root folders have no folderId
         name: folder.name || '',
         label: folder.label || folder.name || '',
         icon: getEntityTypeData('folder', folder.folderType)?.icon || null,
