@@ -38,12 +38,14 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
   const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined)
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
 
+  // get the cell element based on the cellId
+  const anchorElement = document.getElementById(anchorId)
+  const tableContainer = anchorElement?.closest('.table-container')
+
   const updatePosition = () => {
     if (!isEditing) return
 
-    // get the cell element based on the cellId
-    const anchorElement = document.getElementById(anchorId)
-    if (!anchorElement) {
+    if (!anchorElement || !tableContainer) {
       // if the anchor element is not found, position in the center of the screen
       setPosition({
         top: window.innerHeight / 2,
@@ -56,6 +58,11 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     }
 
     const cellRect = anchorElement.getBoundingClientRect()
+
+    const containerRect = tableContainer.getBoundingClientRect()
+    const containerRight = containerRect.right
+    const containerToRightOfScreen = window.innerWidth - containerRect.right
+
     const screenPadding = 24
     const minHeightThreshold = 250
     const minWidthThreshold = 400
@@ -64,7 +71,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     const screenHeight = window.innerHeight
 
     // Check if we have enough space to the right of the cell
-    const spaceToRight = screenWidth - cellRect.left - screenPadding
+    const spaceToRight = containerRight - cellRect.left
     let position: { left?: number; right?: number } = {}
     let dialogWidth = minWidthThreshold
 
@@ -73,7 +80,10 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
       const spaceToLeft = cellRect.right - screenPadding
       if (spaceToLeft >= minWidthThreshold) {
         // Anchor to the right side of the cell
-        position.right = Math.max(screenWidth - cellRect.right, screenPadding)
+        position.right = Math.max(
+          screenWidth - cellRect.right,
+          screenPadding + containerToRightOfScreen,
+        )
       } else {
         // Not enough space on either side, center and use available width
         position.left = screenPadding
@@ -114,7 +124,18 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
 
   useLayoutEffect(() => {
     updatePosition()
-  }, [isEditing, anchorId])
+  }, [isEditing, anchorElement])
+
+  // watch for when the tableContainer width changes
+  useLayoutEffect(() => {
+    if (tableContainer) {
+      const resizeObserver = new ResizeObserver(() => {
+        updatePosition()
+      })
+      resizeObserver.observe(tableContainer)
+      return () => resizeObserver.disconnect()
+    }
+  }, [tableContainer, anchorElement])
 
   if (!isEditing) return null
   return (

@@ -4,6 +4,7 @@ import {
   SelectionCellsProvider,
   SelectedRowsProvider,
   CellEditingProvider,
+  DetailsPanelEntityProvider,
   ProjectTableModulesType,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
@@ -39,13 +40,15 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         onOpenPlayer={handleOpenPlayer}
       >
         <NewEntityProvider>
-          <SelectionCellsProvider>
-            <SelectedRowsProvider>
-              <CellEditingProvider>
-                <ProjectOverviewPage />
-              </CellEditingProvider>
-            </SelectedRowsProvider>
-          </SelectionCellsProvider>
+          <DetailsPanelEntityProvider>
+            <SelectionCellsProvider>
+              <SelectedRowsProvider>
+                <CellEditingProvider>
+                  <ProjectOverviewPage />
+                </CellEditingProvider>
+              </SelectedRowsProvider>
+            </SelectionCellsProvider>
+          </DetailsPanelEntityProvider>
         </NewEntityProvider>
       </ProjectTableProvider>
     </ProjectTableQueriesProvider>

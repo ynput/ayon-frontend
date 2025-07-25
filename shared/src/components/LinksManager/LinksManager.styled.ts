@@ -54,13 +54,15 @@ export const LinkItem = styled.li`
   gap: var(--base-gap-small);
 
   /* card styling */
-  cursor: pointer;
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-m);
   padding: 4px 4px;
 
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-high-hover);
+  &.clickable {
+    cursor: pointer;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+    }
   }
 
   .title {

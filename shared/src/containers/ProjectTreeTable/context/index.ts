@@ -13,6 +13,8 @@ export * from './ProjectTableQueriesContext'
 // selected rows context
 export * from './SelectedRowsContext'
 export * from './SelectedRowsProvider'
+// details panel entity context
+export * from './DetailsPanelEntityContext'
 // selection cells context
 export * from './SelectionCellsContext'
 export * from './SelectionCellsProvider'

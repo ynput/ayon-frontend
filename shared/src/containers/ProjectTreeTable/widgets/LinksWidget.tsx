@@ -3,6 +3,8 @@ import { LinksManagerDialog } from '@shared/components/LinksManager/LinksManager
 import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { createPortal } from 'react-dom'
+import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
+import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 
 export const isLinkEditable = (
   direction: 'in' | 'out',
@@ -48,12 +50,50 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   onChange: _onChange, // not used in this widget
   onCancelEdit,
 }) => {
+  // Try to get the contexts, but they might not exist in all environments
+  let setSelectedEntity:
+    | ((entity: { entityId: string; entityType: 'folder' | 'task' }) => void)
+    | undefined
+  let clearRowsSelection: (() => void) | undefined
+
+  try {
+    const entityContext = useDetailsPanelEntityContext()
+    setSelectedEntity = entityContext.setSelectedEntity
+  } catch {
+    // Context not available
+  }
+
+  try {
+    const rowsContext = useSelectedRowsContext()
+    clearRowsSelection = rowsContext.clearRowsSelection
+  } catch {
+    // Context not available
+  }
+
+  const handleEntityClick = (entityId: string, entityType: string) => {
+    // Clear any row selection first if context is available
+    if (clearRowsSelection) {
+      clearRowsSelection()
+    }
+    // Set the selected entity if context is available
+    if (setSelectedEntity) {
+      setSelectedEntity({
+        entityId,
+        entityType: entityType as 'folder' | 'task',
+      })
+    } else {
+      // Fallback to console.log if contexts are not available
+      console.log('Entity clicked:', entityId, entityType)
+    }
+  }
   return (
     <>
       <Chips
         values={
-          value?.links?.map((v) => ({ label: v.label, tooltip: v.parents.join('/') + v.label })) ||
-          []
+          value?.links?.map((v) => ({
+            label: v.label,
+            tooltip: v.parents.join('/') + '/' + v.label,
+          })) || []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={disabled}
@@ -73,6 +113,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             targetEntityType={value.link.targetEntityType}
             linkType={value.link.linkType}
             onClose={onCancelEdit}
+            onEntityClick={handleEntityClick}
             disabled={disabled}
             folderId={folderId}
           />,

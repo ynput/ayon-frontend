@@ -1,11 +1,11 @@
-import { FC, Fragment, useState } from 'react'
+import { FC, useState } from 'react'
 import * as Styled from './LinksManager.styled'
-import { Button, Icon } from '@ynput/ayon-react-components'
-import { getEntityId, getEntityTypeIcon } from '@shared/util'
+import { getEntityId } from '@shared/util'
 import useUpdateLinks from './hooks/useUpdateLinks'
 import AddNewLinks, { LinkSearchType } from './AddNewLinks'
 import { EntityPickerDialog, PickerEntityType } from '@shared/containers/EntityPickerDialog'
 import { upperFirst } from 'lodash'
+import { LinkManagerItem } from './LinkManagerItem'
 
 export type LinkEntity = {
   linkId: string
@@ -74,33 +74,12 @@ export const LinksManager: FC<LinksManagerProps> = ({
         </Styled.Header>
         <Styled.LinksList>
           {links?.map((link) => (
-            <Styled.LinkItem
+            <LinkManagerItem
               key={link.linkId}
-              onClick={() => onEntityClick?.(link.entityId, link.entityType)}
-              data-tooltip={link.parents.join('/') + link.label}
-            >
-              {link.icon ? (
-                <Icon icon={link.icon} />
-              ) : (
-                <Icon icon={getEntityTypeIcon(link.entityType)} />
-              )}
-
-              <span className="title">
-                {link.parents?.map((part, index) => (
-                  <Fragment key={index}>
-                    <span key={index + '-path'}>{part}</span>
-                    <span key={index + '-separator'}>/</span>
-                  </Fragment>
-                ))}
-                <span className="label">{link.label}</span>
-              </span>
-              <Button
-                icon={'close'}
-                variant="text"
-                className="remove"
-                onClick={(e) => handleRemove(e, link)}
-              />
-            </Styled.LinkItem>
+              link={link}
+              onEntityClick={onEntityClick}
+              onRemove={handleRemove}
+            />
           ))}
           {links.length === 0 && <Styled.SubHeader>No links yet</Styled.SubHeader>}
         </Styled.LinksList>
