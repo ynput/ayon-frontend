@@ -142,9 +142,20 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const initData: EntityForm = { label: '', subType: '' }
 
   //   format title
-  let title = 'Add New '
-  if (isRoot) title += 'Root '
-  title += capitalize(entityType || '')
+  const getDialogTitle = () => {
+    let title = 'Add New '
+    if (isRoot) title += 'Root '
+    title += capitalize(entityType || '')
+    if (!isRoot) {
+      const entityLabels = selectedEntities.map((e) => e?.label || e?.name).filter(Boolean)
+      if (entityLabels.length > 2) {
+        title += ' - ' + entityLabels.slice(0, 2).join(', ') + ` +${entityLabels.length - 2} more`
+      } else {
+        title += ' - ' + entityLabels.join(', ')
+      }
+    }
+    return title
+  }
 
   //   entityType selector
   const typeOptions =
@@ -330,7 +341,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       />
       {entityType && (
         <Dialog
-          header={title}
+          header={getDialogTitle()}
           isOpen
           onClose={handleClose}
           onShow={handleShow}

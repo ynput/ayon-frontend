@@ -381,6 +381,14 @@ export const patchDetailsPanelEntity = (
   // transform the data to match the details panel entity data
   const detailsPanelData = operationDataToDetailsData(operationData, operation.entityType)
 
+  // If this is a folder and name is being updated, also update the path
+  if (operation.entityType === 'folder' && operationData.name && draft.path) {
+    // Construct new path by replacing the last segment with the new name
+    const pathParts = draft.path.split('/')
+    pathParts[pathParts.length - 1] = operationData.name
+    detailsPanelData.path = pathParts.join('/')
+  }
+
   // helper to deep‐clean undefined values
   function cleanUndefined(obj: any): void {
     Object.entries(obj).forEach(([key, val]) => {
