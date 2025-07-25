@@ -26,6 +26,7 @@ export interface LinksManagerProps {
   entityType: string // the entity type of the entity that has these links
   targetEntityType: string // the entity type of the out links
   folderId?: string | null // the folder selected or the parent folder of the selected (used in EntityPickerDialog)
+  selectedEntityIds?: string[] // list of selected entity IDs to highlight
   onClose?: () => void
   onEntityClick?: (entityId: string, entityType: string) => void // a click on an linked entity
 }
@@ -40,6 +41,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
   linkType,
   targetEntityType,
   folderId,
+  selectedEntityIds = [],
   onClose,
   onEntityClick,
 }) => {
@@ -77,6 +79,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
             <LinkManagerItem
               key={link.linkId}
               link={link}
+              isSelected={selectedEntityIds.includes(link.entityId)}
               onEntityClick={onEntityClick}
               onRemove={handleRemove}
             />

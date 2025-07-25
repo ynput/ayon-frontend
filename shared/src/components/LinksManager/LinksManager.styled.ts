@@ -65,6 +65,13 @@ export const LinkItem = styled.li`
     }
   }
 
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
+    }
+  }
+
   .title {
     display: flex;
     flex-wrap: wrap;

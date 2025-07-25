@@ -8,11 +8,17 @@ import clsx from 'clsx'
 
 export interface LinkManagerItemProps {
   link: LinkEntity
+  isSelected?: boolean
   onEntityClick?: (entityId: string, entityType: string) => void
   onRemove: (e: React.MouseEvent<HTMLButtonElement>, link: LinkEntity) => void
 }
 
-export const LinkManagerItem: FC<LinkManagerItemProps> = ({ link, onEntityClick, onRemove }) => {
+export const LinkManagerItem: FC<LinkManagerItemProps> = ({
+  link,
+  isSelected = false,
+  onEntityClick,
+  onRemove,
+}) => {
   const entityTypeSupported = detailsPanelEntityTypes.includes(link.entityType as any)
 
   return (
@@ -20,7 +26,10 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({ link, onEntityClick,
       key={link.linkId}
       onClick={() => entityTypeSupported && onEntityClick?.(link.entityId, link.entityType)}
       data-tooltip={link.parents.join('/') + '/' + link.label}
-      className={clsx({ clickable: entityTypeSupported })}
+      className={clsx({
+        clickable: entityTypeSupported,
+        selected: isSelected,
+      })}
     >
       {link.icon ? <Icon icon={link.icon} /> : <Icon icon={getEntityTypeIcon(link.entityType)} />}
 

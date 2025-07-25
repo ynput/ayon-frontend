@@ -56,9 +56,13 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
     | undefined
   let clearRowsSelection: (() => void) | undefined
 
+  const selectedEntityIds: string[] = []
   try {
     const entityContext = useDetailsPanelEntityContext()
     setSelectedEntity = entityContext.setSelectedEntity
+    if (entityContext.selectedEntity) {
+      selectedEntityIds.push(entityContext.selectedEntity.entityId)
+    }
   } catch {
     // Context not available
   }
@@ -112,6 +116,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             entityType={value.entityType}
             targetEntityType={value.link.targetEntityType}
             linkType={value.link.linkType}
+            selectedEntityIds={selectedEntityIds}
             onClose={onCancelEdit}
             onEntityClick={handleEntityClick}
             disabled={disabled}
