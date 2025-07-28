@@ -15,13 +15,13 @@ import { useRootFolders } from './hooks'
 import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
 import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
 import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
-import { type SelectionData, type SliceType, useFiltersWithHierarchy } from '@shared/containers'
+import { type SelectionData, type SliceType } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
 import { useAppDispatch } from '@state/store'
 import { toast } from 'react-toastify'
-import { Button, Filter, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { Button, Section, ShortcutTag, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
 import { openViewer } from '@state/viewer'
 import './styles.scss'
@@ -35,7 +35,9 @@ import useFilterBySlice from './hooks/useFilterBySlice'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
-import useUserFilters from '@hooks/useUserFilters'
+import useUserQueryFilters from '@hooks/useUserQueryFilters'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -74,7 +76,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // FILTERS
   //
   //
-  const { filters, setFilters } = useUserFilters({ page: 'progress', projectName })
+  const { queryFilters, setQueryFilters } = useUserQueryFilters({ page: 'progress', projectName })
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
@@ -84,27 +86,29 @@ const TasksProgress: FC<TasksProgressProps> = ({
     : persistentRowSelectionData
   const { filter: sliceFilter } = useFilterBySlice()
 
-  const handleFiltersChange = (value: Filter[]) => {
-    setFilters(value)
+  const handleFiltersChange = (value: QueryFilter) => {
+    setQueryFilters(value)
 
     // check if we need to remove the hierarchy filter and clear hierarchy selection
-    if (!value.some((filter) => filter.id === 'hierarchy')) {
+    // Convert QueryFilter to Filter[] to check for hierarchy
+    const hasHierarchyCondition = value.conditions?.some(
+      (condition) => 'key' in condition && condition.key === 'hierarchy',
+    )
+    if (!hasHierarchyCondition) {
       setPersistentRowSelectionData({})
     }
   }
 
-  // if the sliceFilter is not hierarchy and hierarchy is not empty
-  // add the hierarchy to the filters as disabled
-  const filtersWithHierarchy = useFiltersWithHierarchy({
-    sliceFilter,
-    persistedHierarchySelection,
-    filters,
-  })
+  // Convert slice filter to QueryFilter for processing
+  const sliceQueryFilter: QueryFilter | null = useMemo(() => {
+    if (!sliceFilter) return null
+    return clientFilterToQueryFilter([sliceFilter])
+  }, [sliceFilter])
 
   // build the graphql query filters based on the search filters and slice selection
-  const queryFilters = useMemo(
-    () => formatSearchQueryFilters(filters, sliceFilter),
-    [filters, sliceFilter],
+  const queryFiltersForGraphQL = useMemo(
+    () => formatSearchQueryFilters(queryFilters, sliceQueryFilter),
+    [queryFilters, sliceQueryFilter],
   )
 
   //
@@ -166,13 +170,13 @@ const TasksProgress: FC<TasksProgressProps> = ({
     {
       projectName,
       folderIds: folderIdsToFetch,
-      assignees: queryFilters.assignees,
-      assigneesAny: queryFilters.assigneesAny,
-      tags: queryFilters.tags,
-      tagsAny: queryFilters.tagsAny,
-      taskTypes: queryFilters.taskTypes,
-      statuses: queryFilters.statuses,
-      attributes: queryFilters.attributes,
+      assignees: queryFiltersForGraphQL.assignees,
+      assigneesAny: queryFiltersForGraphQL.assigneesAny,
+      tags: queryFiltersForGraphQL.tags,
+      tagsAny: queryFiltersForGraphQL.tagsAny,
+      taskTypes: queryFiltersForGraphQL.taskTypes,
+      statuses: queryFiltersForGraphQL.statuses,
+      attributes: queryFiltersForGraphQL.attributes,
     },
     { skip: !folderIdsToFetch.length || !projectName },
   )
@@ -386,7 +390,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
       <Section style={{ height: '100%' }} direction="column">
         <Toolbar>
           <SearchFilterWrapper
-            filters={filtersWithHierarchy}
+            queryFilters={queryFilters}
             onChange={handleFiltersChange}
             filterTypes={searchFilterTypes}
             projectNames={[projectName]}
