@@ -6,8 +6,9 @@ import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
+import { Views } from '@shared/components'
 
-const AppNavLinks = ({ links = [] }) => {
+const AppNavLinks = ({ links = [], projectName }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams()
@@ -70,6 +71,7 @@ const AppNavLinks = ({ links = [] }) => {
               endContent,
               uriSync,
               module,
+              viewType,
               ...props
             } = {},
             idx,
@@ -96,6 +98,7 @@ const AppNavLinks = ({ links = [] }) => {
                   <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
                     {startContent && startContent}
                     {name}
+                    {viewType && <Views viewType={viewType} projectName={projectName} />}
                     {endContent && endContent}
                   </Button>
                 </NavLink>

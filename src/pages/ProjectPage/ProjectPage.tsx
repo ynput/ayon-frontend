@@ -113,6 +113,7 @@ const ProjectPage = () => {
         name: 'Overview',
         path: `/projects/${projectName}/overview`,
         module: 'overview',
+        viewType: 'overview',
         uriSync: true,
       },
       {
@@ -273,7 +274,7 @@ const ProjectPage = () => {
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
-      <AppNavLinks links={links} />
+      <AppNavLinks links={links} projectName={projectName} />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}
