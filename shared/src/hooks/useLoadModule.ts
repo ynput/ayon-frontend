@@ -108,7 +108,7 @@ export const useLoadModule = <T>({
       outdated: isOutdated
         ? {
             current: modules.find((m) => m.addonName === addon)?.addonVersion || 'unknown',
-            required: minVersion || 'unknown',
+            required: minVersion?.replace('-dev', '') || 'unknown',
           }
         : undefined,
     },
