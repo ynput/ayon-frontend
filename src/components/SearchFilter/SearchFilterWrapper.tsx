@@ -1,5 +1,5 @@
 import { BuildFilterOptions, useBuildFilterOptions } from '@shared/components'
-import { FC, useState, useMemo } from 'react'
+import { FC, useState, useEffect } from 'react'
 import { ALLOW_GLOBAL_SEARCH, ALLOW_MULTIPLE_SAME_FILTERS } from './featureFlags'
 import { SearchFilter, Filter } from '@ynput/ayon-react-components'
 import {
@@ -31,26 +31,15 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   })
 
   // Convert QueryFilter to Filter[] for the SearchFilter component
-  const filters = useMemo(() => {
-    return queryFilterToClientFilter(queryFilters, options)
-  }, [queryFilters, options])
+  const filters = queryFilterToClientFilter(queryFilters, options)
 
   // Use filters directly as initial state and manage changes through onChange
-  const [localFilters, setLocalFilters] = useState<Filter[]>(() => filters)
+  const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
 
-  // Instead of useEffect, update localFilters when filters change by using a key
-  // or by checking if the current localFilters match the expected filters
-  const currentFiltersKey = useMemo(() => {
-    return JSON.stringify(queryFilters)
-  }, [queryFilters])
-
-  const [lastFiltersKey, setLastFiltersKey] = useState(currentFiltersKey)
-
-  // Only update if the queryFilters actually changed
-  if (currentFiltersKey !== lastFiltersKey) {
+  // Update localFilters when filters change
+  useEffect(() => {
     setLocalFilters(filters)
-    setLastFiltersKey(currentFiltersKey)
-  }
+  }, [JSON.stringify(filters)])
 
   // Convert Filter[] back to QueryFilter when changes are applied
   const handleFinish = (newFilters: Filter[]) => {

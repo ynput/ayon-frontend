@@ -1,5 +1,5 @@
 import { BuildFilterOptions, useBuildFilterOptions } from '@shared/components'
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo, useState, useEffect } from 'react'
 import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
 import type { ProjectModel } from '@shared/api'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
@@ -77,29 +77,14 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   })
 
   // Convert QueryFilter to Filter[] for internal use
-  const _filters = useMemo(() => {
-    if (!queryFilters) return []
-    return queryFilterToClientFilter(queryFilters, options)
-  }, [queryFilters, options])
+  const filters = queryFilterToClientFilter(queryFilters, options)
 
   // keeps track of the filters whilst adding/removing filters
-  const [filters, setFilters] = useState<Filter[]>(() => _filters)
+  const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
 
-  // Use a stable key-based approach to update filters when queryFilters change
-  const currentFiltersKey = useMemo(() => {
-    return JSON.stringify(queryFilters)
-  }, [queryFilters])
-
-  const [lastFiltersKey, setLastFiltersKey] = useState(currentFiltersKey)
-
-  // Only update if the queryFilters actually changed
-  if (currentFiltersKey !== lastFiltersKey) {
-    const deduplicatedFilters = _filters.filter(
-      (filter, index, self) => self.findIndex((f) => f.id === filter.id) === index,
-    )
-    setFilters(deduplicatedFilters)
-    setLastFiltersKey(currentFiltersKey)
-  }
+  useEffect(() => {
+    setLocalFilters(filters)
+  }, [JSON.stringify(filters)]) // Update filters when filters change
 
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
     // if a filter is a date then check we have power features
@@ -125,8 +110,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   return (
     <SearchFilter
       options={options}
-      filters={filters}
-      onChange={(v) => validateFilters(v, setFilters)} // when filters are changed
+      filters={localFilters}
+      onChange={(v) => validateFilters(v, setLocalFilters)} // when filters are changed
       onFinish={handleFinish} // when changes are applied
       enableMultipleSameFilters={false}
       enableGlobalSearch={true}
