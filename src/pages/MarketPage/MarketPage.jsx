@@ -397,7 +397,7 @@ const MarketPage = () => {
         onHide={() => setShowConnectDialog(false)}
         redirect={`/market?addon=${selectedItemId}`}
       />
-      <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
+      <main style={{ flexDirection: 'column' }}>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
           <MarketFilters
             filterType={filterType}
