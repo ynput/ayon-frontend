@@ -274,7 +274,7 @@ const ProjectPage = () => {
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
       {/* @ts-expect-error - AppNavLinks is jsx */}
-      <AppNavLinks links={links} projectName={projectName} />
+      <AppNavLinks links={links} currentModule={module} projectName={projectName} />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}

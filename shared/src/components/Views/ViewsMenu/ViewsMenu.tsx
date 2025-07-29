@@ -1,17 +1,19 @@
 import { forwardRef } from 'react'
-import { ViewMenuItem } from '../ViewMenuItem/ViewMenuItem'
+import { ViewItem } from '../ViewItem/ViewItem'
 import * as Styled from './ViewsMenu.styled'
+import { SelectedViewState } from '../Views'
 
-type Divider = '_divider_' // Represents a divider
+export const VIEW_DIVIDER = '_divider_' as const // Represents a divider
 type Title = string // Represents a title
-type MenuItem = ViewMenuItem | Divider | Title
+export type ViewMenuItem = ViewItem | typeof VIEW_DIVIDER | Title
 
-interface ViewsMenuProps extends React.HTMLAttributes<HTMLUListElement> {
-  items: MenuItem[] // Array of ViewMenuItem or string
+export interface ViewsMenuProps extends React.HTMLAttributes<HTMLUListElement> {
+  items: ViewMenuItem[] // Array of ViewMenuItem or string
+  selected: SelectedViewState
 }
 
 export const ViewsMenu = forwardRef<HTMLUListElement, ViewsMenuProps>(
-  ({ items, ...props }, ref) => {
+  ({ items, selected, ...props }, ref) => {
     return (
       <Styled.ViewsMenu {...props} ref={ref}>
         {items.map((item, index) => {
@@ -20,7 +22,9 @@ export const ViewsMenu = forwardRef<HTMLUListElement, ViewsMenuProps>(
           } else if (typeof item === 'string') {
             return <Styled.ViewsMenuTitle key={index}>{item}</Styled.ViewsMenuTitle>
           } else {
-            return <ViewMenuItem key={index} tabIndex={0} {...item} />
+            return (
+              <ViewItem key={item.id} tabIndex={0} isSelected={item.id === selected} {...item} />
+            )
           }
         })}
       </Styled.ViewsMenu>

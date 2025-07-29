@@ -8,6 +8,7 @@ export type PowerpackFeature =
   | 'advancedFilters'
   | 'listAttributes'
   | 'groupAttributes'
+  | 'sharedViews'
 export type PowerpackDialogType = {
   label: string
   description: string
@@ -47,6 +48,11 @@ export const powerpackFeatures: {
     label: 'Group Attributes',
     description: 'Group tasks by assignees, status, or other attributes for better organization.',
     bullet: 'Group tasks by attributes',
+  },
+  sharedViews: {
+    label: 'Shared Views',
+    description: 'Save custom views and share them with team members for better collaboration.',
+    bullet: 'Save and share custom views',
   },
 }
 export type PowerpackContextType = {
