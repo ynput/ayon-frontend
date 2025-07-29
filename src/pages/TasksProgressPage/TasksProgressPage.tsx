@@ -28,7 +28,7 @@ const TasksProgressPage: FC = () => {
   const statuses = useScopedStatuses([projectName], ['task'])
 
   return (
-    <main style={{ overflow: 'hidden' }}>
+    <main>
       <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
         <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 100, maxWidth: 500 }}>
           <Section wrap>
