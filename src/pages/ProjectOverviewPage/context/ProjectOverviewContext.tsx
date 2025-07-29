@@ -91,6 +91,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     projectName,
   })
 
+  // Use the shared hook to handle filter logic
+  const queryFiltersResult = useQueryFilters({
+    queryFilters,
+    sliceFilter,
+  })
+
   const { updateSorting } = useColumnSorting({
     updatePageConfig,
     columnSorting,
@@ -102,14 +108,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
     ? null
     : persistentRowSelectionData
-
-  // Use the shared hook to handle filter logic
-  const queryFiltersResult = useQueryFilters({
-    queryFilters,
-    sliceFilter,
-    sliceType,
-    persistentRowSelectionData: persistedHierarchySelection,
-  })
 
   const selectedFolders = useSelectedFolders({
     rowSelection,
