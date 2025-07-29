@@ -2,7 +2,6 @@ import { useLoadModule } from '@shared/hooks'
 import { GroupSettingsFallback } from '../components/GroupSettingsFallback'
 import { EntityGroup, QueryFilter } from '@shared/api'
 import { TableGroupBy } from '../context'
-import { ProjectTableAttribute } from './useAttributesList'
 
 type GetGroupQueriesParams = {
   taskGroups: EntityGroup[]
