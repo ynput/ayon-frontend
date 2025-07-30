@@ -316,7 +316,7 @@ export const useFetchOverviewData = ({
     return groupBy
       ? getGroupQueries?.({
           taskGroups,
-          queryFilters: queryFilters.filter,
+          filters: queryFilters.filter,
           groupBy,
           groupPageCounts,
         }) ?? []

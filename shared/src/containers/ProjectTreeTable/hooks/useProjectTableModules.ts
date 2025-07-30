@@ -5,7 +5,7 @@ import { TableGroupBy } from '../context'
 
 type GetGroupQueriesParams = {
   taskGroups: EntityGroup[]
-  queryFilters: QueryFilter | undefined
+  filters: QueryFilter | undefined
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>
 }
