@@ -1,7 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
 import { EntityListItem } from '@shared/api'
 import { ProjectDataContextProps, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
-import { Filter } from '@ynput/ayon-react-components'
 import { useUserProjectConfig } from '@shared/hooks'
 import useGetListItemsData from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
@@ -12,6 +11,7 @@ import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable
 import { useEntityListsContext } from './EntityListsContext'
 import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -34,8 +34,8 @@ export interface ListItemsDataContextValue {
   isError?: boolean
   isInitialized: boolean
   // filters
-  listItemsFilters: Filter[]
-  setListItemsFilters: (filters: Filter[]) => Promise<void>
+  listItemsFilters: QueryFilter
+  setListItemsFilters: (filters: QueryFilter) => Promise<void>
   // folders data
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
@@ -80,9 +80,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     selectors,
   })
 
-  const listItemsFilters = pageConfig?.filters || ([] as Filter[])
-  const setListItemsFilters = async (filters: Filter[]) => {
-    await updatePageConfig({ filters })
+  const listItemsFilters =
+    pageConfig?.queryFilters || ({ conditions: [], operator: 'and' } as QueryFilter)
+  const setListItemsFilters = async (queryFilters: QueryFilter) => {
+    await updatePageConfig({ queryFilters })
   }
 
   const { columnSorting = [] } = pageConfig as {
@@ -99,7 +100,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const resetFilters = useCallback(() => {
     updatePageConfig({
-      filters: [],
+      queryFilters: { conditions: [], operator: 'and' },
       columnSorting: [],
     })
   }, [pageConfig, updatePageConfig])
