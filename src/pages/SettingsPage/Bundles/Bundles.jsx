@@ -395,7 +395,7 @@ const Bundles = () => {
         onCancel={closeCopySettings}
         onFinish={closeCopySettings}
       />
-      <main style={{ overflow: 'hidden' }}>
+      <main>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>

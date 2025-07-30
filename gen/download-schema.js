@@ -1,3 +1,4 @@
+require('dotenv').config({ path: __dirname + '/.env' })
 const fs = require('fs')
 const path = require('path')
 const http = require('http')
@@ -9,10 +10,18 @@ async function downloadOpenApiSchema() {
   try {
     const schemaPath = path.join(__dirname, 'openapi.json')
     const apiUrl = 'http://localhost:3000/openapi.json'
+    const token = process.env.TOKEN
 
     // Create a promise-based HTTP request
     await new Promise((resolve, reject) => {
-      const req = http.get(apiUrl, (res) => {
+      const options = {
+        headers: {},
+      }
+      if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const req = http.get(apiUrl, options, (res) => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
           return reject(new Error(`HTTP error! Status: ${res.statusCode}`))
         }
