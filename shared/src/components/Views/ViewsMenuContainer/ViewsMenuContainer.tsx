@@ -71,19 +71,20 @@ export const ViewsMenuContainer: FC = () => {
 
   return (
     <>
-      {createPortal(
-        <Styled.ViewsModal style={modalPosition} ref={modalRef}>
-          <ViewsMenuComponent items={viewMenuItems} selected={selectedViewId} />
-          <ViewItem
-            label="Create new view"
-            id={NEW_VIEW_ID}
-            startContent={<Icon icon="add" />}
-            endContent={!powerLicense && <PowerIcon icon="bolt" />}
-            onClick={handleCreateView}
-          />
-        </Styled.ViewsModal>,
-        document.body,
-      )}
+      {isMenuOpen &&
+        createPortal(
+          <Styled.ViewsModal style={modalPosition} ref={modalRef}>
+            <ViewsMenuComponent items={viewMenuItems} selected={selectedViewId} />
+            <ViewItem
+              label="Create new view"
+              id={NEW_VIEW_ID}
+              startContent={<Icon icon="add" />}
+              endContent={!powerLicense && <PowerIcon icon="bolt" />}
+              onClick={handleCreateView}
+            />
+          </Styled.ViewsModal>,
+          document.body,
+        )}
     </>
   )
 }
