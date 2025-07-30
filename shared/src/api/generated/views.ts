@@ -1,14 +1,11 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
-    initViews: build.mutation<InitViewsApiResponse, InitViewsApiArg>({
-      query: () => ({ url: `/api/views/__init__`, method: 'POST' }),
-    }),
-    getViewList: build.query<GetViewListApiResponse, GetViewListApiArg>({
+    listViews: build.query<ListViewsApiResponse, ListViewsApiArg>({
       query: (queryArg) => ({
         url: `/api/views/${queryArg.viewType}`,
         params: {
-          project: queryArg.project,
+          project_name: queryArg.projectName,
         },
       }),
     }),
@@ -18,7 +15,15 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'POST',
         body: queryArg.payload,
         params: {
-          project: queryArg.project,
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
+    getPersonalView: build.query<GetPersonalViewApiResponse, GetPersonalViewApiArg>({
+      query: (queryArg) => ({
+        url: `/api/views/${queryArg.viewType}/personal`,
+        params: {
+          project_name: queryArg.projectName,
         },
       }),
     }),
@@ -26,7 +31,16 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/views/${queryArg.viewType}/${queryArg.viewId}`,
         params: {
-          project: queryArg.project,
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
+    deleteView: build.mutation<DeleteViewApiResponse, DeleteViewApiArg>({
+      query: (queryArg) => ({
+        url: `/api/views/${queryArg.viewType}/${queryArg.viewId}`,
+        method: 'DELETE',
+        params: {
+          project_name: queryArg.projectName,
         },
       }),
     }),
@@ -34,18 +48,23 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
-export type InitViewsApiResponse = /** status 200 Successful Response */ any
-export type InitViewsApiArg = void
-export type GetViewListApiResponse = /** status 200 Successful Response */ ViewListModel
-export type GetViewListApiArg = {
+export type ListViewsApiResponse = /** status 200 Successful Response */ ViewListModel
+export type ListViewsApiArg = {
   viewType: string
-  project?: string
+  projectName?: string
 }
 export type CreateViewApiResponse = /** status 200 Successful Response */ EntityIdResponse
 export type CreateViewApiArg = {
   viewType: string
-  project?: string
-  payload: OverviewViewModel | TaskProgressViewModel
+  projectName?: string
+  payload: OverviewViewPostModel | TaskProgressViewPostModel
+}
+export type GetPersonalViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+export type GetPersonalViewApiArg = {
+  viewType: string
+  projectName?: string
 }
 export type GetViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
@@ -53,7 +72,13 @@ export type GetViewApiResponse = /** status 200 Successful Response */
 export type GetViewApiArg = {
   viewType: string
   viewId: string
-  project?: string
+  projectName?: string
+}
+export type DeleteViewApiResponse = /** status 200 Successful Response */ any
+export type DeleteViewApiArg = {
+  viewType: string
+  viewId: string
+  projectName?: string
 }
 export type ViewListItemModel = {
   id?: string
@@ -116,8 +141,25 @@ export type ColumnItemModel = {
   width?: number
 }
 export type OverviewSettings = {
+  showHierarchy?: boolean
+  groupBy?: string
   filter?: QueryFilter
   columns?: ColumnItemModel[]
+}
+export type OverviewViewPostModel = {
+  id?: string
+  label: string
+  personal?: boolean
+  settings: OverviewSettings
+}
+export type TaskProgressSettings = {
+  filter?: QueryFilter
+}
+export type TaskProgressViewPostModel = {
+  id?: string
+  label: string
+  personal?: boolean
+  settings: TaskProgressSettings
 }
 export type OverviewViewModel = {
   id?: string
@@ -129,10 +171,6 @@ export type OverviewViewModel = {
   personal?: boolean
   settings: OverviewSettings
   viewType?: 'overview'
-}
-export type TaskProgressSettings = {
-  expanded?: boolean
-  filter?: QueryFilter
 }
 export type TaskProgressViewModel = {
   id?: string

@@ -33,6 +33,7 @@ import { useFiltersWithHierarchy } from '@shared/containers'
 import { useAppSelector } from '@state/store'
 import { OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
+import { ViewsProvider, ViewsComponents } from '@shared/components'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -131,105 +132,108 @@ const ProjectOverviewPage: FC = () => {
   }
 
   return (
-    <main style={{ gap: 4 }}>
-      <Splitter
-        layout="horizontal"
-        style={{ width: '100%', height: '100%' }}
-        stateKey="overview-splitter-table"
-        stateStorage="local"
-      >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
-          <Section wrap>
-            <Slicer sliceFields={overviewSliceFields} persistFieldId="hierarchy" />
-          </Section>
-        </SplitterPanel>
-        <SplitterPanel size={88}>
-          <Section wrap direction="column" style={{ height: '100%' }}>
-            <Toolbar>
-              <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
-              <OverviewActions />
-              <SearchFilterWrapper
-                filters={filtersWithHierarchy}
-                onChange={handleFiltersChange}
-                filterTypes={searchFilterTypes}
-                scope="task"
-                projectNames={projectName ? [projectName] : []}
-                projectInfo={projectInfo}
-                tasksMap={tasksMap}
-                disabledFilters={sliceType ? [sliceType] : []}
-              />
-              <ReloadButton />
-              <SwitchButton
-                value={showHierarchy}
-                onClick={handleShowHierarchy}
-                label="Show hierarchy"
-              />
-              <Actions
-                entities={[]}
-                entityType={undefined}
-                isLoadingEntity={false}
-                projectActionsProjectName={projectName}
-                onNavigate={navigate}
-                onSetSearchParams={setSearchParams}
-                searchParams={searchParams}
-                isDeveloperMode={isDeveloperMode}
-                align="right"
-              />
-              <CustomizeButton />
-            </Toolbar>
-            <Splitter
-              layout="horizontal"
-              stateKey="overview-splitter-settings"
-              stateStorage="local"
-              style={{ width: '100%', height: '100%', overflow: 'hidden' }}
-              gutterSize={!isPanelOpen ? 0 : 4}
-            >
-              <SplitterPanel size={82}>
-                <Splitter
-                  layout="horizontal"
-                  stateKey="overview-splitter-details"
-                  stateStorage="local"
-                  style={{ width: '100%', height: '100%' }}
-                  gutterSize={!selectedRows.length ? 0 : 4}
-                >
-                  <SplitterPanel size={70}>
-                    <ProjectOverviewTable />
-                  </SplitterPanel>
-                  {!!selectedRows.length ? (
-                    <SplitterPanel
-                      size={30}
-                      style={{
-                        zIndex: 300,
-                        minWidth: 300,
-                      }}
-                    >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
+    <ViewsProvider viewType="overview" projectName={projectName}>
+      <ViewsComponents />
+      <main style={{ gap: 4 }}>
+        <Splitter
+          layout="horizontal"
+          style={{ width: '100%', height: '100%' }}
+          stateKey="overview-splitter-table"
+          stateStorage="local"
+        >
+          <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+            <Section wrap>
+              <Slicer sliceFields={overviewSliceFields} persistFieldId="hierarchy" />
+            </Section>
+          </SplitterPanel>
+          <SplitterPanel size={88}>
+            <Section wrap direction="column" style={{ height: '100%' }}>
+              <Toolbar>
+                <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
+                <OverviewActions />
+                <SearchFilterWrapper
+                  filters={filtersWithHierarchy}
+                  onChange={handleFiltersChange}
+                  filterTypes={searchFilterTypes}
+                  scope="task"
+                  projectNames={projectName ? [projectName] : []}
+                  projectInfo={projectInfo}
+                  tasksMap={tasksMap}
+                  disabledFilters={sliceType ? [sliceType] : []}
+                />
+                <ReloadButton />
+                <SwitchButton
+                  value={showHierarchy}
+                  onClick={handleShowHierarchy}
+                  label="Show hierarchy"
+                />
+                <Actions
+                  entities={[]}
+                  entityType={undefined}
+                  isLoadingEntity={false}
+                  projectActionsProjectName={projectName}
+                  onNavigate={navigate}
+                  onSetSearchParams={setSearchParams}
+                  searchParams={searchParams}
+                  isDeveloperMode={isDeveloperMode}
+                  align="right"
+                />
+                <CustomizeButton />
+              </Toolbar>
+              <Splitter
+                layout="horizontal"
+                stateKey="overview-splitter-settings"
+                stateStorage="local"
+                style={{ width: '100%', height: '100%', overflow: 'hidden' }}
+                gutterSize={!isPanelOpen ? 0 : 4}
+              >
+                <SplitterPanel size={82}>
+                  <Splitter
+                    layout="horizontal"
+                    stateKey="overview-splitter-details"
+                    stateStorage="local"
+                    style={{ width: '100%', height: '100%' }}
+                    gutterSize={!selectedRows.length ? 0 : 4}
+                  >
+                    <SplitterPanel size={70}>
+                      <ProjectOverviewTable />
                     </SplitterPanel>
-                  ) : (
-                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-                  )}
-                </Splitter>
-              </SplitterPanel>
-              {isPanelOpen ? (
-                <SplitterPanel
-                  size={18}
-                  style={{
-                    zIndex: 500,
-                  }}
-                >
-                  <ProjectOverviewSettings onChange={handleSettingsChange} />
+                    {!!selectedRows.length ? (
+                      <SplitterPanel
+                        size={30}
+                        style={{
+                          zIndex: 300,
+                          minWidth: 300,
+                        }}
+                      >
+                        <ProjectOverviewDetailsPanel
+                          projectInfo={projectInfo}
+                          projectName={projectName}
+                        />
+                      </SplitterPanel>
+                    ) : (
+                      <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+                    )}
+                  </Splitter>
                 </SplitterPanel>
-              ) : (
-                <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-              )}
-            </Splitter>
-          </Section>
-        </SplitterPanel>
-      </Splitter>
-    </main>
+                {isPanelOpen ? (
+                  <SplitterPanel
+                    size={18}
+                    style={{
+                      zIndex: 500,
+                    }}
+                  >
+                    <ProjectOverviewSettings onChange={handleSettingsChange} />
+                  </SplitterPanel>
+                ) : (
+                  <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+                )}
+              </Splitter>
+            </Section>
+          </SplitterPanel>
+        </Splitter>
+      </main>
+    </ViewsProvider>
   )
 }
 

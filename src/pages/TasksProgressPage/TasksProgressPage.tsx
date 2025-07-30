@@ -11,6 +11,7 @@ import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useScopedDetailsPanel } from '@shared/context'
+import { ViewsProvider, ViewsComponents } from '@shared/components'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: any) => state.project.name) as string
@@ -28,46 +29,49 @@ const TasksProgressPage: FC = () => {
   const statuses = useScopedStatuses([projectName], ['task'])
 
   return (
-    <main>
-      <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
-        <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 100, maxWidth: 500 }}>
-          <Section wrap>
-            <Slicer sliceFields={taskProgressSliceFields} persistFieldId="hierarchy" />
-          </Section>
-        </SplitterPanel>
-        <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
-          <Splitter
-            layout="horizontal"
-            style={{ height: '100%', overflow: 'hidden' }}
-            pt={{ gutter: { style: { width: detailsOpen ? 4 : 0 } } }}
-          >
-            <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
-              <TasksProgress
-                statuses={statuses}
-                taskTypes={projectInfo?.taskTypes}
-                folderTypes={projectInfo?.folderTypes}
-                priorities={priorities}
-                projectName={projectName}
-              />
-            </SplitterPanel>
-            {detailsOpen ? (
-              <SplitterPanel
-                size={20}
-                style={{
-                  minWidth: 300,
-                  maxWidth: 800,
-                  zIndex: 500,
-                }}
-              >
-                <TaskProgressDetailsPanel projectInfo={projectInfo} projectName={projectName} />
+    <ViewsProvider viewType="taskProgress" projectName={projectName}>
+      <ViewsComponents />
+      <main>
+        <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
+          <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 100, maxWidth: 500 }}>
+            <Section wrap>
+              <Slicer sliceFields={taskProgressSliceFields} persistFieldId="hierarchy" />
+            </Section>
+          </SplitterPanel>
+          <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
+            <Splitter
+              layout="horizontal"
+              style={{ height: '100%', overflow: 'hidden' }}
+              pt={{ gutter: { style: { width: detailsOpen ? 4 : 0 } } }}
+            >
+              <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
+                <TasksProgress
+                  statuses={statuses}
+                  taskTypes={projectInfo?.taskTypes}
+                  folderTypes={projectInfo?.folderTypes}
+                  priorities={priorities}
+                  projectName={projectName}
+                />
               </SplitterPanel>
-            ) : (
-              <SplitterPanel size={0} style={{ maxWidth: 0 }}></SplitterPanel>
-            )}
-          </Splitter>
-        </SplitterPanel>
-      </Splitter>
-    </main>
+              {detailsOpen ? (
+                <SplitterPanel
+                  size={20}
+                  style={{
+                    minWidth: 300,
+                    maxWidth: 800,
+                    zIndex: 500,
+                  }}
+                >
+                  <TaskProgressDetailsPanel projectInfo={projectInfo} projectName={projectName} />
+                </SplitterPanel>
+              ) : (
+                <SplitterPanel size={0} style={{ maxWidth: 0 }}></SplitterPanel>
+              )}
+            </Splitter>
+          </SplitterPanel>
+        </Splitter>
+      </main>
+    </ViewsProvider>
   )
 }
 

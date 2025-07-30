@@ -120,6 +120,7 @@ const ProjectPage = () => {
         name: 'Task progress',
         path: `/projects/${projectName}/tasks`,
         module: 'tasks',
+        viewType: 'taskProgress',
         uriSync: true,
       },
       {

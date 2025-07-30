@@ -31,6 +31,8 @@ export const ViewsModal = styled.div`
   min-width: 240px;
   max-width: 800px;
 
+  overflow: hidden;
+
   z-index: 910;
 
   background-color: var(--md-sys-color-surface-container-high);

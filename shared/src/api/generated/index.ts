@@ -276,3 +276,7 @@ export { api as ynputCloudApi } from './ynputCloud'
 // grouping
 export * from './grouping'
 export { api as groupingApi } from './grouping'
+
+// views
+export * from './views'
+export { api as viewsApi } from './views'
