@@ -21,10 +21,8 @@ export const NEW_VIEW_ID = '_new_view_' as const
 export const ViewsMenuContainer: FC = () => {
   const {
     viewType,
-    projectName,
     isMenuOpen,
     setIsMenuOpen,
-    editingView,
     setEditingView,
     selectedView,
     personalView,

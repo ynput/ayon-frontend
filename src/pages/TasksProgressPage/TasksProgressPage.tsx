@@ -11,7 +11,7 @@ import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useScopedDetailsPanel } from '@shared/context'
-import { ViewsProvider, ViewsComponents } from '@shared/components'
+import { ViewsProvider, Views } from '@shared/containers'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: any) => state.project.name) as string
@@ -30,7 +30,7 @@ const TasksProgressPage: FC = () => {
 
   return (
     <ViewsProvider viewType="taskProgress" projectName={projectName}>
-      <ViewsComponents />
+      <Views />
       <main>
         <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
           <SplitterPanel size={detailsOpen ? 12 : 18} style={{ minWidth: 100, maxWidth: 500 }}>

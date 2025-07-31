@@ -6,7 +6,7 @@ import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
-import { getViewsPortalId } from '@shared/components/Views/utils/portalUtils'
+import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 
 const AppNavLinks = ({ links = [], currentModule, projectName }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }

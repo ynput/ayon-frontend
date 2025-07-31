@@ -30,7 +30,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@state/store'
 import { OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
-import { ViewsProvider, ViewsComponents } from '@shared/components'
+import { ViewsProvider, Views } from '@shared/containers/Views'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 
 const searchFilterTypes: FilterFieldType[] = [
@@ -120,7 +120,7 @@ const ProjectOverviewPage: FC = () => {
 
   return (
     <ViewsProvider viewType="overview" projectName={projectName}>
-      <ViewsComponents />
+      <Views />
       <main style={{ gap: 4 }}>
         <Splitter
           layout="horizontal"
