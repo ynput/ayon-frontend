@@ -23,7 +23,7 @@ const personalBaseView: ViewItem = {
 type Props = {
   viewsList: ViewListItemModel[]
   personalView?: ViewListItemModel
-  viewType: 'overview' | 'taskProgress' | undefined
+  viewType?: string
   projectName?: string
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
@@ -64,6 +64,7 @@ const useBuildViewMenuItems = ({
     module: 'getCustomViews',
     fallback: getCustomViewsFallback,
     // minVersion: minVersion,
+    skip: !viewType,
   })
 
   const { myViews, sharedViews } = useMemo(

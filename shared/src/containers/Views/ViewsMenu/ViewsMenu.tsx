@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useEffect } from 'react'
 import { ViewItem } from '../ViewItem/ViewItem'
 import * as Styled from './ViewsMenu.styled'
 import { SelectedViewState } from '../context/ViewsContext'
@@ -28,6 +28,7 @@ export const ViewsMenu = forwardRef<HTMLUListElement, ViewsMenuProps>(
                   key={(item.id || '') + index.toString()}
                   tabIndex={0}
                   isSelected={item.id === selected}
+                  autoFocus={index === 0}
                   {...item}
                 />
               )

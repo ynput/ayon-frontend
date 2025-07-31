@@ -7,6 +7,9 @@ export * from './ViewsMenuContainer/ViewsMenuContainer'
 export * from './utils/portalUtils'
 export * from './utils/getCustomViewsFallback'
 export * from './ViewsDialogContainer/ViewFormDialogFallback'
+export * from './ViewsMenu/ViewsMenu'
+export * from './ViewsMenuContainer/ViewsMenuContainer'
+export * from './hooks/usePageViewColumns'
 
 // Re-export the ViewsComponents for convenience
 export { Views } from './Views'

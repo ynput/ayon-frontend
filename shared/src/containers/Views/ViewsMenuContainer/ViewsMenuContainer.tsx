@@ -2,9 +2,9 @@ import { FC, useCallback, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useViewsContext } from '../context/ViewsContext'
 import { getViewsPortalContainer } from '../utils/portalUtils'
-import { ViewsMenu as ViewsMenuComponent } from '../ViewsMenu/ViewsMenu'
+import { ViewsMenu } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
-import { Dialog, Icon } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { usePowerpack } from '@shared/context'
 import * as Styled from '../Views.styled'
@@ -35,13 +35,13 @@ export const ViewsMenuContainer: FC = () => {
   // Modal position calculation
   const portalContainer = getViewsPortalContainer(viewType)
   const buttonRect = portalContainer?.getBoundingClientRect()
-  const gap = 4
+  const gap = 8
   const modalPosition = {
     top: buttonRect ? buttonRect.bottom + gap : 0,
     left: buttonRect ? buttonRect.left : 0,
   }
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement
@@ -49,11 +49,28 @@ export const ViewsMenuContainer: FC = () => {
         setIsMenuOpen(false)
       }
     }
+
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false)
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscapeKey)
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscapeKey)
     }
   }, [isMenuOpen, portalContainer, setIsMenuOpen])
+
+  // when the view is open, focus the modal
+  useEffect(() => {
+    if (isMenuOpen && modalRef.current) {
+      modalRef.current.focus()
+    }
+  }, [isMenuOpen])
 
   const handleCreateView = useCallback(() => {
     if (!powerLicense) {
@@ -71,14 +88,15 @@ export const ViewsMenuContainer: FC = () => {
     <>
       {isMenuOpen &&
         createPortal(
-          <Styled.ViewsModal style={modalPosition} ref={modalRef}>
-            <ViewsMenuComponent items={viewMenuItems} selected={selectedViewId} />
+          <Styled.ViewsModal style={modalPosition} ref={modalRef} tabIndex={0}>
+            <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
             <ViewItem
               label="Create new view"
               id={NEW_VIEW_ID}
               startContent={<Icon icon="add" />}
               endContent={!powerLicense && <PowerIcon icon="bolt" />}
               onClick={handleCreateView}
+              tabIndex={0}
             />
           </Styled.ViewsModal>,
           document.body,

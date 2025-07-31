@@ -26,8 +26,28 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       },
       transformErrorResponse: (error: any) => error.data?.detail,
     },
+    deleteView: {
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        const { viewId, projectName, viewType } = arg
+        // Optimistically remove the view from the list
+        const patch = dispatch(
+          getViewsApi.util.updateQueryData('listViews', { viewType, projectName }, (draft) => {
+            return draft.filter((view) => view.id !== viewId)
+          }),
+        )
+
+        try {
+          await queryFulfilled
+        } catch (error) {
+          // If the query failed, we need to roll back the optimistic update
+          patch.undo()
+          console.error('Failed to delete view:', error)
+        }
+      },
+      transformErrorResponse: (error: any) => error.data?.detail,
+    },
   },
 })
 
-export const { useCreateViewMutation } = updateViewsApi
+export const { useCreateViewMutation, useDeleteViewMutation } = updateViewsApi
 export { updateViewsApi as viewsQueries }

@@ -10,6 +10,6 @@ export const getViewsPortalId = (viewType: ViewType): string => {
 /**
  * Get the portal container element by viewType
  */
-export const getViewsPortalContainer = (viewType: ViewType): HTMLElement | null => {
-  return document.getElementById(getViewsPortalId(viewType))
+export const getViewsPortalContainer = (viewType?: ViewType): HTMLElement | null => {
+  return viewType ? document.getElementById(getViewsPortalId(viewType)) : null
 }

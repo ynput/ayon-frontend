@@ -68,4 +68,5 @@ export const NavItem = styled.li`
 export const Views = styled.span`
   display: flex;
   align-items: center;
+  margin-left: -8px;
 `

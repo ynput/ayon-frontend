@@ -28,6 +28,17 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import { Views, ViewsProvider } from '@shared/containers'
+
+type NavLink = {
+  name?: string
+  path?: string
+  module?: string
+  viewType?: string
+  uriSync?: boolean
+  enabled?: boolean
+  node?: React.ReactNode
+}
 
 const ProjectContextInfo = () => {
   /**
@@ -107,7 +118,7 @@ const ProjectPage = () => {
   }
 
   // get remote project module pages
-  const links = useMemo(
+  const links: NavLink[] = useMemo(
     () => [
       {
         name: 'Overview',
@@ -182,6 +193,9 @@ const ProjectPage = () => {
     ],
     [addonsData, projectName, remotePages, matchedAddons],
   )
+  const activeLink = useMemo(() => {
+    return links.find((link) => link.module === module) || null
+  }, [links, module])
 
   //
   // Render page
@@ -282,7 +296,12 @@ const ProjectPage = () => {
         onVersionCreated={handleNewVersionUploaded}
       >
         <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
-          <SlicerProvider>{child}</SlicerProvider>
+          <SlicerProvider>
+            <ViewsProvider viewType={activeLink?.viewType} projectName={projectName}>
+              <Views />
+              {child}
+            </ViewsProvider>
+          </SlicerProvider>
           <NewListFromContext />
         </EntityListsProvider>
         <UploadVersionDialog />

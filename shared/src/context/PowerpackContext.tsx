@@ -64,7 +64,13 @@ export type PowerpackContextType = {
 
 const PowerpackContext = createContext<PowerpackContextType | undefined>(undefined)
 
-export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
+export const PowerpackProvider = ({
+  children,
+  debug,
+}: {
+  children: ReactNode
+  debug?: { powerLicense?: boolean }
+}) => {
   const [selectedPowerPack, setPowerpackDialog] =
     useState<PowerpackContextType['selectedPowerPack']>(null)
 
@@ -92,7 +98,10 @@ export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const checkLicense = async () => {
-      if (isLoaded) {
+      if (debug?.powerLicense !== undefined) {
+        console.warn('Using debug power license:', debug.powerLicense)
+        setPowerLicense(debug.powerLicense)
+      } else if (isLoaded) {
         try {
           const hasPowerLicense = await checkPowerLicense()
           setPowerLicense(hasPowerLicense)
@@ -104,7 +113,7 @@ export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
     }
 
     checkLicense()
-  }, [isLoaded, checkPowerLicense])
+  }, [debug, isLoaded, checkPowerLicense])
 
   const value = useMemo(
     () => ({

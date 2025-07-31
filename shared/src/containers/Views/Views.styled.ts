@@ -6,6 +6,7 @@ export const ViewsButton = styled(Icon)`
   border-radius: var(--border-radius-m);
   margin: -4px 0;
   margin-right: -16px;
+  margin-left: 8px;
 
   &:hover,
   &.open {

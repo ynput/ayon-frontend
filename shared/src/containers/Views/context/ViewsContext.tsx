@@ -15,9 +15,10 @@ import { usePowerpack } from '@shared/context'
 export type SelectedViewState = string | null // id of view otherwise null with use personal
 export type EditingViewState = { viewId: string | undefined } | null // id of view being edited otherwise null
 
+const viewTypes = ['overview', 'taskProgress'] as const
 interface ViewsContextValue {
   // State
-  viewType: ViewType
+  viewType?: ViewType
   projectName?: string
   isMenuOpen: boolean
   editingView: EditingViewState
@@ -40,20 +41,37 @@ const ViewsContext = createContext<ViewsContextValue | null>(null)
 
 export interface ViewsProviderProps {
   children: ReactNode
-  viewType: ViewType
+  viewType?: string
   projectName?: string
+  debug?: {
+    powerLicense?: boolean
+  }
 }
 
-export const ViewsProvider: FC<ViewsProviderProps> = ({ children, viewType, projectName }) => {
-  const { powerLicense } = usePowerpack()
+export const ViewsProvider: FC<ViewsProviderProps> = ({
+  children,
+  viewType: viewTypeProp,
+  projectName,
+  debug,
+}) => {
+  let { powerLicense } = usePowerpack()
+  if (debug?.powerLicense !== undefined) {
+    console.warn('Using debug power license:', debug.powerLicense)
+    powerLicense = debug.powerLicense
+  }
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
   const [selectedView, setSelectedView] = useState<SelectedViewState>(null)
 
+  const viewType = viewTypes.includes(viewTypeProp as ViewType)
+    ? (viewTypeProp as ViewType)
+    : undefined
+  const skipViewsList = !viewType || !projectName || !powerLicense
+
   // Fetch views data
   const { data: viewsList = [], isLoading: isLoadingViews } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType || !projectName || !powerLicense },
+    { skip: skipViewsList },
   )
 
   //   always get your personal view

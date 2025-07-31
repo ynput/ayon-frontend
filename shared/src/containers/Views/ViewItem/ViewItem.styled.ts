@@ -4,6 +4,7 @@ import styled from 'styled-components'
 export const ViewItem = styled.li`
   position: relative;
   padding: 4px 6px 4px 12px;
+  user-select: none;
 
   &:has(.start-icon) {
     padding-left: 8px;

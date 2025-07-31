@@ -10,7 +10,12 @@ export const ViewsButton: FC = () => {
 
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  const handleButtonClick = (e: React.MouseEvent<HTMLSpanElement>) => {
+  // views not support for this page
+  if (!viewType) return null
+
+  const handleButtonClick = (
+    e: React.MouseEvent<HTMLSpanElement> | React.KeyboardEvent<HTMLSpanElement>,
+  ) => {
     e.preventDefault()
     e.stopPropagation()
     setIsMenuOpen(!isMenuOpen)
@@ -22,6 +27,12 @@ export const ViewsButton: FC = () => {
       ref={buttonRef}
       onClick={handleButtonClick}
       className={clsx({ active: !!selectedView, open: isMenuOpen })}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleButtonClick(e)
+        }
+      }}
     />
   )
 
