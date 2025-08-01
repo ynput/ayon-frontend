@@ -46,7 +46,7 @@ const useBuildViewMenuItems = ({
     if (!personalView) {
       try {
         console.warn('No personal view found, creating a new one')
-        const personalView = generatePersonalView(viewType)
+        const personalView = generatePersonalView()
         await createView({
           payload: personalView,
           viewType: viewType as string,

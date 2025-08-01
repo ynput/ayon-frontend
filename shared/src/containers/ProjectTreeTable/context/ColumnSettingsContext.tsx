@@ -5,6 +5,7 @@ import {
   OnChangeFn,
   VisibilityState,
   ColumnSizingState,
+  SortingState,
 } from '@tanstack/react-table'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
 
@@ -18,6 +19,7 @@ export type ColumnsConfig = {
   columnOrder: ColumnOrderState
   columnPinning: ColumnPinningState
   columnSizing: ColumnSizingState
+  sorting?: SortingState
   groupBy?: TableGroupBy
   groupByConfig?: {
     showEmpty?: boolean
@@ -27,26 +29,41 @@ export type ColumnsConfig = {
 export interface ColumnSettingsContextType {
   // Column Visibility
   columnVisibility: VisibilityState
-  setColumnVisibility: (columnVisibility: VisibilityState) => void
+  setColumnVisibility: (columnVisibility: VisibilityState, allColumnIds?: string[]) => void
   updateColumnVisibility: (columnVisibility: VisibilityState) => void
   columnVisibilityUpdater: OnChangeFn<VisibilityState>
 
   // Column Pinning
   columnPinning: ColumnPinningState
-  setColumnPinning: (columnPinning: ColumnPinningState) => void
+  setColumnPinning: (columnPinning: ColumnPinningState, allColumnIds?: string[]) => void
   updateColumnPinning: (columnPinning: ColumnPinningState) => void
   columnPinningUpdater: OnChangeFn<ColumnPinningState>
 
   // Column Order
   columnOrder: ColumnOrderState
-  setColumnOrder: (columnOrder: ColumnOrderState) => void
+  setColumnOrder: (columnOrder: ColumnOrderState, allColumnIds?: string[]) => void
   updateColumnOrder: (columnOrder: ColumnOrderState) => void
   columnOrderUpdater: OnChangeFn<ColumnOrderState>
 
   // Column Sizing
   columnSizing: ColumnSizingState
-  setColumnSizing: (columnSizing: ColumnSizingState) => void
+  setColumnSizing: (columnSizing: ColumnSizingState, allColumnIds?: string[]) => void
   columnSizingUpdater: OnChangeFn<ColumnSizingState>
+
+  // Sorting
+  sorting: SortingState
+  setSorting: (sorting: SortingState, allColumnIds?: string[]) => void
+  updateSorting: (sorting: SortingState) => void
+  sortingUpdater: OnChangeFn<SortingState>
+
+  // Unified updaters with all column IDs support
+  createUpdaterWithAllColumns: {
+    columnVisibility: (allColumnIds: string[]) => OnChangeFn<VisibilityState>
+    columnPinning: (allColumnIds: string[]) => OnChangeFn<ColumnPinningState>
+    columnOrder: (allColumnIds: string[]) => OnChangeFn<ColumnOrderState>
+    columnSizing: (allColumnIds: string[]) => OnChangeFn<ColumnSizingState>
+    sorting: (allColumnIds: string[]) => OnChangeFn<SortingState>
+  }
 
   // groupBy
   groupBy?: TableGroupBy

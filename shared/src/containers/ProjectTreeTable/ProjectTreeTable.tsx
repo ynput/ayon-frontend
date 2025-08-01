@@ -152,6 +152,8 @@ export const ProjectTreeTable = ({
     columnOrderUpdater,
     columnSizing,
     columnSizingUpdater,
+    sortingUpdater,
+    createUpdaterWithAllColumns,
     groupBy,
   } = useColumnSettingsContext()
   const isGrouping = !!groupBy
@@ -169,13 +171,13 @@ export const ProjectTreeTable = ({
     projectName,
     updateExpanded,
     toggleExpandAll,
-    sorting,
-    updateSorting,
     showHierarchy,
     fetchNextPage,
     scopes,
     getEntityById,
   } = useProjectTableContext()
+
+  const { sorting, sortingUpdater: updateSorting } = useColumnSettingsContext()
 
   const isLoading = isLoadingProp || isLoadingData
 
@@ -315,12 +317,14 @@ export const ProjectTreeTable = ({
     onExpandedChange: updateExpanded,
     // SORTING
     getSortedRowModel: clientSorting ? getSortedRowModel() : undefined,
-    onSortingChange: updateSorting,
+    onSortingChange: sortingUpdater,
     columnResizeMode: 'onChange',
-    onColumnPinningChange: columnPinningUpdater,
-    onColumnSizingChange: columnSizingUpdater,
-    onColumnVisibilityChange: columnVisibilityUpdater,
-    onColumnOrderChange: columnOrderUpdater,
+    onColumnPinningChange: createUpdaterWithAllColumns.columnPinning(columns.map((col) => col.id!)),
+    onColumnSizingChange: createUpdaterWithAllColumns.columnSizing(columns.map((col) => col.id!)),
+    onColumnVisibilityChange: createUpdaterWithAllColumns.columnVisibility(
+      columns.map((col) => col.id!),
+    ),
+    onColumnOrderChange: createUpdaterWithAllColumns.columnOrder(columns.map((col) => col.id!)),
     // @ts-ignore
     filterFns,
     state: {

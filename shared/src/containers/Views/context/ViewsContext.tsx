@@ -1,6 +1,7 @@
 import { createContext, useContext, FC, ReactNode, useState } from 'react'
-import { ViewType, PERSONAL_VIEW_ID } from '../index'
+import { ViewType, PERSONAL_VIEW_ID, ViewFormData } from '../index'
 import {
+  GetDefaultViewApiResponse,
   OverviewSettings,
   TaskProgressSettings,
   useGetPersonalViewQuery,
@@ -11,9 +12,11 @@ import {
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { usePowerpack } from '@shared/context'
+import { useSelectedView } from '../hooks/useSelectedView'
 
-export type SelectedViewState = string | null // id of view otherwise null with use personal
-export type EditingViewState = { viewId: string | undefined } | null // id of view being edited otherwise null
+export type ViewData = GetDefaultViewApiResponse
+export type SelectedViewState = ViewData | undefined // id of view otherwise null with use personal
+export type EditingViewState = string | true | null // id of view being edited otherwise null
 
 const viewTypes = ['overview', 'taskProgress'] as const
 interface ViewsContextValue {
@@ -29,12 +32,13 @@ interface ViewsContextValue {
   viewSettings: TaskProgressSettings | OverviewSettings | undefined
   personalView: ViewListItemModel | undefined
   viewMenuItems: ViewMenuItem[]
+  editingViewData?: ViewData
   isLoadingViews: boolean
 
   // Actions
   setIsMenuOpen: (open: boolean) => void
   setEditingView: (editing: EditingViewState) => void
-  setSelectedView: (selected: SelectedViewState) => void
+  setSelectedView: (viewId: string) => void
 }
 
 const ViewsContext = createContext<ViewsContextValue | null>(null)
@@ -54,6 +58,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   projectName,
   debug,
 }) => {
+  // validate viewType
+  const viewType = viewTypes.includes(viewTypeProp as ViewType)
+    ? (viewTypeProp as ViewType)
+    : undefined
+
   let { powerLicense } = usePowerpack()
   if (debug?.powerLicense !== undefined) {
     console.warn('Using debug power license:', debug.powerLicense)
@@ -61,11 +70,12 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   }
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
-  const [selectedView, setSelectedView] = useState<SelectedViewState>(null)
 
-  const viewType = viewTypes.includes(viewTypeProp as ViewType)
-    ? (viewTypeProp as ViewType)
-    : undefined
+  const [selectedView, setSelectedView] = useSelectedView({
+    viewType: viewType as string,
+    projectName: projectName,
+  })
+
   const skipViewsList = !viewType || !projectName || !powerLicense
 
   // Fetch views data
@@ -80,15 +90,17 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     { skip: !viewType || !projectName },
   )
 
-  //   if the selected view is not the personal view, get the data for it
-  const { data: selectedViewData } = useGetViewQuery(
-    { viewId: selectedView as string, projectName: projectName, viewType: viewType as string },
-    { skip: !selectedView || selectedView === PERSONAL_VIEW_ID || !powerLicense },
-  )
-
   //   which settings to use for the view
   const viewSettings =
-    selectedView === PERSONAL_VIEW_ID ? personalView?.settings : selectedViewData?.settings
+    !selectedView || selectedView.id === PERSONAL_VIEW_ID
+      ? personalView?.settings
+      : selectedView?.settings
+
+  // get data for the view we are editing
+  const { data: editingViewData } = useGetViewQuery(
+    { viewId: editingView as string, projectName: projectName, viewType: viewType as string },
+    { skip: !editingView || !powerLicense },
+  )
 
   //   build the menu items for the views
   const viewMenuItems = useBuildViewMenuItems({
@@ -97,7 +109,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewType,
     projectName,
     onSelect: setSelectedView,
-    onEdit: (viewId: string) => setEditingView({ viewId }),
+    onEdit: (viewId) => setEditingView(viewId),
   })
 
   const value: ViewsContextValue = {
@@ -107,6 +119,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     editingView,
     selectedView,
     viewSettings,
+    editingViewData,
     viewsList,
     personalView,
     viewMenuItems,

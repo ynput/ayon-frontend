@@ -1,14 +1,76 @@
 // this hook converts the columns settings from a view into the format used by tanstack/react-table
 
 import { useViewsContext } from '../context/ViewsContext'
+import { ColumnsConfig } from '@shared/containers/ProjectTreeTable'
+import {
+  convertColumnConfigToTanstackStates,
+  convertTanstackStatesToColumnConfig,
+} from '@shared/util'
+import { OverviewSettings, useCreateViewMutation } from '@shared/api'
+import { generatePersonalView } from '../utils/generatePersonalView'
+import { toast } from 'react-toastify'
+import { useMemo, useState, useEffect } from 'react'
 
-type Props = {}
+type Return = {
+  columns: ColumnsConfig
+  onUpdateColumns: (columns: ColumnsConfig, allColumnIds?: string[]) => void
+}
 
-export const usePageViewColumns = () => {
+export const usePageViewColumns = (): Return => {
   // this views context is per page/project
-  const { viewSettings } = useViewsContext()
+  const { viewSettings, viewType, projectName } = useViewsContext()
 
-  console.log(viewSettings)
+  // Local state for immediate updates
+  const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
 
-  return {}
+  // MUTATIONS
+  const [createView] = useCreateViewMutation()
+
+  // Convert server settings to columns format
+  const serverColumns = useMemo(
+    () => convertColumnConfigToTanstackStates(viewSettings as OverviewSettings),
+    [JSON.stringify(viewSettings)],
+  )
+
+  // Sync local state with server when viewSettings change
+  useEffect(() => {
+    setLocalColumns(null) // Reset local state when server data changes
+  }, [JSON.stringify(viewSettings)])
+
+  // Use local state if available, otherwise use server state
+  const columns = localColumns || serverColumns
+
+  const onUpdateColumns = async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
+    try {
+      if (!viewType) throw 'No view type provided for updating columns'
+
+      // Immediately update local state for fast UI response
+      setLocalColumns(tableSettings)
+
+      // convert the columns to settings format
+      const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
+
+      // always update the personal view no matter what
+      const newPersonalView = generatePersonalView({ ...viewSettings, ...settings })
+
+      // Make API call in background
+      await createView({
+        payload: newPersonalView,
+        viewType: viewType,
+        projectName: projectName,
+      }).unwrap()
+
+      // Clear local state after successful API call - the server data will take over
+      setLocalColumns(null)
+    } catch (error) {
+      // Revert local state on error
+      setLocalColumns(null)
+      toast.error(`Failed to update columns: ${error}`)
+    }
+  }
+
+  return {
+    columns,
+    onUpdateColumns,
+  }
 }

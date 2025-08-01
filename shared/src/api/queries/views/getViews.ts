@@ -1,6 +1,13 @@
 import { ListViewsApiResponse, viewsApi } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
+export const getScopeTag = (viewType: string, projectName?: string) => {
+  return {
+    type: 'view',
+    id: `${viewType.toUpperCase()}${projectName ? `:${projectName.toUpperCase()}` : ''}`,
+  }
+}
+
 const VIEW_LIST_TAG = { type: 'view', id: 'LIST' }
 
 type GetViewListResult = ListViewsApiResponse['views']
@@ -16,21 +23,38 @@ export const getViewsApi = viewsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
   endpoints: {
     listViews: {
       transformResponse: (response: ListViewsApiResponse) => response?.views || [],
-      providesTags: (result) =>
+      providesTags: (result, _e, { viewType, projectName }) =>
         result
-          ? [VIEW_LIST_TAG, ...result.map((v) => ({ type: 'view', id: v.id }))]
+          ? [
+              VIEW_LIST_TAG,
+              getScopeTag(viewType, projectName),
+              ...result.map((v) => ({ type: 'view', id: v.id })),
+            ]
           : [VIEW_LIST_TAG],
       transformErrorResponse: (error: any) => error.data?.detail,
     },
     getPersonalView: {
-      providesTags: (result) => [{ type: 'view', id: result?.id }, VIEW_LIST_TAG],
+      providesTags: (result, _e, { viewType, projectName }) => [
+        { type: 'view', id: result?.id },
+        getScopeTag(viewType, projectName),
+        VIEW_LIST_TAG,
+      ],
       transformErrorResponse: (error: any) => error.data?.detail,
     },
     getView: {
       providesTags: (result, error, arg) => [{ type: 'view', id: arg.viewId }, VIEW_LIST_TAG],
       transformErrorResponse: (error: any) => error.data?.detail,
     },
+    getDefaultView: {
+      providesTags: (result, _e, { viewType, projectName }) =>
+        result ? [{ type: 'view', id: result.id }, getScopeTag(viewType, projectName)] : [],
+    },
   },
 })
 
-export const { useListViewsQuery, useGetPersonalViewQuery, useGetViewQuery } = getViewsApi
+export const {
+  useListViewsQuery,
+  useGetPersonalViewQuery,
+  useGetViewQuery,
+  useGetDefaultViewQuery,
+} = getViewsApi

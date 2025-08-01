@@ -76,13 +76,15 @@ export const ViewsMenuContainer: FC = () => {
     if (!powerLicense) {
       setPowerpackDialog('sharedViews')
     } else {
-      setEditingView({ viewId: undefined })
+      setEditingView(true)
     }
     setIsMenuOpen(false)
   }, [powerLicense, setPowerpackDialog, setEditingView, setIsMenuOpen])
 
   const selectedViewId =
-    !selectedView || personalView?.id === selectedView ? PERSONAL_VIEW_ID : selectedView
+    !selectedView || personalView?.id === selectedView.id
+      ? PERSONAL_VIEW_ID
+      : (selectedView.id as string)
 
   return (
     <>

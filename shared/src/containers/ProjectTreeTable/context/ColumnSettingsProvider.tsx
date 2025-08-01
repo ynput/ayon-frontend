@@ -6,6 +6,7 @@ import {
   OnChangeFn,
   VisibilityState,
   ColumnSizingState,
+  SortingState,
 } from '@tanstack/react-table'
 import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
@@ -15,7 +16,7 @@ import { GroupByConfig } from '../components/GroupSettingsFallback'
 interface ColumnSettingsProviderProps {
   children: ReactNode
   config?: Record<string, any>
-  onChange: (config: ColumnsConfig) => void
+  onChange: (config: ColumnsConfig, allColumnIds?: string[]) => void
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
@@ -29,6 +30,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     columnPinning: columnPinningInit = {},
     columnVisibility: columnVisibilityInit = {},
     columnSizing: columnsSizingExternal = {},
+    sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
   } = columnsConfig
@@ -90,25 +92,47 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   // DIRECT STATE UPDATES - no side effects
-  const setColumnVisibility = (visibility: VisibilityState) => {
-    onChange({
-      ...columnsConfig,
-      columnVisibility: visibility,
-    })
+  const setColumnVisibility = (visibility: VisibilityState, allColumnIds?: string[]) => {
+    onChange(
+      {
+        ...columnsConfig,
+        columnVisibility: visibility,
+      },
+      allColumnIds,
+    )
   }
 
-  const setColumnOrder = (order: ColumnOrderState) => {
-    onChange({
-      ...columnsConfig,
-      columnOrder: order,
-    })
+  const setColumnOrder = (order: ColumnOrderState, allColumnIds?: string[]) => {
+    onChange(
+      {
+        ...columnsConfig,
+        columnOrder: order,
+      },
+      allColumnIds,
+    )
   }
 
-  const setColumnPinning = (pinning: ColumnPinningState) => {
-    onChange({
-      ...columnsConfig,
-      columnPinning: pinning,
-    })
+  const setColumnPinning = (pinning: ColumnPinningState, allColumnIds?: string[]) => {
+    onChange(
+      {
+        ...columnsConfig,
+        columnPinning: pinning,
+      },
+      allColumnIds,
+    )
+  }
+
+  // SORTING STATE
+  const sorting = [...sortingInit]
+
+  const setSorting = (sortingState: SortingState, allColumnIds?: string[]) => {
+    onChange(
+      {
+        ...columnsConfig,
+        sorting: sortingState,
+      },
+      allColumnIds,
+    )
   }
 
   const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
@@ -118,7 +142,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
-  const setColumnSizing = (sizing: ColumnSizingState) => {
+  const setColumnSizing = (sizing: ColumnSizingState, allColumnIds?: string[]) => {
     setInternalColumnSizing(sizing)
 
     // if there is a timeout already set, clear it
@@ -129,10 +153,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     resizingTimeoutRef.current = setTimeout(() => {
       // we have finished resizing now!
       // update the external column sizing
-      onChange({
-        ...columnsConfig,
-        columnSizing: sizing,
-      })
+      onChange(
+        {
+          ...columnsConfig,
+          columnSizing: sizing,
+        },
+        allColumnIds,
+      )
       // reset the internal column sizing to not be used anymore
       setInternalColumnSizing(null)
     }, 500)
@@ -201,6 +228,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateSorting = (sortingState: SortingState) => {
+    onChange({
+      ...columnsConfig,
+      sorting: sortingState,
+    })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
     onChange({
       ...columnsConfig,
@@ -239,6 +273,45 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     setColumnSizing(newSizing)
   }
 
+  const sortingUpdater: OnChangeFn<SortingState> = (sortingUpdater) => {
+    const newSorting = functionalUpdate(sortingUpdater, sorting)
+    updateSorting(newSorting)
+  }
+
+  // UNIFIED UPDATERS WITH ALL COLUMN IDS
+  const createUpdaterWithAllColumns = {
+    columnVisibility:
+      (allColumnIds: string[]): OnChangeFn<VisibilityState> =>
+      (updater) => {
+        const newVisibility = functionalUpdate(updater, columnVisibility)
+        setColumnVisibility(newVisibility, allColumnIds)
+      },
+    columnPinning:
+      (allColumnIds: string[]): OnChangeFn<ColumnPinningState> =>
+      (updater) => {
+        const newPinning = functionalUpdate(updater, columnPinning)
+        setColumnPinning(newPinning, allColumnIds)
+      },
+    columnOrder:
+      (allColumnIds: string[]): OnChangeFn<ColumnOrderState> =>
+      (updater) => {
+        const newOrder = functionalUpdate(updater, columnOrder)
+        setColumnOrder(newOrder, allColumnIds)
+      },
+    columnSizing:
+      (allColumnIds: string[]): OnChangeFn<ColumnSizingState> =>
+      (updater) => {
+        const newSizing = functionalUpdate(updater, columnSizing)
+        setColumnSizing(newSizing, allColumnIds)
+      },
+    sorting:
+      (allColumnIds: string[]): OnChangeFn<SortingState> =>
+      (updater) => {
+        const newSorting = functionalUpdate(updater, sorting)
+        setSorting(newSorting, allColumnIds)
+      },
+  }
+
   return (
     <ColumnSettingsContext.Provider
       value={{
@@ -261,6 +334,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         columnSizing,
         setColumnSizing,
         columnSizingUpdater,
+        // sorting
+        sorting,
+        setSorting,
+        updateSorting,
+        sortingUpdater,
+        // unified updaters
+        createUpdaterWithAllColumns,
         // group by
         groupBy,
         updateGroupBy,
@@ -268,7 +348,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         updateGroupByConfig,
 
         // global change
-        setColumnsConfig: onChange,
+        setColumnsConfig: (config: ColumnsConfig) => onChange(config),
       }}
     >
       {children}

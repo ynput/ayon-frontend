@@ -15,7 +15,7 @@ import { useRootFolders } from './hooks'
 import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
 import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
 import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
-import { type SelectionData, type SliceType } from '@shared/containers'
+import { useFilters, type SelectionData, type SliceType } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
@@ -35,7 +35,6 @@ import useFilterBySlice from './hooks/useFilterBySlice'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
-import useUserQueryFilters from '@hooks/useUserQueryFilters'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
 
@@ -76,7 +75,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // FILTERS
   //
   //
-  const { queryFilters, setQueryFilters } = useUserQueryFilters({ page: 'progress', projectName })
+  const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useFilters()
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =

@@ -1,7 +1,7 @@
 import { EntityGroup, QueryTasksFoldersApiArg } from '@shared/api'
 import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap } from '.'
 import { ProjectDataContextProps } from '../context'
-import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
+import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { ContextMenuItemConstructors, ProjectTableModulesType } from '../hooks'
 import { ReactNode } from 'react'
 import { QueryFilter } from './operations'
@@ -58,10 +58,6 @@ export interface ProjectOverviewContextType {
   toggleExpanded: (id: string) => void
   updateExpanded: OnChangeFn<ExpandedState>
   setExpanded: (expanded: ExpandedState) => void
-
-  // Sorting
-  sorting: SortingState
-  updateSorting: OnChangeFn<SortingState>
 
   // context menu items
   contextMenuItems: ContextMenuItemConstructors

@@ -1,11 +1,13 @@
 import { FC } from 'react'
-import { ViewType } from '..'
+import { ViewFormData, ViewType } from '..'
 
 export interface ViewFormDialogProps extends React.HTMLAttributes<HTMLDivElement> {
-  editingView: { viewId?: string } | null
-  setEditingView: (view: { viewId: string | undefined }) => void
+  editingView: Partial<ViewFormData> & { viewId?: string }
+  setEditingView: (viewId: string | null) => void
   viewType: ViewType
   projectName?: string
+  createView: any
+  deleteView: any
 }
 
 const ViewFormDialogFallback: FC<ViewFormDialogProps> = () => null
