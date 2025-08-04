@@ -39,6 +39,14 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                 // For non-personal views, add to the list as usual
                 draft.push(newView)
               }
+
+              // finally sort the view by position and then by label
+              draft.sort((a, b) => {
+                if (a.position !== b.position) {
+                  return a.position - b.position
+                }
+                return a.label.localeCompare(b.label)
+              })
             },
           ),
         )
@@ -61,6 +69,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                   owner: user,
                   ...(existingId && { id: existingId }), // Keep existing ID if it exists
                 }
+                console.log('Updated personal view:', updatedPersonalView)
                 // Update the personal view cache with the new view data
                 Object.assign(draft, updatedPersonalView)
               },
@@ -127,6 +136,8 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                 projectName,
               })(state)
               const view = listViewData?.data?.find((v) => v.id === viewId)
+
+              console.log('updating default view:', viewId, 'found in list:', view)
 
               if (view) {
                 // If the view is found in the listViews cache, update the getDefaultView cache with the full view data

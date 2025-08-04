@@ -28,6 +28,8 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
   const setSelectedView = async (viewId: string) => {
     if (!viewType) throw 'No view type provided for setting default view'
 
+    console.log('setting default view:', viewId)
+
     try {
       await setDefaultView({
         setDefaultViewRequestModel: {

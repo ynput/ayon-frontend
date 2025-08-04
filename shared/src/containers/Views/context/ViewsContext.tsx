@@ -1,4 +1,4 @@
-import { createContext, useContext, FC, ReactNode, useState } from 'react'
+import { createContext, useContext, FC, ReactNode, useState, useMemo } from 'react'
 import { ViewType, PERSONAL_VIEW_ID, ViewFormData } from '../index'
 import {
   GetDefaultViewApiResponse,
@@ -15,6 +15,7 @@ import { usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
 
 export type ViewData = GetDefaultViewApiResponse
+export type ViewSettings = GetDefaultViewApiResponse['settings']
 export type SelectedViewState = ViewData | undefined // id of view otherwise null with use personal
 export type EditingViewState = string | true | null // id of view being edited otherwise null
 
@@ -29,11 +30,13 @@ interface ViewsContextValue {
 
   // Views data
   viewsList: ViewListItemModel[]
-  viewSettings: TaskProgressSettings | OverviewSettings | undefined
+  viewSettings: ViewSettings | undefined
+  personalSettings: ViewSettings | undefined
   personalView: ViewListItemModel | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
   isLoadingViews: boolean
+  isViewPersonal: boolean
 
   // Actions
   setIsMenuOpen: (open: boolean) => void
@@ -91,16 +94,25 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     { skip: !viewType || !projectName },
   )
 
+  const personalSettings = personalView?.settings
+
   //   which settings to use for the view
   const viewSettings =
     !selectedView || selectedView.id === PERSONAL_VIEW_ID
-      ? personalView?.settings
+      ? personalSettings
       : selectedView?.settings
 
+  const isViewPersonal = selectedView?.id === personalView?.id
+
   // get data for the view we are editing
-  const { data: editingViewData } = useGetViewQuery(
+  const { data: editingViewDataData } = useGetViewQuery(
     { viewId: editingView as string, projectName: projectName, viewType: viewType as string },
     { skip: !editingView || !powerLicense },
+  )
+
+  const editingViewData = useMemo(
+    () => (editingView === editingViewDataData?.id ? editingViewDataData : undefined),
+    [editingView, editingViewDataData],
   )
 
   //   build the menu items for the views
@@ -120,11 +132,13 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     editingView,
     selectedView,
     viewSettings,
+    personalSettings,
     editingViewData,
     viewsList,
     personalView,
     viewMenuItems,
     isLoadingViews,
+    isViewPersonal,
     setIsMenuOpen,
     setEditingView,
     setSelectedView,

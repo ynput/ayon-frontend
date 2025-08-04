@@ -8,7 +8,15 @@ import { useCreateViewMutation, useDeleteViewMutation } from '@shared/api'
 interface ViewsDialogContainerProps {}
 
 const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
-  const { editingView, editingViewData, setEditingView, viewType, projectName } = useViewsContext()
+  const {
+    editingView,
+    editingViewData,
+    setEditingView,
+    viewType,
+    projectName,
+    personalSettings,
+    setSelectedView,
+  } = useViewsContext()
 
   const [ViewFormDialog, { isLoading: isLoadingQueries, outdated }] = useLoadModule({
     addon: 'powerpack',
@@ -40,10 +48,12 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
         viewId: editingView === true ? undefined : editingView,
         ...(editingViewData || {}),
       }}
+      personalSettings={personalSettings}
       setEditingView={setEditingView}
       viewType={viewType}
       projectName={projectName}
       createView={createView}
+      setSelected={setSelectedView}
       deleteView={deleteView}
     />
   )

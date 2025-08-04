@@ -59,10 +59,14 @@ const useBuildViewMenuItems = ({
         toast.error(`Failed to create personal view: ${error}`)
       }
 
+      console.log(personalViewId)
+
       if (personalViewId) {
         // finally update default view with the personal view
         onSelect(personalViewId)
       }
+    } else {
+      onSelect(personalViewId as string)
     }
   }, [personalView, viewType, createView, projectName, onSelect])
 

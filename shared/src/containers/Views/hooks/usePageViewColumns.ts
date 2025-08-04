@@ -18,7 +18,7 @@ type Return = {
 
 export const usePageViewColumns = (): Return => {
   // this views context is per page/project
-  const { viewSettings, viewType, projectName } = useViewsContext()
+  const { viewSettings, viewType, projectName, setSelectedView, personalView } = useViewsContext()
 
   // Local state for immediate updates
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
@@ -52,13 +52,21 @@ export const usePageViewColumns = (): Return => {
 
       // always update the personal view no matter what
       const newPersonalView = generatePersonalView({ ...viewSettings, ...settings })
+      console.log(newPersonalView, settings)
+      // only use the generated ID if there is no personal view already
+      const newPersonalViewId = personalView?.id || newPersonalView.id
 
       // Make API call in background
-      await createView({
+      const promise = createView({
         payload: newPersonalView,
         viewType: viewType,
         projectName: projectName,
       }).unwrap()
+
+      // Always switch to the personal view after updating anything
+      setSelectedView(newPersonalViewId as string)
+
+      await promise
 
       // Clear local state after successful API call - the server data will take over
       setLocalColumns(null)
