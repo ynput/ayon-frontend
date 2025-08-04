@@ -42,8 +42,9 @@ const useBuildViewMenuItems = ({
 
   // if we have a personal view, we use it, otherwise we create one
   const handlePersonalViewChange = useCallback(async () => {
-    onSelect(PERSONAL_VIEW_ID)
+    let personalViewId = personalView?.id
     if (!personalView) {
+      // no personal view found, create one
       try {
         console.warn('No personal view found, creating a new one')
         const personalView = generatePersonalView()
@@ -52,8 +53,15 @@ const useBuildViewMenuItems = ({
           viewType: viewType as string,
           projectName: projectName,
         }).unwrap()
+        // set id of the new view
+        personalViewId = personalView.id
       } catch (error: any) {
         toast.error(`Failed to create personal view: ${error}`)
+      }
+
+      if (personalViewId) {
+        // finally update default view with the personal view
+        onSelect(personalViewId)
       }
     }
   }, [personalView, viewType, createView, projectName, onSelect])

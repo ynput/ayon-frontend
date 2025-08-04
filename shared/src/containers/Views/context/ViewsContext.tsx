@@ -71,6 +71,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
 
+  // setting of default views
   const [selectedView, setSelectedView] = useSelectedView({
     viewType: viewType as string,
     projectName: projectName,

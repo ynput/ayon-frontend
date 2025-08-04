@@ -5,6 +5,7 @@ import {
   useGetDefaultViewQuery,
   useSetDefaultViewMutation,
 } from '@shared/api'
+import { toast } from 'react-toastify'
 
 type Props = {
   viewType: string
@@ -37,6 +38,7 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
       }).unwrap()
     } catch (error) {
       console.error('Failed to set default view:', error)
+      toast.warn(`Failed to set default view: ${error}`)
     }
   }
   return [defaultView, setSelectedView]
