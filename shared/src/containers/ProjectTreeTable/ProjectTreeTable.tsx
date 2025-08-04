@@ -145,14 +145,11 @@ export const ProjectTreeTable = ({
 }: ProjectTreeTableProps) => {
   const {
     columnVisibility,
-    columnVisibilityUpdater,
     columnPinning,
-    columnPinningUpdater,
     columnOrder,
-    columnOrderUpdater,
     columnSizing,
-    columnSizingUpdater,
     sortingUpdater,
+    sorting,
     createUpdaterWithAllColumns,
     groupBy,
   } = useColumnSettingsContext()
@@ -176,8 +173,6 @@ export const ProjectTreeTable = ({
     scopes,
     getEntityById,
   } = useProjectTableContext()
-
-  const { sorting, sortingUpdater: updateSorting } = useColumnSettingsContext()
 
   const isLoading = isLoadingProp || isLoadingData
 

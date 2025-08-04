@@ -35,6 +35,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     groupByConfig = {},
   } = columnsConfig
 
+  const sorting = [...sortingInit]
   const columnOrder = [...columnOrderInit]
   const columnPinning = { ...columnPinningInit }
   const defaultOrder = ['thumbnail', 'name', 'subType', 'status', 'tags']
@@ -117,19 +118,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       {
         ...columnsConfig,
         columnPinning: pinning,
-      },
-      allColumnIds,
-    )
-  }
-
-  // SORTING STATE
-  const sorting = [...sortingInit]
-
-  const setSorting = (sortingState: SortingState, allColumnIds?: string[]) => {
-    onChange(
-      {
-        ...columnsConfig,
-        sorting: sortingState,
       },
       allColumnIds,
     )
@@ -304,12 +292,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         const newSizing = functionalUpdate(updater, columnSizing)
         setColumnSizing(newSizing, allColumnIds)
       },
-    sorting:
-      (allColumnIds: string[]): OnChangeFn<SortingState> =>
-      (updater) => {
-        const newSorting = functionalUpdate(updater, sorting)
-        setSorting(newSorting, allColumnIds)
-      },
   }
 
   return (
@@ -336,7 +318,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         columnSizingUpdater,
         // sorting
         sorting,
-        setSorting,
         updateSorting,
         sortingUpdater,
         // unified updaters

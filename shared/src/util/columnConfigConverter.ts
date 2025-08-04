@@ -200,11 +200,17 @@ export function convertTanstackStatesToColumnConfig(
   }
 
   // Add sorting information if present
-  if (sorting && sorting.length > 0) {
-    // find the column that is being sorted
-    const firstSort = sorting[0]
-    result.sortBy = firstSort.id
-    result.sortDesc = firstSort.desc
+  if (sorting) {
+    if (sorting.length > 0) {
+      // find the column that is being sorted
+      const firstSort = sorting[0]
+      result.sortBy = firstSort.id
+      result.sortDesc = firstSort.desc
+    } else {
+      // remove sorting
+      result.sortBy = undefined
+      result.sortDesc = undefined
+    }
   }
 
   return result

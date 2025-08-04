@@ -52,7 +52,6 @@ export interface ColumnSettingsContextType {
 
   // Sorting
   sorting: SortingState
-  setSorting: (sorting: SortingState, allColumnIds?: string[]) => void
   updateSorting: (sorting: SortingState) => void
   sortingUpdater: OnChangeFn<SortingState>
 
@@ -62,7 +61,6 @@ export interface ColumnSettingsContextType {
     columnPinning: (allColumnIds: string[]) => OnChangeFn<ColumnPinningState>
     columnOrder: (allColumnIds: string[]) => OnChangeFn<ColumnOrderState>
     columnSizing: (allColumnIds: string[]) => OnChangeFn<ColumnSizingState>
-    sorting: (allColumnIds: string[]) => OnChangeFn<SortingState>
   }
 
   // groupBy
