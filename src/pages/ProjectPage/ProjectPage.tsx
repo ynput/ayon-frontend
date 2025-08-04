@@ -297,7 +297,11 @@ const ProjectPage = () => {
       >
         <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
           <SlicerProvider>
-            <ViewsProvider viewType={activeLink?.viewType} projectName={projectName}>
+            <ViewsProvider
+              viewType={activeLink?.viewType}
+              projectName={projectName}
+              dispatch={dispatch}
+            >
               <Views />
               {child}
             </ViewsProvider>

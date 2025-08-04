@@ -1,8 +1,8 @@
-import { ViewListItemModel } from '@shared/api'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
+import { ViewListItemModelExtended } from '../hooks/useBuildViewMenuItems'
 
 export type GetAllViewsProps = {
-  viewsList: ViewListItemModel[]
+  viewsList: ViewListItemModelExtended[]
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
 }

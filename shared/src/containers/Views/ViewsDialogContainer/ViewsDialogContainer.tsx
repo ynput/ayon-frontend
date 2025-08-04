@@ -3,7 +3,6 @@ import { useViewsContext } from '../context/ViewsContext'
 import { useLoadModule } from '@shared/hooks'
 import ViewFormDialogFallback from './ViewFormDialogFallback'
 import { Dialog } from '@ynput/ayon-react-components'
-import { useCreateViewMutation, useDeleteViewMutation } from '@shared/api'
 
 interface ViewsDialogContainerProps {}
 
@@ -16,6 +15,10 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     projectName,
     personalSettings,
     setSelectedView,
+    onCreateView,
+    onDeleteView,
+    api,
+    dispatch,
   } = useViewsContext()
 
   const [ViewFormDialog, { isLoading: isLoadingQueries, outdated }] = useLoadModule({
@@ -25,10 +28,6 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     fallback: ViewFormDialogFallback,
     minVersion: '1.1.1-views',
   })
-
-  // forward mutations to the dialog
-  const [createView] = useCreateViewMutation()
-  const [deleteView] = useDeleteViewMutation()
 
   if (!viewType || !editingView) return null
 
@@ -52,9 +51,11 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
       setEditingView={setEditingView}
       viewType={viewType}
       projectName={projectName}
-      createView={createView}
       setSelected={setSelectedView}
-      deleteView={deleteView}
+      onCreateView={onCreateView}
+      onDeleteView={onDeleteView}
+      api={api}
+      dispatch={dispatch}
     />
   )
 }

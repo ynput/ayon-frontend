@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { ViewFormData, ViewSettings, ViewType } from '..'
+import { ViewFormData, ViewsContextValue, ViewSettings, ViewType } from '..'
 
 export interface ViewFormDialogProps extends React.HTMLAttributes<HTMLDivElement> {
   editingView: Partial<ViewFormData> & { viewId?: string }
@@ -7,9 +7,11 @@ export interface ViewFormDialogProps extends React.HTMLAttributes<HTMLDivElement
   viewType: ViewType
   personalSettings?: ViewSettings
   projectName?: string
-  createView: any
   setSelected: (viewId: string) => void
-  deleteView: any
+  onCreateView: ViewsContextValue['onCreateView']
+  onDeleteView: ViewsContextValue['onDeleteView']
+  api: ViewsContextValue['api']
+  dispatch: any
 }
 
 const ViewFormDialogFallback: FC<ViewFormDialogProps> = () => null

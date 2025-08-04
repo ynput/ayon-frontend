@@ -1,5 +1,5 @@
-import { useCreateViewMutation, ViewListItemModel } from '@shared/api'
-import React, { useCallback, useMemo } from 'react'
+import { useCreateViewMutation, useGetCurrentUserQuery, ViewListItemModel } from '@shared/api'
+import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
@@ -11,6 +11,7 @@ import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 // constants
 export const PERSONAL_VIEW_ID = '_personal_' as const
 export const NEW_VIEW_ID = '_new_view_' as const
+export type ViewListItemModelExtended = ViewListItemModel & { isOwner: boolean }
 
 const personalBaseView: ViewItem = {
   id: PERSONAL_VIEW_ID,
@@ -39,6 +40,12 @@ const useBuildViewMenuItems = ({
 }: Props): ViewMenuItem[] => {
   // MUTATIONS
   const [createView] = useCreateViewMutation()
+  const { data: user } = useGetCurrentUserQuery()
+
+  const extendedViewsList: ViewListItemModelExtended[] = useMemo(
+    () => viewsList.map((view) => ({ ...view, isOwner: view.owner === user?.name })),
+    [viewsList, user],
+  )
 
   // if we have a personal view, we use it, otherwise we create one
   const handlePersonalViewChange = useCallback(async () => {
@@ -82,7 +89,7 @@ const useBuildViewMenuItems = ({
   const { myViews, sharedViews } = useMemo(
     () =>
       getCustomViews({
-        viewsList,
+        viewsList: extendedViewsList,
         onEdit,
         onSelect,
       }),

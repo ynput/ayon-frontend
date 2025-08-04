@@ -1,18 +1,18 @@
-import { createContext, useContext, FC, ReactNode, useState, useMemo } from 'react'
+import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
 import { ViewType, PERSONAL_VIEW_ID, ViewFormData } from '../index'
 import {
   GetDefaultViewApiResponse,
-  OverviewSettings,
-  TaskProgressSettings,
   useGetPersonalViewQuery,
   useGetViewQuery,
   useListViewsQuery,
   ViewListItemModel,
+  viewsQueries,
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
+import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -20,7 +20,7 @@ export type SelectedViewState = ViewData | undefined // id of view otherwise nul
 export type EditingViewState = string | true | null // id of view being edited otherwise null
 
 const viewTypes = ['overview', 'taskProgress'] as const
-interface ViewsContextValue {
+export interface ViewsContextValue {
   // State
   viewType?: ViewType
   projectName?: string
@@ -42,6 +42,14 @@ interface ViewsContextValue {
   setIsMenuOpen: (open: boolean) => void
   setEditingView: (editing: EditingViewState) => void
   setSelectedView: (viewId: string) => void
+
+  // Mutations
+  onCreateView: UseViewMutations['onCreateView']
+  onDeleteView: UseViewMutations['onDeleteView']
+
+  // api
+  api: typeof viewsQueries
+  dispatch: any
 }
 
 const ViewsContext = createContext<ViewsContextValue | null>(null)
@@ -50,6 +58,7 @@ export interface ViewsProviderProps {
   children: ReactNode
   viewType?: string
   projectName?: string
+  dispatch?: any
   debug?: {
     powerLicense?: boolean
   }
@@ -59,6 +68,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
   viewType: viewTypeProp,
   projectName,
+  dispatch,
   debug,
 }) => {
   // validate viewType
@@ -71,6 +81,9 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     console.warn('Using debug power license:', debug.powerLicense)
     powerLicense = debug.powerLicense
   }
+
+  const { onCreateView, onDeleteView } = useViewsMutations({ viewType, projectName })
+
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
 
@@ -107,7 +120,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   // get data for the view we are editing
   const { data: editingViewDataData } = useGetViewQuery(
     { viewId: editingView as string, projectName: projectName, viewType: viewType as string },
-    { skip: !editingView || !powerLicense },
+    { skip: !(typeof editingView === 'string') || !powerLicense },
   )
 
   const editingViewData = useMemo(
@@ -142,6 +155,12 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     setIsMenuOpen,
     setEditingView,
     setSelectedView,
+    // mutations
+    onCreateView,
+    onDeleteView,
+    // api
+    api: viewsQueries,
+    dispatch,
   }
 
   return <ViewsContext.Provider value={value}>{children}</ViewsContext.Provider>
