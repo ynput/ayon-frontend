@@ -13,7 +13,6 @@
     "generate-token": "node --env-file=.env.local ./gen/getAuth.js",
     "download-openapi": "node ./gen/download-schema.js",
     "generate-rest": "yarn download-openapi && npx @rtk-query/codegen-openapi ./gen/openapi-config.ts && node ./gen/process-api-types.js",
-    "generate-rest:tag": "yarn download-openapi && npx @rtk-query/codegen-openapi ./gen/openapi-config.ts && node ./gen/process-api-types.js",
     "generate-gql": "cd gen && graphql-codegen --require dotenv/config",
     "test": "npx playwright test",
     "test-ui": "npx playwright test --ui",
