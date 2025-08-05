@@ -47,7 +47,9 @@ export const getViewsApi = viewsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     },
     getDefaultView: {
       providesTags: (result, _e, { viewType, projectName }) =>
-        result ? [{ type: 'view', id: result.id }, getScopeTag(viewType, projectName)] : [],
+        result
+          ? [{ type: 'view', id: result.id }, getScopeTag(viewType, projectName)]
+          : [getScopeTag(viewType, projectName)],
     },
   },
 })

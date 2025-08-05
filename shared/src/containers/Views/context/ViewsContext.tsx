@@ -98,18 +98,16 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     projectName: projectName,
   })
 
-  const skipViewsList = !viewType || !projectName || !powerLicense
-
   // Fetch views data
-  const { data: viewsList = [], isLoading: isLoadingViews } = useListViewsQuery(
+  const { currentData: viewsList = [], isLoading: isLoadingViews } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: skipViewsList },
+    { skip: !viewType },
   )
 
   //   always get your personal view
-  const { data: personalView } = useGetPersonalViewQuery(
+  const { currentData: personalView } = useGetPersonalViewQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType || !projectName },
+    { skip: !viewType },
   )
 
   const personalSettings = personalView?.settings
@@ -123,7 +121,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   const isViewPersonal = selectedView?.id === personalView?.id
 
   // get data for the view we are editing
-  const { data: editingViewDataData } = useGetViewQuery(
+  const { currentData: editingViewDataData } = useGetViewQuery(
     { viewId: editingView as string, projectName: projectName, viewType: viewType as string },
     { skip: !(typeof editingView === 'string') || !powerLicense },
   )

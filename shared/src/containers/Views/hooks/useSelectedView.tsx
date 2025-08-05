@@ -18,7 +18,7 @@ type Return = [
 ]
 
 export const useSelectedView = ({ viewType, projectName }: Props): Return => {
-  const { data: defaultView } = useGetDefaultViewQuery(
+  const { currentData: defaultView } = useGetDefaultViewQuery(
     { viewType, projectName },
     { skip: !viewType },
   )

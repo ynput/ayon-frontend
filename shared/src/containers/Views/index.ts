@@ -22,5 +22,7 @@ export { Views } from './Views'
 export { PERSONAL_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuContainer'
 
 // types
-export type ViewFormData = Required<Pick<ViewListItemModel, 'label' | 'scope' | 'visibility'>>
+export type ViewFormData = Required<
+  Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner'>
+>
 export type ViewType = 'overview' | 'taskProgress'

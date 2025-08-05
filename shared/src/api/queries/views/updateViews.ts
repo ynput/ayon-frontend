@@ -124,38 +124,56 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       onQueryStarted: async (arg, { dispatch, queryFulfilled, getState }) => {
         const { setDefaultViewRequestModel, projectName, viewType } = arg
         const { viewId } = setDefaultViewRequestModel
+        const state = getState()
+        // get current state of default view
+        const currentDefaultView = getViewsApi.endpoints.getDefaultView.select({
+          viewType,
+          projectName,
+        })(state)
 
-        // Optimistically update the default view
-        const patch = dispatch(
-          getViewsApi.util.updateQueryData('getDefaultView', { viewType, projectName }, (draft) => {
-            if (draft) {
-              // Try to find the view in the listViews cache
-              const state = getState()
-              const listViewData = getViewsApi.endpoints.listViews.select({
-                viewType,
-                projectName,
-              })(state)
-              const view = listViewData?.data?.find((v) => v.id === viewId)
+        // check if there is even a cache for the default view
+        if (currentDefaultView?.isSuccess && currentDefaultView.data?.id) {
+          // Optimistically update the default view
+          const patch = dispatch(
+            getViewsApi.util.updateQueryData(
+              'getDefaultView',
+              { viewType, projectName },
+              (draft) => {
+                if (draft) {
+                  // Try to find the view in the listViews cache
+                  const listViewData = getViewsApi.endpoints.listViews.select({
+                    viewType,
+                    projectName,
+                  })(state)
+                  const view = listViewData?.data?.find((v) => v.id === viewId)
 
-              console.log('updating default view:', viewId, 'found in list:', view)
+                  console.debug('updating default view:', viewId, 'found in list:', view)
 
-              if (view) {
-                // If the view is found in the listViews cache, update the getDefaultView cache with the full view data
-                Object.assign(draft, view)
-              } else {
-                // If the view is not found, only update the ID
-                draft.id = viewId
-              }
-            }
-          }),
-        )
+                  if (view) {
+                    // If the view is found in the listViews cache, update the getDefaultView cache with the full view data
+                    Object.assign(draft, view)
+                  } else {
+                    // If the view is not found, only update the ID
+                    draft.id = viewId
+                  }
+                }
+              },
+            ),
+          )
 
-        try {
-          await queryFulfilled
-        } catch (error) {
-          // If the query failed, we need to roll back the optimistic update
-          patch.undo()
-          console.error('Failed to set default view:', error)
+          try {
+            await queryFulfilled
+          } catch (error) {
+            // If the query failed, we need to roll back the optimistic update
+            patch.undo()
+            console.error('Failed to set default view:', error)
+          }
+        } else {
+          console.warn(
+            'No current default view found, skipping optimistic update and invalidating default view cache',
+          )
+          // If there is no current default view, we skip the optimistic update
+          // it will be handled by the invalidation below
         }
       },
       transformErrorResponse: (error: any) => error.data?.detail,

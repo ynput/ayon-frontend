@@ -28,7 +28,8 @@ export const ViewsButton: FC = () => {
       onClick={handleButtonClick}
       className={clsx({ active: !!selectedView && !isViewPersonal, open: isMenuOpen })}
       tabIndex={0}
-      data-tooltip={isViewPersonal ? 'Personal View' : selectedView?.label || 'No View Selected'}
+      data-tooltip={isViewPersonal ? 'Personal View' : 'View: ' + selectedView?.label || 'None'}
+      data-tooltip-delay={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           handleButtonClick(e)
