@@ -15,7 +15,7 @@ import { useViewsContext } from '../context/ViewsContext'
 import { OverviewSettings, useCreateViewMutation } from '@shared/api'
 import { generatePersonalView } from '../utils/generatePersonalView'
 import { toast } from 'react-toastify'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 // Import the internal QueryFilter type that the app uses
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -27,7 +27,15 @@ type Return = {
 
 export const useFilters = (): Return => {
   // this views context is per page/project
-  const { viewSettings, viewType, projectName, setSelectedView, personalView } = useViewsContext()
+  const {
+    viewSettings,
+    viewType,
+    projectName,
+    selectedView,
+    setSelectedView,
+    personalView,
+    onSettingsChanged,
+  } = useViewsContext()
 
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
@@ -46,46 +54,62 @@ export const useFilters = (): Return => {
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
 
-  const onUpdateFilters = async (newFilters: QueryFilter) => {
-    try {
-      if (!viewType) throw 'No view type provided for updating filters'
+  const onUpdateFilters = useCallback(
+    async (newFilters: QueryFilter) => {
+      try {
+        if (!viewType) throw 'No view type provided for updating filters'
 
-      // Immediately update local state for fast UI response
-      setLocalFilters(newFilters)
+        // Immediately update local state for fast UI response
+        setLocalFilters(newFilters)
 
-      // Create settings with updated filters
-      const currentSettings = viewSettings as OverviewSettings
-      const updatedSettings: OverviewSettings = {
-        ...currentSettings,
-        // Convert internal QueryFilter to API QueryFilter format
-        filter: newFilters as any,
+        // Create settings with updated filters
+        const currentSettings = viewSettings as OverviewSettings
+        const updatedSettings: OverviewSettings = {
+          ...currentSettings,
+          // Convert internal QueryFilter to API QueryFilter format
+          filter: newFilters as any,
+        }
+
+        // always update the personal view no matter what
+        const newPersonalView = generatePersonalView(updatedSettings)
+        // only use the generated ID if there is no personal view already
+        const newPersonalViewId = personalView?.id || newPersonalView.id
+
+        // Make API call in background
+        const promise = createView({
+          payload: newPersonalView,
+          viewType: viewType,
+          projectName: projectName,
+        }).unwrap()
+
+        // if not personal: set that the settings have been changed to show the little blue save button
+        if (selectedView && !selectedView.personal) {
+          onSettingsChanged(true)
+        }
+        // Always switch to the personal view after updating anything
+        setSelectedView(newPersonalViewId as string)
+
+        await promise
+
+        // Clear local state after successful API call - the server data will take over
+        setLocalFilters(null)
+      } catch (error) {
+        // Revert local state on error
+        setLocalFilters(null)
+        toast.error(`Failed to update filter settings: ${error}`)
       }
-
-      // always update the personal view no matter what
-      const newPersonalView = generatePersonalView(updatedSettings)
-      // only use the generated ID if there is no personal view already
-      const newPersonalViewId = personalView?.id || newPersonalView.id
-
-      // Make API call in background
-      const promise = createView({
-        payload: newPersonalView,
-        viewType: viewType,
-        projectName: projectName,
-      }).unwrap()
-
-      // Always switch to the personal view after updating anything
-      setSelectedView(newPersonalViewId as string)
-
-      await promise
-
-      // Clear local state after successful API call - the server data will take over
-      setLocalFilters(null)
-    } catch (error) {
-      // Revert local state on error
-      setLocalFilters(null)
-      toast.error(`Failed to update filter settings: ${error}`)
-    }
-  }
+    },
+    [
+      viewType,
+      viewSettings,
+      personalView,
+      projectName,
+      selectedView,
+      createView,
+      setSelectedView,
+      onSettingsChanged,
+    ],
+  )
 
   return {
     filters,

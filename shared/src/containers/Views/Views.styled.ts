@@ -14,12 +14,12 @@ export const ViewsButton = styled(Icon)`
   }
 
   &.active {
-    color: var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
 
     &:hover,
     &.open {
-      background-color: var(--md-sys-color-on-primary);
-      color: var(--md-sys-color-primary);
+      background-color: var(--md-sys-color-primary-hover);
     }
   }
 `

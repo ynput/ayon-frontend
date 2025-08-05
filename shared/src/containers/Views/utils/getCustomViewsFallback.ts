@@ -5,6 +5,7 @@ export type GetAllViewsProps = {
   viewsList: ViewListItemModelExtended[]
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
+  onSave: (viewId: string) => void
 }
 
 export type GetAllViewsReturn = {

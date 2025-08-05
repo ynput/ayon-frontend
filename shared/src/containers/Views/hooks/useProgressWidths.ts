@@ -14,7 +14,7 @@ import { useViewsContext } from '../context/ViewsContext'
 import { TaskProgressSettings, useCreateViewMutation, ColumnItemModel } from '@shared/api'
 import { generatePersonalView } from '../utils/generatePersonalView'
 import { toast } from 'react-toastify'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 type Return = {
   columns: ColumnItemModel[]
@@ -23,7 +23,15 @@ type Return = {
 
 export const useProgressWidths = (): Return => {
   // this views context is per page/project
-  const { viewSettings, viewType, projectName, setSelectedView, personalView } = useViewsContext()
+  const {
+    viewSettings,
+    viewType,
+    projectName,
+    selectedView,
+    setSelectedView,
+    personalView,
+    onSettingsChanged,
+  } = useViewsContext()
 
   // Local state for immediate updates
   const [localColumns, setLocalColumns] = useState<ColumnItemModel[] | null>(null)
@@ -42,45 +50,61 @@ export const useProgressWidths = (): Return => {
   // Use local state if available, otherwise use server state
   const columns = localColumns !== null ? localColumns : serverColumns
 
-  const onUpdateColumns = async (newColumns: ColumnItemModel[]) => {
-    try {
-      if (!viewType) throw 'No view type provided for updating column widths'
+  const onUpdateColumns = useCallback(
+    async (newColumns: ColumnItemModel[]) => {
+      try {
+        if (!viewType) throw 'No view type provided for updating column widths'
 
-      // Immediately update local state for fast UI response
-      setLocalColumns(newColumns)
+        // Immediately update local state for fast UI response
+        setLocalColumns(newColumns)
 
-      // Create settings with updated columns
-      const currentSettings = viewSettings as TaskProgressSettings
-      const updatedSettings: TaskProgressSettings = {
-        ...currentSettings,
-        columns: newColumns,
+        // Create settings with updated columns
+        const currentSettings = viewSettings as TaskProgressSettings
+        const updatedSettings: TaskProgressSettings = {
+          ...currentSettings,
+          columns: newColumns,
+        }
+
+        // always update the personal view no matter what
+        const newPersonalView = generatePersonalView(updatedSettings)
+        // only use the generated ID if there is no personal view already
+        const newPersonalViewId = personalView?.id || newPersonalView.id
+
+        // Make API call in background
+        const promise = createView({
+          payload: newPersonalView,
+          viewType: viewType,
+          projectName: projectName,
+        }).unwrap()
+
+        // if not personal: set that the settings have been changed to show the little blue save button
+        if (selectedView && !selectedView.personal) {
+          onSettingsChanged(true)
+        }
+        // Always switch to the personal view after updating anything
+        setSelectedView(newPersonalViewId as string)
+
+        await promise
+
+        // Clear local state after successful API call - the server data will take over
+        setLocalColumns(null)
+      } catch (error) {
+        // Revert local state on error
+        setLocalColumns(null)
+        toast.error(`Failed to update column width settings: ${error}`)
       }
-
-      // always update the personal view no matter what
-      const newPersonalView = generatePersonalView(updatedSettings)
-      // only use the generated ID if there is no personal view already
-      const newPersonalViewId = personalView?.id || newPersonalView.id
-
-      // Make API call in background
-      const promise = createView({
-        payload: newPersonalView,
-        viewType: viewType,
-        projectName: projectName,
-      }).unwrap()
-
-      // Always switch to the personal view after updating anything
-      setSelectedView(newPersonalViewId as string)
-
-      await promise
-
-      // Clear local state after successful API call - the server data will take over
-      setLocalColumns(null)
-    } catch (error) {
-      // Revert local state on error
-      setLocalColumns(null)
-      toast.error(`Failed to update column width settings: ${error}`)
-    }
-  }
+    },
+    [
+      viewType,
+      viewSettings,
+      personalView,
+      projectName,
+      selectedView,
+      createView,
+      setSelectedView,
+      onSettingsChanged,
+    ],
+  )
 
   return {
     columns,

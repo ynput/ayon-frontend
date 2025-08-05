@@ -1,5 +1,6 @@
 import { CreateViewApiArg, useCreateViewMutation, useDeleteViewMutation } from '@shared/api'
 import React, { useCallback } from 'react'
+import { ViewData } from '../context/ViewsContext'
 
 type Props = {
   viewType?: string
@@ -9,17 +10,19 @@ type Props = {
 export type UseViewMutations = {
   onCreateView: (payload: CreateViewApiArg['payload']) => Promise<void>
   onDeleteView: (viewId: string) => Promise<void>
+  onUpdateView: (viewId: string, payload: Partial<ViewData>) => Promise<void>
 }
+type R = UseViewMutations
 
 export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMutations => {
   // forward mutations to the dialog
   const [createView] = useCreateViewMutation()
   const [deleteView] = useDeleteViewMutation()
 
-  const onCreateView = useCallback(
-    async (payload: CreateViewApiArg['payload']) => {
-      if (!viewType || !projectName) {
-        throw new Error('viewType and projectName are required for creating a view')
+  const onCreateView = useCallback<R['onCreateView']>(
+    async (payload) => {
+      if (!viewType) {
+        throw new Error('viewType are required for creating a view')
       }
 
       try {
@@ -36,10 +39,31 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
     [createView, viewType, projectName],
   )
 
-  const onDeleteView = useCallback(
-    async (viewId: string) => {
-      if (!viewType || !projectName) {
-        throw new Error('viewType and projectName are required for deleting a view')
+  const onUpdateView = useCallback<R['onUpdateView']>(
+    async (viewId, payload) => {
+      if (!viewType) {
+        throw new Error('viewType are required for updating a view')
+      }
+
+      try {
+        // await updateView({
+        //         viewId,
+        //         viewType,
+        //         projectName,
+        //         payload,
+        //       }).unwrap()
+      } catch (error) {
+        console.error('Failed to update view:', error)
+        throw error
+      }
+    },
+    [createView, viewType, projectName],
+  )
+
+  const onDeleteView = useCallback<R['onDeleteView']>(
+    async (viewId) => {
+      if (!viewType) {
+        throw new Error('viewType are required for deleting a view')
       }
 
       try {
@@ -58,6 +82,7 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
 
   return {
     onCreateView,
+    onUpdateView,
     onDeleteView,
   }
 }

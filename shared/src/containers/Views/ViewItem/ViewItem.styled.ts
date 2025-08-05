@@ -28,34 +28,45 @@ export const ViewItem = styled.li`
   }
 
   &.selected {
-    background-color: var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-primary-container);
     &,
     .icon {
-      color: var(--md-sys-color-on-primary);
+      color: var(--md-sys-color-on-primary-container);
     }
 
     .more {
       &:hover {
-        background-color: var(--md-sys-color-primary-hover);
+        background-color: var(--md-sys-color-primary-container-hover);
       }
     }
+  }
 
-    /* personal view item uses secondary colors */
-    &.personal {
-      background-color: var(--md-sys-color-secondary-container);
-      &,
-      .icon {
-        color: var(--md-sys-color-on-secondary-container);
-      }
+  /* hide save button by default */
+  .save {
+    display: none;
+  }
+  &:hover {
+    .save {
+      display: flex;
     }
   }
 `
 
-export const MoreButton = styled(Button)`
+export const ActionButton = styled(Button)`
   &.hasIcon {
     padding: 2px;
   }
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+  &.active {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+
+    display: flex !important;
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-hover);
+    }
   }
 `

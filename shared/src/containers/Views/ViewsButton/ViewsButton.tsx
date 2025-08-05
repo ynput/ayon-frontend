@@ -6,7 +6,8 @@ import * as Styled from '../Views.styled'
 import clsx from 'clsx'
 
 export const ViewsButton: FC = () => {
-  const { viewType, isMenuOpen, setIsMenuOpen, selectedView, isViewPersonal } = useViewsContext()
+  const { viewType, isMenuOpen, setIsMenuOpen, selectedView, isViewPersonal, editingViewId } =
+    useViewsContext()
 
   const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -26,9 +27,9 @@ export const ViewsButton: FC = () => {
       icon="view_quilt"
       ref={buttonRef}
       onClick={handleButtonClick}
-      className={clsx({ active: !!selectedView && !isViewPersonal, open: isMenuOpen })}
+      className={clsx({ active: !!editingViewId, open: isMenuOpen })}
       tabIndex={0}
-      data-tooltip={isViewPersonal ? 'Personal View' : 'View: ' + selectedView?.label || 'None'}
+      data-tooltip={isViewPersonal ? 'Working view' : 'View: ' + selectedView?.label || 'None'}
       data-tooltip-delay={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

@@ -30,7 +30,7 @@ import { useViewsContext } from '../context/ViewsContext'
 import { OverviewSettings, useCreateViewMutation } from '@shared/api'
 import { generatePersonalView } from '../utils/generatePersonalView'
 import { toast } from 'react-toastify'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 type Return = {
   showHierarchy: boolean
@@ -39,7 +39,15 @@ type Return = {
 
 export const useHierarchy = (): Return => {
   // this views context is per page/project
-  const { viewSettings, viewType, projectName, setSelectedView, personalView } = useViewsContext()
+  const {
+    viewSettings,
+    viewType,
+    projectName,
+    selectedView,
+    setSelectedView,
+    personalView,
+    onSettingsChanged,
+  } = useViewsContext()
 
   // Local state for immediate updates
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
@@ -58,45 +66,61 @@ export const useHierarchy = (): Return => {
   // Use local state if available, otherwise use server state
   const showHierarchy = localHierarchy !== null ? localHierarchy : serverHierarchy
 
-  const onUpdateHierarchy = async (newShowHierarchy: boolean) => {
-    try {
-      if (!viewType) throw 'No view type provided for updating hierarchy'
+  const onUpdateHierarchy = useCallback(
+    async (newShowHierarchy: boolean) => {
+      try {
+        if (!viewType) throw 'No view type provided for updating hierarchy'
 
-      // Immediately update local state for fast UI response
-      setLocalHierarchy(newShowHierarchy)
+        // Immediately update local state for fast UI response
+        setLocalHierarchy(newShowHierarchy)
 
-      // Create settings with updated hierarchy
-      const currentSettings = viewSettings as OverviewSettings
-      const updatedSettings: OverviewSettings = {
-        ...currentSettings,
-        showHierarchy: newShowHierarchy,
+        // Create settings with updated hierarchy
+        const currentSettings = viewSettings as OverviewSettings
+        const updatedSettings: OverviewSettings = {
+          ...currentSettings,
+          showHierarchy: newShowHierarchy,
+        }
+
+        // always update the personal view no matter what
+        const newPersonalView = generatePersonalView(updatedSettings)
+        // only use the generated ID if there is no personal view already
+        const newPersonalViewId = personalView?.id || newPersonalView.id
+
+        // Make API call in background
+        const promise = createView({
+          payload: newPersonalView,
+          viewType: viewType,
+          projectName: projectName,
+        }).unwrap()
+
+        // if not personal: set that the settings have been changed to show the little blue save button
+        if (selectedView && !selectedView.personal) {
+          onSettingsChanged(true)
+        }
+        // Always switch to the personal view after updating anything
+        setSelectedView(newPersonalViewId as string)
+
+        await promise
+
+        // Clear local state after successful API call - the server data will take over
+        setLocalHierarchy(null)
+      } catch (error) {
+        // Revert local state on error
+        setLocalHierarchy(null)
+        toast.error(`Failed to update hierarchy setting: ${error}`)
       }
-
-      // always update the personal view no matter what
-      const newPersonalView = generatePersonalView(updatedSettings)
-      // only use the generated ID if there is no personal view already
-      const newPersonalViewId = personalView?.id || newPersonalView.id
-
-      // Make API call in background
-      const promise = createView({
-        payload: newPersonalView,
-        viewType: viewType,
-        projectName: projectName,
-      }).unwrap()
-
-      // Always switch to the personal view after updating anything
-      setSelectedView(newPersonalViewId as string)
-
-      await promise
-
-      // Clear local state after successful API call - the server data will take over
-      setLocalHierarchy(null)
-    } catch (error) {
-      // Revert local state on error
-      setLocalHierarchy(null)
-      toast.error(`Failed to update hierarchy setting: ${error}`)
-    }
-  }
+    },
+    [
+      viewType,
+      viewSettings,
+      personalView,
+      projectName,
+      selectedView,
+      createView,
+      setSelectedView,
+      onSettingsChanged,
+    ],
+  )
 
   return {
     showHierarchy,

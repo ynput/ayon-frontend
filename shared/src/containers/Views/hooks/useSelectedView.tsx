@@ -6,6 +6,7 @@ import {
   useSetDefaultViewMutation,
 } from '@shared/api'
 import { toast } from 'react-toastify'
+import { useRef } from 'react'
 
 type Props = {
   viewType: string
@@ -15,6 +16,7 @@ type Props = {
 type Return = [
   selectedView: GetDefaultViewApiResponse | undefined,
   setSelectedView: (viewId: string) => void,
+  previousSelectedViewId: string | undefined,
 ]
 
 export const useSelectedView = ({ viewType, projectName }: Props): Return => {
@@ -25,8 +27,16 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
 
   const [setDefaultView] = useSetDefaultViewMutation()
 
+  // Store the previous selected view ID
+  const previousSelectedViewId = useRef<string | undefined>(undefined)
+
   const setSelectedView = async (viewId: string) => {
     if (!viewType) throw 'No view type provided for setting default view'
+
+    // Store the current view ID as previous before setting the new one
+    if (defaultView?.id && defaultView.id !== viewId) {
+      previousSelectedViewId.current = defaultView.id
+    }
 
     console.log('setting default view:', viewId)
 
@@ -43,5 +53,5 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
       toast.warn(`Failed to set default view: ${error}`)
     }
   }
-  return [defaultView, setSelectedView]
+  return [defaultView, setSelectedView, previousSelectedViewId.current]
 }

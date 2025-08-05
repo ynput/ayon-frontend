@@ -15,6 +15,7 @@ import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
+import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -36,6 +37,7 @@ export interface ViewsContextValue {
   viewSettings: ViewSettings | undefined
   personalSettings: ViewSettings | undefined
   personalView: ViewListItemModel | undefined
+  editingViewId: string | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
   isLoadingViews: boolean
@@ -45,10 +47,12 @@ export interface ViewsContextValue {
   setIsMenuOpen: (open: boolean) => void
   setEditingView: (editing: EditingViewState) => void
   setSelectedView: (viewId: string) => void
+  onSettingsChanged: (changed: boolean) => void
 
   // Mutations
   onCreateView: UseViewMutations['onCreateView']
   onDeleteView: UseViewMutations['onDeleteView']
+  onUpdateView: UseViewMutations['onUpdateView']
 
   // api
   api: typeof viewsQueries
@@ -87,16 +91,25 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const { data: currentUser } = useGetCurrentUserQuery()
 
-  const { onCreateView, onDeleteView } = useViewsMutations({ viewType, projectName })
+  const { onCreateView, onDeleteView, onUpdateView } = useViewsMutations({ viewType, projectName })
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
 
   // setting of default views
-  const [selectedView, setSelectedView] = useSelectedView({
+  const [selectedView, setSelectedView, previousSelectedViewId] = useSelectedView({
     viewType: viewType as string,
     projectName: projectName,
   })
+  // have there been settings changes to a view that had selected?
+  // this determines if we should show the save button in the menu
+  const [viewSettingsChanged, setViewSettingsChanged] = useState(false)
+  const onSettingsChanged = useCallback(
+    (changed: boolean) => {
+      setViewSettingsChanged(changed)
+    },
+    [setViewSettingsChanged],
+  )
 
   // Fetch views data
   const { currentData: viewsList = [], isLoading: isLoadingViews } = useListViewsQuery(
@@ -118,7 +131,16 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
       ? personalSettings
       : selectedView?.settings
 
+  // is the personal view selected?
   const isViewPersonal = selectedView?.id === personalView?.id
+  // were we just on a custom view and then edited it and ended up on the personal view
+  const editingViewId =
+    viewSettingsChanged &&
+    isViewPersonal &&
+    !!previousSelectedViewId &&
+    previousSelectedViewId !== personalView?.id
+      ? previousSelectedViewId
+      : undefined
 
   // get data for the view we are editing
   const { currentData: editingViewDataData } = useGetViewQuery(
@@ -131,6 +153,13 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     [editingView, editingViewDataData],
   )
 
+  const { onSaveViewFromCurrent } = useSaveViewFromCurrent({
+    viewType: viewType,
+    projectName,
+    sourceView: selectedView,
+    onUpdateView: onUpdateView,
+  })
+
   //   build the menu items for the views
   const viewMenuItems = useBuildViewMenuItems({
     viewsList,
@@ -138,8 +167,15 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewType,
     projectName,
     currentUser,
-    onSelect: setSelectedView,
+    usePersonalView: !powerLicense,
+    editingViewId,
+    onSelect: (viewId) => {
+      setSelectedView(viewId)
+      // reset the settings changed state when switching views
+      setViewSettingsChanged(false)
+    },
     onEdit: (viewId) => setEditingView(viewId),
+    onSave: (viewId) => onSaveViewFromCurrent(viewId),
   })
 
   const value: ViewsContextValue = {
@@ -154,14 +190,17 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     editingViewData,
     viewsList,
     personalView,
+    editingViewId,
     viewMenuItems,
     isLoadingViews,
     isViewPersonal,
     setIsMenuOpen,
     setEditingView,
     setSelectedView,
+    onSettingsChanged,
     // mutations
     onCreateView,
+    onUpdateView,
     onDeleteView,
     // api
     api: viewsQueries,
