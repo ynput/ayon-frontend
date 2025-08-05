@@ -1,4 +1,4 @@
-import { useCreateViewMutation, useGetCurrentUserQuery, ViewListItemModel } from '@shared/api'
+import { useCreateViewMutation, UserModel, ViewListItemModel } from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
@@ -26,6 +26,7 @@ type Props = {
   personalView?: ViewListItemModel
   viewType?: string
   projectName?: string
+  currentUser?: UserModel
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
 }
@@ -35,16 +36,16 @@ const useBuildViewMenuItems = ({
   personalView,
   viewType,
   projectName,
+  currentUser,
   onSelect,
   onEdit,
 }: Props): ViewMenuItem[] => {
   // MUTATIONS
   const [createView] = useCreateViewMutation()
-  const { data: user } = useGetCurrentUserQuery()
 
   const extendedViewsList: ViewListItemModelExtended[] = useMemo(
-    () => viewsList.map((view) => ({ ...view, isOwner: view.owner === user?.name })),
-    [viewsList, user],
+    () => viewsList.map((view) => ({ ...view, isOwner: view.owner === currentUser?.name })),
+    [viewsList, currentUser],
   )
 
   // if we have a personal view, we use it, otherwise we create one

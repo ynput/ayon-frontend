@@ -4,6 +4,8 @@ import { useLoadModule } from '@shared/hooks'
 import ViewFormDialogFallback from './ViewFormDialogFallback'
 import { Dialog } from '@ynput/ayon-react-components'
 
+export const VIEWS_DIALOG_CLASS = 'views-dialog' as const
+
 interface ViewsDialogContainerProps {}
 
 const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
@@ -13,6 +15,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     setEditingView,
     viewType,
     projectName,
+    currentUser,
     personalSettings,
     setSelectedView,
     onCreateView,
@@ -56,6 +59,12 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
       onDeleteView={onDeleteView}
       api={api}
       dispatch={dispatch}
+      currentUser={currentUser}
+      pt={{
+        dialog: {
+          className: VIEWS_DIALOG_CLASS,
+        },
+      }}
     />
   )
 }

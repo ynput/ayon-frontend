@@ -1,10 +1,12 @@
 import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { ViewType, PERSONAL_VIEW_ID, ViewFormData } from '../index'
+import { ViewType, PERSONAL_VIEW_ID } from '../index'
 import {
   GetDefaultViewApiResponse,
+  useGetCurrentUserQuery,
   useGetPersonalViewQuery,
   useGetViewQuery,
   useListViewsQuery,
+  UserModel,
   ViewListItemModel,
   viewsQueries,
 } from '@shared/api'
@@ -24,6 +26,7 @@ export interface ViewsContextValue {
   // State
   viewType?: ViewType
   projectName?: string
+  currentUser?: UserModel
   isMenuOpen: boolean
   editingView: EditingViewState
   selectedView: SelectedViewState
@@ -82,6 +85,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     powerLicense = debug.powerLicense
   }
 
+  const { data: currentUser } = useGetCurrentUserQuery()
+
   const { onCreateView, onDeleteView } = useViewsMutations({ viewType, projectName })
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -134,6 +139,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     personalView,
     viewType,
     projectName,
+    currentUser,
     onSelect: setSelectedView,
     onEdit: (viewId) => setEditingView(viewId),
   })
@@ -143,6 +149,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     projectName,
     isMenuOpen,
     editingView,
+    currentUser,
     selectedView,
     viewSettings,
     personalSettings,

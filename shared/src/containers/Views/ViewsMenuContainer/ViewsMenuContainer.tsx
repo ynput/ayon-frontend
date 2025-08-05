@@ -8,6 +8,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { usePowerpack } from '@shared/context'
 import * as Styled from '../Views.styled'
+import { VIEWS_DIALOG_CLASS } from '../ViewsDialogContainer/ViewsDialogContainer'
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
@@ -45,7 +46,14 @@ export const ViewsMenuContainer: FC = () => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement
-      if (!portalContainer?.contains(target) && !modalRef.current?.contains(target) && isMenuOpen) {
+
+      const clickInsideMenu =
+        modalRef.current?.contains(target) || portalContainer?.contains(target)
+      const clickInsideEditDialog = document
+        .querySelector('.' + VIEWS_DIALOG_CLASS)
+        ?.contains(target)
+
+      if (!clickInsideMenu && !clickInsideEditDialog && isMenuOpen) {
         setIsMenuOpen(false)
       }
     }
@@ -78,7 +86,6 @@ export const ViewsMenuContainer: FC = () => {
     } else {
       setEditingView(true)
     }
-    setIsMenuOpen(false)
   }, [powerLicense, setPowerpackDialog, setEditingView, setIsMenuOpen])
 
   const selectedViewId =
