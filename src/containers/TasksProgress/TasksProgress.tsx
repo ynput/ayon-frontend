@@ -15,7 +15,7 @@ import { useRootFolders } from './hooks'
 import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
 import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
 import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
-import { useFilters, type SelectionData, type SliceType } from '@shared/containers'
+import { useTaskProgressViewSettings, type SelectionData, type SliceType } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
@@ -75,7 +75,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // FILTERS
   //
   //
-  const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useFilters()
+  const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
 
   // filter out by slice
   const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =

@@ -9,10 +9,8 @@ export * from './utils/getCustomViewsFallback'
 export * from './ViewsDialogContainer/ViewFormDialogFallback'
 export * from './ViewsMenu/ViewsMenu'
 export * from './ViewsMenuContainer/ViewsMenuContainer'
-export * from './hooks/usePageViewColumns'
-export * from './hooks/useHierarchy'
-export * from './hooks/useFilters'
-export * from './hooks/useProgressWidths'
+export * from './hooks/useTaskProgressViewSettings'
+export * from './hooks/useOverviewViewSettings'
 export * from './utils/generateWorkingView'
 
 // Re-export the ViewsComponents for convenience

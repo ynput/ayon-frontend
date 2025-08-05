@@ -34,7 +34,7 @@ import type { Assignees, Status, TaskType, AttributeEnumItem } from '@shared/api
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { InView } from 'react-intersection-observer'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { useProgressWidths } from '@shared/containers'
+import { useTaskProgressViewSettings } from '@shared/containers'
 
 // Helpers
 import { useFolderSort } from '../../hooks'
@@ -241,7 +241,7 @@ export const TasksProgressTable = ({
     ctxMenuShow(e, buildContextMenu(selection, taskId))
   }
 
-  const { columns, onUpdateColumns } = useProgressWidths()
+  const { columns, onUpdateColumns } = useTaskProgressViewSettings()
 
   const resolveColumnWidth = (taskType: string, useDefault?: boolean) => {
     const screenWidthMultiple = (min: number, max: number, target: number): number => {

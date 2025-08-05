@@ -26,7 +26,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
-import { useHierarchy, useFilters } from '@shared/containers/Views'
+import { useOverviewViewSettings } from '@shared/containers'
 
 // Local context and hooks
 import { useSlicerContext } from '@context/SlicerContext'
@@ -69,8 +69,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     setExpanded,
   })
 
-  const { showHierarchy, onUpdateHierarchy: updateShowHierarchy } = useHierarchy()
-  const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useFilters()
+  const {
+    showHierarchy,
+    onUpdateHierarchy: updateShowHierarchy,
+    filters: queryFilters,
+    onUpdateFilters: setQueryFilters,
+  } = useOverviewViewSettings()
 
   // GET GROUPING
   const { taskGroups, error: groupingError } = useGetTaskGroups({

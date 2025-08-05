@@ -8,12 +8,12 @@ import { SettingsPanelProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
-import { usePageViewColumns } from '@shared/containers'
+import { useOverviewViewSettings } from '@shared/containers'
 
 const ProjectOverviewDataProvider: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
 
-  const { columns, onUpdateColumns } = usePageViewColumns()
+  const { columns, onUpdateColumns } = useOverviewViewSettings()
 
   const modules = useProjectTableModules()
 
