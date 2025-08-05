@@ -11,6 +11,7 @@ export interface ViewFormDialogProps {
   projectName?: string
   setSelected: (viewId: string) => void
   onCreateView: ViewsContextValue['onCreateView']
+  onUpdateView: ViewsContextValue['onUpdateView']
   onDeleteView: ViewsContextValue['onDeleteView']
   api: ViewsContextValue['api']
   dispatch: any

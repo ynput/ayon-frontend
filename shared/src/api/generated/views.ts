@@ -72,19 +72,6 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    powerpack111ViewsUpdateView: build.mutation<
-      Powerpack111ViewsUpdateViewApiResponse,
-      Powerpack111ViewsUpdateViewApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/powerpack/1.1.1-views/views/${queryArg.viewType}/${queryArg.viewId}`,
-        method: 'PATCH',
-        body: queryArg.payload,
-        params: {
-          project_name: queryArg.projectName,
-        },
-      }),
-    }),
   }),
   overrideExisting: false,
 })
@@ -144,13 +131,6 @@ export type UpdateViewApiArg = {
   projectName?: string
   payload: OverviewViewPatchModel | TaskProgressViewPatchModel | ListsViewPatchModel
 }
-export type Powerpack111ViewsUpdateViewApiResponse = /** status 200 Successful Response */ any
-export type Powerpack111ViewsUpdateViewApiArg = {
-  viewType: string
-  viewId: string
-  projectName?: string
-  payload: OverviewViewPatchModel2 | TaskProgressViewPatchModel2 | ListsViewPatchModel2
-}
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
@@ -162,6 +142,7 @@ export type ViewListItemModel = {
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
+  access: object
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
@@ -276,11 +257,11 @@ export type OverviewViewModel = {
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
+  access: object
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
   editable: boolean
-  access: object
   settings: OverviewSettings
   viewType?: 'overview'
 }
@@ -295,11 +276,11 @@ export type TaskProgressViewModel = {
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
+  access: object
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
   editable: boolean
-  access: object
   settings: TaskProgressSettings
   viewType?: 'taskProgress'
 }
@@ -314,11 +295,11 @@ export type ListsViewModel = {
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
+  access: object
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
   editable: boolean
-  access: object
   settings: ListsSettings
   viewType?: 'lists'
 }
@@ -338,26 +319,5 @@ export type TaskProgressViewPatchModel = {
 export type ListsViewPatchModel = {
   label?: string
   owner?: string
-  settings?: ListsSettings
-}
-export type OverviewViewPatchModel2 = {
-  /** Unique identifier for the view within the given scope. */
-  id?: string
-  label?: string
-  visibility?: 'public' | 'private'
-  settings?: OverviewSettings
-}
-export type TaskProgressViewPatchModel2 = {
-  /** Unique identifier for the view within the given scope. */
-  id?: string
-  label?: string
-  visibility?: 'public' | 'private'
-  settings?: TaskProgressSettings
-}
-export type ListsViewPatchModel2 = {
-  /** Unique identifier for the view within the given scope. */
-  id?: string
-  label?: string
-  visibility?: 'public' | 'private'
   settings?: ListsSettings
 }

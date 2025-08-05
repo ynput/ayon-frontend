@@ -24,6 +24,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                 position: draft.length + 1, // Add to the end of the list
                 owner: user,
                 editable: true,
+                access: {},
               }
               if (payload.working) {
                 // For working views, find and replace the existing working view
@@ -93,6 +94,12 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       // updates the view list cache for a specific view type and project
       invalidatesTags: (_r, _e, { viewType, projectName, payload }) => [
         { type: 'view', id: payload.id },
+        getScopeTag(viewType, projectName),
+      ],
+    },
+    updateView: {
+      invalidatesTags: (_r, _e, { viewType, projectName, viewId }) => [
+        { type: 'view', id: viewId },
         getScopeTag(viewType, projectName),
       ],
     },
@@ -187,6 +194,10 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
   },
 })
 
-export const { useCreateViewMutation, useDeleteViewMutation, useSetDefaultViewMutation } =
-  updateViewsApi
+export const {
+  useCreateViewMutation,
+  useUpdateViewMutation,
+  useDeleteViewMutation,
+  useSetDefaultViewMutation,
+} = updateViewsApi
 export { updateViewsApi as viewsQueries }

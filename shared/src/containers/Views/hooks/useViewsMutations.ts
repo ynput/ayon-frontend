@@ -1,4 +1,9 @@
-import { CreateViewApiArg, useCreateViewMutation, useDeleteViewMutation } from '@shared/api'
+import {
+  CreateViewApiArg,
+  useCreateViewMutation,
+  useDeleteViewMutation,
+  useUpdateViewMutation,
+} from '@shared/api'
 import React, { useCallback } from 'react'
 import { ViewData } from '../context/ViewsContext'
 
@@ -18,6 +23,7 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
   // forward mutations to the dialog
   const [createView] = useCreateViewMutation()
   const [deleteView] = useDeleteViewMutation()
+  const [updateView] = useUpdateViewMutation()
 
   const onCreateView = useCallback<R['onCreateView']>(
     async (payload) => {
@@ -46,12 +52,12 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
       }
 
       try {
-        // await updateView({
-        //         viewId,
-        //         viewType,
-        //         projectName,
-        //         payload,
-        //       }).unwrap()
+        await updateView({
+          viewId,
+          viewType,
+          projectName,
+          payload,
+        }).unwrap()
       } catch (error) {
         console.error('Failed to update view:', error)
         throw error

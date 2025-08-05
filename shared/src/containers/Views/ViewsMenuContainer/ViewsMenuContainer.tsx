@@ -52,8 +52,9 @@ export const ViewsMenuContainer: FC = () => {
       const clickInsideEditDialog = document
         .querySelector('.' + VIEWS_DIALOG_CLASS)
         ?.contains(target)
+      const clickInsideDropdown = document.querySelector('.options')?.contains(target)
 
-      if (!clickInsideMenu && !clickInsideEditDialog && isMenuOpen) {
+      if (!clickInsideMenu && !clickInsideEditDialog && !clickInsideDropdown && isMenuOpen) {
         setIsMenuOpen(false)
       }
     }

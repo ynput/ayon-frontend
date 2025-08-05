@@ -19,6 +19,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     workingSettings,
     setSelectedView,
     onCreateView,
+    onUpdateView,
     onDeleteView,
     api,
     dispatch,
@@ -56,6 +57,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
       projectName={projectName}
       setSelected={setSelectedView}
       onCreateView={onCreateView}
+      onUpdateView={onUpdateView}
       onDeleteView={onDeleteView}
       api={api}
       dispatch={dispatch}
