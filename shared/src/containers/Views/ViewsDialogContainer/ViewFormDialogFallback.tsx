@@ -6,7 +6,7 @@ export interface ViewFormDialogProps {
   editingView: Partial<ViewFormData> & { viewId?: string }
   setEditingView: (viewId: string | null) => void
   viewType: ViewType
-  personalSettings?: ViewSettings
+  workingSettings?: ViewSettings
   currentUser?: UserModel
   projectName?: string
   setSelected: (viewId: string) => void

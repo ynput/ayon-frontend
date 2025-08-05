@@ -19,9 +19,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getPersonalView: build.query<GetPersonalViewApiResponse, GetPersonalViewApiArg>({
+    getWorkingView: build.query<GetWorkingViewApiResponse, GetWorkingViewApiArg>({
       query: (queryArg) => ({
-        url: `/api/views/${queryArg.viewType}/personal`,
+        url: `/api/views/${queryArg.viewType}/working`,
         params: {
           project_name: queryArg.projectName,
         },
@@ -62,6 +62,29 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    updateView: build.mutation<UpdateViewApiResponse, UpdateViewApiArg>({
+      query: (queryArg) => ({
+        url: `/api/views/${queryArg.viewType}/${queryArg.viewId}`,
+        method: 'PATCH',
+        body: queryArg.payload,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
+    powerpack111ViewsUpdateView: build.mutation<
+      Powerpack111ViewsUpdateViewApiResponse,
+      Powerpack111ViewsUpdateViewApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/addons/powerpack/1.1.1-views/views/${queryArg.viewType}/${queryArg.viewId}`,
+        method: 'PATCH',
+        body: queryArg.payload,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -77,11 +100,11 @@ export type CreateViewApiArg = {
   projectName?: string
   payload: OverviewViewPostModel | TaskProgressViewPostModel | ListsViewPostModel
 }
-export type GetPersonalViewApiResponse = /** status 200 Successful Response */
+export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
-export type GetPersonalViewApiArg = {
+export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
@@ -114,6 +137,20 @@ export type DeleteViewApiArg = {
   viewId: string
   projectName?: string
 }
+export type UpdateViewApiResponse = /** status 200 Successful Response */ any
+export type UpdateViewApiArg = {
+  viewType: string
+  viewId: string
+  projectName?: string
+  payload: OverviewViewPatchModel | TaskProgressViewPatchModel | ListsViewPatchModel
+}
+export type Powerpack111ViewsUpdateViewApiResponse = /** status 200 Successful Response */ any
+export type Powerpack111ViewsUpdateViewApiArg = {
+  viewType: string
+  viewId: string
+  projectName?: string
+  payload: OverviewViewPatchModel2 | TaskProgressViewPatchModel2 | ListsViewPatchModel2
+}
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
@@ -121,13 +158,14 @@ export type ViewListItemModel = {
   label: string
   /** Determines whether the view is only available for the given project or for all projects (studio). */
   scope: 'project' | 'studio'
-  position: number
   /** Name of the user who created the view. Owners have full control over the view,  */
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
-  /** Personal view is a special type of the view that automatically stores the current view settings without explicitly saving them. Personal views are always private and scoped to the project  */
-  personal: boolean
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  editable: boolean
 }
 export type ViewListModel = {
   views: ViewListItemModel[]
@@ -195,8 +233,8 @@ export type OverviewViewPostModel = {
   id?: string
   /** Human-readable name of the view. */
   label: string
-  /** Personal view is a special type of the view that automatically stores the current view settings without explicitly saving them. Personal views are always private and scoped to the project  */
-  personal?: boolean
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
   settings: OverviewSettings
 }
 export type TaskProgressSettings = {
@@ -208,8 +246,8 @@ export type TaskProgressViewPostModel = {
   id?: string
   /** Human-readable name of the view. */
   label: string
-  /** Personal view is a special type of the view that automatically stores the current view settings without explicitly saving them. Personal views are always private and scoped to the project  */
-  personal?: boolean
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
   settings: TaskProgressSettings
 }
 export type ListsSettings = {
@@ -223,8 +261,8 @@ export type ListsViewPostModel = {
   id?: string
   /** Human-readable name of the view. */
   label: string
-  /** Personal view is a special type of the view that automatically stores the current view settings without explicitly saving them. Personal views are always private and scoped to the project  */
-  personal?: boolean
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
   settings: ListsSettings
 }
 export type OverviewViewModel = {
@@ -234,13 +272,15 @@ export type OverviewViewModel = {
   label: string
   /** Determines whether the view is only available for the given project or for all projects (studio). */
   scope: 'project' | 'studio'
-  position: number
   /** Name of the user who created the view. Owners have full control over the view,  */
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
-  /** Personal view is a special type of the view that automatically stores the current view settings without explicitly saving them. Personal views are always private and scoped to the project  */
-  personal: boolean
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  editable: boolean
+  access: object
   settings: OverviewSettings
   viewType?: 'overview'
 }
@@ -251,13 +291,15 @@ export type TaskProgressViewModel = {
   label: string
   /** Determines whether the view is only available for the given project or for all projects (studio). */
   scope: 'project' | 'studio'
-  position: number
   /** Name of the user who created the view. Owners have full control over the view,  */
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
-  /** Personal view is a special type of the view that automatically stores the current view settings without explicitly saving them. Personal views are always private and scoped to the project  */
-  personal: boolean
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  editable: boolean
+  access: object
   settings: TaskProgressSettings
   viewType?: 'taskProgress'
 }
@@ -268,16 +310,54 @@ export type ListsViewModel = {
   label: string
   /** Determines whether the view is only available for the given project or for all projects (studio). */
   scope: 'project' | 'studio'
-  position: number
   /** Name of the user who created the view. Owners have full control over the view,  */
   owner: string
   /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
   visibility: 'public' | 'private'
-  /** Personal view is a special type of the view that automatically stores the current view settings without explicitly saving them. Personal views are always private and scoped to the project  */
-  personal: boolean
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  editable: boolean
+  access: object
   settings: ListsSettings
   viewType?: 'lists'
 }
 export type SetDefaultViewRequestModel = {
   viewId: string
+}
+export type OverviewViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: OverviewSettings
+}
+export type TaskProgressViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: TaskProgressSettings
+}
+export type ListsViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: ListsSettings
+}
+export type OverviewViewPatchModel2 = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  label?: string
+  visibility?: 'public' | 'private'
+  settings?: OverviewSettings
+}
+export type TaskProgressViewPatchModel2 = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  label?: string
+  visibility?: 'public' | 'private'
+  settings?: TaskProgressSettings
+}
+export type ListsViewPatchModel2 = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  label?: string
+  visibility?: 'public' | 'private'
+  settings?: ListsSettings
 }

@@ -1,9 +1,9 @@
 import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { ViewType, PERSONAL_VIEW_ID } from '../index'
+import { ViewType, WORKING_VIEW_ID } from '../index'
 import {
   GetDefaultViewApiResponse,
   useGetCurrentUserQuery,
-  useGetPersonalViewQuery,
+  useGetWorkingViewQuery,
   useGetViewQuery,
   useListViewsQuery,
   UserModel,
@@ -19,7 +19,7 @@ import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
-export type SelectedViewState = ViewData | undefined // id of view otherwise null with use personal
+export type SelectedViewState = ViewData | undefined // id of view otherwise null with use working
 export type EditingViewState = string | true | null // id of view being edited otherwise null
 
 const viewTypes = ['overview', 'taskProgress'] as const
@@ -35,13 +35,13 @@ export interface ViewsContextValue {
   // Views data
   viewsList: ViewListItemModel[]
   viewSettings: ViewSettings | undefined
-  personalSettings: ViewSettings | undefined
-  personalView: ViewListItemModel | undefined
+  workingSettings: ViewSettings | undefined
+  workingView: ViewListItemModel | undefined
   editingViewId: string | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
   isLoadingViews: boolean
-  isViewPersonal: boolean
+  isViewWorking: boolean
 
   // Actions
   setIsMenuOpen: (open: boolean) => void
@@ -117,28 +117,26 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     { skip: !viewType },
   )
 
-  //   always get your personal view
-  const { currentData: personalView } = useGetPersonalViewQuery(
+  //   always get your working view
+  const { currentData: workingView } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
 
-  const personalSettings = personalView?.settings
+  const workingSettings = workingView?.settings
 
   //   which settings to use for the view
   const viewSettings =
-    !selectedView || selectedView.id === PERSONAL_VIEW_ID
-      ? personalSettings
-      : selectedView?.settings
+    !selectedView || selectedView.id === WORKING_VIEW_ID ? workingSettings : selectedView?.settings
 
-  // is the personal view selected?
-  const isViewPersonal = selectedView?.id === personalView?.id
-  // were we just on a custom view and then edited it and ended up on the personal view
+  // is the working view selected?
+  const isViewWorking = selectedView?.id === workingView?.id
+  // were we just on a custom view and then edited it and ended up on the working view
   const editingViewId =
     viewSettingsChanged &&
-    isViewPersonal &&
+    isViewWorking &&
     !!previousSelectedViewId &&
-    previousSelectedViewId !== personalView?.id
+    previousSelectedViewId !== workingView?.id
       ? previousSelectedViewId
       : undefined
 
@@ -163,11 +161,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   //   build the menu items for the views
   const viewMenuItems = useBuildViewMenuItems({
     viewsList,
-    personalView,
+    workingView,
     viewType,
     projectName,
     currentUser,
-    usePersonalView: !powerLicense,
+    useWorkingView: !powerLicense,
     editingViewId,
     onSelect: (viewId) => {
       setSelectedView(viewId)
@@ -186,14 +184,14 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     currentUser,
     selectedView,
     viewSettings,
-    personalSettings,
+    workingSettings,
     editingViewData,
     viewsList,
-    personalView,
+    workingView,
     editingViewId,
     viewMenuItems,
     isLoadingViews,
-    isViewPersonal,
+    isViewWorking,
     setIsMenuOpen,
     setEditingView,
     setSelectedView,

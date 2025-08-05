@@ -3,14 +3,14 @@ import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
-import { generatePersonalView } from '../utils/generatePersonalView'
+import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { ViewData } from '../context/ViewsContext'
 
 // constants
-export const PERSONAL_VIEW_ID = '_personal_' as const
+export const WORKING_VIEW_ID = '_working_' as const
 export const NEW_VIEW_ID = '_new_view_' as const
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
@@ -19,11 +19,11 @@ export type ViewListItemModelExtended = ViewListItemModel & {
 
 type Props = {
   viewsList: ViewListItemModel[]
-  personalView?: ViewListItemModel
+  workingView?: ViewListItemModel
   viewType?: string
   projectName?: string
   currentUser?: UserModel
-  usePersonalView?: boolean
+  useWorkingView?: boolean
   editingViewId?: string // the preview id of the view being edited
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
@@ -32,11 +32,11 @@ type Props = {
 
 const useBuildViewMenuItems = ({
   viewsList,
-  personalView,
+  workingView,
   viewType,
   projectName,
   currentUser,
-  usePersonalView,
+  useWorkingView,
   editingViewId,
   onSelect,
   onEdit,
@@ -55,35 +55,35 @@ const useBuildViewMenuItems = ({
     [viewsList, currentUser, editingViewId],
   )
 
-  const personalBaseView: ViewItem = {
-    id: PERSONAL_VIEW_ID,
-    label: usePersonalView ? 'Personal view' : 'Working view',
-    startContent: usePersonalView && <Icon icon="person" />,
+  const workingBaseView: ViewItem = {
+    id: WORKING_VIEW_ID,
+    label: useWorkingView ? 'Personal view' : 'Working view',
+    startContent: useWorkingView && <Icon icon="person" />,
     isEditable: false,
   }
 
-  // if we have a personal view, we use it, otherwise we create one
-  const handlePersonalViewChange = useCallback(async () => {
-    let personalViewId = personalView?.id
-    if (!personalView) {
-      // no personal view found, create one
+  // if we have a working view, we use it, otherwise we create one
+  const handleWorkingViewChange = useCallback(async () => {
+    let workingViewId = workingView?.id
+    if (!workingView) {
+      // no working view found, create one
       try {
-        console.warn('No personal view found, creating a new one')
-        const personalView = generatePersonalView()
+        console.warn('No working view found, creating a new one')
+        const workingView = generateWorkingView()
         await createView({
-          payload: personalView,
+          payload: workingView,
           viewType: viewType as string,
           projectName: projectName,
         }).unwrap()
         // set id of the new view
-        personalViewId = personalView.id
+        workingViewId = workingView.id
       } catch (error: any) {
-        toast.error(`Failed to create personal view: ${error}`)
+        toast.error(`Failed to create working view: ${error}`)
       }
     }
-    // select the personal view
-    onSelect(personalViewId as string)
-  }, [personalView, viewType, createView, projectName, onSelect])
+    // select the working view
+    onSelect(workingViewId as string)
+  }, [workingView, viewType, createView, projectName, onSelect])
 
   const [getCustomViews, { isLoading: isLoadingQueries }] = useLoadModule({
     addon: 'powerpack',
@@ -107,17 +107,17 @@ const useBuildViewMenuItems = ({
 
   const dividers = myViews.length || sharedViews.length ? [VIEW_DIVIDER] : []
 
-  const personalViewItem: ViewMenuItem = useMemo(
+  const workingViewItem: ViewMenuItem = useMemo(
     () => ({
-      ...personalBaseView,
-      onClick: handlePersonalViewChange,
+      ...workingBaseView,
+      onClick: handleWorkingViewChange,
     }),
-    [handlePersonalViewChange],
+    [handleWorkingViewChange],
   )
 
   const viewItems: ViewMenuItem[] = useMemo(
-    () => [personalViewItem, ...dividers, ...myViews, ...sharedViews, ...dividers],
-    [personalView, myViews, sharedViews, personalViewItem],
+    () => [workingViewItem, ...dividers, ...myViews, ...sharedViews, ...dividers],
+    [workingView, myViews, sharedViews, workingViewItem],
   )
 
   return viewItems

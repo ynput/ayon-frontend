@@ -2,7 +2,7 @@
  * Hook that syncs the hierarchy boolean state to view settings.
  *
  * This hook provides a simple interface for managing the showHierarchy setting
- * that automatically syncs changes to the personal view settings. It uses local
+ * that automatically syncs changes to the working view settings. It uses local
  * state for immediate UI updates and syncs the settings in the background.
  *
  * Must be used within a ViewsProvider context.
@@ -28,7 +28,7 @@
 
 import { useViewsContext } from '../context/ViewsContext'
 import { OverviewSettings, useCreateViewMutation } from '@shared/api'
-import { generatePersonalView } from '../utils/generatePersonalView'
+import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useState, useEffect, useCallback } from 'react'
 
@@ -45,7 +45,7 @@ export const useHierarchy = (): Return => {
     projectName,
     selectedView,
     setSelectedView,
-    personalView,
+    workingView,
     onSettingsChanged,
   } = useViewsContext()
 
@@ -81,24 +81,24 @@ export const useHierarchy = (): Return => {
           showHierarchy: newShowHierarchy,
         }
 
-        // always update the personal view no matter what
-        const newPersonalView = generatePersonalView(updatedSettings)
-        // only use the generated ID if there is no personal view already
-        const newPersonalViewId = personalView?.id || newPersonalView.id
+        // always update the working view no matter what
+        const newWorkingView = generateWorkingView(updatedSettings)
+        // only use the generated ID if there is no working view already
+        const newWorkingViewId = workingView?.id || newWorkingView.id
 
         // Make API call in background
         const promise = createView({
-          payload: newPersonalView,
+          payload: newWorkingView,
           viewType: viewType,
           projectName: projectName,
         }).unwrap()
 
-        // if not personal: set that the settings have been changed to show the little blue save button
-        if (selectedView && !selectedView.personal) {
+        // if not working: set that the settings have been changed to show the little blue save button
+        if (selectedView && !selectedView.working) {
           onSettingsChanged(true)
         }
-        // Always switch to the personal view after updating anything
-        setSelectedView(newPersonalViewId as string)
+        // Always switch to the working view after updating anything
+        setSelectedView(newWorkingViewId as string)
 
         await promise
 
@@ -113,7 +113,7 @@ export const useHierarchy = (): Return => {
     [
       viewType,
       viewSettings,
-      personalView,
+      workingView,
       projectName,
       selectedView,
       createView,

@@ -16,7 +16,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     viewType,
     projectName,
     currentUser,
-    personalSettings,
+    workingSettings,
     setSelectedView,
     onCreateView,
     onDeleteView,
@@ -50,7 +50,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
         viewId: editingView === true ? undefined : editingView,
         ...(editingViewData || {}),
       }}
-      personalSettings={personalSettings}
+      workingSettings={workingSettings}
       setEditingView={setEditingView}
       viewType={viewType}
       projectName={projectName}

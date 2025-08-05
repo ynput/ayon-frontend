@@ -33,7 +33,7 @@ export const getViewsApi = viewsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
           : [VIEW_LIST_TAG],
       transformErrorResponse: (error: any) => error.data?.detail,
     },
-    getPersonalView: {
+    getWorkingView: {
       providesTags: (result, _e, { viewType, projectName }) => [
         { type: 'view', id: result?.id },
         getScopeTag(viewType, projectName),
@@ -56,7 +56,7 @@ export const getViewsApi = viewsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
 
 export const {
   useListViewsQuery,
-  useGetPersonalViewQuery,
+  useGetWorkingViewQuery,
   useGetViewQuery,
   useGetDefaultViewQuery,
 } = getViewsApi

@@ -16,7 +16,7 @@ const PowerIcon = styled(Icon)`
 `
 
 // constants
-export const PERSONAL_VIEW_ID = '_personal_' as const
+export const WORKING_VIEW_ID = '_working_' as const
 export const NEW_VIEW_ID = '_new_view_' as const
 
 export const ViewsMenuContainer: FC = () => {
@@ -26,7 +26,7 @@ export const ViewsMenuContainer: FC = () => {
     setIsMenuOpen,
     setEditingView,
     selectedView,
-    personalView,
+    workingView,
     viewMenuItems,
   } = useViewsContext()
 
@@ -89,8 +89,8 @@ export const ViewsMenuContainer: FC = () => {
   }, [powerLicense, setPowerpackDialog, setEditingView, setIsMenuOpen])
 
   const selectedViewId =
-    !selectedView || personalView?.id === selectedView.id
-      ? PERSONAL_VIEW_ID
+    !selectedView || workingView?.id === selectedView.id
+      ? WORKING_VIEW_ID
       : (selectedView.id as string)
 
   return (

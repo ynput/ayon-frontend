@@ -7,7 +7,7 @@ import {
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
 import { OverviewSettings, useCreateViewMutation } from '@shared/api'
-import { generatePersonalView } from '../utils/generatePersonalView'
+import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useMemo, useState, useEffect, useCallback } from 'react'
 
@@ -24,7 +24,7 @@ export const usePageViewColumns = (): Return => {
     projectName,
     setSelectedView,
     selectedView,
-    personalView,
+    workingView,
     onSettingsChanged,
   } = useViewsContext()
 
@@ -59,24 +59,24 @@ export const usePageViewColumns = (): Return => {
         // convert the columns to settings format
         const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
 
-        // always update the personal view no matter what
-        const newPersonalView = generatePersonalView({ ...viewSettings, ...settings })
-        // only use the generated ID if there is no personal view already
-        const newPersonalViewId = personalView?.id || newPersonalView.id
+        // always update the working view no matter what
+        const newWorkingView = generateWorkingView({ ...viewSettings, ...settings })
+        // only use the generated ID if there is no working view already
+        const newWorkingViewId = workingView?.id || newWorkingView.id
 
         // Make API call in background
         const promise = createView({
-          payload: newPersonalView,
+          payload: newWorkingView,
           viewType: viewType,
           projectName: projectName,
         }).unwrap()
 
-        // if not personal: set that the settings have been changed to show the little blue save button
-        if (selectedView && !selectedView.personal) {
+        // if not working: set that the settings have been changed to show the little blue save button
+        if (selectedView && !selectedView.working) {
           onSettingsChanged(true)
         }
-        // Always switch to the personal view after updating anything
-        setSelectedView(newPersonalViewId as string)
+        // Always switch to the working view after updating anything
+        setSelectedView(newWorkingViewId as string)
 
         await promise
 
@@ -91,7 +91,7 @@ export const usePageViewColumns = (): Return => {
     [
       viewType,
       viewSettings,
-      personalView,
+      workingView,
       projectName,
       selectedView,
       createView,

@@ -13,13 +13,13 @@ export * from './hooks/usePageViewColumns'
 export * from './hooks/useHierarchy'
 export * from './hooks/useFilters'
 export * from './hooks/useProgressWidths'
-export * from './utils/generatePersonalView'
+export * from './utils/generateWorkingView'
 
 // Re-export the ViewsComponents for convenience
 export { Views } from './Views'
 
 // Re-export constants
-export { PERSONAL_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuContainer'
+export { WORKING_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuContainer'
 
 // types
 export type ViewFormData = Required<

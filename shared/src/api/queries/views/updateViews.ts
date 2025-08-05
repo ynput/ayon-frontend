@@ -18,25 +18,26 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
             (draft) => {
               const newView: ViewListItemModel = {
                 ...payload,
-                personal: payload.personal || false,
+                working: payload.working || false,
                 scope: arg.projectName ? 'project' : 'studio',
                 visibility: 'private',
                 position: draft.length + 1, // Add to the end of the list
                 owner: user,
+                editable: true,
               }
-              if (payload.personal) {
-                // For personal views, find and replace the existing personal view
-                const existingPersonalIndex = draft.findIndex((view) => view.personal === true)
-                if (existingPersonalIndex !== -1) {
+              if (payload.working) {
+                // For working views, find and replace the existing working view
+                const existingWorkingIndex = draft.findIndex((view) => view.working === true)
+                if (existingWorkingIndex !== -1) {
                   // Keep the existing ID but update all other properties
-                  const existingId = draft[existingPersonalIndex].id
-                  draft[existingPersonalIndex] = { ...newView, id: existingId }
+                  const existingId = draft[existingWorkingIndex].id
+                  draft[existingWorkingIndex] = { ...newView, id: existingId }
                 } else {
-                  // No existing personal view, add the new one
+                  // No existing working view, add the new one
                   draft.push(newView)
                 }
               } else {
-                // For non-personal views, add to the list as usual
+                // For non-working views, add to the list as usual
                 draft.push(newView)
               }
 
@@ -51,27 +52,27 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           ),
         )
 
-        // Also update the getPersonalView cache if this is a personal view
-        let personalViewPatch
-        if (payload.personal) {
-          personalViewPatch = dispatch(
+        // Also update the getWorkingView cache if this is a working view
+        let workingViewPatch
+        if (payload.working) {
+          workingViewPatch = dispatch(
             getViewsApi.util.updateQueryData(
-              'getPersonalView',
+              'getWorkingView',
               { viewType: arg.viewType, projectName: arg.projectName },
               (draft) => {
-                // Preserve the existing ID if there's already a personal view
+                // Preserve the existing ID if there's already a working view
                 const existingId = draft?.id
-                const updatedPersonalView = {
+                const updatedWorkingView = {
                   ...payload,
-                  personal: true,
+                  working: true,
                   scope: arg.projectName ? 'project' : 'studio',
                   visibility: 'private',
                   owner: user,
                   ...(existingId && { id: existingId }), // Keep existing ID if it exists
                 }
-                console.log('Updated personal view:', updatedPersonalView)
-                // Update the personal view cache with the new view data
-                Object.assign(draft, updatedPersonalView)
+                console.log('Updated working view:', updatedWorkingView)
+                // Update the working view cache with the new view data
+                Object.assign(draft, updatedWorkingView)
               },
             ),
           )
@@ -82,8 +83,8 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         } catch (error) {
           // If the query failed, we need to roll back the optimistic updates
           patch.undo()
-          if (personalViewPatch) {
-            personalViewPatch.undo()
+          if (workingViewPatch) {
+            workingViewPatch.undo()
           }
           console.error('Failed to create view:', error)
         }
