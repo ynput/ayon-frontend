@@ -98,6 +98,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       ],
     },
     updateView: {
+      transformErrorResponse: (error: any) => error.data?.detail,
       invalidatesTags: (_r, _e, { viewType, projectName, viewId }) => [
         { type: 'view', id: viewId },
         getScopeTag(viewType, projectName),

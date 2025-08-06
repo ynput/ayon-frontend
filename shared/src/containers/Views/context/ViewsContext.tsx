@@ -16,6 +16,7 @@ import { usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
+import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -101,15 +102,10 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewType: viewType as string,
     projectName: projectName,
   })
-  // have there been settings changes to a view that had selected?
-  // this determines if we should show the save button in the menu
-  const [viewSettingsChanged, setViewSettingsChanged] = useState(false)
-  const onSettingsChanged = useCallback(
-    (changed: boolean) => {
-      setViewSettingsChanged(changed)
-    },
-    [setViewSettingsChanged],
-  )
+
+  const [viewSettingsChanged, setViewSettingsChanged] = useViewSettingsChanged({
+    viewType: viewType as ViewType,
+  })
 
   // Fetch views data
   const { currentData: viewsList = [], isLoading: isLoadingViews } = useListViewsQuery(
@@ -154,7 +150,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   const { onSaveViewFromCurrent } = useSaveViewFromCurrent({
     viewType: viewType,
     projectName,
-    sourceView: selectedView,
+    sourceSettings: viewSettings,
     onUpdateView: onUpdateView,
   })
 
@@ -173,7 +169,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
       setViewSettingsChanged(false)
     },
     onEdit: (viewId) => setEditingView(viewId),
-    onSave: (viewId) => onSaveViewFromCurrent(viewId),
+    onSave: async (viewId) => onSaveViewFromCurrent(viewId),
   })
 
   const value: ViewsContextValue = {
@@ -195,7 +191,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     setIsMenuOpen,
     setEditingView,
     setSelectedView,
-    onSettingsChanged,
+    onSettingsChanged: setViewSettingsChanged,
     // mutations
     onCreateView,
     onUpdateView,

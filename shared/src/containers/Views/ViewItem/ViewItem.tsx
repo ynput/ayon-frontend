@@ -41,13 +41,13 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       <Styled.ViewItem {...props} className={clsx(className, { selected: isSelected })} ref={ref}>
         {startContent && startContent}
         <span className="label">{label}</span>
-        {isEditable && isSaveable && (
+        {isEditable && isSaveable && !isSelected && (
           <Styled.ActionButton
             icon="save"
             variant="text"
             className={clsx('save', { active: highlighted === 'save' })}
             onClick={onSave}
-            data-tooltip="Save view settings"
+            data-tooltip="Save view settings from current view"
           />
         )}
         {isEditable && (

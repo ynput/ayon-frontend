@@ -27,7 +27,7 @@ type Props = {
   editingViewId?: string // the preview id of the view being edited
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
-  onSave: (viewId: string) => void
+  onSave: (viewId: string) => Promise<void>
 }
 
 const useBuildViewMenuItems = ({
@@ -85,6 +85,16 @@ const useBuildViewMenuItems = ({
     onSelect(workingViewId as string)
   }, [workingView, viewType, createView, projectName, onSelect])
 
+  const handleEditView = async (viewId: string) => {
+    // save the view and then selected it
+    try {
+      await onSave(viewId)
+      onSelect(viewId)
+    } catch (error: any) {
+      toast.error(error)
+    }
+  }
+
   const [getCustomViews, { isLoading: isLoadingQueries }] = useLoadModule({
     addon: 'powerpack',
     remote: 'views',
@@ -100,9 +110,9 @@ const useBuildViewMenuItems = ({
         viewsList: extendedViewsList,
         onEdit,
         onSelect,
-        onSave,
+        onSave: handleEditView,
       }),
-    [viewsList, onEdit, onSelect],
+    [viewsList, onEdit, onSelect, handleEditView],
   )
 
   const dividers = myViews.length || sharedViews.length ? [VIEW_DIVIDER] : []
