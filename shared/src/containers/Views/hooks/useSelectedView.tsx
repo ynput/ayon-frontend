@@ -28,14 +28,15 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
   const [setDefaultView] = useSetDefaultViewMutation()
 
   // Store the previous selected view ID
-  const previousSelectedViewId = useRef<string | undefined>(undefined)
+  const previousSelectedViewIdByType = useRef<Record<string, string | undefined>>({})
+  const previousSelectedViewId = previousSelectedViewIdByType.current[viewType]
 
   const setSelectedView = async (viewId: string) => {
     if (!viewType) throw 'No view type provided for setting default view'
 
     // Store the current view ID as previous before setting the new one
     if (defaultView?.id && defaultView.id !== viewId) {
-      previousSelectedViewId.current = defaultView.id
+      previousSelectedViewIdByType.current[viewType] = defaultView.id
     }
 
     console.log('setting default view:', viewId)
@@ -53,5 +54,6 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
       toast.warn(`Failed to set default view: ${error}`)
     }
   }
-  return [defaultView, setSelectedView, previousSelectedViewId.current]
+
+  return [defaultView, setSelectedView, previousSelectedViewId]
 }
