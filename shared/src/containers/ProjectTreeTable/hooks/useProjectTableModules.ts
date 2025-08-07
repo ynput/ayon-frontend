@@ -2,6 +2,7 @@ import { useLoadModule } from '@shared/hooks'
 import { GroupSettingsFallback } from '../components/GroupSettingsFallback'
 import { EntityGroup, QueryFilter } from '@shared/api'
 import { TableGroupBy } from '../context'
+import { usePowerpack } from '@shared/context'
 
 type GetGroupQueriesParams = {
   taskGroups: EntityGroup[]
@@ -26,6 +27,8 @@ export type ProjectTableModulesType = {
 const getGroupQueriesFallback = (params: GetGroupQueriesParams): GetGroupQueriesReturn => []
 
 export const useProjectTableModules = (): ProjectTableModulesType => {
+  const { powerLicense } = usePowerpack()
+
   const minVersion = '1.1.1-dev'
   const [GroupSettings, { outdated, isLoading: isLoadingSettings }] = useLoadModule({
     addon: 'powerpack',
@@ -33,6 +36,7 @@ export const useProjectTableModules = (): ProjectTableModulesType => {
     module: 'GroupSettings',
     fallback: GroupSettingsFallback,
     minVersion: minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
   const [getGroupQueries, { isLoading: isLoadingQueries }] = useLoadModule({
@@ -41,6 +45,7 @@ export const useProjectTableModules = (): ProjectTableModulesType => {
     module: 'getGroupQueries',
     fallback: getGroupQueriesFallback,
     minVersion: minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
   const isLoading = isLoadingSettings || isLoadingQueries

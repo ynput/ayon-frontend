@@ -2,6 +2,7 @@ import { useRemoteModules } from '@shared/context/RemoteModulesContext'
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
+import { usePowerpack } from '@shared/context'
 
 interface Props<T> {
   addon: string

@@ -3,6 +3,7 @@ import { useViewsContext } from '../context/ViewsContext'
 import { useLoadModule } from '@shared/hooks'
 import ViewFormDialogFallback from './ViewFormDialogFallback'
 import { Dialog } from '@ynput/ayon-react-components'
+import { usePowerpack } from '@shared/context'
 
 export const VIEWS_DIALOG_CLASS = 'views-dialog' as const
 
@@ -25,12 +26,15 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     dispatch,
   } = useViewsContext()
 
+  const { powerLicense } = usePowerpack()
+
   const [ViewFormDialog, { isLoading: isLoadingQueries, outdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'views',
     module: 'ViewFormDialog',
     fallback: ViewFormDialogFallback,
     minVersion: '1.1.1-views',
+    skip: !viewType || !powerLicense,
   })
 
   if (!viewType || !editingView) return null

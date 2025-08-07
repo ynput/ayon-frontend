@@ -7,7 +7,7 @@ import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
-import { ViewData } from '../context/ViewsContext'
+import { usePowerpack } from '@shared/context'
 
 // constants
 export const WORKING_VIEW_ID = '_working_' as const
@@ -42,6 +42,8 @@ const useBuildViewMenuItems = ({
   onEdit,
   onSave,
 }: Props): ViewMenuItem[] => {
+  const { powerLicense } = usePowerpack()
+
   // MUTATIONS
   const [createView] = useCreateViewMutation()
 
@@ -101,7 +103,7 @@ const useBuildViewMenuItems = ({
     module: 'getCustomViews',
     fallback: getCustomViewsFallback,
     // minVersion: minVersion,
-    skip: !viewType,
+    skip: !viewType || !powerLicense,
   })
 
   const { myViews, sharedViews } = useMemo(
