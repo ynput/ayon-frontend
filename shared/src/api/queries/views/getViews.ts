@@ -50,6 +50,7 @@ export const getViewsApi = viewsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
         result
           ? [{ type: 'view', id: result.id }, getScopeTag(viewType, projectName)]
           : [getScopeTag(viewType, projectName)],
+      transformErrorResponse: (error: any) => error.data?.detail,
     },
   },
 })

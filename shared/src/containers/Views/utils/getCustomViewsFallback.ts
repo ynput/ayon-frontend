@@ -1,19 +1,19 @@
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewListItemModelExtended } from '../hooks/useBuildViewMenuItems'
 
-export type GetAllViewsProps = {
+export type GetCustomViews = {
   viewsList: ViewListItemModelExtended[]
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
   onSave: (viewId: string) => void
 }
 
-export type GetAllViewsReturn = {
+export type CustomViews = {
   myViews: ViewMenuItem[]
   sharedViews: ViewMenuItem[]
 }
 
-export const getCustomViewsFallback = (props: GetAllViewsProps): GetAllViewsReturn => ({
+export const getCustomViewsFallback = (props: GetCustomViews): CustomViews => ({
   myViews: [],
   sharedViews: [],
 })

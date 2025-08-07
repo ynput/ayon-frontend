@@ -9,6 +9,8 @@ import {
   UserModel,
   ViewListItemModel,
   viewsQueries,
+  useGetShareOptionsQuery,
+  ShareOption,
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
@@ -43,6 +45,9 @@ export interface ViewsContextValue {
   editingViewData?: ViewData
   isLoadingViews: boolean
   isViewWorking: boolean
+
+  // Data
+  shareOptions?: ShareOption[] // available users to share with (undefined means loading)
 
   // Actions
   setIsMenuOpen: (open: boolean) => void
@@ -96,6 +101,12 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
+
+  // when editing the view, get all users that can be shared to that view
+  const { data: shareOptions } = useGetShareOptionsQuery(
+    { projectName },
+    { skip: !powerLicense || !editingView },
+  )
 
   // setting of default views
   const [selectedView, setSelectedView, previousSelectedViewId] = useSelectedView({
@@ -188,6 +199,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewMenuItems,
     isLoadingViews,
     isViewWorking,
+    // data
+    shareOptions,
     setIsMenuOpen,
     setEditingView,
     setSelectedView,

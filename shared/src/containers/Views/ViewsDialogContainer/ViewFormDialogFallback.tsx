@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { ViewFormData, ViewsContextValue, ViewSettings, ViewType } from '..'
-import { UserModel } from '@shared/api'
+import { ShareOption, UserModel } from '@shared/api'
 
 export interface ViewFormDialogProps {
   editingView: Partial<ViewFormData> & { viewId?: string }
@@ -10,6 +10,9 @@ export interface ViewFormDialogProps {
   currentUser?: UserModel
   projectName?: string
   setSelected: (viewId: string) => void
+  // data
+  shareOptions?: ShareOption[]
+  // data mutations
   onCreateView: ViewsContextValue['onCreateView']
   onUpdateView: ViewsContextValue['onUpdateView']
   onDeleteView: ViewsContextValue['onDeleteView']
