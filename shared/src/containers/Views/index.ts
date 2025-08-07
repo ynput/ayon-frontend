@@ -9,9 +9,15 @@ export * from './utils/getCustomViewsFallback'
 export * from './ViewsDialogContainer/ViewFormDialogFallback'
 export * from './ViewsMenu/ViewsMenu'
 export * from './ViewsMenuContainer/ViewsMenuContainer'
-export * from './hooks/useTaskProgressViewSettings'
-export * from './hooks/useOverviewViewSettings'
 export * from './utils/generateWorkingView'
+
+// hooks
+export * from './hooks'
+
+// page sync hooks
+export * from './hooks/pages/useTaskProgressViewSettings'
+export * from './hooks/pages/useOverviewViewSettings'
+export * from './hooks/pages/useListsViewSettings'
 
 // Re-export the ViewsComponents for convenience
 export { Views } from './Views'

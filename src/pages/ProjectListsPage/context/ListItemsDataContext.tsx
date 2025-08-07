@@ -1,17 +1,17 @@
 import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
 import { EntityListItem } from '@shared/api'
 import { ProjectDataContextProps, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
-import { useUserProjectConfig } from '@shared/hooks'
 import useGetListItemsData from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
 import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
-import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
 import { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { useEntityListsContext } from './EntityListsContext'
 import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
+import { SortingState } from '@tanstack/react-table'
 
 export type ListItemsMap = Map<string, EntityListItem>
 
@@ -35,13 +35,14 @@ export interface ListItemsDataContextValue {
   isInitialized: boolean
   // filters
   listItemsFilters: QueryFilter
-  setListItemsFilters: (filters: QueryFilter) => Promise<void>
+  setListItemsFilters: (filters: QueryFilter) => void
   // folders data
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
-  // column sorting
-  sorting: SortingState
-  updateSorting: OnChangeFn<SortingState>
+  // columns config
+  columns: ListsViewSettings['columns']
+  onUpdateColumns: ListsViewSettings['onUpdateColumns']
+  // context menu items
   // actions
   contextMenuItems: ContextMenuItemConstructors
   // delete (remove) from list
@@ -74,36 +75,24 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const { selectedList } = useListsContext()
   const selectedListId = selectedList?.id
 
-  const selectors = ['lists', projectName, selectedList?.label]
+  // TODO: finish setting up settings for lists
+  const {
+    filters: listItemsFilters,
+    onUpdateFilters: setListItemsFilters,
+    columns,
+    onUpdateColumns,
+  } = useListsViewSettings()
 
-  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
-    selectors,
-  })
-
-  const listItemsFilters =
-    pageConfig?.queryFilters || ({ conditions: [], operator: 'and' } as QueryFilter)
-  const setListItemsFilters = async (queryFilters: QueryFilter) => {
-    await updatePageConfig({ queryFilters })
-  }
-
-  const { columnSorting = [] } = pageConfig as {
-    columnSorting: SortingState
-  }
-  const setColumnSorting = async (sorting: SortingState) => {
-    await updatePageConfig({ columnSorting: sorting })
-  }
-
-  // update in user preferences
-  const updateSorting: OnChangeFn<SortingState> = (sortingUpdater) => {
-    setColumnSorting(functionalUpdate(sortingUpdater, columnSorting))
+  const updateSorting = (sorting: SortingState) => {
+    onUpdateColumns({
+      ...columns,
+      sorting,
+    })
   }
 
   const resetFilters = useCallback(() => {
-    updatePageConfig({
-      queryFilters: { conditions: [], operator: 'and' },
-      columnSorting: [],
-    })
-  }, [pageConfig, updatePageConfig])
+    setListItemsFilters({ conditions: [], operator: 'and' })
+  }, [setListItemsFilters])
 
   const {
     data: listItemsData,
@@ -115,7 +104,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     projectName,
     entityType: selectedList?.entityType,
     listId: selectedListId,
-    sorting: columnSorting,
+    sorting: columns.sorting || [],
     filters: listItemsFilters,
   })
 
@@ -153,7 +142,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const handleReorderFinished = () => {
     // remove any sorting
-    setColumnSorting([])
+    updateSorting([])
   }
 
   // reorder lists item
@@ -189,7 +178,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         listItemsData,
         listItemsTableData,
         listItemsMap,
-        isLoadingAll: isLoading || !columnsConfigReady || isLoadingData,
+        isLoadingAll: isLoading || isLoadingData,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,
@@ -200,9 +189,9 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         foldersMap,
         tasksMap,
         isInitialized,
-        // sorting
-        sorting: columnSorting,
-        updateSorting,
+        // columns config
+        columns,
+        onUpdateColumns,
         // actions
         contextMenuItems,
         // delete (remove) from list

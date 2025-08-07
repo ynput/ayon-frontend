@@ -144,6 +144,7 @@ const ProjectPage = () => {
         name: 'Lists',
         path: `/projects/${projectName}/lists`,
         module: 'lists',
+        viewType: 'lists',
       },
       {
         name: 'Review',

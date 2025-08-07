@@ -23,7 +23,7 @@ export type ViewSettings = GetDefaultViewApiResponse['settings']
 export type SelectedViewState = ViewData | undefined // id of view otherwise null with use working
 export type EditingViewState = string | true | null // id of view being edited otherwise null
 
-const viewTypes = ['overview', 'taskProgress'] as const
+const viewTypes = ['overview', 'taskProgress', 'lists'] as const
 export interface ViewsContextValue {
   // State
   viewType?: ViewType

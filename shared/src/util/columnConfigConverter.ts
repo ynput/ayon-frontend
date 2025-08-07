@@ -191,8 +191,10 @@ export function convertTanstackStatesToColumnConfig(
   }
 
   // Add grouping information if present
-  if (groupBy?.id) {
+  if (groupBy) {
     result.groupBy = groupBy.id
+  } else {
+    result.groupBy = undefined
   }
 
   if (groupByConfig?.showEmpty !== undefined) {

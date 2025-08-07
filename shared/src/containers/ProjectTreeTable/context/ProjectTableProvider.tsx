@@ -17,10 +17,10 @@
  *    - **Groups Mode**: Groups entities by specified criteria (entity type, custom groups)
  *
  * The context also provides utility functions for entity relationships, expansion state
- * management, filtering, sorting, and folder inheritance operations.
+ * management, filtering,  and folder inheritance operations.
  */
 import { ReactNode, useCallback, useMemo } from 'react'
-import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
+import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
 import { Filter } from '@ynput/ayon-react-components'
 import {
