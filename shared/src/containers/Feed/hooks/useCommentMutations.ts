@@ -1,4 +1,4 @@
-import { v1 as uuid1 } from 'uuid'
+import { getEntityId } from '@shared/util'
 import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
 import { useFeedContext } from '../context/FeedContext'
@@ -115,8 +115,6 @@ const useCommentMutations = ({
     return patch
   }
 
-  const getActivityId = (): string => uuid1().replace(/-/g, '')
-
   const submitComment = async (
     value: string,
     files: File[] = [],
@@ -125,7 +123,7 @@ const useCommentMutations = ({
     // map over all the entities and create a new comment for each
     let patchId: string | null = null
     const promises = entities.map(({ id: entityId, subTitle }) => {
-      const newId = getActivityId()
+      const newId = getEntityId()
       if (!patchId) patchId = newId
       const fileIds = files.map((file) => file.id)
 

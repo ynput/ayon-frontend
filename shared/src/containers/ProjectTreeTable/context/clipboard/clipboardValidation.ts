@@ -1,3 +1,4 @@
+import { validateEntityId } from '@shared/util'
 import { ColumnEnums, builtInFieldMappings, ParsedClipboardData } from './clipboardTypes'
 import { clipboardError } from './clipboardUtils'
 
@@ -32,6 +33,20 @@ export const validateClipboardData = (params: {
   if (colId.startsWith('attrib_') && columnReadOnly.includes(colId.replace('attrib_', ''))) {
     clipboardError(`This column is read-only: "${colId}". Paste operation cancelled.`)
     return false
+  }
+
+  // special handling for links
+  if (colId.startsWith('link_')) {
+    // Split entity Ids by comma
+    const entityIds = pasteValue.split(',').map((v) => v.trim())
+
+    // check every id is valid
+    const isValid = entityIds.every((id) => validateEntityId(id))
+    if (isValid) return true
+    else {
+      clipboardError(`Invalid link id format: "${pasteValue}". Paste operation cancelled.`)
+      return false
+    }
   }
 
   // Special handling for assignees - filter out invalid values instead of canceling

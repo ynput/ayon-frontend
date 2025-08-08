@@ -8,33 +8,61 @@ import type { OperationsResponseModel, OperationModel, OperationsApiArg } from '
 import getOverviewApi from './getOverview'
 import { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api/queries/entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
-import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
 // Helper function to update entities with operation data
 const updateEntityWithOperation = (entity: any, operationData: any) => {
-  // If this is a folder and name is being updated, also update the path
-  let updatedOperationData = { ...operationData }
-  if (operationData?.name && entity.path && entity.entityType !== 'task') {
-    // Construct new path by replacing the last segment with the new name
-    const pathParts = entity.path.split('/')
-    pathParts[pathParts.length - 1] = operationData.name
-    updatedOperationData.path = pathParts.join('/')
-  }
+  // Update top-level properties directly
+  Object.keys(operationData).forEach((key) => {
+    if (key === 'attrib' || key === 'links' || key === 'deleteLinks') return
+    entity[key] = operationData[key]
+  })
 
-  const newData = {
-    ...entity,
-    ...updatedOperationData,
-    attrib: {
+  // Handle attrib merging
+  if (operationData.attrib) {
+    entity.attrib = {
       ...entity.attrib,
-      ...(updatedOperationData?.attrib || {}),
-    },
+      ...operationData.attrib,
+    }
   }
 
-  // patch data onto the entity
-  Object.assign(entity, newData)
+  // Handle links merging
+  if (operationData.links) {
+    const existingLinks = entity.links || []
+    const newLinks = operationData.links || []
+
+    // Ensure links structure exists
+    if (!entity.links) entity.links = []
+
+    // Process links directly
+    entity.links = [...existingLinks]
+
+    newLinks.forEach((newLink: any) => {
+      const existingIndex = entity.links.findIndex((link: any) => link.id === newLink.id)
+
+      if (existingIndex !== -1) {
+        entity.links[existingIndex] = { ...entity.links[existingIndex], ...newLink }
+      } else {
+        entity.links.push(newLink)
+      }
+    })
+  }
+
+  // Handle links deletion
+  if (operationData.deleteLinks) {
+    const linksToDelete = operationData.deleteLinks || []
+
+    // Ensure links structure exists
+    if (!entity.links) entity.links = []
+
+    // Remove links by ID
+    linksToDelete.forEach((linkId: string) => {
+      entity.links = entity.links.filter((link: any) => link.id !== linkId)
+    })
+  }
 }
 
 const getOverviewTaskTags = (tasks: Pick<OperationModel, 'entityId' | 'data'>[]) => {
@@ -68,6 +96,64 @@ export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'd
   type?: OperationModel['type']
 }
 
+// Helper function to create a patch operation for deleting links
+export const createLinkDeletionPatch = (
+  entityId: string,
+  entityType: OperationModel['entityType'],
+  linkIds: string[],
+): PatchOperation => {
+  return {
+    entityId,
+    entityType,
+    type: 'update',
+    data: { deleteLinks: linkIds },
+  }
+}
+
+// Utility function to delete specific links by ID from entities
+export const deleteLinksFromEntities = (
+  entities: { entityId: string; entityType: OperationModel['entityType'] }[],
+  linkIds: string[],
+): PatchOperation[] => {
+  return entities.map((entity) =>
+    createLinkDeletionPatch(entity.entityId, entity.entityType, linkIds),
+  )
+}
+
+// Generic helper function to patch entities based on their type
+export const patchOverviewEntities = (
+  entities: PatchOperation[],
+  {
+    state,
+    dispatch,
+  }: {
+    state: RootState<any, any, 'restApi'>
+    dispatch: ThunkDispatch<any, any, UnknownAction>
+  },
+  patches?: any[],
+) => {
+  // Group entities by type
+  const entitiesByType = entities.reduce((acc, entity) => {
+    if (!acc[entity.entityType]) {
+      acc[entity.entityType] = []
+    }
+    acc[entity.entityType].push(entity)
+    return acc
+  }, {} as Record<string, PatchOperation[]>)
+
+  // Patch each entity type using the appropriate function
+  if (entitiesByType.task) {
+    patchOverviewTasks(entitiesByType.task, { state, dispatch }, patches)
+  }
+  if (entitiesByType.folder) {
+    patchOverviewFolders(entitiesByType.folder, { state, dispatch }, patches)
+  }
+  // Add more entity types as needed
+  // if (entitiesByType.product) { ... }
+  // if (entitiesByType.version) { ... }
+  // etc.
+}
+
 export const patchOverviewTasks = (
   tasks: PatchOperation[],
   {
@@ -96,6 +182,7 @@ export const patchOverviewTasks = (
             } else {
               // Iterate through all pages in the infinite query
               for (const page of draft.pages) {
+                // TODO: task is not found here, why?
                 const task = page.tasks.find((task) => task.id === taskOperation.entityId)
                 if (task) {
                   updateEntityWithOperation(task, taskOperation.data)
@@ -121,7 +208,7 @@ export const patchOverviewTasks = (
               if (
                 taskOperation.type === 'create' &&
                 taskOperation.data &&
-                entry.originalArgs.parentIds.includes(taskOperation.data.folderId)
+                entry.originalArgs.parentIds?.includes(taskOperation.data.folderId)
               ) {
                 const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
                   // @ts-expect-error

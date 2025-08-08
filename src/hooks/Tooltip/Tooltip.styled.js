@@ -33,8 +33,8 @@ export const TooltipInner = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   white-space: break-spaces;
+  word-break: break-all;
 
   /* box shadow */
-  box-shadow: 0 0 10px 0px rgba(0, 0, 0, 0.4);
   z-index: 1200;
 `

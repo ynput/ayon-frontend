@@ -9,7 +9,7 @@ type Props = {
   folderTypes: FolderType[]
 }
 
-const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
+export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
   const { data: { folders = [] } = {}, isFetching } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
@@ -92,7 +92,5 @@ const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return tableData
   }, [tableData])
 
-  return { data: tableData, getData: getHierarchyData, isFetching: isFetching }
+  return { data: tableData, folders, getData: getHierarchyData, isFetching: isFetching }
 }
-
-export default useHierarchyTable

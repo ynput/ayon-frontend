@@ -33,6 +33,7 @@ export const generateLoadingRows = (
         acc[attrib.name] = null
         return acc
       }, {}),
+      links: {},
     }),
   )
 }

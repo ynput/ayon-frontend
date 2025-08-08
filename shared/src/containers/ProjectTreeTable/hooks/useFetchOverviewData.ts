@@ -22,6 +22,7 @@ import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from './useProjectTableModules'
+import { useGetEntityLinksQuery } from '@shared/api'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -98,6 +99,8 @@ export const useFetchOverviewData = ({
     },
     { skip: !expandedParentIds.length || !showHierarchy },
   )
+
+  const skipFoldersByTaskFilter = !queryFilters.filterString || !folders.length || !showHierarchy
   // get folders that would be left if the filters were applied for tasks
   const {
     data: foldersByTaskFilter,
@@ -111,9 +114,46 @@ export const useFetchOverviewData = ({
       tasksFoldersQuery: { filter: queryFilters.filter, search: queryFilters.search },
     },
     {
-      skip: !queryFilters.filterString || !folders.length || !showHierarchy,
+      skip: skipFoldersByTaskFilter,
     },
   )
+
+  // create a list of folders that are current visible in the table
+  // root folders are always visible
+  // then a folder is visible if it's parent is expanded
+  const visibleFolders = useMemo(() => {
+    const visibleSet = new Set<string>()
+
+    // Check each folder in the map
+    folders.forEach((folder) => {
+      // Root folders are always visible
+      if (!folder.parentId) {
+        visibleSet.add(folder.id)
+        return
+      }
+
+      // Check if parent is expanded
+  const parentId = folder.parentId as string
+  const isSelectedInSlicer = selectedFolders.includes(folder.id as string)
+  const expandedMap = expanded as Record<string, boolean>
+  if (expandedMap[parentId] === true || isSelectedInSlicer) {
+        visibleSet.add(folder.id)
+      }
+    })
+
+    return visibleSet
+  }, [folders, foldersByTaskFilter, skipFoldersByTaskFilter, expanded, selectedFolders])
+
+  // get all links for visible folders
+  const {
+    data: foldersLinks = [],
+    refetch: refetchFoldersLinks,
+    isUninitialized: isUninitializedFoldersLinks,
+  } = useGetEntityLinksQuery({
+    projectName,
+    entityIds: Array.from(visibleFolders),
+    entityType: 'folder',
+  })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -125,6 +165,7 @@ export const useFetchOverviewData = ({
         ...folder,
         entityId: folder.id,
         entityType: 'folder',
+        links: foldersLinks?.find((link) => link.id === folder.id)?.links || [],
       }
       return folderWithExtraData
     }
@@ -211,7 +252,7 @@ export const useFetchOverviewData = ({
     }
 
     return map
-  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders])
+  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders, foldersLinks])
 
   // calculate partial loading states
   const loadingTasksForParents = useMemo(() => {
@@ -345,6 +386,28 @@ export const useFetchOverviewData = ({
     },
   )
 
+  // Get visible tasks for link fetching
+  const visibleTasks = useMemo(() => {
+    const allTasks = showHierarchy ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
+    return new Set(allTasks.map((task) => task.id))
+  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks, groupBy])
+
+  // Get all links for visible tasks
+  const {
+    data: tasksLinks = [],
+    refetch: refetchTasksLinks,
+    isUninitialized: isUninitializedTasksLinks,
+  } = useGetEntityLinksQuery(
+    {
+      projectName,
+      entityIds: Array.from(visibleTasks),
+      entityType: 'task',
+    },
+    {
+      skip: visibleTasks.size === 0,
+    },
+  )
+
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
       if (group && group in groupPageCounts) {
@@ -372,6 +435,7 @@ export const useFetchOverviewData = ({
       ...task,
       entityId: task.id,
       entityType: 'task' as const,
+      links: tasksLinks?.find((link) => link.id === task.id)?.links || [],
     })
 
     // either show the hierarchy or the flat list of tasks
@@ -403,7 +467,7 @@ export const useFetchOverviewData = ({
     }
 
     return { tasksMap, tasksByFolderMap }
-  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks])
+  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks, tasksLinks])
 
   // reload all data for all queries
   const reloadTableData = () => {
@@ -413,6 +477,8 @@ export const useFetchOverviewData = ({
     if (!isUninitializedTasksFolders) refetchTasksFolders()
     if (!isUninitializedTasksList) refetchTasksList()
     if (!isUninitializedGroupedTasks) refetchGroupedTasks()
+    if (!isUninitializedFoldersLinks) refetchFoldersLinks()
+    if (!isUninitializedTasksLinks) refetchTasksLinks()
   }
 
   return {

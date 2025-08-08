@@ -1,4 +1,6 @@
 import {
+  getLinkColumnId,
+  getLinkLabel,
   useColumnSettingsContext,
   useProjectTableContext,
 } from '@shared/containers/ProjectTreeTable'
@@ -45,7 +47,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   extraColumns = [],
   highlighted,
 }) => {
-  const { attribFields } = useProjectTableContext()
+  const { attribFields, projectInfo } = useProjectTableContext()
   const { columnVisibility } = useColumnSettingsContext()
 
   const columns = [
@@ -74,9 +76,21 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       label: 'Tags',
     },
     ...attribFields.map((field) => ({
-      value: 'attrib_' + field.name,
+      value: `attrib_${field.name}`,
       label: field.data.title || field.name,
     })),
+    ...(projectInfo?.linkTypes
+      ? projectInfo.linkTypes.flatMap((link) => [
+          {
+            value: getLinkColumnId(link, 'in'),
+            label: getLinkLabel(link, 'in'),
+          },
+          {
+            value: getLinkColumnId(link, 'out'),
+            label: getLinkLabel(link, 'out'),
+          },
+        ])
+      : []),
     ...extraColumns,
   ]
 

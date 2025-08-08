@@ -22,16 +22,10 @@ const ProjectOverviewTable = ({}: Props) => {
 
   const scope = `overview-${projectName}`
 
-  const fetchMoreOnBottomReached = useCallback(
-    (containerRefElement?: HTMLDivElement | null) => {
-      if (containerRefElement && !showHierarchy && !groupBy) {
-        const { scrollHeight, scrollTop, clientHeight } = containerRefElement
-        //once the user has scrolled within 1000px of the bottom of the table, fetch more data if we can
-        if (scrollHeight - scrollTop - clientHeight < 1000 && !isLoading) {
-          fetchNextPage()
-        }
-      }
-
+  // when scrolling to the bottom of the table, we want to fetch more data
+  const handleScroll = useCallback(
+    (event: React.UIEvent<HTMLDivElement>) => {
+      const containerRefElement = event.currentTarget
       if (groupBy) {
         // look for a load more button
         const loadMoreButton = containerRefElement?.querySelector('.load-more')
@@ -46,13 +40,19 @@ const ProjectOverviewTable = ({}: Props) => {
     [fetchNextPage, isLoading, showHierarchy, groupBy],
   )
 
+  const handleScrollBottom = useCallback(() => {
+    if (isLoading) return
+    fetchNextPage()
+  }, [fetchNextPage, isLoading])
+
   return (
     <Section style={{ height: '100%' }}>
       <ProjectTreeTable
         scope={scope}
         sliceId={''}
         // pagination
-        fetchMoreOnBottomReached={fetchMoreOnBottomReached}
+        onScroll={handleScroll}
+        onScrollBottom={handleScrollBottom}
         // metadata
         onOpenNew={onOpenNew}
         clientSorting={showHierarchy}

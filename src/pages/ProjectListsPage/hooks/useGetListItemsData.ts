@@ -1,9 +1,15 @@
-import { useGetListItemsInfiniteInfiniteQuery } from '@shared/api'
+import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@shared/api'
 import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
+import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
+
+// Extend EntityListItem to include links
+export type EntityListItemWithLinks = EntityListItem & {
+  links: EntityLink[]
+}
 
 interface UseGetListItemsDataProps {
   projectName: string
@@ -15,7 +21,7 @@ interface UseGetListItemsDataProps {
 }
 
 export interface UseGetListItemsDataReturn {
-  data: EntityListItem[]
+  data: EntityListItemWithLinks[]
   isLoading: boolean
   isFetchingNextPage: boolean
   isError: boolean
@@ -93,7 +99,7 @@ const useGetListItemsData = ({
     }
   }
 
-  const buildPrivateItem = (i: GetListItemsResult['items'][number]): EntityListItem => ({
+  const buildPrivateItem = (i: GetListItemsResult['items'][number]): EntityListItemWithLinks => ({
     active: true,
     name: 'private',
     id: 'private' + uuidv4().replace(/-/g, ''),
@@ -107,6 +113,8 @@ const useGetListItemsData = ({
     updatedAt: '',
     position: 0,
     ownItemAttrib: [],
+    links: [], // Add empty links array
+    parents: [],
   })
 
   // Extract tasks from infinite query data correctly
@@ -117,8 +125,44 @@ const useGetListItemsData = ({
     )
   }, [itemsInfiniteData?.pages])
 
+  // Get visible entities for link fetching
+  const visibleEntityIds = useMemo(() => {
+    return new Set(data.map((item) => item.entityId))
+  }, [data])
+
+  // Get all links for visible entities
+  const { data: linksData = [] } = useGetEntityLinksQuery(
+    {
+      projectName,
+      entityIds: Array.from(visibleEntityIds),
+      entityType: entityType as
+        | 'folder'
+        | 'task'
+        | 'product'
+        | 'version'
+        | 'representation'
+        | 'workfile',
+    },
+    {
+      skip: visibleEntityIds.size === 0 || !entityType,
+    },
+  )
+
+  // Create a map of links by entity ID for efficient lookups
+  const linksMap = useMemo(() => {
+    return new Map(linksData.map((entityWithLinks) => [entityWithLinks.id, entityWithLinks.links]))
+  }, [linksData])
+
+  // Enhance data with links
+  const dataWithLinks = useMemo(() => {
+    return data.map((item) => ({
+      ...item,
+      links: linksMap.get(item.entityId) || [],
+    }))
+  }, [data, linksMap])
+
   return {
-    data,
+    data: dataWithLinks,
     isLoading: isLoading || isFetchingNewList,
     isFetchingNextPage,
     isError,

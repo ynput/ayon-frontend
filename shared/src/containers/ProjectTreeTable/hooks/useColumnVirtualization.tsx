@@ -42,7 +42,7 @@ const useColumnVirtualization = ({
     estimateSize: (index) => visibleColumns[index].getSize(), //estimate width of each column for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     horizontal: true,
-    overscan: 0, //how many columns to render on each side off screen each way (adjust this for performance)
+    overscan: 1, //how many columns to render on each side off screen each way (adjust this for performance)
     rangeExtractor: (range) => {
       const start = range.startIndex
       const end = range.endIndex

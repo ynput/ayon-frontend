@@ -1,9 +1,8 @@
 import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
-import { EntityListItem } from '@shared/api'
 import { ProjectDataContextProps, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useUserProjectConfig } from '@shared/hooks'
-import useGetListItemsData from '../hooks/useGetListItemsData'
+import useGetListItemsData, { EntityListItemWithLinks } from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
 import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import { functionalUpdate, OnChangeFn, SortingState } from '@tanstack/react-table'
@@ -13,7 +12,7 @@ import { useEntityListsContext } from './EntityListsContext'
 import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 
-export type ListItemsMap = Map<string, EntityListItem>
+export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
 export interface ListItemsDataContextValue {
   // Project Info
@@ -25,7 +24,7 @@ export interface ListItemsDataContextValue {
   attribFields: ProjectDataContextProps['attribFields']
 
   // LIST ITEMS DATA
-  listItemsData: EntityListItem[]
+  listItemsData: EntityListItemWithLinks[]
   listItemsTableData: TableRow[]
   listItemsMap: ListItemsMap
   fetchNextPage: () => void

@@ -1,4 +1,4 @@
-import { useMemo, memo, useCallback, useRef, FC } from 'react'
+import { useMemo, useCallback, useRef, FC } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -7,6 +7,7 @@ import { CollapsedWidget } from './CollapsedWidget'
 import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
+import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -16,6 +17,7 @@ import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { AttributeData, AttributeEnumItem } from '../types'
+import { useProjectTableContext } from '../context'
 
 const Cell = styled.div`
   position: absolute;
@@ -40,14 +42,19 @@ const Cell = styled.div`
   }
 `
 
-type WidgetAttributeData = Pick<AttributeData, 'type'>
+// use this class to trigger the editing mode on a single click
+export const EDIT_TRIGGER_CLASS = 'edit-trigger'
+
+type WidgetAttributeData = { type: AttributeData['type'] | 'links' }
 
 export type CellValue = string | number | boolean
+export type CellValueData = Record<string, any>
 
 interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   rowId: string
   columnId: string
   value: CellValue | CellValue[]
+  valueData?: CellValueData | CellValueData[] // extra data for the value
   attributeData?: WidgetAttributeData
   options?: AttributeEnumItem[]
   isCollapsed?: boolean
@@ -56,6 +63,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isFocused?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  folderId?: string | null
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
   // options passthrough props
   pt?: {
@@ -76,6 +84,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   rowId,
   columnId,
   value,
+  valueData,
   attributeData,
   options = [],
   isCollapsed,
@@ -83,6 +92,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   isPlaceholder,
   isReadOnly,
   enableCustomValues,
+  folderId,
   onChange,
   pt,
   ...props
@@ -90,6 +100,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const ref = useRef<HTMLDivElement>(null)
   const type = attributeData?.type
 
+  const { projectName } = useProjectTableContext()
   const { isEditing, setEditingCellId } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
@@ -104,6 +115,7 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const handleSingleClick = () => {
     // clicking a cell that is not editing will close the editor on this cell
+    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1079
     if (!isCurrentCellEditing) {
       setEditingCellId(null)
     }
@@ -161,6 +173,29 @@ export const CellWidget: FC<EditorCellProps> = ({
           : undefined
         const color = firstSelectedOption?.color
         return <CollapsedWidget color={color} />
+      }
+
+      case type === 'links': {
+        const linksValue = valueData as LinkWidgetData | undefined
+
+        const isEditable = isLinkEditable(
+          linksValue?.direction || 'out',
+          linksValue?.link.linkType || '',
+          linksValue?.entityType || '',
+        )
+
+        // overwrite readonly state if the cell is currently being edited
+        isReadOnly = !isEditable
+        return (
+          <LinksWidget
+            value={linksValue}
+            cellId={cellId}
+            projectName={projectName}
+            disabled={!isEditable}
+            folderId={folderId}
+            {...sharedProps}
+          />
+        )
       }
 
       case !!options.length: {

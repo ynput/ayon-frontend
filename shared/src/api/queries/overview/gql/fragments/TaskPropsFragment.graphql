@@ -12,7 +12,5 @@ fragment TaskPropsFragment on TaskNode {
   assignees
   allAttrib
   hasReviewables
-  folder {
-    path
-  }
+  parents
 }

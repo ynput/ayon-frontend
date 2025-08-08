@@ -1,4 +1,7 @@
+import { GetTasksByParentQuery } from '@shared/api'
+import type { EntityLink } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
+import { LinkValue } from '../utils'
 
 export type FolderListItem = {
   id: string
@@ -17,37 +20,7 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   hasReviewables?: boolean
-}
-
-export type GetTasksByParentQuery = {
-  __typename?: 'Query'
-  project: {
-    __typename?: 'ProjectNode'
-    name: string
-    tasks: {
-      __typename?: 'TasksConnection'
-      edges: Array<{
-        __typename?: 'TaskEdge'
-        node: {
-          __typename?: 'TaskNode'
-          id: string
-          folderId: string
-          label?: string | null
-          name: string
-          ownAttrib: Array<string>
-          status: string
-          tags: Array<string>
-          taskType: string
-          updatedAt: any
-          active: boolean
-          assignees: Array<string>
-          allAttrib: string
-          hasReviewables?: boolean
-          folder: { __typename?: 'FolderNode'; path?: string | null }
-        }
-      }>
-    }
-  }
+  links: EntityLink[]
 }
 
 export type TableRow = {
@@ -62,6 +35,8 @@ export type TableRow = {
   status?: string
   updatedAt?: string
   parentId?: string
+  folderId: string | null // all entities have a folder except root folders which will be null
+  parents?: string[]
   subRows: TableRow[]
   icon?: string | null
   color?: string | null
@@ -70,6 +45,7 @@ export type TableRow = {
   startContent?: JSX.Element
   assignees?: string[]
   attrib?: Record<string, any>
+  links: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
@@ -83,11 +59,12 @@ export type MatchingFolder = FolderListItem & {
 }
 export type FolderNodeMap = Map<string, MatchingFolder>
 type TaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node']
-export type EditorTaskNode = TaskNode & {
+export type EditorTaskNode = Omit<TaskNode, 'links'> & {
   attrib: Record<string, any>
   entityId: string
   entityType: 'task'
   groups?: { value: string; hasNextPage?: string }[]
+  links: EntityLink[]
 }
 
 export type EditorVersionNode = {
@@ -112,6 +89,7 @@ export type EditorVersionNode = {
       id: string
     }
   }
+  links: EntityLink[]
 }
 
 type EditorProductNode = {
@@ -130,6 +108,7 @@ type EditorProductNode = {
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
+  links: EntityLink[]
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>

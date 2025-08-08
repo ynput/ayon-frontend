@@ -13,6 +13,8 @@ import { LoadingTasks } from '../types'
 import { ProjectModel } from '../types/project'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
+import { linksToTableData } from '../utils'
+import { productTypes } from '@shared/util'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -120,10 +122,18 @@ export default function useBuildProjectDataTable({
     // Helper function to create a task row
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
+
+      const links = linksToTableData(task.links, 'task', {
+        folderTypes: projectInfo?.folderTypes || [],
+        productTypes: Object.values(productTypes || {}),
+        taskTypes: projectInfo?.taskTypes || [],
+      })
+
       return {
         id: task.id,
         entityType: 'task',
         parentId: parentId || task.folderId,
+        folderId: task.folderId,
         name: task.name || '',
         label: task.label || task.name || '',
         icon: typeData?.icon || null,
@@ -136,9 +146,10 @@ export default function useBuildProjectDataTable({
         subType: task.taskType || null,
         attrib: task.attrib,
         ownAttrib: task.ownAttrib,
-        path: task.folder.path,
+        parents: task.parents || [],
+        path: task.parents.join('/') || null, // todo: probably remove this and just use parents
         updatedAt: task.updatedAt,
-        hasReviewables: task.hasReviewables,
+        links: links,
       }
     }
 
@@ -186,11 +197,18 @@ export default function useBuildProjectDataTable({
       const folder = foldersMap.get(folderId)
       if (!folder) continue
 
+      const links = linksToTableData(folder.links, 'folder', {
+        folderTypes: projectInfo?.folderTypes || [],
+        productTypes: Object.values(productTypes || {}),
+        taskTypes: projectInfo?.taskTypes || [],
+      })
+
       // Create row with minimal required properties
       const row: TableRow = {
         id: folderId,
         entityType: 'folder',
         parentId: folder.parentId || undefined,
+        folderId: folderId || null, // root folders have no folderId
         name: folder.name || '',
         label: folder.label || folder.name || '',
         icon: getEntityTypeData('folder', folder.folderType)?.icon || null,
@@ -206,6 +224,7 @@ export default function useBuildProjectDataTable({
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
         hasReviewables: folder.hasReviewables || false,
+        links: links,
       }
 
       rowsById.set(folderId, row)

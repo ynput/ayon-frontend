@@ -1,7 +1,11 @@
-require('dotenv').config({ path: __dirname + '/.env' })
-const fs = require('fs')
 const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '.env') })
+
+const fs = require('fs')
 const http = require('http')
+
+// Define your token here or retrieve it from environment/config
+const token = process.env.TOKEN
 
 // Function to download the OpenAPI schema
 async function downloadOpenApiSchema() {
@@ -15,12 +19,10 @@ async function downloadOpenApiSchema() {
     // Create a promise-based HTTP request
     await new Promise((resolve, reject) => {
       const options = {
-        headers: {},
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-      if (token) {
-        options.headers['Authorization'] = `Bearer ${token}`
-      }
-
       const req = http.get(apiUrl, options, (res) => {
         if (res.statusCode < 200 || res.statusCode >= 300) {
           return reject(new Error(`HTTP error! Status: ${res.statusCode}`))

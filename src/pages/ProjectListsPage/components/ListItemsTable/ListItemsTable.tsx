@@ -49,7 +49,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         scope={scope}
         sliceId={''}
         // pagination
-        fetchMoreOnBottomReached={fetchNextPage}
+        onScrollBottom={fetchNextPage}
         readOnly={readOnly}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}

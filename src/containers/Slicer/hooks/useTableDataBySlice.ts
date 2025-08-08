@@ -1,6 +1,6 @@
 import { useAppSelector } from '@state/store'
 import { useEffect, useMemo, useState } from 'react'
-import useHierarchyTable from './useHierarchyTable'
+import { useHierarchyTable } from '@shared/hooks'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
 import { Slice, SliceData, SliceOption, TableData } from '../types'

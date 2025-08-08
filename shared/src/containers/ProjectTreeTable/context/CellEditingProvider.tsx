@@ -1,39 +1,16 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  ReactNode,
-} from 'react'
-import { CellId, parseCellId } from '../utils/cellUtils'
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { CellId, getTypeDefaultValue, parseCellId } from '../utils'
+import useHistory from '../hooks/useHistory'
+import { useSelectionCellsContext } from './SelectionCellsContext'
 import useUpdateTableData, {
   EntityUpdate,
-  InheritFromParent,
   InheritFromParentEntity,
   UpdateTableEntities,
 } from '../hooks/useUpdateTableData'
-import { toast } from 'react-toastify'
-import useHistory, { UseHistoryReturn } from '../hooks/useHistory'
-import validateUpdateEntities from '../utils/validateUpdateEntities'
 import { useProjectTableContext } from './ProjectTableContext'
-import { useSelectionCellsContext } from './SelectionCellsContext'
-import { getTypeDefaultValue } from '../utils'
-
-export interface CellEditingContextType {
-  editingCellId: CellId | null
-  setEditingCellId: (id: CellId | null) => void
-  isEditing: (id: CellId) => boolean
-  updateEntities: UpdateTableEntities
-  inheritFromParent: InheritFromParent
-  // Add history functions to context
-  history: UseHistoryReturn
-  undo: () => Promise<void>
-  redo: () => Promise<void>
-}
-
-const CellEditingContext = createContext<CellEditingContextType | undefined>(undefined)
+import validateUpdateEntities from '../utils/validateUpdateEntities'
+import { toast } from 'react-toastify'
+import { CellEditingContext } from './CellEditingContext'
 
 export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [editingCellId, setEditingCellId] = useState<CellId | null>(null)
@@ -340,12 +317,4 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [canUndo, canRedo, handleUndo, handleRedo, selectedCells, handleClear])
 
   return <CellEditingContext.Provider value={value}>{children}</CellEditingContext.Provider>
-}
-
-export const useCellEditing = (): CellEditingContextType => {
-  const context = useContext(CellEditingContext)
-  if (context === undefined) {
-    throw new Error('useCellEditing must be used within a CellEditingProvider')
-  }
-  return context
 }

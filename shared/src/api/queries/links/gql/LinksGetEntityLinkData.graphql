@@ -1,0 +1,47 @@
+query GetFolderLinkData($projectName: String!, $folderId: String!) {
+  project(name: $projectName) {
+    folder(id: $folderId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+
+query GetProductLinkData($projectName: String!, $productId: String!) {
+  project(name: $projectName) {
+    product(id: $productId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+
+query GetRepresentationLinkData($projectName: String!, $representationId: String!) {
+  project(name: $projectName) {
+    representation(id: $representationId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+
+query GetTaskLinkData($projectName: String!, $taskId: String!) {
+  project(name: $projectName) {
+    task(id: $taskId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+
+query GetVersionLinkData($projectName: String!, $versionId: String!) {
+  project(name: $projectName) {
+    version(id: $versionId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
+
+query GetWorkfileLinkData($projectName: String!, $workfileId: String!) {
+  project(name: $projectName) {
+    workfile(id: $workfileId) {
+      ...OverviewEntityLinkNodeFragment
+    }
+  }
+}
