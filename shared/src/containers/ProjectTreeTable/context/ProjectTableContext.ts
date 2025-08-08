@@ -54,10 +54,6 @@ export interface ProjectTableContextType {
   toggleExpandAll: ToggleExpandAll
   toggleExpands: ToggleExpands // expand/collapse multiple rows at once
 
-  // Sorting
-  sorting: ProjectTableProviderProps['sorting']
-  updateSorting: ProjectTableProviderProps['updateSorting']
-
   // Folder Relationships
   getInheritedDependents: GetInheritedDependents
   findInheritedValueFromAncestors: FindInheritedValueFromAncestors

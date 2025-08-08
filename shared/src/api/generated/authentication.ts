@@ -47,7 +47,6 @@ export type UserAttribModel = {
   email?: string
   avatarUrl?: string
   developerMode?: boolean
-  freelancer?: boolean
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */

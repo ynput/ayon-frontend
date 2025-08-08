@@ -100,6 +100,7 @@ export type PostProjectActivityApiResponse =
   /** status 201 Successful Response */ CreateActivityResponseModel
 export type PostProjectActivityApiArg = {
   projectName: string
+  /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
   'x-sender'?: string
@@ -146,12 +147,14 @@ export type SuggestEntityMentionApiArg = {
 export type GetEntityWatchersApiResponse = /** status 200 Successful Response */ WatchersModel
 export type GetEntityWatchersApiArg = {
   projectName: string
+  /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
 }
 export type SetEntityWatchersApiResponse = /** status 201 Successful Response */ any
 export type SetEntityWatchersApiArg = {
   projectName: string
+  /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
   'x-sender'?: string

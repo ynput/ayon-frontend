@@ -17,10 +17,10 @@
  *    - **Groups Mode**: Groups entities by specified criteria (entity type, custom groups)
  *
  * The context also provides utility functions for entity relationships, expansion state
- * management, filtering, sorting, and folder inheritance operations.
+ * management, filtering,  and folder inheritance operations.
  */
 import { ReactNode, useCallback, useMemo } from 'react'
-import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
+import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
 import { Filter } from '@ynput/ayon-react-components'
 import {
@@ -103,10 +103,6 @@ export interface ProjectTableProviderProps {
   updateExpanded: OnChangeFn<ExpandedState>
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
 
-  // Sorting
-  sorting: SortingState
-  updateSorting: OnChangeFn<SortingState>
-
   // context menu
   contextMenuItems: ContextMenuItemConstructors
 
@@ -159,8 +155,6 @@ export const ProjectTableProvider = ({
   updateShowHierarchy,
   toggleExpanded,
   updateExpanded,
-  sorting,
-  updateSorting,
   fetchNextPage,
   reloadTableData,
   setExpanded,
@@ -184,6 +178,7 @@ export const ProjectTableProvider = ({
     loadingTasks,
     isLoadingMore,
   })
+
   const { groupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
     useColumnSettingsContext()
 
@@ -337,9 +332,6 @@ export const ProjectTableProvider = ({
         updateExpanded,
         toggleExpandAll,
         toggleExpands,
-        // sorting
-        sorting,
-        updateSorting,
         getEntityById,
         // folder relationships
         getInheritedDependents,

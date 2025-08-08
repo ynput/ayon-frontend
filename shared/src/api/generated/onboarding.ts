@@ -31,7 +31,6 @@ export type UserAttribModel = {
   email?: string
   avatarUrl?: string
   developerMode?: boolean
-  freelancer?: boolean
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
@@ -51,7 +50,6 @@ export type LoginResponseModel = {
   error?: string
   token?: string
   user?: UserModel
-  redirectUrl?: string
 }
 export type ValidationError = {
   loc: (string | number)[]

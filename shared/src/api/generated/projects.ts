@@ -214,17 +214,6 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.getUrisRequest,
       }),
     }),
-    planner010DevGetProjectPlannerStatus: build.query<
-      Planner010DevGetProjectPlannerStatusApiResponse,
-      Planner010DevGetProjectPlannerStatusApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/planner/0.1.0-dev/setup`,
-        params: {
-          project: queryArg.project,
-        },
-      }),
-    }),
   }),
   overrideExisting: false,
 })
@@ -406,11 +395,6 @@ export type GetProjectEntityUrisApiArg = {
   projectName: string
   getUrisRequest: GetUrisRequest
 }
-export type Planner010DevGetProjectPlannerStatusApiResponse =
-  /** status 200 Successful Response */ PlannerProjectStatus
-export type Planner010DevGetProjectPlannerStatusApiArg = {
-  project?: string
-}
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
@@ -557,16 +541,6 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
-  shotgridPush?: boolean
 }
 export type FolderType = {
   name: string
@@ -684,16 +658,6 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
-  shotgridPush?: boolean
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -762,13 +726,4 @@ export type GetUrisResponse = {
 export type GetUrisRequest = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   ids?: string[]
-}
-export type PlannerProjectStatusItem = {
-  name: string
-  code: string
-  initialized: boolean
-}
-export type PlannerProjectStatus = {
-  projects?: PlannerProjectStatusItem[]
-  initialized: boolean
 }

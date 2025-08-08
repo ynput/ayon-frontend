@@ -311,6 +311,7 @@ const injectedRtkApi = api.injectEndpoints({
           variant: queryArg.variant,
           summary: queryArg.summary,
           site_id: queryArg.siteId,
+          limit: queryArg.limit,
         },
       }),
     }),
@@ -525,6 +526,7 @@ export type GetAllSettingsApiArg = {
   summary?: boolean
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
   siteId?: string
+  limit?: number
 }
 export type FrontendScopeSettings = {
   admin?: boolean

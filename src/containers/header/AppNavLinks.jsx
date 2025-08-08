@@ -6,8 +6,9 @@ import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
+import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 
-const AppNavLinks = ({ links = [] }) => {
+const AppNavLinks = ({ links = [], currentModule, projectName }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams()
@@ -70,6 +71,7 @@ const AppNavLinks = ({ links = [] }) => {
               endContent,
               uriSync,
               module,
+              viewType,
               ...props
             } = {},
             idx,
@@ -90,12 +92,20 @@ const AppNavLinks = ({ links = [] }) => {
               } else return <li key={idx}>{node}</li>
             }
 
+            const isActive = module === currentModule
+
             return (
               <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
                 <NavLink to={appendUri(path, uriSync)}>
-                  <Button variant="nav" className={Typography.titleSmall} tabIndex={-1}>
+                  <Button
+                    variant="nav"
+                    style={{ border: 'none' }}
+                    className={Typography.titleSmall}
+                    tabIndex={-1}
+                  >
                     {startContent && startContent}
                     {name}
+                    {viewType && <Styled.Views id={getViewsPortalId(viewType)} />}
                     {endContent && endContent}
                   </Button>
                 </NavLink>

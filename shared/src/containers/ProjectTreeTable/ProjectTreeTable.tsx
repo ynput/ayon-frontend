@@ -145,13 +145,16 @@ export const ProjectTreeTable = ({
 }: ProjectTreeTableProps) => {
   const {
     columnVisibility,
-    columnVisibilityUpdater,
     columnPinning,
-    columnPinningUpdater,
     columnOrder,
-    columnOrderUpdater,
     columnSizing,
-    columnSizingUpdater,
+    setAllColumns,
+    sorting,
+    sortingOnChange,
+    columnPinningOnChange,
+    columnSizingOnChange,
+    columnVisibilityOnChange,
+    columnOrderOnChange,
     groupBy,
   } = useColumnSettingsContext()
   const isGrouping = !!groupBy
@@ -169,8 +172,6 @@ export const ProjectTreeTable = ({
     projectName,
     updateExpanded,
     toggleExpandAll,
-    sorting,
-    updateSorting,
     showHierarchy,
     fetchNextPage,
     scopes,
@@ -295,6 +296,12 @@ export const ProjectTreeTable = ({
     return baseColumns
   }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
 
+  // Keep ColumnSettingsProvider's allColumns ref up to date
+  useEffect(() => {
+    const ids = columns.map((c) => c.id!).filter(Boolean)
+    setAllColumns(ids)
+  }, [columns, setAllColumns])
+
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
@@ -315,12 +322,12 @@ export const ProjectTreeTable = ({
     onExpandedChange: updateExpanded,
     // SORTING
     getSortedRowModel: clientSorting ? getSortedRowModel() : undefined,
-    onSortingChange: updateSorting,
+    onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
-    onColumnPinningChange: columnPinningUpdater,
-    onColumnSizingChange: columnSizingUpdater,
-    onColumnVisibilityChange: columnVisibilityUpdater,
-    onColumnOrderChange: columnOrderUpdater,
+    onColumnPinningChange: columnPinningOnChange,
+    onColumnSizingChange: columnSizingOnChange,
+    onColumnVisibilityChange: columnVisibilityOnChange,
+    onColumnOrderChange: columnOrderOnChange,
     // @ts-ignore
     filterFns,
     state: {

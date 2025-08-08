@@ -3,6 +3,7 @@ import React, { createContext, useContext, ReactNode, FC } from 'react'
 import { ListsAttributesContextValue } from './ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
+import { usePowerpack } from '@shared/context'
 
 interface ListsAttributeSettingsFallbackProps {
   listAttributes: ListsAttributesContextValue['listAttributes']
@@ -41,12 +42,14 @@ interface ListsModuleProviderProps {
 }
 
 export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ children }) => {
+  const { powerLicense } = usePowerpack()
   const [ListsAttributesSettings, { outdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
     fallback: ListsAttributeSettingsFallback,
     minVersion: '1.0.5',
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
   const value = {

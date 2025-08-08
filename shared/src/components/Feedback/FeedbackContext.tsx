@@ -93,6 +93,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
       },
     }
 
+    console.log(identifyData)
+
     const win = window as any
     win.Featurebase('identify', identifyData, (err: any) => {
       // Callback function. Called when identify completed.

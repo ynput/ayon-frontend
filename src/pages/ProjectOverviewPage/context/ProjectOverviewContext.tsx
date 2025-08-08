@@ -2,16 +2,14 @@
 import { createContext, useContext } from 'react'
 
 // Third-party libraries
-import { ExpandedState, SortingState } from '@tanstack/react-table'
+import { ExpandedState } from '@tanstack/react-table'
 import { isEmpty } from 'lodash'
 
 // Shared components and hooks
-import { Filter } from '@ynput/ayon-react-components'
-import { useLocalStorage, useUserProjectConfig } from '@shared/hooks'
+import { useLocalStorage } from '@shared/hooks'
 
 // Shared ProjectTreeTable
 import {
-  TableGroupBy,
   useProjectDataContext,
   useFetchOverviewData,
   useQueryFilters,
@@ -19,13 +17,16 @@ import {
   useSelectedFolders,
   useScopedAttributeFields,
   useExpandedState,
-  useColumnSorting,
   createLocalStorageKey,
   extractErrorMessage,
   useGetTaskGroups,
   ProjectOverviewContextType,
   ProjectOverviewProviderProps,
+  useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable'
+
+// Views hooks
+import { useOverviewViewSettings } from '@shared/containers'
 
 // Local context and hooks
 import { useSlicerContext } from '@context/SlicerContext'
@@ -44,6 +45,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isInitialized,
     isLoading: isLoadingData,
   } = useProjectDataContext()
+
+  const { groupBy, sorting } = useColumnSettingsContext()
+
   const { filter: sliceFilter } = useFilterBySlice()
 
   // filter out attribFields by scope
@@ -65,24 +69,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     setExpanded,
   })
 
-  // Get column sorting
-  const [pageConfig, updatePageConfig, { isSuccess: isConfigReady }] = useUserProjectConfig({
-    selectors: ['overview', projectName],
-  })
-
-  const [filters, setFilters] = useLocalStorage<Filter[]>(
-    createLocalStorageKey(page, 'filters', projectName),
-    [],
-  )
-  const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
-    createLocalStorageKey(page, 'showHierarchy', projectName),
-    true,
-  )
-
-  let { columnSorting = [], groupBy } = pageConfig as {
-    columnSorting: SortingState
-    groupBy?: TableGroupBy
-  }
+  const {
+    showHierarchy,
+    onUpdateHierarchy: updateShowHierarchy,
+    filters: queryFilters,
+    onUpdateFilters: setQueryFilters,
+  } = useOverviewViewSettings()
 
   // GET GROUPING
   const { taskGroups, error: groupingError } = useGetTaskGroups({
@@ -91,14 +83,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   })
 
   // Use the shared hook to handle filter logic
-  const { combinedFilters, ...queryFilters } = useQueryFilters({
-    filters,
+  const queryFiltersResult = useQueryFilters({
+    queryFilters,
     sliceFilter,
-  })
-
-  const { updateSorting } = useColumnSorting({
-    updatePageConfig,
-    columnSorting,
   })
 
   const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
@@ -127,10 +114,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
-    filters: combinedFilters,
-    queryFilters,
+    queryFilters: {
+      filter: queryFiltersResult.filter,
+      filterString: queryFiltersResult.filterString,
+      search: queryFiltersResult.search,
+    },
     expanded,
-    sorting: columnSorting,
+    sorting: sorting,
     groupBy,
     taskGroups,
     showHierarchy,
@@ -146,7 +136,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   return (
     <ProjectOverviewContext.Provider
       value={{
-        isInitialized: isInitialized && isConfigReady,
+        isInitialized: isInitialized,
         isLoading: isLoadingAll || isLoadingData,
         isLoadingMore,
         loadingTasks,
@@ -162,10 +152,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         fetchNextPage,
         reloadTableData,
         taskGroups,
-        // filters
-        filters,
-        setFilters,
-        queryFilters,
+        // query filters
+        queryFilters: {
+          filter: queryFiltersResult.filter,
+          filterString: queryFiltersResult.filterString,
+          search: queryFiltersResult.search,
+        },
+        setQueryFilters,
+        // Additional filter contexts for dual filtering system
+        combinedFilters: queryFiltersResult.combinedFilters,
+        displayFilters: queryFiltersResult.displayFilters,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
@@ -175,9 +171,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         toggleExpanded,
         updateExpanded,
         setExpanded,
-        // sorting
-        sorting: columnSorting,
-        updateSorting,
         // context menu item
         contextMenuItems,
       }}
