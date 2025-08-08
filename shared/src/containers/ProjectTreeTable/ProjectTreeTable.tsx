@@ -67,6 +67,7 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -155,6 +156,7 @@ export const ProjectTreeTable = ({
     groupBy,
   } = useColumnSettingsContext()
   const isGrouping = !!groupBy
+  const {productTypes} = useProjectContext()
 
   const {
     projectInfo,
@@ -187,6 +189,7 @@ export const ProjectTreeTable = ({
         statuses,
         folderTypes,
         taskTypes,
+        productTypes,
         tags,
         scopes,
       }),

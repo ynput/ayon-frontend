@@ -100,6 +100,12 @@ export type TaskType = {
   icon?: string
 }
 
+export type ProductType = {
+  name: string
+  icon?: string
+  color?: string
+}
+
 export type LinkType = {
   link_type: string
   input_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'

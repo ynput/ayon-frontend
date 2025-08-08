@@ -616,6 +616,7 @@ export type Anatomy = {
   task_types?: TaskType[]
   /** Link types configuration */
   link_types?: LinkType[]
+  product_types?: ProductTypes
   /** Statuses configuration */
   statuses?: Status[]
   /** Tags configuration */
@@ -663,6 +664,17 @@ export type LinkTypeModel = {
   /** Additional link type data */
   data?: Record<string, any>
 }
+
+export type ProductTypeOverride = {
+  name: string
+  color?: string
+  icon?: string
+}
+
+export type ProductTypes = {
+  default?: ProductTypeOverride[]
+}
+
 export type ProjectAttribModel2 = {
   priority?: 'urgent' | 'high' | 'normal' | 'low'
   /** Frame rate */
@@ -705,7 +717,7 @@ export type ProjectModel = {
   linkTypes?: LinkTypeModel[]
   statuses?: Status[]
   tags?: Tag[]
-  config?: object
+  config: Record<string, any>
   attrib?: ProjectAttribModel2
   data?: Record<string, any>
   /** Whether the project is active */
