@@ -146,7 +146,7 @@ export type ViewListItemModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
-  editable: boolean
+  accessLevel: number
 }
 export type ViewListModel = {
   views: ViewListItemModel[]
@@ -261,7 +261,7 @@ export type OverviewViewModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
-  editable: boolean
+  accessLevel: number
   settings: OverviewSettings
   viewType?: 'overview'
 }
@@ -280,7 +280,7 @@ export type TaskProgressViewModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
-  editable: boolean
+  accessLevel: number
   settings: TaskProgressSettings
   viewType?: 'taskProgress'
 }
@@ -299,7 +299,7 @@ export type ListsViewModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working: boolean
   position: number
-  editable: boolean
+  accessLevel: number
   settings: ListsSettings
   viewType?: 'lists'
 }
