@@ -261,7 +261,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   }
 
   return (
-    <main style={{ overflow: 'hidden', gap: 4 }}>
+    <main style={{ gap: 4 }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}

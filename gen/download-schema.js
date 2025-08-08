@@ -14,6 +14,7 @@ async function downloadOpenApiSchema() {
   try {
     const schemaPath = path.join(__dirname, 'openapi.json')
     const apiUrl = 'http://localhost:3000/openapi.json'
+    const token = process.env.TOKEN
 
     // Create a promise-based HTTP request
     await new Promise((resolve, reject) => {

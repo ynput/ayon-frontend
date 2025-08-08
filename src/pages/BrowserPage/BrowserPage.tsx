@@ -19,7 +19,7 @@ type BrowserPageProps = {
 const BrowserPage: FC<BrowserPageProps> = () => {
   const { onOpenVersionUpload } = useVersionUploadContext()
   return (
-    <main style={{ overflow: 'hidden' }}>
+    <main>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}

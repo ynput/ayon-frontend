@@ -156,7 +156,7 @@ const UserDashboardPage = () => {
   return (
     <>
       <AppNavLinks links={links} />
-      <main style={{ overflow: 'hidden' }}>
+      <main>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
           {showProjectList ? (
             <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
