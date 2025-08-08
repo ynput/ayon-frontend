@@ -73,6 +73,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
   const [selectedHost, setSelectedHost] = useState(null)
   const [settingsVariant, setSettingsVariant] = useState('production')
   const [storages, setStorages] = useState('')
+  const [ports, setPorts] = useState('')
 
   const { data: addonData = [] } = useGetServiceAddonsQuery({})
   const { data: hostsData } = useListHostsQuery()
@@ -101,6 +102,14 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       if (volumes && volumes.length) {
         setStorages(volumes.join('\n'))
       }
+
+      // Set ports if available
+      const ports = editService.data?.ports
+      if (ports && ports.length) {
+        setPorts(ports.join('\n'))
+      }
+        
+
     }
   }, [isEditMode, editService, addonData])
 
@@ -167,6 +176,10 @@ const ServiceDialog = ({ onHide, editService = null }) => {
 
     if (storages) {
       serviceConfig.volumes = storages.split('\n').map((s) => s.trim())
+    }
+
+    if (ports) {
+      serviceConfig.ports = ports.split('\n').map((s) => s.trim())
     }
 
     const serviceData = {
@@ -338,6 +351,15 @@ const ServiceDialog = ({ onHide, editService = null }) => {
             style={{ minHeight: 80 }}
             onChange={(e) => setStorages(e.target.value)}
             placeholder="/local/path:/container/path"
+          />
+        </FormRow>
+        
+        <FormRow label="Ports">
+          <InputTextarea
+            value={ports}
+            style={{ minHeight: 40 }}
+            onChange={(e) => setPorts(e.target.value)}
+            placeholder="8080:8080"
           />
         </FormRow>
       </FormLayout>
