@@ -71,7 +71,6 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                   owner: user,
                   ...(existingId && { id: existingId }), // Keep existing ID if it exists
                 }
-                console.log('Updated working view:', updatedWorkingView)
                 // Update the working view cache with the new view data
                 Object.assign(draft, updatedWorkingView)
               },
@@ -155,8 +154,6 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                     projectName,
                   })(state)
                   const view = listViewData?.data?.find((v) => v.id === viewId)
-
-                  console.debug('updating default view:', viewId, 'found in list:', view)
 
                   if (view) {
                     // If the view is found in the listViews cache, update the getDefaultView cache with the full view data

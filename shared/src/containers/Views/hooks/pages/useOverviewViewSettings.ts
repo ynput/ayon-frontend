@@ -52,6 +52,7 @@ export const useOverviewViewSettings = (): Return => {
   const overviewSettings = viewSettings as OverviewSettings
   const serverFilters = (overviewSettings?.filter as any) ?? {}
   const serverHierarchy = overviewSettings?.showHierarchy ?? true
+
   const serverColumns = useMemo(
     () => convertColumnConfigToTanstackStates(overviewSettings),
     [JSON.stringify(viewSettings)],
@@ -82,6 +83,21 @@ export const useOverviewViewSettings = (): Return => {
   // Hierarchy update handler
   const onUpdateHierarchy = useCallback(
     async (newShowHierarchy: boolean) => {
+      // If turning hierarchy ON while grouped, clear groupBy in the same update
+      if (newShowHierarchy && (columns as ColumnsConfig)?.groupBy) {
+        const clearedColumns: ColumnsConfig = { ...columns, groupBy: undefined }
+        // Optimistically update local columns to remove grouping
+        setLocalColumns(clearedColumns)
+        const settings = convertTanstackStatesToColumnConfig(clearedColumns)
+        await updateViewSettings(
+          { ...settings, showHierarchy: true },
+          setLocalHierarchy,
+          newShowHierarchy,
+          { errorMessage: 'Failed to update hierarchy setting' },
+        )
+        return
+      }
+
       await updateViewSettings(
         { showHierarchy: newShowHierarchy },
         setLocalHierarchy,
@@ -89,16 +105,39 @@ export const useOverviewViewSettings = (): Return => {
         { errorMessage: 'Failed to update hierarchy setting' },
       )
     },
-    [updateViewSettings],
+    [updateViewSettings, columns],
   )
 
   // Column update handler
   const onUpdateColumns = useCallback(
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
-      const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
-      await updateViewSettings(settings, setLocalColumns, tableSettings, {
-        errorMessage: 'Failed to update columns',
-      })
+      // Derive a stable allColumnIds if not provided to preserve order and grouping on server
+      const derivedAll =
+        allColumnIds ||
+        [
+          ...(tableSettings.columnOrder || []),
+          ...Object.keys(tableSettings.columnVisibility || {}),
+          ...((tableSettings.columnPinning?.left as string[]) || []),
+          ...((tableSettings.columnPinning?.right as string[]) || []),
+        ]
+          .filter(Boolean)
+          .filter((v, i, a) => a.indexOf(v) === i)
+
+      const settings = convertTanstackStatesToColumnConfig(tableSettings, derivedAll)
+      const hasGroupBy = !!tableSettings.groupBy
+
+      // If grouping is being set, turn off hierarchy in the same update for consistency
+      if (hasGroupBy) {
+        // Optimistically reflect hierarchy off
+        setLocalHierarchy(false)
+      }
+
+      await updateViewSettings(
+        hasGroupBy ? { ...settings, showHierarchy: false } : settings,
+        setLocalColumns,
+        tableSettings,
+        { errorMessage: 'Failed to update columns' },
+      )
     },
     [updateViewSettings],
   )

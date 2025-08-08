@@ -84,10 +84,19 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   } = useListsViewSettings()
 
   const updateSorting = (sorting: SortingState) => {
-    onUpdateColumns({
-      ...columns,
-      sorting,
-    })
+    onUpdateColumns(
+      {
+        ...columns,
+        sorting,
+      },
+      // best-effort allColumnIds: collect from current columns states
+      [
+        ...(columns.columnOrder || []),
+        ...Object.keys(columns.columnVisibility || {}),
+        ...((columns.columnPinning?.left as string[]) || []),
+        ...((columns.columnPinning?.right as string[]) || []),
+      ],
+    )
   }
 
   const resetFilters = useCallback(() => {

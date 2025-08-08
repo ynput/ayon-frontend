@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useCallback, useEffect } from 'react'
+import { FC } from 'react'
 
 // state
 import { useSlicerContext } from '@context/SlicerContext'
@@ -12,7 +12,7 @@ import Slicer from '@containers/Slicer'
 import { Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { FilterFieldType, OverviewSettingsChange } from '@shared/components'
+import { FilterFieldType } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -57,7 +57,7 @@ const ProjectOverviewPage: FC = () => {
     tasksMap,
   } = useProjectOverviewContext()
 
-  const { groupBy, updateGroupBy } = useColumnSettingsContext()
+  useColumnSettingsContext()
 
   const { isPanelOpen } = useSettingsPanel()
 
@@ -81,33 +81,7 @@ const ProjectOverviewPage: FC = () => {
     }
   }
 
-  const handleSettingsChange = useCallback<OverviewSettingsChange>(
-    (setting, value) => {
-      if (setting === 'group-by') {
-        if (value !== undefined && showHierarchy) {
-          // turn hierarchy off
-          updateShowHierarchy(false)
-        }
-      }
-    },
-    [showHierarchy, updateShowHierarchy],
-  )
-
-  // if groupBy is set and showHierarchy is true, turn off hierarchy
-  useEffect(() => {
-    if (groupBy && showHierarchy) {
-      updateShowHierarchy(false)
-    }
-  }, [groupBy, showHierarchy, updateShowHierarchy])
-
-  const handleShowHierarchy = () => {
-    // update hierarchy
-    updateShowHierarchy(!showHierarchy)
-    // remove grouping
-    if (groupBy) {
-      updateGroupBy(undefined)
-    }
-  }
+  const handleShowHierarchy = () => updateShowHierarchy(!showHierarchy)
 
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
 
@@ -207,7 +181,7 @@ const ProjectOverviewPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectOverviewSettings onChange={handleSettingsChange} />
+                  <ProjectOverviewSettings />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

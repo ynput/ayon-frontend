@@ -27,41 +27,36 @@ export type ColumnsConfig = {
 }
 
 export interface ColumnSettingsContextType {
+  // All column IDs reference
+  setAllColumns: (allColumnIds: string[]) => void
+
   // Column Visibility
   columnVisibility: VisibilityState
-  setColumnVisibility: (columnVisibility: VisibilityState, allColumnIds?: string[]) => void
+  setColumnVisibility: (columnVisibility: VisibilityState) => void
   updateColumnVisibility: (columnVisibility: VisibilityState) => void
-  columnVisibilityUpdater: OnChangeFn<VisibilityState>
+  columnVisibilityOnChange: OnChangeFn<VisibilityState>
 
   // Column Pinning
   columnPinning: ColumnPinningState
-  setColumnPinning: (columnPinning: ColumnPinningState, allColumnIds?: string[]) => void
+  setColumnPinning: (columnPinning: ColumnPinningState) => void
   updateColumnPinning: (columnPinning: ColumnPinningState) => void
-  columnPinningUpdater: OnChangeFn<ColumnPinningState>
+  columnPinningOnChange: OnChangeFn<ColumnPinningState>
 
   // Column Order
   columnOrder: ColumnOrderState
-  setColumnOrder: (columnOrder: ColumnOrderState, allColumnIds?: string[]) => void
+  setColumnOrder: (columnOrder: ColumnOrderState) => void
   updateColumnOrder: (columnOrder: ColumnOrderState) => void
-  columnOrderUpdater: OnChangeFn<ColumnOrderState>
+  columnOrderOnChange: OnChangeFn<ColumnOrderState>
 
   // Column Sizing
   columnSizing: ColumnSizingState
-  setColumnSizing: (columnSizing: ColumnSizingState, allColumnIds?: string[]) => void
-  columnSizingUpdater: OnChangeFn<ColumnSizingState>
+  setColumnSizing: (columnSizing: ColumnSizingState) => void
+  columnSizingOnChange: OnChangeFn<ColumnSizingState>
 
   // Sorting
   sorting: SortingState
   updateSorting: (sorting: SortingState) => void
-  sortingUpdater: OnChangeFn<SortingState>
-
-  // Unified updaters with all column IDs support
-  createUpdaterWithAllColumns: {
-    columnVisibility: (allColumnIds: string[]) => OnChangeFn<VisibilityState>
-    columnPinning: (allColumnIds: string[]) => OnChangeFn<ColumnPinningState>
-    columnOrder: (allColumnIds: string[]) => OnChangeFn<ColumnOrderState>
-    columnSizing: (allColumnIds: string[]) => OnChangeFn<ColumnSizingState>
-  }
+  sortingOnChange: OnChangeFn<SortingState>
 
   // groupBy
   groupBy?: TableGroupBy
