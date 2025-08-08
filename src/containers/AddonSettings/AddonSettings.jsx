@@ -606,6 +606,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         <Toolbar>
           <VariantSelector variant={variant} setVariant={setVariant} />
           {developerMode && copySettingsButton}
+          {!developerMode && projectName && (
+            <>
+              <Spacer />
+              <Button icon="settings" data-tooltip={`Change project ${variant} bundle`} />
+            </>
+          )}
         </Toolbar>
         {!developerMode && (
           <Toolbar>
@@ -730,6 +736,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             setSelectedAddons={onSelectAddon}
             variant={variant}
             onAddonFocus={onAddonFocus}
+            bundleName={bundleName}
             setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
