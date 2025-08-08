@@ -6,6 +6,8 @@ import {
 } from '@shared/api'
 import React, { useCallback } from 'react'
 import { ViewData } from '../context/ViewsContext'
+import { generateWorkingView } from '../utils/generateWorkingView'
+import { toast } from 'react-toastify'
 
 type Props = {
   viewType?: string
@@ -16,6 +18,13 @@ export type UseViewMutations = {
   onCreateView: (payload: CreateViewApiArg['payload']) => Promise<void>
   onDeleteView: (viewId: string) => Promise<void>
   onUpdateView: (viewId: string, payload: Partial<ViewData>) => Promise<void>
+  onResetWorkingView: (args?: {
+    existingWorkingViewId?: string
+    selectedViewId?: string
+    setSelectedView?: (id: string) => void
+    setSettingsChanged?: (changed: boolean) => void
+    notify?: boolean
+  }) => Promise<string>
 }
 type R = UseViewMutations
 
@@ -86,9 +95,53 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
     [deleteView, viewType, projectName],
   )
 
+  const onResetWorkingView = useCallback<R['onResetWorkingView']>(
+    async (args) => {
+      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify } =
+        args || {}
+      if (!viewType) {
+        throw new Error('viewType are required for resetting a view')
+      }
+
+      const freshWorkingView = generateWorkingView({})
+      if (existingWorkingViewId) {
+        freshWorkingView.id = existingWorkingViewId
+      }
+
+      try {
+        await createView({
+          viewType,
+          projectName,
+          payload: freshWorkingView,
+        }).unwrap()
+        const newId = freshWorkingView.id as string
+
+        // If we're not currently on the working view, switch to it and mark settings as changed
+        if (setSelectedView && setSettingsChanged && selectedViewId && existingWorkingViewId) {
+          if (selectedViewId !== existingWorkingViewId) {
+            setSelectedView(newId)
+            setSettingsChanged(true)
+          }
+        }
+
+        if (notify) {
+          toast.success('View reset to default settings')
+        }
+
+        return newId
+      } catch (error) {
+        console.error('Failed to reset working view:', error)
+        if (notify) toast.error('Failed to reset view to default')
+        throw error
+      }
+    },
+    [createView, viewType, projectName],
+  )
+
   return {
     onCreateView,
     onUpdateView,
     onDeleteView,
+    onResetWorkingView,
   }
 }

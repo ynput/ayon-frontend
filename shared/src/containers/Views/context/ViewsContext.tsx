@@ -60,6 +60,9 @@ export interface ViewsContextValue {
   onDeleteView: UseViewMutations['onDeleteView']
   onUpdateView: UseViewMutations['onUpdateView']
 
+  // Actions (shared)
+  resetWorkingView: () => Promise<void>
+
   // api
   api: typeof viewsQueries
   dispatch: any
@@ -97,7 +100,10 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const { data: currentUser } = useGetCurrentUserQuery()
 
-  const { onCreateView, onDeleteView, onUpdateView } = useViewsMutations({ viewType, projectName })
+  const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView } = useViewsMutations({
+    viewType,
+    projectName,
+  })
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
@@ -165,6 +171,21 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     onUpdateView: onUpdateView,
   })
 
+  // Reset working view to default (empty) settings
+  const resetWorkingView = useCallback(async () => {
+    try {
+      await onResetWorkingView({
+        existingWorkingViewId: workingView?.id,
+        selectedViewId: selectedView?.id,
+        setSelectedView,
+        setSettingsChanged: setViewSettingsChanged,
+        notify: true,
+      })
+    } catch (error) {
+      console.error('Failed to reset view:', error)
+    }
+  }, [workingView, onResetWorkingView, selectedView, setSelectedView, setViewSettingsChanged])
+
   //   build the menu items for the views
   const viewMenuItems = useBuildViewMenuItems({
     viewsList,
@@ -174,10 +195,13 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     currentUser,
     useWorkingView: !powerLicense,
     editingViewId,
+    onResetWorkingView,
     onSelect: (viewId) => {
       setSelectedView(viewId)
       // reset the settings changed state when switching views
       setViewSettingsChanged(false)
+      // close the menu when selecting a view
+      setIsMenuOpen(false)
     },
     onEdit: (viewId) => setEditingView(viewId),
     onSave: async (viewId) => onSaveViewFromCurrent(viewId),
@@ -209,6 +233,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     onCreateView,
     onUpdateView,
     onDeleteView,
+    // shared actions
+    resetWorkingView,
     // api
     api: viewsQueries,
     dispatch,

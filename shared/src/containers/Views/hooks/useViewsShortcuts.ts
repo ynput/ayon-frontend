@@ -1,7 +1,5 @@
 import { useEffect, useCallback } from 'react'
-import { toast } from 'react-toastify'
 import { useViewsContext } from '../context/ViewsContext'
-import { generateWorkingView } from '../utils/generateWorkingView'
 
 /**
  * Hook to handle keyboard shortcuts for Views functionality.
@@ -14,55 +12,11 @@ import { generateWorkingView } from '../utils/generateWorkingView'
  * it will switch to it and mark settings as changed.
  */
 export const useViewsShortcuts = () => {
-  const {
-    viewType,
-    projectName,
-    onCreateView,
-    setSelectedView,
-    workingView,
-    isViewWorking,
-    onSettingsChanged,
-  } = useViewsContext()
+  const { resetWorkingView } = useViewsContext()
 
   const resetViewToDefault = useCallback(async () => {
-    if (!viewType || !projectName) {
-      console.warn('Cannot reset view: viewType or projectName not available')
-      return
-    }
-
-    try {
-      // Always create a fresh working view with empty settings
-      const freshWorkingView = generateWorkingView({})
-
-      // If we already have a working view, preserve its ID to replace it
-      if (workingView?.id) {
-        freshWorkingView.id = workingView.id
-      }
-
-      // Create/update the working view with empty settings
-      await onCreateView(freshWorkingView)
-
-      // If we're not currently on the working view, switch to it and mark settings as changed
-      if (!isViewWorking && freshWorkingView.id) {
-        setSelectedView(freshWorkingView.id)
-        onSettingsChanged(true)
-      }
-
-      toast.success('View reset to default settings')
-      console.log('View reset to default:', freshWorkingView)
-    } catch (error) {
-      console.error('Failed to reset view:', error)
-      toast.error('Failed to reset view to default')
-    }
-  }, [
-    viewType,
-    projectName,
-    onCreateView,
-    setSelectedView,
-    workingView,
-    isViewWorking,
-    onSettingsChanged,
-  ])
+    await resetWorkingView()
+  }, [resetWorkingView])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -42,11 +42,13 @@ export const ViewItem = styled.li`
   }
 
   /* hide save button by default */
-  .save {
+  .save,
+  .reset {
     display: none;
   }
   &:hover {
-    .save {
+    .save,
+    .reset {
       display: flex;
     }
   }

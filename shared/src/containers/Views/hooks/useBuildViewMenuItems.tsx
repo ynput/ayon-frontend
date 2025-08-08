@@ -28,6 +28,7 @@ type Props = {
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
   onSave: (viewId: string) => Promise<void>
+  onResetWorkingView?: () => void
 }
 
 const useBuildViewMenuItems = ({
@@ -41,6 +42,7 @@ const useBuildViewMenuItems = ({
   onSelect,
   onEdit,
   onSave,
+  onResetWorkingView,
 }: Props): ViewMenuItem[] => {
   const { powerLicense } = usePowerpack()
 
@@ -123,8 +125,11 @@ const useBuildViewMenuItems = ({
     () => ({
       ...workingBaseView,
       onClick: handleWorkingViewChange,
+      // expose reset button when handler is provided
+      isEditable: Boolean(onResetWorkingView),
+      onResetView: onResetWorkingView,
     }),
-    [handleWorkingViewChange],
+    [handleWorkingViewChange, onResetWorkingView],
   )
 
   const viewItems: ViewMenuItem[] = useMemo(
