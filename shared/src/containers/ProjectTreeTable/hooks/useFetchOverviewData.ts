@@ -133,15 +133,16 @@ export const useFetchOverviewData = ({
       }
 
       // Check if parent is expanded
-      const parentId = folder.parentId as string
-      // @ts-ignore
-      if (expanded[parentId] === true) {
+  const parentId = folder.parentId as string
+  const isSelectedInSlicer = selectedFolders.includes(folder.id as string)
+  const expandedMap = expanded as Record<string, boolean>
+  if (expandedMap[parentId] === true || isSelectedInSlicer) {
         visibleSet.add(folder.id)
       }
     })
 
     return visibleSet
-  }, [folders, foldersByTaskFilter, skipFoldersByTaskFilter, expanded])
+  }, [folders, foldersByTaskFilter, skipFoldersByTaskFilter, expanded, selectedFolders])
 
   // get all links for visible folders
   const {

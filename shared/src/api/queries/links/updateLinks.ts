@@ -128,11 +128,12 @@ const patchEntityLinksCache = (
               console.log(`Patching ${entityToPatch.entityType} links cache`)
               // Find the entity in the cache
               const entityInCache = draft.find((entity) => entity.id === entityToPatch.entityId)
-              if (!entityInCache)
-                return console.warn(
+              if (!entityInCache) {
+                console.warn(
                   `${entityToPatch.entityType} ${entityToPatch.entityId} not found in cache`,
                 )
-
+                return
+              }
               if (isDelete) {
                 // Remove the link from the entity
                 entityInCache.links = entityInCache.links.filter((link) => link.id !== linkId)
