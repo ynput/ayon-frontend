@@ -5,7 +5,7 @@ import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
-import { useLoadModule } from '@shared/hooks'
+import { useLoadModule, useLocalStorage } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
 
@@ -25,11 +25,14 @@ type Props = {
   currentUser?: UserModel
   useWorkingView?: boolean
   editingViewId?: string // the preview id of the view being edited
+  selectedId?: string
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
   onSave: (viewId: string) => Promise<void>
   onResetWorkingView?: () => void
 }
+
+type CollapsedState = Record<string, boolean>
 
 const useBuildViewMenuItems = ({
   viewsList,
@@ -43,6 +46,7 @@ const useBuildViewMenuItems = ({
   onEdit,
   onSave,
   onResetWorkingView,
+  selectedId,
 }: Props): ViewMenuItem[] => {
   const { powerLicense } = usePowerpack()
 
@@ -108,18 +112,34 @@ const useBuildViewMenuItems = ({
     skip: !viewType || !powerLicense,
   })
 
-  const { myViews, sharedViews } = useMemo(
-    () =>
-      getCustomViews({
-        viewsList: extendedViewsList,
-        onEdit,
-        onSelect,
-        onSave: handleEditView,
-      }),
-    [viewsList, onEdit, onSelect, handleEditView],
+  const { myViews, sharedViews, allPrivateViews } = getCustomViews({
+    viewsList: extendedViewsList,
+    onEdit,
+    onSelect,
+    onSave: handleEditView,
+  })
+
+  // Collapsed state persisted globally across all viewTypes and projects
+  const stateKey = 'viewsMenuCollapsed'
+
+  const [collapsed, setCollapsed] = useLocalStorage<CollapsedState>(stateKey, {})
+
+  const toggleSection = useCallback(
+    (id: string) => {
+      setCollapsed({ ...collapsed, [id]: !collapsed[id] })
+    },
+    [collapsed, setCollapsed],
   )
 
-  const dividers = myViews.length || sharedViews.length ? [VIEW_DIVIDER] : []
+  const sections: Array<{ id: string; title: string; items: ViewItem[] }> = useMemo(() => {
+    return [
+      { id: 'myViews', title: 'My views', items: myViews as ViewItem[] },
+      { id: 'sharedViews', title: 'Shared views', items: sharedViews as ViewItem[] },
+      { id: 'allPrivateViews', title: 'All private views', items: allPrivateViews as ViewItem[] },
+    ]
+  }, [myViews, sharedViews, allPrivateViews])
+
+  console.log(allPrivateViews)
 
   const workingViewItem: ViewMenuItem = useMemo(
     () => ({
@@ -132,10 +152,36 @@ const useBuildViewMenuItems = ({
     [handleWorkingViewChange, onResetWorkingView],
   )
 
-  const viewItems: ViewMenuItem[] = useMemo(
-    () => [workingViewItem, ...dividers, ...myViews, ...sharedViews, ...dividers],
-    [workingView, myViews, sharedViews, workingViewItem],
-  )
+  // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
+  const viewItems: ViewMenuItem[] = useMemo(() => {
+    const result: ViewMenuItem[] = [workingViewItem]
+
+    // Add divider only if any section exists
+    const visibleSections = sections.filter((s) => (s.items?.length || 0) > 0)
+    if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
+
+    visibleSections.forEach((section) => {
+      const isCollapsed = !!collapsed[section.id]
+      result.push({
+        type: 'section',
+        id: section.id,
+        title: section.title,
+        collapsed: isCollapsed,
+        onToggle: () => toggleSection(section.id),
+      })
+      if (!isCollapsed) {
+        result.push(...section.items)
+      } else if (selectedId) {
+        const selectedItem = section.items.find((i) => i.id === selectedId)
+        if (selectedItem) result.push(selectedItem)
+      }
+    })
+
+    // Add a closing divider after all sections (only if sections exist)
+    if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
+
+    return result
+  }, [workingViewItem, sections, collapsed, toggleSection, selectedId])
 
   return viewItems
 }

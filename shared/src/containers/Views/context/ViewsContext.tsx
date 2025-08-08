@@ -19,6 +19,7 @@ import { useSelectedView } from '../hooks/useSelectedView'
 import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
+import { useLocalStorage } from '@shared/hooks'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -107,6 +108,10 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
+  const [collapsedSections, setCollapsedSections] = useLocalStorage<Record<string, boolean>>(
+    'collapsed-views',
+    {},
+  )
 
   // when editing the view, get all users that can be shared to that view
   const { data: shareOptions } = useGetShareOptionsQuery(
@@ -195,6 +200,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     currentUser,
     useWorkingView: !powerLicense,
     editingViewId,
+    selectedId: selectedView?.id,
     onResetWorkingView,
     onSelect: (viewId) => {
       setSelectedView(viewId)

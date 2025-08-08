@@ -1,4 +1,4 @@
-import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
+import { ViewItem } from '../ViewItem/ViewItem'
 import { ViewListItemModelExtended } from '../hooks/useBuildViewMenuItems'
 
 export type GetCustomViews = {
@@ -9,11 +9,13 @@ export type GetCustomViews = {
 }
 
 export type CustomViews = {
-  myViews: ViewMenuItem[]
-  sharedViews: ViewMenuItem[]
+  myViews: ViewItem[] // views current user has created but are private
+  sharedViews: ViewItem[] // public views I have shared or are shared with me
+  allPrivateViews: ViewItem[] // ADMIN ONLY: views that are private and current user is not the owner
 }
 
 export const getCustomViewsFallback = (props: GetCustomViews): CustomViews => ({
   myViews: [],
   sharedViews: [],
+  allPrivateViews: [],
 })
