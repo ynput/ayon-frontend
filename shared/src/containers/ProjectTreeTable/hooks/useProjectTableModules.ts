@@ -1,16 +1,13 @@
 import { useLoadModule } from '@shared/hooks'
 import { GroupSettingsFallback } from '../components/GroupSettingsFallback'
-import { EntityGroup } from '@shared/api'
-import { Filter } from '@ynput/ayon-react-components'
+import { EntityGroup, QueryFilter } from '@shared/api'
 import { TableGroupBy } from '../context'
-import { ProjectTableAttribute } from './useAttributesList'
 
 type GetGroupQueriesParams = {
   taskGroups: EntityGroup[]
-  filters: Filter[]
+  filters: QueryFilter | undefined
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>
-  dataType: ProjectTableAttribute['data']['type']
 }
 
 type GetGroupQueriesReturn = {
@@ -29,7 +26,7 @@ export type ProjectTableModulesType = {
 const getGroupQueriesFallback = (params: GetGroupQueriesParams): GetGroupQueriesReturn => []
 
 export const useProjectTableModules = (): ProjectTableModulesType => {
-  const minVersion = '1.0.6-dev'
+  const minVersion = '1.1.1-dev'
   const [GroupSettings, { outdated, isLoading: isLoadingSettings }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',

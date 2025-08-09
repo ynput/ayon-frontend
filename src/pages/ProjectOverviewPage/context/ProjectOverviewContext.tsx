@@ -6,7 +6,6 @@ import { ExpandedState, SortingState } from '@tanstack/react-table'
 import { isEmpty } from 'lodash'
 
 // Shared components and hooks
-import { Filter } from '@ynput/ayon-react-components'
 import { useLocalStorage, useUserProjectConfig } from '@shared/hooks'
 
 // Shared ProjectTreeTable
@@ -25,6 +24,7 @@ import {
   useGetTaskGroups,
   ProjectOverviewContextType,
   ProjectOverviewProviderProps,
+  QueryFilter,
 } from '@shared/containers/ProjectTreeTable'
 
 // Local context and hooks
@@ -70,9 +70,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     selectors: ['overview', projectName],
   })
 
-  const [filters, setFilters] = useLocalStorage<Filter[]>(
+  // Store filters as QueryFilter for more compact/simpler storage format
+  const [queryFilters, setQueryFilters] = useLocalStorage<QueryFilter>(
     createLocalStorageKey(page, 'filters', projectName),
-    [],
+    {},
   )
   const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
     createLocalStorageKey(page, 'showHierarchy', projectName),
@@ -91,8 +92,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   })
 
   // Use the shared hook to handle filter logic
-  const { combinedFilters, ...queryFilters } = useQueryFilters({
-    filters,
+  const queryFiltersResult = useQueryFilters({
+    queryFilters,
     sliceFilter,
   })
 
@@ -127,8 +128,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
-    filters: combinedFilters,
-    queryFilters,
+    queryFilters: {
+      filter: queryFiltersResult.filter,
+      filterString: queryFiltersResult.filterString,
+      search: queryFiltersResult.search,
+    },
     expanded,
     sorting: columnSorting,
     groupBy,
@@ -162,10 +166,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         fetchNextPage,
         reloadTableData,
         taskGroups,
-        // filters
-        filters,
-        setFilters,
-        queryFilters,
+        // query filters
+        queryFilters: {
+          filter: queryFiltersResult.filter,
+          filterString: queryFiltersResult.filterString,
+          search: queryFiltersResult.search,
+        },
+        setQueryFilters,
+        // Additional filter contexts for dual filtering system
+        combinedFilters: queryFiltersResult.combinedFilters,
+        displayFilters: queryFiltersResult.displayFilters,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,

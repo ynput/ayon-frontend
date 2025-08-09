@@ -14,7 +14,7 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
 
   return (
     <SearchFilterWrapper
-      filters={listItemsFilters}
+      queryFilters={listItemsFilters}
       onChange={setListItemsFilters}
       scope={entityType}
       projectNames={[projectName]}

@@ -10,6 +10,7 @@ import type {
   GetGroupedTasksListArgs,
   EntityGroup,
   QueryTasksFoldersApiArg,
+  QueryFilter,
 } from '@shared/api'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
@@ -18,7 +19,6 @@ import { determineLoadingTaskFolders } from '../utils/loadingUtils'
 import { LoadingTasks } from '../types'
 import { TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
-import { Filter } from '@ynput/ayon-react-components'
 import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from './useProjectTableModules'
@@ -37,9 +37,8 @@ type useFetchOverviewDataData = {
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
-  filters: Filter[] // RAW filters (including slicer filters)
   queryFilters: {
-    filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
+    filter: QueryFilter | undefined
     filterString?: string
     search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
   } // filters from the filters bar or slicer (not hierarchy)
@@ -55,7 +54,6 @@ type Params = {
 export const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
-  filters,
   queryFilters,
   sorting,
   groupBy,
@@ -318,13 +316,12 @@ export const useFetchOverviewData = ({
     return groupBy
       ? getGroupQueries?.({
           taskGroups,
-          filters,
+          filters: queryFilters.filter,
           groupBy,
           groupPageCounts,
-          dataType: groupByDataType,
         }) ?? []
       : []
-  }, [groupBy, taskGroups, filters, groupPageCounts, groupByDataType, getGroupQueries])
+  }, [groupBy, taskGroups, groupPageCounts, groupByDataType, queryFilters.filter, getGroupQueries])
 
   const {
     data: { tasks: groupTasks = [] } = {},

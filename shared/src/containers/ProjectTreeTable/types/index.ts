@@ -1,5 +1,6 @@
 export * from './table'
 export * from './overviewContext'
+export * from './operations'
 
 import { OperationModel } from './operations'
 
