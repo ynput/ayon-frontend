@@ -139,8 +139,6 @@ const useBuildViewMenuItems = ({
     ]
   }, [myViews, sharedViews, allPrivateViews])
 
-  console.log(allPrivateViews)
-
   const workingViewItem: ViewMenuItem = useMemo(
     () => ({
       ...workingBaseView,

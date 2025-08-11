@@ -34,7 +34,7 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
     remote: 'views',
     module: 'ViewFormDialog',
     fallback: ViewFormDialogFallback,
-    minVersion: '1.1.1-views',
+    minVersion: '1.1.1',
     skip: !viewType || !powerLicense,
   })
 
@@ -42,10 +42,13 @@ const ViewsDialogContainer: FC<ViewsDialogContainerProps> = ({}) => {
 
   if (editingView && outdated) {
     return (
-      <Dialog isOpen header="Powerpack Update Required" onClose={() => setEditingView(null)}>
-        <p>
-          The View Form Dialog is outdated. Please update the Powerpack addon to the latest version.
-        </p>
+      <Dialog
+        isOpen
+        header="Powerpack Update Required"
+        onClose={() => setEditingView(null)}
+        size="sm"
+      >
+        <p>Please update the Powerpack addon to at least {outdated.required}</p>
       </Dialog>
     )
   }
