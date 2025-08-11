@@ -34,7 +34,7 @@ import type { Assignees, Status, TaskType, AttributeEnumItem } from '@shared/api
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { InView } from 'react-intersection-observer'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { useLocalStorage } from '@shared/hooks'
+import { useTaskProgressViewSettings } from '@shared/containers'
 
 // Helpers
 import { useFolderSort } from '../../hooks'
@@ -241,10 +241,7 @@ export const TasksProgressTable = ({
     ctxMenuShow(e, buildContextMenu(selection, taskId))
   }
 
-  type SavedWidths = { [task: string]: number | null }
-
-  const localStorageKey = `tasks-progress-table-${projectName}`
-  const [savedWidths, setSavedWidths] = useLocalStorage<SavedWidths | null>(localStorageKey, null)
+  const { columns, onUpdateColumns } = useTaskProgressViewSettings()
 
   const resolveColumnWidth = (taskType: string, useDefault?: boolean) => {
     const screenWidthMultiple = (min: number, max: number, target: number): number => {
@@ -254,7 +251,8 @@ export const TasksProgressTable = ({
       return Math.round(Math.min(max, Math.max(min, width)))
     }
 
-    const savedWidth = savedWidths?.[taskType]
+    const column = columns.find((col) => col.name === taskType)
+    const savedWidth = column?.width
     const fullWidth = screenWidthMultiple(180, 250, 13)
     const compactWidth = screenWidthMultiple(80, 150, 10)
     const minWidthPerTask = detailsOpen ? compactWidth : fullWidth
@@ -266,25 +264,43 @@ export const TasksProgressTable = ({
   const handleColumnResize = (e: DataTableColumnResizeEndEvent) => {
     const taskType = e.column.props?.field
     if (!taskType) return console.error('Resize error: No task type found')
-    // const newWidth = Math.round(e.element.clientWidth)
+
     const currentWidth = resolveColumnWidth(taskType)
+
     const delta = e.delta
     const newWidth = currentWidth + delta
 
-    // set the new width to local storage
-    setSavedWidths({
-      ...savedWidths,
-      [taskType]: newWidth,
-    })
+    // Update the columns array
+    const updatedColumns = [...columns]
+    const existingColumnIndex = updatedColumns.findIndex((col) => col.name === taskType)
+
+    if (existingColumnIndex >= 0) {
+      updatedColumns[existingColumnIndex] = {
+        ...updatedColumns[existingColumnIndex],
+        width: newWidth,
+      }
+    } else {
+      updatedColumns.push({
+        name: taskType,
+        visible: true,
+        width: newWidth,
+      })
+    }
+
+    onUpdateColumns(updatedColumns)
   }
 
   const resetColumnWidth = (taskType?: string) => {
     if (!taskType) return console.error('Width reset error: No task type found')
-    // remove taskType from column widths
-    const newWidths = { ...savedWidths }
-    delete newWidths[taskType]
-    taskType && setSavedWidths(newWidths)
 
+    // Remove width from the specific column
+    const updatedColumns = columns
+      .map((col) => (col.name === taskType ? { ...col, width: undefined } : col))
+      .filter(
+        (col) => col.name !== taskType || col.visible !== undefined || col.pinned !== undefined,
+      )
+
+    onUpdateColumns(updatedColumns)
     forceReloadTable()
   }
 

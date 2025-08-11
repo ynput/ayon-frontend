@@ -1,6 +1,6 @@
 import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@shared/api'
 import type { EntityListItem, GetListItemsResult } from '@shared/api'
-import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
@@ -15,7 +15,7 @@ interface UseGetListItemsDataProps {
   projectName: string
   listId?: string
   sorting: SortingState
-  filters?: FilterForQuery[]
+  filters?: QueryFilter
   skip?: boolean
   entityType?: string
 }
@@ -33,11 +33,10 @@ const useGetListItemsData = ({
   listId,
   entityType,
   sorting,
-  filters = [],
+  filters = { conditions: [], operator: 'and' },
   skip,
 }: UseGetListItemsDataProps): UseGetListItemsDataReturn => {
-  const queryFilter = clientFilterToQueryFilter(filters)
-  const queryFilterString = filters.length ? JSON.stringify(queryFilter) : ''
+  const queryFilterString = filters.conditions?.length ? JSON.stringify(filters) : ''
 
   // Create sort params for infinite query
   const singleSort = { ...sorting[0] }

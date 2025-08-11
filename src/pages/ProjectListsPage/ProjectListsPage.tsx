@@ -20,7 +20,6 @@ import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
-import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
@@ -94,8 +93,15 @@ type ProjectListsWithInnerProvidersProps = {
 }
 
 const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({ isReview }) => {
-  const { projectName, selectedListId, contextMenuItems, attribFields, ...props } =
-    useListItemsDataContext()
+  const {
+    projectName,
+    selectedListId,
+    contextMenuItems,
+    attribFields,
+    columns,
+    onUpdateColumns,
+    ...props
+  } = useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
 
@@ -107,10 +113,6 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     ],
     [listAttributes, attribFields, selectedList],
   )
-
-  const [pageConfig, updatePageConfig] = useUserProjectConfig({
-    selectors: ['lists', projectName, selectedList?.label],
-  })
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: projectName,
@@ -174,7 +176,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
       onDragCancel={handleDndDragCancel}
     >
       <SettingsPanelProvider>
-        <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+        <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
           <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
             <ProjectTableProvider
               projectName={projectName}
@@ -191,8 +193,6 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               showHierarchy={false}
               isLoading={props.isLoadingAll}
               contextMenuItems={contextMenuItems}
-              sorting={props.sorting}
-              updateSorting={props.updateSorting}
               scopes={[selectedList?.entityType]}
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
