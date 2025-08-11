@@ -10,6 +10,10 @@ const ActionButton = styled(Button)`
     background-color: unset;
   }
 
+  &:hover {
+    background-color: var(--md-sys-color-surface-container);
+  }
+
   &.selected {
     display: flex !important;
   }

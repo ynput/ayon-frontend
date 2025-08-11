@@ -207,7 +207,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   // Should we show "Show all login options" button?
 
-  const showAllButton = !showAllProviders && (featuredProviders?.length || !showPasswordLogin)
+  const showAllButton = !showAllProviders && (featuredProviders || !showPasswordLogin)
 
   // Create SSO buttons based on the available options
 

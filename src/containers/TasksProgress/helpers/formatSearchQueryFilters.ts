@@ -1,8 +1,7 @@
-// take filters from the search filter and transform them into something graphql can use
+// take QueryFilter and transform them into something graphql can use
 
 import { AttributeFilterInput, ProjectNodeTasksArgs } from '@shared/api'
-import getFilterFromId from '@components/SearchFilter/getFilterFromId'
-import { Filter } from '@ynput/ayon-react-components'
+import { QueryFilter, QueryCondition } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SliceType } from '@shared/containers'
 
 export type TaskProgressSliceType = Extract<
@@ -17,67 +16,148 @@ export type FilterQueriesData = Pick<
   'assignees' | 'assigneesAny' | 'tags' | 'tagsAny' | 'taskTypes' | 'statuses' | 'attributes'
 >
 
-const filterIsNoValue = (filter: Filter) => filter.values?.some((v) => v.id === 'noValue') ?? false
-const filterIsHasValue = (filter: Filter) =>
-  filter.values?.some((v) => v.id === 'hasValue') ?? false
+const getConditionsByKey = (queryFilter: QueryFilter, key: string): QueryCondition[] => {
+  return (
+    (queryFilter.conditions?.filter(
+      (condition) => 'key' in condition && condition.key === key,
+    ) as QueryCondition[]) || []
+  )
+}
+
+const isNoValueCondition = (condition: QueryCondition): boolean => {
+  return (
+    condition.operator === 'eq' && Array.isArray(condition.value) && condition.value.length === 0
+  )
+}
+
+const isHasValueCondition = (condition: QueryCondition): boolean => {
+  return (
+    condition.operator === 'ne' && Array.isArray(condition.value) && condition.value.length === 0
+  )
+}
 
 interface FilterResult<T> {
   exact?: T[]
   any?: T[]
 }
 
-const formatFilter = (filter: Filter | undefined, filterId: string): FilterResult<string> => {
-  if (!filter || !filter.values?.length || getFilterFromId(filter.id) !== filterId) {
+const formatQueryConditions = (conditions: QueryCondition[]): FilterResult<string> => {
+  if (!conditions.length) {
     return {}
   }
 
-  if (filterIsNoValue(filter)) {
+  // Check for No Value conditions
+  const noValueConditions = conditions.filter(isNoValueCondition)
+  if (noValueConditions.length > 0) {
     return { exact: [] }
   }
 
-  if (filterIsHasValue(filter)) {
+  // Check for Has Value conditions
+  const hasValueConditions = conditions.filter(isHasValueCondition)
+  if (hasValueConditions.length > 0) {
     return { any: [] }
   }
 
-  const values = filter.values.map((v) => v.id)
-  return filter.operator === 'OR' ? { any: values } : { exact: values }
+  // Process regular value conditions
+  const allValues: string[] = []
+  for (const condition of conditions) {
+    if (condition.value !== undefined && condition.value !== null) {
+      if (Array.isArray(condition.value)) {
+        allValues.push(...condition.value.map(String))
+      } else {
+        allValues.push(String(condition.value))
+      }
+    }
+  }
+
+  // For simplicity, we'll treat all as 'any' unless specifically configured otherwise
+  return allValues.length > 0 ? { any: allValues } : {}
 }
 
-const formatSearchQueryFilters = (filters: Filter[], slice: Filter | null): FilterQueriesData => {
+const formatSearchQueryFilters = (
+  queryFilters: QueryFilter,
+  slice: QueryFilter | null,
+): FilterQueriesData => {
+  // Handle empty or undefined queryFilters
+  if (!queryFilters || !queryFilters.conditions?.length) {
+    const emptyResults: FilterQueriesData = {
+      assignees: undefined,
+      assigneesAny: undefined,
+      tags: undefined,
+      tagsAny: undefined,
+      taskTypes: undefined,
+      statuses: undefined,
+      attributes: undefined,
+    }
+
+    // Still process slice if it exists
+    if (slice) {
+      const filterMap: Record<
+        SliceField,
+        { exact: keyof FilterQueriesData; any: keyof FilterQueriesData }
+      > = {
+        assignees: { exact: 'assignees', any: 'assigneesAny' },
+        status: { exact: 'statuses', any: 'statuses' },
+        taskType: { exact: 'taskTypes', any: 'taskTypes' },
+      }
+
+      const sliceConditions =
+        (slice.conditions?.filter((condition) => 'key' in condition) as QueryCondition[]) || []
+
+      for (const condition of sliceConditions) {
+        const filterKeys = filterMap[condition.key as SliceField]
+        if (filterKeys) {
+          if (isNoValueCondition(condition)) {
+            emptyResults[filterKeys.exact] = []
+          } else if (isHasValueCondition(condition)) {
+            emptyResults[filterKeys.any] = []
+          } else if (condition.value !== undefined && condition.value !== null) {
+            const values = Array.isArray(condition.value)
+              ? condition.value.map(String)
+              : [String(condition.value)]
+            if (values.length && filterKeys.any !== 'attributes') {
+              emptyResults[filterKeys.any] = values
+            }
+          }
+        }
+      }
+    }
+
+    return emptyResults
+  }
+
   // ASSIGNEES
-  const { exact: assignees, any: assigneesAny } = formatFilter(
-    filters.find((f) => getFilterFromId(f.id) === 'assignees'),
-    'assignees',
-  )
+  const assigneesConditions = getConditionsByKey(queryFilters, 'assignees')
+  const { exact: assignees, any: assigneesAny } = formatQueryConditions(assigneesConditions)
 
   // TAGS
-  const { exact: tags, any: tagsAny } = formatFilter(
-    filters.find((f) => getFilterFromId(f.id) === 'tags'),
-    'tags',
-  )
+  const tagsConditions = getConditionsByKey(queryFilters, 'tags')
+  const { exact: tags, any: tagsAny } = formatQueryConditions(tagsConditions)
 
   // TASK TYPES
-  const { any: taskTypes } = formatFilter(
-    filters.find((f) => getFilterFromId(f.id) === 'taskType'),
-    'taskType',
-  )
+  const taskTypeConditions = getConditionsByKey(queryFilters, 'taskType')
+  const { any: taskTypes } = formatQueryConditions(taskTypeConditions)
 
   // STATUSES
-  const { any: statuses } = formatFilter(
-    filters.find((f) => getFilterFromId(f.id) === 'status'),
-    'status',
-  )
+  const statusConditions = getConditionsByKey(queryFilters, 'status')
+  const { any: statuses } = formatQueryConditions(statusConditions)
 
   // ATTRIBUTES (anything not covered by the above)
-  const attributeFilters = filters.filter(
-    (f) =>
-      !['assignees', 'tags', 'taskType', 'status'].includes(getFilterFromId(f.id)) &&
-      f.values?.length,
-  )
-  const attributes: AttributeFilterInput[] | undefined = attributeFilters.length
-    ? attributeFilters.map((f) => ({
-        name: getFilterFromId(f.id),
-        values: f.values?.map((v) => v.id) ?? [],
+  const attributeConditions =
+    (queryFilters.conditions?.filter((condition) => {
+      if (!('key' in condition)) return false
+      const key = condition.key
+      return !['assignees', 'tags', 'taskType', 'status'].includes(key)
+    }) as QueryCondition[]) || []
+
+  const attributes: AttributeFilterInput[] | undefined = attributeConditions.length
+    ? attributeConditions.map((condition) => ({
+        name: condition.key,
+        values: Array.isArray(condition.value)
+          ? condition.value.map(String)
+          : condition.value !== undefined && condition.value !== null
+          ? [String(condition.value)]
+          : [],
       }))
     : undefined
 
@@ -102,16 +182,24 @@ const formatSearchQueryFilters = (filters: Filter[], slice: Filter | null): Filt
   }
 
   if (slice) {
-    const filterKeys = filterMap[slice.id as SliceField]
-    if (filterKeys) {
-      const values = slice.values?.map((v) => v.id)
-      if (values && values.length) {
-        if (values.includes('noValue')) {
+    // Find slice conditions by looking for the slice field in the slice QueryFilter
+    const sliceConditions =
+      (slice.conditions?.filter((condition) => 'key' in condition) as QueryCondition[]) || []
+
+    for (const condition of sliceConditions) {
+      const filterKeys = filterMap[condition.key as SliceField]
+      if (filterKeys) {
+        if (isNoValueCondition(condition)) {
           results[filterKeys.exact] = []
-        } else if (values.includes('hasValue')) {
+        } else if (isHasValueCondition(condition)) {
           results[filterKeys.any] = []
-        } else if (filterKeys.any !== 'attributes') {
-          results[filterKeys.any] = values
+        } else if (condition.value !== undefined && condition.value !== null) {
+          const values = Array.isArray(condition.value)
+            ? condition.value.map(String)
+            : [String(condition.value)]
+          if (values.length && filterKeys.any !== 'attributes') {
+            results[filterKeys.any] = values
+          }
         }
       }
     }

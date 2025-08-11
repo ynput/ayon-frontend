@@ -57,7 +57,7 @@ export const TableContainer = styled.div`
 
 export const Cell = styled.div`
   width: 100%;
-  height: 32px;
+  min-height: 32px;
   user-select: none;
   padding: 0px 4px;
 
@@ -73,6 +73,11 @@ export const Cell = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .path {
+    display: flex;
+    gap: var(--base-gap-small);
   }
 
   .loading {
@@ -109,10 +114,12 @@ export const Container = styled.div`
   border-radius: var(--border-radius-m);
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
+  height: 100%;
   flex: 1;
 
   display: flex;
   flex-direction: column;
+  position: relative;
 `
 
 export const Header = styled.div`

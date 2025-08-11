@@ -1,0 +1,9 @@
+fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}

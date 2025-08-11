@@ -39,7 +39,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
     undefined,
     {
-      skip: !user?.name,
+      skip: !user?.name || !connect,
     },
   )
 
@@ -92,6 +92,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         instanceId: connect?.instanceId,
       },
     }
+
+    console.log(identifyData)
 
     const win = window as any
     win.Featurebase('identify', identifyData, (err: any) => {
@@ -254,7 +256,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // verify user
   useEffect(() => {
     // check if we can identify the user
-    if (!user?.name || !verification || !scriptLoaded) return
+    if (!user?.name || !connect || !verification || !scriptLoaded) return
     // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
