@@ -177,6 +177,9 @@ const LoginPage = ({ isFirstTime = false }) => {
     if (success) {
       // And redirect to the final URL
       window.location.href = finalRedirect
+    } else {
+      // we don't want to retry!
+      window.location.href = '/'
     }
 
   } // handleSSOCallback
