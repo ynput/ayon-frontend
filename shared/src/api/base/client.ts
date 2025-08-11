@@ -112,6 +112,7 @@ const tagTypes = [
   'config',
   'feedback',
   'overviewTask',
+  'link',
 ]
 
 const prepareHeaders = (headers: any) => {

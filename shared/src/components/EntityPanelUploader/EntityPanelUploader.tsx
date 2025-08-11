@@ -1,6 +1,5 @@
 import { ChangeEvent, useRef, useState } from 'react'
 import clsx from 'clsx'
-import { upperFirst } from 'lodash'
 
 import { ThumbnailWrapper } from '@shared/containers'
 import {
@@ -22,10 +21,7 @@ import {
   createVersionHelper,
   getNextVersionNumber,
   handleUploadError,
-  type ProductCreationData,
-  type VersionCreationData,
-} from '@shared/utils/versionUploadHelpers'
-// 3811c830436f11f0abc9d6ac5bf0bcfb
+} from '@shared/util'
 
 type Operation = {
   id: string

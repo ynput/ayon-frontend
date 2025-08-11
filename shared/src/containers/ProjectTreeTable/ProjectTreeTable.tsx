@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -67,6 +67,7 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -111,7 +112,7 @@ export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   sliceId: string
-  fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
+  onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
   onOpenNew?: (type: 'folder' | 'task') => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
@@ -130,7 +131,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
 export const ProjectTreeTable = ({
   scope,
   sliceId,
-  fetchMoreOnBottomReached,
+  onScroll,
+  onScrollBottom, // when the user scrolls to the bottom of the table, this callback is called
   onOpenNew,
   readOnly,
   excludedColumns,
@@ -179,7 +181,13 @@ export const ProjectTreeTable = ({
 
   const isLoading = isLoadingProp || isLoadingData
 
-  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
+  const {
+    statuses = [],
+    folderTypes = [],
+    taskTypes = [],
+    tags = [],
+    linkTypes = [],
+  } = projectInfo || {}
   const options: BuiltInFieldOptions = useMemo(
     () =>
       getTableFieldOptions({
@@ -268,6 +276,7 @@ export const ProjectTreeTable = ({
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       attribs: columnAttribs,
+      links: linkTypes,
       showHierarchy,
       options,
       extraColumns,
@@ -412,6 +421,25 @@ export const ProjectTreeTable = ({
     return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
   }, [dndActiveId, tableData, sortableRows])
 
+  const combinedScrollHandler: UIEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      // Call the original onScroll if provided
+      onScroll?.(e)
+
+      if (onScrollBottom) {
+        const containerRefElement = e.currentTarget
+        if (containerRefElement && !showHierarchy && !groupBy) {
+          const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+          //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+          if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
+            onScrollBottom(e)
+          }
+        }
+      }
+    },
+    [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
+  )
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -422,7 +450,7 @@ export const ProjectTreeTable = ({
         <Styled.TableContainer
           ref={tableContainerRef}
           style={{ height: '100%', padding: 0 }}
-          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+          onScroll={combinedScrollHandler}
           {...pt?.container}
           className={clsx('table-container', pt?.container?.className)}
         >
@@ -1037,7 +1065,7 @@ const TableCell = ({
 
   const { isRowSelected } = useSelectedRowsContext()
 
-  const { isEditing } = useCellEditing()
+  const { isEditing, setEditingCellId } = useCellEditing()
 
   const borderClasses = getCellBorderClasses(cellId)
 
@@ -1078,19 +1106,21 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // if selection options from a dropdown skip
-        if (target.closest('.options')) return
-
-        // if selecting dropdown expand icon, make sure it is selected ()
-        if (target.closest('.expand')) {
+        // if we are clicking on an edit trigger, we need to start editing
+        if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
           if (!isCellSelected(cellId)) {
-            // select
+            // if the cell is not selected, select it and deselect all others
             selectCell(cellId, false, false)
-            // focus
             focusCell(cellId)
           }
+          // start editing the cell
+          setEditingCellId(cellId)
+
           return
         }
+
+        // check we are not clicking in a dropdown
+        if (target.closest('.options')) return
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()

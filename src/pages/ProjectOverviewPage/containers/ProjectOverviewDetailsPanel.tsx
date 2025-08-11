@@ -2,16 +2,26 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
-import { useGetUsersAssigneeQuery } from '@shared/api'
+import { detailsPanelEntityTypes, useGetUsersAssigneeQuery } from '@shared/api'
 import type { ProjectModel } from '@shared/api'
-import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers/ProjectTreeTable'
-import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
+import {
+  useProjectTableContext,
+  useSelectedRowsContext,
+  useDetailsPanelEntityContext,
+} from '@shared/containers/ProjectTreeTable'
+import { EntityMap } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
 
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+}
+
+type EntitySelection = {
+  entities: Array<{ id: string; projectName: string }>
+  entityType: 'folder' | 'task' | 'version'
+  handleClose: () => void
 }
 
 const ProjectOverviewDetailsPanel = ({
@@ -24,40 +34,52 @@ const ProjectOverviewDetailsPanel = ({
   const { getEntityById } = useProjectTableContext()
   const { selectedRows, clearRowsSelection } = useSelectedRowsContext()
 
-  const selectRowData = selectedRows.map((id) => getEntityById(id)).filter(Boolean) as
-    | (MatchingFolder | EditorTaskNode)[]
-    | undefined
+  const { data: users = [] } = useGetUsersAssigneeQuery(
+    { names: undefined, projectName },
+    { skip: !projectName },
+  )
 
-  if (!selectRowData || !selectRowData.length) return null
-  // task types will always take priority over folder types, we can only have one type at one time
-  const entityType = selectRowData.every((row) => row.entityType === selectRowData[0].entityType)
-    ? selectRowData[0].entityType
-    : selectRowData.some((row) => row.entityType === 'task')
-    ? 'task'
-    : 'folder'
-  const entities = selectRowData
-    .filter((row) => entityType === row.entityType)
-    .map((row) => ({ id: row.entityId || row.id, projectName }))
+  // Try to get the entity context, but it might not exist
+  const entityContext = useDetailsPanelEntityContext()
+  const selectedEntity = entityContext?.selectedEntity || null
+  const clearSelectedEntity = entityContext?.clearSelectedEntity
 
-  const handleClose = () => {
-    clearRowsSelection()
+  // Early return if no project info is available
+  if (!projectInfo || !projectName) {
+    return null
   }
-
-  const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
-
-  if (!entities.length || !entityType || !projectName || !projectInfo) return null
-
   const projectsInfo = { [projectName]: projectInfo }
 
+  // Get entity selection data
+  const entitySelection = getEntitySelection({
+    selectedRows,
+    selectedEntity,
+    getEntityById,
+    clearRowsSelection,
+    clearSelectedEntity,
+    projectName,
+  })
+
+  // Early return if no entities are selected
+  if (!entitySelection) {
+    return null
+  }
+
+  const { entities, entityType, handleClose } = entitySelection
+  // check that entityType is supported
+  if (!detailsPanelEntityTypes.includes(entityType)) {
+    console.warn(`Unsupported entity type: ${entityType}`)
+    return null
+  }
+
   return (
-    // @ts-nocheck
     <>
       <DetailsPanel
         entityType={entityType}
-        entities={entities as any}
+        entities={entities}
         projectsInfo={projectsInfo}
-        projectNames={[projectName] as any}
-        tagsOptions={projectInfo?.tags || []}
+        projectNames={[projectName]}
+        tagsOptions={projectInfo.tags || []}
         projectUsers={users}
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
@@ -68,6 +90,127 @@ const ProjectOverviewDetailsPanel = ({
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
     </>
   )
+}
+
+/**
+ * Determines the entity selection based on row selection and entity context
+ */
+function getEntitySelection({
+  selectedRows,
+  selectedEntity,
+  getEntityById,
+  clearRowsSelection,
+  clearSelectedEntity,
+  projectName,
+}: {
+  selectedRows: string[]
+  selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
+  getEntityById: (id: string, field?: string) => EntityMap | undefined
+  clearRowsSelection: () => void
+  clearSelectedEntity?: () => void
+  projectName: string
+}): EntitySelection | null {
+  const hasRowSelection = selectedRows.length > 0
+  const hasEntitySelection = selectedEntity !== null
+
+  // Prioritize row selection over entity selection
+  if (hasRowSelection) {
+    return getRowSelectionData({
+      selectedRows,
+      getEntityById,
+      clearRowsSelection,
+      projectName,
+    })
+  }
+
+  if (hasEntitySelection && clearSelectedEntity && selectedEntity) {
+    return getEntitySelectionData({
+      selectedEntity,
+      clearSelectedEntity,
+      projectName,
+    })
+  }
+
+  return null
+}
+
+/**
+ * Processes row selection data into entity selection format
+ */
+function getRowSelectionData({
+  selectedRows,
+  getEntityById,
+  clearRowsSelection,
+  projectName,
+}: {
+  selectedRows: string[]
+  getEntityById: (id: string, field?: string) => EntityMap | undefined
+  clearRowsSelection: () => void
+  projectName: string
+}): EntitySelection | null {
+  const selectedEntities = selectedRows
+    .map((id) => getEntityById(id))
+    .filter((entity): entity is EntityMap => entity !== undefined)
+
+  if (selectedEntities.length === 0) {
+    return null
+  }
+
+  const entityType = determineEntityType(selectedEntities)
+  const filteredEntities = selectedEntities.filter((entity) => entity.entityType === entityType)
+
+  const entities = filteredEntities.map((entity) => ({
+    id: entity.entityId || entity.id,
+    projectName,
+  }))
+
+  return {
+    entities,
+    entityType,
+    handleClose: clearRowsSelection,
+  }
+}
+
+/**
+ * Processes entity selection data into entity selection format
+ */
+function getEntitySelectionData({
+  selectedEntity,
+  clearSelectedEntity,
+  projectName,
+}: {
+  selectedEntity: { entityId: string; entityType: 'folder' | 'task' }
+  clearSelectedEntity: () => void
+  projectName: string
+}): EntitySelection | null {
+  return {
+    entities: [{ id: selectedEntity.entityId, projectName }],
+    entityType: selectedEntity.entityType as 'folder' | 'task' | 'version',
+    handleClose: clearSelectedEntity,
+  }
+}
+
+/**
+ * Determines the most appropriate entity type for a mixed selection
+ */
+function determineEntityType(entities: EntityMap[]): 'folder' | 'task' | 'version' {
+  if (entities.length === 1) {
+    return entities[0].entityType as 'folder' | 'task' | 'version'
+  }
+
+  const firstEntityType = entities[0].entityType
+  const allSameType = entities.every((entity) => entity.entityType === firstEntityType)
+
+  if (allSameType) {
+    return firstEntityType as 'folder' | 'task' | 'version'
+  }
+
+  // For mixed selections, prioritize tasks over folders, versions over all others
+  const hasVersion = entities.some((entity) => entity.entityType === 'version')
+  if (hasVersion) return 'version'
+
+  const hasTask = entities.some((entity) => entity.entityType === 'task')
+  return hasTask ? 'task' : 'folder'
 }
 
 export default ProjectOverviewDetailsPanel
