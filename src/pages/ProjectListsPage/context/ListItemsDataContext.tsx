@@ -1,7 +1,6 @@
 import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
-import { EntityListItem } from '@shared/api'
 import { ProjectDataContextProps, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
-import useGetListItemsData from '../hooks/useGetListItemsData'
+import useGetListItemsData, { EntityListItemWithLinks } from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
 import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import useDeleteListItems, { UseDeleteListItemsReturn } from '../hooks/useDeleteListItems'
@@ -13,7 +12,7 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
 import { SortingState } from '@tanstack/react-table'
 
-export type ListItemsMap = Map<string, EntityListItem>
+export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
 export interface ListItemsDataContextValue {
   // Project Info
@@ -25,7 +24,7 @@ export interface ListItemsDataContextValue {
   attribFields: ProjectDataContextProps['attribFields']
 
   // LIST ITEMS DATA
-  listItemsData: EntityListItem[]
+  listItemsData: EntityListItemWithLinks[]
   listItemsTableData: TableRow[]
   listItemsMap: ListItemsMap
   fetchNextPage: () => void

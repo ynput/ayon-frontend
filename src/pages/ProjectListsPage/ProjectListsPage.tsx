@@ -1,4 +1,8 @@
-import { ProjectDataProvider, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import {
+  ProjectDataProvider,
+  useDetailsPanelEntityContext,
+  useProjectDataContext,
+} from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -20,6 +24,7 @@ import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQuer
 import {
   CellEditingProvider,
   ColumnSettingsProvider,
+  DetailsPanelEntityProvider,
   ProjectTableProvider,
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
@@ -192,18 +197,20 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
             >
-              <SelectionCellsProvider>
-                <SelectedRowsProvider>
-                  <CellEditingProvider>
-                    <ProjectLists
-                      extraColumns={extraColumns}
-                      extraColumnsSettings={extraColumnsSettings}
-                      isReview={isReview}
-                      dndActiveId={dndActiveId}
-                    />
-                  </CellEditingProvider>
-                </SelectedRowsProvider>
-              </SelectionCellsProvider>
+              <DetailsPanelEntityProvider>
+                <SelectionCellsProvider>
+                  <SelectedRowsProvider>
+                    <CellEditingProvider>
+                      <ProjectLists
+                        extraColumns={extraColumns}
+                        extraColumnsSettings={extraColumnsSettings}
+                        isReview={isReview}
+                        dndActiveId={dndActiveId}
+                      />
+                    </CellEditingProvider>
+                  </SelectedRowsProvider>
+                </SelectionCellsProvider>
+              </DetailsPanelEntityProvider>
             </ProjectTableProvider>
           </ProjectTableQueriesProvider>
         </ColumnSettingsProvider>
@@ -234,6 +241,19 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
+
+  // Try to get the entity context, but it might not exist
+  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
+  try {
+    const entityContext = useDetailsPanelEntityContext()
+    selectedEntity = entityContext.selectedEntity
+  } catch {
+    // Context not available, that's fine
+    selectedEntity = null
+  }
+
+  // Check if we should show the details panel
+  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -295,7 +315,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!selectedRows.length ? 0 : 4}
+                  gutterSize={shouldShowDetailsPanel ? 4 : 0}
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
@@ -305,7 +325,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       dndActiveId={dndActiveId} // Pass prop
                     />
                   </SplitterPanel>
-                  {!!selectedRows.length ? (
+                  {shouldShowDetailsPanel ? (
                     <SplitterPanel
                       size={30}
                       style={{

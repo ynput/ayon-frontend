@@ -22,7 +22,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     submitRenameList,
     renamingList,
   } = useListsContext()
-  const { listsTableData, isLoadingAll, isError } = useListsDataContext()
+  const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [clientSearch, setClientSearch] = useState<null | string>(null)
 
@@ -108,6 +108,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
             isExpandable={listsTableData.some((row) => row.subRows.length > 0)}
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
+            onScrollBottom={fetchNextPage}
             meta={{
               handleRowContext,
               handleValueDoubleClick,

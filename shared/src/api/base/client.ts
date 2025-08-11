@@ -114,6 +114,7 @@ const tagTypes = [
   'viewer',
   'watchers',
   'workfile',
+  'link',
 ]
 
 const prepareHeaders = (headers: any) => {
