@@ -137,6 +137,29 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
     }
   }, [tableContainer, anchorElement])
 
+  // close the dialog when clicking outside of it
+  useLayoutEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node) &&
+        anchorElement &&
+        !anchorElement.contains(event.target as Node) &&
+        // check we are not clicking inside the EntityPickerDialog
+        !(event.target as HTMLElement).closest('.entity-picker-dialog') &&
+        // check we are not clicking on the dialog backdrop
+        !(event.target as HTMLElement).querySelector('.entity-picker-dialog')
+      ) {
+        onClose?.()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [onClose, anchorElement])
+
   if (!isEditing) return null
   return (
     <StyledPopUp

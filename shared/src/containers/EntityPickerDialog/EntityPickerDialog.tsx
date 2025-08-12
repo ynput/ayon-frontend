@@ -141,6 +141,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   return (
     <Dialog
       {...props}
+      className="entity-picker-dialog"
       header={`Select ${upperFirst(entityType)}`}
       isOpen
       size="full"
