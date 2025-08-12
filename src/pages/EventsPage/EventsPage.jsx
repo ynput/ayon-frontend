@@ -12,8 +12,11 @@ import EventOverview from './EventOverview'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
 import { debounce } from 'lodash'
+import useTitle from '@hooks/useTitle'
 
 const EventsPage = () => {
+  useTitle({ page: 'Events', project: '' })
+  
   const dispatch = useDispatch()
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
   // use query param to get selected event

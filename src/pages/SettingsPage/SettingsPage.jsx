@@ -23,25 +23,9 @@ const SettingsPage = () => {
   const isManager = useSelector((state) => state.user.data.isManager)
   
   // Get page name based on module
-  const getPageName = (module, addonName) => {
-    if (addonName) return addonName
-    switch (module) {
-      case 'addons': return 'Addons'
-      case 'bundles': return 'Bundles'
-      case 'anatomyPresets': return 'Anatomy Presets'
-      case 'studio': return 'Studio Settings'
-      case 'site': return 'Site Settings'
-      case 'users': return 'Users'
-      case 'accessGroups': return 'Permissions'
-      case 'attributes': return 'Attributes'
-      case 'secrets': return 'Secrets'
-      case 'server': return 'Global'
-      default: return 'Settings'
-    }
-  }
   
-  // Set dynamic title
-  useTitle({ page: getPageName(module, addonName) })
+  // Set dynamic title and clear project name (since this is not a project page)
+
 
   const {
     data: addonsData,
@@ -186,6 +170,8 @@ const SettingsPage = () => {
 
     return result
   }, [addonsData, isManager])
+  
+  useTitle({links, paramKey: addonName ? 'addonName' : 'module', project: ''})
 
   return (
     <>

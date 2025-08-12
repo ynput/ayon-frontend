@@ -12,6 +12,7 @@ import styled from 'styled-components'
 import { useListServicesQuery } from '@queries/services/getServices'
 import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'
 import { confirmDialog } from 'primereact/confirmdialog'
+import useTitle from '@hooks/useTitle'
 
 const StatusBadge = styled.span`
   display: inline-block;
@@ -66,6 +67,8 @@ const detailsMaxWidth = '40vw'
 const detailsMaxMaxWidth = 700
 
 const ServicesPage = () => {
+  useTitle({ page: 'Services', project: '' })
+  
   const [showServiceDialog, setShowServiceDialog] = useState(false)
   const [editingService, setEditingService] = useState(null)
   const [selectedServices, setSelectedServices] = useState([])

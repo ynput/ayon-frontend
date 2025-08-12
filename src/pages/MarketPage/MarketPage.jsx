@@ -25,6 +25,7 @@ import ReleaseDetails from './MarketDetails/ReleaseDetails'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
+import useTitle from '@hooks/useTitle'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   type: 'placeholder',
@@ -39,6 +40,8 @@ const placeholders = [...Array(20)].map((_, i) => ({
 }))
 
 const MarketPage = () => {
+  useTitle({ page: 'Market', project: '' })
+  
   const dispatch = useAppDispatch()
   // GET ALL ADDONS IN MARKET
   const {

@@ -1,17 +1,15 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 type TitleParts = {
-  page: string
-  project: string
-  entity: string
-  base: string
+  page?: string
+  project?: string
+  entity?: string
+  base?: string
 }
 
 type TitleContextType = {
   titleParts: TitleParts
-  setPage: (page: string) => void
-  setProject: (project: string) => void
-  setEntity: (entity: string) => void
+  setTitleParts: (parts: Partial<TitleParts>) => void
   resetTitle: () => void
   buildTitle: () => string
 }
@@ -23,61 +21,43 @@ type TitleProviderProps = {
 const TitleContext = createContext<TitleContextType | undefined>(undefined)
 
 export const TitleProvider = ({ children }: TitleProviderProps) => {
-  const [titleParts, setTitleParts] = useState<TitleParts>({
+  const [titleParts, setTitlePartsState] = useState<TitleParts>({
     page: '',
     project: '',
     entity: '',
     base: 'Ayon'
   })
 
-  const setPage = useCallback((page: string) => {
-    setTitleParts(prev => ({ ...prev, page }))
-  }, [])
-
-  const setProject = useCallback((project: string) => {
-    setTitleParts(prev => ({ ...prev, project }))
-  }, [])
-
-  const setEntity = useCallback((entity: string) => {
-    setTitleParts(prev => ({ ...prev, entity }))
+  const setTitleParts = useCallback((parts: Partial<TitleParts>) => {
+    setTitlePartsState(prev => ({ ...prev, ...parts }))
   }, [])
 
   const resetTitle = useCallback(() => {
-    setTitleParts({ page: '', project: '', entity: '', base: 'Ayon' })
+    setTitlePartsState({ page: '', project: '', entity: '', base: 'Ayon' })
   }, [])
 
   const buildTitle = useCallback((): string => {
-    const { page, project, entity, base } = titleParts
+    const { page, project, entity, base = 'Ayon' } = titleParts
     const parts: string[] = []
-    
+
     if (entity) parts.push(entity)
     if (page) parts.push(page)
     if (project) parts.push(project)
-    
-    // Only add base "Ayon" for Dashboard pages or when no other parts exist (fallback)
-    const isDashboardPage = page?.toLowerCase().includes('dashboard') || page === 'Tasks' || page === 'Overview'
+
+    const isDashboardPage = page?.toLowerCase().includes('dashboard') || ['Tasks', 'Overview'].includes(page ?? '')
     const isEmptyTitle = !entity && !page && !project
-    
+
     if (isDashboardPage || isEmptyTitle) {
       parts.push(base)
     }
-    
+
     return parts.length > 0 ? parts.join(' - ') : base
   }, [titleParts])
 
-  const value: TitleContextType = {
-    titleParts,
-    setPage,
-    setProject,
-    setEntity,
-    resetTitle,
-    buildTitle
-  }
-
   return (
-    <TitleContext.Provider value={value}>
-      {children}
-    </TitleContext.Provider>
+      <TitleContext.Provider value={{ titleParts, setTitleParts, resetTitle, buildTitle }}>
+        {children}
+      </TitleContext.Provider>
   )
 }
 

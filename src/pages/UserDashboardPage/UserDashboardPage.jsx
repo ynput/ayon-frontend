@@ -36,19 +36,6 @@ const UserDashboardPage = () => {
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
   
-  // Get page name based on module
-  const getPageName = (module, addonName) => {
-    if (addonName) return addonName
-    switch (module) {
-      case 'tasks': return 'Tasks'
-      case 'overview': return 'Overview'
-      default: return 'Dashboard'
-    }
-  }
-  
-  // Set dynamic title
-  useTitle({ page: getPageName(module, addonName) })
-
   const {
     data: addonsData = [],
     //isLoading: addonsLoading,
@@ -80,6 +67,8 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
+  
+  useTitle({ links, paramKey: addonName ? 'addonName' : 'module', project: '' })
 
   const addonData = addonsData.find((addon) => addon.name === addonName)
 

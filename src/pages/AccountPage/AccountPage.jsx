@@ -21,19 +21,6 @@ export const PanelButtonsStyled = styled(Panel)`
 const AccountPage = () => {
   const { module } = useParams()
   
-  // Get page name based on module
-  const getPageName = (module) => {
-    switch (module) {
-      case 'profile': return 'Profile'
-      case 'sessions': return 'Sessions'
-      case 'downloads': return 'Launchers'
-      case 'settings': return 'Settings'
-      default: return 'Account'
-    }
-  }
-  
-  // Set dynamic title
-  useTitle({ page: getPageName(module) })
 
   // RTK QUERIES
   // GET USER DATA
@@ -72,6 +59,8 @@ const AccountPage = () => {
     //   module: 'settings',
     // },
   ]
+  
+  useTitle({links, project: ''})
 
   return (
     <>

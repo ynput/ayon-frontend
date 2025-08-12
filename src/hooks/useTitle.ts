@@ -1,41 +1,46 @@
 import { useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { useTitleContext } from '@context/TitleContext'
+
+type LinkLike = Partial<{
+  name: string
+  module: string
+}> & Record<string, any>
 
 type UseTitleOptions = {
   page?: string
   project?: string
   entity?: string
+  links?: LinkLike[]
+  paramKey?: string // default: 'module'
 }
 
-type UseTitleReturn = {
-  setPage: (page: string) => void
-  setProject: (project: string) => void
-  setEntity: (entity: string) => void
-}
 
-/**
- * Custom hook to set page title parts
- * @param options - Title configuration
- * @param options.page - Page name (e.g., "Settings", "Browser", "Overview")
- * @param options.project - Project name 
- * @param options.entity - Entity name (e.g., folder name, task name)
- */
-export const useTitle = ({ page, project, entity }: UseTitleOptions = {}): UseTitleReturn => {
-  const { setPage, setProject, setEntity } = useTitleContext()
+const useTitle = (options: UseTitleOptions = {}) => {
+  const { setTitleParts } = useTitleContext()
+  const { page, project, entity, links, paramKey = 'module' } = options
+  const params = useParams()
 
-  useEffect(() => {
-    if (page !== undefined) setPage(page)
-  }, [page, setPage])
-
-  useEffect(() => {
-    if (project !== undefined) setProject(project)
-  }, [project, setProject])
+  // Auto-resolve page if links are provided
+  const resolvedPage = (() => {
+    if (links) {
+      const validLinks = links.filter(
+          (l): l is { name: string; module: string } =>
+              typeof l.name === 'string' && typeof l.module === 'string',
+      )
+      const match = validLinks.find(link => link.module === params[paramKey])
+      return match?.name || 'Ayon'
+    }
+    return page
+  })()
 
   useEffect(() => {
-    if (entity !== undefined) setEntity(entity)
-  }, [entity, setEntity])
-
-  return { setPage, setProject, setEntity }
+    setTitleParts({
+      page: resolvedPage || '',
+      project: project || '',
+      entity: entity || '',
+    })
+  }, [resolvedPage, project, entity, setTitleParts])
 }
 
 export default useTitle
