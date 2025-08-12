@@ -8,7 +8,6 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 // import SiteSettings from './SiteSettingsPage'
 import ProfilePage from './ProfilePage'
 import DownloadsPage from './DownloadsPage/DownloadsPage'
-import useTitle from '@hooks/useTitle'
 
 export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
@@ -60,7 +59,6 @@ const AccountPage = () => {
     // },
   ]
   
-  useTitle({parentPage:"Account", links, project: ''})
 
   return (
     <>

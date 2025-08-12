@@ -28,7 +28,6 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import useTitle from '@hooks/useTitle'
 import { Views, ViewsProvider } from '@shared/containers'
 
 type NavLink = {
@@ -201,7 +200,6 @@ const ProjectPage = () => {
     [addonsData, projectName, remotePages, matchedAddons],
   )
 
-  useTitle({links, paramKey: addonName ? 'addonName' : 'module', project: projectName})
   const activeLink = useMemo(() => {
     return links.find((link) => link.module === module) || null
   }, [links, module])

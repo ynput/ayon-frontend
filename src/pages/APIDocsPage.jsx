@@ -1,7 +1,4 @@
-import useTitle from '@hooks/useTitle'
-
 const APIDocsPage = () => {
-  useTitle({ page: 'API Docs', project: '' })
   
   return (
     <main>

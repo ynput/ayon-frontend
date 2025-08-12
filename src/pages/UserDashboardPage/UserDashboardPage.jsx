@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
-import useTitle from '@hooks/useTitle'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import { useDispatch, useSelector } from 'react-redux'
@@ -68,7 +67,6 @@ const UserDashboardPage = () => {
     })
   }
   
-  useTitle({ parentPage: "Dashboard", links, paramKey: addonName ? 'addonName' : 'module', project: '' })
 
   const addonData = addonsData.find((addon) => addon.name === addonName)
 

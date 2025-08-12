@@ -3,7 +3,6 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 import Inbox from './Inbox/Inbox'
 import { useGetInboxUnreadCountQuery } from '@queries/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
-import useTitle from '@hooks/useTitle'
 
 const InboxPage = () => {
   const { module } = useParams()
@@ -40,7 +39,6 @@ const InboxPage = () => {
       module: 'cleared',
     },
   ]
-  useTitle({ parentPage: 'Inbox',links, project: '' })
 
   return (
     <>

@@ -21,7 +21,6 @@ import ProjectUserAccess from './Users/ProjectUserAccess'
 import ProjectPermissions from './ProjectPermissions'
 import { isActiveDecider, projectSorter, Module, ModuleList, ModulePath } from './mappers'
 import { replaceQueryParams } from '@helpers/url'
-import useTitle from '@hooks/useTitle'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -178,7 +177,6 @@ const ProjectManagerPage = () => {
     }
   }, [isLoadingUserPermissions, selectedProject, module])
 
-  useTitle({ links: linksWithProject, project: selectedProject })
 
   return (
     <>

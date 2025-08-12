@@ -26,7 +26,6 @@ import ShareDialog from '@components/ShareDialog'
 import ErrorFallback from '@components/ErrorFallback'
 import { GlobalContextMenu, ContextMenuProvider } from '@shared/containers/ContextMenu'
 import Favicon from '@components/Favicon/Favicon'
-import { TitleProvider } from '@context/TitleContext'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
@@ -176,7 +175,7 @@ const App = () => {
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
-      <TitleProvider>
+      <>
         <Favicon />
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
@@ -235,14 +234,14 @@ const App = () => {
             </RestartProvider>
           </FeedbackProvider>
         </Suspense>
-      </TitleProvider>
+      </>
     ),
     [isUser, isTrialing, user.name],
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
-  
+
 
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
@@ -286,7 +285,7 @@ const App = () => {
 
   const isTokenAuth = () => {
     // User is trying to log in with a token
-    // we need to show the login page, that handles sso 
+    // we need to show the login page, that handles sso
     // callbacks in order to parse the token and overwrite
     // existing session if needed
     const provider = window.location.pathname.split('/')
