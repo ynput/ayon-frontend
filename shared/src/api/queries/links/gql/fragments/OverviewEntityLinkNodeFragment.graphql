@@ -1,0 +1,14 @@
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}

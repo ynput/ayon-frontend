@@ -15,6 +15,7 @@ import type { ProjectModel, Assignees } from '@shared/api'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
 import { SliceMap } from '@containers/Slicer/types'
+import { usePowerpack } from '@shared/context'
 
 export type OnSliceTypeChange = (
   sliceType: SliceType,
@@ -189,12 +190,15 @@ const useSlicerRemotes = () => {
     }
   }
 
+  const { powerLicense } = usePowerpack()
+
   // slicer transformers
   const [useExtraSlices] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'useExtraSlices',
     fallback: useExtraSlicesDefault,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
   const [SlicerDropdown] = useLoadModule({
@@ -202,6 +206,7 @@ const useSlicerRemotes = () => {
     remote: 'slicer',
     module: 'SlicerDropdown',
     fallback: SlicerDropdownFallback,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
   return { useExtraSlices, SlicerDropdown: SlicerDropdown }

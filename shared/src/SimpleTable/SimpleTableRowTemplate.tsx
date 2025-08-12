@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, Fragment } from 'react'
 import * as Styled from './SimpleTable.styled'
 import { Icon } from '@ynput/ayon-react-components'
 
@@ -32,6 +32,7 @@ export const RowExpander = ({
 export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
+  parents?: string[]
   iconColor?: string
   isRowExpandable?: boolean
   isRowExpanded?: boolean
@@ -48,6 +49,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
     {
       value,
       icon,
+      parents,
       iconColor,
       isRowExpandable,
       isRowExpanded,
@@ -78,6 +80,16 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         />
         {startContent && startContent}
         {icon && <Icon icon={icon} style={{ color: iconColor }} />}
+        {parents && (
+          <span className="path">
+            {parents.map((part, index) => (
+              <Fragment key={index}>
+                <span key={index + '-path'}>{part}</span>
+                <span key={index + '-separator'}>/</span>
+              </Fragment>
+            ))}
+          </span>
+        )}
         <span className="value">{value}</span>
         {endContent && endContent}
       </Styled.Cell>

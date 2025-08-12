@@ -8,6 +8,7 @@ export type PowerpackFeature =
   | 'advancedFilters'
   | 'listAttributes'
   | 'groupAttributes'
+  | 'sharedViews'
 export type PowerpackDialogType = {
   label: string
   description: string
@@ -48,6 +49,11 @@ export const powerpackFeatures: {
     description: 'Group tasks by assignees, status, or other attributes for better organization.',
     bullet: 'Group tasks by attributes',
   },
+  sharedViews: {
+    label: 'Shared Views',
+    description: 'Save custom views and share them with team members for better collaboration.',
+    bullet: 'Save and share custom views',
+  },
 }
 export type PowerpackContextType = {
   selectedPowerPack: null | PowerpackFeature
@@ -58,7 +64,13 @@ export type PowerpackContextType = {
 
 const PowerpackContext = createContext<PowerpackContextType | undefined>(undefined)
 
-export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
+export const PowerpackProvider = ({
+  children,
+  debug,
+}: {
+  children: ReactNode
+  debug?: { powerLicense?: boolean }
+}) => {
   const [selectedPowerPack, setPowerpackDialog] =
     useState<PowerpackContextType['selectedPowerPack']>(null)
 
@@ -86,7 +98,10 @@ export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const checkLicense = async () => {
-      if (isLoaded) {
+      if (debug?.powerLicense !== undefined) {
+        console.warn('Using debug power license:', debug.powerLicense)
+        setPowerLicense(debug.powerLicense)
+      } else if (isLoaded) {
         try {
           const hasPowerLicense = await checkPowerLicense()
           setPowerLicense(hasPowerLicense)
@@ -98,7 +113,7 @@ export const PowerpackProvider = ({ children }: { children: ReactNode }) => {
     }
 
     checkLicense()
-  }, [isLoaded, checkPowerLicense])
+  }, [debug, isLoaded, checkPowerLicense])
 
   const value = useMemo(
     () => ({

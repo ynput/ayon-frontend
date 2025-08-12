@@ -5,10 +5,16 @@ import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCe
 import { useCellEditing } from './CellEditingContext'
 
 // Utils
-import { getCellValue, getEntityDataById, parseCellId } from '../utils/cellUtils'
+import {
+  getCellValue,
+  getEntityDataById,
+  getLinkEntityIdsByColumnId,
+  parseCellId,
+} from '../utils/cellUtils'
 
 // Types
 import { EntityUpdate } from '../hooks/useUpdateTableData'
+import usePasteLinks, { LinkUpdate } from '../hooks/usePasteLinks'
 
 // Import from the new modular files
 import {
@@ -20,6 +26,7 @@ import {
 import { validateClipboardData } from './clipboard/clipboardValidation'
 import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
 import { useProjectTableContext } from './ProjectTableContext'
+import { validateEntityId } from '@shared/util'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
 
@@ -32,6 +39,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
+  const { pasteTableLinks } = usePasteLinks()
   const { getEntityById, attribFields } = useProjectTableContext()
 
   const getSelectionData = useCallback(
@@ -116,7 +124,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         }
 
         for (const rowId of sortedRows) {
-          // Determine if this is a folder or task by checking which map contains the ID
+          // Get the entity for this row
           const entity = getEntityById(rowId)
 
           if (!entity) {
@@ -140,34 +148,40 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           for (const colId of filteredColIds) {
             // Determine the value based on the column ID
             let cellValue = ''
-            // @ts-ignore
-            let foundValue = getCellValue(entity, colId)
 
-            if (!foundValue) {
-              // we should look for the default value set out in attribFields
-              const field = attribFields.find((f) => f.name === colId.replace('attrib_', ''))
-              if (field && field.data.type === 'boolean') {
-                foundValue = false // default boolean value
-              } else if (field && field.data.type.includes('list_of')) {
-                foundValue = [] // default list value
+            // special handling of link cells
+            if (colId.startsWith('link_')) {
+              cellValue = getLinkEntityIdsByColumnId(entity.links, colId)
+            } else {
+              // @ts-ignore
+              let foundValue = getCellValue(entity, colId)
+
+              if (!foundValue) {
+                // we should look for the default value set out in attribFields
+                const field = attribFields.find((f) => f.name === colId.replace('attrib_', ''))
+                if (field && field.data.type === 'boolean') {
+                  foundValue = false // default boolean value
+                } else if (field && field.data.type.includes('list_of')) {
+                  foundValue = [] // default list value
+                }
               }
-            }
 
-            // convert to string if foundValue is not undefined or null use empty string otherwise
-            cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
+              // convert to string if foundValue is not undefined or null use empty string otherwise
+              cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
-            // Special handling for name field - include full path
-            if (colId === 'name') {
-              cellValue = getEntityPath(entity.entityId || entity.id, entitiesMap)
-            }
-
-            if (colId === 'subType') {
-              // get folderType or taskType
-              if ('folderType' in entity) {
-                cellValue = entity.folderType || ''
+              // Special handling for name field - include full path
+              if (colId === 'name') {
+                cellValue = getEntityPath(entity.entityId || entity.id, entitiesMap)
               }
-              if ('taskType' in entity) {
-                cellValue = entity.taskType || ''
+
+              if (colId === 'subType') {
+                // get folderType or taskType
+                if ('folderType' in entity) {
+                  cellValue = entity.folderType || ''
+                }
+                if ('taskType' in entity) {
+                  cellValue = entity.taskType || ''
+                }
               }
             }
 
@@ -187,13 +201,23 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, focusedCellId, gridMap, entitiesMap, getEntityById],
   )
 
+  const doesClipboardContainId = async () => {
+    // check if the clipboard contains a valid ID
+    const clipboardText = await getClipboardString()
+    if (!clipboardText) return false
+    const parsedData = parseClipboardText(clipboardText)
+    if (parsedData.length === 0) return false
+    return parsedData.every((row) => {
+      return row.values.every((value) => value.split(',').every((v) => validateEntityId(v)))
+    })
+  }
+
   const copyToClipboard: ClipboardContextType['copyToClipboard'] = useCallback(
     async (selected, fullRow) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
       const clipboardText = await getSelectionData(selected, { fullRow })
       if (!clipboardText) {
-        clipboardError('No data to copy to clipboard.')
         return
       }
       if (!navigator.clipboard) {
@@ -242,28 +266,32 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, entitiesMap, gridMap, getSelectionData],
   )
 
-  const pasteFromClipboard: ClipboardContextType['pasteFromClipboard'] = useCallback(
-    async (selected) => {
-      selected = selected || Array.from(selectedCells)
-      if (!selected.length) return
-      if (!navigator.clipboard) {
-        clipboardError('Clipboard API not supported in this browser.')
-        return
-      }
-      if (!window.isSecureContext) {
-        clipboardError('Clipboard operations require a secure HTTPS context.')
-        return
-      }
-      let clipboardText: string
-      try {
-        clipboardText = await navigator.clipboard.readText()
-      } catch (error: any) {
-        clipboardError(`Failed to read from clipboard: ${error.message}`)
-        return
-      }
+  const getClipboardString = async (): Promise<string | void> => {
+    if (!navigator.clipboard) {
+      clipboardError('Clipboard API not supported in this browser.')
+      return
+    }
+    if (!window.isSecureContext) {
+      clipboardError('Clipboard operations require a secure HTTPS context.')
+      return
+    }
+    let clipboardText: string
+    try {
+      clipboardText = await navigator.clipboard.readText()
+      return clipboardText
+    } catch (error: any) {
+      clipboardError(`Failed to read from clipboard: ${error.message}`)
+      return
+    }
+  }
 
-      // we can have empty text in the clipboard
-      //if (!clipboardText.trim()) return
+  const pasteFromClipboard: ClipboardContextType['pasteFromClipboard'] = useCallback(
+    async (selected, config) => {
+      const { method = 'replace' } = config || {}
+      if (!selected.length) return
+
+      const clipboardText = await getClipboardString()
+      if (!clipboardText) return
 
       // Parse the clipboard text
       const parsedData = parseClipboardText(clipboardText)
@@ -349,6 +377,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           type: string
           fields: Record<string, any>
           attrib: Record<string, any>
+          links: Record<string, string[]>
         }
       >()
 
@@ -360,7 +389,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         if (colId === 'name') continue
 
         // Check if this is an attribute field by examining the first entity
-        let isAttrib = false
+        let isAttrib = false,
+          isLink = false
         // Check if the field potentially contains array values
         let fieldValueType: 'string' | 'number' | 'boolean' | 'array' = 'string'
 
@@ -369,11 +399,12 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           const entity = getEntityById(firstRowId)
           if (entity) {
             isAttrib = colId.startsWith('attrib_')
+            isLink = colId.startsWith('link_')
 
             // Determine if field is an array and its value type
             // @ts-ignore - Check entity property or attribute
             const fieldValue = getCellValue(entity, colId)
-            if (Array.isArray(fieldValue)) {
+            if (Array.isArray(fieldValue) || isLink) {
               fieldValueType = 'array'
             } else if (typeof fieldValue === 'number') {
               fieldValueType = 'number'
@@ -427,13 +458,18 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               type: entityType,
               fields: {},
               attrib: {},
+              links: {},
             })
           }
 
           const entityData = entitiesToUpdateMap.get(entityKey)!
 
           // Add the field to the appropriate place
-          if (isAttrib) {
+          if (isLink) {
+            const [_link, linkType, inType, outType, direction] = colId.split('_')
+            // final-task|folder|task
+            entityData.links[`${linkType}|${inType}|${outType}_${direction}`] = processedValue
+          } else if (isAttrib) {
             entityData.attrib[fieldToUpdate] = processedValue
           } else {
             entityData.fields[fieldToUpdate] = processedValue
@@ -441,8 +477,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         }
       }
 
-      // Convert the consolidated map to EntityUpdate array
+      // Convert the consolidated map to EntityUpdate array and LinkUpdate array
       const allEntityUpdates: EntityUpdate[] = []
+      const linkUpdatesMap = new Map<string, LinkUpdate>()
 
       entitiesToUpdateMap.forEach((entity) => {
         // For regular fields, create one update per field
@@ -467,26 +504,77 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             isAttrib: true,
           })
         })
+
+        // For links, create LinkUpdate objects
+        Object.entries(entity.links).forEach(([linkKey, targetEntityIds]) => {
+          // Parse the linkKey: "linkType|inType|outType_direction"
+          const [linkTypePart, direction] = linkKey.split('_')
+          const linkTypeParts = linkTypePart.split('|')
+
+          if (linkTypeParts.length >= 3) {
+            const linkTypeName = linkTypeParts[0]
+            const inType = linkTypeParts[1]
+            const outType = linkTypeParts[2]
+
+            // Reconstruct the full linkType in the required format: name|input_type|output_type
+            const linkType = `${linkTypeName}|${inType}|${outType}`
+
+            // Determine target entity type based on direction
+            const targetEntityType = direction === 'out' ? outType : inType
+
+            // Create a unique key for this link operation
+            const linkUpdateKey = `${entity.id}-${linkType}-${direction}`
+
+            linkUpdatesMap.set(linkUpdateKey, {
+              rowId: entity.rowId,
+              sourceEntityId: entity.id,
+              sourceEntityType: entity.type,
+              linkType,
+              direction: direction as 'in' | 'out',
+              targetEntityType,
+              operation: method,
+              targetEntityIds: Array.isArray(targetEntityIds) ? targetEntityIds : [],
+            })
+          }
+        })
       })
 
-      // Make a single call to update all entities
+      const allLinkUpdates = Array.from(linkUpdatesMap.values())
+
+      // Make separate calls to update entities and links
+      const updatePromises: Promise<void>[] = []
+
       if (allEntityUpdates.length > 0) {
+        updatePromises.push(updateEntities(allEntityUpdates))
+      }
+
+      if (allLinkUpdates.length > 0) {
+        updatePromises.push(pasteTableLinks(allLinkUpdates))
+      }
+
+      if (updatePromises.length > 0) {
         try {
-          await updateEntities(allEntityUpdates)
-        } catch (error) {
+          await Promise.all(updatePromises)
+        } catch (error: any) {
           console.error('Error updating entities:', error)
-          clipboardError(
-            `Failed to update: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          )
+          clipboardError(`Paste failed: ${error || error?.message || 'Unknown error'}`)
         }
       }
     },
-    [selectedCells, gridMap, entitiesMap, updateEntities, columnEnums, getEntityById],
+    [
+      selectedCells,
+      gridMap,
+      entitiesMap,
+      updateEntities,
+      pasteTableLinks,
+      columnEnums,
+      getEntityById,
+    ],
   )
 
   // Set up keyboard event listeners
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       // Copy functionality (Ctrl+C or Command+C)
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         copyToClipboard()
@@ -496,15 +584,27 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         // don't execute paste if focus is inside an input, textarea, or content‐editable element
         const activeEl = document.activeElement as HTMLElement | null
+
         if (
           activeEl &&
           (activeEl.tagName === 'INPUT' ||
             activeEl.tagName === 'TEXTAREA' ||
             activeEl.isContentEditable)
         ) {
-          return
+          // focus is inside an input, textarea, or content-editable element
+          const allEntityIds = await doesClipboardContainId()
+          // we might still want to paste if the clipboard contains valid entity IDs
+          if (allEntityIds) {
+            // prevent pasting into input fields and handle as paste on the cell
+            e.preventDefault()
+          } else {
+            // skip pasting
+            return
+          }
         }
-        pasteFromClipboard()
+        pasteFromClipboard(Array.from(selectedCells), {
+          method: e.shiftKey ? 'merge' : 'replace', // Use shift key to determine paste method
+        })
       }
     }
 

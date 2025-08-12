@@ -38,9 +38,6 @@ query GetListItems(
               ownItemAttrib: ownAttrib
               position
               node {
-                active
-                name
-                updatedAt
                 ...ListItemFragment
               }
             }

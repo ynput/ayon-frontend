@@ -2,6 +2,7 @@
  * Shared cell utilities for table operations
  */
 
+import { TaskLink } from '@shared/api'
 import { parseRowId } from '../context'
 import { EMapResult, EntitiesMap } from '../types'
 
@@ -56,6 +57,20 @@ export const getCellValue = (obj: any, path: string): any => {
   }
 
   return current
+}
+
+// return the link entity ids for a given column id
+export const getLinkEntityIdsByColumnId = (links: TaskLink[], columnId: CellId): string => {
+  // split the columnId
+  const [_link, linkType, _inType, _outType, direction] = columnId.split('_')
+  const cellLinks = links.filter(
+    (link) => link.linkType === linkType && link.direction === direction,
+  )
+  if (cellLinks.length) {
+    return cellLinks.map((link) => link.node.id).join(',')
+  } else {
+    return ''
+  }
 }
 
 /**
