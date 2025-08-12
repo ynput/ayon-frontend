@@ -206,6 +206,56 @@ const injectedApi = enhancedApi.injectEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
+        const pendingTaskIds = new Set<string>()
+        const MAX_BATCH = 100
+        const INTERVAL = 500
+        let scheduled = false
+
+        const schedule = () => {
+          if (scheduled) return
+          scheduled = true
+          setTimeout(flush, INTERVAL)
+        }
+
+        const flush = async () => {
+          scheduled = false
+          if (!pendingTaskIds.size) return
+          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
+          batchIds.forEach((id) => pendingTaskIds.delete(id))
+          try {
+            const res = await dispatch(
+              enhancedApi.endpoints.GetTasksList.initiate(
+                {
+                  projectName,
+                  taskIds: batchIds,
+                } as any,
+                { forceRefetch: true },
+              ),
+            ).unwrap()
+            const returned = res.tasks || []
+            const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
+
+            updateCachedData((draft: EditorTaskNode[]) => {
+              // update or add
+              for (const task of returned) {
+                const idx = draft.findIndex((t) => t.id === task.id)
+                if (idx > -1) draft[idx] = task
+                else draft.push(task)
+              }
+              // remove missing
+              for (const id of batchIds) {
+                if (!returnedMap.has(id)) {
+                  const idx = draft.findIndex((t) => t.id === id)
+                  if (idx > -1) draft.splice(idx, 1)
+                }
+              }
+            })
+          } catch (err) {
+            console.error('Realtime overview batch update failed', err)
+          } finally {
+            if (pendingTaskIds.size) schedule()
+          }
+        }
         try {
           await cacheDataLoaded
 
@@ -215,42 +265,8 @@ const injectedApi = enhancedApi.injectEndpoints({
             if (!taskId || !parentId) return
             // Only react if the parent folder is part of the current expanded set
             if (!parentIds.includes(parentId)) return
-
-            try {
-              // Re-fetch only the specific task via GetTasksList (supports taskIds)
-              const res = await dispatch(
-                enhancedApi.endpoints.GetTasksList.initiate(
-                  {
-                    projectName,
-                    taskIds: [taskId],
-                    filter,
-                    search,
-                  } as any, // cast in case taskIds not yet typed in generated vars
-                  { forceRefetch: true },
-                ),
-              ).unwrap()
-
-              const updatedTask = res.tasks?.[0]
-
-              updateCachedData((draft: EditorTaskNode[]) => {
-                const idx = draft.findIndex((t) => t.id === taskId)
-
-                if (!updatedTask) {
-                  // Task no longer matches filter / was deleted -> remove from cache if present
-                  if (idx > -1) draft.splice(idx, 1)
-                  return
-                }
-
-                if (idx > -1) {
-                  draft[idx] = updatedTask
-                } else {
-                  // Insert only if its parent is tracked (already ensured) and not duplicated
-                  draft.push(updatedTask)
-                }
-              })
-            } catch (err) {
-              console.error('Realtime task update failed', err)
-            }
+            pendingTaskIds.add(taskId)
+            schedule()
           }
 
           // Subscribe to task entity updates
@@ -366,66 +382,58 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
       async onCacheEntryAdded(
-        arg: GetTasksListArgs,
+        arg,
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
-        try {
-          await cacheDataLoaded
+        const pendingTaskIds = new Set<string>()
+        const MAX_BATCH = 100
+        const INTERVAL = 500
+        let scheduled = false
 
-          const { projectName, filter, search, folderIds, sortBy, desc } =
-            arg || ({} as GetTasksListArgs)
+        const schedule = () => {
+          if (scheduled) return
+          scheduled = true
+          setTimeout(flush, INTERVAL)
+        }
 
-          const handlePubSub = async (_topic: string, message: any) => {
-            const taskId = message?.summary?.entityId
-            if (!taskId) return
+        const flush = async () => {
+          scheduled = false
+          if (!pendingTaskIds.size) return
+          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
+          batchIds.forEach((id) => pendingTaskIds.delete(id))
+          try {
+            const res = await dispatch(
+              enhancedApi.endpoints.GetTasksList.initiate(
+                {
+                  projectName: arg.projectName,
+                  taskIds: batchIds,
+                  folderIds: arg.folderIds,
+                } as any,
+                { forceRefetch: true },
+              ),
+            ).unwrap()
 
-            try {
-              // Fetch only the changed task (or detect deletion) via GetTasksList using taskIds
-              const res = await dispatch(
-                enhancedApi.endpoints.GetTasksList.initiate(
-                  {
-                    projectName,
-                    taskIds: [taskId],
-                    filter,
-                    search,
-                    folderIds,
-                    sortBy,
-                    desc,
-                    // guard if GetTasksList later gains its own realtime listener
-                    noRealtime: true,
-                  } as any,
-                  { forceRefetch: true },
-                ),
-              ).unwrap()
+            const returned = res.tasks || []
+            const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
 
-              const updatedTask = res.tasks?.[0]
-
-              updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
-                // Locate task across pages
-                let found = false
+            updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
+              // update/insert
+              for (const task of returned) {
+                let located = false
                 for (const page of draft.pages) {
-                  const idx = page.tasks.findIndex((t) => t.id === taskId)
+                  const idx = page.tasks.findIndex((t) => t.id === task.id)
                   if (idx !== -1) {
-                    found = true
-                    if (updatedTask) {
-                      page.tasks[idx] = updatedTask
-                    } else {
-                      // remove if task disappeared
-                      page.tasks.splice(idx, 1)
-                    }
+                    page.tasks[idx] = task
+                    located = true
                     break
                   }
                 }
-
-                // Insert new task if it now matches filter but wasn't present
-                if (!found && updatedTask) {
-                  // Heuristic: prepend to first page (keeps recently changed visible). Sorting will fix on next manual refetch.
-                  if (draft.pages.length) {
-                    draft.pages[0].tasks.unshift(updatedTask)
-                  } else {
+                if (!located) {
+                  if (draft.pages.length) draft.pages[0].tasks.unshift(task)
+                  else
                     draft.pages.push({
-                      tasks: [updatedTask],
+                      tasks: [task],
                       pageInfo: {
                         startCursor: null,
                         endCursor: null,
@@ -433,12 +441,34 @@ const injectedApi = enhancedApi.injectEndpoints({
                         hasPreviousPage: false,
                       },
                     })
+                }
+              }
+              // remove any requested but missing tasks
+              for (const id of batchIds) {
+                if (returnedMap.has(id)) continue
+                for (const page of draft.pages) {
+                  const idx = page.tasks.findIndex((t) => t.id === id)
+                  if (idx !== -1) {
+                    page.tasks.splice(idx, 1)
+                    break
                   }
                 }
-              })
-            } catch (err) {
-              console.error('Realtime infinite tasks update failed', err)
-            }
+              }
+            })
+          } catch (err) {
+            console.error('Realtime infinite tasks batch update failed', err)
+          } finally {
+            if (pendingTaskIds.size) schedule()
+          }
+        }
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            const taskId = message?.summary?.entityId
+            if (!taskId) return
+            pendingTaskIds.add(taskId)
+            schedule()
           }
 
           token = PubSub.subscribe('entity.task', handlePubSub)
