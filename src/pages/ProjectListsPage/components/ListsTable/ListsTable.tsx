@@ -1,13 +1,17 @@
 import { FC, useCallback, MouseEvent, useState } from 'react' // Import event types
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
-import SimpleTable, { Container, SimpleTableProvider, SimpleTableRow } from '@shared/SimpleTable'
+import SimpleTable, {
+  Container,
+  SimpleTableProvider,
+  SimpleTableRow,
+  SimpleTableCellTemplateProps,
+} from '@shared/containers/SimpleTable'
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import { ExpandedState, Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
-import { SimpleTableCellTemplateProps } from '@shared/SimpleTable/SimpleTableRowTemplate'
 
 interface ListsTableProps {
   isReview?: boolean

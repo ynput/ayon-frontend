@@ -9,7 +9,7 @@ import {
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
-import { SimpleTableRow } from '@shared/SimpleTable'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useLoadModule } from '@shared/hooks'
 import type { ProjectModel, Assignees } from '@shared/api'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'

@@ -79,6 +79,11 @@
       "types": "./dist/types/containers/Views/index.d.ts",
       "import": "./dist/Views.es.js",
       "require": "./dist/Views.cjs.js"
+    },
+    "./SimpleTable": {
+      "types": "./dist/types/containers/SimpleTable/index.d.ts",
+      "import": "./dist/SimpleTable.es.js",
+      "require": "./dist/SimpleTable.cjs.js"
     }
   },
   "files": [
