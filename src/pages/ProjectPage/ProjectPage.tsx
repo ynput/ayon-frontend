@@ -28,6 +28,7 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import useTitle from '@hooks/useTitle'
 
 const ProjectContextInfo = () => {
   /**
@@ -60,6 +61,25 @@ const ProjectPage = () => {
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
+  
+  // Get page name based on module
+  const getPageName = (module: string, addonName?: string) => {
+    if (module === 'overview') return 'Overview'
+    if (module === 'tasks') return 'Task Progress'
+    if (module === 'browser') return 'Browser'
+    if (module === 'lists') return 'Lists'
+    if (module === 'reviews') return 'Review'
+    if (module === 'workfiles') return 'Workfiles'
+    if (module === 'scheduler') return 'Scheduler'
+    if (addonName) return addonName
+    return module || 'Overview'
+  }
+  
+  // Set dynamic title
+  useTitle({ 
+    project: projectName, 
+    page: getPageName(module, addonName)
+  })
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
     { projectName: projectName || '' },

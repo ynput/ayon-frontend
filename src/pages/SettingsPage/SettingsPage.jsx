@@ -5,6 +5,7 @@ import { useGetSettingsAddonsQuery } from '@shared/api'
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useSelector } from 'react-redux'
+import useTitle from '@hooks/useTitle'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -20,6 +21,27 @@ const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
 const SettingsPage = () => {
   const { module, addonName } = useParams()
   const isManager = useSelector((state) => state.user.data.isManager)
+  
+  // Get page name based on module
+  const getPageName = (module, addonName) => {
+    if (addonName) return addonName
+    switch (module) {
+      case 'addons': return 'Addons'
+      case 'bundles': return 'Bundles'
+      case 'anatomyPresets': return 'Anatomy Presets'
+      case 'studio': return 'Studio Settings'
+      case 'site': return 'Site Settings'
+      case 'users': return 'Users'
+      case 'accessGroups': return 'Permissions'
+      case 'attributes': return 'Attributes'
+      case 'secrets': return 'Secrets'
+      case 'server': return 'Global'
+      default: return 'Settings'
+    }
+  }
+  
+  // Set dynamic title
+  useTitle({ page: getPageName(module, addonName) })
 
   const {
     data: addonsData,

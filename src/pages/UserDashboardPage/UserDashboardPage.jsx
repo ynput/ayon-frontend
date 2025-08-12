@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
+import useTitle from '@hooks/useTitle'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import { useDispatch, useSelector } from 'react-redux'
@@ -34,6 +35,19 @@ const UserDashboardPage = () => {
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
+  
+  // Get page name based on module
+  const getPageName = (module, addonName) => {
+    if (addonName) return addonName
+    switch (module) {
+      case 'tasks': return 'Tasks'
+      case 'overview': return 'Overview'
+      default: return 'Dashboard'
+    }
+  }
+  
+  // Set dynamic title
+  useTitle({ page: getPageName(module, addonName) })
 
   const {
     data: addonsData = [],

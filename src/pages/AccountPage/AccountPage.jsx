@@ -8,6 +8,7 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 // import SiteSettings from './SiteSettingsPage'
 import ProfilePage from './ProfilePage'
 import DownloadsPage from './DownloadsPage/DownloadsPage'
+import useTitle from '@hooks/useTitle'
 
 export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
@@ -19,6 +20,20 @@ export const PanelButtonsStyled = styled(Panel)`
 
 const AccountPage = () => {
   const { module } = useParams()
+  
+  // Get page name based on module
+  const getPageName = (module) => {
+    switch (module) {
+      case 'profile': return 'Profile'
+      case 'sessions': return 'Sessions'
+      case 'downloads': return 'Launchers'
+      case 'settings': return 'Settings'
+      default: return 'Account'
+    }
+  }
+  
+  // Set dynamic title
+  useTitle({ page: getPageName(module) })
 
   // RTK QUERIES
   // GET USER DATA

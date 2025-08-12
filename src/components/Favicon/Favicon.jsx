@@ -1,14 +1,18 @@
 import { Helmet } from 'react-helmet'
 import { useGetInboxHasUnreadQuery } from '@queries/inbox/getInbox'
 import { useSelector } from 'react-redux'
+import { useTitleContext } from '@context/TitleContext'
 
 const Favicon = () => {
   const user = useSelector((state) => state.user)
   const { data: hasUnread } = useGetInboxHasUnreadQuery({}, { skip: !user })
+  const { buildTitle } = useTitleContext()
+
+  const title = buildTitle()
 
   return (
     <Helmet defer={false}>
-      <title>Ayon {hasUnread ? ' - Unread Message...' : ''}</title>
+      <title>{title}</title>
       <link
         rel="apple-touch-icon"
         sizes="180x180"

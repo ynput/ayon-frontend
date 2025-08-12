@@ -26,6 +26,7 @@ import ShareDialog from '@components/ShareDialog'
 import ErrorFallback from '@components/ErrorFallback'
 import { GlobalContextMenu, ContextMenuProvider } from '@shared/containers/ContextMenu'
 import Favicon from '@components/Favicon/Favicon'
+import { TitleProvider } from '@context/TitleContext'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
@@ -175,7 +176,7 @@ const App = () => {
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
     () => (
-      <>
+      <TitleProvider>
         <Favicon />
         <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
@@ -234,7 +235,7 @@ const App = () => {
             </RestartProvider>
           </FeedbackProvider>
         </Suspense>
-      </>
+      </TitleProvider>
     ),
     [isUser, isTrialing, user.name],
   )
