@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 type TitleParts = {
+  parentPage?: string
   page?: string
   project?: string
   entity?: string
@@ -37,21 +38,20 @@ export const TitleProvider = ({ children }: TitleProviderProps) => {
   }, [])
 
   const buildTitle = useCallback((): string => {
-    const { page, project, entity, base = 'Ayon' } = titleParts
+    const { parentPage, page, project, entity, base = 'Ayon' } = titleParts
     const parts: string[] = []
-
+    if(parentPage) parts.push(parentPage)
     if (entity) parts.push(entity)
     if (page) parts.push(page)
     if (project) parts.push(project)
 
-    const isDashboardPage = page?.toLowerCase().includes('dashboard') || ['Tasks', 'Overview'].includes(page ?? '')
     const isEmptyTitle = !entity && !page && !project
 
-    if (isDashboardPage || isEmptyTitle) {
+    if (isEmptyTitle) {
       parts.push(base)
     }
 
-    return parts.length > 0 ? parts.join(' - ') : base
+    return parts.length > 0 ? parts.join(' · ') : base
   }, [titleParts])
 
   return (

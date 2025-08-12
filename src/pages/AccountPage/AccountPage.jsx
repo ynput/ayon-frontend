@@ -60,7 +60,7 @@ const AccountPage = () => {
     // },
   ]
   
-  useTitle({links, project: ''})
+  useTitle({parentPage:"Account", links, project: ''})
 
   return (
     <>
