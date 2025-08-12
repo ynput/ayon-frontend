@@ -39,13 +39,16 @@ function generateOutputFiles(filterTags: string[] = []) {
   const endpointsByTag: Record<string, string[]> = {}
   const seenOperationIds = new Set<string>()
 
+  console.log('Processing OpenAPI paths...')
+
   // Process paths and operations
   for (const [path, operations] of Object.entries(openapi.paths)) {
     for (const [method, operation] of Object.entries(operations as Record<string, any>)) {
       // Skip if no operationId
       if (!operation.operationId) continue
 
-      const operationId = toCamelCase(operation.operationId)
+      // replace spaces and underscores in operationId with camelCase
+      const operationId = toCamelCase(operation.operationId).replace(/_([0-9]+)/g, '$1')
 
       // Skip if we've already seen this operation ID
       if (seenOperationIds.has(operationId)) {
@@ -61,10 +64,12 @@ function generateOutputFiles(filterTags: string[] = []) {
       // Handle 'misc' specially, otherwise convert to camelCase
       const tag = rawTag.toLowerCase() === 'misc' ? 'misc' : toCamelCase(rawTag)
 
+      // skip if it's an addon endpoint (with a version)
+      if (tag.match(/^[a-z]+[0-9]+.*$/i) && !filterTags.includes(tag)) continue
+      console.log(operation.operationId, operationId)
+
       // Skip if filtering by tags and this tag is not included
-      if (filterTags.length > 0 && !filterTags.includes(tag)) {
-        continue
-      }
+      if (filterTags.length > 0 && !filterTags.includes(tag)) continue
 
       // Initialize tag array if it doesn't exist
       if (!endpointsByTag[tag]) {
@@ -76,6 +81,7 @@ function generateOutputFiles(filterTags: string[] = []) {
     }
   }
 
+  console.log('Generated endpoints by tag:', Object.keys(endpointsByTag))
   return endpointsByTag
 }
 

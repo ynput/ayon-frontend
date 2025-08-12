@@ -6,6 +6,7 @@ import {
   OnChangeFn,
   VisibilityState,
   ColumnSizingState,
+  SortingState,
 } from '@tanstack/react-table'
 import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
@@ -15,7 +16,7 @@ import { GroupByConfig } from '../components/GroupSettingsFallback'
 interface ColumnSettingsProviderProps {
   children: ReactNode
   config?: Record<string, any>
-  onChange: (config: ColumnsConfig) => void
+  onChange: (config: ColumnsConfig, allColumnIds?: string[]) => void
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
@@ -23,16 +24,23 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   config,
   onChange,
 }) => {
+  const allColumnsRef = React.useRef<string[]>([])
+  const setAllColumns = (allColumnIds: string[]) => {
+    allColumnsRef.current = Array.from(new Set(allColumnIds))
+  }
+  const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
   const columnsConfig = config as ColumnsConfig
   const {
     columnOrder: columnOrderInit = [],
     columnPinning: columnPinningInit = {},
     columnVisibility: columnVisibilityInit = {},
     columnSizing: columnsSizingExternal = {},
+    sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
   } = columnsConfig
 
+  const sorting = [...sortingInit]
   const columnOrder = [...columnOrderInit]
   const columnPinning = { ...columnPinningInit }
   const defaultOrder = ['thumbnail', 'name', 'subType', 'status', 'tags']
@@ -91,21 +99,21 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   // DIRECT STATE UPDATES - no side effects
   const setColumnVisibility = (visibility: VisibilityState) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnVisibility: visibility,
     })
   }
 
   const setColumnOrder = (order: ColumnOrderState) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnOrder: order,
     })
   }
 
   const setColumnPinning = (pinning: ColumnPinningState) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnPinning: pinning,
     })
@@ -129,7 +137,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     resizingTimeoutRef.current = setTimeout(() => {
       // we have finished resizing now!
       // update the external column sizing
-      onChange({
+      onChangeWithColumns({
         ...columnsConfig,
         columnSizing: sizing,
       })
@@ -176,7 +184,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   // UPDATE METHODS WITH SIDE EFFECTS
   const updateColumnVisibility = (visibility: VisibilityState) => {
     const newPinning = togglePinningOnVisibilityChange(visibility)
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnVisibility: visibility,
       columnPinning: newPinning,
@@ -185,7 +193,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   const updateColumnOrder = (order: ColumnOrderState) => {
     const newPinning = updatePinningOrderOnOrderChange(order)
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnOrder: order,
       columnPinning: newPinning,
@@ -194,22 +202,29 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   const updateColumnPinning = (pinning: ColumnPinningState) => {
     const newOrder = updateOrderOnPinningChange(pinning)
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnOrder: newOrder,
       columnPinning: pinning,
     })
   }
 
+  const updateSorting = (sortingState: SortingState) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      sorting: sortingState,
+    })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       groupBy: groupBy,
     })
   }
 
   const updateGroupByConfig = (config: GroupByConfig) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       groupByConfig: {
         ...groupByConfig,
@@ -218,49 +233,62 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
-  // UPDATER FUNCTIONS
-  const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
-    const newVisibility = functionalUpdate(columnVisibilityUpdater, columnVisibility)
-    updateColumnVisibility(newVisibility)
+  // Remove redundant local updater functions in favor of unified updaters with all columns
+
+  // ON-CHANGE HANDLERS (TanStack-compatible)
+  const columnVisibilityOnChange: OnChangeFn<VisibilityState> = (updater) => {
+    const newVisibility = functionalUpdate(updater, columnVisibility)
+    setColumnVisibility(newVisibility)
   }
 
-  const columnOrderUpdater: OnChangeFn<ColumnOrderState> = (columnOrderUpdater) => {
-    const newOrder = functionalUpdate(columnOrderUpdater, columnOrder)
-    updateColumnOrder(newOrder)
+  const columnPinningOnChange: OnChangeFn<ColumnPinningState> = (updater) => {
+    const newPinning = functionalUpdate(updater, columnPinning)
+    setColumnPinning(newPinning)
   }
 
-  const columnPinningUpdater: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
-    const newPinning = functionalUpdate(columnPinningUpdater, columnPinning)
-    updateColumnPinning(newPinning)
+  const columnOrderOnChange: OnChangeFn<ColumnOrderState> = (updater) => {
+    const newOrder = functionalUpdate(updater, columnOrder)
+    setColumnOrder(newOrder)
   }
 
-  const columnSizingUpdater: OnChangeFn<ColumnSizingState> = (sizingUpdater) => {
-    const newSizing = functionalUpdate(sizingUpdater, columnSizing)
+  const columnSizingOnChange: OnChangeFn<ColumnSizingState> = (updater) => {
+    const newSizing = functionalUpdate(updater, columnSizing)
     setColumnSizing(newSizing)
+  }
+
+  const sortingOnChange: OnChangeFn<SortingState> = (updater) => {
+    const newSorting = functionalUpdate(updater, sorting)
+    updateSorting(newSorting)
   }
 
   return (
     <ColumnSettingsContext.Provider
       value={{
+        // all columns ref
+        setAllColumns,
         // column visibility
         columnVisibility,
         setColumnVisibility,
         updateColumnVisibility,
-        columnVisibilityUpdater,
+        columnVisibilityOnChange,
         // column pinning
         columnPinning,
         setColumnPinning,
         updateColumnPinning,
-        columnPinningUpdater,
+        columnPinningOnChange,
         // column order
         columnOrder,
         setColumnOrder,
         updateColumnOrder,
-        columnOrderUpdater,
+        columnOrderOnChange,
         // column sizing
         columnSizing,
         setColumnSizing,
-        columnSizingUpdater,
+        columnSizingOnChange,
+        // sorting
+        sorting,
+        updateSorting,
+        sortingOnChange,
         // group by
         groupBy,
         updateGroupBy,
@@ -268,7 +296,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         updateGroupByConfig,
 
         // global change
-        setColumnsConfig: onChange,
+        setColumnsConfig: (config: ColumnsConfig) => onChangeWithColumns(config),
       }}
     >
       {children}

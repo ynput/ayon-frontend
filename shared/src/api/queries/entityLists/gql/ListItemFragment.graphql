@@ -1,6 +1,9 @@
 fragment ListItemFragment on BaseNode {
+  active
+  name
+  updatedAt
+  parents
   ... on TaskNode {
-    name
     label
     status
     tags
@@ -8,13 +11,13 @@ fragment ListItemFragment on BaseNode {
     assignees
     ownAttrib
     hasReviewables
+    folderId
     folder {
       path
       folderType
     }
   }
   ... on FolderNode {
-    name
     label
     status
     tags
@@ -22,19 +25,19 @@ fragment ListItemFragment on BaseNode {
     path
     ownAttrib
     hasReviewables
+    folderId: id
   }
   ... on ProductNode {
-    name
     status
     tags
     productType
+    folderId
     folder {
       path
       folderType
     }
   }
   ... on VersionNode {
-    name
     status
     tags
     hasReviewables
@@ -42,6 +45,7 @@ fragment ListItemFragment on BaseNode {
       id
       name
       productType
+      folderId
       folder {
         id
         path

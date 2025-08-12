@@ -36,6 +36,7 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
       attrib: parseAllAttribs(taskNode.allAttrib),
       entityId: taskNode.id,
       entityType: 'task',
+      links: [],
     })
   }
 
@@ -49,12 +50,12 @@ const getOverviewTaskTags = (
 ) => {
   const taskTags = result?.map((task) => ({ type: 'overviewTask', id: task.id })) || []
 
-  if (!parentIds) return taskTags
-
-  const parentTags = (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
-    type: 'overviewTask',
-    id,
-  }))
+  const parentTags = parentIds
+    ? (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
+        type: 'overviewTask',
+        id,
+      }))
+    : []
 
   return [
     ...taskTags,

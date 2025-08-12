@@ -215,7 +215,7 @@ const ServicesPage = () => {
   const [ctxMenuShow] = useCreateContextMenu([])
 
   return (
-    <main style={{ overflow: 'hidden' }}>
+    <main>
       {showServiceDialog && (
         <ServiceDialog onHide={handleCloseDialog} editService={editingService} />
       )}

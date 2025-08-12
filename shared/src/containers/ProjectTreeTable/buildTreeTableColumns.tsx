@@ -3,7 +3,7 @@ import { TableRow } from './types/table'
 import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { CellWidget, EntityNameWidget, GroupHeaderWidget, ThumbnailWidget } from './widgets'
 import { getCellId, getCellValue } from './utils/cellUtils'
-import { TableCellContent } from './ProjectTreeTable.styled'
+import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
@@ -11,6 +11,10 @@ import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
+import { LinkTypeModel } from '@shared/api'
+import { LinkWidgetData } from './widgets/LinksWidget'
+import { Icon } from '@ynput/ayon-react-components'
+import { getEntityTypeIcon } from '@shared/util'
 
 const MIN_SIZE = 50
 
@@ -61,6 +65,19 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
+export const getLinkLabel = (
+  link: Pick<LinkTypeModel, 'linkType'>,
+  direction: 'in' | 'out' | string,
+) => `${link.linkType.charAt(0).toUpperCase() + link.linkType.slice(1)} (${direction})`
+
+export const getLinkKey = (link: Pick<LinkTypeModel, 'name'>, direction: 'in' | 'out' | string) =>
+  `${link.name.replaceAll('_', '').replaceAll('-', '').replaceAll('|', '_')}_${direction}`
+
+export const getLinkColumnId = (
+  link: Pick<LinkTypeModel, 'name'>,
+  direction: 'in' | 'out' | string,
+) => `link_${getLinkKey(link, direction)}`
+
 export type DefaultColumns =
   | typeof ROW_SELECTION_COLUMN_ID
   | 'thumbnail'
@@ -74,6 +91,7 @@ export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: num
 
 export type BuildTreeTableColumnsProps = {
   attribs: ProjectTableAttribute[]
+  links: LinkTypeModel[]
   showHierarchy: boolean
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
@@ -83,6 +101,7 @@ export type BuildTreeTableColumnsProps = {
 
 const buildTreeTableColumns = ({
   attribs,
+  links = [],
   showHierarchy,
   options,
   excluded,
@@ -197,7 +216,7 @@ const buildTreeTableColumns = ({
                 id={row.id}
                 label={row.original.label}
                 name={row.original.name}
-                path={!showHierarchy ? row.original.path : undefined}
+                path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
                 showHierarchy={showHierarchy}
                 icon={row.original.icon}
                 type={row.original.entityType}
@@ -407,8 +426,8 @@ const buildTreeTableColumns = ({
       const columnId = 'attrib_' + attrib.name
       // Check if the specific attribute column is excluded
       // or if all built-in attributes are excluded and this is a built-in attribute
-      if (excluded?.includes(columnId)) return false
-      if (attrib.builtin && excluded?.includes('attrib')) return false
+      if (!isIncluded(columnId)) return false
+      if (attrib.builtin && !isIncluded('attrib')) return false
       return true
     })
     .map((attrib) => {
@@ -459,7 +478,66 @@ const buildTreeTableColumns = ({
       return attribColumn
     })
 
-  const allColumns = [...staticColumns, ...attributeColumns]
+  const linkColumns: ColumnDef<TableRow>[] = links
+    .filter((link) => {
+      // Check if the link type is excluded
+      if (!isIncluded(link.linkType) || !isIncluded('link')) return false
+      return true
+    })
+    .flatMap((link) => {
+      const createLinkColumn = (direction: 'in' | 'out'): ColumnDef<TableRow> => {
+        return {
+          id: getLinkColumnId(link, direction),
+          accessorKey: `links.${getLinkKey(link, direction)}`,
+          header: () => (
+            <LinkColumnHeader>
+              {getLinkLabel(link, direction)}{' '}
+              <Icon
+                icon={getEntityTypeIcon(direction === 'in' ? link.inputType : link.outputType)}
+              />
+            </LinkColumnHeader>
+          ),
+          minSize: MIN_SIZE,
+          enableSorting: false,
+          enableResizing: true,
+          enablePinning: true,
+          enableHiding: true,
+          cell: ({ row, column }) => {
+            const columnIdParsed = column.id.replace('link_', '')
+
+            const { id, value } = getValueIdType(row, columnIdParsed, 'links')
+            const cellValue = value?.map((v: any) => v.label)
+            const valueData: LinkWidgetData = {
+              links: value,
+              direction: direction,
+              entityId: row.original.entityId || row.original.id,
+              entityType: row.original.entityType,
+              link: {
+                label: link.linkType,
+                linkType: link.name,
+                targetEntityType: direction === 'in' ? link.inputType : link.outputType,
+              },
+            }
+
+            return (
+              <CellWidget
+                rowId={id}
+                className={clsx('links', { loading: row.original.isLoading })}
+                columnId={column.id}
+                value={cellValue}
+                valueData={valueData}
+                folderId={row.original.folderId}
+                attributeData={{ type: 'links' }}
+              />
+            )
+          },
+        }
+      }
+
+      return [createLinkColumn('in'), createLinkColumn('out')]
+    })
+
+  const allColumns = [...staticColumns, ...attributeColumns, ...linkColumns]
 
   // Add extra columns if provided
   if (extraColumns) {
