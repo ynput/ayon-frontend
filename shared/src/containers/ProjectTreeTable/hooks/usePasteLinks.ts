@@ -36,13 +36,13 @@ export type LinkUpdate = {
   targetEntityIds: string[]
 }
 
-export type UpdateTableLinks = (linkUpdates: LinkUpdate[]) => Promise<void>
+export type PasteTableLinks = (linkUpdates: LinkUpdate[]) => Promise<void>
 
-interface UseUpdateTableLinksProps {
+interface usePasteLinksProps {
   projectName?: string
 }
 
-const useUpdateTableLinks = (props?: UseUpdateTableLinksProps) => {
+const usePasteLinks = (props?: usePasteLinksProps) => {
   const { getEntityById, projectName: contextProjectName } = useProjectTableContext()
   const projectName = props?.projectName || contextProjectName
 
@@ -51,7 +51,7 @@ const useUpdateTableLinks = (props?: UseUpdateTableLinksProps) => {
   const [addLink] = useCreateEntityLinkMutation()
 
   // Handle link updates using the utility functions
-  const updateTableLinks = useCallback<UpdateTableLinks>(
+  const pasteTableLinks = useCallback<PasteTableLinks>(
     async (linkUpdates: LinkUpdate[]) => {
       if (!projectName || !linkUpdates.length) return
 
@@ -99,10 +99,14 @@ const useUpdateTableLinks = (props?: UseUpdateTableLinksProps) => {
         const currentLinks = entityData.links
 
         if (operation === 'replace') {
-          // Remove all current links of this type
+          // Remove all current links of this (linkType + direction + targetEntityType) only.
           if (Array.isArray(currentLinks)) {
             for (const link of currentLinks) {
-              if (link.entityType === targetEntityType && link.direction === direction) {
+              if (
+                link.entityType === targetEntityType &&
+                link.direction === direction &&
+                link.linkType === linkType.split('|')[0]
+              ) {
                 linksToRemove.push({
                   id: link.id,
                   target: {
@@ -134,11 +138,15 @@ const useUpdateTableLinks = (props?: UseUpdateTableLinksProps) => {
             })
           }
         } else if (operation === 'merge') {
-          // Get existing target entity IDs
+          // Get existing target entity IDs for this (linkType + direction + targetEntityType)
           const existingTargetIds = new Set<string>()
           if (Array.isArray(currentLinks)) {
             currentLinks.forEach((link) => {
-              if (link.entityType === targetEntityType && link.direction === direction) {
+              if (
+                link.entityType === targetEntityType &&
+                link.direction === direction &&
+                link.linkType === linkType
+              ) {
                 existingTargetIds.add(link.node.id)
               }
             })
@@ -182,7 +190,7 @@ const useUpdateTableLinks = (props?: UseUpdateTableLinksProps) => {
     [projectName, getEntityById, deleteLink, addLink],
   )
 
-  return { updateTableLinks }
+  return { pasteTableLinks }
 }
 
-export default useUpdateTableLinks
+export default usePasteLinks

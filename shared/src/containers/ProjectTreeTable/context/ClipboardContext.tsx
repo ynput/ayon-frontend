@@ -14,7 +14,7 @@ import {
 
 // Types
 import { EntityUpdate } from '../hooks/useUpdateTableData'
-import useUpdateTableLinks, { LinkUpdate } from '../hooks/useUpdateTableLinks'
+import usePasteLinks, { LinkUpdate } from '../hooks/usePasteLinks'
 
 // Import from the new modular files
 import {
@@ -39,7 +39,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
-  const { updateTableLinks } = useUpdateTableLinks()
+  const { pasteTableLinks } = usePasteLinks()
   const { getEntityById, attribFields } = useProjectTableContext()
 
   const getSelectionData = useCallback(
@@ -549,7 +549,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       }
 
       if (allLinkUpdates.length > 0) {
-        updatePromises.push(updateTableLinks(allLinkUpdates))
+        updatePromises.push(pasteTableLinks(allLinkUpdates))
       }
 
       if (updatePromises.length > 0) {
@@ -566,7 +566,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       gridMap,
       entitiesMap,
       updateEntities,
-      updateTableLinks,
+      pasteTableLinks,
       columnEnums,
       getEntityById,
     ],
