@@ -40,7 +40,7 @@ const InboxPage = () => {
       module: 'cleared',
     },
   ]
-  useTitle({ links, project: '' })
+  useTitle({ parentPage: 'Inbox',links, project: '' })
 
   return (
     <>

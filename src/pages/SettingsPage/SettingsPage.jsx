@@ -171,7 +171,7 @@ const SettingsPage = () => {
     return result
   }, [addonsData, isManager])
   
-  useTitle({links, paramKey: addonName ? 'addonName' : 'module', project: ''})
+  useTitle({parentPage: 'Settings',links, paramKey: addonName ? 'addonName' : 'module', project: ''})
 
   return (
     <>

@@ -68,7 +68,7 @@ const UserDashboardPage = () => {
     })
   }
   
-  useTitle({ links, paramKey: addonName ? 'addonName' : 'module', project: '' })
+  useTitle({ parentPage: "Dashboard", links, paramKey: addonName ? 'addonName' : 'module', project: '' })
 
   const addonData = addonsData.find((addon) => addon.name === addonName)
 
