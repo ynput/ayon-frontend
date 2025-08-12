@@ -365,6 +365,89 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
+      async onCacheEntryAdded(
+        arg: GetTasksListArgs,
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+      ) {
+        let token: any
+        try {
+          await cacheDataLoaded
+
+          const { projectName, filter, search, folderIds, sortBy, desc } =
+            arg || ({} as GetTasksListArgs)
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            const taskId = message?.summary?.entityId
+            if (!taskId) return
+
+            try {
+              // Fetch only the changed task (or detect deletion) via GetTasksList using taskIds
+              const res = await dispatch(
+                enhancedApi.endpoints.GetTasksList.initiate(
+                  {
+                    projectName,
+                    taskIds: [taskId],
+                    filter,
+                    search,
+                    folderIds,
+                    sortBy,
+                    desc,
+                    // guard if GetTasksList later gains its own realtime listener
+                    noRealtime: true,
+                  } as any,
+                  { forceRefetch: true },
+                ),
+              ).unwrap()
+
+              const updatedTask = res.tasks?.[0]
+
+              updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
+                // Locate task across pages
+                let found = false
+                for (const page of draft.pages) {
+                  const idx = page.tasks.findIndex((t) => t.id === taskId)
+                  if (idx !== -1) {
+                    found = true
+                    if (updatedTask) {
+                      page.tasks[idx] = updatedTask
+                    } else {
+                      // remove if task disappeared
+                      page.tasks.splice(idx, 1)
+                    }
+                    break
+                  }
+                }
+
+                // Insert new task if it now matches filter but wasn't present
+                if (!found && updatedTask) {
+                  // Heuristic: prepend to first page (keeps recently changed visible). Sorting will fix on next manual refetch.
+                  if (draft.pages.length) {
+                    draft.pages[0].tasks.unshift(updatedTask)
+                  } else {
+                    draft.pages.push({
+                      tasks: [updatedTask],
+                      pageInfo: {
+                        startCursor: null,
+                        endCursor: null,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                      },
+                    })
+                  }
+                }
+              })
+            } catch (err) {
+              console.error('Realtime infinite tasks update failed', err)
+            }
+          }
+
+          token = PubSub.subscribe('entity.task', handlePubSub)
+        } catch (_) {
+          // ignore
+        }
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
+      },
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
       queryFn: async ({ projectName, groups, search, folderIds, desc, sortBy }, api) => {
