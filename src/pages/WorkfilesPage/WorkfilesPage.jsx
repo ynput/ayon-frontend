@@ -2,8 +2,10 @@ import Hierarchy from '@containers/hierarchy'
 import TaskList from '@containers/taskList'
 import WorkfileList from './WorkfileList'
 import WorkfileDetail from './WorkfileDetail'
+import useTitle from '@hooks/useTitle'
 
 const WorkfilesPage = () => {
+  useTitle() // This will use breadcrumbs fallback
   return (
     <main>
       <Hierarchy style={{ flex: 1, minWidth: 250, maxWidth: 500 }} />
