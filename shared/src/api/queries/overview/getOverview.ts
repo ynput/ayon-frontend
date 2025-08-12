@@ -6,6 +6,7 @@ import {
   QueryTasksFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
+import { PubSub } from '@shared/util'
 import { EditorTaskNode, TableGroupBy } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
@@ -200,6 +201,69 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
+      async onCacheEntryAdded(
+        { projectName, parentIds, filter, search },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+      ) {
+        let token: any
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            const taskId = message?.summary?.entityId
+            const parentId = message?.summary?.parentId
+            if (!taskId || !parentId) return
+            // Only react if the parent folder is part of the current expanded set
+            if (!parentIds.includes(parentId)) return
+
+            try {
+              // Re-fetch only the specific task via GetTasksList (supports taskIds)
+              const res = await dispatch(
+                enhancedApi.endpoints.GetTasksList.initiate(
+                  {
+                    projectName,
+                    taskIds: [taskId],
+                    filter,
+                    search,
+                  } as any, // cast in case taskIds not yet typed in generated vars
+                  { forceRefetch: true },
+                ),
+              ).unwrap()
+
+              const updatedTask = res.tasks?.[0]
+
+              updateCachedData((draft: EditorTaskNode[]) => {
+                const idx = draft.findIndex((t) => t.id === taskId)
+
+                if (!updatedTask) {
+                  // Task no longer matches filter / was deleted -> remove from cache if present
+                  if (idx > -1) draft.splice(idx, 1)
+                  return
+                }
+
+                if (idx > -1) {
+                  draft[idx] = updatedTask
+                } else {
+                  // Insert only if its parent is tracked (already ensured) and not duplicated
+                  draft.push(updatedTask)
+                }
+              })
+            } catch (err) {
+              console.error('Realtime task update failed', err)
+            }
+          }
+
+          // Subscribe to task entity updates
+          // NOTE: backend emits topics like 'entity.task.assignees_changed'.
+          // Assuming PubSub supports prefix matching when subscribing without the suffix.
+          token = PubSub.subscribe('entity.task', handlePubSub)
+        } catch (e) {
+          // cache entry removed before loaded - ignore
+        }
+
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
+      },
     }),
     // queryTasksFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook
