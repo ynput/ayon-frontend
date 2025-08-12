@@ -150,6 +150,7 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
+        viewType: 'review',
       },
       {
         name: 'Scheduler',
