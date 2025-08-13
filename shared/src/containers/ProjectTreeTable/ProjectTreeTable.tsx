@@ -420,6 +420,8 @@ export const ProjectTreeTable = ({
     visibleColumns,
     tableContainerRef,
     columnPinning,
+    columnSizing,
+    columnOrder,
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
