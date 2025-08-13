@@ -17,50 +17,45 @@ export function formatTitle(
   // Check if lastPart is already the project name (avoid duplicates)
   const isLastPartProjectName = projectName && lastPart === projectName
 
-  // 1. Projects pages: {page/tab} • {project_name}
-  // Example: Overview • demo_Commercial
-  // (If the last part of breadcrumbs is already the project name, do not duplicate it.)
-  if (projectName && breadcrumbParts.length > 1 && !isLastPartProjectName) {
-    return `${lastPart} • ${projectName}`
-  }
-
   // Handle specific single pages first to avoid incorrect settings detection
   const singlePages = ['/market', '/events', '/inbox', '/teams', '/services', '/api-docs']
   if (pathname && singlePages.includes(pathname)) {
     return `${lastPart} • AYON`
   }
 
-  // 2. Studio Settings: {tab/page} • Studio Settings
-  // Example: Bundles • Studio Settings
-  // 3. Addon in Studio Settings: {addon_name} • Studio Settings
-  // Example: maya • Studio Settings
+  // Studio Settings: {tab/page} • Studio Settings OR {addon_name} • Studio Settings
   if (pathname?.includes('/settings') && !pathname.includes('manageProjects')) {
     return `${lastPart || 'Studio Settings'} • Studio Settings`
   }
 
-  // 4. Project Settings: {tab/page} • Manage Projects
-  // Example: Bundles • Manage Projects
+  // Project Settings: {tab/page} • Manage Projects
   if (pathname?.includes('/manageProjects')) {
     return `${lastPart || 'Manage Projects'} • Manage Projects`
   }
 
-  // 5. Single pages: {page_name} • AYON
+  // Projects pages: {page/tab} • {project_name}
+  // Example: Overview • demo_Commercial
+  if (projectName && breadcrumbParts.length > 1 && !isLastPartProjectName) {
+    return `${lastPart} • ${projectName}`
+  }
+
+  // Single pages OR Home/Dashboard pages with single breadcrumb: {page_name} • AYON
   // Example: Market • AYON
   if (breadcrumbParts.length === 1) {
     return `${breadcrumbParts[0]} • AYON`
   }
 
-  // 6. Home/Dashboard: {page/tab} • AYON
-  // Example: Planner • AYON
+  // Home/Dashboard pages with multiple breadcrumbs but no project: {page/tab} • AYON
+  // Example: Tasks • AYON, Planner • AYON
   if (breadcrumbParts.length > 1 && !projectName) {
     return `${lastPart} • AYON`
   }
 
-  // If lastPart is already project name, format appropriately
+  // If lastPart is already project name, show as single page: {project_name} • AYON
   if (isLastPartProjectName) {
     return `${lastPart} • AYON`
   }
 
-  // 7. If none of the above applies, use breadcrumbs.join(' / ') or 'AYON' as a fallback
+  // Fallback
   return breadcrumbParts.join(' / ') || 'AYON'
 }

@@ -1,60 +1,38 @@
 import React from 'react'
-import { Helmet } from 'react-helmet'
-import { useSelector } from 'react-redux'
-import { useLocation } from 'react-router-dom'
-import { formatTitle } from '@/utils/formatTitle'
-
-interface Link {
-  name: string
-  path: string
-  module: string
-}
-
-interface DocumentTitleProps {
-  title?: string
-  links?: Link[]
-}
+import {Helmet} from 'react-helmet'
+import {useSelector} from 'react-redux'
+import {useLocation} from 'react-router-dom'
+import {formatTitle} from '@/utils/formatTitle'
+import {uri2crumbs} from '@/utils/breadcrumbs'
 
 /**
- * Component responsible for setting the document title
- * @param title - Simple title string (e.g., "Market")
- * @param links - Array of navigation links to determine current page title
+ * Main DocumentTitle component that provides titles for all pages
  */
-const DocumentTitle: React.FC<DocumentTitleProps> = ({ title, links }) => {
+const DocumentTitle: React.FC = () => {
   const projectName = useSelector((state: any) => state.project.name) as string | undefined
+  const ctxUri = useSelector((state: any) => state.context.uri) || ''
   const location = useLocation()
 
-  const formattedTitle = React.useMemo(() => {
-    let pageTitle = title
+  const fallbackTitle = React.useMemo(() => {
+    // Generate breadcrumbs as fallback, including projectName for proper context
+    const breadcrumbParts = uri2crumbs(ctxUri, location.pathname, projectName)
 
-    // If links provided, find current page from links
-    if (links && !title) {
-      const currentLink = links.find(link => link.path === location.pathname)
-      pageTitle = currentLink?.name
+    if (breadcrumbParts.length === 0) {
+      return 'AYON'
     }
 
-    if (!pageTitle) return 'AYON'
+    return formatTitle(breadcrumbParts, projectName, location.pathname)
 
-    // Use simple formatting logic
-    const breadcrumbParts = [pageTitle]
-    const finalTitle = formatTitle(breadcrumbParts, projectName, location.pathname)
+  }, [ctxUri, location.pathname, projectName])
 
-    // Debug logging
-    console.log('DocumentTitle (explicit):', {
-      pathname: location.pathname,
-      title,
-      links: !!links,
-      pageTitle,
-      projectName,
-      finalTitle
-    })
-
-    return finalTitle
-  }, [title, links, location.pathname, projectName])
+  // Force title update when fallbackTitle changes
+  React.useEffect(() => {
+    document.title = fallbackTitle
+  }, [fallbackTitle])
 
   return (
-    <Helmet>
-      <title>{formattedTitle}</title>
+    <Helmet defer={false} key={`${location.pathname}-${projectName || 'no-project'}`}>
+      <title>{fallbackTitle}</title>
     </Helmet>
   )
 }

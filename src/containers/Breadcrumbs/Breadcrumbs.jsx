@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useSelector } from 'react-redux'
+import { useLocation } from 'react-router-dom'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
@@ -10,7 +11,8 @@ import clsx from 'clsx'
 import { uri2crumbs } from '@/utils/breadcrumbs'
 
 const Breadcrumbs = () => {
-  const location = window.location
+  const location = useLocation()
+  const projectName = useSelector((state) => state.project.name)
 
   const [localUri, setLocalUri] = useState('')
   const [editMode, setEditMode] = useState(false)
@@ -77,7 +79,7 @@ const Breadcrumbs = () => {
       setLocalUri(ctxUri)
     }
 
-    const urlParams = new URLSearchParams(window.location.search)
+    const urlParams = new URLSearchParams(location.search)
     const encodedAyonEntity = urlParams.get(ayonUrlParam)
     if (encodedAyonEntity !== null) {
       const ayonEntity = decodeURIComponent(encodedAyonEntity)
@@ -85,11 +87,20 @@ const Breadcrumbs = () => {
         navigate(ayonEntity)
       }
     }
-  }, [ctxUri])
+  }, [ctxUri, location.search, navigate])
 
-  const uriDisplay = uri2crumbs(ctxUri, location.pathname).join(' / ')
-  const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
+  // Memoize the breadcrumb display to ensure it updates when dependencies change
+  const uriDisplay = useMemo(() => {
+    const crumbs = uri2crumbs(ctxUri, location.pathname, projectName)
+    return crumbs.length > 0 ? crumbs.join(' / ') : ''
+  }, [ctxUri, location.pathname, projectName])
 
+  // Get URI from URL params as fallback for edit mode on initial load
+  const urlParams = new URLSearchParams(location.search)
+  const encodedAyonEntity = urlParams.get(ayonUrlParam)
+  const urlParamUri = encodedAyonEntity ? decodeURIComponent(encodedAyonEntity) : ''
+  
+  const inputValue = editMode ? (localUri || ctxUri || urlParamUri) : uriDisplay || 'Go to URI...'
   return (
     <Styled.Wrapper>
       <Styled.Crumbtainer>
@@ -104,6 +115,13 @@ const Breadcrumbs = () => {
               }}
               onClick={(e) => {
                 e.preventDefault()
+                // If localUri is empty, set it to the best available URI before entering edit mode
+                if (!localUri) {
+                  const fallbackUri = ctxUri || urlParamUri
+                  if (fallbackUri) {
+                    setLocalUri(fallbackUri)
+                  }
+                }
                 setEditMode(true)
               }}
               variant="tonal"
@@ -114,7 +132,16 @@ const Breadcrumbs = () => {
               value={inputValue}
               onChange={(e) => setLocalUri(e.target.value)}
               onBlur={() => setEditMode(false)}
-              onFocus={() => setEditMode(true)}
+              onFocus={() => {
+                // Ensure localUri is populated when focusing
+                if (!localUri) {
+                  const fallbackUri = ctxUri || urlParamUri
+                  if (fallbackUri) {
+                    setLocalUri(fallbackUri)
+                  }
+                }
+                setEditMode(true)
+              }}
               onKeyDown={handleKeyDown}
               ref={inputRef}
               style={{ borderRadius: '4px 0 0 4px' }}
