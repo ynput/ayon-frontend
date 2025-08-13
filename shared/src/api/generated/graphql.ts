@@ -1633,6 +1633,7 @@ export type GetTasksByParentQuery = { __typename?: 'Query', project: { __typenam
 export type GetTasksListQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  taskIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2369,7 +2370,7 @@ export const GetTasksByParentDocument = `
 }
     ${TaskPropsFragmentFragmentDoc}`;
 export const GetTasksListDocument = `
-    query GetTasksList($projectName: String!, $folderIds: [String!], $filter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     name
     tasks(
@@ -2381,6 +2382,7 @@ export const GetTasksListDocument = `
       before: $before
       last: $last
       sortBy: $sortBy
+      ids: $taskIds
     ) {
       pageInfo {
         startCursor
