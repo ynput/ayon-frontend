@@ -1,6 +1,6 @@
 import { OnSliceTypeChange } from '@context/SlicerContext'
 import { SliceType } from '@shared/containers/Slicer'
-import { SimpleTableRow } from '@shared/SimpleTable'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 
 export interface SliceOption {
   value: SliceType

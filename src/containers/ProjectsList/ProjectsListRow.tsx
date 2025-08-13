@@ -1,7 +1,7 @@
 import {
   SimpleTableCellTemplate,
   SimpleTableCellTemplateProps,
-} from '@shared/SimpleTable/SimpleTableRowTemplate'
+} from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'

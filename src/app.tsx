@@ -26,6 +26,7 @@ import ShareDialog from '@components/ShareDialog'
 import ErrorFallback from '@components/ErrorFallback'
 import { GlobalContextMenu, ContextMenuProvider } from '@shared/containers/ContextMenu'
 import Favicon from '@components/Favicon/Favicon'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
@@ -208,6 +209,7 @@ const App = () => {
                                       updateType: 'replaceIn',
                                     }}
                                   >
+                                    <DocumentTitle />
                                     <Header />
                                     <ShareDialog />
                                     <ViewerDialog />

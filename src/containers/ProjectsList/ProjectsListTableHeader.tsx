@@ -1,7 +1,7 @@
 import Menu from '@components/Menu/MenuComponents/Menu'
 import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
 import ListsSearch from '@pages/ProjectListsPage/components/ListsTable/ListsSearch'
-import { Header, HeaderButton } from '@shared/SimpleTable'
+import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'

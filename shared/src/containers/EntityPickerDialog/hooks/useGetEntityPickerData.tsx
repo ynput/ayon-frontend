@@ -13,7 +13,7 @@ import {
   EntityAnatomy,
   entityHierarchies,
 } from '../util'
-import { SimpleTableRow } from '@shared/SimpleTable'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { matchSorter } from 'match-sorter'
 import { productTypes } from '@shared/util'
 

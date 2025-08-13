@@ -1,11 +1,11 @@
 import { FC, useState } from 'react'
-import SimpleTable, { Container, Header } from '@shared/SimpleTable'
+import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { SliceType } from '@shared/containers/Slicer'
-import { SimpleTableProvider } from '@shared/SimpleTable'
+import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
 

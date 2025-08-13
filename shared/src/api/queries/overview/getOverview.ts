@@ -6,6 +6,7 @@ import {
   QueryTasksFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
+import { PubSub } from '@shared/util'
 import { EditorTaskNode, TableGroupBy } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
@@ -200,6 +201,85 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
+      async onCacheEntryAdded(
+        { projectName, parentIds, filter, search },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+      ) {
+        let token: any
+        const pendingTaskIds = new Set<string>()
+        const MAX_BATCH = 100
+        const INTERVAL = 500
+        let scheduled = false
+
+        const schedule = () => {
+          if (scheduled) return
+          scheduled = true
+          setTimeout(flush, INTERVAL)
+        }
+
+        const flush = async () => {
+          scheduled = false
+          if (!pendingTaskIds.size) return
+          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
+          batchIds.forEach((id) => pendingTaskIds.delete(id))
+          try {
+            const res = await dispatch(
+              enhancedApi.endpoints.GetTasksList.initiate(
+                {
+                  projectName,
+                  taskIds: batchIds,
+                } as any,
+                { forceRefetch: true },
+              ),
+            ).unwrap()
+            const returned = res.tasks || []
+            const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
+
+            updateCachedData((draft: EditorTaskNode[]) => {
+              // update or add
+              for (const task of returned) {
+                const idx = draft.findIndex((t) => t.id === task.id)
+                if (idx > -1) draft[idx] = task
+                else draft.push(task)
+              }
+              // remove missing
+              for (const id of batchIds) {
+                if (!returnedMap.has(id)) {
+                  const idx = draft.findIndex((t) => t.id === id)
+                  if (idx > -1) draft.splice(idx, 1)
+                }
+              }
+            })
+          } catch (err) {
+            console.error('Realtime overview batch update failed', err)
+          } finally {
+            if (pendingTaskIds.size) schedule()
+          }
+        }
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            const taskId = message?.summary?.entityId
+            const parentId = message?.summary?.parentId
+            if (!taskId || !parentId) return
+            // Only react if the parent folder is part of the current expanded set
+            if (!parentIds.includes(parentId)) return
+            pendingTaskIds.add(taskId)
+            schedule()
+          }
+
+          // Subscribe to task entity updates
+          // NOTE: backend emits topics like 'entity.task.assignees_changed'.
+          // Assuming PubSub supports prefix matching when subscribing without the suffix.
+          token = PubSub.subscribe('entity.task', handlePubSub)
+        } catch (e) {
+          // cache entry removed before loaded - ignore
+        }
+
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
+      },
     }),
     // queryTasksFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook
@@ -301,6 +381,103 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
+      async onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+      ) {
+        let token: any
+        const pendingTaskIds = new Set<string>()
+        const MAX_BATCH = 100
+        const INTERVAL = 500
+        let scheduled = false
+
+        const schedule = () => {
+          if (scheduled) return
+          scheduled = true
+          setTimeout(flush, INTERVAL)
+        }
+
+        const flush = async () => {
+          scheduled = false
+          if (!pendingTaskIds.size) return
+          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
+          batchIds.forEach((id) => pendingTaskIds.delete(id))
+          try {
+            const res = await dispatch(
+              enhancedApi.endpoints.GetTasksList.initiate(
+                {
+                  projectName: arg.projectName,
+                  taskIds: batchIds,
+                  folderIds: arg.folderIds,
+                } as any,
+                { forceRefetch: true },
+              ),
+            ).unwrap()
+
+            const returned = res.tasks || []
+            const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
+
+            updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
+              // update/insert
+              for (const task of returned) {
+                let located = false
+                for (const page of draft.pages) {
+                  const idx = page.tasks.findIndex((t) => t.id === task.id)
+                  if (idx !== -1) {
+                    page.tasks[idx] = task
+                    located = true
+                    break
+                  }
+                }
+                if (!located) {
+                  if (draft.pages.length) draft.pages[0].tasks.unshift(task)
+                  else
+                    draft.pages.push({
+                      tasks: [task],
+                      pageInfo: {
+                        startCursor: null,
+                        endCursor: null,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                      },
+                    })
+                }
+              }
+              // remove any requested but missing tasks
+              for (const id of batchIds) {
+                if (returnedMap.has(id)) continue
+                for (const page of draft.pages) {
+                  const idx = page.tasks.findIndex((t) => t.id === id)
+                  if (idx !== -1) {
+                    page.tasks.splice(idx, 1)
+                    break
+                  }
+                }
+              }
+            })
+          } catch (err) {
+            console.error('Realtime infinite tasks batch update failed', err)
+          } finally {
+            if (pendingTaskIds.size) schedule()
+          }
+        }
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            const taskId = message?.summary?.entityId
+            if (!taskId) return
+            pendingTaskIds.add(taskId)
+            schedule()
+          }
+
+          token = PubSub.subscribe('entity.task', handlePubSub)
+        } catch (_) {
+          // ignore
+        }
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
+      },
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
       queryFn: async ({ projectName, groups, search, folderIds, desc, sortBy }, api) => {
