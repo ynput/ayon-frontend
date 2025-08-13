@@ -1,4 +1,5 @@
 import { Section } from '@ynput/ayon-react-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import MarketFilters, { getMarketFilter } from './MarketFilters'
 import { useEffect, useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
@@ -393,6 +394,7 @@ const MarketPage = () => {
 
   return (
     <>
+      <DocumentTitle title="Market" />
       <ConnectDialog
         visible={showConnectDialog}
         onHide={() => setShowConnectDialog(false)}

@@ -3,63 +3,11 @@ import { useSelector } from 'react-redux'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
-import { upperFirst } from 'lodash'
 import { copyToClipboard } from '@shared/util'
 import { useURIContext } from '@context/UriContext'
 import { ayonUrlParam } from '@/constants'
 import clsx from 'clsx'
-import DocumentTitle from "@components/DocumentTitle/DocumentTitle";
-
-const uri2crumbs = (uri = '', pathname) => {
-  // parse uri to path and query params
-  const [scope, pathAndQuery = ''] = uri.split('://')
-  const [path, query] = pathAndQuery.split('?')
-  const crumbs = path.split('/').filter((crumb) => crumb)
-
-  if (scope?.includes('ayon+settings')) {
-    let settingsScope = ''
-    if (query?.includes('project')) {
-      settingsScope = 'Projects Manager'
-    } else {
-      settingsScope = 'Studio Settings'
-    }
-
-    crumbs.unshift(settingsScope)
-  } else if (scope?.includes('ayon+entity')) {
-    crumbs.unshift('Project')
-  } else {
-    // anything that doesn't have a uri
-    let pageTitle = pathname.split('/')[1]
-
-    if (pageTitle.includes('settings')) pageTitle = 'Studio Settings'
-    else if (pageTitle.includes('manageProjects')) pageTitle = 'Projects Manager'
-    // just a regular url (use last part of pathname)
-    crumbs.unshift(
-      ...pathname
-        .slice(1)
-        .split('/')
-        .map((p) => upperFirst(p)),
-    )
-  }
-
-  const qp = {}
-
-  if (query) {
-    const params = query.split('&')
-    for (const param of params) {
-      const [key, value] = param.split('=')
-      qp[key] = value
-    }
-  }
-
-  for (const level of ['product', 'task', 'workfile', 'version', 'representation']) {
-    if (qp[level]) {
-      crumbs.push(qp[level])
-    }
-  }
-
-  return crumbs
-}
+import { uri2crumbs } from '@/utils/breadcrumbs'
 
 const Breadcrumbs = () => {
   const location = window.location
@@ -144,7 +92,6 @@ const Breadcrumbs = () => {
 
   return (
     <Styled.Wrapper>
-      <DocumentTitle title={uriDisplay} />
       <Styled.Crumbtainer>
         <Styled.CrumbsForm onSubmit={goThere} className={clsx({ noUri: !uriDisplay || !localUri })}>
           {uriDisplay && localUri && (

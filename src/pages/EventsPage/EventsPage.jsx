@@ -1,4 +1,5 @@
 import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import { useGetEventsWithLogsQuery, useLazyGetEventsWithLogsQuery } from '@queries/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
@@ -207,8 +208,10 @@ const EventsPage = () => {
   }
 
   return (
-    <main>
-      <Section>
+    <>
+      <DocumentTitle title="Events" />
+      <main>
+        <Section>
         <Toolbar>
           <form onSubmit={handleSearchSubmit}>
             <InputText
@@ -259,6 +262,7 @@ const EventsPage = () => {
         </Splitter>
       </Section>
     </main>
+    </>
   )
 }
 
