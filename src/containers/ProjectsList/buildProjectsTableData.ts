@@ -1,5 +1,5 @@
 import { ListProjectsItemModel } from '@shared/api'
-import { SimpleTableRow } from '@shared/SimpleTable'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 
 const buildProjectsTableData = (projects: ListProjectsItemModel[]): SimpleTableRow[] => {
   const tableRows: SimpleTableRow[] = projects.map((project) => ({

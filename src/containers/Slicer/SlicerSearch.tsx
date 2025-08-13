@@ -1,4 +1,4 @@
-import { HeaderButton } from '@shared/SimpleTable'
+import { HeaderButton } from '@shared/containers/SimpleTable'
 import { InputText } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { useState } from 'react'

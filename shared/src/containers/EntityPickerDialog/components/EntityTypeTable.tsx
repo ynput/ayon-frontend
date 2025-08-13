@@ -3,7 +3,7 @@
 
 import { FC, useMemo } from 'react'
 import { PickerEntityType } from '../EntityPickerDialog'
-import SimpleTable, { Container, SimpleTableRow } from '@shared/SimpleTable'
+import SimpleTable, { Container, SimpleTableRow } from '@shared/containers/SimpleTable'
 import EntityTypeTableHeader from './EntityTypeTableHeader'
 import { upperFirst } from 'lodash'
 import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'

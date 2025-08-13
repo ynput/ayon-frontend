@@ -68,6 +68,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
+import { toast } from 'react-toastify'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -251,9 +252,12 @@ export const ProjectTreeTable = ({
           const { colId, rowId } = parseCellId(cellId) || {}
 
           const entity = getEntityById(rowId || '')
-          if (!entity) continue
+          if (!entity) {
+            console.warn(`Entity with ID ${rowId} not found for cell update.`)
+            continue
+          }
 
-          if (colId?.replace('attrib_', '') === field && rowId) {
+          if ((!colId?.includes('attrib_') || colId?.replace('attrib_', '') === field) && rowId) {
             entitiesToUpdate.push({
               field: field,
               rowId: rowId,
@@ -265,6 +269,13 @@ export const ProjectTreeTable = ({
           }
         }
       }
+
+      if (!entitiesToUpdate.length) {
+        console.warn('No entities to update, skipping updateEntities call.')
+        toast.warn('No entities to update.')
+        return
+      }
+
       await updateEntities(entitiesToUpdate, true)
     },
     [updateEntities, getEntityById, selectedCells],

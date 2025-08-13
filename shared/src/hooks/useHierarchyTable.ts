@@ -1,5 +1,5 @@
 // create table data for the hierarchy
-import { SimpleTableRow } from '@shared/SimpleTable'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useGetFolderListQuery } from '@shared/api'
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'

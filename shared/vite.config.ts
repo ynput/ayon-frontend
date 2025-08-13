@@ -43,6 +43,7 @@ export default defineConfig({
         RepresentationsList: resolve(__dirname, 'src/containers/RepresentationsList/index.ts'),
         Slicer: resolve(__dirname, 'src/containers/Slicer/index.ts'),
         Views: resolve(__dirname, 'src/containers/Views/index.ts'),
+        SimpleTable: resolve(__dirname, 'src/containers/SimpleTable/index.ts'),
       },
       name: 'AyonFrontendShared',
       formats: ['es', 'cjs'],

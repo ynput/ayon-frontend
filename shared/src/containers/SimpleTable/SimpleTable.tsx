@@ -20,7 +20,9 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual'
 
 import clsx from 'clsx'
-import useRowKeydown, { RowKeyboardEvent } from '../../../src/containers/Slicer/hooks/useRowKeydown'
+import useRowKeydown, {
+  RowKeyboardEvent,
+} from '../../../../src/containers/Slicer/hooks/useRowKeydown'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'

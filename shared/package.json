@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.2.23",
+  "version": "0.2.24",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -79,6 +79,11 @@
       "types": "./dist/types/containers/Views/index.d.ts",
       "import": "./dist/Views.es.js",
       "require": "./dist/Views.cjs.js"
+    },
+    "./SimpleTable": {
+      "types": "./dist/types/containers/SimpleTable/index.d.ts",
+      "import": "./dist/SimpleTable.es.js",
+      "require": "./dist/SimpleTable.cjs.js"
     }
   },
   "files": [
