@@ -17,6 +17,8 @@ import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import styled from 'styled-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import usePageTitle from '@hooks/usePageTitle'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -66,6 +68,8 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
+  
+  const title = usePageTitle(addonName || module, links, 'AYON', 'Dashboard')
   
 
   const addonData = addonsData.find((addon) => addon.name === addonName)
@@ -156,6 +160,7 @@ const UserDashboardPage = () => {
 
   return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={links} />
       <main>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>

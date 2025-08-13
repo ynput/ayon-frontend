@@ -3,6 +3,8 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 import Inbox from './Inbox/Inbox'
 import { useGetInboxUnreadCountQuery } from '@queries/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import usePageTitle from '@hooks/usePageTitle'
 
 const InboxPage = () => {
   const { module } = useParams()
@@ -40,8 +42,11 @@ const InboxPage = () => {
     },
   ]
 
-  return (
+  const title = usePageTitle(module, links, 'AYON', 'Inbox')
+
+return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={links} />
       <Inbox filter={module} />
     </>

@@ -1,24 +1,15 @@
-import { useEffect } from 'react'
-
+import {Helmet} from "react-helmet";
 type DocumentProps = {
-  title: string,
+    title: string,
 }
-
 
 const DocumentTitle = ({title}: DocumentProps) => {
-  useEffect(() => {
-    // Reverse the title parts and join with ·
-    const titleParts = title.split(' / ')
-    const reversedParts = [...titleParts].reverse()
-    const finalTitle = reversedParts.join(' · ')
-    
-    document.title = finalTitle || 'Ayon'
-  }, [title])
-  
-  return null
+
+    return (<Helmet defer={false}>
+            <title>{title}</title>
+        </Helmet>
+    )
 }
-
-
 
 
 export default DocumentTitle

@@ -5,6 +5,8 @@ import { useGetSettingsAddonsQuery } from '@shared/api'
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useSelector } from 'react-redux'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import usePageTitle from '@hooks/usePageTitle'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -170,9 +172,11 @@ const SettingsPage = () => {
     return result
   }, [addonsData, isManager])
   
+  const title = usePageTitle(addonName || module, links, 'AYON', 'Settings')
 
   return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={links} />
       {moduleComponent}
     </>

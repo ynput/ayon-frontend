@@ -7,6 +7,7 @@ import Hierarchy from '@containers/hierarchy'
 import TaskList from '@containers/taskList'
 import useAddonContextResend from '@hooks/useAddonContextResend'
 import LoadingPage from './LoadingPage'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -194,8 +195,12 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
     setTimeout(() => pushContext(), 20)
   }
 
+  // Generate title for the project addon
+  const addonTitle = addonName ? `${addonName} • ${projectName}` : `Addon • ${projectName}`
+
   return (
     <main {...props}>
+      <DocumentTitle title={addonTitle} />
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />

@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import usePageTitle from '@hooks/usePageTitle'
 
 import BrowserPage from '../BrowserPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
@@ -204,6 +206,8 @@ const ProjectPage = () => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
 
+  const title = usePageTitle(module, links, projectName || 'AYON')
+
   //
   // Render page
   //
@@ -286,6 +290,7 @@ const ProjectPage = () => {
 
   return (
     <>
+      <DocumentTitle title={title} />
       <Dialog
         header="Project Context"
         isOpen={showContextDialog}

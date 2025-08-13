@@ -8,7 +8,6 @@ import { copyToClipboard } from '@shared/util'
 import { useURIContext } from '@context/UriContext'
 import { ayonUrlParam } from '@/constants'
 import clsx from 'clsx'
-import DocumentTitle from "@components/DocumentTitle/DocumentTitle";
 
 const uri2crumbs = (uri = '', pathname) => {
   // parse uri to path and query params
@@ -144,7 +143,6 @@ const Breadcrumbs = () => {
 
   return (
     <Styled.Wrapper>
-      <DocumentTitle title={uriDisplay} />
       <Styled.Crumbtainer>
         <Styled.CrumbsForm onSubmit={goThere} className={clsx({ noUri: !uriDisplay || !localUri })}>
           {uriDisplay && localUri && (
