@@ -25,11 +25,6 @@ const DocumentTitle: React.FC = () => {
 
   }, [ctxUri, location.pathname, projectName])
 
-  // Force title update when fallbackTitle changes
-  React.useEffect(() => {
-    document.title = fallbackTitle
-  }, [fallbackTitle])
-
   return (
     <Helmet defer={false} key={`${location.pathname}-${projectName || 'no-project'}`}>
       <title>{fallbackTitle}</title>
