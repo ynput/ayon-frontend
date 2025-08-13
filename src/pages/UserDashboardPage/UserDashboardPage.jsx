@@ -17,6 +17,7 @@ import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import styled from 'styled-components'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -66,6 +67,12 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
+
+  // Add spacer and help button
+  links.push({ node: 'spacer' })
+  links.push({
+    node: <HelpButton module={module || 'tasks'} />,
+  })
 
   const addonData = addonsData.find((addon) => addon.name === addonName)
 

@@ -5,6 +5,7 @@ import { useGetSettingsAddonsQuery } from '@shared/api'
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useSelector } from 'react-redux'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -161,6 +162,12 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       })
     }
+
+    // Add spacer and help button
+    result.push({ node: 'spacer' })
+    result.push({
+      node: <HelpButton module={module} />,
+    })
 
     return result
   }, [addonsData, isManager])

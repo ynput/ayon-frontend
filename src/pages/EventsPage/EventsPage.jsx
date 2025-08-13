@@ -12,6 +12,7 @@ import EventOverview from './EventOverview'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
 import { debounce } from 'lodash'
+import StickyHelpButton from '@components/StickyHelpButton/StickyHelpButton'
 
 const EventsPage = () => {
   const dispatch = useDispatch()
@@ -206,58 +207,61 @@ const EventsPage = () => {
   }
 
   return (
-    <main>
-      <Section>
-        <Toolbar>
-          <form onSubmit={handleSearchSubmit}>
-            <InputText
-              style={{ width: '200px' }}
-              placeholder="Filter events..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoComplete="off"
-            />
-          </form>
-          <InputSwitch
-            checked={showLogs}
-            onChange={() => setShowLogs(!showLogs)}
-            style={{ width: 40, marginLeft: 10 }}
-          />
-          Show With Logs
-        </Toolbar>
-        <Splitter style={{ height: '100%', width: '100%' }}>
-          <SplitterPanel size={70}>
-            <EventList
-              eventData={filteredTreeData}
-              isLoading={isLoading || isFetching}
-              selectedEvent={selectedEvent}
-              setSelectedEvent={setSelectedEvent}
-              onScrollBottom={loadPage}
-            />
-          </SplitterPanel>
-          <SplitterPanel size={30}>
-            {selectedEvent?.id ? (
-              <EventDetail
-                id={selectedEvent?.id}
-                event={selectedEvent}
-                setSelectedEvent={setSelectedEvent}
-                onFilter={handleSearchFilter}
-                events={eventData}
+    <>
+      <StickyHelpButton module="events" />
+      <main>
+        <Section>
+          <Toolbar>
+            <form onSubmit={handleSearchSubmit}>
+              <InputText
+                style={{ width: '200px' }}
+                placeholder="Filter events..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                autoComplete="off"
               />
-            ) : (
-              <EventOverview
-                onTotal={handleSearchFilter}
-                search={search}
-                events={eventData}
-                logs={logsData}
-                setShowLogs={setShowLogs}
+            </form>
+            <InputSwitch
+              checked={showLogs}
+              onChange={() => setShowLogs(!showLogs)}
+              style={{ width: 40, marginLeft: 10 }}
+            />
+            Show With Logs
+          </Toolbar>
+          <Splitter style={{ height: '100%', width: '100%' }}>
+            <SplitterPanel size={70}>
+              <EventList
+                eventData={filteredTreeData}
+                isLoading={isLoading || isFetching}
+                selectedEvent={selectedEvent}
                 setSelectedEvent={setSelectedEvent}
+                onScrollBottom={loadPage}
               />
-            )}
-          </SplitterPanel>
-        </Splitter>
-      </Section>
-    </main>
+            </SplitterPanel>
+            <SplitterPanel size={30}>
+              {selectedEvent?.id ? (
+                <EventDetail
+                  id={selectedEvent?.id}
+                  event={selectedEvent}
+                  setSelectedEvent={setSelectedEvent}
+                  onFilter={handleSearchFilter}
+                  events={eventData}
+                />
+              ) : (
+                <EventOverview
+                  onTotal={handleSearchFilter}
+                  search={search}
+                  events={eventData}
+                  logs={logsData}
+                  setShowLogs={setShowLogs}
+                  setSelectedEvent={setSelectedEvent}
+                />
+              )}
+            </SplitterPanel>
+          </Splitter>
+        </Section>
+      </main>
+    </>
   )
 }
 

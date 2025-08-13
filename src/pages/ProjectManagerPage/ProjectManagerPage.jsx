@@ -21,6 +21,7 @@ import ProjectUserAccess from './Users/ProjectUserAccess'
 import ProjectPermissions from './ProjectPermissions'
 import { isActiveDecider, projectSorter, Module, ModuleList, ModulePath } from './mappers'
 import { replaceQueryParams } from '@helpers/url'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -155,14 +156,20 @@ const ProjectManagerPage = () => {
     },
   )
 
-  const linksWithProject = useMemo(
-    () =>
-      links.map((link) => ({
-        ...link,
-        path: replaceQueryParams(link.path, selectedProject ? { project: selectedProject } : {}),
-      })),
-    [links, selectedProject],
-  )
+  const linksWithProject = useMemo(() => {
+    const mappedLinks = links.map((link) => ({
+      ...link,
+      path: replaceQueryParams(link.path, selectedProject ? { project: selectedProject } : {}),
+    }))
+
+    // Add spacer and help button
+    mappedLinks.push({ node: 'spacer' })
+    mappedLinks.push({
+      node: <HelpButton module={module} />,
+    })
+
+    return mappedLinks
+  }, [links, selectedProject, module])
 
   useEffect(() => {
     if (isLoadingUserPermissions || module !== undefined) {

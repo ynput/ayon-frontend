@@ -59,66 +59,83 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
   const currentPageName = currentPageLink?.name
   
   
+  const spacerIndex = links.findIndex(link => link.node === 'spacer')
+  const scrollableLinks = spacerIndex >= 0 ? links.slice(0, spacerIndex) : links
+  const fixedButtons = spacerIndex >= 0 ? links.slice(spacerIndex + 1) : []
+
+  const renderLinkItem = (linkData, idx, isFixedButton = false) => {
+    const {
+      accessLevels,
+      node,
+      shortcut,
+      path,
+      tooltip,
+      name,
+      enabled = true,
+      startContent,
+      endContent,
+      uriSync,
+      module,
+      viewType,
+      ...props
+    } = linkData || {}
+
+    if (!enabled) return null
+  
+    let hasAccess = true
+    if (accessLevels?.length) {
+      hasAccess = accessLevels?.every((restriction) => access[restriction])
+    }
+    if (!hasAccess) return null
+
+
+    if (node && node !== 'spacer') {
+      return isFixedButton ? (
+        <React.Fragment key={idx}>{node}</React.Fragment>
+      ) : (
+        <li key={idx}>{node}</li>
+      )
+    }
+
+    const isActive = module === currentModule
+
+    const linkContent = (
+      <NavLink to={appendUri(path, uriSync)}>
+        <Button
+          variant="nav"
+          style={{ border: 'none' }}
+          className={Typography.titleSmall}
+          tabIndex={-1}
+        >
+          {startContent && startContent}
+          {name}
+          {viewType && <Styled.Views id={getViewsPortalId(viewType)} />}
+          {endContent && endContent}
+        </Button>
+      </NavLink>
+    )
+
+    return isFixedButton ? (
+      <React.Fragment key={idx}>{linkContent}</React.Fragment>
+    ) : (
+      <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
+        {linkContent}
+      </Styled.NavItem>
+    )
+  }
+
   return (
     <Styled.NavBar className="secondary">
-      <ul>
-        {links.map(
-          (
-            {
-              accessLevels,
-              node,
-              shortcut,
-              path,
-              tooltip,
-              name,
-              enabled = true,
-              startContent,
-              endContent,
-              uriSync,
-              module,
-              viewType,
-              ...props
-            } = {},
-            idx,
-          ) => {
-            if (!enabled) return null
-            // if item has restrictions, check if user has access
-            let hasAccess = true
-            if (accessLevels?.length) {
-              hasAccess = accessLevels?.every((restriction) => access[restriction])
-            }
-            if (!hasAccess) return null
-
-            // return spacer if item is a spacer, or just the node
-            if (node) {
-              // if item is a node a spacer, return spacer
-              if (node === 'spacer') {
-                return <Spacer key={idx} />
-              } else return <li key={idx}>{node}</li>
-            }
-
-            const isActive = module === currentModule
-
-            return (
-              <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-                <NavLink to={appendUri(path, uriSync)}>
-                  <Button
-                    variant="nav"
-                    style={{ border: 'none' }}
-                    className={Typography.titleSmall}
-                    tabIndex={-1}
-                  >
-                    {startContent && startContent}
-                    {name}
-                    {viewType && <Styled.Views id={getViewsPortalId(viewType)} />}
-                    {endContent && endContent}
-                  </Button>
-                </NavLink>
-              </Styled.NavItem>
-            )
-          },
-        )}
-      </ul>
+      <div className="scrollable-tabs">
+        <ul>
+          {scrollableLinks.map((link, idx) => renderLinkItem(link, idx, false))}
+        </ul>
+      </div>
+      {fixedButtons.length > 0 && (
+        <div className="fixed-buttons">
+          {fixedButtons.map((link, idx) => renderLinkItem(link, idx, true))}
+        </div>
+      )}
     </Styled.NavBar>
   )
 }

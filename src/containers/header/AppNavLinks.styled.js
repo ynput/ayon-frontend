@@ -5,30 +5,46 @@ export const NavBar = styled.nav`
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   background-color: var(--panel-background);
   padding: 0 8px;
+  position: relative;
+  display: flex;
 
-  ul {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--base-gap-small);
-    /* reset defaults */
-    list-style: none;
-    margin: 0;
-    padding: 0;
-
-    /* this hides the border of the navbar by putting the active tab border over it */
-    position: relative;
-    top: 1px;
-    margin-bottom: -1px;
-
-    /* overflow */
-    width: 100%;
+  .scrollable-tabs {
+    flex: 1;
     overflow-x: auto;
     /* hide scroll bar */
     scrollbar-width: none;
     -ms-overflow-style: none;
     &::-webkit-scrollbar {
       display: none;
+    }
+
+    ul {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--base-gap-small);
+      /* reset defaults */
+      list-style: none;
+      margin: 0;
+      padding: 0;
+
+      /* this hides the border of the navbar by putting the active tab border over it */
+      position: relative;
+    }
+  }
+
+  .fixed-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+    position: relative;
+    background-color: var(--panel-background);
+    z-index: 2;
+
+    @media (min-width: 1200px) {
+      position: static;
+      background-color: transparent;
+      padding-left: 0;
     }
   }
 `
