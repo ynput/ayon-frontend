@@ -53,7 +53,12 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
       }
     }
   }, [module, links, access])
-
+  
+  const activeModule = currentModule || module
+  const currentPageLink = links.find(link => link.module === activeModule)
+  const currentPageName = currentPageLink?.name
+  
+  
   return (
     <Styled.NavBar className="secondary">
       <ul>
