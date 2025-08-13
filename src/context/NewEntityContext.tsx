@@ -297,6 +297,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               hasReviewables: false, // Add required field
               links: [], // Add empty links object
               allAttrib: JSON.stringify(filteredAttribs),
+              parents: [],
             } as EditorTaskNode,
           }
           patchOperations.push(taskPatch)
