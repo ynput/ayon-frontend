@@ -20,7 +20,7 @@ import SiteList from '@containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
-import VariantSelector from './VariantSelector'
+import VariantSelector, { DropdownBadge } from './VariantSelector'
 import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
 import RawSettingsDialog from '@containers/RawSettingsDialog'
 
@@ -63,6 +63,25 @@ const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
   align-items: center;
   height: 100%;
   widows: 100%;
+`
+
+const StyledBundleLabel = styled.div`
+  padding: 6px var(--padding-m);
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  .label {
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    flex: 1;
+    color: var(--md-sys-color-outline);
+  }
 `
 
 const isChildPath = (childPath, parentPath) => {
@@ -598,6 +617,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         originalData={originalData}
         setOriginalData={setOriginalData}
         projectName={projectName}
+        pt={{ button: { style: { marginLeft: 'auto' } } }}
       />
     )
 
@@ -605,28 +625,20 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       <>
         <Toolbar>
           <VariantSelector variant={variant} setVariant={setVariant} />
-          {developerMode && copySettingsButton}
           {projectName && (
-            <>
-              <Spacer />
-              <Button icon="settings" data-tooltip={`Change project ${variant} bundle`} />
-            </>
+            <Button icon="settings" data-tooltip={`Change project ${variant} bundle`} />
           )}
+          {developerMode && copySettingsButton}
         </Toolbar>
         {!developerMode && (
           <Toolbar>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {bundleName}
-            </span>
-            <Spacer />
+            <StyledBundleLabel>
+              <span className="label">{bundleName}</span>
+              <DropdownBadge className={variant}>
+                {variant === 'production' ? 'P' : 'S'}
+              </DropdownBadge>
+            </StyledBundleLabel>
             {copySettingsButton}
-            <Button
-              icon="rocket_launch"
-              data-tooltip="Push bundle to production"
-              onClick={onPushToProduction}
-              disabled={variant !== 'staging' || canCommit}
-              style={{ zIndex: 100 }}
-            />
           </Toolbar>
         )}
       </>

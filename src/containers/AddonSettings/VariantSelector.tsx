@@ -1,18 +1,30 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import { useMemo, useEffect, CSSProperties, ReactNode } from 'react'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
-import type { RootState } from '@state/store'
 import type { BundleModel } from '@shared/api/generated/bundles'
 
-// Type definitions
-type BundleWithDefaults = BundleModel | { label: string; name: string }
+type BundleType = 'production' | 'staging' | 'dev'
 
 interface BundleOption {
   label: string
   value: string
   active: boolean
+  type: BundleType
+  createdAt?: string
+}
+
+const BUNDLE_TYPE_ORDER: Record<BundleType, number> = {
+  production: 0,
+  staging: 1,
+  dev: 2,
+}
+
+const BUNDLE_BADGES: Record<BundleType, { label: string; className?: string }> = {
+  production: { label: 'P', className: 'production' },
+  staging: { label: 'S', className: 'staging' },
+  dev: { label: 'D' },
 }
 
 interface VariantSelectorProps {
@@ -24,15 +36,37 @@ interface VariantSelectorProps {
 
 type DevModeSelectorProps = VariantSelectorProps
 
-const BundleDropdownItem = styled.div`
+// Utility functions
+const getBundleType = (bundle: BundleModel): BundleType => {
+  if (bundle.isProduction) return 'production'
+  if (bundle.isStaging) return 'staging'
+  return 'dev'
+}
+
+const compareBundles = (a: BundleOption, b: BundleOption): number => {
+  // First sort by type priority
+  const typeDiff = BUNDLE_TYPE_ORDER[a.type] - BUNDLE_TYPE_ORDER[b.type]
+  if (typeDiff !== 0) return typeDiff
+
+  // Within same type, sort by createdAt (newest first)
+  if (a.createdAt && b.createdAt) {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  }
+
+  // Fallback to name sorting
+  return a.label.localeCompare(b.label)
+}
+
+const BundleDropdownItemContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   padding: 4px 8px;
+  flex: 1;
 `
 
-const DropdownBadge = styled.span`
+export const DropdownBadge = styled.span`
   border-radius: 3px;
   padding: 2px 4px;
   font-size: 0.7rem;
@@ -40,26 +74,68 @@ const DropdownBadge = styled.span`
   color: black;
   background-color: var(--color-hl-developer);
   margin-left: 8px;
+  height: 18px;
+  width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.staging {
+    background-color: var(--color-hl-staging);
+  }
+
+  &.production {
+    background-color: var(--color-hl-production);
+  }
 `
+
+interface DropdownBundleItemProps {
+  bundle: BundleOption
+}
+
+const BundleLabel = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+const BadgeContainer = styled.span`
+  display: flex;
+  gap: 4px;
+`
+
+const DropdownBundleItem = ({ bundle }: DropdownBundleItemProps) => {
+  const typeBadge = BUNDLE_BADGES[bundle.type]
+
+  return (
+    <BundleDropdownItemContainer>
+      <BundleLabel>{bundle.label}</BundleLabel>
+      <BadgeContainer>
+        {bundle.active && <DropdownBadge>A</DropdownBadge>}
+        <DropdownBadge className={typeBadge.className}>{typeBadge.label}</DropdownBadge>
+      </BadgeContainer>
+    </BundleDropdownItemContainer>
+  )
+}
 
 const DevModeSelector = ({ variant, setVariant, disabled, style }: DevModeSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({})
-  const userName = useSelector((state: RootState) => state.user.name)
+  const userName = useAppSelector((state) => state.user.name)
 
-  const bundleList = useMemo<BundleWithDefaults[]>(() => {
-    return [
-      { label: 'Production', name: 'production' },
-      { label: 'Staging', name: 'staging' },
-      ...(bundles || []).filter((b) => !b?.isArchived && b?.isDev),
-    ]
+  const bundleList = useMemo<BundleModel[]>(() => {
+    return bundles.filter((b) => !b?.isArchived && (b?.isProduction || b?.isStaging || b?.isDev))
   }, [bundles])
 
   const bundleOptions = useMemo<BundleOption[]>(() => {
-    return bundleList.map((b) => ({
-      label: 'label' in b ? b.label : b.name,
-      value: b.name,
-      active: 'activeUser' in b ? b.activeUser === userName : false,
-    }))
+    return bundleList
+      .map((bundle) => ({
+        label: bundle.name,
+        value: bundle.name,
+        active: 'activeUser' in bundle ? bundle.activeUser === userName : false,
+        type: getBundleType(bundle),
+        createdAt: bundle.createdAt,
+      }))
+      .sort(compareBundles)
   }, [bundleList, userName])
 
   const dropdownStyle = style || { flexGrow: 1 }
@@ -69,24 +145,7 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }: DevModeSelect
     if (!value.length) return ''
     const selectedBundle = bundleOptions.find((b) => b.value === value[0])
     if (!selectedBundle) return ''
-    return (
-      <BundleDropdownItem>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {selectedBundle.label}
-        </span>
-        <span>
-          {selectedBundle.active && <DropdownBadge>A</DropdownBadge>}
-          {selectedBundle.value === 'staging' && (
-            <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>S</DropdownBadge>
-          )}
-          {selectedBundle.value === 'production' && (
-            <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
-              P
-            </DropdownBadge>
-          )}
-        </span>
-      </BundleDropdownItem>
-    )
+    return <DropdownBundleItem bundle={selectedBundle} />
   }
 
   useEffect(() => {
@@ -107,27 +166,27 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }: DevModeSelect
       disabled={disabled}
       style={dropdownStyle}
       valueTemplate={formatValue}
-      itemTemplate={(option: BundleOption) => (
-        <BundleDropdownItem>
-          {option.label}
-          <span>
-            {option.active && <DropdownBadge>A</DropdownBadge>}
-            {option.value === 'staging' && (
-              <DropdownBadge style={{ backgroundColor: 'var(--color-hl-staging)' }}>
-                S
-              </DropdownBadge>
-            )}
-            {option.value === 'production' && (
-              <DropdownBadge style={{ backgroundColor: 'var(--color-hl-production)' }}>
-                P
-              </DropdownBadge>
-            )}
-          </span>
-        </BundleDropdownItem>
-      )}
+      itemTemplate={(option: BundleOption) => <DropdownBundleItem bundle={option} />}
     />
   )
 }
+
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+`
+
+const VARIANT_STYLES = {
+  production: {
+    backgroundColor: 'var(--color-hl-production)',
+    color: 'black',
+  },
+  staging: {
+    backgroundColor: 'var(--color-hl-staging)',
+    color: 'black',
+  },
+} as const
 
 const VariantSelector = ({
   variant,
@@ -135,7 +194,7 @@ const VariantSelector = ({
   disabled = false,
   style,
 }: VariantSelectorProps) => {
-  const user = useSelector((state: RootState) => state.user)
+  const user = useAppSelector((state) => state.user)
 
   useEffect(() => {
     if (!user.attrib.developerMode && !['staging', 'production'].includes(variant)) {
@@ -154,30 +213,18 @@ const VariantSelector = ({
     )
   }
 
-  const styleHlProd = {
-    backgroundColor: 'var(--color-hl-production)',
-    color: 'black',
-  }
-  const styleHlStag = {
-    backgroundColor: 'var(--color-hl-staging)',
-    color: 'black',
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', gap: 6 }}>
-      <Button
-        label="Production"
-        onClick={() => setVariant('production')}
-        style={variant === 'production' ? styleHlProd : {}}
-        disabled={disabled}
-      />
-      <Button
-        label="Staging"
-        onClick={() => setVariant('staging')}
-        style={variant === 'staging' ? styleHlStag : {}}
-        disabled={disabled}
-      />
-    </div>
+    <ButtonContainer>
+      {(['production', 'staging'] as const).map((variantType) => (
+        <Button
+          key={variantType}
+          label={variantType.charAt(0).toUpperCase() + variantType.slice(1)}
+          onClick={() => setVariant(variantType)}
+          style={variant === variantType ? VARIANT_STYLES[variantType] : {}}
+          disabled={disabled}
+        />
+      ))}
+    </ButtonContainer>
   )
 }
 

@@ -16,6 +16,7 @@ const CopyBundleSettingsButton = ({
   setOriginalData,
   projectName,
   siteId,
+  pt,
 }) => {
   const [dialogVisible, setDialogVisible] = useState(false)
 
@@ -61,6 +62,7 @@ const CopyBundleSettingsButton = ({
         data-tooltip="Copy settings from another bundle"
         onClick={() => setDialogVisible(true)}
         disabled={disabled || !bundleName}
+        {...pt?.button}
       />
       {dialogVisible && (
         <CopySettingsDialog
