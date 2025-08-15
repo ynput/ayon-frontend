@@ -85,6 +85,8 @@ const ProjectPage = () => {
     isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
+  console.log('addonsData', addonsData)
+
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
     addons: ['review', 'planner'],
@@ -216,6 +218,7 @@ const ProjectPage = () => {
   }
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
+    console.log('module', module, 'xxxx', addonName);
     if (module === 'overview') {
       return <ProjectOverviewPage />
     }
@@ -243,6 +246,8 @@ const ProjectPage = () => {
     if (module === 'scheduler') {
       return <SchedulerPage />
     }
+
+
 
     const foundAddon = addonsData?.find((item) => item.name === addonName)
     if (foundAddon) {
