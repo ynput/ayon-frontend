@@ -11,16 +11,14 @@ interface HelpButtonProps {
 
 const HelpButton: React.FC<HelpButtonProps> = ({ module, pageName, className }) => {
     const { openSupport } = useFeedback()
-    const handleHelpClick = () => {
-        const help = getHelpForPage(module, pageName)
+    const help = getHelpForPage(module, pageName)
 
-        if (help.articleId) {
-            // Open specific help article
-            openSupport('ShowArticle', help.articleId)
-        } else {
-            // Open support with a prefilled message
-            openSupport('NewMessage', help.fallbackMessage)
-        }
+    if (!help) {
+        return null
+    }
+
+    const handleHelpClick = () => {
+        openSupport('ShowArticle', help.articleId)
     }
 
     return (

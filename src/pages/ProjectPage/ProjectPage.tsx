@@ -183,7 +183,7 @@ const ProjectPage = () => {
         })),
       { node: 'spacer' },
       {
-        node: <HelpButton module={module} />,
+        node: <HelpButton module={addonName || module} />,
       },
       {
         node: (

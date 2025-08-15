@@ -37,26 +37,19 @@ export const HELP_ARTICLES: Record<string, HelpArticle> = {
     attributes: {
         articleId: '4636995',
     },
-    market: {
-        fallbackMessage: 'Can you help me know more about the Market page?',
+    inbox:{
+        articleId: '7870202'
     },
-    events: {
-        fallbackMessage: 'Can you help me know more about the Events page?',
-    },
-    services: {
-        fallbackMessage: 'Can you help me know more about the Services page?',
+    projectAccess: {
+        articleId: '2635883',
     }
-}
 
-export const getHelpForPage = (module: string, pageName?: string): HelpArticle => {
+}
+export const getHelpForPage = (module: string, pageName?: string): HelpArticle | null => {
     const help = HELP_ARTICLES[module]
-    if (help) {
+    console.log("HELP ", module, pageName, help)
+    if (help && help.articleId) {
         return help
     }
-
-
-    const displayName = pageName || module
-    return {
-        fallbackMessage: `Can you help me know more about the ${displayName} page?`,
-    }
+    return null
 }

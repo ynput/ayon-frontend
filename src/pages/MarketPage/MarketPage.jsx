@@ -25,7 +25,6 @@ import ReleaseDetails from './MarketDetails/ReleaseDetails'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
-import StickyHelpButton from '@components/StickyHelpButton/StickyHelpButton'
 
 const placeholders = [...Array(20)].map((_, i) => ({
   type: 'placeholder',
@@ -393,7 +392,6 @@ const MarketPage = () => {
 
   return (
     <>
-      <StickyHelpButton module="market" />
       <ConnectDialog
         visible={showConnectDialog}
         onHide={() => setShowConnectDialog(false)}

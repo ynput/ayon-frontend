@@ -12,8 +12,6 @@ import styled from 'styled-components'
 import { useListServicesQuery } from '@queries/services/getServices'
 import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'
 import { confirmDialog } from 'primereact/confirmdialog'
-import StickyHelpButton from '@components/StickyHelpButton/StickyHelpButton'
-
 const StatusBadge = styled.span`
   display: inline-block;
   padding: 1px 6px;
@@ -214,7 +212,6 @@ const ServicesPage = () => {
 
   return (
     <>
-      <StickyHelpButton module="services" />
       <main>
         {showServiceDialog && (
           <ServiceDialog onHide={handleCloseDialog} editService={editingService} />

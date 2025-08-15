@@ -12,8 +12,6 @@ import EventOverview from './EventOverview'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
 import { debounce } from 'lodash'
-import StickyHelpButton from '@components/StickyHelpButton/StickyHelpButton'
-
 const EventsPage = () => {
   const dispatch = useDispatch()
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
@@ -208,7 +206,6 @@ const EventsPage = () => {
 
   return (
     <>
-      <StickyHelpButton module="events" />
       <main>
         <Section>
           <Toolbar>
