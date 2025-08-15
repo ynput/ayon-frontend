@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Toolbar, Spacer, SaveButton, Button, InputSwitch } from '@ynput/ayon-react-components'
+import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import type { Addon } from './types'
 
@@ -317,17 +317,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
             </Button>
           </>
         )}
-        {!isDev && (
-          <>
-            <InputSwitch
-              checked={formData?.isProject}
-              onChange={() =>
-                formData && setFormData({ ...formData, isProject: !formData?.isProject })
-              }
-            />
-            {formData?.isProject ? 'project' : 'studio'}
-          </>
-        )}
+
         <SaveButton
           label={isDev ? 'Save dev bundle' : 'Create new bundle'}
           onClick={isDev ? handleUpdate : handleSave}
@@ -352,6 +342,9 @@ const NewBundle: React.FC<NewBundleProps> = ({
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
         addonListRef={addonListRef}
+        onProjectSwitchChange={() =>
+          formData && setFormData({ ...formData, isProject: !formData?.isProject })
+        }
       >
         <Styled.AddonTools>
           <Button
