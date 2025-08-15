@@ -1,52 +1,53 @@
 import styled from 'styled-components'
 
 export const NavBar = styled.nav`
-  padding-right: 8px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  background-color: var(--panel-background);
-  padding: 0 8px;
-  position: relative;
-  display: flex;
-
-  .scrollable-tabs {
-    flex: 1;
-    overflow-x: auto;
-    /* hide scroll bar */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    ul {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: var(--base-gap-small);
-      /* reset defaults */
-      list-style: none;
-      margin: 0;
-      padding: 0;
-
-      /* this hides the border of the navbar by putting the active tab border over it */
-      position: relative;
-    }
-  }
-
-  .fixed-buttons {
-    display: flex;
-    align-items: center;
-    gap: var(--base-gap-small);
-    position: relative;
+    padding-right: 8px;
     background-color: var(--panel-background);
-    z-index: 2;
+    padding: 0 8px;
+    position: relative;
+    display: flex;
+    
+    .scrollable-tabs {
+        flex: 1;
+        overflow-x: auto;
+        /* hide scroll bar */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        &::-webkit-scrollbar {
+            display: none;
+        }
 
-    @media (min-width: 1200px) {
-      position: static;
-      background-color: transparent;
-      padding-left: 0;
+        ul {
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: var(--base-gap-small);
+            /* reset defaults */
+            list-style: none;
+            margin: 0;
+            padding: 0;
+
+            /* this hides the border of the navbar by putting the active tab border over it */
+            position: relative;
+        }
     }
-  }
+
+    .fixed-buttons {
+        display: flex;
+        align-items: center;
+        gap: var(--base-gap-small);
+        position: relative;
+        background-color: var(--panel-background);
+        border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        z-index: 2;
+
+        @media (min-width: 1200px) {
+            position: static;
+            background-color: transparent;
+            padding-left: 0;
+        }
+    }
 `
 
 export const NavItem = styled.li`
@@ -58,8 +59,8 @@ export const NavItem = styled.li`
     display: block;
     border: 1px solid transparent;
     border-radius: 4px 4px 0 0;
+    margin-bottom: -1px;
 
-    /* this will be fixed with theme buttons */
     button {
       padding: 4px 16px;
       max-height: unset;
@@ -68,7 +69,7 @@ export const NavItem = styled.li`
     &.active {
       background-color: var(--md-sys-color-background);
       border: 1px solid var(--md-sys-color-outline-variant);
-      border-bottom: 1px solid var(--color-grey-01);
+ 
 
       button {
         &:hover {
