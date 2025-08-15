@@ -45,11 +45,16 @@ export const HELP_ARTICLES: Record<string, HelpArticle> = {
     }
 
 }
-export const getHelpForPage = (module: string, pageName?: string): HelpArticle | null => {
+export const getHelpForPage = (module: string, pageName?: string): HelpArticle => {
     const help = HELP_ARTICLES[module]
     console.log("HELP ", module, pageName, help)
     if (help && help.articleId) {
         return help
     }
-    return null
+    
+    // Generate fallback message using page label
+    const displayName = pageName || module
+    return {
+        fallbackMessage: `Can you help me know more about the ${displayName} page?`,
+    }
 }

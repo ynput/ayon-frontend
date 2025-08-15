@@ -71,7 +71,7 @@ const UserDashboardPage = () => {
   // Add spacer and help button
   links.push({ node: 'spacer' })
   links.push({
-    node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard' : module) || 'tasks'} />,
+    node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'} />,
   })
 
   const addonData = addonsData.find((addon) => addon.name === addonName)
