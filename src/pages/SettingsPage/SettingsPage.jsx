@@ -5,6 +5,7 @@ import { useGetSettingsAddonsQuery } from '@shared/api'
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useSelector } from 'react-redux'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -162,8 +163,20 @@ const SettingsPage = () => {
       })
     }
 
+    // Add spacer and help button
+    result.push({ node: 'spacer' })
+    
+    // Find addon title if we're on an addon page
+    const addonTitle = addonName && addonsData 
+      ? addonsData.find(addon => addon.name === addonName)?.title 
+      : undefined
+    
+    result.push({
+      node: <HelpButton module={addonName || module} pageName={addonTitle} />,
+    })
+
     return result
-  }, [addonsData, isManager])
+  }, [addonsData, isManager, module, addonName])
 
   return (
     <>

@@ -3,6 +3,7 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 import Inbox from './Inbox/Inbox'
 import { useGetInboxUnreadCountQuery } from '@queries/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const InboxPage = () => {
   const { module } = useParams()
@@ -38,6 +39,12 @@ const InboxPage = () => {
       module: 'cleared',
     },
   ]
+
+  // Add spacer and help button
+  links.push({ node: 'spacer' })
+  links.push({
+    node: <HelpButton module={`inbox`} />,
+  })
 
   return (
     <>
