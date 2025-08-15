@@ -1,8 +1,28 @@
 import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { useSelector } from 'react-redux'
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, CSSProperties, ReactNode } from 'react'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import styled from 'styled-components'
+import type { RootState } from '@state/store'
+import type { BundleModel } from '@shared/api/generated/bundles'
+
+// Type definitions
+type BundleWithDefaults = BundleModel | { label: string; name: string }
+
+interface BundleOption {
+  label: string
+  value: string
+  active: boolean
+}
+
+interface VariantSelectorProps {
+  variant: string
+  setVariant: (variant: string) => void
+  disabled?: boolean
+  style?: CSSProperties
+}
+
+type DevModeSelectorProps = VariantSelectorProps
 
 const BundleDropdownItem = styled.div`
   display: flex;
@@ -22,11 +42,11 @@ const DropdownBadge = styled.span`
   margin-left: 8px;
 `
 
-const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
+const DevModeSelector = ({ variant, setVariant, disabled, style }: DevModeSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({})
-  const userName = useSelector((state) => state.user.name)
+  const userName = useSelector((state: RootState) => state.user.name)
 
-  const bundleList = useMemo(() => {
+  const bundleList = useMemo<BundleWithDefaults[]>(() => {
     return [
       { label: 'Production', name: 'production' },
       { label: 'Staging', name: 'staging' },
@@ -34,17 +54,17 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
     ]
   }, [bundles])
 
-  const bundleOptions = useMemo(() => {
+  const bundleOptions = useMemo<BundleOption[]>(() => {
     return bundleList.map((b) => ({
-      label: b.label || b.name,
+      label: 'label' in b ? b.label : b.name,
       value: b.name,
-      active: b.activeUser === userName,
+      active: 'activeUser' in b ? b.activeUser === userName : false,
     }))
-  }, [bundleList])
+  }, [bundleList, userName])
 
   const dropdownStyle = style || { flexGrow: 1 }
 
-  const formatValue = (value) => {
+  const formatValue = (value: string[]): ReactNode => {
     if (!bundleOptions.length) return ''
     if (!value.length) return ''
     const selectedBundle = bundleOptions.find((b) => b.value === value[0])
@@ -52,7 +72,7 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
     return (
       <BundleDropdownItem>
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {selectedBundle.label || selectedBundle.name}
+          {selectedBundle.label}
         </span>
         <span>
           {selectedBundle.active && <DropdownBadge>A</DropdownBadge>}
@@ -72,10 +92,12 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
   useEffect(() => {
     // Bundle preselection
     if (!bundleList.length) return
-    const userBundle = bundleList.find((b) => b.activeUser === userName)
+    const userBundle = bundleList.find(
+      (b): b is BundleModel => 'activeUser' in b && b.activeUser === userName,
+    )
     if (userBundle) setVariant(userBundle.name)
     else setVariant(bundleList[0].name)
-  }, [bundleList])
+  }, [bundleList, userName, setVariant])
 
   return (
     <Dropdown
@@ -85,7 +107,7 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
       disabled={disabled}
       style={dropdownStyle}
       valueTemplate={formatValue}
-      itemTemplate={(option) => (
+      itemTemplate={(option: BundleOption) => (
         <BundleDropdownItem>
           {option.label}
           <span>
@@ -107,14 +129,19 @@ const DevModeSelector = ({ variant, setVariant, disabled, style }) => {
   )
 }
 
-const VariantSelector = ({ variant, setVariant, disabled = false, style }) => {
-  const user = useSelector((state) => state.user)
+const VariantSelector = ({
+  variant,
+  setVariant,
+  disabled = false,
+  style,
+}: VariantSelectorProps) => {
+  const user = useSelector((state: RootState) => state.user)
 
   useEffect(() => {
     if (!user.attrib.developerMode && !['staging', 'production'].includes(variant)) {
       setVariant('production')
     }
-  }, [user.attrib.developerMode])
+  }, [user.attrib.developerMode, variant, setVariant])
 
   if (user.attrib.developerMode) {
     return (
