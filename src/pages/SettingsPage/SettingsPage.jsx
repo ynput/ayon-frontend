@@ -22,11 +22,6 @@ const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
 const SettingsPage = () => {
   const { module, addonName } = useParams()
   const isManager = useSelector((state) => state.user.data.isManager)
-  
-  // Get page name based on module
-  
-  // Set dynamic title and clear project name (since this is not a project page)
-
 
   const {
     data: addonsData,
@@ -171,9 +166,9 @@ const SettingsPage = () => {
 
     return result
   }, [addonsData, isManager])
-  
+
   const title = useTitle(addonName || module, links, '', '')
-  const revertedTitle = title=== 'Studio settings' ? title: title + ' • Studio settings'
+  const revertedTitle = title === 'Studio settings' ? title : title + ' • Studio settings'
   return (
     <>
       <DocumentTitle title={revertedTitle} />

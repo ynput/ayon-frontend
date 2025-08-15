@@ -180,8 +180,8 @@ const ProjectManagerPage = () => {
   }, [isLoadingUserPermissions, selectedProject, module])
 
   const title = useTitle(module, linksWithProject, selectedProject || 'AYON')
-
-  return (
+    
+    return (
     <>
       <DocumentTitle title={title} />
       <AppNavLinks links={linksWithProject} />

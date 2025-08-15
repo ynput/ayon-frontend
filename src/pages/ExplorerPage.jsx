@@ -7,7 +7,7 @@ const ExplorerPage = () => {
     */
   return (
     <>
-      <DocumentTitle title="Explorer • AYON" />
+      <DocumentTitle title="GraphQL Explorer • AYON" />
       <main>
         <iframe className="embed" title="graphiql" src="/graphiql" style={{ flexGrow: 1 }} />
       </main>

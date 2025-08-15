@@ -43,8 +43,8 @@ const InboxPage = () => {
   ]
 
   const title = useTitle(module, links, 'AYON', 'Inbox')
-
-return (
+    
+    return (
     <>
       <DocumentTitle title={title} />
       <AppNavLinks links={links} />

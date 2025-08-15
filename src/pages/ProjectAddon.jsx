@@ -119,7 +119,7 @@ const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...pro
   }
 }
 
-const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
+const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
   const [requestModal, setRequestModal] = useState(false)
@@ -196,11 +196,11 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
   }
 
   // Generate title for the project addon
-  const addonTitle = addonName ? `${addonName} • ${projectName}` : `Addon • ${projectName}`
+  const pageTitle = addonTitle ? `${addonTitle} • ${projectName}` : addonName ? `${addonName} • ${projectName}` : `Addon • ${projectName}`
 
   return (
     <main {...props}>
-      <DocumentTitle title={addonTitle} />
+      <DocumentTitle title={pageTitle} />
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />

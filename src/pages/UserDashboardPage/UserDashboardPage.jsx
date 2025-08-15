@@ -71,7 +71,7 @@ const UserDashboardPage = () => {
   
   const title = useTitle(addonName || module, links, 'AYON', '')
   
-
+  
   const addonData = addonsData.find((addon) => addon.name === addonName)
 
   const addonModule = addonData ? (

@@ -1,8 +1,8 @@
 import { useMemo, ReactNode } from 'react'
 
 type Link = {
-  name: string
-  module: string
+  name?: string
+  module?: string
   path?: string
   enabled?: boolean
   uriSync?: boolean
@@ -11,10 +11,10 @@ type Link = {
 }
 
 const useTitle = (
-  currentModule: string,
-  links: Link[],
-  basePage: string = '',
-  pagePrefix: string | null = null
+    currentModule: string,
+    links: Link[],
+    basePage: string = '',
+    pagePrefix: string | null = null
 ): string => {
   return useMemo(() => {
     if (!currentModule || !links) {
@@ -22,7 +22,7 @@ const useTitle = (
     }
 
     const currentLink = links.find(link => link.module === currentModule)
-    const pageName = currentLink ? currentLink.name : basePage
+    const pageName = currentLink?.name || basePage
 
     if (pagePrefix) {
       return basePage ? `${pagePrefix} • ${pageName} • ${basePage}` : `${pagePrefix} • ${pageName}`

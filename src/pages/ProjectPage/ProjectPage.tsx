@@ -4,7 +4,6 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
-
 import BrowserPage from '../BrowserPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
@@ -13,7 +12,6 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
-
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
@@ -41,7 +39,6 @@ type NavLink = {
   enabled?: boolean
   node?: React.ReactNode
 }
-
 
 const ProjectContextInfo = () => {
   /**
@@ -74,9 +71,6 @@ const ProjectPage = () => {
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
-
-
-
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
     { projectName: projectName || '' },
@@ -260,6 +254,7 @@ const ProjectPage = () => {
           addonName={addonName}
           addonVersion={foundAddon.version}
           sidebar={foundAddon.settings.sidebar}
+          addonTitle={foundAddon.title}
         />
       )
     }

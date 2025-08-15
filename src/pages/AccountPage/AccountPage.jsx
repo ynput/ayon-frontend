@@ -62,7 +62,7 @@ const AccountPage = () => {
   ]
   
   const title = useTitle(module, links, 'AYON')
-
+  
   return (
     <>
       <DocumentTitle title={title} />

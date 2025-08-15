@@ -208,7 +208,6 @@ const App = () => {
                                       updateType: 'replaceIn',
                                     }}
                                   >
-
                                     <Header />
                                     <ShareDialog />
                                     <ViewerDialog />
@@ -241,8 +240,6 @@ const App = () => {
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
-
-
 
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
