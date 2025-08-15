@@ -172,11 +172,11 @@ const SettingsPage = () => {
     return result
   }, [addonsData, isManager])
   
-  const title = useTitle(addonName || module, links, 'AYON', 'Settings')
-
+  const title = useTitle(addonName || module, links, '', '')
+  const revertedTitle = title=== 'Studio settings' ? title: title + ' • Studio settings'
   return (
     <>
-      <DocumentTitle title={title} />
+      <DocumentTitle title={revertedTitle} />
       <AppNavLinks links={links} />
       {moduleComponent}
     </>

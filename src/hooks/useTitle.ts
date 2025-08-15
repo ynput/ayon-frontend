@@ -13,7 +13,7 @@ type Link = {
 const useTitle = (
   currentModule: string,
   links: Link[],
-  basePage: string = 'AYON',
+  basePage: string = '',
   pagePrefix: string | null = null
 ): string => {
   return useMemo(() => {
@@ -25,10 +25,10 @@ const useTitle = (
     const pageName = currentLink ? currentLink.name : basePage
 
     if (pagePrefix) {
-      return `${pagePrefix} • ${pageName} • ${basePage}`
+      return basePage ? `${pagePrefix} • ${pageName} • ${basePage}` : `${pagePrefix} • ${pageName}`
     }
 
-    return `${pageName} • ${basePage}`
+    return basePage ? `${pageName} • ${basePage}` : pageName
   }, [currentModule, links, basePage, pagePrefix])
 }
 
