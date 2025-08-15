@@ -4,14 +4,47 @@ import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { SocketContext } from '@context/WebsocketContext'
-import { compareBuild, coerce, rcompare } from 'semver'
+import { compareBuild, coerce } from 'semver'
 import { Icon, InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+import type { Addon as SharedAddon } from './types'
 
-const StyledDataTable = styled(DataTable)`
+type VersionsMap = Record<string, { projectCanOverrideAddonVersion?: boolean }>
+
+type Addon = {
+  name: string
+  title: string
+  addonType: 'pipeline' | 'server' | string
+  versions: VersionsMap
+  projectCanOverrideAddonVersion?: boolean
+}
+
+type BundleFormData = {
+  name?: string
+  isProject?: boolean
+  isDev?: boolean
+  activeUser?: string
+  addons?: Record<string, string | null>
+  addonDevelopment?: Record<string, { enabled?: boolean; path?: string }>
+}
+
+type BundlesAddonListProps = {
+  formData: BundleFormData
+  setFormData: React.Dispatch<React.SetStateAction<BundleFormData>>
+  readOnly?: boolean
+  selected?: SharedAddon[] | any[]
+  setSelected: (sel: any) => void
+  style?: React.CSSProperties
+  diffAddonVersions?: string[]
+  isDev?: boolean
+  onDevChange?: (addonNames: string[], payload: { value: any; key: 'enabled' | 'path' }) => void
+  onAddonAutoUpdate?: (addon: string, version: string | null) => void
+}
+
+const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
   tr {
     display: flex;
     flex-wrap: nowrap;
@@ -39,7 +72,14 @@ const StyledDataTable = styled(DataTable)`
   }
 `
 
-const AddonListItem = ({ version, setVersion, selection, addons = [], versions }) => {
+const AddonListItem: React.FC<{
+  version?: string | null
+  setVersion: (v: string | null) => void
+  selection: any[]
+  addons?: Addon[]
+  versions: string[]
+  isDev?: boolean
+}> = ({ version, setVersion, selection, addons = [], versions }) => {
   const options = useMemo(
     () =>
       selection.length > 1
@@ -62,12 +102,15 @@ const AddonListItem = ({ version, setVersion, selection, addons = [], versions }
       versions={options}
       value={version ? [version] : []}
       placeholder="NONE"
-      onChange={(e) => setVersion(e[0])}
+      onChange={(e: string[]) => setVersion(e[0] || null)}
     />
   )
 }
 
-const AddonItem = ({ currentVersion, latestVersion }) => {
+const AddonItem: React.FC<{ currentVersion?: string | null; latestVersion?: string }> = ({
+  currentVersion,
+  latestVersion,
+}) => {
   const isCurrentLatest = currentVersion === latestVersion
   return (
     <>
@@ -83,7 +126,7 @@ const AddonItem = ({ currentVersion, latestVersion }) => {
   )
 }
 
-const BundlesAddonList = React.forwardRef(
+const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
   (
     {
       formData,
@@ -101,7 +144,7 @@ const BundlesAddonList = React.forwardRef(
   ) => {
     const navigate = useNavigate()
 
-    const { data: { addons = [] } = {}, refetch } = useListAddonsQuery({})
+    const { data: { addons = [] } = {}, refetch } = useListAddonsQuery({}) as any
 
     const readyState = useContext(SocketContext).readyState
     useEffect(() => {
@@ -109,20 +152,21 @@ const BundlesAddonList = React.forwardRef(
     }, [readyState])
 
     // get production bundle, because
-    let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
+    let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true }) as any
     const currentProductionAddons = useMemo(
-      () => bundles.find((b) => b.isProduction)?.addons || {},
+      () => (bundles as any[]).find((b: any) => b.isProduction)?.addons || {},
       [bundles],
     )
 
     // every time readyState changes, refetch selected addons
 
-    const onSetVersion = (addonName, version, isPipeline) => {
-      const versionsToSet = selected.length > 1 ? selected.map((s) => s.name) : [addonName]
+    const onSetVersion = (addonName: string, version: string | null, isServer: boolean) => {
+      const versionsToSet: string[] =
+        selected.length > 1 ? selected.map((s: any) => s.name) : [addonName]
 
       setFormData((prev) => {
-        const newFormData = { ...prev }
-        const addons = { ...(newFormData.addons || {}) }
+        const newFormData: BundleFormData = { ...prev }
+        const addons: Record<string, string | null> = { ...(newFormData.addons || {}) }
 
         for (const addon of versionsToSet) {
           addons[addon] = version === 'NONE' ? null : version
@@ -132,20 +176,18 @@ const BundlesAddonList = React.forwardRef(
       })
 
       // auto update addon if readOnly and addon.addonType === 'server'
-      if (readOnly && isPipeline) {
+      if (readOnly && isServer && onAddonAutoUpdate) {
         onAddonAutoUpdate(addonName, version === 'NONE' ? null : version)
       }
     }
 
     const addonsTable = useMemo(() => {
-      return addons
-        .map((addon) => {
-          return {
-            ...addon,
-            version: formData?.addons?.[addon.name] || 'NONE',
-            dev: formData?.addonDevelopment?.[addon.name],
-          }
-        })
+      return (addons as Addon[])
+        .map((addon) => ({
+          ...addon,
+          version: formData?.addons?.[addon.name] || 'NONE',
+          dev: formData?.addonDevelopment?.[addon.name] as { enabled?: boolean; path?: string },
+        }))
         .sort((a, b) => {
           if (
             formData.isProject &&
@@ -157,7 +199,7 @@ const BundlesAddonList = React.forwardRef(
         })
     }, [addons, formData])
 
-    const createContextItems = (selected) => {
+    const createContextItems = (selected: any) => {
       let items = [
         {
           label: 'View in Market',
@@ -171,10 +213,10 @@ const BundlesAddonList = React.forwardRef(
 
     const [ctxMenuShow] = useCreateContextMenu([])
 
-    const handleContextClick = (e) => {
-      let contextSelection = []
+    const handleContextClick = (e: any) => {
+      let contextSelection: any = []
       // is new click not in original selection?
-      if (selected.name !== e.data.name) {
+      if ((selected as any)?.name !== e.data.name) {
         // then update selection to new click
         setSelected(e.data)
         contextSelection = e.data
@@ -194,11 +236,11 @@ const BundlesAddonList = React.forwardRef(
         responsive="true"
         dataKey="name"
         selection={selected}
-        onSelectionChange={(e) => setSelected(e.value)}
+        onSelectionChange={(e: any) => setSelected(e.value)}
         onContextMenu={handleContextClick}
         tableStyle={{ ...style }}
         className="addons-table"
-        rowClassName={(rowData) => diffAddonVersions?.includes(rowData.name) && 'diff-version'}
+        rowClassName={(rowData: any) => diffAddonVersions?.includes(rowData.name) && 'diff-version'}
         ref={ref}
       >
         <Column
@@ -219,13 +261,13 @@ const BundlesAddonList = React.forwardRef(
           field="version"
           header="Version"
           className="version-column"
-          body={(addon) => {
+          body={(addon: any) => {
             const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
             const productionVersion = currentProductionAddons?.[addon.name]
             const allVersions = addon.versions
             const sortedVersions = Object.keys(allVersions).sort((a, b) => {
-              const comparison = -1 * compareBuild(coerce(a), coerce(b))
+              const comparison = -1 * compareBuild(coerce(a) ?? a, coerce(b) ?? b)
               if (comparison === 0) {
                 return b.localeCompare(a)
               }
@@ -257,7 +299,6 @@ const BundlesAddonList = React.forwardRef(
             return (
               <AddonListItem
                 key={addon.name}
-                addonTitle={addon.title}
                 version={addon.version}
                 selection={selected}
                 addons={addons}
@@ -280,6 +321,7 @@ const BundlesAddonList = React.forwardRef(
                 <InputSwitch
                   checked={addon.dev?.enabled}
                   onChange={() =>
+                    onDevChange &&
                     onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
                   }
                 />
@@ -289,7 +331,7 @@ const BundlesAddonList = React.forwardRef(
                   placeholder="/path/to/dev/addon/client"
                   data-tooltip="Path to the client folder of the addon to run client side code live from source."
                   onChange={(e) =>
-                    onDevChange([addon.name], { value: e.target.value, key: 'path' })
+                    onDevChange && onDevChange([addon.name], { value: e.target.value, key: 'path' })
                   }
                   disabled={!addon.dev?.enabled}
                 />

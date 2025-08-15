@@ -9,19 +9,42 @@ import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { current } from '@reduxjs/toolkit'
+import type { Addon } from './types'
 
-const BundleDetail = ({
+type Installer = { version: string; platforms?: string[] }
+type Bundle = {
+  name: string
+  isProduction?: boolean
+  isStaging?: boolean
+  isProject?: boolean
+  installerVersion?: string
+  addons: Record<string, string | null>
+  addonDevelopment?: Record<string, { enabled?: boolean; path?: string }>
+  activeUser?: string
+  isDev?: boolean
+}
+
+// Addon type now imported from ./types
+
+type BundleDetailProps = {
+  selectedBundles?: Bundle[]
+  onDuplicate: (name: string) => void
+  installers: Installer[]
+  toggleBundleStatus: (state: 'staging' | 'production', name: string) => void
+  addons: Array<Addon>
+}
+
+const BundleDetail: React.FC<BundleDetailProps> = ({
   selectedBundles = [],
   onDuplicate,
   installers,
   toggleBundleStatus,
   addons,
 }) => {
-  const [selectedBundle, setSelectedBundle] = useState(null)
+  const [selectedBundle, setSelectedBundle] = useState<string | null>(null)
 
-  const [formData, setFormData] = useState({})
-  const [selectedAddons, setSelectedAddons] = useState([])
+  const [formData, setFormData] = useState<Bundle | any>({} as Bundle)
+  const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const [updateBundle] = useUpdateBundleMutation()
 
   // list of all bundles because we need production versions of addons
@@ -33,7 +56,7 @@ const BundleDetail = ({
 
   // data for first selected bundle
   const bundle = useMemo(() => {
-    return selectedBundles.find((b) => b.name === selectedBundle)
+    return selectedBundles.find((b) => b.name === selectedBundle) as Bundle
   }, [selectedBundles, selectedBundle])
 
   const bundleStates = [
@@ -48,8 +71,8 @@ const BundleDetail = ({
   ]
 
   // Select addon if query search has addon=addonName
-  const addonListRef = useRef()
-  useAddonSelection(addons, setSelectedAddons, addonListRef, [formData])
+  const addonListRef = useRef<any>()
+  useAddonSelection<Addon>(addons, setSelectedAddons, addonListRef, [formData])
 
   // every time we select a new bundle, update the form data
   useEffect(() => {
@@ -85,33 +108,38 @@ const BundleDetail = ({
     }
   }, [selectedBundles, selectedBundle, addons, currentProductionAddons])
 
-  const handleAddonAutoSave = async (addon, version) => {
+  const handleAddonAutoSave = async (addon: string, version: string | null) => {
     try {
       await updateBundle({ name: bundle.name, data: { addons: { [addon]: version } } }).unwrap()
       toast.success(`Bundle addon updated ${addon}: ${version}`)
     } catch (error) {
       console.error(error)
-      toast.error(error.data?.detail || 'Failed to update bundle addon')
+      toast.error((error as any)?.data?.detail || 'Failed to update bundle addon')
     }
   }
 
   return (
     <>
+      {/** Cast styled button to any to allow transient $hl prop */}
+      {(() => null)()}
       <Toolbar>
         <Spacer />
         <>
-          {bundleStates.map(({ name, active }) => (
-            <Styled.BadgeButton
-              key={name}
-              $hl={active ? name : null}
-              icon={active && 'check'}
-              onClick={() => toggleBundleStatus(name, bundle.name)}
-              disabled={selectedBundles.length > 1}
-              data-tooltip={`${!active ? 'Set' : 'Unset'} bundle to ${name}`}
-            >
-              {!active ? 'Set' : ''} {upperFirst(name)}
-            </Styled.BadgeButton>
-          ))}
+          {bundleStates.map(({ name, active }) => {
+            const BadgeButton: any = Styled.BadgeButton
+            return (
+              <BadgeButton
+                key={name}
+                $hl={active ? name : null}
+                icon={active ? 'check' : undefined}
+                onClick={() => toggleBundleStatus(name as 'staging' | 'production', bundle.name)}
+                disabled={selectedBundles.length > 1}
+                data-tooltip={`${!active ? 'Set' : 'Unset'} bundle to ${name}`}
+              >
+                {!active ? 'Set' : ''} {upperFirst(name)}
+              </BadgeButton>
+            )
+          })}
         </>
         <Button
           label="Duplicate and edit"
@@ -123,7 +151,7 @@ const BundleDetail = ({
         />
       </Toolbar>
       {selectedBundles.length > 1 && selectedBundles.length < 5 ? (
-        <BundleCompare bundles={selectedBundles} addons={addons} />
+        <BundleCompare bundles={selectedBundles as any} addons={addons as any} />
       ) : (
         <BundleForm
           isNew={false}
@@ -131,7 +159,7 @@ const BundleDetail = ({
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           onAddonAutoUpdate={handleAddonAutoSave}
         >
-          <BundleDeps bundle={bundle} />
+          <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}
     </>

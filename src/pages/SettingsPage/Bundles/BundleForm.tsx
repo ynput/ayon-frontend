@@ -1,7 +1,7 @@
 import {
   Divider,
   FormLayout,
-  FormRow,
+  FormRow as RCFormRow,
   InputSwitch,
   InputText,
   Panel,
@@ -13,8 +13,9 @@ import BundlesAddonList from './BundlesAddonList'
 import * as Styled from './Bundles.styled'
 import { upperFirst } from 'lodash'
 import InstallerSelector from './InstallerSelector'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import { useGetUsersQuery } from '@shared/api'
+import type { Addon } from './types'
 
 const StyledColumns = styled.div`
   display: flex;
@@ -24,7 +25,37 @@ const StyledColumns = styled.div`
   overflow: hidden;
 `
 
-const BundleForm = ({
+type Installer = { version: string; platforms?: string[] }
+
+type BundleFormData = {
+  name?: string
+  installerVersion?: string
+  isProject?: boolean
+  isDev?: boolean
+  activeUser?: string
+  addons?: Record<string, string | null>
+  addonDevelopment?: Record<string, { enabled?: boolean; path?: string }>
+}
+
+type BundleFormProps = {
+  formData: BundleFormData | null
+  setFormData: React.Dispatch<React.SetStateAction<BundleFormData>>
+  isNew: boolean
+  isDev?: boolean
+  installers?: Installer[]
+  children?: React.ReactNode
+  selectedAddons: Addon[]
+  setSelectedAddons: (sel: any) => void
+  onAddonDevChange?: (
+    addonNames: string[],
+    payload: { value: any; key: 'enabled' | 'path' },
+  ) => void
+  developerMode?: boolean
+  addonListRef?: any
+  onAddonAutoUpdate?: (addon: string, version: string | null) => void
+}
+
+const BundleForm: React.FC<BundleFormProps> = ({
   formData,
   setFormData,
   isNew,
@@ -39,16 +70,16 @@ const BundleForm = ({
   onAddonAutoUpdate,
 }) => {
   const showNameError = formData && !formData?.name && isNew
-  const currentUser = useSelector((state) => state.user.name)
-  const { data: users = [], isLoading } = useGetUsersQuery({ selfName: currentUser })
-  const devs = users?.filter((u) => u.isDeveloper)
+  const currentUser = useAppSelector((state) => state.user.name)
+  const { data: users = [], isLoading } = useGetUsersQuery({ selfName: currentUser }) as any
+  const devs = users?.filter((u: any) => u.isDeveloper)
   const installerPlatforms = installers.find(
     (i) => i.version === formData?.installerVersion,
   )?.platforms
 
   const devSelectOptions = useMemo(
     () =>
-      devs.map((d) => ({
+      devs.map((d: any) => ({
         name: d.name,
         fullName: d.attrib?.fullName || d.name,
         avatarUrl: d.name && `/api/users/${d.name}/avatar`,
@@ -77,7 +108,7 @@ const BundleForm = ({
             )}
           </div>
         </Styled.FormRow>
-        <FormRow label="Launcher version">
+        <RCFormRow label="Launcher version">
           {isNew ? (
             <InstallerSelector
               value={formData?.installerVersion ? [formData?.installerVersion] : []}
@@ -90,56 +121,69 @@ const BundleForm = ({
               <h2 style={{ margin: 0, marginRight: 32 }}>{formData?.installerVersion || 'NONE'}</h2>
               <>
                 {!!installerPlatforms?.length &&
-                  installerPlatforms.map((platform, i) => (
-                    <Styled.PlatformTag key={platform + '-' + i} $platform={platform}>
-                      {upperFirst(platform === 'darwin' ? 'macOS' : platform)}
-                    </Styled.PlatformTag>
-                  ))}
+                  installerPlatforms.map((platform, i) => {
+                    const PlatformTag: any = Styled.PlatformTag
+                    return (
+                      <PlatformTag key={platform + '-' + i} $platform={platform}>
+                        {upperFirst(platform === 'darwin' ? 'macOS' : platform)}
+                      </PlatformTag>
+                    )
+                  })}
               </>
             </div>
           )}
-        </FormRow>
+        </RCFormRow>
         {developerMode && !isDev && (
-          <FormRow label="Dev bundle">
+          <RCFormRow label="Dev bundle">
             <InputSwitch
               checked={formData.isDev}
               onChange={() => setFormData({ ...formData, isDev: !formData.isDev })}
             />
-          </FormRow>
+          </RCFormRow>
         )}
         {(isDev || developerMode) && (
-          <FormRow label="Assigned dev" fieldStyle={{ flexDirection: 'row', gap: 8 }}>
-            <Styled.DevSelect
-              editor
-              emptyMessage={'Assign developer...'}
-              value={[formData.activeUser]}
-              options={devSelectOptions}
-              disabled={isLoading || !formData.isDev}
-              multiSelect={false}
-              onChange={(v) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  activeUser: v[0],
-                }))
-              }
-            />
-            <Styled.BadgeButton
-              label="Assign to me"
-              $hl={'developer-surface'}
-              icon={'person_pin_circle'}
-              style={{
-                justifyContent: 'center',
-                width: 'auto',
-              }}
-              disabled={formData.activeUser === currentUser || isLoading || !formData.isDev}
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  activeUser: currentUser,
-                }))
-              }}
-            />
-          </FormRow>
+          <RCFormRow label="Assigned dev" fieldStyle={{ flexDirection: 'row', gap: 8 }}>
+            {(() => {
+              const DevSelect: any = Styled.DevSelect
+              return (
+                <DevSelect
+                  editor
+                  emptyMessage={'Assign developer...'}
+                  value={[formData.activeUser || '']}
+                  options={devSelectOptions}
+                  disabled={isLoading || !formData.isDev}
+                  multiSelect={false}
+                  onChange={(v: string[]) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      activeUser: v[0],
+                    }))
+                  }
+                />
+              )
+            })()}
+            {(() => {
+              const BadgeButton: any = Styled.BadgeButton
+              return (
+                <BadgeButton
+                  label="Assign to me"
+                  $hl={'developer-surface'}
+                  icon={'person_pin_circle'}
+                  style={{
+                    justifyContent: 'center',
+                    width: 'auto',
+                  }}
+                  disabled={formData.activeUser === currentUser || isLoading || !formData.isDev}
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      activeUser: currentUser,
+                    }))
+                  }}
+                />
+              )
+            })()}
+          </RCFormRow>
         )}
       </FormLayout>
       <Divider />
