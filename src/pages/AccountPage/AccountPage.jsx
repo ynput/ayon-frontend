@@ -9,7 +9,7 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 import ProfilePage from './ProfilePage'
 import DownloadsPage from './DownloadsPage/DownloadsPage'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-import usePageTitle from '@hooks/usePageTitle'
+import useTitle from '@hooks/useTitle'
 
 export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
@@ -61,7 +61,7 @@ const AccountPage = () => {
     // },
   ]
   
-  const title = usePageTitle(module, links, 'AYON')
+  const title = useTitle(module, links, 'AYON')
 
   return (
     <>

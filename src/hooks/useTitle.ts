@@ -1,25 +1,35 @@
-import { useSelector } from 'react-redux'
-import { useMemo } from 'react'
-import { useLocation } from 'react-router-dom'
-import { formatTitle } from '../utils/formatTitle'
+import { useMemo, ReactNode } from 'react'
 
+type Link = {
+  name: string
+  module: string
+  path?: string
+  enabled?: boolean
+  uriSync?: boolean
+  viewType?: string
+  node?: ReactNode | string
+}
 
-/**
- * Hook to format page titles based on breadcrumb title
- * @param breadcrumbTitle - The breadcrumb title string (e.g., "Project / Browser / Overview")
- * @returns Formatted title string for document.title
- */
-const useTitle = (breadcrumbTitle: string): string => {
-  const projectName = useSelector((state: any) => state.project.name)
-  const location = useLocation()
-
+const useTitle = (
+  currentModule: string,
+  links: Link[],
+  basePage: string = 'AYON',
+  pagePrefix: string | null = null
+): string => {
   return useMemo(() => {
-    // Split breadcrumb title into parts
-    const breadcrumbParts = breadcrumbTitle ? breadcrumbTitle.split(' / ') : []
+    if (!currentModule || !links) {
+      return basePage
+    }
 
-    // Call pure function with all necessary data
-    return formatTitle(breadcrumbParts, projectName, location.pathname)
-  }, [breadcrumbTitle, projectName, location.pathname])
+    const currentLink = links.find(link => link.module === currentModule)
+    const pageName = currentLink ? currentLink.name : basePage
+
+    if (pagePrefix) {
+      return `${pagePrefix} • ${pageName} • ${basePage}`
+    }
+
+    return `${pageName} • ${basePage}`
+  }, [currentModule, links, basePage, pagePrefix])
 }
 
 export default useTitle

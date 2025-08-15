@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-import usePageTitle from '@hooks/usePageTitle'
+import useTitle from '@hooks/useTitle'
 
 import AddonSettings from '@containers/AddonSettings'
 
@@ -179,7 +179,7 @@ const ProjectManagerPage = () => {
     }
   }, [isLoadingUserPermissions, selectedProject, module])
 
-  const title = usePageTitle(module, linksWithProject, selectedProject || 'AYON')
+  const title = useTitle(module, linksWithProject, selectedProject || 'AYON')
 
   return (
     <>

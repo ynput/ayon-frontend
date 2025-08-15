@@ -18,7 +18,7 @@ import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import styled from 'styled-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-import usePageTitle from '@hooks/usePageTitle'
+import useTitle from '@hooks/useTitle'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -69,7 +69,7 @@ const UserDashboardPage = () => {
     })
   }
   
-  const title = usePageTitle(addonName || module, links, 'AYON', 'Dashboard')
+  const title = useTitle(addonName || module, links, 'AYON', 'Dashboard')
   
 
   const addonData = addonsData.find((addon) => addon.name === addonName)

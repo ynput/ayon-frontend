@@ -4,7 +4,7 @@ import Inbox from './Inbox/Inbox'
 import { useGetInboxUnreadCountQuery } from '@queries/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-import usePageTitle from '@hooks/usePageTitle'
+import useTitle from '@hooks/useTitle'
 
 const InboxPage = () => {
   const { module } = useParams()
@@ -42,7 +42,7 @@ const InboxPage = () => {
     },
   ]
 
-  const title = usePageTitle(module, links, 'AYON', 'Inbox')
+  const title = useTitle(module, links, 'AYON', 'Inbox')
 
 return (
     <>

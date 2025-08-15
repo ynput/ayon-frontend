@@ -6,7 +6,7 @@ const Favicon = () => {
   const user = useSelector((state) => state.user)
   const { data: hasUnread } = useGetInboxHasUnreadQuery({}, { skip: !user })
   return (
-    <Helmet defer={false}>
+    <Helmet defer={false} defaultTitle="AYON" titleTemplate="%s">
       <link
         rel="apple-touch-icon"
         sizes="180x180"

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from 'react-rout
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-import usePageTitle from '@hooks/usePageTitle'
+import useTitle from '@hooks/useTitle'
 
 import BrowserPage from '../BrowserPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
@@ -206,7 +206,7 @@ const ProjectPage = () => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
 
-  const title = usePageTitle(module, links, projectName || 'AYON')
+  const title = useTitle(module, links, projectName || 'AYON')
 
   //
   // Render page
