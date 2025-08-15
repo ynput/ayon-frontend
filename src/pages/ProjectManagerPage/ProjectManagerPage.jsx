@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
 
 import AddonSettings from '@containers/AddonSettings'
 
@@ -177,8 +179,11 @@ const ProjectManagerPage = () => {
     }
   }, [isLoadingUserPermissions, selectedProject, module])
 
-  return (
+  const title = useTitle(module, linksWithProject, selectedProject || 'AYON')
+    
+    return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={linksWithProject} />
       {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
       <ProjectManagerPageContainer
