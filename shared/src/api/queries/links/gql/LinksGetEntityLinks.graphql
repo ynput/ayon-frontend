@@ -1,0 +1,101 @@
+query GetFoldersLinks($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    folders(ids: $entityIds, last: 100) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetProductsLinks($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    products(ids: $entityIds, last: 1000) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetTasksLinks($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    tasks(ids: $entityIds, last: 1000) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetVersionsLinks($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    versions(ids: $entityIds, last: 1000) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetWorkfilesLinks($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    workfiles(ids: $entityIds, last: 1000) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetRepresentationsLinks($projectName: String!, $entityIds: [String!]) {
+  project(name: $projectName) {
+    representations(ids: $entityIds, last: 1000) {
+      edges {
+        node {
+          id
+          links {
+            edges {
+              ...OverviewEntityLinkFragment
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -72,7 +72,7 @@ export type LinkTypeModel = {
   data?: Record<string, any>
 }
 export type LinkTypeListResponse = {
-  /** List of link types */
+  /** List of link types defined in the project. */
   types: LinkTypeModel[]
 }
 export type ValidationError = {
@@ -84,7 +84,7 @@ export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type CreateLinkTypeRequestModel = {
-  /** Link data */
+  /** Additional link type data (appearance, description, etc.). */
   data?: Record<string, any>
 }
 export type EntityIdResponse = {
@@ -92,16 +92,18 @@ export type EntityIdResponse = {
   id: string
 }
 export type CreateLinkRequestModel = {
+  /** ID of the link to create. If not provided, will be generated. */
+  id?: string
   /** The ID of the input entity. */
   input: string
   /** The ID of the output entity. */
   output: string
   /** The name of the link. */
   name?: string
-  /** Link type to create. This is deprecated. Use linkType instead. */
-  link?: string
   /** Link type to create. */
   linkType?: string
-  /** Link data */
+  /** Additional data for the link. */
   data?: Record<string, any>
+  /** Link type to create. This is deprecated. Use linkType instead. */
+  link?: string
 }

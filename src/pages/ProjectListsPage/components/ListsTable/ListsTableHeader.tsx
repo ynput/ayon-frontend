@@ -1,5 +1,5 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { Header, HeaderButton } from '@shared/SimpleTable'
+import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'

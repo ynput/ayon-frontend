@@ -1,13 +1,17 @@
 import { FC, useCallback, MouseEvent, useState } from 'react' // Import event types
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
-import SimpleTable, { Container, SimpleTableProvider, SimpleTableRow } from '@shared/SimpleTable'
+import SimpleTable, {
+  Container,
+  SimpleTableProvider,
+  SimpleTableRow,
+  SimpleTableCellTemplateProps,
+} from '@shared/containers/SimpleTable'
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import { ExpandedState, Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
-import { SimpleTableCellTemplateProps } from '@shared/SimpleTable/SimpleTableRowTemplate'
 
 interface ListsTableProps {
   isReview?: boolean
@@ -22,7 +26,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     submitRenameList,
     renamingList,
   } = useListsContext()
-  const { listsTableData, isLoadingAll, isError } = useListsDataContext()
+  const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [clientSearch, setClientSearch] = useState<null | string>(null)
 
@@ -108,6 +112,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
             isExpandable={listsTableData.some((row) => row.subRows.length > 0)}
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
+            onScrollBottom={fetchNextPage}
             meta={{
               handleRowContext,
               handleValueDoubleClick,

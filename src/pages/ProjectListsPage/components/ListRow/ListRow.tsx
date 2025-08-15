@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './ListRow.styled'
 import { Icon, InputText, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { RowExpander } from '@shared/SimpleTable/SimpleTableRowTemplate'
+import { RowExpander } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 
 export interface ListRowProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string

@@ -16,6 +16,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'react-toastify'
+import { usePowerpack } from '@shared/context'
 
 type DrawHistory = {
   clear: (page?: number) => void
@@ -67,6 +68,7 @@ type ViewerProviderProps = {
 }
 
 export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderProps) => {
+  const { powerLicense } = usePowerpack()
   const minVersion = '1.0.0'
   // get annotation remotes
   const [AnnotationsProvider, { isLoaded: isLoadedProvider, outdated }] = useLoadModule({
@@ -75,6 +77,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     module: 'AnnotationsProvider',
     fallback: FallbackAnnotationsProvider,
     minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
   const [AnnotationsEditorProvider, { isLoaded: isLoadedEditorProvider }] = useLoadModule({
     addon: 'powerpack',
@@ -82,6 +85,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     module: 'AnnotationsEditorProvider',
     fallback: FallbackAnnotationsEditorProvider,
     minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
   const [AnnotationsCanvas, { isLoaded: isLoadedCanvas }] = useLoadModule({
     addon: 'powerpack',
@@ -89,6 +93,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     module: 'AnnotationsCanvas',
     fallback: () => null,
     minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
   const [useAnnotations, { isLoaded: isLoadedHook }] = useLoadModule({
     addon: 'powerpack',
@@ -96,6 +101,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     module: 'useAnnotations',
     fallback: useAnnotationsFallback,
     minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
   const [AnnotationTools, { isLoaded: isLoadedTools }] = useLoadModule({
     addon: 'powerpack',
@@ -103,6 +109,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     module: 'AnnotationTools',
     fallback: AnnotationToolsFallback,
     minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
   const [useDrawHistory] = useLoadModule({
     addon: 'powerpack',
@@ -110,6 +117,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     module: 'useDrawHistory',
     fallback: useDrawHistoryFallback,
     minVersion,
+    skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
   // show error message if annotations version is outdated
