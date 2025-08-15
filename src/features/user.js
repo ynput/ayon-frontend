@@ -42,6 +42,10 @@ const userSlice = createSlice({
         user.data.isUser = isUser
       }
 
+      if (action.payload.redirectUrl) {
+        user.redirectUrl = action.payload.redirectUrl
+      }
+
       return user
     },
 

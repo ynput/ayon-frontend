@@ -12,7 +12,6 @@ import * as Styled from './LoginPage.styled'
 import remarkGfm from 'remark-gfm'
 import Markdown from 'react-markdown'
 
-
 const LoginPage = ({ isFirstTime = false }) => {
   const dispatch = useDispatch()
 
@@ -132,7 +131,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     let success = false
     let response = null
-    let finalRedirect = null
+    let redirectUrl = null
 
     try {
       console.debug('SSO Callback', providerConfig.callback)
@@ -162,7 +161,7 @@ const LoginPage = ({ isFirstTime = false }) => {
       accessToken = data.token
 
       if (data.redirectUrl) {
-        finalRedirect = data.redirectUrl
+        redirectUrl = data.redirectUrl
       }
     } else if (success) {
       // successful request, without user data.
@@ -177,23 +176,18 @@ const LoginPage = ({ isFirstTime = false }) => {
       // At this point we may have redirect URL from the response, but that 
       // is optional and used sparsely.
 
-      if ((!finalRedirect) && localStorage.getItem('auth-preferred-url')) {
-        finalRedirect = localStorage.getItem('auth-preferred-url')
+      if ((!redirectUrl) && localStorage.getItem('auth-preferred-url')) {
+        redirectUrl = localStorage.getItem('auth-preferred-url')
       }
 
-      if (!finalRedirect) {
+      if (!redirectUrl) {
         // if we STILL don't have a redirect, just land on the home page
-        finalRedirect = window.location.origin
+        redirectUrl = window.location.origin
       }
-
-      setTimeout(() => {
-        console.log('Redirecting to', finalRedirect)
-        window.location.href = finalRedirect
-      }, 100) // give some time for the state to update
 
       setIsLoading(false)
       localStorage.removeItem('auth-preferred-url')
-      dispatch(login({ user, accessToken }))
+      dispatch(login({ user, accessToken, redirectUrl }))
       dispatch(api.util.resetApiState())
 
 
