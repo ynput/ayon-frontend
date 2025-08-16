@@ -116,7 +116,7 @@ const UserDashboardPage = () => {
   }
 
   const handleActivateProject = async (sel, active) => {
-    await updateProject({ projectName: sel, update: { active } }).unwrap()
+    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
   }
 
   const isProjectsMultiSelect = module === 'tasks'

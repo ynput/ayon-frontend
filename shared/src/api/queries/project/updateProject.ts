@@ -1,53 +1,26 @@
-import api from './getProject'
+import projectApi from './getProject'
 
-// TODO: move endpoints to enhanced
-
-const projectApi = api.injectEndpoints({
-  endpoints: (build) => ({
-    createProject: build.mutation({
-      query: ({ name, code, anatomy, library }) => ({
-        url: `/api/projects`,
-        method: 'POST',
-        body: {
-          name,
-          code,
-          anatomy,
-          library,
-        },
-      }),
-      // @ts-ignore
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
+const enhancedProjectApi = projectApi.enhanceEndpoints({
+  endpoints: {
+    deployProject: {
+      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       invalidatesTags: () => [
         { type: 'projects', id: 'LIST' },
         { type: 'kanBanTask', id: 'LIST' },
       ],
-    }),
-    deleteProject: build.mutation({
-      query: ({ projectName }) => ({
-        url: `/api/projects/${projectName}`,
-        method: 'DELETE',
-      }),
+    },
+    deleteProject: {
       invalidatesTags: () => [{ type: 'projects', id: 'LIST' }],
-    }),
-    updateProjectAnatomy: build.mutation({
-      query: ({ projectName, anatomy }) => ({
-        url: `/api/projects/${projectName}/anatomy`,
-        method: 'POST',
-        body: anatomy,
-      }),
+    },
+    setProjectAnatomy: {
       invalidatesTags: (result, error, { projectName }) =>
         error ? [] : [{ type: 'project', id: projectName }],
-    }),
-    updateProject: build.mutation({
-      query: ({ projectName, update }) => ({
-        url: `/api/projects/${projectName}`,
-        method: 'PATCH',
-        body: update,
-      }),
-      invalidatesTags: (result, error, { projectName, update }) =>
+    },
+    updateProject: {
+      invalidatesTags: (result, error, { projectName, projectPatchModel }) =>
         error
           ? []
-          : 'active' in update
+          : 'active' in projectPatchModel
           ? // if active is updated, invalidate all projects
             ['project']
           : // if not, invalidate only the updated project
@@ -55,23 +28,14 @@ const projectApi = api.injectEndpoints({
               { type: 'project', id: projectName },
               { type: 'projects', id: 'LIST' },
             ],
-    }),
-    updateProjectUsers: build.mutation({
-      query: ({ projectName, userName, update }) => ({
-        url: `/api/projects/${projectName}/users/${userName}`,
-        method: 'PATCH',
-        body: update,
-      }),
-    }),
-  }),
-  overrideExisting: true,
+    },
+  },
 })
 
 export const {
-  useCreateProjectMutation,
+  useDeployProjectMutation,
   useDeleteProjectMutation,
-  useUpdateProjectAnatomyMutation,
+  useSetProjectAnatomyMutation,
   useUpdateProjectMutation,
-  useUpdateProjectUsersMutation,
-} = projectApi
+} = enhancedProjectApi
 export { projectApi as projectQueries }
