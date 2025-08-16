@@ -19,7 +19,6 @@ const AddonList = ({
   changedAddonKeys = null, // List of addon keys that have changed
   projectName, // used for changed addons
   siteId, // used for changed addons
-  setBundleName,
 }) => {
   const { data, isLoading, isError } = useGetAddonSettingsListQuery({
     projectName,
@@ -62,16 +61,6 @@ const AddonList = ({
 
     return result
   }, [data, variant, siteSettings])
-
-  useEffect(() => {
-    if (setBundleName) {
-      if (data?.bundleName && !isError) {
-        setBundleName(data?.bundleName)
-      } else {
-        setBundleName(null)
-      }
-    }
-  }, [data?.bundleName, isError])
 
   useEffect(() => {
     // Maintain selection when addons are changed due to variant change
@@ -142,6 +131,12 @@ const AddonList = ({
 
   if (isError) tableData = []
 
+  const formatVersion = (rowData) => {
+    let v = rowData.version
+    if ((data?.inheritedAddons || []).includes(rowData.name)) v = `${v} (Inherited)`
+    return v
+  }
+
   return (
     <Section style={{ minWidth: 250 }}>
       <TablePanel>
@@ -159,7 +154,7 @@ const AddonList = ({
           emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >
           <Column field="title" header="Addon" />
-          <Column field="version" header="Version" style={{ maxWidth: 110 }} />
+          <Column field="version" header="Version" style={{ maxWidth: 110 }} body={formatVersion} />
         </DataTable>
       </TablePanel>
     </Section>

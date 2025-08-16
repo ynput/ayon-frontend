@@ -22,13 +22,17 @@ export const FormRow = styled.div`
   }
 `
 
-const platformColors = {
+const platformColors: Record<string, string> = {
   windows: '#00a2ed',
   linux: '#f47421',
   darwin: '#e9eff5',
 }
 
-export const PlatformTag = styled.span`
+interface PlatformTagProps {
+  $platform?: string
+}
+
+export const PlatformTag = styled.span<PlatformTagProps>`
   padding: 2px 4px;
   border-radius: 4px;
   color: black;
@@ -37,7 +41,7 @@ export const PlatformTag = styled.span`
 
   ${({ $platform }) => {
     // get platform color
-    const color = platformColors[$platform?.toLowerCase()] || 'var(--md-sys-color-outline)'
+    const color = platformColors[$platform?.toLowerCase() || ''] || 'var(--md-sys-color-outline)'
 
     return css`
       background-color: ${color};
@@ -45,8 +49,12 @@ export const PlatformTag = styled.span`
   }}
 `
 
+interface BadgeButtonProps {
+  $hl?: string
+}
+
 // hl prop for background
-export const BadgeButton = styled(Button)`
+export const BadgeButton = styled(Button)<BadgeButtonProps>`
   ${({ $hl }) =>
     $hl &&
     css`

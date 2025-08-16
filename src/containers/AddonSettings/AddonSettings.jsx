@@ -21,6 +21,7 @@ import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
+import BundlesSelector, { DropdownBadge } from './BundlesSelector'
 import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
 import RawSettingsDialog from '@containers/RawSettingsDialog'
 
@@ -28,6 +29,7 @@ import {
   useSetAddonSettingsMutation,
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
+  useGetAddonSettingsListQuery,
 } from '@queries/addonSettings'
 
 import { usePromoteBundleMutation } from '@queries/bundles/updateBundles'
@@ -44,6 +46,7 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
+import PerProjectBundleConfig from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -65,6 +68,25 @@ const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
   widows: 100%;
 `
 
+const StyledBundleLabel = styled.div`
+  padding: 6px var(--padding-m);
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  .label {
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    flex: 1;
+    color: var(--md-sys-color-outline);
+  }
+`
+
 const isChildPath = (childPath, parentPath) => {
   if (childPath.length < parentPath.length) return false
   for (let i = 0; i < parentPath.length; i++) {
@@ -84,8 +106,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const [unpinnedKeys, setUnpinnedKeys] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
-  const [variant, setVariant] = useState('production')
-  const [bundleName, setBundleName] = useState()
+
+  const siteId = showSites ? selectedSites[0] || '_' : undefined
+
+  const [variant, setVariant] = useState('production') // this can be a variant or a specific bundle name
   const [addonSchemas, setAddonSchemas] = useState({})
 
   const [showCopySettings, setShowCopySettings] = useState(false)
@@ -101,6 +125,14 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const { requestPaste } = usePaste()
 
   const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
+
+  const { data: addonSettings } = useGetAddonSettingsListQuery({
+    projectName,
+    siteId,
+    variant,
+  })
+  // the selected bundle that goes with the variant
+  const bundleName = addonSettings?.bundleName
 
   const projectKey = projectName || '_'
 
@@ -583,46 +615,29 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     // site settings do not have variants
     if (showSites) return
 
-    const copySettingsButton = (
-      <CopyBundleSettingsButton
-        bundleName={bundleName}
-        variant={variant}
-        disabled={canCommit}
-        localData={localData}
-        changedKeys={changedKeys}
-        unpinnedKeys={unpinnedKeys}
-        setLocalData={setLocalData}
-        setChangedKeys={setChangedKeys}
-        setUnpinnedKeys={setUnpinnedKeys}
-        setSelectedAddons={setSelectedAddons}
-        originalData={originalData}
-        setOriginalData={setOriginalData}
-        projectName={projectName}
-      />
-    )
-
     return (
       <>
         <Toolbar>
-          <VariantSelector variant={variant} setVariant={setVariant} />
-          {developerMode && copySettingsButton}
+          <VariantSelector variant={variant} setVariant={setVariant} showDev />
+          <Spacer />
+          {projectName && <PerProjectBundleConfig projectName={projectName} variant={variant} />}
+          <CopyBundleSettingsButton
+            bundleName={bundleName}
+            variant={variant}
+            disabled={canCommit}
+            localData={localData}
+            changedKeys={changedKeys}
+            unpinnedKeys={unpinnedKeys}
+            setLocalData={setLocalData}
+            setChangedKeys={setChangedKeys}
+            setUnpinnedKeys={setUnpinnedKeys}
+            setSelectedAddons={setSelectedAddons}
+            originalData={originalData}
+            setOriginalData={setOriginalData}
+            projectName={projectName}
+          />
         </Toolbar>
-        {!developerMode && (
-          <Toolbar>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {bundleName}
-            </span>
-            <Spacer />
-            {copySettingsButton}
-            <Button
-              icon="rocket_launch"
-              data-tooltip="Push bundle to production"
-              onClick={onPushToProduction}
-              disabled={variant !== 'staging' || canCommit}
-              style={{ zIndex: 100 }}
-            />
-          </Toolbar>
-        )}
+        <BundlesSelector selected={variant} onChange={setVariant} />
       </>
     )
   }, [variant, changedKeys, bundleName, projectName, developerMode])
@@ -719,7 +734,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               variant={variant}
               reloadAddons={reloadAddons}
               projectName={projectName}
-              siteId={showSites ? selectedSites[0] || '_' : undefined}
+              siteId={siteId}
               onClose={() => {
                 setShowRawEdit(false)
               }}
@@ -730,7 +745,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             setSelectedAddons={onSelectAddon}
             variant={variant}
             onAddonFocus={onAddonFocus}
-            setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
             siteSettings={showSites}

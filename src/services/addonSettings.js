@@ -41,6 +41,7 @@ const addonSettings = api.injectEndpoints({
       providesTags: (result, error, arg) => [
         { type: 'addonSettingsList', ...arg },
         { type: 'addonSettingsList' },
+        { type: 'addonSettingsList', id: 'LIST' },
       ],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
