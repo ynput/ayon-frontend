@@ -19,8 +19,6 @@ const AddonList = ({
   changedAddonKeys = null, // List of addon keys that have changed
   projectName, // used for changed addons
   siteId, // used for changed addons
-  bundleName,
-  setBundleName,
 }) => {
   const { data, isLoading, isError } = useGetAddonSettingsListQuery({
     projectName,
@@ -63,16 +61,6 @@ const AddonList = ({
 
     return result
   }, [data, variant, siteSettings])
-
-  useEffect(() => {
-    if (setBundleName) {
-      if (!isError && data?.bundleName) {
-        if (bundleName !== data?.bundleName) setBundleName(data?.bundleName)
-      } else {
-        setBundleName(null)
-      }
-    }
-  }, [data?.bundleName, isError])
 
   useEffect(() => {
     // Maintain selection when addons are changed due to variant change
