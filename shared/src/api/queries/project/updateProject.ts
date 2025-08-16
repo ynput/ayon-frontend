@@ -28,6 +28,13 @@ const enhancedProjectApi = projectApi.enhanceEndpoints({
               { type: 'project', id: projectName },
               { type: 'projects', id: 'LIST' },
             ],
+      transformErrorResponse: (error: any) => error.data.detail,
+    },
+    setProjectBundle: {
+      invalidatesTags: (_r, _e, { projectName }) => [
+        { type: 'project', id: projectName },
+        { type: 'addonSettingsList', id: 'LIST' },
+      ],
     },
   },
 })
@@ -37,5 +44,6 @@ export const {
   useDeleteProjectMutation,
   useSetProjectAnatomyMutation,
   useUpdateProjectMutation,
+  useSetProjectBundleMutation,
 } = enhancedProjectApi
 export { projectApi as projectQueries }

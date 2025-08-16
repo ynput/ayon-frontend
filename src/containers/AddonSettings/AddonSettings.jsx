@@ -46,6 +46,7 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
+import PerProjectBundleConfig from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -617,10 +618,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return (
       <>
         <Toolbar>
-          <VariantSelector variant={variant} setVariant={setVariant} />
-        </Toolbar>
-        <Toolbar>
-          <BundlesSelector selected={variant} onChange={setVariant} />
+          <VariantSelector variant={variant} setVariant={setVariant} showDev />
+          <Spacer />
+          {projectName && <PerProjectBundleConfig projectName={projectName} variant={variant} />}
           <CopyBundleSettingsButton
             bundleName={bundleName}
             variant={variant}
@@ -635,9 +635,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             originalData={originalData}
             setOriginalData={setOriginalData}
             projectName={projectName}
-            pt={{ button: { style: { marginLeft: 'auto' } } }}
           />
         </Toolbar>
+        <BundlesSelector selected={variant} onChange={setVariant} />
       </>
     )
   }, [variant, changedKeys, bundleName, projectName, developerMode])

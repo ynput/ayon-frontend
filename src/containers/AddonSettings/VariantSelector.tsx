@@ -30,16 +30,23 @@ interface VariantSelectorProps {
   variant: string
   setVariant: (variant: string) => void
   disabled?: boolean
+  showDev?: boolean
 }
 
-const VariantSelector = ({ variant, setVariant, disabled = false }: VariantSelectorProps) => {
+const VariantSelector = ({
+  variant,
+  setVariant,
+  showDev = false,
+  disabled = false,
+}: VariantSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const devMode = useAppSelector((state) => state.user.attrib.developerMode)
   const userName = useAppSelector((state) => state.user.name)
 
-  const buttons = devMode
-    ? (['production', 'staging', 'dev'] as const)
-    : (['production', 'staging'] as const)
+  const buttons =
+    devMode && showDev
+      ? (['production', 'staging', 'dev'] as const)
+      : (['production', 'staging'] as const)
 
   const selectedBundle = useMemo(() => {
     if (variant === 'production') {

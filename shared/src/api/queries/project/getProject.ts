@@ -8,7 +8,6 @@ type UpdatedDefinitions = Omit<Definitions, 'getProject'> & {
   listProjects: OverrideResultType<Definitions['listProjects'], ListProjectsItemModel[]>
 }
 
-// TODO: sort out the types
 const enhancedProject = projectsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getProject: {
