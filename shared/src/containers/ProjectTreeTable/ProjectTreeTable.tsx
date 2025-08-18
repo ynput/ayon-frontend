@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
+import { createPortal } from 'react-dom'
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -48,10 +49,12 @@ import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
+// EntityPickerDialog import
+import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
+
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
-import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
@@ -587,6 +590,7 @@ export const ProjectTreeTable = ({
       document.body,
     )
 
+
   if (sortableRows) {
     return (
       <>
@@ -832,7 +836,29 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+
+
+  const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
+  const moveDialog = cellContextMenuHook.moveDialog || null
+  const handleMoveSubmit = cellContextMenuHook.handleMoveSubmit || (() => {})
+  const closeMoveDialog = cellContextMenuHook.closeMoveDialog || (() => {})
+  const isEntityPickerOpen = cellContextMenuHook.isEntityPickerOpen || false
+
+  // Get projectName for the move dialog
+  const { projectName } = useProjectTableContext()
+
+  // Create the move dialog portal
+  const moveDialogPortal = (isEntityPickerOpen && projectName) ? createPortal(
+    <EntityPickerDialog
+      projectName={projectName}
+      entityType="folder"
+      onSubmit={handleMoveSubmit}
+      onClose={closeMoveDialog}
+    />,
+    document.body
+  ) : null
+
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -915,12 +941,20 @@ const TableBody = ({
 
   if (sortableRows) {
     return (
-      <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
-        {tbodyContent}
-      </SortableContext>
+      <>
+        <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
+          {tbodyContent}
+        </SortableContext>
+        {moveDialogPortal}
+      </>
     )
   } else {
-    return tbodyContent
+    return (
+      <>
+        {tbodyContent}
+        {moveDialogPortal}
+      </>
+    )
   }
 }
 

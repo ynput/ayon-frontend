@@ -6,12 +6,18 @@ import { useClipboard } from '../context/ClipboardContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
+import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
-import { ProjectTableAttribute, TableRow } from '../types'
+import {EditorTaskNode, MatchingFolder, ProjectTableAttribute, TableRow} from '../types'
 import { UseHistoryReturn } from './useHistory'
 import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { getEntityViewierIds } from '../utils'
+import { useState } from 'react'
+import { EntityPickerDialog } from '../../EntityPickerDialog/EntityPickerDialog'
+import { createPortal } from 'react-dom'
+import { api as foldersApi } from '@shared/api/generated/folders'
+import { api as tasksApi } from '@shared/api/generated/tasks'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -40,6 +46,7 @@ type DefaultMenuItem =
   | 'create-folder'
   | 'create-task'
   | 'open-viewer'
+  | 'move'
 export type ContextMenuItemConstructor = (
   e: ContextEvent,
   cell: TableCellContextData,
@@ -76,15 +83,29 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     contextMenuItems = [],
     powerpack,
     onOpenPlayer,
+    reloadTableData,
   } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history } = useCellEditing()
+  const { updateEntities, getFoldersTasks } = useProjectTableQueriesContext()
 
   // update entity context
 
   // data mutations
   const deleteEntities = useDeleteEntities({})
+  const [updateFolder] = foldersApi.useUpdateFolderMutation()
+  const [updateTask] = tasksApi.useUpdateTaskMutation()
+
+  // move dialog state
+  const [moveDialog, setMoveDialog] = useState<{
+    isOpen: boolean
+    entityId: string
+    entityType: 'folder' | 'task'
+  } | null>(null)
+
+  // separate state for entity picker dialog visibility
+  const [isEntityPickerOpen, setIsEntityPickerOpen] = useState(false)
 
   const [cellContextMenuShow] = useCreateContextMenu([], powerpack)
 
@@ -280,6 +301,111 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
   })
 
+  const moveItem: ContextMenuItemConstructor = (e, cell) => ({
+    label: 'Move',
+    icon: 'drive_file_move',
+    command: () => {
+      setMoveDialog({
+        isOpen: true,
+        entityId: cell.entityId,
+        entityType: cell.entityType as 'folder' | 'task',
+      })
+      setIsEntityPickerOpen(true)
+    },
+    hidden:
+      cell.columnId !== 'name' ||
+      cell.isGroup ||
+      !showHierarchy ||
+      (cell.entityType !== 'folder' && cell.entityType !== 'task'),
+  })
+
+  const handleMoveSubmit = async (selectedFolderIds: string[]) => {
+    if (!moveDialog || selectedFolderIds.length === 0) return
+
+    const targetFolderId = selectedFolderIds[0]
+    const entity = getEntityById(moveDialog.entityId)
+    // Store original state for potential rollback
+    const originalParentId = moveDialog.entityType === 'folder'
+      ? (entity as EditorTaskNode)?.parentId
+      : (entity as MatchingFolder)?.folderId
+
+    // Close the dialog immediately before API call
+    setIsEntityPickerOpen(false)
+
+    try {
+      // Optimistic update - immediately update the UI
+      if (entity) {
+        const optimisticUpdate = {
+          id: `optimistic-move-${moveDialog.entityId}`,
+          type: 'update' as const,
+          entityType: moveDialog.entityType as 'folder' | 'task',
+          entityId: moveDialog.entityId,
+          rowId: moveDialog.entityId,
+          data: moveDialog.entityType === 'folder'
+            ? { parentId: targetFolderId }
+            : { folderId: targetFolderId }
+        }
+
+        // Update the entity immediately in the UI using updateEntities
+        await updateEntities({
+          operations: [optimisticUpdate],
+        })
+      }
+
+      // Perform the API call
+      if (moveDialog.entityType === 'folder') {
+        await updateFolder({
+          projectName,
+          folderId: moveDialog.entityId,
+          folderPatchModel: {
+            parentId: targetFolderId,
+          },
+        }).unwrap()
+      } else if (moveDialog.entityType === 'task') {
+        await updateTask({
+          projectName,
+          taskId: moveDialog.entityId,
+          taskPatchModel: {
+            folderId: targetFolderId,
+          },
+        }).unwrap()
+      }
+
+
+    } catch (error) {
+      console.error('Failed to move entity:', error)
+
+      // Rollback optimistic update on error
+      if (entity) {
+        try {
+          const rollbackUpdate = {
+            id: `rollback-move-${moveDialog.entityId}`,
+            type: 'update' as const,
+            entityType: moveDialog.entityType as 'folder' | 'task',
+            entityId: moveDialog.entityId,
+            rowId: moveDialog.entityId,
+            data: moveDialog.entityType === 'folder'
+              ? { parentId: originalParentId }
+              : { folderId: originalParentId }
+          }
+
+          await updateEntities({
+            operations: [rollbackUpdate],
+          })
+        } catch (rollbackError) {
+          console.warn('Failed to rollback optimistic update:', rollbackError)
+          // If rollback fails, force a full reload
+          reloadTableData()
+        }
+      }
+
+
+    } finally {
+      setMoveDialog(null)
+      setIsEntityPickerOpen(false) // Ensure dialog is closed even if there's an error
+    }
+  }
+
   const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {
     ['copy-paste']: copyAndPasteItems,
     ['show-details']: showDetailsItem,
@@ -290,6 +416,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     ['create-folder']: createFolderItems,
     ['create-task']: createTaskItem,
     ['open-viewer']: openViewerItem,
+    ['move']: moveItem,
   }
 
   const getCellData = (cellId: string): TableCellContextData | undefined => {
@@ -393,7 +520,16 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     cellContextMenuShow(e, constructedMenuItems)
   }
 
-  return { handleTableBodyContextMenu }
+  return {
+    handleTableBodyContextMenu,
+    moveDialog,
+    handleMoveSubmit,
+    closeMoveDialog: () => {
+      setMoveDialog(null)
+      setIsEntityPickerOpen(false)
+    },
+    isEntityPickerOpen
+  }
 }
 
 export default useCellContextMenu

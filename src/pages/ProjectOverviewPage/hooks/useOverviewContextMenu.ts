@@ -81,6 +81,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     uploadVersionItem,
     'create-folder',
     'create-task',
+    'move',
     'delete',
   ]
 

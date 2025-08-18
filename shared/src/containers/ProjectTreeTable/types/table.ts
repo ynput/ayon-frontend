@@ -55,6 +55,7 @@ export type TableRow = {
 export type MatchingFolder = FolderListItem & {
   childOnlyMatch?: boolean
   entityId: string
+  folderId:string
   entityType: 'folder'
 }
 export type FolderNodeMap = Map<string, MatchingFolder>
@@ -63,6 +64,7 @@ export type EditorTaskNode = Omit<TaskNode, 'links'> & {
   attrib: Record<string, any>
   entityId: string
   entityType: 'task'
+  parentId: string
   groups?: { value: string; hasNextPage?: string }[]
   links: EntityLink[]
 }
