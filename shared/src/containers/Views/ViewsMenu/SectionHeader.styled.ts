@@ -28,6 +28,12 @@ export const SectionHeader = styled.li`
     display: none;
   }
 
+  /* if collapsed show icon at 90degrees */
+  &.collapsed .icon {
+    display: inline-flex;
+    transform: rotate(-90deg);
+  }
+
   &:hover .icon {
     display: inline-flex;
   }

@@ -8,6 +8,7 @@ import { toast } from 'react-toastify'
 import { useLoadModule, useLocalStorage } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
+import { CollapsedViewState } from '../context/ViewsContext'
 
 // constants
 export const WORKING_VIEW_ID = '_working_' as const
@@ -26,13 +27,13 @@ type Props = {
   useWorkingView?: boolean
   editingViewId?: string // the preview id of the view being edited
   selectedId?: string
+  collapsed: CollapsedViewState
+  setCollapsed: (state: CollapsedViewState) => void
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
   onSave: (viewId: string) => Promise<void>
   onResetWorkingView?: () => void
 }
-
-type CollapsedState = Record<string, boolean>
 
 const useBuildViewMenuItems = ({
   viewsList,
@@ -42,6 +43,8 @@ const useBuildViewMenuItems = ({
   currentUser,
   useWorkingView,
   editingViewId,
+  collapsed,
+  setCollapsed,
   onSelect,
   onEdit,
   onSave,
@@ -118,11 +121,6 @@ const useBuildViewMenuItems = ({
     onSelect,
     onSave: handleEditView,
   })
-
-  // Collapsed state persisted globally across all viewTypes and projects
-  const stateKey = 'viewsMenuCollapsed'
-
-  const [collapsed, setCollapsed] = useLocalStorage<CollapsedState>(stateKey, {})
 
   const toggleSection = useCallback(
     (id: string) => {
