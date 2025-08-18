@@ -2,6 +2,7 @@ import { AttributeEnumItem } from '@shared/api'
 import { Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
+import { EDIT_TRIGGER_CLASS } from './CellWidget'
 
 const StyledWidget = styled.div`
   display: flex;
@@ -201,7 +202,9 @@ export const EnumCellValue = ({
         ))}
       </StyledValuesContainer>
       {!isItem && !isReadOnly && (
-        <StyledExpandButton className={clsx('expand', { open: isOpen }, expandClassName)}>
+        <StyledExpandButton
+          className={clsx('expand', EDIT_TRIGGER_CLASS, { open: isOpen }, expandClassName)}
+        >
           <StyledExpandIcon
             icon="expand_more"
             style={{ rotate: isOpen ? '180deg' : '0', ...expandStyle }}

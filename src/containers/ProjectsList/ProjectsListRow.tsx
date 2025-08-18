@@ -1,7 +1,7 @@
 import {
   SimpleTableCellTemplate,
   SimpleTableCellTemplateProps,
-} from '@shared/SimpleTable/SimpleTableRowTemplate'
+} from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'
@@ -77,6 +77,7 @@ interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
 const ProjectsListRow: FC<ProjectsListRowProps> = ({
   code,
   isPinned,
+  isInActive,
   onPinToggle,
   className,
   ...props
@@ -85,7 +86,7 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
     <StyledTableRow
       {...props}
       style={{ paddingRight: 2 }}
-      className={clsx(className, { inactive: props.isInActive })}
+      className={clsx(className, { inactive: isInActive })}
       startContent={<span className="project-code">{code}</span>}
       endContent={
         <StyledPin

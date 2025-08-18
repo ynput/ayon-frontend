@@ -8,6 +8,8 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 // import SiteSettings from './SiteSettingsPage'
 import ProfilePage from './ProfilePage'
 import DownloadsPage from './DownloadsPage/DownloadsPage'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
 
 export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
@@ -19,6 +21,7 @@ export const PanelButtonsStyled = styled(Panel)`
 
 const AccountPage = () => {
   const { module } = useParams()
+  
 
   // RTK QUERIES
   // GET USER DATA
@@ -57,9 +60,12 @@ const AccountPage = () => {
     //   module: 'settings',
     // },
   ]
-
+  
+  const title = useTitle(module, links, 'AYON')
+  
   return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={links} />
       {moduleComponent}
     </>

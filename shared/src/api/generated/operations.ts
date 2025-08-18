@@ -152,4 +152,6 @@ export type OperationModel = {
 export type OperationsRequestModel = {
   operations?: OperationModel[]
   canFail?: boolean
+  waitForEvents?: boolean
+  raiseOnError?: boolean
 }

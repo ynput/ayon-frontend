@@ -2,9 +2,10 @@ import { useMemo } from 'react'
 import { Filter } from '@ynput/ayon-react-components'
 import { type QueryTasksFoldersApiArg } from '@shared/api'
 import { clientFilterToQueryFilter } from '../utils'
+import { QueryFilter, QueryCondition } from '../types/operations'
 
 interface UseQueryFiltersProps {
-  filters: Filter[]
+  queryFilters: QueryFilter
   sliceFilter?: Filter | null
 }
 
@@ -12,32 +13,50 @@ interface QueryFiltersResult {
   filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
   filterString?: string
   search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
-  combinedFilters: Filter[]
+  combinedFilters: QueryFilter // For data fetching (includes slice filters)
+  displayFilters: QueryFilter // For SearchFilterWrapper (excludes slice filters, except hierarchy)
 }
 
 export const useQueryFilters = ({
-  filters,
+  queryFilters,
   sliceFilter,
 }: UseQueryFiltersProps): QueryFiltersResult => {
   return useMemo(() => {
-    // merge the slice filter with the user filters
-    let combinedFilters = [...filters]
+    let combinedQueryFilter = queryFilters
+
+    // If there's a slice filter, convert it and merge it with the query filters
     if (sliceFilter?.values?.length) {
-      combinedFilters.push(sliceFilter as Filter)
+      const sliceQueryFilter = clientFilterToQueryFilter([sliceFilter])
+
+      // Merge the slice filter with existing query filters for data fetching
+      if (sliceQueryFilter.conditions?.length) {
+        const existingConditions = combinedQueryFilter?.conditions || []
+        combinedQueryFilter = {
+          conditions: [...existingConditions, ...sliceQueryFilter.conditions],
+          operator: 'and',
+        }
+      }
     }
 
-    // transform the task bar filters to the query format
-    const queryFilter = clientFilterToQueryFilter(combinedFilters)
-    const queryFilterString = combinedFilters.length ? JSON.stringify(queryFilter) : ''
-    // extract the fuzzy search from the filters
-    const fuzzySearchFilter = combinedFilters.find((filter) => filter.id.includes('text'))
-      ?.values?.[0]?.id
+    // Create display filters (for SearchFilterWrapper)
+    // This excludes slice filters, except for hierarchy when slice type changes
+    let displayQueryFilter = queryFilters
+
+    const queryFilterString = combinedQueryFilter?.conditions?.length
+      ? JSON.stringify(combinedQueryFilter)
+      : ''
+
+    // For text search, we'll need to extract it from the slice filter if it contains text
+    const fuzzySearchFilter = sliceFilter?.id?.includes('text')
+      ? sliceFilter?.values?.[0]?.id
+      : undefined
 
     return {
       filterString: queryFilterString,
-      filter: queryFilter,
+      filter: combinedQueryFilter,
       search: fuzzySearchFilter,
-      combinedFilters,
+      combinedFilters: combinedQueryFilter,
+      displayFilters: displayQueryFilter,
     }
-  }, [filters, sliceFilter])
+  }, [queryFilters, sliceFilter])
 }

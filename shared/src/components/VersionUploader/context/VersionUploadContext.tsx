@@ -13,7 +13,7 @@ import React, {
   useEffect,
 } from 'react'
 import { useCreateProductMutation } from '@shared/api'
-import { extractVersionFromFilename } from '@shared/utils/extractVersionFromFilename'
+import { extractVersionFromFilename } from '@shared/util'
 import { toast } from 'react-toastify'
 import {
   validateFormData as validateFormDataHelper,
@@ -23,7 +23,7 @@ import {
   getNextVersionNumber,
   type ProductCreationData,
   type VersionCreationData,
-} from '@shared/utils/versionUploadHelpers'
+} from '@shared/util/versionUploadHelpers'
 
 export interface FormData {
   version: number

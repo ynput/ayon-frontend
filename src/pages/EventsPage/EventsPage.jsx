@@ -12,8 +12,10 @@ import EventOverview from './EventOverview'
 import { useMemo, useRef, useState } from 'react'
 import { useEffect } from 'react'
 import { debounce } from 'lodash'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const EventsPage = () => {
+  
   const dispatch = useDispatch()
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
   // use query param to get selected event
@@ -206,7 +208,9 @@ const EventsPage = () => {
   }
 
   return (
-    <main>
+    <>
+      <DocumentTitle title="Events • AYON" />
+      <main>
       <Section>
         <Toolbar>
           <form onSubmit={handleSearchSubmit}>
@@ -258,6 +262,7 @@ const EventsPage = () => {
         </Splitter>
       </Section>
     </main>
+    </>
   )
 }
 

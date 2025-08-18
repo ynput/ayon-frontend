@@ -6,6 +6,10 @@ export * from './getPriorityOptions'
 export * from './copyToClipboard'
 export * from './getMixedState'
 export * from './getAttributeIcon'
+export * from './getEntityId'
+export * from './extractVersionFromFilename'
+export * from './versionUploadHelpers'
+export * from './columnConfigConverter'
 
 import PubSub from './pubsub'
 export { PubSub }

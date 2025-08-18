@@ -8,6 +8,7 @@ import api from '@shared/api'
 import AuthLink from './AuthLink'
 import { useGetSiteInfoQuery } from '@shared/api'
 import LoadingPage from '../LoadingPage'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import * as Styled from './LoginPage.styled'
 import remarkGfm from 'remark-gfm'
 import Markdown from 'react-markdown'
@@ -177,6 +178,9 @@ const LoginPage = ({ isFirstTime = false }) => {
     if (success) {
       // And redirect to the final URL
       window.location.href = finalRedirect
+    } else {
+      // we don't want to retry!
+      window.location.href = '/'
     }
 
   } // handleSSOCallback
@@ -244,7 +248,9 @@ const LoginPage = ({ isFirstTime = false }) => {
   //
 
   return (
-    <main className="center">
+    <>
+      <DocumentTitle title="Login • AYON" />
+      <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
       <Styled.LoginForm>
         {(motd || loginPageBrand) && (
@@ -315,6 +321,7 @@ const LoginPage = ({ isFirstTime = false }) => {
         </Panel>
       </Styled.LoginForm>
     </main>
+    </>
   )
 }
 

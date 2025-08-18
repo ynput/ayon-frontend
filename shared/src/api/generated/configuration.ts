@@ -79,6 +79,10 @@ export type CustomizationModel = {
   /** The message that is displayed to users on the login page. Markdown syntax is supported. */
   motd?: string
 }
+export type AuthenticationModel = {
+  /** If enabled, password authentication will be hidden from the login page. */
+  hide_password_auth?: boolean
+}
 export type ProjectOptionsModel = {
   /** A regular expression that is used to create project code from the project name. */
   project_code_regex?: string
@@ -92,6 +96,8 @@ export type ServerConfigModel = {
   studio_name?: string
   /** Customization options for the login page */
   customization?: CustomizationModel
+  /** Settings related to user authentication */
+  authentication?: AuthenticationModel
   project_options?: ProjectOptionsModel
   /** Settings for the changelog feature */
   changelog?: ChangelogSettingsModel

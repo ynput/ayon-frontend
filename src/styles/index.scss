@@ -88,6 +88,7 @@ strong {
     flex-grow: 1;
     display: flex;
     flex-direction: row;
+    overflow: hidden;
     gap: var(--base-gap-large);
     padding: 8px;
     position: relative;

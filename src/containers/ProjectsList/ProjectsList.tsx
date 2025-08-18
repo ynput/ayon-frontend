@@ -1,5 +1,5 @@
 import { useListProjectsQuery } from '@shared/api'
-import SimpleTable, { Container, SimpleTableProvider } from '@shared/SimpleTable'
+import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo } from 'react'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'

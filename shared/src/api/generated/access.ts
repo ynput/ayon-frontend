@@ -28,6 +28,14 @@ const injectedRtkApi = api.injectEndpoints({
     setProjectsAccess: build.mutation<SetProjectsAccessApiResponse, SetProjectsAccessApiArg>({
       query: (queryArg) => ({ url: `/api/access`, method: 'POST', body: queryArg.payload }),
     }),
+    getShareOptions: build.query<GetShareOptionsApiResponse, GetShareOptionsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/share`,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -61,6 +69,10 @@ export type SetProjectsAccessApiArg = {
       [key: string]: string[]
     }
   }
+}
+export type GetShareOptionsApiResponse = /** status 200 Successful Response */ ShareOptions
+export type GetShareOptionsApiArg = {
+  projectName?: string
 }
 export type AccessGroupObject = {
   /** Name of the access group */
@@ -130,4 +142,14 @@ export type Permissions = {
   attrib_write?: AttributeWriteAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
+}
+export type ShareOption = {
+  shareType: string
+  value: string
+  name: string
+  label: string
+  attribute?: string
+}
+export type ShareOptions = {
+  options: ShareOption[]
 }

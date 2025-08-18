@@ -40,7 +40,7 @@ const SchedulerPage: FC<SchedulerPageProps> = ({}) => {
   }
 
   return (
-    <main style={{ overflow: 'hidden', width: '100%', height: '100%' }}>
+    <main style={{ width: '100%', height: '100%' }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}

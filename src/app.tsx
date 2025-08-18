@@ -241,8 +241,6 @@ const App = () => {
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
-  
-
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
     [serverError],
@@ -285,7 +283,7 @@ const App = () => {
 
   const isTokenAuth = () => {
     // User is trying to log in with a token
-    // we need to show the login page, that handles sso 
+    // we need to show the login page, that handles sso
     // callbacks in order to parse the token and overwrite
     // existing session if needed
     const provider = window.location.pathname.split('/')

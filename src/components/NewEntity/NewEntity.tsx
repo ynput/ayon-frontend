@@ -93,10 +93,14 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useSelectionCellsContext()
-  const { rowSelection: slicerSelection, sliceType } = useSlicerContext()
+  const {
+    rowSelection: slicerSelection,
+    rowSelectionData: slicerSelectionData,
+    sliceType,
+  } = useSlicerContext()
   const { getEntityById, projectInfo } = useProjectTableContext()
 
-  const [selectedFolderIds, selectedEntities] = React.useMemo(() => {
+  const [selectedFolderIds, selectedEntitiesLabels] = React.useMemo(() => {
     const selectedRowIds = Array.from(
       new Set(
         Array.from(selectedCells)
@@ -128,12 +132,20 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     if (!selectedFolderIds.length && sliceType === 'hierarchy') {
       // add the selected folder ids from the slicer
       const selectedFolderIdsFromSlicer = Object.keys(slicerSelection)
-      return [selectedFolderIdsFromSlicer, selectedEntities]
+      const selectedEntitiesLabels = Object.entries(slicerSelectionData)
+        .filter(([id]) => selectedFolderIdsFromSlicer.includes(id))
+        .map(([, data]) => data.label || data.name)
+        .filter(Boolean)
+      return [selectedFolderIdsFromSlicer, selectedEntitiesLabels]
     } else {
-      return [selectedFolderIds, selectedEntities]
+      const selectedEntitiesLabels = selectedEntities
+        .map((e) => e?.label || e?.name)
+        .filter(Boolean)
+      return [selectedFolderIds, selectedEntitiesLabels]
     }
-  }, [selectedCells, slicerSelection, sliceType, getEntityById])
-  const parentLabel = selectedEntities[0]?.label || selectedEntities[0]?.name || ''
+  }, [selectedCells, slicerSelection, sliceType, entityType, getEntityById])
+
+  const parentLabel = selectedEntitiesLabels[0] || ''
 
   const isRoot = isEmpty(selectedFolderIds)
 
@@ -142,9 +154,22 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const initData: EntityForm = { label: '', subType: '' }
 
   //   format title
-  let title = 'Add New '
-  if (isRoot) title += 'Root '
-  title += capitalize(entityType || '')
+  const getDialogTitle = () => {
+    let title = 'Add New '
+    if (isRoot) title += 'Root '
+    title += capitalize(entityType || '')
+    if (!isRoot) {
+      if (selectedEntitiesLabels.length > 2) {
+        title +=
+          ' - ' +
+          selectedEntitiesLabels.slice(0, 2).join(', ') +
+          ` +${selectedEntitiesLabels.length - 2} more`
+      } else {
+        title += ' - ' + selectedEntitiesLabels.join(', ')
+      }
+    }
+    return title
+  }
 
   //   entityType selector
   const typeOptions =
@@ -330,7 +355,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       />
       {entityType && (
         <Dialog
-          header={title}
+          header={getDialogTitle()}
           isOpen
           onClose={handleClose}
           onShow={handleShow}

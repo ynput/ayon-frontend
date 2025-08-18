@@ -12,6 +12,7 @@ import styled from 'styled-components'
 import { useListServicesQuery } from '@queries/services/getServices'
 import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'
 import { confirmDialog } from 'primereact/confirmdialog'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const StatusBadge = styled.span`
   display: inline-block;
@@ -66,6 +67,7 @@ const detailsMaxWidth = '40vw'
 const detailsMaxMaxWidth = 700
 
 const ServicesPage = () => {
+  
   const [showServiceDialog, setShowServiceDialog] = useState(false)
   const [editingService, setEditingService] = useState(null)
   const [selectedServices, setSelectedServices] = useState([])
@@ -211,8 +213,18 @@ const ServicesPage = () => {
 
   const [ctxMenuShow] = useCreateContextMenu([])
 
+  // Generate dynamic title based on selected service
+  const pageTitle = useMemo(() => {
+    if (selectedService && selectedService.addonName) {
+      return `Services • ${selectedService.addonName} • AYON`
+    }
+    return 'Services • AYON'
+  }, [selectedService])
+
   return (
-    <main style={{ overflow: 'hidden' }}>
+    <>
+      <DocumentTitle title={pageTitle} />
+      <main>
       {showServiceDialog && (
         <ServiceDialog onHide={handleCloseDialog} editService={editingService} />
       )}
@@ -283,6 +295,7 @@ const ServicesPage = () => {
         </Splitter>
       </Section>
     </main>
+    </>
   )
 }
 

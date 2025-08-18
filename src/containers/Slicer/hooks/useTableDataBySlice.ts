@@ -1,10 +1,10 @@
 import { useAppSelector } from '@state/store'
 import { useEffect, useMemo, useState } from 'react'
-import useHierarchyTable from './useHierarchyTable'
+import { useHierarchyTable } from '@shared/hooks'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
 import { Slice, SliceData, SliceOption, TableData } from '../types'
-import { SimpleTableRow } from '@shared/SimpleTable'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { SliceType } from '@shared/containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
 
