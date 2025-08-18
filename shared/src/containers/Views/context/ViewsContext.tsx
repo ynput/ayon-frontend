@@ -1,5 +1,5 @@
 import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { ViewType, WORKING_VIEW_ID } from '../index'
+import { ViewType, viewTypes, WORKING_VIEW_ID } from '../index'
 import {
   GetDefaultViewApiResponse,
   useGetCurrentUserQuery,
@@ -26,7 +26,6 @@ export type ViewSettings = GetDefaultViewApiResponse['settings']
 export type SelectedViewState = ViewData | undefined // id of view otherwise null with use working
 export type EditingViewState = string | true | null // id of view being edited otherwise null
 
-const viewTypes = ['overview', 'taskProgress', 'lists'] as const
 export interface ViewsContextValue {
   // State
   viewType?: ViewType

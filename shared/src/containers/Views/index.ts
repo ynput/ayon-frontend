@@ -29,4 +29,6 @@ export { WORKING_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuCont
 export type ViewFormData = Required<
   Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner' | 'access' | 'accessLevel'>
 >
-export type ViewType = 'overview' | 'taskProgress'
+
+export const viewTypes = ['overview', 'taskProgress', 'lists', 'review'] as const
+export type ViewType = (typeof viewTypes)[number]
