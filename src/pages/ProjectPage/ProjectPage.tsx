@@ -28,6 +28,7 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import { ProjectContextProvider } from '@shared/context/ProjectContext'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from "@components/HelpButton/HelpButton.tsx"
 
@@ -288,7 +289,7 @@ const ProjectPage = () => {
   }
 
   return (
-    <>
+    <ProjectContextProvider projectName={projectName}>
       <DocumentTitle title={title} />
       <Dialog
         header="Project Context"
@@ -322,7 +323,7 @@ const ProjectPage = () => {
         <UploadVersionDialog />
       </VersionUploadProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
-    </>
+    </ProjectContextProvider>
   )
 }
 

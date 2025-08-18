@@ -67,6 +67,8 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+
+import { useProjectContext } from '@shared/context/ProjectContext'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 
@@ -161,6 +163,7 @@ export const ProjectTreeTable = ({
     groupBy,
   } = useColumnSettingsContext()
   const isGrouping = !!groupBy
+  const {productTypes} = useProjectContext()
 
   const {
     projectInfo,
@@ -197,6 +200,7 @@ export const ProjectTreeTable = ({
         statuses,
         folderTypes,
         taskTypes,
+        productTypes,
         tags,
         scopes,
       }),
