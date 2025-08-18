@@ -29,6 +29,7 @@ import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
+import HelpButton from "@components/HelpButton/HelpButton.tsx"
 
 type NavLink = {
   name?: string
@@ -182,6 +183,9 @@ const ProjectPage = () => {
         })),
       { node: 'spacer' },
       {
+        node: <HelpButton module={addonName || module} />,
+      },
+      {
         node: (
           <Button
             icon="more_horiz"
@@ -193,7 +197,7 @@ const ProjectPage = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, matchedAddons],
+    [addonsData, projectName, remotePages, matchedAddons, module],
   )
 
   const activeLink = useMemo(() => {

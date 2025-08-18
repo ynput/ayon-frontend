@@ -7,6 +7,7 @@ import AppNavLinks from '@containers/header/AppNavLinks'
 import { useSelector } from 'react-redux'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -163,7 +164,15 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       })
     }
-
+      result.push({ node: 'spacer' })
+      
+      const addonTitle = addonName && addonsData
+         ? addonsData.find(addon => addon.name === addonName)?.title
+         : undefined
+      
+      result.push({
+          node: <HelpButton module={addonName || module} pageName={addonTitle} />,
+      })
     return result
   }, [addonsData, isManager])
 

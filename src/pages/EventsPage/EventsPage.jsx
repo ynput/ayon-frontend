@@ -15,7 +15,6 @@ import { debounce } from 'lodash'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const EventsPage = () => {
-  
   const dispatch = useDispatch()
   const [showLogs, setShowLogs] = useLocalStorage('events-logs', true)
   // use query param to get selected event

@@ -19,6 +19,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import styled from 'styled-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -68,6 +69,10 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
+    links.push({ node: 'spacer' })
+    links.push({
+        node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'} />,
+    })
   
   const title = useTitle(addonName || module, links, 'AYON', '')
   
