@@ -18,6 +18,8 @@ import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import styled from 'styled-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -68,7 +70,10 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
-
+  
+  const title = useTitle(addonName || module, links, 'AYON', '')
+  
+  
   const addonData = addonsData.find((addon) => addon.name === addonName)
 
   const addonModule = addonData ? (
@@ -162,6 +167,7 @@ const UserDashboardPage = () => {
 
   return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={links} />
       <main>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>

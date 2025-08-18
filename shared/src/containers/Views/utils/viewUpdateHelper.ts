@@ -79,6 +79,7 @@ export const useViewUpdateHelper = () => {
       } catch (error) {
         // Revert local state on error
         localStateSetter(null)
+        console.error(error)
         const errorMsg = options.errorMessage || `Failed to update view settings: ${error}`
         toast.error(errorMsg)
       }

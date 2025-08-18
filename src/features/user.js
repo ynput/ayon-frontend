@@ -5,6 +5,7 @@ const userSlice = createSlice({
   name: 'user',
   initialState: {
     name: '',
+    redirectUrl: null,
     data: {
       frontendPreferences: {
         notifications: false,

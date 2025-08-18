@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
-
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
 import BrowserPage from '../BrowserPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
@@ -11,7 +12,6 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
-
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
@@ -28,14 +28,14 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import { Views, ViewsProvider } from '@shared/containers'
 import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
+import { Views, ViewsProvider, ViewType } from '@shared/containers'
 
 type NavLink = {
   name?: string
   path?: string
   module?: string
-  viewType?: string
+  viewType?: ViewType
   uriSync?: boolean
   enabled?: boolean
   node?: React.ReactNode
@@ -152,7 +152,7 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
-        viewType: 'review',
+        viewType: 'reviews',
       },
       {
         name: 'Scheduler',
@@ -197,9 +197,12 @@ const ProjectPage = () => {
     ],
     [addonsData, projectName, remotePages, matchedAddons],
   )
+
   const activeLink = useMemo(() => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
+
+  const title = useTitle(module, links, projectName || 'AYON')
 
   //
   // Render page
@@ -253,6 +256,7 @@ const ProjectPage = () => {
           addonName={addonName}
           addonVersion={foundAddon.version}
           sidebar={foundAddon.settings.sidebar}
+          addonTitle={foundAddon.title}
         />
       )
     }
@@ -287,6 +291,7 @@ const ProjectPage = () => {
 
   return (
     <>
+      <DocumentTitle title={title} />
       <Dialog
         header="Project Context"
         isOpen={showContextDialog}

@@ -12,6 +12,9 @@ import { toast } from 'react-toastify'
 type Props = {
   viewType?: string
   projectName?: string
+  onCreate?: (view: ViewData) => void
+  onUpdate?: (view: ViewData) => void
+  onDelete?: (viewId: string) => void
 }
 
 export type UseViewMutations = {
@@ -28,7 +31,13 @@ export type UseViewMutations = {
 }
 type R = UseViewMutations
 
-export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMutations => {
+export const useViewsMutations = ({
+  viewType,
+  projectName,
+  onCreate,
+  onDelete,
+  onUpdate,
+}: Props): UseViewMutations => {
   // forward mutations to the dialog
   const [createView] = useCreateViewMutation()
   const [deleteView] = useDeleteViewMutation()
@@ -46,12 +55,16 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
           projectName: projectName,
           payload,
         }).unwrap()
+
+        if (onCreate) {
+          onCreate(payload as ViewData)
+        }
       } catch (error) {
         console.error('Failed to create view:', error)
         throw error
       }
     },
-    [createView, viewType, projectName],
+    [createView, viewType, projectName, onCreate],
   )
 
   const onUpdateView = useCallback<R['onUpdateView']>(
@@ -67,12 +80,16 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
           projectName,
           payload,
         }).unwrap()
+
+        if (onUpdate) {
+          onUpdate({ ...payload, id: viewId } as ViewData)
+        }
       } catch (error) {
         console.error('Failed to update view:', error)
         throw error
       }
     },
-    [createView, viewType, projectName],
+    [createView, viewType, projectName, onUpdate],
   )
 
   const onDeleteView = useCallback<R['onDeleteView']>(
@@ -87,12 +104,16 @@ export const useViewsMutations = ({ viewType, projectName }: Props): UseViewMuta
           projectName: projectName,
           viewId,
         }).unwrap()
+
+        if (onDelete) {
+          onDelete(viewId)
+        }
       } catch (error) {
         console.error('Failed to delete view:', error)
         throw error
       }
     },
-    [deleteView, viewType, projectName],
+    [deleteView, viewType, projectName, onDelete],
   )
 
   const onResetWorkingView = useCallback<R['onResetWorkingView']>(
