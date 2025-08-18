@@ -1,16 +1,15 @@
 import styled from 'styled-components'
 
 export const NavBar = styled.nav`
-    padding-right: 8px;
+  
     background-color: var(--panel-background);
-    padding: 0 8px;
     position: relative;
     display: flex;
+    margin-top: 1px;
     
     .scrollable-tabs {
         flex: 1;
         overflow-x: auto;
-        /* hide scroll bar */
         scrollbar-width: none;
         -ms-overflow-style: none;
         &::-webkit-scrollbar {
@@ -23,12 +22,9 @@ export const NavBar = styled.nav`
             flex-direction: row;
             align-items: center;
             gap: var(--base-gap-small);
-            /* reset defaults */
             list-style: none;
             margin: 0;
-            padding: 0;
-
-            /* this hides the border of the navbar by putting the active tab border over it */
+            padding: 0 8px;
             position: relative;
         }
     }
@@ -55,7 +51,7 @@ export const NavItem = styled.li`
   /* NavLink */
   a {
     padding: 2px 4px;
-    padding-bottom: 4px;
+    padding-bottom: 3px;
     display: block;
     border: 1px solid transparent;
     border-radius: 4px 4px 0 0;
