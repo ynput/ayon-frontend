@@ -1,5 +1,4 @@
 import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
-import { createPortal } from 'react-dom'
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -848,16 +847,7 @@ const TableBody = ({
   // Get projectName for the move dialog
   const { projectName } = useProjectTableContext()
 
-  // Create the move dialog portal
-  const moveDialogPortal = (isEntityPickerOpen && projectName) ? createPortal(
-    <EntityPickerDialog
-      projectName={projectName}
-      entityType="folder"
-      onSubmit={handleMoveSubmit}
-      onClose={closeMoveDialog}
-    />,
-    document.body
-  ) : null
+  // Move dialog conditional rendering
 
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
@@ -945,14 +935,28 @@ const TableBody = ({
         <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
           {tbodyContent}
         </SortableContext>
-        {moveDialogPortal}
+        {isEntityPickerOpen && projectName && (
+          <EntityPickerDialog
+            projectName={projectName}
+            entityType="folder"
+            onSubmit={handleMoveSubmit}
+            onClose={closeMoveDialog}
+          />
+        )}
       </>
     )
   } else {
     return (
       <>
         {tbodyContent}
-        {moveDialogPortal}
+        {isEntityPickerOpen && projectName && (
+          <EntityPickerDialog
+            projectName={projectName}
+            entityType="folder"
+            onSubmit={handleMoveSubmit}
+            onClose={closeMoveDialog}
+          />
+        )}
       </>
     )
   }
