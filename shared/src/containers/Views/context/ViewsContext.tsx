@@ -26,6 +26,8 @@ export type ViewSettings = GetDefaultViewApiResponse['settings']
 export type SelectedViewState = ViewData | undefined // id of view otherwise null with use working
 export type EditingViewState = string | true | null // id of view being edited otherwise null
 
+export type CollapsedViewState = Record<string, boolean>
+
 export interface ViewsContextValue {
   // State
   viewType?: ViewType
@@ -100,17 +102,32 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const { data: currentUser } = useGetCurrentUserQuery()
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [editingView, setEditingView] = useState<EditingViewState>(null)
+  // Collapsed state persisted globally across all viewTypes and projects
+  const stateKey = 'viewsMenuCollapsed'
+
+  const [collapsedSections, setCollapsedSections] = useLocalStorage<CollapsedViewState>(
+    stateKey,
+    {},
+  )
+
+  // anything extra to do when a view is created successfully
+  const handleOnViewCreated = (view: ViewData) => {
+    const key = view.visibility === 'private' ? 'myViews' : 'sharedViews'
+    // if the section is collapsed, expand it
+    if (collapsedSections[key]) {
+      const newCollapsedSections = { ...collapsedSections }
+      newCollapsedSections[key] = false
+      setCollapsedSections(newCollapsedSections)
+    }
+  }
+
   const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView } = useViewsMutations({
     viewType,
     projectName,
+    onCreate: handleOnViewCreated,
   })
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [editingView, setEditingView] = useState<EditingViewState>(null)
-  const [collapsedSections, setCollapsedSections] = useLocalStorage<Record<string, boolean>>(
-    'collapsed-views',
-    {},
-  )
 
   // when editing the view, get all users that can be shared to that view
   const { data: shareOptions } = useGetShareOptionsQuery(
@@ -200,6 +217,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     useWorkingView: !powerLicense,
     editingViewId,
     selectedId: selectedView?.id,
+    collapsed: collapsedSections,
+    setCollapsed: setCollapsedSections,
     onResetWorkingView,
     onSelect: (viewId) => {
       setSelectedView(viewId)
