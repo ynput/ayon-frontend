@@ -28,13 +28,13 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import { Views, ViewsProvider } from '@shared/containers'
+import { Views, ViewsProvider, ViewType } from '@shared/containers'
 
 type NavLink = {
   name?: string
   path?: string
   module?: string
-  viewType?: string
+  viewType?: ViewType
   uriSync?: boolean
   enabled?: boolean
   node?: React.ReactNode
@@ -150,7 +150,7 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
-        viewType: 'review',
+        viewType: 'reviews',
       },
       {
         name: 'Scheduler',
