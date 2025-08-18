@@ -29,6 +29,7 @@ import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import { Views, ViewsProvider } from '@shared/containers'
+import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 
 type NavLink = {
   name?: string
@@ -68,6 +69,7 @@ const ProjectPage = () => {
 
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
+  const isExternal = useAppSelector((state) => state.user.data.isExternal)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -277,6 +279,10 @@ const ProjectPage = () => {
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
     // focus the new version in the browser
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
+  }
+
+  if (isExternal){
+    return <ExternalUserPageLocked/>
   }
 
   return (

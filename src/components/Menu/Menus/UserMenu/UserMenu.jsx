@@ -14,35 +14,32 @@ export const UserMenu = ({ user, ...props }) => {
     logout()
   }
 
-  const items = [
-    {
+  const items = []
+  if (!user.data.isExternal) {
+    items.push({
       id: 'account',
       link: '/account/profile',
       label: 'Account',
       icon: 'person',
-    },
-    // {
-    //   id: 'settings',
-    //   link: '/account/settings',
-    //   label: 'Settings',
-    //   icon: 'settings',
-    // },
-    {
+    })
+    items.push({
       id: 'downloads',
       link: '/account/downloads',
       label: 'Download Launcher',
       icon: 'install_desktop',
-    },
-    {
-      id: 'divider',
-    },
+    })
+    items.push({ id: 'divider' })
+  }
+
+
+  items.push(
     {
       id: 'signOut',
       label: 'Sign out',
       icon: 'logout',
       onClick: handleLogOut,
     },
-  ]
+  )
 
   return (
     <>

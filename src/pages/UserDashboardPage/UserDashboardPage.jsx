@@ -16,6 +16,7 @@ import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import styled from 'styled-components'
 
 const StyledSplitter = styled(Splitter)`
@@ -34,6 +35,7 @@ const UserDashboardPage = () => {
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
+  const isExternal = user?.data?.isExternal
 
   const {
     data: addonsData = [],
@@ -152,6 +154,11 @@ const UserDashboardPage = () => {
         break
     }
   }
+
+  if (isExternal) {
+    return <ExternalUserPageLocked />
+  }
+
 
   return (
     <>
