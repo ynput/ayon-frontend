@@ -30,5 +30,5 @@ export type ViewFormData = Required<
   Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner' | 'access' | 'accessLevel'>
 >
 
-export const viewTypes = ['overview', 'taskProgress', 'lists', 'review'] as const
+export const viewTypes = ['overview', 'taskProgress', 'lists', 'reviews'] as const
 export type ViewType = (typeof viewTypes)[number]
