@@ -5,6 +5,8 @@ import { useGetSettingsAddonsQuery } from '@shared/api'
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useSelector } from 'react-redux'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
@@ -162,24 +164,23 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       })
     }
-
-    // Add spacer and help button
-    result.push({ node: 'spacer' })
-    
-    // Find addon title if we're on an addon page
-    const addonTitle = addonName && addonsData 
-      ? addonsData.find(addon => addon.name === addonName)?.title 
-      : undefined
-    
-    result.push({
-      node: <HelpButton module={addonName || module} pageName={addonTitle} />,
-    })
-
+      result.push({ node: 'spacer' })
+      
+      const addonTitle = addonName && addonsData
+         ? addonsData.find(addon => addon.name === addonName)?.title
+         : undefined
+      
+      result.push({
+          node: <HelpButton module={addonName || module} pageName={addonTitle} />,
+      })
     return result
-  }, [addonsData, isManager, module, addonName])
+  }, [addonsData, isManager])
 
+  const title = useTitle(addonName || module, links, '', '')
+  const revertedTitle = title === 'Studio settings' ? title : title + ' • Studio settings'
   return (
     <>
+      <DocumentTitle title={revertedTitle} />
       <AppNavLinks links={links} />
       {moduleComponent}
     </>

@@ -17,6 +17,8 @@ import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import styled from 'styled-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
 
 const StyledSplitter = styled(Splitter)`
@@ -35,7 +37,7 @@ const UserDashboardPage = () => {
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
-
+  
   const {
     data: addonsData = [],
     //isLoading: addonsLoading,
@@ -67,13 +69,14 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
-
-  // Add spacer and help button
-  links.push({ node: 'spacer' })
-  links.push({
-    node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'} />,
-  })
-
+    links.push({ node: 'spacer' })
+    links.push({
+        node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'} />,
+    })
+  
+  const title = useTitle(addonName || module, links, 'AYON', '')
+  
+  
   const addonData = addonsData.find((addon) => addon.name === addonName)
 
   const addonModule = addonData ? (
@@ -162,6 +165,7 @@ const UserDashboardPage = () => {
 
   return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={links} />
       <main>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>

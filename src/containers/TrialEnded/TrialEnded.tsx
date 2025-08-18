@@ -7,6 +7,7 @@ import { useAppSelector } from '@state/store'
 import { useGetActiveUsersCountQuery } from '@shared/api'
 import { useLogoutMutation } from '@queries/auth/logout'
 import { useFeedback } from '@shared/components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 interface TrialEndedProps {
   orgName?: string
@@ -32,7 +33,9 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const [logout] = useLogoutMutation()
 
   return (
-    <Styled.TrialEndContainer>
+    <>
+      <DocumentTitle title="Trial end • AYON" />
+      <Styled.TrialEndContainer>
       <Toolbar>
         <Styled.Logo src="/AYON.svg" />
         <Button className="logout" variant="text" onClick={() => logout()}>
@@ -70,6 +73,7 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
         )}
       </Styled.TrialEndCard>
     </Styled.TrialEndContainer>
+    </>
   )
 }
 

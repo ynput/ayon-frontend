@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useEffect, useLayoutEffect, useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Column } from '@tanstack/react-table'
+import { Column, ColumnOrderState, ColumnSizingState } from '@tanstack/react-table'
 import { TableRow } from '../types/table'
+import { throttle } from 'lodash'
 
 interface UseColumnVirtualizationProps {
   visibleColumns: Column<TableRow, unknown>[]
@@ -9,6 +10,8 @@ interface UseColumnVirtualizationProps {
   columnPinning: {
     left?: string[]
   }
+  columnSizing: ColumnSizingState
+  columnOrder: ColumnOrderState
 }
 
 interface UseColumnVirtualizationResult {
@@ -21,6 +24,8 @@ const useColumnVirtualization = ({
   visibleColumns,
   tableContainerRef,
   columnPinning,
+  columnSizing,
+  columnOrder,
 }: UseColumnVirtualizationProps): UseColumnVirtualizationResult => {
   // Extract pinned column indexes for virtualization
   const leftPinnedIndexes = useMemo(() => {
@@ -66,6 +71,19 @@ const useColumnVirtualization = ({
       return Array.from(allIndexes).sort((a, b) => a - b)
     },
   })
+
+  const throttledMeasure = useMemo(
+    () =>
+      throttle(() => {
+        columnVirtualizer.measure()
+      }, 1000),
+    [columnVirtualizer],
+  )
+
+  // HACK: we must remeasure the column widths when the column sizing or ordering changes
+  useLayoutEffect(() => {
+    throttledMeasure()
+  }, [throttledMeasure, columnSizing, columnOrder])
 
   const virtualColumnsResult = columnVirtualizer.getVirtualItems()
 

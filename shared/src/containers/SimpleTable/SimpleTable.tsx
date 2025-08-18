@@ -110,6 +110,7 @@ export interface SimpleTableProps {
   error?: string
   isExpandable?: boolean // show expand/collapse icons
   isMultiSelect?: boolean // enable multi-select with shift+click and ctrl/cmd+click
+  enableClickToDeselect?: boolean // allow deselecting a single selected row by clicking it again & clicking outside clears selection
   forceUpdateTable?: any
   globalFilter?: string
   meta?: Record<string, any>
@@ -166,6 +167,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   error,
   isExpandable,
   isMultiSelect = true,
+  enableClickToDeselect = true,
   forceUpdateTable,
   globalFilter,
   meta,
@@ -218,6 +220,19 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       if (!currentRow) return
 
+      // If click-to-deselect is enabled and only one row is selected and it's the current row
+      if (
+        enableClickToDeselect &&
+        !isShift &&
+        !isCtrlOrMeta &&
+        Object.keys(tableInstance.getState().rowSelection).length === 1 &&
+        tableInstance.getState().rowSelection[currentId]
+      ) {
+        tableInstance.setRowSelection({})
+        lastSelectedIdRef.current = null
+        return
+      }
+
       if (isMultiSelect && isShift && lastSelectedIdRef.current) {
         const lastId = lastSelectedIdRef.current
         const anchorRow = allProcessableRows.find((r) => r.id === lastId)
@@ -237,7 +252,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       }
       lastSelectedIdRef.current = currentId
     },
-    [isMultiSelect],
+    [isMultiSelect, enableClickToDeselect],
   )
 
   // Callback for useRowKeydown's handleRowSelect prop
@@ -333,7 +348,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         },
       },
     ],
-    [forceUpdateTable, handleSelectionLogic, handleRowKeyDown], // Added handleRowKeyDown to dependencies
+    [forceUpdateTable, handleSelectionLogic, handleRowKeyDown, enableClickToDeselect], // include enableClickToDeselect for completeness
   )
 
   const handleRowSelectionChangeCallback: OnChangeFn<RowSelectionState> = useCallback(
@@ -446,11 +461,20 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [onScrollBottom, isLoading],
   )
 
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // if the click is outside of any row, clear selection
+    if (enableClickToDeselect && !(e.target as HTMLElement).closest('tr')) {
+      table.setRowSelection({})
+      lastSelectedIdRef.current = null
+    }
+  }
+
   return (
     <Styled.TableContainer
       ref={tableContainerRef}
       className={clsx({ isLoading })}
       onScroll={handleScroll}
+      onClick={handleContainerClick}
     >
       {!error && (
         <table>

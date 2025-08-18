@@ -97,10 +97,10 @@ const Attributes = () => {
     setShowEditor(true)
   }
 
-  const onDelete = () => {
-    if (!selectedAttribute?.name || Array.isArray(selectedAttribute)) return
+  const onDelete = (selected) => {
+    if (!selected?.name || Array.isArray(selected)) return
     setAttributes((attrs) => {
-      return attrs.filter((attr) => attr.name !== selectedAttribute.name)
+      return attrs.filter((attr) => attr.name !== selected.name)
     })
   }
 
@@ -124,7 +124,7 @@ const Attributes = () => {
     {
       label: 'Delete',
       icon: 'delete',
-      command: () => onDelete(),
+      command: () => onDelete(selected),
       danger: true,
       disabled: selected?.builtin,
     },

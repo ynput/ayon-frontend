@@ -8,6 +8,7 @@ import StepWrapper from './util/StepWrapper'
 import { useRestartServerMutation } from '@queries/restartServer'
 import { SocketContext } from '@context/WebsocketContext'
 import ServerRestartingPage from '@components/ServerRestartingPage'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
   const [isFinishing, setIsFinishing] = useState(false)
@@ -47,7 +48,9 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
   }
 
   return (
-    <main className="center">
+    <>
+      <DocumentTitle title="Onboarding • AYON" />
+      <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
       <OnBoardingProvider initStep={noAdminUser ? 0 : 3} onFinish={handleFinish}>
         <StepWrapper>
@@ -69,6 +72,7 @@ const OnBoardingPage = ({ noAdminUser, onFinish, isOnboarding }) => {
         )}
       </OnBoardingProvider>
     </main>
+    </>
   )
 }
 
