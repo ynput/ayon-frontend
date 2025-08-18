@@ -71,6 +71,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
+import {createPortal} from "react-dom";
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
