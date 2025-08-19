@@ -83,7 +83,6 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
 
   // update entity context
 
-
   // data mutations
   const deleteEntities = useDeleteEntities({})
 

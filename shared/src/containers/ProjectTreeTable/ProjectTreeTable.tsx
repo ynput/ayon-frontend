@@ -15,7 +15,8 @@ import {
   Table,
   Header,
   HeaderGroup,
-  RowData, ExpandedState,
+  RowData,
+  ExpandedState,
 } from '@tanstack/react-table'
 
 // Utility imports

@@ -8,7 +8,7 @@ import { QueryFilter } from './operations'
 
 interface EntityMoveData {
   entityId: string
-  entityType: 'folder' | 'task'
+  entityType: 'folder'
 }
 
 export interface ProjectOverviewProviderProps {
@@ -66,7 +66,7 @@ export interface ProjectOverviewContextType {
 
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
-  
+
   // move dialog
   openMoveDialog?: (entityData: EntityMoveData) => void
 }
