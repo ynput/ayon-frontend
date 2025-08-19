@@ -523,7 +523,7 @@ export const ProjectTreeTable = ({
       {isEntityPickerOpen && projectName && moveDialog?.entityId && (
         <EntityPickerDialog
           projectName={projectName}
-          entityType={moveDialog.entityType}
+          entityType="folder"
           onSubmit={handleMoveSubmit}
           onClose={closeMoveDialog}
         />

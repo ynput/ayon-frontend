@@ -6,8 +6,6 @@ import {
     OperationResponseModel,
 } from '@shared/api'
 import {useProjectDataContext} from "@shared/containers";
-import {getEntityId} from "@shared/util";
-
 
 type NewEntityType = 'folder' | 'task'
 
@@ -54,25 +52,13 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
         if (!moveDialog || selectedFolderIds.length === 0) return
 
         const targetFolderId = selectedFolderIds[0]
-        const entity = getEntityId()
-
-        if (!entity) {
-            toast.error('Entity not found')
-            return
-        }
-
 
         setIsEntityPickerOpen(false)
 
-
-        const originalParentId = moveDialog.entityType === 'folder'
-            ? (entity as any).parentId
-            : (entity as any).folderId
-
         try {
-            // Prepare optimistic update operation
-            const optimisticUpdate: OperationModel = {
-                id: `optimistic-move-${moveDialog.entityId}`,
+            // Prepare move operation
+            const moveOperation: OperationModel = {
+                id: `move-${moveDialog.entityId}-${Date.now()}`,
                 type: 'update',
                 entityType: moveDialog.entityType,
                 entityId: moveDialog.entityId,
@@ -81,50 +67,48 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
                     : { folderId: targetFolderId }
             }
 
-            // Perform optimistic update and API call
+            // Use the mutation with built-in optimistic updates and rollback
             const result = await updateOverviewEntities({
                 projectName,
                 operationsRequestModel: {
-                    operations: [optimisticUpdate],
+                    operations: [moveOperation],
                 },
             }).unwrap()
 
-            // Check if the operation was successful
+
             const operationResult = result?.operations?.find(
-                (op: OperationResponseModel) => op.id === optimisticUpdate.id
+                (op: OperationResponseModel) => op.id === moveOperation.id
             )
 
             if (operationResult?.success === false) {
-                throw new Error('Move operation failed')
+                throw new Error(operationResult.detail || 'Move operation failed')
             }
 
-
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to move entity:', error)
 
-            // Rollback optimistic update on error
-            try {
-                const rollbackUpdate: OperationModel = {
-                    id: `rollback-move-${moveDialog.entityId}`,
-                    type: 'update',
-                    entityType: moveDialog.entityType,
-                    entityId: moveDialog.entityId,
-                    data: moveDialog.entityType === 'folder'
-                        ? { parentId: originalParentId }
-                        : { folderId: originalParentId }
+            // Extract and improve error message
+            let errorMessage = error?.data?.detail ||
+                             error?.error ||
+                             error?.message ||
+                             'Failed to move entity'
+            
+            // Improve specific error messages for better UX
+            if (errorMessage.includes('already exists')) {
+                if (moveDialog.entityType === 'task') {
+                    // Extract task name from error message if possible
+                    const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
+                    const taskName = nameMatch ? nameMatch[1] : 'this task'
+                    errorMessage = `Cannot move "${taskName}" - a task with this name already exists in the target folder`
+                } else {
+                    // Extract folder name from error message if possible  
+                    const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
+                    const folderName = nameMatch ? nameMatch[1] : 'this folder'
+                    errorMessage = `Cannot move "${folderName}" - a folder with this name already exists in the target location`
                 }
-
-                await updateOverviewEntities({
-                    projectName,
-                    operationsRequestModel: {
-                        operations: [rollbackUpdate],
-                    },
-                })
-            } catch (rollbackError) {
-                console.warn('Failed to rollback optimistic update:', rollbackError)
             }
 
-            toast.error('Failed to move entity')
+            toast.error(errorMessage)
         } finally {
             setMoveDialog(null)
             setIsEntityPickerOpen(false)
