@@ -6,9 +6,8 @@ import { useClipboard } from '../context/ClipboardContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useCellEditing } from '../context/CellEditingContext'
-import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
-import { ProjectTableAttribute, TableRow} from '../types'
+import { ProjectTableAttribute, TableRow } from '../types'
 import { UseHistoryReturn } from './useHistory'
 import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
@@ -81,6 +80,9 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history } = useCellEditing()
+
+  // update entity context
+
 
   // data mutations
   const deleteEntities = useDeleteEntities({})
@@ -392,9 +394,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     cellContextMenuShow(e, constructedMenuItems)
   }
 
-  return {
-    handleTableBodyContextMenu,
-  }
+  return { handleTableBodyContextMenu }
 }
 
 export default useCellContextMenu
