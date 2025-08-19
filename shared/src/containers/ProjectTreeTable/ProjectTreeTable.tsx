@@ -15,7 +15,7 @@ import {
   Table,
   Header,
   HeaderGroup,
-  RowData,
+  RowData, ExpandedState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -74,7 +74,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import entityTypeTable from "@shared/containers/EntityPickerDialog/components/EntityTypeTable";
+import {getEntityId} from "@shared/util";
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -469,6 +469,31 @@ export const ProjectTreeTable = ({
   // Get move entity context functions for the dialog
   const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, moveDialog } = useMoveEntity()
 
+  const handleMoveSubmitWithExpand = (selection: string[]) => {
+    handleMoveSubmit(selection);
+    const folderIdToExpand = selection[0];
+
+    updateExpanded((prevExpanded: ExpandedState) => {
+
+      if (typeof prevExpanded === 'boolean') {
+
+        if (prevExpanded) {
+          return prevExpanded;
+        }
+        return { [folderIdToExpand]: true };
+      }
+
+      if (prevExpanded[folderIdToExpand]) {
+        return prevExpanded;
+      }
+
+      return {
+        ...prevExpanded,
+        [folderIdToExpand]: true,
+      };
+    });
+  };
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -524,7 +549,7 @@ export const ProjectTreeTable = ({
         <EntityPickerDialog
           projectName={projectName}
           entityType="folder"
-          onSubmit={handleMoveSubmit}
+          onSubmit={handleMoveSubmitWithExpand}
           onClose={closeMoveDialog}
         />
       )}

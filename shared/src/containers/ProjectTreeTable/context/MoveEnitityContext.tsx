@@ -5,7 +5,7 @@ import {
     OperationModel,
     OperationResponseModel,
 } from '@shared/api'
-import {useProjectDataContext} from "@shared/containers";
+import {createLocalStorageKey, useExpandedState, useProjectDataContext} from "@shared/containers";
 
 type NewEntityType = 'folder' | 'task'
 
@@ -92,7 +92,7 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
                              error?.error ||
                              error?.message ||
                              'Failed to move entity'
-            
+
             // Improve specific error messages for better UX
             if (errorMessage.includes('already exists')) {
                 if (moveDialog.entityType === 'task') {
@@ -101,7 +101,7 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
                     const taskName = nameMatch ? nameMatch[1] : 'this task'
                     errorMessage = `Cannot move "${taskName}" - a task with this name already exists in the target folder`
                 } else {
-                    // Extract folder name from error message if possible  
+                    // Extract folder name from error message if possible
                     const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
                     const folderName = nameMatch ? nameMatch[1] : 'this folder'
                     errorMessage = `Cannot move "${folderName}" - a folder with this name already exists in the target location`
