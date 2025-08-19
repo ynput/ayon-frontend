@@ -50,10 +50,13 @@ import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // EntityPickerDialog import
 import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
+// Move entity context
+import { useMoveEntity } from './context/MoveEnitityContext'
 
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
@@ -71,7 +74,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import {createPortal} from "react-dom";
+import entityTypeTable from "@shared/containers/EntityPickerDialog/components/EntityTypeTable";
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -463,6 +466,9 @@ export const ProjectTreeTable = ({
     [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
   )
 
+  // Get move entity context functions for the dialog
+  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, moveDialog } = useMoveEntity()
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -513,6 +519,15 @@ export const ProjectTreeTable = ({
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>
+      {/* Render EntityPickerDialog alongside table content */}
+      {isEntityPickerOpen && projectName && moveDialog?.entityId && (
+        <EntityPickerDialog
+          projectName={projectName}
+          entityType={moveDialog.entityType}
+          onSubmit={handleMoveSubmit}
+          onClose={closeMoveDialog}
+        />
+      )}
     </ClipboardProvider>
   )
 
@@ -840,15 +855,9 @@ const TableBody = ({
 
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
-  const moveDialog = cellContextMenuHook.moveDialog || null
-  const handleMoveSubmit = cellContextMenuHook.handleMoveSubmit || (() => {})
-  const closeMoveDialog = cellContextMenuHook.closeMoveDialog || (() => {})
-  const isEntityPickerOpen = cellContextMenuHook.isEntityPickerOpen || false
 
   // Get projectName for the move dialog
   const { projectName } = useProjectTableContext()
-
-  // Move dialog conditional rendering
 
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
@@ -936,28 +945,12 @@ const TableBody = ({
         <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
           {tbodyContent}
         </SortableContext>
-        {isEntityPickerOpen && projectName && (
-          <EntityPickerDialog
-            projectName={projectName}
-            entityType="folder"
-            onSubmit={handleMoveSubmit}
-            onClose={closeMoveDialog}
-          />
-        )}
       </>
     )
   } else {
     return (
       <>
         {tbodyContent}
-        {isEntityPickerOpen && projectName && (
-          <EntityPickerDialog
-            projectName={projectName}
-            entityType="folder"
-            onSubmit={handleMoveSubmit}
-            onClose={closeMoveDialog}
-          />
-        )}
       </>
     )
   }

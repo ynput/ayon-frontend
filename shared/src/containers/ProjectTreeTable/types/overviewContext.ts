@@ -6,6 +6,11 @@ import { ContextMenuItemConstructors, ProjectTableModulesType } from '../hooks'
 import { ReactNode } from 'react'
 import { QueryFilter } from './operations'
 
+interface EntityMoveData {
+  entityId: string
+  entityType: 'folder' | 'task'
+}
+
 export interface ProjectOverviewProviderProps {
   children: ReactNode
   modules: ProjectTableModulesType
@@ -61,4 +66,7 @@ export interface ProjectOverviewContextType {
 
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
+  
+  // move dialog
+  openMoveDialog?: (entityData: EntityMoveData) => void
 }

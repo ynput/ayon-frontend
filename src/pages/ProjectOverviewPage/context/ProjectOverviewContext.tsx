@@ -173,6 +173,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         setExpanded,
         // context menu item
         contextMenuItems,
+        // move dialog
+        openMoveDialog: undefined,
       }}
     >
       {children}

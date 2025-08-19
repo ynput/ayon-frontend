@@ -9,12 +9,14 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
+import {useMoveEntity} from "@shared/containers/ProjectTreeTable/context/MoveEnitityContext.tsx";
 
 type OverviewContextMenuProps = {}
 
-const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
+const useOverviewContextMenu = ({ }: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
+  const { openMoveDialog} = useMoveEntity()
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
@@ -67,6 +69,22 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     command: () => handleVersionUpload(cell),
   })
 
+  const moveItem: ContextMenuItemConstructor = (_e, cell) => ({
+    id: 'move-entity',
+    label: 'Move',
+    icon: 'drive_file_move',
+    command: () => {
+      if (cell.entityType === 'folder' || cell.entityType === 'task') {
+        openMoveDialog?.({
+          entityId: cell.entityId,
+          entityType: cell.entityType
+        })
+      }
+    },
+    hidden:
+      (cell.entityType !== 'folder' && cell.entityType !== 'task')
+  })
+
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
@@ -79,9 +97,9 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     'inherit',
     'export',
     uploadVersionItem,
+    moveItem,
     'create-folder',
     'create-task',
-    'move',
     'delete',
   ]
 
