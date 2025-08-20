@@ -49,6 +49,8 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   initialSelection?: Partial<PickerSelection> // Initial selection of entities
   isMultiSelect?: boolean // Whether to allow multiple selection
   onSubmit: (selection: string[]) => void // Callback when the user selects an entity/entities
+  showMoveToRoot?: boolean // Whether to show "Move to root" button
+  onMoveToRoot?: () => void // Callback when user clicks "Move to root"
 }
 
 export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
@@ -57,6 +59,8 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   initialSelection,
   isMultiSelect,
   onSubmit,
+  showMoveToRoot,
+  onMoveToRoot,
   ...props
 }) => {
   const initSelectionState: PickerSelection = {
@@ -147,12 +151,21 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
       size="full"
       style={{ height: '80vh', maxWidth: entityHierarchy.length * COL_MAX_WIDTH }}
       footer={
-        <Button
-          label={`Select ${entityType}${isMultiSelect ? 's' : ''}`}
-          variant="filled"
-          disabled={!entitySelection[entityType]?.length}
-          onClick={handleSubmit}
-        />
+        <>
+          {showMoveToRoot && onMoveToRoot && (
+            <Button
+              label="Move to root"
+              variant="text"
+              onClick={onMoveToRoot}
+            />
+          )}
+          <Button
+            label={`Select ${entityType}${isMultiSelect ? 's' : ''}`}
+            variant="filled"
+            disabled={!entitySelection[entityType]?.length}
+            onClick={handleSubmit}
+          />
+        </>
       }
     >
       <TablesContainer>

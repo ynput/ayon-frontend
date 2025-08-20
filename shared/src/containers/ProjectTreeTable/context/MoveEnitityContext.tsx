@@ -27,6 +27,7 @@ interface MoveEntityContextProps {
     openMoveDialog: (entityData: EntityMoveData | MultiEntityMoveData) => void
     closeMoveDialog: () => void
     handleMoveSubmit: (selectedFolderIds: string[]) => Promise<void>
+    handleMoveToRoot: () => Promise<void>
 }
 export const MoveEntityContext = createContext<MoveEntityContextProps | undefined>(undefined)
 
@@ -135,12 +136,71 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
         }
     }
 
+    const handleMoveToRoot = async () => {
+        if (!moveDialog) return
+
+        setIsEntityPickerOpen(false)
+
+        try {
+            // Prepare move operations for all entities to move to root (null parentId/folderId)
+            const moveOperations: OperationModel[] = moveDialog.entities.map((entity, index) => ({
+                id: `move-to-root-${entity.entityId}-${Date.now()}-${index}`,
+                type: 'update',
+                entityType: entity.entityType,
+                entityId: entity.entityId,
+                data: entity.entityType === 'folder'
+                    ? { parentId: null }
+                    : { folderId: null }
+            }))
+
+            // Use the mutation with built-in optimistic updates and rollback
+            const result = await updateOverviewEntities({
+                projectName,
+                operationsRequestModel: {
+                    operations: moveOperations,
+                },
+            }).unwrap()
+
+            // Check for any failed operations
+            const failedOperations = result?.operations?.filter(
+                (op: OperationResponseModel) => op.success === false
+            ) || []
+
+            if (failedOperations.length > 0) {
+                const errorDetails = failedOperations.map(op => op.detail).join(', ')
+                throw new Error(errorDetails || 'Some move operations failed')
+            }
+
+            // Show success message
+            if (moveDialog.entities.length > 1) {
+                toast.success(`Successfully moved ${moveDialog.entities.length} entities to root`)
+            } else {
+                toast.success(`Successfully moved to root`)
+            }
+
+        } catch (error: any) {
+            console.error('Failed to move entities to root:', error)
+
+            // Extract and improve error message
+            let errorMessage = error?.data?.detail ||
+                             error?.error ||
+                             error?.message ||
+                             'Failed to move entities to root'
+
+            toast.error(errorMessage)
+        } finally {
+            setMoveDialog(null)
+            setIsEntityPickerOpen(false)
+        }
+    }
+
     const value: MoveEntityContextProps = {
         moveDialog,
         isEntityPickerOpen,
         openMoveDialog,
         closeMoveDialog,
         handleMoveSubmit,
+        handleMoveToRoot,
     }
 
     return <MoveEntityContext.Provider value={value}>{children}</MoveEntityContext.Provider>

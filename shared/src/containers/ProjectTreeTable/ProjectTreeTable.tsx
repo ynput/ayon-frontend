@@ -468,7 +468,7 @@ export const ProjectTreeTable = ({
   )
 
   // Get move entity context functions for the dialog
-  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, moveDialog } = useMoveEntity()
+  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, moveDialog, handleMoveToRoot } = useMoveEntity()
 
   const handleMoveSubmitWithExpand = (selection: string[]) => {
     handleMoveSubmit(selection);
@@ -552,6 +552,8 @@ export const ProjectTreeTable = ({
           entityType="folder"
           onSubmit={handleMoveSubmitWithExpand}
           onClose={closeMoveDialog}
+          showMoveToRoot={moveDialog.entities.every(entity => entity.entityType === 'folder')}
+          onMoveToRoot={handleMoveToRoot}
         />
       )}
     </ClipboardProvider>
