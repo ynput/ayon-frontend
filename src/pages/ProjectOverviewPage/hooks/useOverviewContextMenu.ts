@@ -69,21 +69,51 @@ const useOverviewContextMenu = ({ }: OverviewContextMenuProps) => {
     command: () => handleVersionUpload(cell),
   })
 
-  const moveItem: ContextMenuItemConstructor = (_e, cell) => ({
-    id: 'move-entity',
-    label: 'Move',
-    icon: 'drive_file_move',
-    command: () => {
-      if (cell.entityType === 'folder' || cell.entityType === 'task') {
-        openMoveDialog?.({
-          entityId: cell.entityId,
-          entityType: cell.entityType
-        })
-      }
-    },
-    hidden:
-      (cell.entityType !== 'folder' && cell.entityType !== 'task')
-  })
+  const moveItem: ContextMenuItemConstructor = (_e, cell, selectedCells) => {
+    // Get all selected entity data for multi-selection support
+    const selectedEntities = selectedCells
+      .filter(cellData => cellData.entityType === 'folder' || cellData.entityType === 'task')
+      .map(cellData => ({
+        entityId: cellData.entityId,
+        entityType: cellData.entityType as 'folder' | 'task'
+      }))
+
+    // If no valid entities in selection, fall back to current cell
+    const entitiesToMove = selectedEntities.length > 0 ? selectedEntities :
+      (cell.entityType === 'folder' || cell.entityType === 'task') ?
+      [{ entityId: cell.entityId, entityType: cell.entityType }] : []
+
+    const label = entitiesToMove.length > 1 ?
+      (() => {
+        const folders = entitiesToMove.filter(e => e.entityType === 'folder').length
+        const tasks = entitiesToMove.filter(e => e.entityType === 'task').length
+
+        if (folders > 0 && tasks > 0) {
+          return `Move ${folders} folder${folders > 1 ? 's' : ''} and ${tasks} task${tasks > 1 ? 's' : ''}`
+        } else if (folders > 0) {
+          return `Move ${folders} folder${folders > 1 ? 's' : ''}`
+        } else {
+          return `Move ${tasks} task${tasks > 1 ? 's' : ''}`
+        }
+      })() :
+      'Move'
+
+    return {
+      id: 'move-entity',
+      label,
+      icon: 'drive_file_move',
+      command: () => {
+        if (entitiesToMove.length === 1) {
+          // Single entity move
+          openMoveDialog?.(entitiesToMove[0])
+        } else if (entitiesToMove.length > 1) {
+          // Multi-entity move
+          openMoveDialog?.({ entities: entitiesToMove })
+        }
+      },
+      hidden: entitiesToMove.length === 0
+    }
+  }
 
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [

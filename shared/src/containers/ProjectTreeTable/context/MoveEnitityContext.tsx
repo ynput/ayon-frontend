@@ -14,13 +14,17 @@ interface EntityMoveData {
     entityType: NewEntityType
 }
 
+interface MultiEntityMoveData {
+    entities: EntityMoveData[]
+}
+
 interface MoveEntityContextProps {
     // State
-    moveDialog: EntityMoveData | null
+    moveDialog: MultiEntityMoveData | null
     isEntityPickerOpen: boolean
 
     // Actions
-    openMoveDialog: (entityData: EntityMoveData) => void
+    openMoveDialog: (entityData: EntityMoveData | MultiEntityMoveData) => void
     closeMoveDialog: () => void
     handleMoveSubmit: (selectedFolderIds: string[]) => Promise<void>
 }
@@ -34,12 +38,16 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
     const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
 
     // Dialog state
-    const [moveDialog, setMoveDialog] = useState<EntityMoveData | null>(null)
+    const [moveDialog, setMoveDialog] = useState<MultiEntityMoveData | null>(null)
     const [isEntityPickerOpen, setIsEntityPickerOpen] = useState(false)
 
-    const openMoveDialog = (entityData: EntityMoveData) => {
+    const openMoveDialog = (entityData: EntityMoveData | MultiEntityMoveData) => {
         console.log('openMoveDialog', entityData)
-        setMoveDialog(entityData)
+        // Convert single entity to multi-entity format
+        const multiEntityData: MultiEntityMoveData = 'entities' in entityData 
+            ? entityData 
+            : { entities: [entityData] }
+        setMoveDialog(multiEntityData)
         setIsEntityPickerOpen(true)
     }
 
@@ -56,32 +64,38 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
         setIsEntityPickerOpen(false)
 
         try {
-            // Prepare move operation
-            const moveOperation: OperationModel = {
-                id: `move-${moveDialog.entityId}-${Date.now()}`,
+            // Prepare move operations for all entities
+            const moveOperations: OperationModel[] = moveDialog.entities.map((entity, index) => ({
+                id: `move-${entity.entityId}-${Date.now()}-${index}`,
                 type: 'update',
-                entityType: moveDialog.entityType,
-                entityId: moveDialog.entityId,
-                data: moveDialog.entityType === 'folder'
+                entityType: entity.entityType,
+                entityId: entity.entityId,
+                data: entity.entityType === 'folder'
                     ? { parentId: targetFolderId }
                     : { folderId: targetFolderId }
-            }
+            }))
 
             // Use the mutation with built-in optimistic updates and rollback
             const result = await updateOverviewEntities({
                 projectName,
                 operationsRequestModel: {
-                    operations: [moveOperation],
+                    operations: moveOperations,
                 },
             }).unwrap()
 
+            // Check for any failed operations
+            const failedOperations = result?.operations?.filter(
+                (op: OperationResponseModel) => op.success === false
+            ) || []
 
-            const operationResult = result?.operations?.find(
-                (op: OperationResponseModel) => op.id === moveOperation.id
-            )
+            if (failedOperations.length > 0) {
+                const errorDetails = failedOperations.map(op => op.detail).join(', ')
+                throw new Error(errorDetails || 'Some move operations failed')
+            }
 
-            if (operationResult?.success === false) {
-                throw new Error(operationResult.detail || 'Move operation failed')
+            // Show success message for multiple entities
+            if (moveDialog.entities.length > 1) {
+                toast.success(`Successfully moved ${moveDialog.entities.length} entities`)
             }
 
         } catch (error: any) {
@@ -91,20 +105,26 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
             let errorMessage = error?.data?.detail ||
                              error?.error ||
                              error?.message ||
-                             'Failed to move entity'
+                             'Failed to move entities'
 
             // Improve specific error messages for better UX
             if (errorMessage.includes('already exists')) {
-                if (moveDialog.entityType === 'task') {
-                    // Extract task name from error message if possible
-                    const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
-                    const taskName = nameMatch ? nameMatch[1] : 'this task'
-                    errorMessage = `Cannot move "${taskName}" - a task with this name already exists in the target folder`
+                // For multiple entities, provide a more general message
+                if (moveDialog.entities.length > 1) {
+                    errorMessage = `Cannot move some entities - one or more entities with the same name already exist in the target location`
                 } else {
-                    // Extract folder name from error message if possible
-                    const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
-                    const folderName = nameMatch ? nameMatch[1] : 'this folder'
-                    errorMessage = `Cannot move "${folderName}" - a folder with this name already exists in the target location`
+                    const entity = moveDialog.entities[0]
+                    if (entity.entityType === 'task') {
+                        // Extract task name from error message if possible
+                        const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
+                        const taskName = nameMatch ? nameMatch[1] : 'this task'
+                        errorMessage = `Cannot move "${taskName}" - a task with this name already exists in the target folder`
+                    } else {
+                        // Extract folder name from error message if possible
+                        const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
+                        const folderName = nameMatch ? nameMatch[1] : 'this folder'
+                        errorMessage = `Cannot move "${folderName}" - a folder with this name already exists in the target location`
+                    }
                 }
             }
 

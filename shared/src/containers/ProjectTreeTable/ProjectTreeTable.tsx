@@ -546,7 +546,7 @@ export const ProjectTreeTable = ({
         </Styled.TableContainer>
       </Styled.TableWrapper>
       {/* Render EntityPickerDialog alongside table content */}
-      {isEntityPickerOpen && projectName && moveDialog?.entityId && (
+      {isEntityPickerOpen && projectName && moveDialog?.entities && moveDialog.entities.length > 0 && (
         <EntityPickerDialog
           projectName={projectName}
           entityType="folder"
