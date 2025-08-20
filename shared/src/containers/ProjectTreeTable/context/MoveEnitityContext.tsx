@@ -1,17 +1,15 @@
-import React, { createContext, useState, ReactNode, useContext } from 'react'
-import { toast } from 'react-toastify'
-import {
-    useUpdateOverviewEntitiesMutation,
-    OperationModel,
-    OperationResponseModel,
-} from '@shared/api'
-import {createLocalStorageKey, useExpandedState, useProjectDataContext} from "@shared/containers";
+import React, {createContext, ReactNode, useContext, useState} from 'react'
+import {toast} from 'react-toastify'
+import {OperationModel, OperationResponseModel, useUpdateOverviewEntitiesMutation,} from '@shared/api'
+import {useProjectDataContext} from "@shared/containers";
 
 type NewEntityType = 'folder' | 'task'
 
 interface EntityMoveData {
     entityId: string
     entityType: NewEntityType
+    name?: string
+    currentParentId?: string
 }
 
 interface MultiEntityMoveData {
@@ -20,7 +18,7 @@ interface MultiEntityMoveData {
 
 interface MoveEntityContextProps {
     // State
-    moveDialog: MultiEntityMoveData | null
+    movingEntities: MultiEntityMoveData | null
     isEntityPickerOpen: boolean
 
     // Actions
@@ -28,6 +26,8 @@ interface MoveEntityContextProps {
     closeMoveDialog: () => void
     handleMoveSubmit: (selectedFolderIds: string[]) => Promise<void>
     handleMoveToRoot: () => Promise<void>
+    getDisabledFolderIds: () => string[]
+    getDisabledMessage: (folderId: string) => string | undefined
 }
 export const MoveEntityContext = createContext<MoveEntityContextProps | undefined>(undefined)
 
@@ -39,26 +39,25 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
     const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
 
     // Dialog state
-    const [moveDialog, setMoveDialog] = useState<MultiEntityMoveData | null>(null)
+    const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
     const [isEntityPickerOpen, setIsEntityPickerOpen] = useState(false)
 
     const openMoveDialog = (entityData: EntityMoveData | MultiEntityMoveData) => {
-        console.log('openMoveDialog', entityData)
         // Convert single entity to multi-entity format
-        const multiEntityData: MultiEntityMoveData = 'entities' in entityData 
-            ? entityData 
+        const multiEntityData: MultiEntityMoveData = 'entities' in entityData
+            ? entityData
             : { entities: [entityData] }
-        setMoveDialog(multiEntityData)
+        setMovingEntities(multiEntityData)
         setIsEntityPickerOpen(true)
     }
 
     const closeMoveDialog = () => {
-        setMoveDialog(null)
+        setMovingEntities(null)
         setIsEntityPickerOpen(false)
     }
 
     const handleMoveSubmit = async (selectedFolderIds: string[]) => {
-        if (!moveDialog || selectedFolderIds.length === 0) return
+        if (!movingEntities || selectedFolderIds.length === 0) return
 
         const targetFolderId = selectedFolderIds[0]
 
@@ -66,7 +65,7 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
 
         try {
             // Prepare move operations for all entities
-            const moveOperations: OperationModel[] = moveDialog.entities.map((entity, index) => ({
+            const moveOperations: OperationModel[] = movingEntities.entities.map((entity, index) => ({
                 id: `move-${entity.entityId}-${Date.now()}-${index}`,
                 type: 'update',
                 entityType: entity.entityType,
@@ -95,8 +94,8 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
             }
 
             // Show success message for multiple entities
-            if (moveDialog.entities.length > 1) {
-                toast.success(`Successfully moved ${moveDialog.entities.length} entities`)
+            if (movingEntities.entities.length > 1) {
+                toast.success(`Successfully moved ${movingEntities.entities.length} entities`)
             }
 
         } catch (error: any) {
@@ -111,10 +110,10 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
             // Improve specific error messages for better UX
             if (errorMessage.includes('already exists')) {
                 // For multiple entities, provide a more general message
-                if (moveDialog.entities.length > 1) {
+                if (movingEntities.entities.length > 1) {
                     errorMessage = `Cannot move some entities - one or more entities with the same name already exist in the target location`
                 } else {
-                    const entity = moveDialog.entities[0]
+                    const entity = movingEntities.entities[0]
                     if (entity.entityType === 'task') {
                         // Extract task name from error message if possible
                         const nameMatch = errorMessage.match(/name '.*?, (.+?)' already exists/)
@@ -131,19 +130,19 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
 
             toast.error(errorMessage)
         } finally {
-            setMoveDialog(null)
+            setMovingEntities(null)
             setIsEntityPickerOpen(false)
         }
     }
 
     const handleMoveToRoot = async () => {
-        if (!moveDialog) return
+        if (!movingEntities) return
 
         setIsEntityPickerOpen(false)
 
         try {
             // Prepare move operations for all entities to move to root (null parentId/folderId)
-            const moveOperations: OperationModel[] = moveDialog.entities.map((entity, index) => ({
+            const moveOperations: OperationModel[] = movingEntities.entities.map((entity, index) => ({
                 id: `move-to-root-${entity.entityId}-${Date.now()}-${index}`,
                 type: 'update',
                 entityType: entity.entityType,
@@ -172,8 +171,8 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
             }
 
             // Show success message
-            if (moveDialog.entities.length > 1) {
-                toast.success(`Successfully moved ${moveDialog.entities.length} entities to root`)
+            if (movingEntities.entities.length > 1) {
+                toast.success(`Successfully moved ${movingEntities.entities.length} entities to root`)
             } else {
                 toast.success(`Successfully moved to root`)
             }
@@ -189,18 +188,70 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
 
             toast.error(errorMessage)
         } finally {
-            setMoveDialog(null)
+            setMovingEntities(null)
             setIsEntityPickerOpen(false)
         }
     }
 
+
+    const getDisabledFolderIds = (): string[] => {
+        if (!movingEntities) return []
+        const disabledIds: string[] = []
+
+        movingEntities.entities.forEach(entity => {
+            disabledIds.push(entity.entityId)
+
+        })
+        return [...new Set(disabledIds)]
+    }
+
+    // Function to get custom disabled message for a folder
+    const getDisabledMessage = (folderId: string): string | undefined => {
+        if (!movingEntities) return undefined;
+
+        // 1. Check if the target is a child folder. This is the most specific check.
+        const isChildFolder = movingEntities.entities.some(
+            (entity) =>
+                entity.entityType === 'folder'
+        );
+
+        if (isChildFolder) {
+            return 'Cannot move folder to its child';
+        }
+
+        // 2. Check if this folder is the entity being moved itself.
+        const isEntityItself = movingEntities.entities.some(
+            (entity) => entity.entityType === 'folder' && entity.entityId === folderId
+        );
+
+        if (isEntityItself) {
+            return 'Cannot move folder to itself';
+        }
+
+        // 3. Check if this is the current parent folder.
+        const isCurrentParent = movingEntities.entities.some(
+            (entity) => entity.currentParentId === folderId
+        );
+
+        if (isCurrentParent) {
+            return 'Cannot move to the same location';
+        }
+
+        // Default message
+        return 'Cannot move to this location';
+    };
+
+
+
     const value: MoveEntityContextProps = {
-        moveDialog,
+        movingEntities,
         isEntityPickerOpen,
         openMoveDialog,
         closeMoveDialog,
         handleMoveSubmit,
         handleMoveToRoot,
+        getDisabledFolderIds,
+        getDisabledMessage,
     }
 
     return <MoveEntityContext.Provider value={value}>{children}</MoveEntityContext.Provider>

@@ -75,13 +75,18 @@ const useOverviewContextMenu = ({ }: OverviewContextMenuProps) => {
       .filter(cellData => cellData.entityType === 'folder' || cellData.entityType === 'task')
       .map(cellData => ({
         entityId: cellData.entityId,
-        entityType: cellData.entityType as 'folder' | 'task'
+        entityType: cellData.entityType as 'folder' | 'task',
+        currentParentId: cellData.parentId
       }))
 
     // If no valid entities in selection, fall back to current cell
     const entitiesToMove = selectedEntities.length > 0 ? selectedEntities :
       (cell.entityType === 'folder' || cell.entityType === 'task') ?
-      [{ entityId: cell.entityId, entityType: cell.entityType }] : []
+      [{
+        entityId: cell.entityId,
+        entityType: cell.entityType,
+        currentParentId: cell.parentId
+      }] : []
 
     const label = entitiesToMove.length > 1 ?
       (() => {

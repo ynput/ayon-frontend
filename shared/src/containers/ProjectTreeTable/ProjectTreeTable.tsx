@@ -75,7 +75,6 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import {getEntityId} from "@shared/util";
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -468,7 +467,7 @@ export const ProjectTreeTable = ({
   )
 
   // Get move entity context functions for the dialog
-  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, moveDialog, handleMoveToRoot } = useMoveEntity()
+  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, movingEntities, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } = useMoveEntity()
 
   const handleMoveSubmitWithExpand = (selection: string[]) => {
     handleMoveSubmit(selection);
@@ -546,14 +545,16 @@ export const ProjectTreeTable = ({
         </Styled.TableContainer>
       </Styled.TableWrapper>
       {/* Render EntityPickerDialog alongside table content */}
-      {isEntityPickerOpen && projectName && moveDialog?.entities && moveDialog.entities.length > 0 && (
+      {isEntityPickerOpen && projectName && movingEntities?.entities && movingEntities.entities.length > 0 && (
         <EntityPickerDialog
           projectName={projectName}
           entityType="folder"
           onSubmit={handleMoveSubmitWithExpand}
           onClose={closeMoveDialog}
-          showMoveToRoot={moveDialog.entities.every(entity => entity.entityType === 'folder')}
+          showMoveToRoot={movingEntities.entities.every(entity => entity.entityType === 'folder')}
           onMoveToRoot={handleMoveToRoot}
+          disabledIds={getDisabledFolderIds()}
+          getDisabledMessage={getDisabledMessage}
         />
       )}
     </ClipboardProvider>

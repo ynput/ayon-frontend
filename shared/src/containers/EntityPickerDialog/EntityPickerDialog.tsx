@@ -51,6 +51,9 @@ interface EntityPickerDialogProps extends Pick<DialogProps, 'onClose'> {
   onSubmit: (selection: string[]) => void // Callback when the user selects an entity/entities
   showMoveToRoot?: boolean // Whether to show "Move to root" button
   onMoveToRoot?: () => void // Callback when user clicks "Move to root"
+  disabledIds?: string[] // IDs to display as disabled/unselectable
+  disabledMessage?: string // Default tooltip message for disabled items
+  getDisabledMessage?: (id: string) => string | undefined // Custom message per disabled item
 }
 
 export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
@@ -61,6 +64,9 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   onSubmit,
   showMoveToRoot,
   onMoveToRoot,
+  disabledIds = [],
+  disabledMessage = "Cannot select this item",
+  getDisabledMessage,
   ...props
 }) => {
   const initSelectionState: PickerSelection = {
@@ -129,6 +135,44 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]
 
+  // Process table data to filter out excluded IDs and mark disabled rows
+  const recursivelyProcessRows = (row:{id:string, subRows:any[]}, disabledIds:string[], parentIsDisabled: boolean) => {
+    // Determine if the current row should be disabled.
+
+    // A row is disabled if its parent is disabled OR its own ID is in the disabledIds list.
+    const isDisabled = parentIsDisabled || disabledIds.includes(row.id);
+    const disabledRowMessage = isDisabled
+        ? (getDisabledMessage?.(row.id) || disabledMessage)
+        : undefined;
+
+    // Create a new row object with the updated disabled state.
+    const newRow = {
+      ...row,
+      isDisabled,
+      disabledMessage: disabledRowMessage
+    };
+
+    // If the row has subRows, recursively process each of them.
+    if (row.subRows && row.subRows.length > 0) {
+      newRow.subRows = row.subRows.map((subRow:any ) =>
+          recursivelyProcessRows(subRow, disabledIds, isDisabled)
+      );
+    }
+
+    return newRow;
+  };
+
+  const processTableDataWithDisabled = (tableData:any ) => {
+
+
+    if (!disabledIds || disabledIds.length === 0) {
+      return tableData;
+    }
+
+    // Iterate over the top-level rows and start the recursive processing.
+    return tableData.map((row:any) => recursivelyProcessRows(row, disabledIds, false));
+  };
+
   const handleSubmit = () => {
     // check the target entity has a selection
     if (!entitySelection[entityType]?.length) {
@@ -182,7 +226,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
               key={tableEntityType}
               entityType={tableEntityType}
               search={search[tableEntityType]}
-              tableData={entityData[tableEntityType]?.table || []}
+              tableData={processTableDataWithDisabled(entityData[tableEntityType]?.table || [])}
               isFolderHierarchy={tableEntityType === 'folder' && !search.folder}
               onSearch={(v) => setEntitySearch(v, tableEntityType)}
               isMultiSelect={tableEntityType === entityType ? !!isMultiSelect : true}
