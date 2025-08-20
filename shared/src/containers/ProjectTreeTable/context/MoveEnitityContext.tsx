@@ -93,10 +93,6 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
                 throw new Error(errorDetails || 'Some move operations failed')
             }
 
-            // Show success message for multiple entities
-            if (movingEntities.entities.length > 1) {
-                toast.success(`Successfully moved ${movingEntities.entities.length} entities`)
-            }
 
         } catch (error: any) {
             console.error('Failed to move entity:', error)
@@ -170,12 +166,6 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
                 throw new Error(errorDetails || 'Some move operations failed')
             }
 
-            // Show success message
-            if (movingEntities.entities.length > 1) {
-                toast.success(`Successfully moved ${movingEntities.entities.length} entities to root`)
-            } else {
-                toast.success(`Successfully moved to root`)
-            }
 
         } catch (error: any) {
             console.error('Failed to move entities to root:', error)

@@ -634,7 +634,6 @@ export const ProjectTreeTable = ({
       document.body,
     )
 
-
   if (sortableRows) {
     return (
       <>
@@ -885,9 +884,6 @@ const TableBody = ({
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
-  // Get projectName for the move dialog
-  const { projectName } = useProjectTableContext()
-
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -970,17 +966,13 @@ const TableBody = ({
 
   if (sortableRows) {
     return (
-      <>
         <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
           {tbodyContent}
         </SortableContext>
-      </>
     )
   } else {
     return (
-      <>
-        {tbodyContent}
-      </>
+        tbodyContent
     )
   }
 }

@@ -13,10 +13,10 @@ import {useMoveEntity} from "@shared/containers/ProjectTreeTable/context/MoveEni
 
 type OverviewContextMenuProps = {}
 
-const useOverviewContextMenu = ({ }: OverviewContextMenuProps) => {
+const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
-  const { openMoveDialog} = useMoveEntity()
+  const { openMoveDialog } = useMoveEntity()
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
