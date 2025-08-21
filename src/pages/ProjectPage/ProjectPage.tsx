@@ -28,6 +28,7 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
+import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from "@components/HelpButton/HelpButton.tsx"
 
@@ -69,6 +70,7 @@ const ProjectPage = () => {
 
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
+  const isExternal = useAppSelector((state) => state.user.data.isExternal)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -285,6 +287,10 @@ const ProjectPage = () => {
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
     // focus the new version in the browser
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
+  }
+
+  if (isExternal){
+    return <ExternalUserPageLocked/>
   }
 
   return (

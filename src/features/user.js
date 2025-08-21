@@ -5,6 +5,7 @@ const userSlice = createSlice({
   name: 'user',
   initialState: {
     name: '',
+    redirectUrl: null,
     data: {
       frontendPreferences: {
         notifications: false,
@@ -40,6 +41,10 @@ const userSlice = createSlice({
       if (user.data) {
         if (user.data.isAdmin || user.data.isManager) isUser = false
         user.data.isUser = isUser
+      }
+
+      if (action.payload.redirectUrl) {
+        user.redirectUrl = action.payload.redirectUrl
       }
 
       return user
