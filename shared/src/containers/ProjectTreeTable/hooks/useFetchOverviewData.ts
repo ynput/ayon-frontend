@@ -274,8 +274,9 @@ export const useFetchOverviewData = ({
   const singleSort = { ...sorting[0] }
   // if task list and sorting by name, sort by path instead
   const sortByPath = singleSort?.id === 'name' && !showHierarchy
-  // Don't send subType to server - we handle it client-side with anatomy order
-  const sortId = sortByPath ? 'path' : singleSort?.id === 'subType' ? undefined : singleSort?.id
+  // Don't send subType or status to server - we handle them client-side with anatomy order
+  const sortId = sortByPath ? 'path' : 
+    (singleSort?.id === 'subType' || singleSort?.id === 'status') ? undefined : singleSort?.id
   const tasksFolderIdsParams = selectedFolders.length ? Array.from(foldersMap.keys()) : undefined
 
   // Use the new infinite query hook for tasks list with correct name

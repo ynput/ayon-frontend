@@ -72,15 +72,15 @@ const subTypeSort: SubTypeSortingFn = (rowA, rowB, options) => {
   const valueB = getCellValue(rowB.original, 'subType')
   const typeA = rowA.original.entityType
   const typeB = rowB.original.entityType
-  
+
   // Folders come first when different entity types
   if (typeA !== typeB) return typeA === 'folder' ? -1 : 1
-  
+
   // Use anatomy order for same entity types
   const typeOptions = typeA === 'task' ? options.taskType : options.folderType
   const indexA = typeOptions?.findIndex(t => t.value === valueA) ?? -1
   const indexB = typeOptions?.findIndex(t => t.value === valueB) ?? -1
-  
+
   return indexA - indexB
 }
 
@@ -256,9 +256,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'status',
       minSize: MIN_SIZE,
       header: 'Status',
-      sortingFn: withLoadingStateSort((a, b, c) =>
-        attribSort(a, b, c, { enum: options.status, type: 'string' }),
-      ),
+      sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, { enum: options.status, type: 'string' })),
       sortDescFirst: true,
       enableSorting: true,
       enableResizing: true,
