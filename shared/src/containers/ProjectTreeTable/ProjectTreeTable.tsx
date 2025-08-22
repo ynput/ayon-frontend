@@ -51,8 +51,9 @@ import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
 // EntityPickerDialog import
 import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
-// Move entity context
-import { useMoveEntity } from './context/MoveEnitityContext'
+// Move entity hook
+import { useMoveEntities } from './hooks/useMoveEntities'
+import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
@@ -75,6 +76,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
+import {EntityMoveData} from "../../../../src/features/moveEntity";
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -466,8 +468,12 @@ export const ProjectTreeTable = ({
     [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
   )
 
-  // Get move entity context functions for the dialog
-  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, movingEntities, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } = useMoveEntity()
+  const { projectName: contextProjectName } = useProjectDataContext()
+
+  // Get move entity functions for the dialog
+  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, movingEntities, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } = useMoveEntities({
+    projectName: contextProjectName || projectName || ''
+  })
 
   const handleMoveSubmitWithExpand = (selection: string[]) => {
     handleMoveSubmit(selection);
@@ -551,7 +557,7 @@ export const ProjectTreeTable = ({
           entityType="folder"
           onSubmit={handleMoveSubmitWithExpand}
           onClose={closeMoveDialog}
-          showMoveToRoot={movingEntities.entities.every(entity => entity.entityType === 'folder')}
+          showMoveToRoot={movingEntities.entities.every((entity: EntityMoveData) => entity.entityType === 'folder')}
           onMoveToRoot={handleMoveToRoot}
           disabledIds={getDisabledFolderIds()}
           getDisabledMessage={getDisabledMessage}

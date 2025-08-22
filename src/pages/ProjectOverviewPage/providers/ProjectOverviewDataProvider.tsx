@@ -9,7 +9,6 @@ import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
 import { useOverviewViewSettings } from '@shared/containers'
-import {MoveEntityProvider} from "@shared/containers/ProjectTreeTable/context/MoveEnitityContext.tsx";
 
 const ProjectOverviewDataProvider: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
@@ -20,7 +19,6 @@ const ProjectOverviewDataProvider: FC = () => {
 
   return (
     <ProjectDataProvider projectName={projectName}>
-      <MoveEntityProvider>
       <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
         <ProjectOverviewProvider modules={modules}>
           <SettingsPanelProvider>
@@ -28,7 +26,6 @@ const ProjectOverviewDataProvider: FC = () => {
           </SettingsPanelProvider>
         </ProjectOverviewProvider>
       </ColumnSettingsProvider>
-      </MoveEntityProvider>
     </ProjectDataProvider>
   )
 }

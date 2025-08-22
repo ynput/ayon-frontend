@@ -9,14 +9,15 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
-import {useMoveEntity} from "@shared/containers/ProjectTreeTable/context/MoveEnitityContext.tsx";
+import { useAppDispatch } from '@state/store'
+import { openMoveDialog } from '@state/moveEntity'
 
 type OverviewContextMenuProps = {}
 
 const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
-  const { openMoveDialog } = useMoveEntity()
+  const dispatch = useAppDispatch()
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
@@ -110,10 +111,10 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
       command: () => {
         if (entitiesToMove.length === 1) {
           // Single entity move
-          openMoveDialog?.(entitiesToMove[0])
+          dispatch(openMoveDialog(entitiesToMove[0]))
         } else if (entitiesToMove.length > 1) {
           // Multi-entity move
-          openMoveDialog?.({ entities: entitiesToMove })
+          dispatch(openMoveDialog({ entities: entitiesToMove }))
         }
       },
       hidden: entitiesToMove.length === 0
