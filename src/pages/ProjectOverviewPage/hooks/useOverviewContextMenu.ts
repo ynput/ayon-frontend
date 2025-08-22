@@ -6,11 +6,13 @@ import {
   isAttribGroupable,
   TableCellContextData,
   useColumnSettingsContext,
+  useProjectDataContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { useAppDispatch } from '@state/store'
 import { openMoveDialog } from '@state/moveEntity'
+import { useGetFolderListQuery } from '@shared/api'
 
 type OverviewContextMenuProps = {}
 
@@ -20,6 +22,13 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   const dispatch = useAppDispatch()
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
+
+  // Get project context for folder version data
+  const { projectName } = useProjectDataContext()
+  const { data: { folders = [] } = {} } = useGetFolderListQuery(
+    { projectName: projectName || '', attrib: true },
+    { skip: !projectName }
+  )
 
   const groupByColumnItem = useCallback<ContextMenuItemConstructor>(
     (_e, cell) => ({
@@ -89,6 +98,15 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
         currentParentId: cell.parentId
       }] : []
 
+    // Check if any folders have versions (published content) - they should not be movable
+    const hasUnmovableFolders = entitiesToMove.some(entity => {
+      if (entity.entityType === 'folder') {
+        const folderData = folders.find(folder => folder.id === entity.entityId)
+        return folderData?.hasVersions
+      }
+      return false
+    })
+
     const label = entitiesToMove.length > 1 ?
       (() => {
         const folders = entitiesToMove.filter(e => e.entityType === 'folder').length
@@ -117,7 +135,8 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
           dispatch(openMoveDialog({ entities: entitiesToMove }))
         }
       },
-      hidden: entitiesToMove.length === 0
+      hidden: entitiesToMove.length === 0,
+      disabled: hasUnmovableFolders
     }
   }
 

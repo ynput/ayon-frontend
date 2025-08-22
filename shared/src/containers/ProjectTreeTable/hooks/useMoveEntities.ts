@@ -181,16 +181,9 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
     if (!movingEntities) return []
     const disabledIds: string[] = []
 
-    // Add the entities being moved themselves
+    // Add the entities being moved themselves to prevent moving to themselves
     movingEntities.entities.forEach((entity: EntityMoveData) => {
       disabledIds.push(entity.entityId)
-    })
-
-    // Add folders that have versions - they cannot be used as move targets
-    folders.forEach(folder => {
-      if (folder.hasVersions) {
-        disabledIds.push(folder.id)
-      }
     })
 
     // Add folders where name conflicts would occur
@@ -232,13 +225,7 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
   const getDisabledMessage = useCallback((folderId: string): string | undefined => {
     if (!movingEntities) return undefined
 
-    // 1. Check if this folder has versions - highest priority check
-    const folderWithVersions = folders.find(folder => folder.id === folderId && folder.hasVersions)
-    if (folderWithVersions) {
-      return 'Cannot move to folder with versions'
-    }
-
-    // 2. Check if this folder is the entity being moved itself.
+    // 1. Check if this folder is the entity being moved itself.
     const isEntityItself = movingEntities.entities.some(
       (entity: EntityMoveData) => entity.entityType === 'folder' && entity.entityId === folderId
     )
@@ -247,7 +234,7 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
       return 'Cannot move folder to itself'
     }
 
-    // 3. Check if this is the current parent folder.
+    // 2. Check if this is the current parent folder.
     const isCurrentParent = movingEntities.entities.some(
       (entity: EntityMoveData) => entity.currentParentId === folderId
     )
