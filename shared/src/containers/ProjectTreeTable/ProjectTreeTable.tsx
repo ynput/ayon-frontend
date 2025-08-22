@@ -972,14 +972,12 @@ const TableBody = ({
 
   if (sortableRows) {
     return (
-        <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
-          {tbodyContent}
-        </SortableContext>
+      <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
+        {tbodyContent}
+      </SortableContext>
     )
   } else {
-    return (
-        tbodyContent
-    )
+    return tbodyContent
   }
 }
 

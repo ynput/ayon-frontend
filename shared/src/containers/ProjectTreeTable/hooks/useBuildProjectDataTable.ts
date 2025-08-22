@@ -226,6 +226,7 @@ export default function useBuildProjectDataTable({
         hasReviewables: folder.hasReviewables || false,
         links: links,
       }
+
       rowsById.set(folderId, row)
 
       // Add root rows directly to the rootRows array
