@@ -1,6 +1,6 @@
 import React, {createContext, ReactNode, useContext, useState} from 'react'
 import {toast} from 'react-toastify'
-import {OperationModel, OperationResponseModel, useUpdateOverviewEntitiesMutation,} from '@shared/api'
+import {OperationModel, OperationResponseModel, useUpdateOverviewEntitiesMutation, useGetFolderListQuery} from '@shared/api'
 import {useProjectDataContext} from "@shared/containers";
 
 type NewEntityType = 'folder' | 'task'
@@ -37,6 +37,12 @@ interface MoveEntityProviderProps {
 export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children }) => {
     const { projectName } = useProjectDataContext()
     const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
+
+    // Get folder data to check hasVersions property
+    const { data: { folders = [] } = {} } = useGetFolderListQuery(
+        { projectName: projectName || '', attrib: true },
+        { skip: !projectName }
+    )
 
     // Dialog state
     const [movingEntities, setMovingEntities] = useState<MultiEntityMoveData | null>(null)
@@ -190,8 +196,15 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
 
         movingEntities.entities.forEach(entity => {
             disabledIds.push(entity.entityId)
-
         })
+
+        // Add folders that have versions - they cannot be used as move targets
+        folders.forEach(folder => {
+            if (folder.hasVersions) {
+                disabledIds.push(folder.id)
+            }
+        })
+
         return [...new Set(disabledIds)]
     }
 
@@ -199,7 +212,13 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
     const getDisabledMessage = (folderId: string): string | undefined => {
         if (!movingEntities) return undefined;
 
-        // 1. Check if the target is a child folder. This is the most specific check.
+        // 1. Check if this folder has versions - highest priority check
+        const folderWithVersions = folders.find(folder => folder.id === folderId && folder.hasVersions);
+        if (folderWithVersions) {
+            return 'Cannot move to folder with versions';
+        }
+
+        // 2. Check if the target is a child folder. This is the most specific check.
         const isChildFolder = movingEntities.entities.some(
             (entity) =>
                 entity.entityType === 'folder'
@@ -209,7 +228,7 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
             return 'Cannot move folder to its child';
         }
 
-        // 2. Check if this folder is the entity being moved itself.
+        // 3. Check if this folder is the entity being moved itself.
         const isEntityItself = movingEntities.entities.some(
             (entity) => entity.entityType === 'folder' && entity.entityId === folderId
         );
@@ -218,7 +237,7 @@ export const MoveEntityProvider: React.FC<MoveEntityProviderProps> = ({ children
             return 'Cannot move folder to itself';
         }
 
-        // 3. Check if this is the current parent folder.
+        // 4. Check if this is the current parent folder.
         const isCurrentParent = movingEntities.entities.some(
             (entity) => entity.currentParentId === folderId
         );
