@@ -16,6 +16,7 @@ import {
   Header,
   HeaderGroup,
   RowData,
+  ExpandedState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -48,6 +49,12 @@ import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
+// EntityPickerDialog import
+import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
+// Move entity hook
+import { useMoveEntities } from './hooks/useMoveEntities'
+import { useProjectDataContext } from '@shared/containers'
+
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
@@ -69,6 +76,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
+import {EntityMoveData} from "../../../../src/features/moveEntity";
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -460,6 +468,38 @@ export const ProjectTreeTable = ({
     [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
   )
 
+  const { projectName: contextProjectName } = useProjectDataContext()
+
+  // Get move entity functions for the dialog
+  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, movingEntities, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } = useMoveEntities({
+    projectName: contextProjectName || projectName || ''
+  })
+
+  const handleMoveSubmitWithExpand = (selection: string[]) => {
+    handleMoveSubmit(selection);
+    const folderIdToExpand = selection[0];
+
+    updateExpanded((prevExpanded: ExpandedState) => {
+
+      if (typeof prevExpanded === 'boolean') {
+
+        if (prevExpanded) {
+          return prevExpanded;
+        }
+        return { [folderIdToExpand]: true };
+      }
+
+      if (prevExpanded[folderIdToExpand]) {
+        return prevExpanded;
+      }
+
+      return {
+        ...prevExpanded,
+        [folderIdToExpand]: true,
+      };
+    });
+  };
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -510,6 +550,19 @@ export const ProjectTreeTable = ({
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>
+      {/* Render EntityPickerDialog alongside table content */}
+      {isEntityPickerOpen && projectName && movingEntities?.entities && movingEntities.entities.length > 0 && (
+        <EntityPickerDialog
+          projectName={projectName}
+          entityType="folder"
+          onSubmit={handleMoveSubmitWithExpand}
+          onClose={closeMoveDialog}
+          showMoveToRoot={movingEntities.entities.every((entity: EntityMoveData) => entity.entityType === 'folder')}
+          onMoveToRoot={handleMoveToRoot}
+          disabledIds={getDisabledFolderIds()}
+          getDisabledMessage={getDisabledMessage}
+        />
+      )}
     </ClipboardProvider>
   )
 
@@ -832,7 +885,11 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+
+
+  const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
+
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
