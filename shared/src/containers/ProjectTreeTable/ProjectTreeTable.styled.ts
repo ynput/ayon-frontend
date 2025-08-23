@@ -77,6 +77,10 @@ export const TableCellContent = styled.div`
   &:focus-visible {
     outline: none;
   }
+
+  .resizing & {
+    cursor: col-resize !important;
+  }
 `
 
 export const ResizedHandler = styled.div`
@@ -85,7 +89,7 @@ export const ResizedHandler = styled.div`
   top: 0;
   bottom: 0;
   width: 6px;
-  cursor: col-resize;
+  cursor: col-resize !important;
   background-color: var(--md-sys-color-surface-container-high);
 
   opacity: 0;
@@ -93,6 +97,7 @@ export const ResizedHandler = styled.div`
   &.resizing {
     background-color: var(--md-sys-color-primary);
     opacity: 1;
+    cursor: col-resize !important;
   }
 `
 
@@ -121,6 +126,19 @@ export const HeaderCell = styled.th`
     }
   }
 
+  /* Hide action buttons when resizing */
+  &.resizing {
+    .action {
+      display: none !important;
+    }
+    cursor: col-resize !important;
+    
+    /* Ensure all child elements also have the resize cursor */
+    * {
+      cursor: col-resize !important;
+    }
+  }
+
   /* Styling for the last pinned left column */
   &.last-pinned-left {
     box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container),
@@ -141,6 +159,7 @@ export const HeaderCell = styled.th`
 export const HeaderButtons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+  align-items: center;
 
   position: absolute;
   z-index: 10;
@@ -149,6 +168,10 @@ export const HeaderButtons = styled.div`
   transform: translateY(-50%);
   background-color: var(--md-sys-color-surface-container-lowest);
   padding-left: 4px;
+
+  .resizing & {
+    cursor: col-resize !important;
+  }
 `
 
 type TableCellProps = {
@@ -346,6 +369,10 @@ export const TableHeader = styled.thead`
   min-height: 34px;
   z-index: 10;
   background-color: var(--md-sys-color-surface-container-lowest);
+
+  .resizing & {
+    cursor: col-resize !important;
+  }
 `
 
 export const TableWrapper = styled.div`
