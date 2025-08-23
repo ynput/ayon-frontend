@@ -33,6 +33,7 @@ import * as Styled from './ProjectTreeTable.styled'
 import HeaderActionButton from './components/HeaderActionButton'
 import RowDragHandleCellContent from './components/RowDragHandleCellContent' // Added import
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
+import { ColumnHeaderMenu } from './components/ColumnHeaderMenu'
 
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
@@ -481,6 +482,7 @@ export const ProjectTreeTable = ({
               userSelect: 'none',
               ...columnSizeVars,
               width: table.getTotalSize(),
+              cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
             }}
           >
             <TableHead
@@ -714,11 +716,13 @@ const TableHeadCell = ({
 }: TableHeadCellProps) => {
   const { column } = header
 
+
   return (
     <Styled.HeaderCell
-      className={clsx(header.id, 'shimmer-dark', {
+      className={clsx(header.id, 'shimmer-dark', 'aaa', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
+        resizing: column.getIsResizing(),
       })}
       key={header.id}
       style={{
@@ -734,30 +738,16 @@ const TableHeadCell = ({
           )}
 
           <Styled.HeaderButtons className="actions">
-            {/* COLUMN HIDING */}
-            {canHide && (
-              <HeaderActionButton
-                icon="visibility_off"
-                selected={!column.getIsVisible()}
-                onClick={column.getToggleVisibilityHandler()}
-              />
-            )}
-            {/* COLUMN PINNING */}
-            {canPin && (
-              <HeaderActionButton
-                icon="push_pin"
-                selected={header.column.getIsPinned() === 'left'}
-                onClick={() => {
-                  if (header.column.getIsPinned() === 'left') {
-                    header.column.pin(false)
-                  } else {
-                    header.column.pin('left')
-                  }
-                }}
+            {(canHide || canPin || canSort) && (
+              <ColumnHeaderMenu
+                header={header}
+                canHide={canHide}
+                canPin={canPin}
+                canSort={canSort}
+                isResizing={column.getIsResizing()}
               />
             )}
 
-            {/* COLUMN SORTING */}
             {canSort && (
               <HeaderActionButton
                 icon={'sort'}
