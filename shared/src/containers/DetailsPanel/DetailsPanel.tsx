@@ -5,10 +5,12 @@ import * as Styled from './DetailsPanel.styled'
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
 import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
-import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
+import { EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
 import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
+import { useVersionUploadContext } from '@shared/components/VersionUploader/context/VersionUploadContext'
+
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -21,6 +23,13 @@ import mergeProjectInfo from './helpers/mergeProjectInfo'
 export const entitiesWithoutFeed = ['product', 'representation']
 
 type User = { avatarUrl: string; name: string; fullName?: string }
+
+const StyledMoreDropdown = styled(Dropdown)`
+  .dropdown-content {
+    min-width: 180px;
+    max-width: 250px;
+  }
+`
 
 export type DetailsPanelProps = {
   entityType: DetailsPanelEntityType
@@ -133,6 +142,7 @@ export const DetailsPanel = ({
     isFetching: isFetchingEntitiesDetails,
     isError,
     originalArgs,
+    refetch,
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery },
     {
@@ -182,6 +192,24 @@ export const DetailsPanel = ({
 
   const { requestPipWindow } = usePiPWindow()
 
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false)
+
+  let onOpenVersionUpload: any = null
+  try {
+    const versionUploadContext = useVersionUploadContext()
+    onOpenVersionUpload = versionUploadContext.onOpenVersionUpload
+  } catch (error) {
+    console.log('VersionUploadProvider not available in this context')
+  }
+
+  let entityListsContext: any = null
+  try {
+    const { useEntityListsContext } = require('@pages/ProjectListsPage/context')
+    entityListsContext = useEntityListsContext()
+  } catch (error) {
+    console.log('EntityListsProvider not available in this context')
+  }
+
   const handleOpenPip = () => {
     openPip({
       entityType: entityType,
@@ -189,6 +217,125 @@ export const DetailsPanel = ({
       scope: scope,
     })
     requestPipWindow(500, 500)
+  }
+
+  const handleUploadThumbnail = async (file: File) => {
+    if (!file || !firstEntityData || !firstProject) return
+
+    try {
+      if (!file.type.includes('image')) {
+        throw new Error('File is not an image')
+      }
+
+      const response = await fetch(
+        `/api/projects/${firstProject}/${entityType}s/${firstEntityData.id}/thumbnail`,
+        {
+          method: 'POST',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to upload thumbnail')
+      }
+
+      const result = await response.json()
+
+      console.log('Thumbnail uploaded successfully:', result)
+
+      if (refetch) {
+        await refetch()
+      }
+
+    } catch (error: any) {
+      console.error('Error uploading thumbnail:', error)
+    }
+  }
+
+  const moreMenuOptions = useMemo(
+    () => [
+      {
+        value: 'picture-in-picture',
+        label: 'Picture in picture',
+        icon: 'picture_in_picture',
+      },
+      {
+        value: 'upload-thumbnail',
+        label: 'Upload thumbnail',
+        icon: 'add_photo_alternate',
+      },
+      {
+        value: 'upload-version',
+        label: 'Upload version',
+        icon: 'upload',
+      },
+      {
+        value: 'view-details',
+        label: 'View details (raw data)',
+        icon: 'database',
+      },
+      {
+        value: 'add-to-list',
+        label: 'Add to list',
+        icon: 'playlist_add',
+      },
+    ],
+    [],
+  )
+
+  const handleMoreMenuAction = (value: string) => {
+    switch (value) {
+      case 'picture-in-picture':
+        handleOpenPip()
+        break
+      case 'upload-thumbnail':
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0]
+          if (file && firstEntityData && firstProject) {
+            await handleUploadThumbnail(file)
+          }
+        }
+        input.click()
+        break
+      case 'upload-version':
+        if (onOpenVersionUpload && firstEntityData && firstProject) {
+          const productId = firstEntityData.product?.id
+          const taskId = firstEntityData.task?.id
+          const folderId = firstEntityData.folder?.id
+
+          onOpenVersionUpload({
+            productId,
+            taskId,
+            folderId,
+          })
+        } else {
+          console.log('Version upload not available in this context')
+        }
+        break
+      case 'view-details':
+        setShowDetailsDialog(true)
+        break
+      case 'add-to-list':
+        if (entityListsContext && firstEntityData && firstProject) {
+          const selectedEntities = [{
+            entityId: firstEntityData.id,
+            entityType: entityType,
+          }]
+
+          entityListsContext.openCreateNewList(entityType as any, selectedEntities)
+        } else {
+          console.log('Add to list not available in this context')
+        }
+        break
+      default:
+        console.log('Unknown action:', value)
+    }
   }
 
   return (
@@ -208,6 +355,19 @@ export const DetailsPanel = ({
             entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
+            <StyledMoreDropdown
+              options={moreMenuOptions}
+              value={[]}
+              placeholder=""
+              onChange={(values) => handleMoreMenuAction(values[0])}
+              valueTemplate={() => (
+                <Button
+                  icon="more_vert"
+                  variant="text"
+                  data-tooltip="More actions"
+                />
+              )}
+            />
             <Watchers
               entities={entitiesToQuery}
               entityType={entityType}
@@ -294,6 +454,16 @@ export const DetailsPanel = ({
           </FeedContextWrapper>
         )}
       </Styled.Panel>
+
+      {showDetailsDialog && firstEntityData && firstProject && (
+        <DetailsDialog
+          projectName={firstProject}
+          entityType={entityType}
+          entityIds={[firstEntityData.id]}
+          visible={showDetailsDialog}
+          onHide={() => setShowDetailsDialog(false)}
+        />
+      )}
     </>
   )
 }
