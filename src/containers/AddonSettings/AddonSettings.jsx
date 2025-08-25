@@ -15,13 +15,13 @@ import {
 } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-import AddonList from '@containers/AddonList'
+import SettingsAddonList from '@containers/AddonSettings/SettingsAddonList'
 import SiteList from '@containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
-import BundlesSelector  from './BundlesSelector'
+import BundlesSelector from './BundlesSelector'
 import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
 import RawSettingsDialog from '@containers/RawSettingsDialog'
 
@@ -109,10 +109,14 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
-  // const [variant, setVariant] = useState('production') // this can be a variant or a specific bundle name
-  // const [bundleName, setBundleName] = useState(null) // if set, this overrides the bundle inferred from the variant
 
-  const [selectedBundle, setSelectedBundle] = useState(/** @type {BundleIdentifier} */ ({ variant: 'production', bundleName: null }))
+  const [selectedBundle, setSelectedBundle] = useState(/** @type {BundleIdentifier} */({ 
+    variant: 'production', 
+    bundleName: null, 
+    projectBundleName: undefined 
+  }))
+
+  const [loadedBundleName, setLoadedBundleName] = useState("????")
 
   const [addonSchemas, setAddonSchemas] = useState({})
 
@@ -130,14 +134,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
 
-  const { data: addonSettings } = useGetAddonSettingsListQuery({
-    projectName,
-    siteId,
-    variant: selectedBundle?.variant,
-    bundleName: selectedBundle?.bundleName,
-  })
-  // the selected bundle that goes with the variant
-  const loadedBundleName = addonSettings?.bundleName
 
   const projectKey = projectName || '_'
 
@@ -622,13 +618,13 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return (
       <>
         <Toolbar>
-          <VariantSelector 
-            variant={selectedBundle.variant} 
+          <VariantSelector
+            variant={selectedBundle.variant}
             setVariant={(v) => setSelectedBundle({ variant: v, bundleName: null })}
-            showDev 
+            showDev
           />
           <Spacer />
-          {projectName && <PerProjectBundleConfig projectName={projectName} variant={variant} />}
+          {projectName && <PerProjectBundleConfig projectName={projectName} variant={selectedBundle.variant} />}
           <CopyBundleSettingsButton
             bundleName={loadedBundleName}
             variant={selectedBundle.variant}
@@ -645,13 +641,19 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             projectName={projectName}
           />
         </Toolbar>
-        <BundlesSelector 
-          selected={selectedBundle} 
+        { projectName ? (
+          <div>
+            { loadedBundleName }
+          </div>
+        ) : (
+        <BundlesSelector
+          selected={selectedBundle}
           onChange={setSelectedBundle}
         />
+        )}
       </>
     )
-  }, [selectedBundle.variant, changedKeys, loadedBundleName, projectName, developerMode])
+  }, [selectedBundle, changedKeys, loadedBundleName, projectName, developerMode])
 
   const commitToolbar = useMemo(
     () => (
@@ -751,10 +753,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               }}
             />
           )}
-          <AddonList
+          <SettingsAddonList
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
+            setBundleName={setLoadedBundleName}
             bundleName={selectedBundle.bundleName}
+            projectBundleName={selectedBundle.projectBundleName}
             variant={selectedBundle.variant}
             onAddonFocus={onAddonFocus}
             changedAddonKeys={Object.keys(changedKeys || {})}

@@ -9,12 +9,14 @@ import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 
-const AddonList = ({
+const SettingsAddonList = ({
   selectedAddons,
   setSelectedAddons,
+  setBundleName,
   onContextMenu,
   variant = 'production', // 'production' or 'staging'
   bundleName = null,
+  projectBundleName = null,
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
   onAddonFocus = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
   changedAddonKeys = null, // List of addon keys that have changed
@@ -26,6 +28,7 @@ const AddonList = ({
     siteId,
     variant,
     bundleName,
+    projectBundleName,
   })
   const uriChanged = useSelector((state) => state.context.uriChanged)
 
@@ -76,6 +79,13 @@ const AddonList = ({
     }
     setSelectedAddons(newSelection)
   }, [addons])
+
+
+  useEffect(() => {
+    if (!setBundleName) return
+    setBundleName(data?.bundleName || null)
+  }, [data?.bundleName])
+
 
   useEffect(() => {
     const url = new URL(window.location.href)
@@ -163,4 +173,4 @@ const AddonList = ({
   )
 }
 
-export default AddonList
+export default SettingsAddonList

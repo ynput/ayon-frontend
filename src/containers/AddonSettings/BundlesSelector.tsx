@@ -141,6 +141,7 @@ const DropdownBundleItem = ({ bundle, isSelected }: DropdownBundleItemProps) => 
 
 export interface BundleIdentifier {
   bundleName?: string
+  projectBundleName?: string
   variant?: string
 }
 
@@ -154,6 +155,8 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const userName = useAppSelector((state) => state.user.name)
   const devMode = useAppSelector((state) => state.user.attrib.developerMode)
+
+  console.log("selected bundle: ", selected)
 
   const bundleOptions = useMemo<BundleOption[]>(() => {
     return bundles
@@ -169,13 +172,13 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
   }, [bundles, devMode, userName])
 
   const selectedBundle = useMemo(() => {
-    if (!selected.bundleName){
+    if (!(selected.bundleName || selected.projectBundleName)) {
       if (selected.variant === 'production' || selected.variant === 'staging') {
         return bundleOptions.find((b) => b.type === selected.variant)
       }
     } 
 
-    return bundleOptions.find((b) => b.value === selected.bundleName)
+    return bundleOptions.find((b) => b.value === (selected.projectBundleName || selected.bundleName))
    
   }, [selected, bundleOptions])
 
@@ -186,12 +189,13 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
 
     // if the bundle is staging or production, set the variant instead of bundle name
     if (selectedBundle.type === 'staging' || selectedBundle.type === 'production') {
-      onChange({variant: selectedBundle.type, bundleName: selectedBundle.value})
+      onChange({variant: selected.variant, bundleName: selectedBundle.value, projectBundleName: undefined})
+    } else if (selectedBundle.type === 'project') {
+      onChange({variant: selected.variant, bundleName: undefined, projectBundleName: selectedBundle.value})
     } else if (selectedBundle.type === 'dev') {
-      // otherwise, just set the bundle name
-      onChange({ bundleName: selectedBundle.value, variant: selectedBundle.value })
+      onChange({ bundleName: selectedBundle.value, variant: selectedBundle.value, projectBundleName: undefined })
     } else {
-      onChange({ bundleName: selectedBundle.value, variant: selected.variant })
+      onChange({ bundleName: selectedBundle.value, variant: selected.variant, projectBundleName: undefined })
     }
   }
 

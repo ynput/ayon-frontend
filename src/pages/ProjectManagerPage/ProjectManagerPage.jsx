@@ -46,6 +46,9 @@ const ProjectManagerPage = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
+  console.log('ProjectManagerPage render', { projectName })
+
+
   let { module } = useParams()
 
   const [showNewProject, setShowNewProject] = useState(false)
