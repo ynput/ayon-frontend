@@ -781,7 +781,7 @@ const TableHeadCell = ({
 
   return (
     <Styled.HeaderCell
-      className={clsx(header.id, 'shimmer-dark', 'aaa', {
+      className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
