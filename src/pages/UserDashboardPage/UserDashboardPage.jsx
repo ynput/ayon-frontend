@@ -169,7 +169,6 @@ const UserDashboardPage = () => {
     return <ExternalUserPageLocked />
   }
 
-
   return (
     <>
       <DocumentTitle title={title} />

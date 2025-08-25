@@ -31,6 +31,7 @@ import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from "@components/HelpButton/HelpButton.tsx"
+import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 
 type NavLink = {
   name?: string
@@ -289,7 +290,7 @@ const ProjectPage = () => {
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isExternal){
+  if (isExternal) {
     return <ExternalUserPageLocked/>
   }
 
