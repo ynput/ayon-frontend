@@ -1,5 +1,4 @@
 import { Dropdown, Icon } from '@ynput/ayon-react-components'
-import { useState } from 'react'
 import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
@@ -8,8 +7,8 @@ const MenuItem = styled.div<{ isFirst?: boolean; isLast?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: ${({ isFirst, isLast }) =>
-    `${isFirst ? '16px' : '8px'} 12px ${isLast ? '16px' : '8px'}`};
+  height: 32px;
+  padding: 0 12px;
   cursor: pointer;
   border-radius: 4px;
 
@@ -26,6 +25,11 @@ const MenuItem = styled.div<{ isFirst?: boolean; isLast?: boolean }>`
     font-size: 14px;
     color: var(--md-sys-color-on-surface);
   }
+`
+
+const Divider = styled.div`
+  height: 1px;
+  background-color: #41474D;
 `
 
 const StyledDropdown = styled(Dropdown)`
@@ -66,7 +70,6 @@ interface MenuOption {
   value: string
   label: string
   icon: string
-  divider?: boolean
 }
 
 interface ColumnHeaderMenuProps {
@@ -85,20 +88,23 @@ export const ColumnHeaderMenu = ({
   isResizing,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
-  const [isOpen, setIsOpen] = useState(false)
 
   // Hide the menu when resizing
   if (isResizing) {
     return null
   }
 
+  // Get current column state - we need to call these methods directly to get fresh state
+  const isPinned = column.getIsPinned()
+  const isVisible = column.getIsVisible()
+
   const menuOptions: MenuOption[] = []
 
   if (canPin) {
-    const isPinned = column.getIsPinned() === 'left'
+    const isPinnedLeft = isPinned === 'left'
     menuOptions.push({
       value: 'pin',
-      label: isPinned ? 'Unpin column' : 'Pin column',
+      label: isPinnedLeft ? 'Unpin column' : 'Pin column',
       icon: 'push_pin',
     })
   }
@@ -108,7 +114,6 @@ export const ColumnHeaderMenu = ({
       value: 'divider1',
       label: '',
       icon: '',
-      divider: true,
     })
   }
 
@@ -131,15 +136,14 @@ export const ColumnHeaderMenu = ({
       value: 'divider2',
       label: '',
       icon: '',
-      divider: true,
     })
   }
 
   if (canHide) {
     menuOptions.push({
       value: 'hide',
-      label: column.getIsVisible() ? 'Hide column' : 'Show column',
-      icon: column.getIsVisible() ? 'visibility_off' : 'visibility',
+      label: isVisible ? 'Hide column' : 'Show column',
+      icon: isVisible ? 'visibility_off' : 'visibility',
     })
   }
 
@@ -151,12 +155,15 @@ export const ColumnHeaderMenu = ({
     const selectedValue = value[0]
 
     if (selectedValue === 'hide') {
-      column.getToggleVisibilityHandler()({} as any)
+      // Toggle column visibility directly
+      column.toggleVisibility()
     } else if (selectedValue === 'pin') {
-      const isPinned = column.getIsPinned() === 'left'
-      if (isPinned) {
+      const isPinnedLeft = isPinned === 'left'
+      if (isPinnedLeft) {
+        // Unpin the column
         column.pin(false)
       } else {
+        // Pin the column to the left
         column.pin('left')
       }
     } else if (selectedValue === 'sort-asc') {
@@ -172,32 +179,25 @@ export const ColumnHeaderMenu = ({
       options={menuOptions}
       onChange={handleMenuChange}
       dropIcon="more_horiz"
+      multiSelect={false}
       listStyle={{
         minWidth: '160px',
         border: 'none',
         display: 'flex',
         flexDirection: 'column',
         gap: '8px',
+        padding: '8px',
       }}
       placeholder=""
       itemTemplate={(option) => {
-        if (option.divider) {
-          return (
-            <hr
-              style={{
-                margin: '0 8px',
-                border: 'none',
-                borderTop: '1px solid var(--md-sys-color-surface-container)',
-                height: '1px',
-              }}
-            />
-          )
+        // Check if this is a divider
+        if (option.value.startsWith('divider')) {
+          return <Divider />
         }
 
-        const menuItems = menuOptions.filter((opt) => !opt.divider)
-        const menuItemIndex = menuItems.findIndex((item) => item.value === option.value)
+        const menuItemIndex = menuOptions.findIndex((item) => item.value === option.value)
         const isFirst = menuItemIndex === 0
-        const isLast = menuItemIndex === menuItems.length - 1
+        const isLast = menuItemIndex === menuOptions.length - 1
 
         return (
           <MenuItem isFirst={isFirst} isLast={isLast}>

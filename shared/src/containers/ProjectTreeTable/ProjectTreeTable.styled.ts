@@ -119,16 +119,16 @@ export const HeaderCell = styled.th`
     }
   }
 
-  /* show action button */
+  /* show action buttons */
   &:hover {
-    .action {
+    .actions {
       display: flex;
     }
   }
 
   /* Hide action buttons when resizing */
   &.resizing {
-    .action {
+    .actions {
       display: none !important;
     }
     cursor: col-resize !important;
@@ -157,7 +157,7 @@ export const HeaderCell = styled.th`
 `
 
 export const HeaderButtons = styled.div`
-  display: flex;
+  display: none;
   gap: var(--base-gap-small);
   align-items: center;
 

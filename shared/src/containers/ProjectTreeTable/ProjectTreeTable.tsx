@@ -31,10 +31,9 @@ import buildTreeTableColumns, {
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
-import HeaderActionButton from './components/HeaderActionButton'
-import RowDragHandleCellContent from './components/RowDragHandleCellContent' // Added import
+import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
-import { ColumnHeaderMenu } from './components/ColumnHeaderMenu'
+import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
@@ -769,7 +768,6 @@ const TableHeadCell = ({
 }: TableHeadCellProps) => {
   const { column } = header
 
-
   return (
     <Styled.HeaderCell
       className={clsx(header.id, 'shimmer-dark', 'aaa', {
@@ -801,6 +799,7 @@ const TableHeadCell = ({
               />
             )}
 
+            {/* COLUMN SORTING */}
             {canSort && (
               <HeaderActionButton
                 icon={'sort'}
