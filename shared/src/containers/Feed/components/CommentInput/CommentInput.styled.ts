@@ -83,12 +83,24 @@ export const Comment = styled.div`
   }
 
   /* list and check box styles */
-  .ql-editor ol {
+  .ql-editor ol,
+  .ql-editor ul {
     li {
-      :not([data-list='ordered']) {
-        &::before {
-          display: none;
-        }
+      padding-left: 0;
+
+      /* Hide React Quill's ::before pseudo-elements */
+      &::before {
+        content: none;
+      }
+
+      &[data-list='ordered'] {
+        list-style-type: decimal;
+        list-style-position: inside;
+      }
+
+      &[data-list='bullet'] {
+        list-style-type: circle;
+        list-style-position: inside;
       }
 
       /* checkbox data-checked false or true */
