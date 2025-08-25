@@ -14,6 +14,7 @@ import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTa
 import { checkName } from '@shared/util'
 import { useSlicerContext } from './SlicerContext'
 import { isEmpty } from 'lodash'
+import { FormValue } from '@/types'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -84,7 +85,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     parentId?: string,
   ): NewEntityOperation => {
     // add extra data from slicer
-    const slicerData: Record<string, any> = {}
+    const slicerData: Record<string, FormValue> = {}
     if (sliceType !== 'hierarchy' && !isEmpty(rowSelection) && entityType === 'task') {
       const selection = Object.keys(rowSelection).filter(
         (key) => !['hasValue', 'noValue'].includes(key),

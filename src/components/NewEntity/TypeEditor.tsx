@@ -1,8 +1,9 @@
 import { FolderType, TaskType } from '@shared/api'
 import { Dropdown, DropdownRef } from '@ynput/ayon-react-components'
 import { forwardRef, CSSProperties } from 'react'
+import { ComponentProps } from '@/types'
 
-interface TypeEditorProps {
+interface TypeEditorProps extends ComponentProps {
   value: string
   options: (FolderType | TaskType)[]
   onChange: (value: string) => void
@@ -13,7 +14,6 @@ interface TypeEditorProps {
   isChanged?: boolean
   align?: string
   type: string
-  [key: string]: any
 }
 
 const TypeEditor = forwardRef<DropdownRef, TypeEditorProps>(
