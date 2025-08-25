@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
 import SubChip from '@components/SubChip/SubChip'
 import { PricingLink } from '@shared/components/Powerpack/PricingLink'
+import { toast } from 'react-toastify'
 
 type ExtendedAddonDetail = AddonDetail & {
   downloadedVersions: Record<string, string>
@@ -130,9 +131,33 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   let actionButton = null
   const subRequired = flags?.includes('licensed') && !available
+  const newestVersion = [...versions].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0]
+  const latestVersionData = newestVersion || versions.find(v => v.version === latestVersion)
+  const isLatestIncompatible = latestVersionData?.isCompatible === false
+  
+  // Find the latest compatible version
+  const latestCompatibleVersion = versions
+    .filter(v => v.isCompatible !== false)
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0]
 
-  // Download button (top right)
-  if (isDownloading) {
+
+  if (isLatestIncompatible && !latestCompatibleVersion) {
+    actionButton = (
+      <Button variant="tertiary" disabled icon={'block'}>
+        {`v${latestVersion} - Server update required`}
+      </Button>
+    )
+  } else if (isLatestIncompatible && latestCompatibleVersion) {
+    actionButton = (
+      <Button 
+        variant="filled" 
+        icon={'download'} 
+        onClick={() => handleDownload(latestCompatibleVersion.version)}
+      >
+        {`Download v${latestCompatibleVersion.version}`}
+      </Button>
+    )
+  } else if (isDownloading) {
     actionButton = (
       <SaveButton active saving disabled>
         Downloading...
@@ -149,17 +174,31 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   } else if (isDownloaded && !isOutdated) {
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
   } else if (isDownloaded && isOutdated && latestVersion) {
+    const versionToDownload = isLatestIncompatible && latestCompatibleVersion ? latestCompatibleVersion.version : latestVersion
     actionButton = (
       <Button
         variant="filled"
         icon={'download'}
-        onClick={() => handleDownload(latestVersion)}
-      >{`Download v${latestVersion}`}</Button>
+        onClick={() => {
+          if (isLatestIncompatible && !latestCompatibleVersion) {
+            toast.error('Addon incompatible with your server version')
+            return
+          }
+          handleDownload(versionToDownload)
+        }}
+      >{`Download v${versionToDownload}`}</Button>
     )
   } else if (latestVersion) {
+    const versionToDownload = isLatestIncompatible && latestCompatibleVersion ? latestCompatibleVersion.version : latestVersion
     actionButton = (
-      <Button variant="filled" icon={'download'} onClick={() => handleDownload(latestVersion)}>
-        {`Download v${latestVersion}`}
+      <Button variant="filled" icon={'download'} onClick={() => {
+        if (isLatestIncompatible && !latestCompatibleVersion) {
+          toast.error('Addon incompatible with your server version')
+          return
+        }
+        handleDownload(versionToDownload)
+      }}>
+        {`Download v${versionToDownload}`}
       </Button>
     )
   } else if (subRequired) {
@@ -176,8 +215,9 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     () =>
       versions.map((v) => ({
         value: v.version,
-        label: `v${v.version}`,
+        label: !v.isCompatible? `v${v.version} (server update required)`: `v${v.version}`,
         isDownloaded: downloaded.includes(v.version),
+        disabled: v.isCompatible === false,
       })),
     [versions, downloaded],
   )
@@ -245,15 +285,32 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                   options={versionsOptions}
                   align="right"
                   value={[]}
-                  widthExpand
-                  onChange={(v) => handleDownload(v[0])}
+                  onChange={(v) => {
+                    const selectedVersion = versions.find(version => version.version === v[0])
+                    if (selectedVersion?.isCompatible !== false) {
+                      handleDownload(v[0])
+                    } else {
+                      toast.error('Addon incompatible with your server version')
+                    }
+                  }}
                   itemStyle={{ justifyContent: 'space-between' }}
-                  // @ts-expect-error
-                  buttonProps={{ 'data-tooltip': 'Download a specific version' }}
+                  buttonProps={{
+                    'data-tooltip': isLatestIncompatible
+                      ? 'Select a compatible version to download'
+                      : 'Download a specific version'
+                  } as any}
                   search={versions.length > 10}
                   itemTemplate={(option) => (
                     <Styled.VersionDropdownItem>
-                      <Icon icon={option.isDownloaded ? 'check' : 'download'} />
+                      <Icon
+                        icon={
+                          option.disabled
+                            ? 'block'
+                            : option.isDownloaded
+                              ? 'check'
+                              : 'download'
+                        }
+                      />
                       {option.label}
                     </Styled.VersionDropdownItem>
                   )}
