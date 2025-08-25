@@ -5,10 +5,11 @@ import * as Styled from './DetailsPanel.styled'
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
 import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
-import { DetailsPanelAttributes, EntityPath, Watchers } from '@shared/components'
+import { DetailsPanelAttributes, EntityPath, Watchers, DetailsDialog } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
 import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
+import { DetailsPanelMoreMenu } from './DetailsPanelMoreMenu'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -38,13 +39,15 @@ export type DetailsPanelProps = {
   scope: string
   isCompact?: boolean
   onClose?: () => void
-  onWatchersUpdate?: (added: any[], removed: any[]) => void
-  onOpenViewer?: (entity: any) => void
+  onWatchersUpdate?: (added: { id: string; name: string; type: string }[], removed: { id: string; name: string; type: string }[]) => void
+  onOpenViewer?: (entity: { entityId?: string; versionId?: string; projectName?: string; folderId?: string; taskId?: string; productId?: string }) => void
   onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   // annotations
-  annotations?: any
+  annotations?: Record<string, unknown>
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
+  // entity lists context
+  entityListsContext?: Record<string, unknown>
 }
 
 export const DetailsPanel = ({
@@ -73,8 +76,11 @@ export const DetailsPanel = ({
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
+  entityListsContext,
 }: DetailsPanelProps) => {
+  console.log('entityType', entityType)
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
+  
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
   // Force attribs tab for specific entity types
@@ -132,6 +138,7 @@ export const DetailsPanel = ({
     isFetching: isFetchingEntitiesDetails,
     isError,
     originalArgs,
+    refetch,
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery },
     {
@@ -217,6 +224,14 @@ export const DetailsPanel = ({
             entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
+            <DetailsPanelMoreMenu
+              entityType={entityType}
+              firstEntityData={firstEntityData}
+              firstProject={firstProject}
+              onOpenPip={handleOpenPip}
+              refetch={refetch}
+              entityListsContext={entityListsContext}
+            />
             <Watchers
               entities={entitiesToQuery}
               entityType={entityType}
@@ -288,6 +303,7 @@ export const DetailsPanel = ({
           />
         )}
       </Panel>
+
     </>
   )
 }
