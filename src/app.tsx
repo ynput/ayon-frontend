@@ -241,7 +241,12 @@ const App = () => {
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
-  
+  useEffect(() => {
+      if (user.name && user.redirectUrl) {
+        window.location.href = user.redirectUrl
+        //dispatch(clearRedirectUrl())
+      }
+  }, [user.name, user.redirectUrl, dispatch])
 
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
@@ -285,7 +290,7 @@ const App = () => {
 
   const isTokenAuth = () => {
     // User is trying to log in with a token
-    // we need to show the login page, that handles sso 
+    // we need to show the login page, that handles sso
     // callbacks in order to parse the token and overwrite
     // existing session if needed
     const provider = window.location.pathname.split('/')

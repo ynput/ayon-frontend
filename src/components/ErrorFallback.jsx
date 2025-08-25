@@ -3,6 +3,7 @@ import { useAppSelector } from '@state/store'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const StyledPanel = styled(Panel)`
   max-width: 300px;
@@ -35,7 +36,9 @@ const StyledPanel = styled(Panel)`
 const ErrorFallback = ({ error }) => {
   if (error?.toString()?.includes('TypeError: Failed to fetch dynamically imported module:')) {
     return (
-      <StyledPanel>
+      <>
+        <DocumentTitle title="Oops • AYON" />
+        <StyledPanel>
         <h1>AYON has been updated. Please reload for changes.</h1>
         <Button
           label={'Reload page'}
@@ -48,12 +51,15 @@ const ErrorFallback = ({ error }) => {
           2. If reloading does not work: try shift + ctrl/cmd + delete. Then clear Cached images and
           files.
         </span>
-      </StyledPanel>
+        </StyledPanel>
+      </>
     )
   }
 
   return (
-    <StyledPanel>
+    <>
+      <DocumentTitle title="Oops • AYON" />
+      <StyledPanel>
       <h1>Something went wrong, please send a report to Ynput.</h1>
       <pre>{error?.toString()}</pre>
       <Section direction="row">
@@ -64,7 +70,8 @@ const ErrorFallback = ({ error }) => {
           <Button label={'Home'} icon="home" variant="filled" />
         </a>
       </Section>
-    </StyledPanel>
+      </StyledPanel>
+    </>
   )
 }
 

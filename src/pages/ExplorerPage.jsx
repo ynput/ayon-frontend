@@ -1,11 +1,17 @@
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+
 const ExplorerPage = () => {
+  
   /*
     Render the GraphiQL interface.
     */
   return (
-    <main>
-      <iframe className="embed" title="graphiql" src="/graphiql" style={{ flexGrow: 1 }} />
-    </main>
+    <>
+      <DocumentTitle title="GraphQL Explorer • AYON" />
+      <main>
+        <iframe className="embed" title="graphiql" src="/graphiql" style={{ flexGrow: 1 }} />
+      </main>
+    </>
   )
 }
 

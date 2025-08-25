@@ -16,7 +16,11 @@ import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
+import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import styled from 'styled-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -34,6 +38,7 @@ const UserDashboardPage = () => {
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
+  const isExternal = user?.data?.isExternal
 
   const {
     data: addonsData = [],
@@ -66,7 +71,14 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
-
+    links.push({ node: 'spacer' })
+    links.push({
+        node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'} />,
+    })
+  
+  const title = useTitle(addonName || module, links, 'AYON', '')
+  
+  
   const addonData = addonsData.find((addon) => addon.name === addonName)
 
   const addonModule = addonData ? (
@@ -153,8 +165,14 @@ const UserDashboardPage = () => {
     }
   }
 
+  if (isExternal) {
+    return <ExternalUserPageLocked />
+  }
+
+
   return (
     <>
+      <DocumentTitle title={title} />
       <AppNavLinks links={links} />
       <main>
         <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>

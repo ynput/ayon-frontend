@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
-
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
 import BrowserPage from '../BrowserPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
@@ -11,7 +12,6 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
-
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
@@ -28,13 +28,15 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import { Views, ViewsProvider } from '@shared/containers'
+import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
+import { Views, ViewsProvider, ViewType } from '@shared/containers'
+import HelpButton from "@components/HelpButton/HelpButton.tsx"
 
 type NavLink = {
   name?: string
   path?: string
   module?: string
-  viewType?: string
+  viewType?: ViewType
   uriSync?: boolean
   enabled?: boolean
   node?: React.ReactNode
@@ -68,6 +70,7 @@ const ProjectPage = () => {
 
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
+  const isExternal = useAppSelector((state) => state.user.data.isExternal)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -150,7 +153,7 @@ const ProjectPage = () => {
         name: 'Review',
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
-        viewType: 'review',
+        viewType: 'reviews',
       },
       {
         name: 'Scheduler',
@@ -182,6 +185,9 @@ const ProjectPage = () => {
         })),
       { node: 'spacer' },
       {
+        node: <HelpButton module={addonName || module} />,
+      },
+      {
         node: (
           <Button
             icon="more_horiz"
@@ -193,11 +199,14 @@ const ProjectPage = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, matchedAddons],
+    [addonsData, projectName, remotePages, matchedAddons, module],
   )
+
   const activeLink = useMemo(() => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
+
+  const title = useTitle(module, links, projectName || 'AYON')
 
   //
   // Render page
@@ -251,6 +260,7 @@ const ProjectPage = () => {
           addonName={addonName}
           addonVersion={foundAddon.version}
           sidebar={foundAddon.settings.sidebar}
+          addonTitle={foundAddon.title}
         />
       )
     }
@@ -279,8 +289,13 @@ const ProjectPage = () => {
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
+  if (isExternal){
+    return <ExternalUserPageLocked/>
+  }
+
   return (
     <>
+      <DocumentTitle title={title} />
       <Dialog
         header="Project Context"
         isOpen={showContextDialog}

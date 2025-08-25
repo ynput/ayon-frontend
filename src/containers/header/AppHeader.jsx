@@ -186,35 +186,40 @@ const Header = () => {
           </DeveloperSwitch>
         )}
 
-        <ChatBubbleButton />
+        {!user.data.isExternal && (
+          <>
+          <ChatBubbleButton />
 
-        {/* help icon and menu vvv */}
-        <HeaderButton
-          icon="help"
-          ref={helpButtonRef}
-          onClick={() => handleToggleMenu('help')}
-          className={clsx({ active: menuOpen === 'help' })}
-          variant="nav"
-        />
-        <MenuContainer id="help" target={helpButtonRef.current}>
-          <HelpMenu user={user} />
-        </MenuContainer>
-        {/* help icon and menu ^^^ */}
+          {/* help icon and menu vvv */}
+          <HeaderButton
+            icon="help"
+            ref={helpButtonRef}
+            onClick={() => handleToggleMenu('help')}
+            className={clsx({ active: menuOpen === 'help' })}
+            variant="nav"
+          />
+          <MenuContainer id="help" target={helpButtonRef.current}>
+            <HelpMenu user={user} />
+          </MenuContainer>
+          {/* help icon and menu ^^^ */}
 
-        {/* Inbox icon */}
-        <InboxNotificationIcon />
+          {/* Inbox icon */}
+          <InboxNotificationIcon />
 
-        {/* App icon and menu vvv */}
-        <HeaderButton
-          icon="apps"
-          onClick={() => handleToggleMenu('app')}
-          ref={appButtonRef}
-          variant="nav"
-          className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
-        />
-        <MenuContainer id="app" target={appButtonRef.current}>
-          <AppMenu user={user} />
-        </MenuContainer>
+          {/* App icon and menu vvv */}
+          <HeaderButton
+            icon="apps"
+            onClick={() => handleToggleMenu('app')}
+            ref={appButtonRef}
+            variant="nav"
+            className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
+          />
+
+          <MenuContainer id="app" target={appButtonRef.current}>
+            <AppMenu user={user} />
+          </MenuContainer>
+          </>
+        )}
         {/* App icon and menu ^^^ */}
 
         {/* User icon and menu vvv */}

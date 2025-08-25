@@ -1,6 +1,7 @@
 import { forwardRef } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './SectionHeader.styled'
+import clsx from 'clsx'
 
 export interface SectionHeaderProps extends React.LiHTMLAttributes<HTMLLIElement> {
   id: string
@@ -9,12 +10,16 @@ export interface SectionHeaderProps extends React.LiHTMLAttributes<HTMLLIElement
 }
 
 export const SectionHeader = forwardRef<HTMLLIElement, SectionHeaderProps>(
-  ({ title, collapsed, ...props }, ref) => {
+  ({ title, collapsed, className, ...props }, ref) => {
     return (
-      <Styled.SectionHeader {...props} ref={ref}>
+      <Styled.SectionHeader
+        {...props}
+        className={clsx('views-section-header', { collapsed }, className)}
+        ref={ref}
+      >
         <span>{title}</span>
         <span className="spacer" />
-        <Icon className="icon" icon={collapsed ? 'expand_more' : 'expand_less'} />
+        <Icon className="icon" icon={'expand_more'} />
       </Styled.SectionHeader>
     )
   },
