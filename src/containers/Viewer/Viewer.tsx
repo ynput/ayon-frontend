@@ -258,8 +258,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
-  console.log('noVersions', noVersions)
-
   // todo: noVersions modal smaller
   return (
     <ViewerProvider selectedVersionId={selectedVersion?.id}>

@@ -30,10 +30,8 @@ import buildTreeTableColumns, {
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
-import HeaderActionButton from './components/HeaderActionButton'
-import RowDragHandleCellContent from './components/RowDragHandleCellContent' // Added import
+import { RowDragHandleCellContent, ColumnHeaderMenu, HeaderActionButton } from './components'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
-
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/SelectionCellsContext'
@@ -481,6 +479,7 @@ export const ProjectTreeTable = ({
               userSelect: 'none',
               ...columnSizeVars,
               width: table.getTotalSize(),
+              cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
             }}
           >
             <TableHead
@@ -716,9 +715,10 @@ const TableHeadCell = ({
 
   return (
     <Styled.HeaderCell
-      className={clsx(header.id, 'shimmer-dark', {
+      className={clsx(header.id, 'shimmer-dark', 'aaa', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
+        resizing: column.getIsResizing(),
       })}
       key={header.id}
       style={{
@@ -757,7 +757,6 @@ const TableHeadCell = ({
               />
             )}
 
-            {/* COLUMN SORTING */}
             {canSort && (
               <HeaderActionButton
                 icon={'sort'}

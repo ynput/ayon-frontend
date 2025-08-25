@@ -1,4 +1,5 @@
 import api from './getAccessGroups'
+import { ProjectUserData, GetProjectsUsersApiResponse } from './getAccessGroups'
 
 const setAccessGroups = api.injectEndpoints({
   endpoints: (build) => ({
@@ -18,14 +19,14 @@ const setAccessGroups = api.injectEndpoints({
             // @ts-ignore
             'getProjectsAccess',
             { projects: selectedProjects },
-            (draft: any) => {
-              let updatedData: any = {}
+            (draft: GetProjectsUsersApiResponse) => {
+              let updatedData: ProjectUserData = {}
               for (const user of Object.keys(payload)) {
                 for (const project of Object.keys(payload[user])) {
                   updatedData = {
                     ...updatedData,
                     [project]: {
-                      ...(draft[project] || {}),
+                      ...(draft.data[project] || {}),
                       ...(updatedData[project] || {}),
                       [user]: payload[user][project],
                     },
@@ -33,7 +34,7 @@ const setAccessGroups = api.injectEndpoints({
                 }
               }
 
-              return { ...draft, ...updatedData }
+              return { ...draft, data: { ...draft.data, ...updatedData } }
             },
           ),
         )
