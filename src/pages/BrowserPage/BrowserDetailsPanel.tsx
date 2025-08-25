@@ -3,25 +3,43 @@
 
 import useFocusedEntities from '@hooks/useFocused'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { openViewer } from '@state/viewer'
+import { openViewer, ViewerState } from '@state/viewer'
 // shared
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
-import { useGetUsersAssigneeQuery, useGetProjectsInfoQuery, ProjectModel } from '@shared/api'
+import { useGetUsersAssigneeQuery, useGetProjectsInfoQuery, ProjectModel, DetailsPanelEntityType } from '@shared/api'
 import { setFocusedVersions, setSelectedVersions } from '@state/context'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+
+interface FocusedEntity {
+  id: string
+  projectName: string
+}
+
+interface UseFocusedEntitiesReturn {
+  entities: FocusedEntity[]
+  entityType: DetailsPanelEntityType
+  subTypes: string[]
+}
 
 const BrowserDetailsPanel = () => {
   const projectName = useAppSelector((state) => state.project.name) as unknown as string
 
   const dispatch = useAppDispatch()
-  const handleOpenViewer = (args: any) => dispatch(openViewer(args))
+  const handleOpenViewer = (args: Partial<ViewerState>) => dispatch(openViewer(args))
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
   const projectInfo = projectsInfo[projectName]
 
-  // if entityType is representation, entityType stays as versions because we use a slide out
-  const { entities, entityType, subTypes } = useFocusedEntities(projectName)
+  const { entities, entityType, subTypes }: UseFocusedEntitiesReturn = useFocusedEntities(projectName)
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
+
+  let entityListsContext: Record<string, unknown> | undefined = undefined
+  try {
+    entityListsContext = useEntityListsContext() as unknown as Record<string, unknown>
+  } catch (error) {
+    console.log('BrowserDetailsPanel - entityListsContext not available:', error)
+  }
 
   const updateFocusedVersion = (versionId: string) => {
     // set selected product
@@ -46,6 +64,7 @@ const BrowserDetailsPanel = () => {
         scope="project"
         onOpenViewer={handleOpenViewer}
         onEntityFocus={updateFocusedVersion}
+        entityListsContext={entityListsContext}
       />
       <DetailsPanelSlideOut
         projectsInfo={projectsInfo as Record<string, ProjectModel>}

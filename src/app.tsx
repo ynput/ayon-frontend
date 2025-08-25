@@ -66,6 +66,7 @@ import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompletePro
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
+import { ViewerArgs } from '@/types'
 
 const App = () => {
   const user = useAppSelector((state) => state.user)
@@ -77,7 +78,7 @@ const App = () => {
   const [noAdminUser, setNoAdminUser] = useState(false)
 
   //   handlers for details panel
-  const onOpenImage = (args: any) => {
+  const onOpenImage = (args: ViewerArgs) => {
     dispatch(onCommentImageOpen(args))
   }
 
@@ -85,7 +86,7 @@ const App = () => {
     dispatch(goToFrame(frame))
   }
 
-  const onOpenViewer = (args: any) => {
+  const onOpenViewer = (args: ViewerArgs) => {
     dispatch(openViewer(args))
   }
 

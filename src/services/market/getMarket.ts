@@ -3,6 +3,7 @@ import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxj
 
 // VVV REST endpoints VVV
 import { marketApi, MarketAddonListApiResponse } from '@shared/api'
+import { PubSubMessage } from '@/types'
 
 type MarketAddonItemRes = NonNullable<MarketAddonListApiResponse['addons']>[0]
 export interface MarketAddonItem extends MarketAddonItemRes {
@@ -39,8 +40,8 @@ type UpdatedDefinitionsRest = Omit<DefinitionsRest, 'marketAddonList'> & {
 export const enhancedMarketRest = marketApi.enhanceEndpoints<TagTypesRest, UpdatedDefinitionsRest>({
   endpoints: {
     marketAddonList: {
-      providesTags: (addons: any) => [
-        ...(addons?.map(({ id }: any) => ({ type: 'marketAddon', id })) || []),
+      providesTags: (addons: MarketAddonListApiResponse['addons']) => [
+        ...(addons?.map(({ id }) => ({ type: 'marketAddon', id })) || []),
         {
           type: 'marketAddon',
           id: 'LIST',
@@ -48,7 +49,7 @@ export const enhancedMarketRest = marketApi.enhanceEndpoints<TagTypesRest, Updat
       ],
       transformResponse: (response: MarketAddonListApiResponse) =>
         [...(response?.addons || [])]
-          .map((addon: any) => {
+          .map((addon) => {
             const isDownloaded = !!addon.currentLatestVersion
             const isOfficial = addon.orgName === 'ynput-official'
             const isProductionOutdated =
@@ -113,22 +114,22 @@ export const enhancedMarketGQL = gqlApi.enhanceEndpoints<TagTypesGQL, UpdatedDef
       async onCacheEntryAdded(_args, { updateCachedData, cacheEntryRemoved }) {
         let subscriptions = []
         try {
-          const handlePubSub = (topic: string, message: any) => {
+          const handlePubSub = (topic: string, message: PubSubMessage) => {
             if (topic === 'client.connected') {
               return
             }
 
             // update cache
             updateCachedData((draft) => {
-              if (!draft) return (draft = [message])
+              if (!draft) return (draft = [message.data as MarketAddonInstallEvent])
               // find index of event
-              const index = draft?.findIndex((e) => e.id === message.id)
+              const index = draft?.findIndex((e) => e.id === (message.data as MarketAddonInstallEvent).id)
               // replace event
               if (index !== -1) {
-                draft[index] = message
+                draft[index] = message.data as MarketAddonInstallEvent
               } else {
                 // add event
-                draft.push(message)
+                draft.push(message.data as MarketAddonInstallEvent)
               }
             })
           }

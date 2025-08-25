@@ -1,4 +1,5 @@
 import { projectsApi, accessApi } from '@shared/api'
+import { ApiError } from '@/types'
 
 export type ProjectUserData = {
   [project: string]: {
@@ -20,7 +21,7 @@ const enhancedApi = accessApi.injectEndpoints({
       async queryFn({ projects = [] }, { dispatch, forced }) {
         try {
           let promises = []
-          let projectUsersData: any = {}
+          let projectUsersData: ProjectUserData = {}
           for (const project of projects) {
             promises.push(
               dispatch(
@@ -28,7 +29,7 @@ const enhancedApi = accessApi.injectEndpoints({
                   { projectName: project },
                   { forceRefetch: forced },
                 ),
-              ).then((response: any) => {
+              ).then((response: { status: string; data: Record<string, string[]> }) => {
                 if (response.status === 'rejected') {
                   return
                 }
@@ -42,9 +43,9 @@ const enhancedApi = accessApi.injectEndpoints({
 
           await Promise.all(promises)
           return { data: projectUsersData, meta: undefined, error: undefined }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error(error)
-          return { error, meta: undefined, data: undefined }
+          return { error: error as ApiError, meta: undefined, data: undefined }
         }
       },
       providesTags: (_res, _error, { projects }) =>
