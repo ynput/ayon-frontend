@@ -1,14 +1,6 @@
-import { Button, Panel, Dropdown, DefaultValueTemplate } from '@ynput/ayon-react-components'
-import React, { useEffect, useMemo, useState } from 'react'
-import styled from 'styled-components'
+import { Button, Panel } from '@ynput/ayon-react-components'
+import React, { useEffect, useMemo } from 'react'
 import * as Styled from './DetailsPanel.styled'
-
-const StyledMoreDropdown = styled(Dropdown)`
-  .dropdown-content {
-    min-width: 180px;
-    max-width: 250px;
-  }
-`
 
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
@@ -17,8 +9,7 @@ import { DetailsPanelAttributes, EntityPath, Watchers, DetailsDialog } from '@sh
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
 import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
-import { useVersionUploadContext } from '@shared/components/VersionUploader/context/VersionUploadContext'
-
+import { DetailsPanelMoreMenu } from './DetailsPanelMoreMenu'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -48,13 +39,15 @@ export type DetailsPanelProps = {
   scope: string
   isCompact?: boolean
   onClose?: () => void
-  onWatchersUpdate?: (added: any[], removed: any[]) => void
-  onOpenViewer?: (entity: any) => void
+  onWatchersUpdate?: (added: { id: string; name: string; type: string }[], removed: { id: string; name: string; type: string }[]) => void
+  onOpenViewer?: (entity: { entityId?: string; versionId?: string; projectName?: string; folderId?: string; taskId?: string; productId?: string }) => void
   onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   // annotations
-  annotations?: any
+  annotations?: Record<string, unknown>
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
+  // entity lists context
+  entityListsContext?: Record<string, unknown>
 }
 
 export const DetailsPanel = ({
@@ -83,9 +76,10 @@ export const DetailsPanel = ({
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
+  entityListsContext,
 }: DetailsPanelProps) => {
-  console.log('entityType', entityType)
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
+  
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
   // Force attribs tab for specific entity types
@@ -193,24 +187,6 @@ export const DetailsPanel = ({
 
   const { requestPipWindow } = usePiPWindow()
 
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false)
-
-  let onOpenVersionUpload: any = null
-  try {
-    const versionUploadContext = useVersionUploadContext()
-    onOpenVersionUpload = versionUploadContext.onOpenVersionUpload
-  } catch (error) {
-    console.log('VersionUploadProvider not available in this context')
-  }
-
-  let entityListsContext: any = null
-  try {
-    const { useEntityListsContext } = require('@pages/ProjectListsPage/context')
-    entityListsContext = useEntityListsContext()
-  } catch (error) {
-    console.log('EntityListsProvider not available in this context')
-  }
-
   const handleOpenPip = () => {
     openPip({
       entityType: entityType,
@@ -218,125 +194,6 @@ export const DetailsPanel = ({
       scope: scope,
     })
     requestPipWindow(500, 500)
-  }
-
-  const handleUploadThumbnail = async (file: File) => {
-    if (!file || !firstEntityData || !firstProject) return
-
-    try {
-      if (!file.type.includes('image')) {
-        throw new Error('File is not an image')
-      }
-
-      const response = await fetch(
-        `/api/projects/${firstProject}/${entityType}s/${firstEntityData.id}/thumbnail`,
-        {
-          method: 'POST',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
-          },
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to upload thumbnail')
-      }
-
-      const result = await response.json()
-      
-      console.log('Thumbnail uploaded successfully:', result)
-      
-      if (refetch) {
-        await refetch()
-      }
-      
-    } catch (error: any) {
-      console.error('Error uploading thumbnail:', error)
-    }
-  }
-
-  const moreMenuOptions = useMemo(
-    () => [
-      {
-        value: 'picture-in-picture',
-        label: 'Picture in picture',
-        icon: 'picture_in_picture',
-      },
-      {
-        value: 'upload-thumbnail',
-        label: 'Upload thumbnail',
-        icon: 'add_photo_alternate',
-      },
-      {
-        value: 'upload-version',
-        label: 'Upload version',
-        icon: 'upload',
-      },
-      {
-        value: 'view-details',
-        label: 'View details (raw data)',
-        icon: 'database',
-      },
-      {
-        value: 'add-to-list',
-        label: 'Add to list',
-        icon: 'playlist_add',
-      },
-    ],
-    [],
-  )
-
-  const handleMoreMenuAction = (value: string) => {
-    switch (value) {
-      case 'picture-in-picture':
-        handleOpenPip()
-        break
-      case 'upload-thumbnail':
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.accept = 'image/*'
-        input.onchange = async (e) => {
-          const file = (e.target as HTMLInputElement).files?.[0]
-          if (file && firstEntityData && firstProject) {
-            await handleUploadThumbnail(file)
-          }
-        }
-        input.click()
-        break
-      case 'upload-version':
-        if (onOpenVersionUpload && firstEntityData && firstProject) {
-          const productId = firstEntityData.product?.id
-          const taskId = firstEntityData.task?.id
-          const folderId = firstEntityData.folder?.id
-          
-          onOpenVersionUpload({
-            productId,
-            taskId,
-            folderId,
-          })
-        } else {
-          console.log('Version upload not available in this context')
-        }
-        break
-      case 'view-details':
-        setShowDetailsDialog(true)
-        break
-      case 'add-to-list':
-        if (entityListsContext && firstEntityData && firstProject) {
-          const selectedEntities = [{
-            entityId: firstEntityData.id,
-            entityType: entityType,
-          }]
-          
-          entityListsContext.openCreateNewList(entityType as any, selectedEntities)
-        } else {
-          console.log('Add to list not available in this context')
-        }
-        break
-      default:
-        console.log('Unknown action:', value)
-    }
   }
 
   return (
@@ -366,18 +223,13 @@ export const DetailsPanel = ({
             entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
-            <StyledMoreDropdown
-              options={moreMenuOptions}
-              value={[]}
-              placeholder=""
-              onChange={(values) => handleMoreMenuAction(values[0])}
-              valueTemplate={() => (
-                <Button
-                  icon="more_vert"
-                  variant="text"
-                  data-tooltip="More actions"
-                />
-              )}
+            <DetailsPanelMoreMenu
+              entityType={entityType}
+              firstEntityData={firstEntityData}
+              firstProject={firstProject}
+              onOpenPip={handleOpenPip}
+              refetch={refetch}
+              entityListsContext={entityListsContext}
             />
             <Watchers
               entities={entitiesToQuery}
@@ -451,15 +303,6 @@ export const DetailsPanel = ({
         )}
       </Panel>
 
-      {showDetailsDialog && firstEntityData && firstProject && (
-        <DetailsDialog
-          projectName={firstProject}
-          entityType={entityType}
-          entityIds={[firstEntityData.id]}
-          visible={showDetailsDialog}
-          onHide={() => setShowDetailsDialog(false)}
-        />
-      )}
     </>
   )
 }
