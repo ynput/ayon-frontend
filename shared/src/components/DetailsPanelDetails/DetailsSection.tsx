@@ -5,6 +5,9 @@ import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
 import { BorderedSection } from './BorderedSection'
 
+const StyledContent = styled.div`
+  padding: 8px;
+`
 const StyledRow = styled.div`
   display: grid;
   grid-template-columns: 120px 1fr 40px;

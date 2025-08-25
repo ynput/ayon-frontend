@@ -88,17 +88,13 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
     case !!field.data.enum?.length: {
       const isListType = type.includes('list')
-      // Determine the value array based on type and state
       let valueArray = []
 
       if (isListType) {
-        // If it's a list type attribute
         valueArray = Array.isArray(displayValue) ? displayValue : []
       } else if (isMixed) {
-        // If this field has mixed values (multiple selection)
         valueArray = []
       } else {
-        // For single values, wrap in array for EnumWidget
         valueArray = [displayValue]
       }
 
