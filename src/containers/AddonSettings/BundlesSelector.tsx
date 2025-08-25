@@ -138,9 +138,16 @@ const DropdownBundleItem = ({ bundle, isSelected }: DropdownBundleItemProps) => 
   )
 }
 
+
+export interface BundleIdentifier {
+  bundleName?: string
+  variant?: string
+}
+
+
 interface BundlesSelectorProps {
-  selected: string // name of bundle selected
-  onChange: (bundleOrVariant: string) => void
+  selected: BundleIdentifier
+  onChange: (value: BundleIdentifier) => void
 }
 
 const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
@@ -162,10 +169,14 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
   }, [bundles, devMode, userName])
 
   const selectedBundle = useMemo(() => {
-    if (selected === 'production' || selected === 'staging') {
-      return bundleOptions.find((b) => b.type === selected)
-    }
-    return bundleOptions.find((b) => b.value === selected)
+    if (!selected.bundleName){
+      if (selected.variant === 'production' || selected.variant === 'staging') {
+        return bundleOptions.find((b) => b.type === selected.variant)
+      }
+    } 
+
+    return bundleOptions.find((b) => b.value === selected.bundleName)
+   
   }, [selected, bundleOptions])
 
   const handleOnChange = (bundle: string) => {
@@ -175,10 +186,12 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
 
     // if the bundle is staging or production, set the variant instead of bundle name
     if (selectedBundle.type === 'staging' || selectedBundle.type === 'production') {
-      onChange(selectedBundle.type)
-    } else {
+      onChange({variant: selectedBundle.type, bundleName: selectedBundle.value})
+    } else if (selectedBundle.type === 'dev') {
       // otherwise, just set the bundle name
-      onChange(selectedBundle.value)
+      onChange({ bundleName: selectedBundle.value, variant: selectedBundle.value })
+    } else {
+      onChange({ bundleName: selectedBundle.value, variant: selected.variant })
     }
   }
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -21,7 +21,7 @@ import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
-import BundlesSelector, { DropdownBadge } from './BundlesSelector'
+import BundlesSelector  from './BundlesSelector'
 import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
 import RawSettingsDialog from '@containers/RawSettingsDialog'
 
@@ -109,7 +109,11 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
-  const [variant, setVariant] = useState('production') // this can be a variant or a specific bundle name
+  // const [variant, setVariant] = useState('production') // this can be a variant or a specific bundle name
+  // const [bundleName, setBundleName] = useState(null) // if set, this overrides the bundle inferred from the variant
+
+  const [selectedBundle, setSelectedBundle] = useState(/** @type {BundleIdentifier} */ ({ variant: 'production', bundleName: null }))
+
   const [addonSchemas, setAddonSchemas] = useState({})
 
   const [showCopySettings, setShowCopySettings] = useState(false)
@@ -129,10 +133,11 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const { data: addonSettings } = useGetAddonSettingsListQuery({
     projectName,
     siteId,
-    variant,
+    variant: selectedBundle?.variant,
+    bundleName: selectedBundle?.bundleName,
   })
   // the selected bundle that goes with the variant
-  const bundleName = addonSettings?.bundleName
+  const loadedBundleName = addonSettings?.bundleName
 
   const projectKey = projectName || '_'
 
@@ -416,7 +421,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Remove selected override',
       message,
       accept: executeRemove,
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -453,7 +458,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Remove all overrides',
       message,
       accept: executeRemove,
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -491,7 +496,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Pin override',
       message,
       accept: executePin,
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -499,9 +504,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     // Push a value to a given path of the settings
     // Validate that the value is compatible with the existing value
 
-    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${
-      projectKey || '_'
-    }`
+    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey || '_'
+      }`
     const allData = localData[key]
     if (!allData) {
       toast.error('No data to paste')
@@ -559,7 +563,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     const message = (
       <>
         <p>
-          Are you sure you want to push <strong>{bundleName}</strong> to production?
+          Are you sure you want to push <strong>{loadedBundleName}</strong> to production?
         </p>
         <p>
           This will mark the current staging bundle as production and copy all staging studio
@@ -569,17 +573,17 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     )
 
     confirmDialog({
-      header: `Push ${bundleName} to production`,
+      header: `Push ${loadedBundleName} to production`,
       message,
       accept: async () => {
-        await promoteBundle({ name: bundleName }).unwrap()
+        await promoteBundle({ name: loadedBundleName }).unwrap()
         setLocalData({})
         setOriginalData({})
         setSelectedAddons([])
         toast.success('Bundle pushed to production')
-        setVariant('production')
+        setSelectedBundle({ variant: 'production', bundleName: null })
       },
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -618,12 +622,16 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return (
       <>
         <Toolbar>
-          <VariantSelector variant={variant} setVariant={setVariant} showDev />
+          <VariantSelector 
+            variant={selectedBundle.variant} 
+            setVariant={(v) => setSelectedBundle({ variant: v, bundleName: null })}
+            showDev 
+          />
           <Spacer />
           {projectName && <PerProjectBundleConfig projectName={projectName} variant={variant} />}
           <CopyBundleSettingsButton
-            bundleName={bundleName}
-            variant={variant}
+            bundleName={loadedBundleName}
+            variant={selectedBundle.variant}
             disabled={canCommit}
             localData={localData}
             changedKeys={changedKeys}
@@ -637,10 +645,13 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             projectName={projectName}
           />
         </Toolbar>
-        <BundlesSelector selected={variant} onChange={setVariant} />
+        <BundlesSelector 
+          selected={selectedBundle} 
+          onChange={setSelectedBundle}
+        />
       </>
     )
-  }, [variant, changedKeys, bundleName, projectName, developerMode])
+  }, [selectedBundle.variant, changedKeys, loadedBundleName, projectName, developerMode])
 
   const commitToolbar = useMemo(
     () => (
@@ -743,7 +754,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           <AddonList
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
-            variant={variant}
+            bundleName={selectedBundle.bundleName}
+            variant={selectedBundle.variant}
             onAddonFocus={onAddonFocus}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}

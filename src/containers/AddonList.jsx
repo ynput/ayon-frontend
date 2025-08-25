@@ -14,6 +14,7 @@ const AddonList = ({
   setSelectedAddons,
   onContextMenu,
   variant = 'production', // 'production' or 'staging'
+  bundleName = null,
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
   onAddonFocus = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
   changedAddonKeys = null, // List of addon keys that have changed
@@ -24,6 +25,7 @@ const AddonList = ({
     projectName,
     siteId,
     variant,
+    bundleName,
   })
   const uriChanged = useSelector((state) => state.context.uriChanged)
 
