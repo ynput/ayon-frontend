@@ -38,6 +38,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   onNewProject,
   onActivateProject,
   onDeleteProject,
+  onNoProjectSelected,
   pt,
 }) => {
   const {
@@ -68,6 +69,14 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const selectedProjects = useMemo(() => {
     return projects.filter((p) => selection.includes(p.name))
   }, [projects, selection])
+
+  useEffect(() => {
+    if (selection?.length) return
+    if (!projects?.length) return
+    if (!onNoProjectSelected) return
+    onNoProjectSelected(projects[0].name)
+  }, [selection, projects, onNoProjectSelected])
+
 
   // if not multi-select, remove selected projects except the first one
   // if there is no project selected, select the first one

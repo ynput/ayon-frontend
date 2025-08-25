@@ -2,11 +2,12 @@ import React from 'react'
 import { format, differenceInDays } from 'date-fns'
 
 import DashboardPanelWrapper from './DashboardPanelWrapper'
-import { useGetProjectAttribsQuery } from '@shared/api'
+import { useGetProjectQuery } from '@shared/api'
 import styled, { css, keyframes } from 'styled-components'
 import { useState } from 'react'
 import ProgressBar from './ProgressBar'
 import clsx from 'clsx'
+import { useAppSelector } from '@state/store'
 
 const TailsStyled = styled.div`
   border-radius: var(--panel-border-radius);
@@ -116,11 +117,8 @@ const Timeline = ({ projectName }) => {
   // animation played
   const [animation, setAnimation] = useState(true)
 
-  let { data = {}, isFetching } = useGetProjectAttribsQuery({
-    projectName,
-    attribs: ['startDate', 'endDate'],
-  })
-  let { startDate, endDate } = data.attrib || {}
+  const { data: project, isFetching } = useGetProjectQuery({ projectName })
+  const { startDate, endDate } = project?.attrib || {}
 
   let done = 0,
     left = 0,
@@ -129,7 +127,7 @@ const Timeline = ({ projectName }) => {
     startString = '',
     endString = ''
 
-  if (!isFetching) {
+  if (startDate || endDate) {
     let start = new Date(startDate || '')
     let end = new Date(endDate || '')
 
@@ -148,6 +146,9 @@ const Timeline = ({ projectName }) => {
     done = Math.max(0, Math.min(differenceInDays(new Date(), start), length))
     left = length - done
     percentage = Math.round((done / length) * 100)
+  } else {
+    startString = 'No Start Date'
+    endString = 'No End Date'
   }
 
   return (

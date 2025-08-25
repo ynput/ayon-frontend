@@ -22,13 +22,15 @@ const apiSuffix = (projectName, siteId, variant, asVersion) => {
 const addonSettings = api.injectEndpoints({
   endpoints: (build) => ({
     getAddonSettingsList: build.query({
-      query: ({ variant, projectName, siteId }) => {
+      query: ({ variant, projectName, siteId, bundleName, projectBundleName }) => {
         // this should prevent passing null/undefined values to the query
         // params once and for all (until we have typescript)
-        const params = {}
+        const params = {summary: true}
         if (variant) params.variant = variant
         if (projectName) params.project_name = projectName
         if (siteId) params.site_id = siteId
+        if (bundleName) params.bundle_name = bundleName
+        if (projectBundleName) params.project_bundle_name = projectBundleName
 
         return {
           url: `/api/settings`,
@@ -41,6 +43,7 @@ const addonSettings = api.injectEndpoints({
       providesTags: (result, error, arg) => [
         { type: 'addonSettingsList', ...arg },
         { type: 'addonSettingsList' },
+        { type: 'addonSettingsList', id: 'LIST' },
       ],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
