@@ -41,7 +41,7 @@ const isValidUrl = (text: string): boolean => {
 // Function to parse text and extract URLs
 const parseTextWithUrls = (text: string) => {
   // Regex to match HTTP/HTTPS URLs
-  const urlRegex = /(https?:\/\/\S+)/gi
+  const urlRegex = /(https?:\/\/[^\s<>"]+[^\s.,!?;:<>\")\]])/gi;
   const parts = text.split(urlRegex)
 
   return parts.map((part, index) => {
