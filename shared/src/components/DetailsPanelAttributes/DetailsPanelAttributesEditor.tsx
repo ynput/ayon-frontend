@@ -52,9 +52,12 @@ const FieldValue = styled.div`
   border-radius: 4px;
   padding: 0 4px;
   text-align: left;
+  position: relative;
+  z-index: 1;
 
   &:not(.readonly) {
     cursor: pointer;
+    pointer-events: auto;
   }
 
   &:hover:not(.readonly) {
@@ -69,6 +72,10 @@ const FieldValue = styled.div`
     background-color: var(--md-sys-color-surface-container);
     cursor: default;
     justify-content: flex-start;
+  }
+
+  &.readonly {
+    pointer-events: none;
   }
 `
 
@@ -108,17 +115,23 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   const [editingField, setEditingField] = useState<string | null>(null)
 
   const handleStartEditing = (fieldName: string) => {
+    console.log('handleStartEditing called:', { fieldName, enableEditing, fields: fields.find((field) => field.name === fieldName) })
+    
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {
       setEditingField(fieldName)
+    } else {
+      console.log('Editing not allowed:', { enableEditing, fieldReadonly: fields.find((field) => field.name === fieldName)?.readonly })
     }
   }
 
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
+    console.log('handleValueChange called:', { fieldName, value })
     setEditingField(null)
     onChange?.(fieldName, value)
   }
 
   const handleCancelEdit = () => {
+    console.log('handleCancelEdit called')
     setEditingField(null)
   }
 
@@ -152,7 +165,14 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
               </FieldLabel>
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
-                onClick={() => !isEditing && handleStartEditing(field.name)}
+                onClick={(e) => {
+                  console.log('FieldValue clicked:', { fieldName: field.name, isEditing, isReadOnly, enableEditing })
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (!isEditing && !isReadOnly) {
+                    handleStartEditing(field.name)
+                  }
+                }}
               >
                 <RenderFieldWidget
                   field={field}
@@ -169,6 +189,8 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                 variant="text"
                 icon="content_copy"
                 onClick={(e) => {
+                  console.log('Copy button clicked for field:', field.name)
+                  e.preventDefault()
                   e.stopPropagation()
                   const valueToDisplay =
                     fieldValue === null || fieldValue === undefined ? '' : fieldValue
