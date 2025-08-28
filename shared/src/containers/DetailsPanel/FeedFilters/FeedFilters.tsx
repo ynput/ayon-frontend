@@ -89,7 +89,7 @@ const FeedFilters = ({
         selected={currentTab === 'attribs'}
         style={{ padding: '6px 8px' }}
       >
-        Attributes
+        Details
       </Button>
     </Styled.FiltersToolbar>
   )

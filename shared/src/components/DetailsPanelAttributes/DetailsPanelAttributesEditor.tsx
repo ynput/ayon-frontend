@@ -6,22 +6,19 @@ import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidge
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
+import { BorderedSection } from '../DetailsPanelDetails/BorderedSection'
 
-const StyledForm = styled.div`
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  height: 100%;
+const StyledContent = styled.div`
+  padding: 8px;
 `
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: 150px 1fr auto;
+  grid-template-columns: 120px 1fr 40px;
   gap: 0px;
   align-items: center;
   min-height: 37px;
   position: relative;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
   .copy-icon {
     opacity: 0;
@@ -47,18 +44,20 @@ const FieldLabel = styled.div`
 const FieldValue = styled.div`
   height: 32px;
   overflow: hidden;
-  width: fit-content;
-  min-width: 160px;
-  max-width: 100%;
-  justify-self: end;
+  width: 100%;
+  justify-self: start;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   border-radius: 4px;
   padding: 0 4px;
+  text-align: left;
+  position: relative;
+  z-index: 1;
 
   &:not(.readonly) {
     cursor: pointer;
+    pointer-events: auto;
   }
 
   &:hover:not(.readonly) {
@@ -72,6 +71,11 @@ const FieldValue = styled.div`
   &.editing {
     background-color: var(--md-sys-color-surface-container);
     cursor: default;
+    justify-content: flex-start;
+  }
+
+  &.readonly {
+    pointer-events: none;
   }
 `
 
@@ -83,22 +87,20 @@ const ShimmerRow = styled(FormRow)`
   }
 `
 
-// TODO: move styles to a separate file
-
 export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
   readonly?: boolean
   hidden?: boolean
 }
 
 export interface DetailsPanelAttributesEditorProps {
-  isLoading?: boolean // show loading shimmer for 20 placeholder items
-  enableEditing?: boolean // if this is false, everything is readonly
-  fields: AttributeField[] // the schema for the form
+  isLoading?: boolean
+  enableEditing?: boolean
+  fields: AttributeField[]
   form: Record<
     string,
     string | number | boolean | Date | any[] | Record<string, any> | undefined | null
-  > // the form data
-  mixedFields?: string[] // when multiple entities are selected, this is a list of fields that are mixed
+  >
+  mixedFields?: string[]
   onChange?: (key: string, value: any) => void
 }
 
@@ -112,38 +114,42 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
 
-  // Handler for starting to edit a field
   const handleStartEditing = (fieldName: string) => {
+    console.log('handleStartEditing called:', { fieldName, enableEditing, fields: fields.find((field) => field.name === fieldName) })
+    
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {
       setEditingField(fieldName)
+    } else {
+      console.log('Editing not allowed:', { enableEditing, fieldReadonly: fields.find((field) => field.name === fieldName)?.readonly })
     }
   }
 
-  // Handler for field value changes
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
+    console.log('handleValueChange called:', { fieldName, value })
     setEditingField(null)
     onChange?.(fieldName, value)
   }
 
   const handleCancelEdit = () => {
+    console.log('handleCancelEdit called')
     setEditingField(null)
   }
 
   if (isLoading) {
     return (
-      <StyledForm>
+      <BorderedSection title="Attributes">
         {Array.from({ length: 10 }).map((_, index) => (
           <ShimmerRow key={index}>
             <div className="loading"></div>
             <div className="loading"></div>
           </ShimmerRow>
         ))}
-      </StyledForm>
+      </BorderedSection>
     )
   }
 
   return (
-    <StyledForm>
+    <BorderedSection title="Attributes">
       {fields
         .filter((f) => !f.hidden)
         .map((field) => {
@@ -159,7 +165,14 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
               </FieldLabel>
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
-                onClick={() => !isEditing && handleStartEditing(field.name)}
+                onClick={(e) => {
+                  console.log('FieldValue clicked:', { fieldName: field.name, isEditing, isReadOnly, enableEditing })
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (!isEditing && !isReadOnly) {
+                    handleStartEditing(field.name)
+                  }
+                }}
               >
                 <RenderFieldWidget
                   field={field}
@@ -176,6 +189,8 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                 variant="text"
                 icon="content_copy"
                 onClick={(e) => {
+                  console.log('Copy button clicked for field:', field.name)
+                  e.preventDefault()
                   e.stopPropagation()
                   const valueToDisplay =
                     fieldValue === null || fieldValue === undefined ? '' : fieldValue
@@ -185,6 +200,6 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
             </FormRow>
           )
         })}
-    </StyledForm>
+    </BorderedSection>
   )
 }
