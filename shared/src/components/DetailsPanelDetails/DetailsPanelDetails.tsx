@@ -54,10 +54,20 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
   const { enableEditing, updateEntity } = useEntityEditing({
     entities,
     entityType,
+  })
+
+  // Debug logging to help identify the issue
+  console.log('DetailsPanelDetails Debug:', {
+    entityType,
     mixedFields,
+    enableEditing,
+    entitiesCount: entities.length,
+    formData: formData ? { entityType: formData.entityType, projectName: formData.projectName } : null
   })
 
   const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
+    console.log('handleChange called:', { key, value, enableEditing })
+    
     if (key.startsWith('attrib.')) {
       value = {
         [key.replace('attrib.', '')]: value,
@@ -70,6 +80,8 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
   }
 
   const handleDescriptionChange = (description: string) => {
+    console.log('handleDescriptionChange called:', { description, enableEditing })
+    
     updateFormData('description', description)
     clearMixedField('description')
     updateEntity('attrib', { description })

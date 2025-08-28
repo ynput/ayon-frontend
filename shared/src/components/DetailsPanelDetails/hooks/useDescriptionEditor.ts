@@ -39,6 +39,7 @@ export const useDescriptionEditor = ({
   }, [description, isEditing])
 
   const handleStartEditing = () => {
+    console.log('handleStartEditing called:', { enableEditing, isMixed })
     if (enableEditing && !isMixed) {
       setIsEditing(true)
       const html = convertMarkdownToHtml(description)
