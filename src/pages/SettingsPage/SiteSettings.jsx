@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
 import SettingsEditor from '@containers/SettingsEditor'
-import AddonList from '@containers/AddonList'
+import SettingsAddonList from '@containers/AddonSettings/SettingsAddonList'
 import SiteList from '@containers/SiteList'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '@queries/siteSettings'
@@ -102,7 +102,7 @@ const SiteSettings = () => {
   return (
     <main style={{ flexDirection: 'row', flexGrow: 1 }}>
       <Section style={{ maxWidth: 400 }}>
-        <AddonList
+        <SettingsAddonList
           selectedAddons={selectedAddons}
           setSelectedAddons={setSelectedAddons}
           environment="production"

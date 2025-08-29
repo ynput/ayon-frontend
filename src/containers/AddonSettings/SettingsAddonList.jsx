@@ -9,22 +9,26 @@ import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 
-const AddonList = ({
+const SettingsAddonList = ({
   selectedAddons,
   setSelectedAddons,
+  setBundleName,
   onContextMenu,
   variant = 'production', // 'production' or 'staging'
+  bundleName = null,
+  projectBundleName = null,
   siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
   onAddonFocus = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
   changedAddonKeys = null, // List of addon keys that have changed
   projectName, // used for changed addons
   siteId, // used for changed addons
-  setBundleName,
 }) => {
   const { data, isLoading, isError } = useGetAddonSettingsListQuery({
     projectName,
     siteId,
     variant,
+    bundleName,
+    projectBundleName,
   })
   const uriChanged = useSelector((state) => state.context.uriChanged)
 
@@ -64,16 +68,6 @@ const AddonList = ({
   }, [data, variant, siteSettings])
 
   useEffect(() => {
-    if (setBundleName) {
-      if (data?.bundleName && !isError) {
-        setBundleName(data?.bundleName)
-      } else {
-        setBundleName(null)
-      }
-    }
-  }, [data?.bundleName, isError])
-
-  useEffect(() => {
     // Maintain selection when addons are changed due to variant change
     const newSelection = []
     for (const addon of addons) {
@@ -85,6 +79,13 @@ const AddonList = ({
     }
     setSelectedAddons(newSelection)
   }, [addons])
+
+
+  useEffect(() => {
+    if (!setBundleName) return
+    setBundleName(data?.bundleName || null)
+  }, [data?.bundleName])
+
 
   useEffect(() => {
     const url = new URL(window.location.href)
@@ -142,6 +143,12 @@ const AddonList = ({
 
   if (isError) tableData = []
 
+  const formatVersion = (rowData) => {
+    let v = rowData.version
+    if ((data?.inheritedAddons || []).includes(rowData.name)) v = `${v} (Inherited)`
+    return v
+  }
+
   return (
     <Section style={{ minWidth: 250 }}>
       <TablePanel>
@@ -159,11 +166,11 @@ const AddonList = ({
           emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >
           <Column field="title" header="Addon" />
-          <Column field="version" header="Version" style={{ maxWidth: 110 }} />
+          <Column field="version" header="Version" style={{ maxWidth: 110 }} body={formatVersion} />
         </DataTable>
       </TablePanel>
     </Section>
   )
 }
 
-export default AddonList
+export default SettingsAddonList
