@@ -1,5 +1,3 @@
-import productTypes from './productTypes'
-
 export * from './platform'
 export * from './confirmDelete'
 export * from './getEntityTypeIcon'
@@ -13,6 +11,5 @@ export * from './extractVersionFromFilename'
 export * from './versionUploadHelpers'
 export * from './columnConfigConverter'
 
-export { productTypes }
 import PubSub from './pubsub'
 export { PubSub }
