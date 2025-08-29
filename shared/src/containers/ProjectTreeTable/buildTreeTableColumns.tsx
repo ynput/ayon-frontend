@@ -65,6 +65,25 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   }
 }
 
+type SubTypeSortingFn = (rowA: any, rowB: any, options: BuiltInFieldOptions) => number
+// sort by the project anatomy order for task types and folder types
+const subTypeSort: SubTypeSortingFn = (rowA, rowB, options) => {
+  const valueA = getCellValue(rowA.original, 'subType')
+  const valueB = getCellValue(rowB.original, 'subType')
+  const typeA = rowA.original.entityType
+  const typeB = rowB.original.entityType
+
+  // Folders come first when different entity types
+  if (typeA !== typeB) return typeA === 'folder' ? -1 : 1
+
+  // Use anatomy order for same entity types
+  const typeOptions = typeA === 'task' ? options.taskType : options.folderType
+  const indexA = typeOptions?.findIndex(t => t.value === valueA) ?? -1
+  const indexB = typeOptions?.findIndex(t => t.value === valueB) ?? -1
+
+  return indexA - indexB
+}
+
 export const getLinkLabel = (
   link: Pick<LinkTypeModel, 'linkType'>,
   direction: 'in' | 'out' | string,
@@ -237,9 +256,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'status',
       minSize: MIN_SIZE,
       header: 'Status',
-      sortingFn: withLoadingStateSort((a, b, c) =>
-        attribSort(a, b, c, { enum: options.status, type: 'string' }),
-      ),
+      sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, { enum: options.status, type: 'string' })),
       sortDescFirst: true,
       enableSorting: true,
       enableResizing: true,
@@ -293,6 +310,8 @@ const buildTreeTableColumns = ({
       accessorKey: 'subType',
       header: 'Type',
       minSize: MIN_SIZE,
+      sortingFn: withLoadingStateSort((a, b) => subTypeSort(a, b, options)),
+      sortDescFirst: false,
       enableSorting: true,
       enableResizing: true,
       enablePinning: true,
