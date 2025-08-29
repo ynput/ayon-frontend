@@ -233,6 +233,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
           isLoading={isLoading}
           isMultiSelect={multiSelect}
           error={error ? (error as string) : undefined}
+          enableClickToDeselect={false}
           meta={{
             handleRowContext,
           }}

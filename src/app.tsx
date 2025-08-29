@@ -241,6 +241,13 @@ const App = () => {
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
+  useEffect(() => {
+      if (user.name && user.redirectUrl) {
+        window.location.href = user.redirectUrl
+        //dispatch(clearRedirectUrl())
+      }
+  }, [user.name, user.redirectUrl, dispatch])
+
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
     [serverError],

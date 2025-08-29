@@ -13,7 +13,6 @@ import * as Styled from './LoginPage.styled'
 import remarkGfm from 'remark-gfm'
 import Markdown from 'react-markdown'
 
-
 const LoginPage = ({ isFirstTime = false }) => {
   const dispatch = useDispatch()
 
@@ -70,7 +69,6 @@ const LoginPage = ({ isFirstTime = false }) => {
       return
     }
 
-    // clear local storage
     localStorage.removeItem('auth-preferred-url')
     toast.info(response.data.detail)
     dispatch(login({ user: response.data.user, accessToken: response.data.token, }))
@@ -80,6 +78,11 @@ const LoginPage = ({ isFirstTime = false }) => {
 
 
   const handleSSOCallback = async (ssoOptions) => {
+
+    if (!ssoOptions?.length) {
+      return
+    }
+
     // First we check if there's a provider name in the URL
     // And abort if there isn't
     const provider = window.location.pathname.split('/')[2]
@@ -94,6 +97,14 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     // If the query string is empty, we can't proceed. Abort
     if (!qs.toString()) return
+
+
+    // Clear the query string from the URL
+    // This is important to avoid confusion with the next login attempts
+    // (we don't want to keep the query string in the URL after login)
+    
+    window.history.replaceState({}, '', window.location.pathname)
+
 
     // Get the provider config
     // We need to handle the situation ssoOptions is undefined.
@@ -121,7 +132,7 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     let success = false
     let response = null
-    let finalRedirect = null
+    let redirectUrl = null
 
     try {
       console.debug('SSO Callback', providerConfig.callback)
@@ -138,18 +149,20 @@ const LoginPage = ({ isFirstTime = false }) => {
     }
 
     // If we have a response and it contains user data, we're good to go
+    
+    let user = null
+    let accessToken = null
 
     if (success && response?.data?.user) {
       console.debug('SSO Callback response', response.data)
       const data = response.data
       toast.info(data.detail || `Logged in as ${data.user.name}`)
 
-      dispatch(login({ user: data.user, accessToken: data.token }))
-      // invalidate all rtk queries cache
-      dispatch(api.util.resetApiState())
+      user = data.user
+      accessToken = data.token
 
       if (data.redirectUrl) {
-        finalRedirect = data.redirectUrl
+        redirectUrl = data.redirectUrl
       }
     } else if (success) {
       // successful request, without user data.
@@ -158,29 +171,33 @@ const LoginPage = ({ isFirstTime = false }) => {
       success = false
     }
 
-    // Still, we need to figure out where to redirect the user after login
-    // At this point we may have redirect URL from the response, but that 
-    // is optional and used sparsely.
-
-    if (localStorage.getItem('auth-preferred-url')) {
-      finalRedirect = localStorage.getItem('auth-preferred-url')
-    }
-
-    // if we STILL don't have a redirect, just land on the home page
-    if (!finalRedirect) {
-      finalRedirect = window.location.origin
-    }
-
-    // Clear everything
-    localStorage.removeItem('auth-preferred-url')
-    setIsLoading(false)
 
     if (success) {
-      // And redirect to the final URL
-      window.location.href = finalRedirect
+      // Still, we need to figure out where to redirect the user after login
+      // At this point we may have redirect URL from the response, but that 
+      // is optional and used sparsely.
+
+      if ((!redirectUrl) && localStorage.getItem('auth-preferred-url')) {
+        redirectUrl = localStorage.getItem('auth-preferred-url')
+      }
+
+      if (!redirectUrl) {
+        // if we STILL don't have a redirect, just land on the home page
+        redirectUrl = window.location.origin
+      }
+
+      setIsLoading(false)
+      localStorage.removeItem('auth-preferred-url')
+      dispatch(login({ user, accessToken, redirectUrl }))
+      dispatch(api.util.resetApiState())
+
+
     } else {
       // we don't want to retry!
-      window.location.href = '/'
+      // Clear everything
+      console.log('SSO Callback failed, clearing auth state')
+      setIsLoading(false)
+      localStorage.removeItem('auth-preferred-url')
     }
 
   } // handleSSOCallback

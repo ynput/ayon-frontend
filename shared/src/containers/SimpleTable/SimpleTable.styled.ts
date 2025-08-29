@@ -96,6 +96,25 @@ export const Cell = styled.div`
       color: var(--md-sys-color-on-primary-container);
     }
   }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    
+    &,
+    .value,
+    .icon {
+      color: var(--md-sys-color-outline);
+    }
+
+    &:hover {
+      background-color: transparent;
+    }
+
+    .value {
+      text-decoration: line-through;
+    }
+  }
 `
 
 export const Expander = styled(Button)`

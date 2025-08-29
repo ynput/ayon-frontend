@@ -83,8 +83,6 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
 }
 export type FolderType = {
   name: string

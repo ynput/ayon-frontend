@@ -131,6 +131,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       // reset form
       setInitData(formData)
       setChangesMade(false)
+      toast.success('Profile updated')
     } catch (error) {
       console.log(error)
       toast.error('Unable to update profile')
@@ -227,9 +228,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const handleSaveAll = async () => {
     if (changesMade) await onSave()
     if (preferenceChanges) await onSavePreferences()
-
-    // success toast
-    toast.success('Profile updated')
   }
 
   const notificationsDisabled =

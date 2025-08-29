@@ -5,6 +5,7 @@ import { useGetInboxUnreadCountQuery } from '@queries/inbox/getInbox'
 import { UnreadCount } from './Inbox/Inbox.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
+import HelpButton from '@components/HelpButton/HelpButton'
 
 const InboxPage = () => {
   const { module } = useParams()
@@ -41,7 +42,11 @@ const InboxPage = () => {
       module: 'cleared',
     },
   ]
-
+    
+    links.push({ node: 'spacer' })
+    links.push({
+        node: <HelpButton module={`inbox`} />,
+    })
   const title = useTitle(module, links, 'AYON', 'Inbox')
     
     return (
