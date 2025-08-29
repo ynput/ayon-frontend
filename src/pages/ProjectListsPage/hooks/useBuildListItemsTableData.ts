@@ -6,7 +6,7 @@ import {
 } from '@shared/containers'
 import { useMemo } from 'react'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
-import { productTypes } from '@shared/util'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 type Props = {
   listItemsData: EntityListItemWithLinks[]
@@ -14,6 +14,7 @@ type Props = {
 
 const useBuildListItemsTableData = ({ listItemsData }: Props) => {
   const { projectInfo } = useProjectDataContext()
+  const project = useProjectContext()
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo })
 
@@ -21,9 +22,9 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
     return listItemsData.map((item) => {
       // Process links if they exist
       const links = linksToTableData(item.links, item.entityType, {
-        folderTypes: projectInfo?.folderTypes || [],
-        productTypes: Object.values(productTypes || {}),
-        taskTypes: projectInfo?.taskTypes || [],
+        folderTypes: project?.folderTypes || [],
+        productTypes: project.productTypes || [],
+        taskTypes: project?.taskTypes || [],
       })
 
       return {

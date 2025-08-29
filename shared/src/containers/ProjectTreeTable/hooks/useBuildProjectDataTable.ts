@@ -14,7 +14,7 @@ import { ProjectModel } from '../types/project'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 import { linksToTableData } from '../utils'
-import { productTypes } from '@shared/util'
+import { useProjectContext } from '@shared/context/ProjectContext'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -41,6 +41,7 @@ export default function useBuildProjectDataTable({
   isLoadingMore = false,
 }: Params): TableRow[] {
   const getEntityTypeData = useGetEntityTypeData({ projectInfo })
+  const project = useProjectContext()
 
   // Convert expanded object to a stable string for memoization comparison
   const expandedKey = useMemo(() => JSON.stringify(expanded), [expanded])
@@ -124,9 +125,9 @@ export default function useBuildProjectDataTable({
       const typeData = getEntityTypeData('task', task.taskType)
 
       const links = linksToTableData(task.links, 'task', {
-        folderTypes: projectInfo?.folderTypes || [],
-        productTypes: Object.values(productTypes || {}),
-        taskTypes: projectInfo?.taskTypes || [],
+        folderTypes: project?.folderTypes || [],
+        productTypes: project.productTypes || [],
+        taskTypes: project?.taskTypes || [],
       })
 
       return {
@@ -198,9 +199,9 @@ export default function useBuildProjectDataTable({
       if (!folder) continue
 
       const links = linksToTableData(folder.links, 'folder', {
-        folderTypes: projectInfo?.folderTypes || [],
-        productTypes: Object.values(productTypes || {}),
-        taskTypes: projectInfo?.taskTypes || [],
+        folderTypes: project?.folderTypes || [],
+        productTypes: project?.productTypes || [],
+        taskTypes: project?.taskTypes || [],
       })
 
       // Create row with minimal required properties

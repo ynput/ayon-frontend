@@ -4,6 +4,7 @@ import {
   useGetProjectQuery,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
+import { useProjectContext } from '@shared/context/ProjectContext'
 import { useHierarchyTable } from '@shared/hooks'
 import { FC, useMemo } from 'react'
 import { PickerEntityType, PickerSearch, PickerSelection } from '../EntityPickerDialog'
@@ -15,7 +16,6 @@ import {
 } from '../util'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { matchSorter } from 'match-sorter'
-import { productTypes } from '@shared/util'
 
 export type EntityQueryResult = {
   data: (SearchEntityLink | FolderListItem)[]
@@ -52,7 +52,8 @@ export const useGetEntityPickerData = ({
   const entityDependencies = entityHierarchies[entityType] || []
 
   // Get project data
-  const { data: project } = useGetProjectQuery({ projectName })
+  //const { data: project } = useGetProjectQuery({ projectName })
+  const project = useProjectContext()
   // convert flat list to table rows for the table
   const {
     data: hierarchTable,
@@ -115,7 +116,7 @@ export const useGetEntityPickerData = ({
       entityHierarchies['product'][entityHierarchies['product'].length - 2],
       folder.data,
     ),
-    Object.values(productTypes),
+    project?.productTypes,
   )
   const version = useGetEntityTypeData(
     projectName,

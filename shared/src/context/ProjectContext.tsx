@@ -1,7 +1,7 @@
 import { createContext, useContext, useCallback, useMemo } from 'react'
 import { useGetProjectQuery } from '@shared/api';
 
-import type { FolderType, ProductTypeOverride } from '@shared/api';
+import type { FolderType, ProductTypeOverride, TaskType } from '@shared/api';
 
 
 export interface ProjectContextProps {
@@ -18,6 +18,8 @@ export interface ProjectContextProps {
 
   folderTypes: FolderType[];
   getFolderType?: (name: string) => FolderType | undefined;
+
+  taskTypes?: TaskType[];
 
   // Product types
 
@@ -48,7 +50,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
   // (we're referencing nested objects. no need to use useMemo for these)
 
   const productTypes: ProductTypeOverride[] = 
-    (project?.config as { productTypes?: { default: ProductTypeOverride[] } })?.productTypes?.default || [];
+    (project?.config as { productTypes?: { default: ProductTypeOverride[] } })?.productBaseTypes?.definitions || [];
 
   //
   // Magic functions
@@ -59,6 +61,12 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
 
   const getFolderType = useCallback((name: string): FolderType | undefined => {
     return project?.folderTypes?.find((type: FolderType) => type.name === name);
+  }, [project]);
+
+  // Task types
+  
+  const getTaskType = useCallback((name: string): TaskType | undefined => {
+    return project?.taskTypes?.find((type: TaskType) => type.name === name);
   }, [project]);
 
   // Product types
@@ -100,6 +108,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
 
   const functions = {
     getFolderType,
+    getTaskType,
     getProductTypeIcon,
     getProductTypeColor,
     getProductTypeOptions,
@@ -109,6 +118,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
     name: projectName,
     project,
     folderTypes: project?.folderTypes || [],
+    taskTypes: project?.taskTypes || [],
     productTypes,
     isLoading,
     error,
