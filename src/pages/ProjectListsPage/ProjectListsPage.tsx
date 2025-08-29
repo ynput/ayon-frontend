@@ -1,4 +1,8 @@
-import { ProjectDataProvider, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import {
+  ProjectDataProvider,
+  useDetailsPanelEntityContext,
+  useProjectDataContext,
+} from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -16,11 +20,11 @@ import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
-import { useUserProjectConfig } from '@shared/hooks'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
   ColumnSettingsProvider,
+  DetailsPanelEntityProvider,
   ProjectTableProvider,
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
@@ -89,8 +93,15 @@ type ProjectListsWithInnerProvidersProps = {
 }
 
 const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({ isReview }) => {
-  const { projectName, selectedListId, contextMenuItems, attribFields, ...props } =
-    useListItemsDataContext()
+  const {
+    projectName,
+    selectedListId,
+    contextMenuItems,
+    attribFields,
+    columns,
+    onUpdateColumns,
+    ...props
+  } = useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
 
@@ -102,10 +113,6 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     ],
     [listAttributes, attribFields, selectedList],
   )
-
-  const [pageConfig, updatePageConfig] = useUserProjectConfig({
-    selectors: ['lists', projectName, selectedList?.label],
-  })
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: projectName,
@@ -169,7 +176,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
       onDragCancel={handleDndDragCancel}
     >
       <SettingsPanelProvider>
-        <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
+        <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
           <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
             <ProjectTableProvider
               projectName={projectName}
@@ -186,24 +193,24 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               showHierarchy={false}
               isLoading={props.isLoadingAll}
               contextMenuItems={contextMenuItems}
-              sorting={props.sorting}
-              updateSorting={props.updateSorting}
               scopes={[selectedList?.entityType]}
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
             >
-              <SelectionCellsProvider>
-                <SelectedRowsProvider>
-                  <CellEditingProvider>
-                    <ProjectLists
-                      extraColumns={extraColumns}
-                      extraColumnsSettings={extraColumnsSettings}
-                      isReview={isReview}
-                      dndActiveId={dndActiveId}
-                    />
-                  </CellEditingProvider>
-                </SelectedRowsProvider>
-              </SelectionCellsProvider>
+              <DetailsPanelEntityProvider>
+                <SelectionCellsProvider>
+                  <SelectedRowsProvider>
+                    <CellEditingProvider>
+                      <ProjectLists
+                        extraColumns={extraColumns}
+                        extraColumnsSettings={extraColumnsSettings}
+                        isReview={isReview}
+                        dndActiveId={dndActiveId}
+                      />
+                    </CellEditingProvider>
+                  </SelectedRowsProvider>
+                </SelectionCellsProvider>
+              </DetailsPanelEntityProvider>
             </ProjectTableProvider>
           </ProjectTableQueriesProvider>
         </ColumnSettingsProvider>
@@ -231,9 +238,22 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList, createReviewSessionList } = useListsContext()
+  const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
+
+  // Try to get the entity context, but it might not exist
+  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
+  try {
+    const entityContext = useDetailsPanelEntityContext()
+    selectedEntity = entityContext.selectedEntity
+  } catch {
+    // Context not available, that's fine
+    selectedEntity = null
+  }
+
+  // Check if we should show the details panel
+  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -241,7 +261,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   }
 
   return (
-    <main style={{ overflow: 'hidden', gap: 4 }}>
+    <main style={{ gap: 4 }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
@@ -295,7 +315,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!selectedRows.length ? 0 : 4}
+                  gutterSize={shouldShowDetailsPanel ? 4 : 0}
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
@@ -305,7 +325,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       dndActiveId={dndActiveId} // Pass prop
                     />
                   </SplitterPanel>
-                  {!!selectedRows.length ? (
+                  {shouldShowDetailsPanel ? (
                     <SplitterPanel
                       size={30}
                       style={{

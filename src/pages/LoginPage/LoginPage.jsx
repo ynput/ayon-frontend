@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
@@ -8,167 +8,266 @@ import api from '@shared/api'
 import AuthLink from './AuthLink'
 import { useGetSiteInfoQuery } from '@shared/api'
 import LoadingPage from '../LoadingPage'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import * as Styled from './LoginPage.styled'
-import { useLocalStorage } from '@shared/hooks'
-import { isEmpty, isEqual } from 'lodash'
 import remarkGfm from 'remark-gfm'
 import Markdown from 'react-markdown'
 
-const clearQueryParams = () => {
-  const url = new URL(window.location)
-  url.search = ''
-  console.log('clearQueryParams', url.href)
-  history.pushState({}, '', url.href)
-}
-
 const LoginPage = ({ isFirstTime = false }) => {
+  const dispatch = useDispatch()
+
   // get query params from url
   const search = new URLSearchParams(window.location.search)
-  const dispatch = useDispatch()
+
+  // password form state
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
 
   // which methods are featured (all others are hidden)
-  const featuredMethods = search.getAll('provider')
+  const featuredProviders = search.getAll('provider')
 
-  // if there are none [] then show all
-  const [shownProviders, setShownProviders] = useState(featuredMethods)
+  // has the user requested to see all login providers?
+  const [showAllProviders, setShowAllProviders] = useState(false)
 
+  // site information
   const [isLoading, setIsLoading] = useState(false)
-
   const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
 
-  // we need to store the redirect in local storage to persist it across auth flows
-  const [redirectQueryParams, setRedirectQueryParams] = useLocalStorage(
-    'auth-redirect-params',
-    null,
-  )
 
-  const allowedParams = ['auth_redirect']
-  // preserve the redirect query params across auth flows
+  // store the current url in local storage to preserve the redirect across auth flows
+
   useEffect(() => {
-    // convert search params to object
-    const searchParams = Array.from(search.entries()).reduce((acc, [key, value]) => {
-      if (allowedParams.includes(key)) {
-        acc[key] = value
-      }
-      return acc
-    }, {})
+    if (window.location.pathname.startsWith('/login')) return
+    console.debug('Storing preferred URL in local storage:', window.location.href)
+    localStorage.setItem('auth-preferred-url', window.location.href)
+  }, [])
 
-    if (isEmpty(searchParams) || isEqual(searchParams, redirectQueryParams)) return
 
-    // store the redirect in local storage
-    setRedirectQueryParams(searchParams)
-  }, [search, setRedirectQueryParams, redirectQueryParams])
+  // Password login handler
 
-  // OAuth2 handler after redirect from provider
-  useEffect(() => {
-    const provider = window.location.pathname.split('/')[2]
-    if (!provider) {
-      return
-    }
-    const qs = new URLSearchParams(window.location.search)
-
-    if (info?.ssoOptions?.length) {
-      window.history.replaceState({}, document.title, window.location.pathname)
-      const providerConfig = info.ssoOptions.find((o) => o.name === provider)
-
-      // if query string is empty, abort
-      if (!qs.toString()) {
-        return
-      }
-
-      // add provider to the query
-      qs.append('ayonProvider', provider)
-
-      if (!providerConfig) {
-        return
-      }
-
-      setIsLoading(true)
-      axios
-        .get(providerConfig.callback, { params: qs })
-        .then((response) => {
-          const data = response.data
-          if (data.user) {
-            // login successful
-            toast.info(data.detail)
-            dispatch(login({ user: data.user, accessToken: data.token }))
-            // invalidate all rtk queries cache
-            dispatch(api.util.resetApiState())
-          } else {
-            toast.error('Unable to login using SSO')
-          }
-        })
-        .catch((err) => {
-          console.error('SSO Callback error', err.response.data)
-          toast.error(
-            <>
-              <p>Unable to login using {providerConfig.name}:</p>
-              <p>{err.response?.data?.detail || `Error ${err.response.status}`}</p>
-            </>,
-          )
-        })
-        .finally(() => {
-          // clear the query string
-          clearQueryParams()
-          // replace with redirect query params
-          if (redirectQueryParams) {
-            const redirect = new URLSearchParams(redirectQueryParams)
-            // clear local storage
-            localStorage.removeItem('auth-redirect-params')
-            window.location.search = redirect.toString()
-          }
-          setIsLoading(false)
-        })
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [info.ssoOptions])
-
-  // Login form
-
-  const doLogin = async () => {
-    axios
-      .post('/api/auth/login', { name, password })
-      .then((response) => {
-        if (response.data.user) {
-          // clear local storage
-          localStorage.removeItem('auth-redirect-params')
-          toast.info(response.data.detail)
-          dispatch(
-            login({
-              user: response.data.user,
-              accessToken: response.data.token,
-            }),
-          )
-          // invalidate all rtk queries cache
-          dispatch(api.util.resetApiState())
-        }
-      })
-      .catch((err) => {
-        toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
-      })
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (!(name && password)) {
       toast.error('Please enter username and password to login')
-    } else {
-      doLogin()
+      return
     }
-  }
+
+    let response = null
+
+    try {
+      response = await axios.post('/api/auth/login', { name, password })
+    } catch (err) {
+      console.error('Login error', err.response?.data || err)
+      toast.error(err.response.data.detail || `Unable to login: Error ${err.response.status}`)
+      return
+    }
+
+    if (!response || !response.data) {
+      console.error('Login error', response)
+      toast.error('Unable to login, check the console for details')
+      return
+    }
+
+    localStorage.removeItem('auth-preferred-url')
+    toast.info(response.data.detail)
+    dispatch(login({ user: response.data.user, accessToken: response.data.token, }))
+    dispatch(api.util.resetApiState())
+  } // handleSubmit
+
+
+
+  const handleSSOCallback = async (ssoOptions) => {
+
+    if (!ssoOptions?.length) {
+      return
+    }
+
+    // First we check if there's a provider name in the URL
+    // And abort if there isn't
+    const provider = window.location.pathname.split('/')[2]
+    if (!provider) return
+    console.debug('handleSSOCallback', provider)
+
+    // If we don't have any SSO options, we can't proceed. Abort
+    if (!ssoOptions?.length && provider !== "_token") return
+
+    // Get the query string from the URL to use in the callback
+    const qs = new URLSearchParams(window.location.search)
+
+    // If the query string is empty, we can't proceed. Abort
+    if (!qs.toString()) return
+
+
+    // Clear the query string from the URL
+    // This is important to avoid confusion with the next login attempts
+    // (we don't want to keep the query string in the URL after login)
+    
+    window.history.replaceState({}, '', window.location.pathname)
+
+
+    // Get the provider config
+    // We need to handle the situation ssoOptions is undefined.
+    // That happens, when user is already logged in
+    // but wants to re-login using a token
+    let providerConfig = (info?.ssoOptions || []).find((o) => o.name === provider)
+    if (provider === "_token") {
+      // special case for token auth
+      // we don't have a providerConfig for this, but we can still proceed
+      providerConfig = {
+        name: 'secure token',
+        callback: '/api/auth/tokenauth',
+      }
+    }
+
+    // No such provider found, abort
+    if (!providerConfig) return
+
+    // add provider to the query
+    // this is used by sso addon to determine which provider to use
+    // for the callback (the all share the same callback URL)
+    qs.append('ayonProvider', provider)
+
+    setIsLoading(true)
+
+    let success = false
+    let response = null
+    let redirectUrl = null
+
+    try {
+      console.debug('SSO Callback', providerConfig.callback)
+      response = await axios.get(providerConfig.callback, { params: qs })
+      success = true
+    } catch (err) {
+      console.error('SSO Callback error', err.response.data)
+      toast.error(
+        <>
+          <p>Unable to login using {providerConfig.name}:</p>
+          <p>{err.response?.data?.detail || `Error ${err.response.status}`}</p>
+        </>,
+      )
+    }
+
+    // If we have a response and it contains user data, we're good to go
+    
+    let user = null
+    let accessToken = null
+
+    if (success && response?.data?.user) {
+      console.debug('SSO Callback response', response.data)
+      const data = response.data
+      toast.info(data.detail || `Logged in as ${data.user.name}`)
+
+      user = data.user
+      accessToken = data.token
+
+      if (data.redirectUrl) {
+        redirectUrl = data.redirectUrl
+      }
+    } else if (success) {
+      // successful request, without user data.
+      // This should not happen, but we handle it gracefully
+      toast.error('Unable to login using SSO')
+      success = false
+    }
+
+
+    if (success) {
+      // Still, we need to figure out where to redirect the user after login
+      // At this point we may have redirect URL from the response, but that 
+      // is optional and used sparsely.
+
+      if ((!redirectUrl) && localStorage.getItem('auth-preferred-url')) {
+        redirectUrl = localStorage.getItem('auth-preferred-url')
+      }
+
+      if (!redirectUrl) {
+        // if we STILL don't have a redirect, just land on the home page
+        redirectUrl = window.location.origin
+      }
+
+      setIsLoading(false)
+      localStorage.removeItem('auth-preferred-url')
+      dispatch(login({ user, accessToken, redirectUrl }))
+      dispatch(api.util.resetApiState())
+
+
+    } else {
+      // we don't want to retry!
+      // Clear everything
+      console.log('SSO Callback failed, clearing auth state')
+      setIsLoading(false)
+      localStorage.removeItem('auth-preferred-url')
+    }
+
+  } // handleSSOCallback
+
+
+  // Handle SSO callback after redirection from SSO provider
+  // (this needs to be called after sso options are loaded)
+
+  useEffect(() => {
+    handleSSOCallback(info.ssoOptions)
+  }, [info.ssoOptions])
+
+
+  //
+  // Render logic (what are we showing?)
+  //
+
+  // Should we show the password login?
+
+  let showPasswordLogin = (
+    showAllProviders
+    || !info?.hidePasswordAuth
+    || (featuredProviders?.length && featuredProviders.includes('password'))
+  ) || null
+
+  // Should we show "Show all login options" button?
+
+  const showAllButton = !showAllProviders && (featuredProviders || !showPasswordLogin)
+
+  // Create SSO buttons based on the available options
+
+  const ssoButtons = useMemo(() => {
+    if (!info.ssoOptions?.length) return null
+
+    return info.ssoOptions
+      .filter(({ name, hidden }) => !hidden && (!featuredProviders?.length || featuredProviders.includes(name) || showAllProviders))
+      .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
+        const queryDict = { ...args }
+        const redirect_uri = `${window.location.origin}/login/${name}`
+        queryDict[redirectKey] = redirect_uri
+
+        const query = new URLSearchParams(queryDict)
+        const fullUrl = `${url}?${query}`
+
+        return (
+          <AuthLink
+            key={name}
+            name={title || name}
+            url={fullUrl}
+            icon={icon}
+            color={color}
+            textColor={textColor}
+          />
+        )
+      })
+  }, [info.ssoOptions, featuredProviders, showAllProviders])
+
+  // Loading state
 
   if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
 
-  const showAllProviders = !shownProviders.length
-  const showPasswordLogin = showAllProviders || shownProviders.includes('password')
+
+  //
+  // Render the login page
+  //
 
   return (
-    <main className="center">
+    <>
+      <DocumentTitle title="Login • AYON" />
+      <main className="center">
       {loginPageBackground && <Styled.BG src={loginPageBackground} />}
       <Styled.LoginForm>
         {(motd || loginPageBrand) && (
@@ -181,8 +280,9 @@ const LoginPage = ({ isFirstTime = false }) => {
         )}
         <Panel>
           <Styled.Ayon src="/AYON.svg" />
+
           <Styled.Methods>
-            {showPasswordLogin && (
+            {showPasswordLogin ? (
               <form onSubmit={handleSubmit}>
                 <label id="username">Username</label>
                 <InputText
@@ -205,41 +305,23 @@ const LoginPage = ({ isFirstTime = false }) => {
                   <span className="label">Login with password</span>
                 </Button>
               </form>
+            ) : (
+                <>
+                {/* we need a margin between the logo and the SSO buttons */}
+                <div style={{ marginBottom: '8px' }} />
+                </>
             )}
 
-            {
-              info.ssoOptions?.length
-                ? info.ssoOptions
-                    .filter(({ name }) => shownProviders.includes(name) || showAllProviders)
-                    .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
-                      const queryDict = { ...args }
-                      const redirect_uri = `${window.location.origin}/login/${name}`
-                      queryDict[redirectKey] = redirect_uri
+            {ssoButtons}
 
-                      const query = new URLSearchParams(queryDict)
-                      const fullUrl = `${url}?${query}`
-
-                      return (
-                        <AuthLink
-                          key={name}
-                          name={title || name}
-                          url={fullUrl}
-                          icon={icon}
-                          color={color}
-                          textColor={textColor}
-                        />
-                      )
-                    })
-                : null // ssoOptions.map
-            }
           </Styled.Methods>
           {info?.passwordRecoveryAvailable && showPasswordLogin && (
             <a href="/passwordReset" style={{ margin: '8px 0' }}>
               Reset password
             </a>
           )}
-          {!showAllProviders && (
-            <Button style={{ width: '100%' }} variant="text" onClick={() => setShownProviders([])}>
+          {showAllButton && (
+            <Button style={{ width: '100%' }} variant="text" onClick={() => setShowAllProviders(true)}>
               Show all login options
             </Button>
           )}
@@ -256,6 +338,7 @@ const LoginPage = ({ isFirstTime = false }) => {
         </Panel>
       </Styled.LoginForm>
     </main>
+    </>
   )
 }
 

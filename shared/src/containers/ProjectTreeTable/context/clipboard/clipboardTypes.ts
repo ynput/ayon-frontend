@@ -12,10 +12,10 @@ export const builtInFieldMappings = {
 export interface ColumnEnums extends BuiltInFieldOptions {
   [attrib: string]: AttributeEnumItem[]
 }
-
+export type PasteMethod = 'replace' | 'merge'
 export interface ClipboardContextType {
   copyToClipboard: (selected?: string[], fullRow?: boolean) => Promise<void>
-  pasteFromClipboard: (selected?: string[]) => Promise<void>
+  pasteFromClipboard: (selected: string[], config?: { method?: PasteMethod }) => Promise<void>
   exportCSV: (selected: string[], projectName: string, fullRow?: boolean) => void
 }
 

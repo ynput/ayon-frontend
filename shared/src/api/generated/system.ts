@@ -255,6 +255,8 @@ export type InfoResponseModel = {
   onboarding?: boolean
   /** If set, the changelog will not be shown to the user */
   disableChangelog?: boolean
+  /** Password authentication will not be shown on the login page */
+  hidePasswordAuth?: boolean
   passwordRecoveryAvailable?: boolean
   user?: UserModel
   attributes?: AttributeModel[]

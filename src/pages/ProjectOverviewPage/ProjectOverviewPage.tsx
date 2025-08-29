@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useCallback, useEffect } from 'react'
+import { FC } from 'react'
 
 // state
 import { useSlicerContext } from '@context/SlicerContext'
@@ -9,30 +9,29 @@ import { useSlicerContext } from '@context/SlicerContext'
 import Slicer from '@containers/Slicer'
 
 // arc
-import { Filter, Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
+import { Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { isEmpty } from 'lodash'
-import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
-import { FilterFieldType, OverviewSettingsChange } from '@shared/components'
+import { FilterFieldType } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   useColumnSettingsContext,
-  useProjectTableContext,
   useSelectedRowsContext,
+  useDetailsPanelEntityContext,
 } from '@shared/containers/ProjectTreeTable'
+import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import { CustomizeButton } from '@shared/components'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useFiltersWithHierarchy } from '@shared/containers'
 import { useAppSelector } from '@state/store'
 import { OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -46,83 +45,60 @@ const ProjectOverviewPage: FC = () => {
   const user = useAppSelector((state) => state.user?.attrib)
   const isDeveloperMode = user?.developerMode ?? false
   const { selectedRows } = useSelectedRowsContext()
+
+  // Try to get the entity context, but it might not exist
+  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
+  try {
+    const entityContext = useDetailsPanelEntityContext()
+    selectedEntity = entityContext.selectedEntity
+  } catch {
+    // Context not available, that's fine
+    selectedEntity = null
+  }
+
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const {
     projectName,
     projectInfo,
-    filters,
-    setFilters,
+    setQueryFilters,
+    displayFilters,
     showHierarchy,
     updateShowHierarchy,
     tasksMap,
-  } = useProjectTableContext()
+  } = useProjectOverviewContext()
 
-  const { groupBy, updateGroupBy } = useColumnSettingsContext()
+  useColumnSettingsContext()
 
   const { isPanelOpen } = useSettingsPanel()
 
   // load slicer remote config
-  const { config, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
-    useSlicerContext()
+  const { config, sliceType, setPersistentRowSelectionData } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
 
-  // filter out by slice
-  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
-    ? null
-    : persistentRowSelectionData
+  const handleFiltersChange = (newQueryFilters: QueryFilter) => {
+    // Update the stored QueryFilter directly
+    setQueryFilters(newQueryFilters)
 
-  const { filter: sliceFilter } = useFilterBySlice()
-
-  const handleFiltersChange = (value: Filter[]) => {
-    // make sure to remove the hierarchy filter from the new value
-    const newValue = value.filter((filter) => filter.id !== 'hierarchy')
-    setFilters(newValue)
-
-    // check if we need to remove the hierarchy filter and clear hierarchy selection
-    if (!value.some((filter) => filter.id === 'hierarchy')) {
+    // check if we need to clear hierarchy selection
+    // This is a simplified check - you might need to implement QueryFilter inspection
+    // to determine if hierarchy filter is present
+    if (
+      !newQueryFilters.conditions?.some(
+        (condition) => 'key' in condition && condition.key === 'hierarchy',
+      )
+    ) {
       setPersistentRowSelectionData({})
     }
   }
 
-  // if the sliceFilter is not hierarchy and hierarchy is not empty
-  // add the hierarchy to the filters as disabled
-  const filtersWithHierarchy = useFiltersWithHierarchy({
-    sliceFilter,
-    persistedHierarchySelection,
-    filters,
-  })
-
-  const handleSettingsChange = useCallback<OverviewSettingsChange>(
-    (setting, value) => {
-      if (setting === 'group-by') {
-        if (value !== undefined && showHierarchy) {
-          // turn hierarchy off
-          updateShowHierarchy(false)
-        }
-      }
-    },
-    [showHierarchy, updateShowHierarchy],
-  )
-
-  // if groupBy is set and showHierarchy is true, turn off hierarchy
-  useEffect(() => {
-    if (groupBy && showHierarchy) {
-      updateShowHierarchy(false)
-    }
-  }, [groupBy, showHierarchy, updateShowHierarchy])
-
-  const handleShowHierarchy = () => {
-    // update hierarchy
-    updateShowHierarchy(!showHierarchy)
-    // remove grouping
-    if (groupBy) {
-      updateGroupBy(undefined)
-    }
-  }
+  const handleShowHierarchy = () => updateShowHierarchy(!showHierarchy)
 
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
+
+  // Check if we should show the details panel
+  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
 
   // select new entities and expand their parents
   const handleNewEntities = (ops: OperationResponseModel[], stayOpen: boolean) => {
@@ -131,7 +107,7 @@ const ProjectOverviewPage: FC = () => {
   }
 
   return (
-    <main style={{ overflow: 'hidden', gap: 4 }}>
+    <main style={{ gap: 4 }}>
       <Splitter
         layout="horizontal"
         style={{ width: '100%', height: '100%' }}
@@ -149,7 +125,7 @@ const ProjectOverviewPage: FC = () => {
               <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
               <OverviewActions />
               <SearchFilterWrapper
-                filters={filtersWithHierarchy}
+                queryFilters={displayFilters}
                 onChange={handleFiltersChange}
                 filterTypes={searchFilterTypes}
                 scope="task"
@@ -190,12 +166,12 @@ const ProjectOverviewPage: FC = () => {
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!selectedRows.length ? 0 : 4}
+                  gutterSize={!shouldShowDetailsPanel ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     <ProjectOverviewTable />
                   </SplitterPanel>
-                  {!!selectedRows.length ? (
+                  {shouldShowDetailsPanel ? (
                     <SplitterPanel
                       size={30}
                       style={{
@@ -220,7 +196,7 @@ const ProjectOverviewPage: FC = () => {
                     zIndex: 500,
                   }}
                 >
-                  <ProjectOverviewSettings onChange={handleSettingsChange} />
+                  <ProjectOverviewSettings />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

@@ -17,7 +17,6 @@ export default function useKeyboardNavigation() {
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
       if (!target?.closest('table')) {
-        console.log('Cell key event: target is not inside a table')
         return
       }
 

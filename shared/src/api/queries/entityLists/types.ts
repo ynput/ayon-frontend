@@ -44,25 +44,24 @@ type ItemNodeData = {
   taskType?: string
   folderType?: string
   productType?: string
+  parentId?: string
+  folderId?: string
   assignees?: string[]
   label?: string
   ownAttrib: string[]
-  // different paths to folder
-  path?: string
+  parents?: string[]
   folder?: {
-    path: string
     folderType: string
   }
   product?: {
-    name: string
+    folderId?: string
     productType: string
     folder: {
-      path: string
       folderType: string
     }
   }
   task?: {
-    name: string
+    folderId?: string
     taskType: string
   }
 }

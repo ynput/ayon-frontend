@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -16,6 +16,7 @@ import {
   Header,
   HeaderGroup,
   RowData,
+  ExpandedState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -48,6 +49,12 @@ import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 
+// EntityPickerDialog import
+import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
+// Move entity hook
+import { useMoveEntities } from './hooks/useMoveEntities'
+import { useProjectDataContext } from '@shared/containers'
+
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
@@ -67,6 +74,9 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
+import { toast } from 'react-toastify'
+import {EntityMoveData} from "../../../../src/features/moveEntity";
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -111,7 +121,7 @@ export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   sliceId: string
-  fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
+  onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
   onOpenNew?: (type: 'folder' | 'task') => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
@@ -130,7 +140,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
 export const ProjectTreeTable = ({
   scope,
   sliceId,
-  fetchMoreOnBottomReached,
+  onScroll,
+  onScrollBottom, // when the user scrolls to the bottom of the table, this callback is called
   onOpenNew,
   readOnly,
   excludedColumns,
@@ -145,13 +156,16 @@ export const ProjectTreeTable = ({
 }: ProjectTreeTableProps) => {
   const {
     columnVisibility,
-    columnVisibilityUpdater,
     columnPinning,
-    columnPinningUpdater,
     columnOrder,
-    columnOrderUpdater,
     columnSizing,
-    columnSizingUpdater,
+    setAllColumns,
+    sorting,
+    sortingOnChange,
+    columnPinningOnChange,
+    columnSizingOnChange,
+    columnVisibilityOnChange,
+    columnOrderOnChange,
     groupBy,
   } = useColumnSettingsContext()
   const isGrouping = !!groupBy
@@ -169,8 +183,6 @@ export const ProjectTreeTable = ({
     projectName,
     updateExpanded,
     toggleExpandAll,
-    sorting,
-    updateSorting,
     showHierarchy,
     fetchNextPage,
     scopes,
@@ -179,7 +191,13 @@ export const ProjectTreeTable = ({
 
   const isLoading = isLoadingProp || isLoadingData
 
-  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
+  const {
+    statuses = [],
+    folderTypes = [],
+    taskTypes = [],
+    tags = [],
+    linkTypes = [],
+  } = projectInfo || {}
   const options: BuiltInFieldOptions = useMemo(
     () =>
       getTableFieldOptions({
@@ -242,9 +260,12 @@ export const ProjectTreeTable = ({
           const { colId, rowId } = parseCellId(cellId) || {}
 
           const entity = getEntityById(rowId || '')
-          if (!entity) continue
+          if (!entity) {
+            console.warn(`Entity with ID ${rowId} not found for cell update.`)
+            continue
+          }
 
-          if (colId?.replace('attrib_', '') === field && rowId) {
+          if ((!colId?.includes('attrib_') || colId?.replace('attrib_', '') === field) && rowId) {
             entitiesToUpdate.push({
               field: field,
               rowId: rowId,
@@ -256,6 +277,13 @@ export const ProjectTreeTable = ({
           }
         }
       }
+
+      if (!entitiesToUpdate.length) {
+        console.warn('No entities to update, skipping updateEntities call.')
+        toast.warn('No entities to update.')
+        return
+      }
+
       await updateEntities(entitiesToUpdate, true)
     },
     [updateEntities, getEntityById, selectedCells],
@@ -268,6 +296,7 @@ export const ProjectTreeTable = ({
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       attribs: columnAttribs,
+      links: linkTypes,
       showHierarchy,
       options,
       extraColumns,
@@ -295,6 +324,12 @@ export const ProjectTreeTable = ({
     return baseColumns
   }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
 
+  // Keep ColumnSettingsProvider's allColumns ref up to date
+  useEffect(() => {
+    const ids = columns.map((c) => c.id!).filter(Boolean)
+    setAllColumns(ids)
+  }, [columns, setAllColumns])
+
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
@@ -315,12 +350,12 @@ export const ProjectTreeTable = ({
     onExpandedChange: updateExpanded,
     // SORTING
     getSortedRowModel: clientSorting ? getSortedRowModel() : undefined,
-    onSortingChange: updateSorting,
+    onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
-    onColumnPinningChange: columnPinningUpdater,
-    onColumnSizingChange: columnSizingUpdater,
-    onColumnVisibilityChange: columnVisibilityUpdater,
-    onColumnOrderChange: columnOrderUpdater,
+    onColumnPinningChange: columnPinningOnChange,
+    onColumnSizingChange: columnSizingOnChange,
+    onColumnVisibilityChange: columnVisibilityOnChange,
+    onColumnOrderChange: columnOrderOnChange,
     // @ts-ignore
     filterFns,
     state: {
@@ -393,6 +428,8 @@ export const ProjectTreeTable = ({
     visibleColumns,
     tableContainerRef,
     columnPinning,
+    columnSizing,
+    columnOrder,
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
@@ -412,6 +449,57 @@ export const ProjectTreeTable = ({
     return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
   }, [dndActiveId, tableData, sortableRows])
 
+  const combinedScrollHandler: UIEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      // Call the original onScroll if provided
+      onScroll?.(e)
+
+      if (onScrollBottom) {
+        const containerRefElement = e.currentTarget
+        if (containerRefElement && !showHierarchy && !groupBy) {
+          const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+          //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+          if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
+            onScrollBottom(e)
+          }
+        }
+      }
+    },
+    [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
+  )
+
+  const { projectName: contextProjectName } = useProjectDataContext()
+
+  // Get move entity functions for the dialog
+  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, movingEntities, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } = useMoveEntities({
+    projectName: contextProjectName || projectName || ''
+  })
+
+  const handleMoveSubmitWithExpand = (selection: string[]) => {
+    handleMoveSubmit(selection);
+    const folderIdToExpand = selection[0];
+
+    updateExpanded((prevExpanded: ExpandedState) => {
+
+      if (typeof prevExpanded === 'boolean') {
+
+        if (prevExpanded) {
+          return prevExpanded;
+        }
+        return { [folderIdToExpand]: true };
+      }
+
+      if (prevExpanded[folderIdToExpand]) {
+        return prevExpanded;
+      }
+
+      return {
+        ...prevExpanded,
+        [folderIdToExpand]: true,
+      };
+    });
+  };
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -422,7 +510,7 @@ export const ProjectTreeTable = ({
         <Styled.TableContainer
           ref={tableContainerRef}
           style={{ height: '100%', padding: 0 }}
-          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+          onScroll={combinedScrollHandler}
           {...pt?.container}
           className={clsx('table-container', pt?.container?.className)}
         >
@@ -462,6 +550,19 @@ export const ProjectTreeTable = ({
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>
+      {/* Render EntityPickerDialog alongside table content */}
+      {isEntityPickerOpen && projectName && movingEntities?.entities && movingEntities.entities.length > 0 && (
+        <EntityPickerDialog
+          projectName={projectName}
+          entityType="folder"
+          onSubmit={handleMoveSubmitWithExpand}
+          onClose={closeMoveDialog}
+          showMoveToRoot={movingEntities.entities.every((entity: EntityMoveData) => entity.entityType === 'folder')}
+          onMoveToRoot={handleMoveToRoot}
+          disabledIds={getDisabledFolderIds()}
+          getDisabledMessage={getDisabledMessage}
+        />
+      )}
     </ClipboardProvider>
   )
 
@@ -784,7 +885,11 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+
+
+  const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
+
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -1037,7 +1142,7 @@ const TableCell = ({
 
   const { isRowSelected } = useSelectedRowsContext()
 
-  const { isEditing } = useCellEditing()
+  const { isEditing, setEditingCellId } = useCellEditing()
 
   const borderClasses = getCellBorderClasses(cellId)
 
@@ -1078,19 +1183,21 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // if selection options from a dropdown skip
-        if (target.closest('.options')) return
-
-        // if selecting dropdown expand icon, make sure it is selected ()
-        if (target.closest('.expand')) {
+        // if we are clicking on an edit trigger, we need to start editing
+        if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
           if (!isCellSelected(cellId)) {
-            // select
+            // if the cell is not selected, select it and deselect all others
             selectCell(cellId, false, false)
-            // focus
             focusCell(cellId)
           }
+          // start editing the cell
+          setEditingCellId(cellId)
+
           return
         }
+
+        // check we are not clicking in a dropdown
+        if (target.closest('.options')) return
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()

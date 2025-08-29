@@ -22,6 +22,7 @@ export const TR = styled.tr`
 
   &:hover {
     // When the row (TR) is hovered...
+
     // Target the button inside the drag handle cell to make it visible at 50% opacity.
     // This uses a more specific selector by including 'td' to ensure it correctly targets the cell.
     td.${DRAG_HANDLE_CLASS} button {
@@ -146,6 +147,8 @@ export const HeaderButtons = styled.div`
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
+  background-color: var(--md-sys-color-surface-container-lowest);
+  padding-left: 4px;
 `
 
 type TableCellProps = {
@@ -184,6 +187,18 @@ export const TableCell = styled.td<TableCellProps>`
 
   &.selected-row {
     background-color: var(--md-sys-color-surface-container-high);
+  }
+
+  /* show hover effect only if direct child div does NOT have .readonly */
+  &:not(:has(> div.readonly)) {
+    cursor: pointer;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container);
+    }
+
+    .selected {
+      background-color: var(--md-sys-color-secondary-container);
+    }
   }
 
   &.selected {
@@ -374,5 +389,15 @@ export const TableContainer = styled.div`
     height: 34px;
     padding: 1px 0px;
     width: 100%;
+  }
+`
+
+export const LinkColumnHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  .icon {
+    font-size: 18px;
+    color: var(--md-sys-color-outline);
   }
 `

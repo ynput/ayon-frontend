@@ -72,15 +72,6 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     const dropdownRef = useRef<DropdownRef>(null)
 
-    const handleClosedClick = (e: React.MouseEvent<HTMLSpanElement>) => {
-      // if we click on the chevron icon, then we open the dropdown spright away (put it into editing mode)
-      if (e.target instanceof HTMLElement && e.target.closest('.expand') && onOpen && !isReadOnly) {
-        onOpen()
-        // stop the event from propagating to the parent element because a single click on the cell would close the dropdown
-        e.stopPropagation()
-      }
-    }
-
     const [dropdownOpen, setDropdownOpen] = useState(false)
     useEffect(() => {
       if (isEditing && dropdownRef.current && autoOpen) {
@@ -165,7 +156,6 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       <EnumCellValue
         selectedOptions={selectedOptions}
         hasMultipleValues={hasMultipleValues}
-        onClick={handleClosedClick}
         isMultiSelect={isMultiSelect}
         isReadOnly={isReadOnly}
         {...pt?.template}

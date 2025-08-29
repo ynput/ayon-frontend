@@ -89,8 +89,11 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         origin: window.location.origin,
         serverVersion: serverVersion,
         frontendVersion: frontendVersion,
+        instanceId: connect?.instanceId,
       },
     }
+
+    console.log(identifyData)
 
     const win = window as any
     win.Featurebase('identify', identifyData, (err: any) => {

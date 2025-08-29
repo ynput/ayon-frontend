@@ -17,7 +17,6 @@ import './styles/index.scss'
 
 import short from 'short-uuid'
 import { SocketProvider } from '@context/WebsocketContext'
-import { FeedbackProvider } from '@shared/components'
 
 // generate unique session id
 declare global {
@@ -57,9 +56,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <ReduxProvider store={store}>
       <SocketProvider>
         <div id="root-header" />
-        <FeedbackProvider>
-          <App />
-        </FeedbackProvider>
+        <App />
         <ToastContainer
           position="bottom-right"
           transition={Flip}

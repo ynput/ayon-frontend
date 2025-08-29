@@ -1,10 +1,15 @@
 import { EntityGroup, QueryTasksFoldersApiArg } from '@shared/api'
 import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap } from '.'
 import { ProjectDataContextProps } from '../context'
-import { Filter } from '@ynput/ayon-react-components'
-import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
+import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { ContextMenuItemConstructors, ProjectTableModulesType } from '../hooks'
 import { ReactNode } from 'react'
+import { QueryFilter } from './operations'
+
+interface EntityMoveData {
+  entityId: string
+  entityType: 'folder'
+}
 
 export interface ProjectOverviewProviderProps {
   children: ReactNode
@@ -36,14 +41,17 @@ export interface ProjectOverviewContextType {
   // Grouping data
   taskGroups: EntityGroup[]
 
-  // Filters
-  filters: Filter[]
-  setFilters: (filters: Filter[]) => void
+  // Query Filters
   queryFilters: {
     filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
     filterString?: string
     search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
   }
+  setQueryFilters: (queryFilters: QueryFilter) => void
+
+  // Dual filtering system
+  combinedFilters: QueryFilter // For data fetching (includes slice filters)
+  displayFilters: QueryFilter // For SearchFilterWrapper (excludes slice filters, except hierarchy)
 
   // Hierarchy
   showHierarchy: boolean
@@ -56,10 +64,9 @@ export interface ProjectOverviewContextType {
   updateExpanded: OnChangeFn<ExpandedState>
   setExpanded: (expanded: ExpandedState) => void
 
-  // Sorting
-  sorting: SortingState
-  updateSorting: OnChangeFn<SortingState>
-
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
+
+  // move dialog
+  openMoveDialog?: (entityData: EntityMoveData) => void
 }

@@ -27,7 +27,7 @@ const BundleDepPackage = ({ children, label, onEdit }) => {
         onClick={onEdit}
         data-tooltip={children ? 'Edit dependency package' : 'Add dependency package'}
       />
-      <span>
+      <span data-tooltip={children || '(NONE)'}>
         {children || '(NONE)'}
         {/* <span> (author)</span> */}
       </span>
