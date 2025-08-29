@@ -6,7 +6,7 @@ import styled from 'styled-components'
 const ActionButton = styled(Button)`
   &.action {
     padding: 0px;
-    display: none;
+    display: flex;
     background-color: unset;
   }
 
