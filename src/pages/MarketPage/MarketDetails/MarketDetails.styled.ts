@@ -45,7 +45,7 @@ export const Right = styled.div`
   gap: var(--base-gap-large);
   flex: 1;
   max-width: 300px;
-  min-width: 200px;
+  min-width: 250px;
 
   & > button {
     width: 100%;
