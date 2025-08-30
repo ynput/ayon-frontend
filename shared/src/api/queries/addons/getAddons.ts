@@ -36,18 +36,6 @@ const getAddonsApi = enhancedApi.injectEndpoints({
           })
         }
 
-        const mockReportAddon = {
-          name: 'report',
-          title: 'Report',
-          version: '0.1.0-dev',
-          settings: {
-            sidebar: false,
-            admin: false,
-            manager: false,
-          },
-        }
-        result.push(mockReportAddon)
-
         return result
       },
     }),

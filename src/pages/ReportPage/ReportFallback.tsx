@@ -13,7 +13,7 @@ interface ReportFallbackProps extends RemoteAddonProjectProps {
 }
 
 const ReportFallback: FC<ReportFallbackProps> = ({}) => {
-  return <div>Install reports and insights now!</div>
+  return <div>Install reports and insights addon!</div>
 }
 
 export default ReportFallback

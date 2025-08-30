@@ -20,7 +20,7 @@ type RemoteModulesContextType = {
 }
 
 const RemoteModulesContext = createContext<RemoteModulesContextType>({
-  isLoading: false,
+  isLoading: true,
   modules: [],
   remotesInitialized: false,
 })
@@ -35,6 +35,8 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   const { data: addonRemoteModules = [], isLoading } = useListFrontendModulesQuery(undefined, {
     skip,
   })
+
+
 
   const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery(
     { full: true },
@@ -69,19 +71,15 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
       })
     })
 
-    console.log('registerAddonRemotes', allRemotes)
-    registerRemotes(
-      allRemotes.map((r) => ({
-        name: r.remote,
-        alias: r.remote,
-        entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
-          r.remote
-        }/remoteEntry.js?server=${info?.releaseInfo?.version || info?.releaseInfo}-${
-          info?.releaseInfo?.buildDate
-        }-${new Date().getTime()}`,
-        type: 'module',
-      })),
-    )
+    const remoteConfigs = allRemotes.map((r) => ({
+      name: r.remote,
+      alias: r.remote,
+      entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
+        r.remote
+      }/remoteEntry.js`,
+      type: 'module',
+    }))
+    registerRemotes(remoteConfigs)
 
     setRemotesInitialized(true)
   }, [addonRemoteModules, isLoading, isLoadingInfo, remotesInitialized])
@@ -101,7 +99,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
 
 export const useRemoteModules = () => {
   const context = useContext(RemoteModulesContext)
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useRemoteModules must be used within a RemoteModulesProvider')
   }
   return context

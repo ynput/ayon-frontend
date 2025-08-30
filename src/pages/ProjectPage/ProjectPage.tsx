@@ -12,6 +12,8 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
+
+
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
@@ -31,6 +33,7 @@ import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from "@components/HelpButton/HelpButton.tsx"
+import ReportPage from '@pages/ReportPage/ReportPage'
 
 type NavLink = {
   name?: string
@@ -70,7 +73,7 @@ const ProjectPage = () => {
 
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
-  const isExternal = useAppSelector((state) => state.user.data.isExternal)
+  const isExternal = useAppSelector((state) => (state.user.data as any)?.isExternal || false)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -92,7 +95,7 @@ const ProjectPage = () => {
 
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
-    addons: ['review', 'planner'],
+    addons: ['review', 'planner', 'report'],
   })
 
   useEffect(() => {
@@ -121,6 +124,8 @@ const ProjectPage = () => {
     remotePages: RemoteAddonProject[]
     isLoading: boolean
   }
+
+  console.log('matchedAddons', matchedAddons)
 
   // get remote project module pages
   const links: NavLink[] = useMemo(
@@ -157,6 +162,7 @@ const ProjectPage = () => {
         module: 'reviews',
         viewType: 'reviews',
       },
+      
       {
         name: 'Scheduler',
         path: `/projects/${projectName}/scheduler`,
@@ -164,20 +170,34 @@ const ProjectPage = () => {
         enabled: matchedAddons?.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
       },
       {
+        name: 'Report',
+        path: `/projects/${projectName}/report`,
+        module: 'report',
+      },
+      {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
         module: 'workfiles',
         uriSync: true,
       },
-      ...remotePages.map((remote) => ({
-        name: remote.name,
-        module: remote.module,
-        path: `/projects/${projectName}/${remote.module}`,
-      })),
+      ...remotePages
+        .map((remote) => ({
+          name: remote.name,
+          module: remote.module,
+          path: `/projects/${projectName}/${remote.module}`,
+        })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
           if (addon.settings.manager && !isManager) return false
+          if (addon.name === 'report') return false
+          // Filter out addons that are already handled by Module Federation
+          const isHandledByModuleFederation = remotePages.some(remote => 
+            remote.module === addon.name || 
+            remote.name === addon.title ||
+            remote.module === addon.title
+          )
+          if (isHandledByModuleFederation) return false
           return true
         })
         .map((addon) => ({
@@ -227,7 +247,13 @@ const ProjectPage = () => {
   }
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
-    console.log('module', module, 'xxxx', addonName);
+    console.log('module', module, 'addonName', addonName);
+
+    // // Handle report module as an addon
+    // if (module === 'report') {
+    //   addonName = 'report'
+    // }
+
     if (module === 'overview') {
       return <ProjectOverviewPage />
     }
@@ -255,21 +281,10 @@ const ProjectPage = () => {
     if (module === 'scheduler') {
       return <SchedulerPage />
     }
-
-
-
-    const foundAddon = addonsData?.find((item) => item.name === addonName)
-    if (foundAddon) {
-      return (
-        <ProjectAddon
-          addonName={addonName}
-          addonVersion={foundAddon.version}
-          sidebar={foundAddon.settings.sidebar}
-          addonTitle={foundAddon.title}
-        />
-      )
+    if (module === 'report') {
+      return <ReportPage />
     }
-
+    // Check if this module is handled by Module Federation first
     const foundRemotePage = remotePages.find((item) => item.module === module)
     if (foundRemotePage) {
       const RemotePage = foundRemotePage.component
@@ -279,6 +294,19 @@ const ProjectPage = () => {
             ...{ useParams, useNavigate, useLocation, useSearchParams },
           }}
           projectName={projectName}
+        />
+      )
+    }
+
+    // Handle addon-specific routes (iframe approach for non-Module Federation addons)
+    const foundAddon = addonsData?.find((item) => item.name === addonName)
+    if (foundAddon) {
+      return (
+        <ProjectAddon
+          addonName={addonName}
+          addonVersion={foundAddon.version}
+          sidebar={foundAddon.settings.sidebar}
+          addonTitle={foundAddon.title}
         />
       )
     }
