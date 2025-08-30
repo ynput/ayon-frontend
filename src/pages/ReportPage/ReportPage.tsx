@@ -28,7 +28,8 @@ const ReportPage: FC<ReportPageProps> = ({}) => {
     remote: 'report',
     module: 'Report',
     fallback: ReportFallback,
-    minVersion: '0.1.0',
+    minVersion: '0.1.0-dev',
+    loadCSS: true, // Automatically load CSS for the report addon
   })
 
   if (outdated) {

@@ -3,6 +3,7 @@ import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
 import { usePowerpack } from '@shared/context'
+import { loadRemoteCSS } from '@shared/utils/loadRemoteCSS'
 
 interface Props<T> {
   addon: string
@@ -12,6 +13,7 @@ interface Props<T> {
   debug?: boolean
   minVersion?: string // minimum version required for this module
   skip?: boolean // skip loading if module is provided externally
+  loadCSS?: boolean // automatically load CSS for the remote module
 }
 
 export const useLoadModule = <T>({
@@ -21,6 +23,7 @@ export const useLoadModule = <T>({
   fallback,
   minVersion,
   skip = false,
+  loadCSS = false,
 }: Props<T>): [
   T,
   { isLoaded: boolean; isLoading: boolean; outdated?: { current: string; required: string } },
@@ -30,8 +33,12 @@ export const useLoadModule = <T>({
   const [isLoaded, setIsLoaded] = useState<string | boolean>(false)
   const [isOutdated, setIsOutdated] = useState(false)
   const loadedRemote = useRef<T>(fallback)
+  const hasAttemptedLoad = useRef(false)
 
   useEffect(() => {
+    // Reset attempt flag when dependencies change
+    hasAttemptedLoad.current = false
+
     // skip loading if module is provided externally
     if (skip) {
       setIsLoading(false)
@@ -82,24 +89,33 @@ export const useLoadModule = <T>({
     }
 
     // check if module is already loaded
-    if (isLoaded === module) {
+    if (isLoaded === module || hasAttemptedLoad.current) {
       setIsLoading(false)
       return
     }
+    hasAttemptedLoad.current = true
     loadRemote<{ default: T }>(`${remote}/${module}`, {
       from: 'runtime',
     })
-      .then((remote) => {
-        console.log('loaded remote', module)
+      .then((loadedModule) => {
         setIsLoaded(module)
         setIsLoading(false)
-        if (remote) loadedRemote.current = remote.default
+        if (loadedModule) loadedRemote.current = loadedModule.default
+
+        if (loadCSS) {
+          loadRemoteCSS(addon, initializedRemote.addonVersion, remote)
+        }
       })
       .catch((e) => {
         setIsLoading(false)
         console.error('error loading remote', remote, module, e)
+        // Fallback to fallback component if available
+        if (fallback) {
+          loadedRemote.current = fallback
+          setIsLoaded(module) // Mark as loaded when using fallback
+        }
       })
-  }, [isLoaded, remotesInitialized, modules, addon, remote, module, minVersion, skip])
+  }, [remotesInitialized, modules, addon, remote, module, minVersion, skip, loadCSS])
 
   return [
     loadedRemote.current,
