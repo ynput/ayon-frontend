@@ -119,7 +119,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
         subType: task.taskType || null,
         attrib: task.attrib,
         ownAttrib: task.ownAttrib,
-        path: task.folder?.path,
+        parents: task.parents || [],
         updatedAt: task.updatedAt,
         links: linksToTableData(task.links, 'task', {
           folderTypes: project?.folderTypes || [],
