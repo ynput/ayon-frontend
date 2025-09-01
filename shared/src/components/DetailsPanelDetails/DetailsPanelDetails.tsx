@@ -30,7 +30,6 @@ export type DetailsPanelDetailsProps = {
 }
 
 export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDetailsProps) => {
-  // Use custom hooks to manage state and logic
   const { formData, mixedFields, updateFormData, clearMixedField } = useEntityFormData(
     entities,
     isLoading,
@@ -56,18 +55,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     entityType,
   })
 
-  // Debug logging to help identify the issue
-  console.log('DetailsPanelDetails Debug:', {
-    entityType,
-    mixedFields,
-    enableEditing,
-    entitiesCount: entities.length,
-    formData: formData ? { entityType: formData.entityType, projectName: formData.projectName } : null
-  })
-
   const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
-    console.log('handleChange called:', { key, value, enableEditing })
-    
     if (key.startsWith('attrib.')) {
       value = {
         [key.replace('attrib.', '')]: value,

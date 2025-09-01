@@ -246,13 +246,11 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
 
   const conditionalFormats = useQuillFormats({ feedContext, projectName })
 
-  // Combine keyboard handlers
   const handleCombinedKeyDown = (e: React.KeyboardEvent) => {
     handleMentionKeyDown(e)
     handleKeyDown(e)
   }
 
-  // Combine change handlers
   const handleCombinedChange = (content: string, delta: any, source: any, editor: any) => {
     handleMentionChange(content, delta, source, editor)
   }

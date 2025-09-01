@@ -15,7 +15,7 @@ interface FeedContextWrapperProps {
   isMultiProjects: boolean
   readOnly: boolean
   statuses: Status[]
-  scope: string
+  scope?: string
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
@@ -37,8 +37,8 @@ const FeedContextWrapper: FC<FeedContextWrapperProps> = ({
 
   const { user } = useDetailsPanelContext()
 
-  const userName = user.name || ''
-  const userFullName = user.attrib?.fullName || ''
+  const userName = user?.name ?? ''
+  const userFullName = user?.attrib?.fullName ?? ''
 
   const [editingId, setEditingId] = useState<EditingState>(null)
 

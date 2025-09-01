@@ -61,10 +61,11 @@ export interface TextWidgetProps
   value: string
   option?: AttributeEnumItem
   isInherited?: boolean
+  type?: TextWidgetType
 }
 
 export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
-  ({ value, option, isEditing, isInherited, onChange, onCancelEdit, style, ...props }, ref) => {
+  ({ value, option, isEditing, isInherited, onChange, onCancelEdit, style, type, ...props }, ref) => {
     const handleLinkClick = useCallback((e: React.MouseEvent, url: string) => {
       e.stopPropagation()
       window.open(url, '_blank', 'noopener,noreferrer')
@@ -72,7 +73,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     if (isEditing) {
       return (
-        <TextWidgetInput value={value} onChange={onChange} onCancel={onCancelEdit} type={'text'} />
+        <TextWidgetInput value={value} onChange={onChange} onCancel={onCancelEdit} type={type || 'string'} />
       )
     }
 
