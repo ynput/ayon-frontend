@@ -24,11 +24,21 @@ export const useDescriptionEditor = ({
   // Convert markdown to HTML for the editor
   const convertMarkdownToHtml = (markdown: string): string => {
     if (!markdown) return ''
-    return markdown
+
+    // 1) Escape HTML to avoid injection
+    const esc = markdown
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+
+    // 2) Lightweight markdown handling (still limited)
+    return esc
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code>$1</code>')
       .replace(/\n/g, '<br>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
   }
 
   useEffect(() => {
@@ -39,7 +49,6 @@ export const useDescriptionEditor = ({
   }, [description, isEditing])
 
   const handleStartEditing = () => {
-    console.log('handleStartEditing called:', { enableEditing, isMixed })
     if (enableEditing && !isMixed) {
       setIsEditing(true)
       const html = convertMarkdownToHtml(description)

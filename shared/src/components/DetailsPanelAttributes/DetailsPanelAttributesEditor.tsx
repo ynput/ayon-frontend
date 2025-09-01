@@ -115,8 +115,6 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   const [editingField, setEditingField] = useState<string | null>(null)
 
   const handleStartEditing = (fieldName: string) => {
-    console.log('handleStartEditing called:', { fieldName, enableEditing, fields: fields.find((field) => field.name === fieldName) })
-    
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {
       setEditingField(fieldName)
     } else {
@@ -125,13 +123,11 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   }
 
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
-    console.log('handleValueChange called:', { fieldName, value })
     setEditingField(null)
     onChange?.(fieldName, value)
   }
 
   const handleCancelEdit = () => {
-    console.log('handleCancelEdit called')
     setEditingField(null)
   }
 
@@ -166,7 +162,6 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
                 onClick={(e) => {
-                  console.log('FieldValue clicked:', { fieldName: field.name, isEditing, isReadOnly, enableEditing })
                   e.preventDefault()
                   e.stopPropagation()
                   if (!isEditing && !isReadOnly) {
@@ -189,7 +184,6 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                 variant="text"
                 icon="content_copy"
                 onClick={(e) => {
-                  console.log('Copy button clicked for field:', field.name)
                   e.preventDefault()
                   e.stopPropagation()
                   const valueToDisplay =

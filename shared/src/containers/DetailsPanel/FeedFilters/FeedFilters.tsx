@@ -85,8 +85,8 @@ const FeedFilters = ({
         />
       )}
       <Button
-        onClick={() => onTabChange('attribs')}
-        selected={currentTab === 'attribs'}
+        onClick={() => onTabChange('details')}
+        selected={currentTab === 'details'}
         style={{ padding: '6px 8px' }}
       >
         Details

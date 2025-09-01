@@ -125,6 +125,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           <TextWidget
             value={displayValue.toString()}
             onCancelEdit={onCancelEdit}
+            type={type as 'string' | 'integer' | 'float'}
             {...widgetCommonProps}
           />
         </FieldValueText>

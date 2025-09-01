@@ -78,10 +78,10 @@ export const DetailsPanel = ({
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
-  // Force attribs tab for specific entity types
+  // Force details tab for specific entity types
   useEffect(() => {
-    if (entitiesWithoutFeed.includes(entityType) && currentTab !== 'attribs') {
-      setTab('attribs')
+    if (entitiesWithoutFeed.includes(entityType) && currentTab !== 'details') {
+      setTab('details')
     }
   }, [entityType, currentTab, setTab])
 
@@ -282,7 +282,7 @@ export const DetailsPanel = ({
             isLoadingVersion={isFetchingEntitiesDetails}
           />
         )}
-        {currentTab === 'attribs' && (
+        {currentTab === 'details' && (
           <FeedContextWrapper
             entityType={entityType}
             entities={entityDetailsData}

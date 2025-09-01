@@ -52,7 +52,7 @@ export const useMentionSystem = ({
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
 
   // Sort mention types by length (longest first) for proper matching
-  mentionTypes.sort((a, b) => b.length - a.length)
+  const sortedMentionTypes = mentionTypes.toSorted((a, b) => b.length - a.length)
 
   const mentionOptions = useMemo(() => {
     if (!feedContext || !mentionUsers || !mentionVersions || !mentionTasks) {
@@ -80,10 +80,7 @@ export const useMentionSystem = ({
 
   const shownMentionOptions = mentionOptions.slice(0, 5)
 
-  // Initialize mention link if project name is available
-  if (projectName) {
-    useMentionLink({ projectName })
-  }
+  useMentionLink({ projectName: projectName ?? '' })
 
   // Reset mention state when editing stops
   useEffect(() => {
@@ -103,8 +100,7 @@ export const useMentionSystem = ({
     const typePrefix = mention.type
     const search = typePrefix + (mention.search || '')
     const mentionLabel = typePrefix + selectedOption.label
-    // @ts-expect-error
-    const type = mentionTypeOptions[typePrefix]
+    const type = mentionTypeOptions[typePrefix as keyof typeof mentionTypeOptions]
     const href = `${type?.id}:${selectedOption.id}`
 
     const selection = quill.getSelection(true)
@@ -194,10 +190,7 @@ export const useMentionSystem = ({
     const selectedOption = mentionOptions[mentionSelectedIndex]
 
     if (mention && tabOrEnter && selectedOption) {
-      const retain = (delta.ops[0] && delta.ops[0].retain) || 0
-
-      // @ts-ignore
-      handleSelectMention(selectedOption, retain)
+      handleSelectMention(selectedOption)
 
       return
     }
@@ -210,7 +203,7 @@ export const useMentionSystem = ({
       currentCharacter = editor.getText(delta.ops[0].retain - 1, 1)
     }
 
-    const isMention = currentCharacter && mentionTypes.includes(currentCharacter)
+    const isMention = currentCharacter && sortedMentionTypes.includes(currentCharacter)
 
     if (isMention) {
       const mentionIndex = delta.ops.findIndex((op: any) => 'insert' in op || 'delete' in op)
@@ -231,7 +224,7 @@ export const useMentionSystem = ({
 
       let mentionMatch = null
 
-      for (const chars of mentionTypes) {
+      for (const chars of sortedMentionTypes) {
         let isMatch = true
         if (chars.endsWith(mentionChar)) {
           for (let i = chars.length - 1; i >= 0; i--) {
@@ -270,7 +263,7 @@ export const useMentionSystem = ({
           currentCharacter === ' ' ||
           !retain ||
           !currentCharacter ||
-          !mentionTypes.includes(currentCharacter)
+          !sortedMentionTypes.includes(currentCharacter)
         ) {
           setMention(null)
           setMentionSelectedIndex(0)
@@ -316,7 +309,7 @@ export const useMentionSystem = ({
     mention,
     mentionSelectedIndex,
     mentionOptions: shownMentionOptions,
-    mentionTypes,
+    mentionTypes: sortedMentionTypes,
     mentionTypeOptions,
     handleSelectMention,
     handleMentionButton,
