@@ -34,6 +34,7 @@ export default function useKeyboardNavigation() {
       // allow keyboard and up and down only if the player is open
       if (playerOpen && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
 
+      // Don't handle keyboard events if we are currently editing a cell
       if (editingCellId) return
 
       // Don't handle keyboard events if we don't have a focused cell
