@@ -21,7 +21,6 @@ import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
-import useLoadRemoteProjectPages from '../../remote/useLoadRemotePages'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
@@ -34,6 +33,7 @@ import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from "@components/HelpButton/HelpButton.tsx"
 import ReportPage from '@pages/ReportPage/ReportPage'
+import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 
 type NavLink = {
   name?: string
@@ -116,7 +116,7 @@ const ProjectPage = () => {
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
-  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages({
+  const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     // fallbacks: permanentAddons,
     moduleKey: 'Project',
     skip: !projectName || !addonsData || addonsLoading || isLoading,
@@ -162,7 +162,6 @@ const ProjectPage = () => {
         module: 'reviews',
         viewType: 'reviews',
       },
-      
       {
         name: 'Scheduler',
         path: `/projects/${projectName}/scheduler`,
@@ -173,6 +172,7 @@ const ProjectPage = () => {
         name: 'Report',
         path: `/projects/${projectName}/report`,
         module: 'report',
+        viewType: 'report',
       },
       {
         name: 'Workfiles',

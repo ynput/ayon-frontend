@@ -25,7 +25,7 @@ const useLoadRemotePages = ({ fallbacks, moduleKey, skip = false }: ProjectRemot
             remote,
             module,
             fallback: fallbacks?.get(module)?.component,
-            loadCSS: true, // Automatically load CSS for remote modules
+            loadCSS: true,
           }
           pageModules.push(moduleSpec)
         }

@@ -1,17 +1,28 @@
 import { useLoadModule } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import ReportFallback from './ReportFallback'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useReportViewSettings } from '@shared/containers/Views'
 
 interface ReportPageProps {}
 
 const ReportPage: FC<ReportPageProps> = ({}) => {
   const projectName = (useAppSelector((state) => state.project.name) as null | string) || ''
+
+  // Get view settings from the Views system
+  const {
+    rowSelection: viewRowSelection,
+    onUpdateRowSelection,
+    expanded: viewExpanded,
+    onUpdateExpanded,
+    persistentRowSelectionData: viewPersistentData,
+    onUpdatePersistentRowSelectionData,
+  } = useReportViewSettings()
 
   // load slicer remote config
   const {
@@ -20,8 +31,44 @@ const ReportPage: FC<ReportPageProps> = ({}) => {
     persistentRowSelectionData,
     setPersistentRowSelectionData,
     rowSelectionData,
+    rowSelection,
+    setRowSelection,
+    expanded,
+    setExpanded,
   } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
+
+  // Sync view settings with slicer context on mount and when view settings change
+  useEffect(() => {
+    if (viewRowSelection && Object.keys(viewRowSelection).length > 0) {
+      setRowSelection(viewRowSelection)
+    }
+    if (viewExpanded && Object.keys(viewExpanded).length > 0) {
+      setExpanded(viewExpanded)
+    }
+    if (viewPersistentData && Object.keys(viewPersistentData).length > 0) {
+      setPersistentRowSelectionData(viewPersistentData)
+    }
+  }, [viewRowSelection, viewExpanded, viewPersistentData, setRowSelection, setExpanded, setPersistentRowSelectionData])
+
+  // Update view settings when slicer context changes
+  useEffect(() => {
+    if (rowSelection && Object.keys(rowSelection).length > 0) {
+      onUpdateRowSelection(rowSelection)
+    }
+  }, [rowSelection, onUpdateRowSelection])
+
+  useEffect(() => {
+    if (expanded && Object.keys(expanded).length > 0) {
+      onUpdateExpanded(expanded)
+    }
+  }, [expanded, onUpdateExpanded])
+
+  useEffect(() => {
+    if (persistentRowSelectionData && Object.keys(persistentRowSelectionData).length > 0) {
+      onUpdatePersistentRowSelectionData(persistentRowSelectionData)
+    }
+  }, [persistentRowSelectionData, onUpdatePersistentRowSelectionData])
 
   const [Report, { isLoaded, outdated }] = useLoadModule({
     addon: 'report',
