@@ -1,4 +1,4 @@
-import { Filter, FilterValue } from '@ynput/ayon-react-components'
+import { Filter, FilterValue, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { QueryFilter, QueryCondition } from '../types/operations'
 
 // Option interface for filter options (from useBuildFilterOptions)
@@ -58,6 +58,18 @@ const convertConditionToFilter = (
   processedConditions: Set<string>,
 ): Filter | null => {
   const { key, value, operator } = condition
+
+  // check if the filter is a text search filter
+  if (key === SEARCH_FILTER_ID) {
+    const filter: Filter = {
+      id: SEARCH_FILTER_ID,
+      type: 'string',
+      label: '',
+      values: (value as string[]).map((v) => ({ id: v, label: v })),
+    }
+
+    return filter
+  }
 
   // Find the matching filter option
   const filterOption = findFilterOption(key, filterOptions)
