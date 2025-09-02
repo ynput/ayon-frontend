@@ -84,7 +84,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     // when the dropdown is open, focus the first item
     useEffect(() => {
-      if (dropdownOpen) {
+      if (dropdownOpen && !dropdownProps.search) {
         const optionsUlEl = dropdownRef.current?.getOptions() as HTMLUListElement
         const firstItem = optionsUlEl?.querySelector('li')
         if (firstItem) {
@@ -93,7 +93,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           firstItem.style.outline = 'none'
         }
       }
-    }, [dropdownOpen])
+    }, [dropdownOpen, dropdownProps.search])
 
     const isMultiSelect = !!type?.includes('list')
 
