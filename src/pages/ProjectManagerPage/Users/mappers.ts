@@ -1,5 +1,5 @@
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
+import { Filter, FilterValue, Option } from '@ynput/ayon-react-components'
 import { ProjectNode, UserNode } from '@shared/api'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
