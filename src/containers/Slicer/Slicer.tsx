@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
@@ -39,6 +39,14 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
     setRowSelection(s)
     onRowSelectionChange?.(s, sliceMap)
   }
+
+  // on first mount, check that current sliceType is in sliceFields, if not, change to first option
+  useEffect(() => {
+    const isAttribute = sliceType.startsWith('attrib.')
+    if (!sliceFields.includes(sliceType) && !(isAttribute && sliceFields.includes('attributes'))) {
+      handleSliceTypeChange(sliceFields[0], false, false)
+    }
+  }, [])
 
   return (
     <Container>

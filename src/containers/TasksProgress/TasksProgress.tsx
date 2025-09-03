@@ -15,7 +15,12 @@ import { useRootFolders } from './hooks'
 import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
 import type { FolderType, Status, TaskType, AttributeEnumItem } from '@shared/api'
 import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
-import { useTaskProgressViewSettings, type SelectionData, type SliceType } from '@shared/containers'
+import {
+  createFilterFromSlicer,
+  useTaskProgressViewSettings,
+  type SelectionData,
+  type SliceType,
+} from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
@@ -31,7 +36,6 @@ import formatFilterTagsData from './helpers/formatFilterTagsData'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
 import { useSlicerContext } from '@context/SlicerContext'
-import useFilterBySlice from './hooks/useFilterBySlice'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
@@ -78,12 +82,21 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
 
   // filter out by slice
-  const { rowSelection, sliceType, setPersistentRowSelectionData, persistentRowSelectionData } =
-    useSlicerContext()
+  const {
+    rowSelection,
+    sliceType,
+    rowSelectionData,
+    setPersistentRowSelectionData,
+    persistentRowSelectionData,
+  } = useSlicerContext()
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
     ? null
     : persistentRowSelectionData
-  const { filter: sliceFilter } = useFilterBySlice()
+  const sliceFilter = createFilterFromSlicer({
+    type: sliceType,
+    selection: rowSelectionData,
+    attribFields: [],
+  })
 
   const handleFiltersChange = (value: QueryFilter) => {
     setQueryFilters(value)

@@ -7,33 +7,12 @@ import { Slice, SliceData, SliceOption, TableData } from '../types'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { SliceType } from '@shared/containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
+import useSlicerAttributesData from './useSlicerAttributesData'
+import { getAttributeIcon } from '@shared/util'
 
 interface Props {
   sliceFields: SliceType[]
 }
-
-const defaultSliceOptions: SliceOption[] = [
-  {
-    label: 'Hierarchy',
-    value: 'hierarchy' as SliceType,
-    icon: 'table_rows',
-  },
-  {
-    label: 'Assignees',
-    value: 'assignees' as SliceType,
-    icon: 'person',
-  },
-  {
-    label: 'Status',
-    value: 'status' as SliceType,
-    icon: 'arrow_circle_right',
-  },
-  {
-    label: 'Task Type',
-    value: 'taskType' as SliceType,
-    icon: 'check_circle',
-  },
-]
 
 const getNoValue = (field: string): SimpleTableRow => ({
   id: 'noValue',
@@ -61,9 +40,47 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
 
+  const defaultSliceOptions: SliceOption[] = [
+    {
+      label: 'Hierarchy',
+      value: 'hierarchy' as SliceType,
+      icon: 'table_rows',
+    },
+    {
+      label: 'Assignees',
+      value: 'assignees' as SliceType,
+      icon: 'person',
+    },
+    {
+      label: 'Status',
+      value: 'status' as SliceType,
+      icon: 'arrow_circle_right',
+    },
+    {
+      label: 'Task Type',
+      value: 'taskType' as SliceType,
+      icon: 'check_circle',
+    },
+  ]
+
   const sliceOptions = defaultSliceOptions.filter(
     (option) => !sliceFields.length || sliceFields.includes(option.value),
   )
+
+  const showAttributes = sliceFields.includes('attributes')
+  const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
+    skip: !showAttributes,
+  })
+
+  if (showAttributes) {
+    slicerAttribs.forEach((attr) =>
+      sliceOptions.push({
+        label: attr.data.title || attr.name,
+        value: 'attrib.' + attr.name,
+        icon: getAttributeIcon(attr.name, attr.data.type, Boolean(attr.data.enum)),
+      }),
+    )
+  }
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -73,6 +90,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     getStatuses,
     getTypes,
     getTaskTypes,
+    getAttribute,
     isLoading: isLoadingProject,
   } = useProjectAnatomySlices({ projectName, useExtraSlices })
 
@@ -118,6 +136,15 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     },
   }
 
+  for (const attrib of slicerAttribs) {
+    builtInSlices['attrib.' + attrib.name] = {
+      getData: () => getAttribute(attrib),
+      isLoading: isLoadingAttribs,
+      isExpandable: false,
+      isAttribute: true,
+    }
+  }
+
   const initSlice = { data: [], isExpandable: false }
   const [slice, setSlice] = useState<Slice>(initSlice)
   const sliceConfig = builtInSlices[sliceType]
@@ -127,8 +154,14 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     leavePersistentSlice: boolean,
     returnToPersistentSlice: boolean,
   ) => {
+    // get slice data object
+    const sliceConfig = builtInSlices[sliceType]
+    if (!sliceConfig) {
+      console.warn(`Slice type ${sliceType} not found`)
+      return
+    }
     // check slice type is enabled
-    if (sliceFields.includes(sliceType)) {
+    if ((sliceConfig.isAttribute && showAttributes) || sliceFields.includes(sliceType)) {
       onSliceTypeChange(sliceType, leavePersistentSlice, returnToPersistentSlice)
     }
   }
@@ -136,9 +169,6 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   useEffect(() => {
     // wait for hierarchy data to load before fetching slice data
     if (isLoadingData) return
-
-    // check if slice field is enabled
-    if (!sliceFields.includes(sliceType)) return
 
     const fetchData = async () => {
       try {
@@ -188,7 +218,10 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     sliceOptions,
     table: slice,
     sliceMap,
-    isLoading: builtInSlices[sliceType].isLoading || isLoading || isLoadingData,
+    isLoading:
+      (builtInSlices[sliceType] && builtInSlices[sliceType].isLoading) ||
+      isLoading ||
+      isLoadingData,
     sliceType,
     handleSliceTypeChange,
   }

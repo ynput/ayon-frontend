@@ -22,6 +22,7 @@ export interface SliceData {
   isExpandable: boolean
   noValue?: boolean
   hasValue?: boolean
+  isAttribute?: boolean
 }
 
 export interface Slice {

@@ -1,4 +1,5 @@
 import { AttributeModel } from '../ProjectTreeTable'
+import { ProjectTableAttribute } from '../ProjectTreeTable/hooks/useAttributesList'
 import { SelectionData, SliceDataItem, SliceFilter, SliceType } from './types'
 
 interface FilterMapping {
@@ -10,12 +11,18 @@ interface FilterMapping {
 export type CreateFilterFromSlicer = ({
   selection,
   type,
+  attribFields,
 }: {
   selection: SelectionData
   type: SliceType
+  attribFields: ProjectTableAttribute[]
 }) => SliceFilter | null
 
-export const createFilterFromSlicer: CreateFilterFromSlicer = ({ selection, type }) => {
+export const createFilterFromSlicer: CreateFilterFromSlicer = ({
+  selection,
+  type,
+  attribFields,
+}) => {
   const sliceTypeToFilterMap: Record<string, FilterMapping | undefined> = {
     assignees: {
       id: 'assignees',
@@ -39,17 +46,31 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({ selection, type
     hierarchy: undefined,
   }
 
+  const sliceFilterTypes = {
+    assignees: 'list_of_strings',
+    status: 'string',
+    taskType: 'string',
+    hierarchy: undefined,
+    ...attribFields.reduce((acc, field) => {
+      acc['attrib.' + field.name] = field.data.type
+      return acc
+    }, {} as Record<string, AttributeModel['data']['type']>),
+  }
+
   const filter: SliceFilter | null = (() => {
-    const mapping = sliceTypeToFilterMap[type]
-    if (!mapping) return null
+    const sliceType = sliceFilterTypes[type as keyof typeof sliceFilterTypes]
+    if (!sliceType) return null
 
     const selectedItems = Object.values(selection)
-    const values = mapping.mapValue(selectedItems)
+    const values = selectedItems.map((item) => ({
+      id: item.id,
+      label: item.label || item.name || '',
+    }))
 
     return {
-      id: mapping.id,
-      label: mapping.id,
-      type: mapping.type,
+      id: type,
+      label: type,
+      type: sliceType,
       inverted: false,
       operator: 'OR',
       values,

@@ -26,11 +26,10 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
-import { useOverviewViewSettings } from '@shared/containers'
+import { createFilterFromSlicer, useOverviewViewSettings } from '@shared/containers'
 
 // Local context and hooks
 import { useSlicerContext } from '@context/SlicerContext'
-import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextType | undefined>(undefined)
@@ -46,9 +45,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isLoading: isLoadingData,
   } = useProjectDataContext()
 
+  const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
+    useSlicerContext()
+
   const { groupBy, sorting } = useColumnSettingsContext()
 
-  const { filter: sliceFilter } = useFilterBySlice()
+  const sliceFilter = createFilterFromSlicer({
+    type: sliceType,
+    selection: rowSelectionData,
+    attribFields: attribFields,
+  })
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({
@@ -87,8 +93,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     queryFilters,
     sliceFilter,
   })
-
-  const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
 
   // filter out by slice
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
