@@ -39,6 +39,7 @@ const getSomeValue = (field: string): SimpleTableRow => ({
 const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
+  const { formatAttribute } = useExtraSlices()
 
   const defaultSliceOptions: SliceOption[] = [
     {
@@ -72,7 +73,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
     skip: !showAttributes,
   })
 
-  if (showAttributes) {
+  if (showAttributes && typeof formatAttribute === 'function') {
     slicerAttribs.forEach((attr) =>
       sliceOptions.push({
         label: attr.data.title || attr.name,
@@ -172,8 +173,18 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
 
     const fetchData = async () => {
       try {
+        if (!sliceConfig) return
         setIsLoading(true)
         const newData = await sliceConfig.getData()
+
+        if (newData === undefined) {
+          window.alert(
+            'Slice options failed to load. This likely means the PowerFeatures addon is out of date. Please update to the latest version.',
+          )
+          // setSlice type to hierarchy
+          onSliceTypeChange('hierarchy', false, false)
+          throw new Error('Slice data is undefined')
+        }
 
         // add some value option
         if (sliceConfig.hasValue) newData.unshift(getSomeValue(sliceType))
@@ -186,6 +197,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
         })
       } catch (error) {
         console.error('Error fetching slice data:', error)
+        // set to initial empty state
         setSlice(initSlice)
       } finally {
         setIsLoading(false)

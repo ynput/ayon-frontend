@@ -17,7 +17,7 @@ export interface SlicerTableProps {
 }
 
 export interface SliceData {
-  getData: () => Promise<SimpleTableRow[]>
+  getData: () => Promise<SimpleTableRow[] | undefined>
   isLoading: boolean
   isExpandable: boolean
   noValue?: boolean
