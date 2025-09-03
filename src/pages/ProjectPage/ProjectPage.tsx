@@ -91,8 +91,6 @@ const ProjectPage = () => {
     isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
-  console.log('addonsData', addonsData)
-
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
     addons: ['review', 'planner', 'report'],

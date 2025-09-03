@@ -9,7 +9,7 @@ interface ProjectRemoteLoaderProps {
   skip?: boolean
 }
 
-const useLoadRemotePages = ({ fallbacks, moduleKey, skip = false }: ProjectRemoteLoaderProps) => {
+export const useLoadRemotePages = ({ fallbacks, moduleKey, skip = false }: ProjectRemoteLoaderProps) => {
   const { modules, remotesInitialized } = useRemoteModules()
 
   const pageModules = useMemo<ModuleSpec<any>[]>(() => {
@@ -67,5 +67,3 @@ const useLoadRemotePages = ({ fallbacks, moduleKey, skip = false }: ProjectRemot
 
   return { remotePages: loadedPages, isLoading: isLoadingModulePages }
 }
-
-export default useLoadRemotePages
