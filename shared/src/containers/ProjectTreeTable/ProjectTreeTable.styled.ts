@@ -132,7 +132,7 @@ export const HeaderCell = styled.th`
       display: none !important;
     }
     cursor: col-resize !important;
-    
+
     /* Ensure all child elements also have the resize cursor */
     * {
       cursor: col-resize !important;
@@ -212,14 +212,14 @@ export const TableCell = styled.td<TableCellProps>`
     background-color: var(--md-sys-color-surface-container-high);
   }
 
-  /* show hover effect only if direct child div does NOT have .readonly */
+  /* show hover effect only if direct child div does NOT have .readonly and is not selected */
   &:not(:has(> div.readonly)) {
     cursor: pointer;
     &:hover {
       background-color: var(--md-sys-color-surface-container);
     }
 
-    .selected {
+    &.selected {
       background-color: var(--md-sys-color-secondary-container);
     }
   }
