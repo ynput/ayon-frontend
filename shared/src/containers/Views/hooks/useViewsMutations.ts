@@ -19,8 +19,12 @@ type Props = {
 
 export type UseViewMutations = {
   onCreateView: (payload: CreateViewApiArg['payload'], isProjectScope: boolean) => Promise<void>
-  onDeleteView: (viewId: string) => Promise<void>
-  onUpdateView: (viewId: string, payload: Partial<ViewData>) => Promise<void>
+  onDeleteView: (viewId: string, isProjectScope: boolean) => Promise<void>
+  onUpdateView: (
+    viewId: string,
+    payload: Partial<ViewData>,
+    isProjectScope: boolean,
+  ) => Promise<void>
   onResetWorkingView: (args?: {
     existingWorkingViewId?: string
     selectedViewId?: string
@@ -49,6 +53,8 @@ export const useViewsMutations = ({
         throw new Error('viewType are required for creating a view')
       }
 
+      console.log(payload, isProjectScope)
+
       try {
         await createView({
           viewType: viewType,
@@ -68,7 +74,7 @@ export const useViewsMutations = ({
   )
 
   const onUpdateView = useCallback<R['onUpdateView']>(
-    async (viewId, payload) => {
+    async (viewId, payload, isProjectScope) => {
       if (!viewType) {
         throw new Error('viewType are required for updating a view')
       }
@@ -77,7 +83,7 @@ export const useViewsMutations = ({
         await updateView({
           viewId,
           viewType,
-          projectName,
+          projectName: isProjectScope ? projectName : undefined,
           payload,
         }).unwrap()
 
@@ -93,7 +99,7 @@ export const useViewsMutations = ({
   )
 
   const onDeleteView = useCallback<R['onDeleteView']>(
-    async (viewId) => {
+    async (viewId, isProjectScope) => {
       if (!viewType) {
         throw new Error('viewType are required for deleting a view')
       }
@@ -101,7 +107,7 @@ export const useViewsMutations = ({
       try {
         await deleteView({
           viewType: viewType,
-          projectName: projectName,
+          projectName: isProjectScope ? projectName : undefined,
           viewId,
         }).unwrap()
 

@@ -1,10 +1,12 @@
 import { useCallback } from 'react'
-import { ViewData, ViewSettings, ViewType } from '..'
+import { isViewProjectScope, ViewData, ViewSettings, ViewType } from '..'
 import { UseViewMutations } from './useViewsMutations'
+import { ViewListItemModel } from '@shared/api'
 
 type Props = {
   viewType?: ViewType
   projectName?: string
+  viewsList: ViewListItemModel[]
   sourceSettings?: ViewSettings
   onUpdateView: UseViewMutations['onUpdateView']
 }
@@ -12,6 +14,7 @@ type Props = {
 export const useSaveViewFromCurrent = ({
   viewType,
   projectName,
+  viewsList,
   sourceSettings,
   onUpdateView,
 }: Props) => {
@@ -28,9 +31,13 @@ export const useSaveViewFromCurrent = ({
       }
 
       try {
-        await onUpdateView(viewId, {
-          settings: sourceSettings,
-        })
+        await onUpdateView(
+          viewId,
+          {
+            settings: sourceSettings,
+          },
+          isViewProjectScope(viewId, viewsList),
+        )
       } catch (error) {
         const errorMessage =
           typeof error === 'string'

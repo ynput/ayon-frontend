@@ -176,7 +176,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   // get data for the view we are editing
   const { currentData: editingViewDataData } = useGetViewQuery(
-    { viewId: editingView as string, projectName: projectName, viewType: viewType as string },
+    {
+      viewId: editingView as string,
+      projectName: isViewProjectScope(editingView as string, viewsList) ? projectName : undefined,
+      viewType: viewType as string,
+    },
     { skip: !(typeof editingView === 'string') || !powerLicense },
   )
 
@@ -188,6 +192,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   const { onSaveViewFromCurrent } = useSaveViewFromCurrent({
     viewType: viewType,
     projectName,
+    viewsList,
     sourceSettings: viewSettings,
     onUpdateView: onUpdateView,
   })
@@ -273,4 +278,10 @@ export const useViewsContext = (): ViewsContextValue => {
     throw new Error('useViewsContext must be used within a ViewsProvider')
   }
   return context
+}
+
+export const isViewProjectScope = (viewId: string | undefined, viewsList: ViewListItemModel[]) => {
+  if (!viewId) return false
+  const view = viewsList.find((v) => v.id === viewId)
+  return view?.scope === 'project'
 }
