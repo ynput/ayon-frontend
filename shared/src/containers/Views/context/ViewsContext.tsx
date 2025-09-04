@@ -45,6 +45,7 @@ export interface ViewsContextValue {
   editingViewId: string | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
+  isLoadingEditingViewData: boolean
   isLoadingViews: boolean
   isViewWorking: boolean
 
@@ -175,10 +176,15 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
       : undefined
 
   // get data for the view we are editing
-  const { currentData: editingViewDataData } = useGetViewQuery(
-    { viewId: editingView as string, projectName: projectName, viewType: viewType as string },
-    { skip: !(typeof editingView === 'string') || !powerLicense },
-  )
+  const { currentData: editingViewDataData, isFetching: isLoadingEditingViewData } =
+    useGetViewQuery(
+      {
+        viewId: editingView as string,
+        projectName: isViewStudioScope(editingView as string, viewsList) ? undefined : projectName,
+        viewType: viewType as string,
+      },
+      { skip: !(typeof editingView === 'string') || !powerLicense },
+    )
 
   const editingViewData = useMemo(
     () => (editingView === editingViewDataData?.id ? editingViewDataData : undefined),
@@ -188,6 +194,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   const { onSaveViewFromCurrent } = useSaveViewFromCurrent({
     viewType: viewType,
     projectName,
+    viewsList,
     sourceSettings: viewSettings,
     onUpdateView: onUpdateView,
   })
@@ -241,6 +248,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewSettings,
     workingSettings,
     editingViewData,
+    isLoadingEditingViewData,
     viewsList,
     workingView,
     editingViewId,
@@ -273,4 +281,10 @@ export const useViewsContext = (): ViewsContextValue => {
     throw new Error('useViewsContext must be used within a ViewsProvider')
   }
   return context
+}
+
+export const isViewStudioScope = (viewId: string | undefined, viewsList: ViewListItemModel[]) => {
+  if (!viewId) return true
+  const view = viewsList.find((v) => v.id === viewId)
+  return view?.scope === 'studio'
 }

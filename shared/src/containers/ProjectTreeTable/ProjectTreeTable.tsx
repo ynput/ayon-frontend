@@ -76,7 +76,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
-import {EntityMoveData} from "../../../../src/features/moveEntity";
+import { EntityMoveData } from '@shared/context/MoveEntityContext'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -471,34 +471,40 @@ export const ProjectTreeTable = ({
   const { projectName: contextProjectName } = useProjectDataContext()
 
   // Get move entity functions for the dialog
-  const { isEntityPickerOpen, handleMoveSubmit, closeMoveDialog, movingEntities, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } = useMoveEntities({
-    projectName: contextProjectName || projectName || ''
+  const {
+    isEntityPickerOpen,
+    handleMoveSubmit,
+    closeMoveDialog,
+    movingEntities,
+    handleMoveToRoot,
+    getDisabledFolderIds,
+    getDisabledMessage,
+  } = useMoveEntities({
+    projectName: contextProjectName || projectName || '',
   })
 
   const handleMoveSubmitWithExpand = (selection: string[]) => {
-    handleMoveSubmit(selection);
-    const folderIdToExpand = selection[0];
+    handleMoveSubmit(selection)
+    const folderIdToExpand = selection[0]
 
     updateExpanded((prevExpanded: ExpandedState) => {
-
       if (typeof prevExpanded === 'boolean') {
-
         if (prevExpanded) {
-          return prevExpanded;
+          return prevExpanded
         }
-        return { [folderIdToExpand]: true };
+        return { [folderIdToExpand]: true }
       }
 
       if (prevExpanded[folderIdToExpand]) {
-        return prevExpanded;
+        return prevExpanded
       }
 
       return {
         ...prevExpanded,
         [folderIdToExpand]: true,
-      };
-    });
-  };
+      }
+    })
+  }
 
   const tableUiContent = (
     <ClipboardProvider
@@ -552,18 +558,23 @@ export const ProjectTreeTable = ({
         </Styled.TableContainer>
       </Styled.TableWrapper>
       {/* Render EntityPickerDialog alongside table content */}
-      {isEntityPickerOpen && projectName && movingEntities?.entities && movingEntities.entities.length > 0 && (
-        <EntityPickerDialog
-          projectName={projectName}
-          entityType="folder"
-          onSubmit={handleMoveSubmitWithExpand}
-          onClose={closeMoveDialog}
-          showMoveToRoot={movingEntities.entities.every((entity: EntityMoveData) => entity.entityType === 'folder')}
-          onMoveToRoot={handleMoveToRoot}
-          disabledIds={getDisabledFolderIds()}
-          getDisabledMessage={getDisabledMessage}
-        />
-      )}
+      {isEntityPickerOpen &&
+        projectName &&
+        movingEntities?.entities &&
+        movingEntities.entities.length > 0 && (
+          <EntityPickerDialog
+            projectName={projectName}
+            entityType="folder"
+            onSubmit={handleMoveSubmitWithExpand}
+            onClose={closeMoveDialog}
+            showMoveToRoot={movingEntities.entities.every(
+              (entity: EntityMoveData) => entity.entityType === 'folder',
+            )}
+            onMoveToRoot={handleMoveToRoot}
+            disabledIds={getDisabledFolderIds()}
+            getDisabledMessage={getDisabledMessage}
+          />
+        )}
     </ClipboardProvider>
   )
 
@@ -876,9 +887,7 @@ const TableBody = ({
 
   const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
 
-
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
-
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 

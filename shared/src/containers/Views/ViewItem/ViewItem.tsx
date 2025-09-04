@@ -2,6 +2,7 @@ import { forwardRef, ReactNode } from 'react'
 import * as Styled from './ViewItem.styled'
 import clsx from 'clsx'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 export interface ViewItem {
   id: string
@@ -40,6 +41,21 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
     },
     ref,
   ) => {
+    const handleSave = (e: React.MouseEvent<HTMLButtonElement>, requireConfirm: boolean) => {
+      // prevent selecting the view when clicking save
+      e.stopPropagation()
+      if (requireConfirm) {
+        // first validate we actually want to save by asking user to confirm
+        confirmDialog({
+          message: 'Save current view settings and overwrite this view?',
+          header: 'Confirm save',
+          accept: () => onSave && onSave(e),
+        })
+      } else {
+        onSave && onSave(e)
+      }
+    }
+
     return (
       <Styled.ViewItem {...props} className={clsx(className, { selected: isSelected })} ref={ref}>
         {startContent && startContent}
@@ -60,7 +76,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             icon="save"
             variant="text"
             className={clsx('save', { active: highlighted === 'save' })}
-            onClick={onSave}
+            onClick={(e) => handleSave(e, highlighted !== 'save')}
             data-tooltip="Save view settings from current view"
           />
         )}
