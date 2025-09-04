@@ -7,6 +7,7 @@ import {
   LinkToAdd,
   LinkToRemove,
 } from '../utils/linkUpdates'
+import { toast } from 'react-toastify'
 
 type Props = {
   projectName: string
