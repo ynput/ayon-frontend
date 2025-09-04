@@ -35,6 +35,11 @@ export const TR = styled.tr`
     td.${DRAG_HANDLE_CLASS} button:hover {
       opacity: 1;
     }
+
+    /* row selection hover */
+    td {
+      background-color: hsl(215 14% 15%);
+    }
   }
 
   &.group-row {
