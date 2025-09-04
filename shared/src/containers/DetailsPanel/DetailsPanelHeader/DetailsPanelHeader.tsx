@@ -55,7 +55,6 @@ const DetailsPanelHeader = ({
   onTabChange,
   entityTypeIcons,
   onOpenViewer,
-  onEntityFocus,
 }: DetailsPanelHeaderProps) => {
   const { useSearchParams, useNavigate, isDeveloperMode } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -207,12 +206,12 @@ const DetailsPanelHeader = ({
 
   return (
     <Styled.HeaderContainer>
-      <EntityPanelUploader
+      {/* <EntityPanelUploader
         entities={entities}
         entityType={entityType}
         projectName={projectName}
         onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
-      >
+      > */}
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
@@ -313,7 +312,7 @@ const DetailsPanelHeader = ({
             onTabChange={onTabChange}
           />
         </Styled.Grid>
-      </EntityPanelUploader>
+      {/* </EntityPanelUploader> */}
     </Styled.HeaderContainer>
   )
 }

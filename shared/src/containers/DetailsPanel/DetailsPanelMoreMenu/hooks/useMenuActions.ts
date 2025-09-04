@@ -45,7 +45,7 @@ export const useMenuActions = ({
         toast.info('Version upload is only available in project pages')
       }
     },
-    'view-details': () => {
+    'view-data': () => {
       setShowDetailsDialog(true)
     },
     'add-to-list': () => {
