@@ -209,8 +209,9 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
+  --task-background-color: hsl(216 15% 11.5% / 1);
   &.task {
-    background-color: hsl(216 15% 11.5% / 1);
+    background-color: var(--task-background-color);
   }
 
   &.selected-row {
@@ -358,6 +359,12 @@ export const TableCell = styled.td<TableCellProps>`
         display: none;
       }
     }
+  }
+
+  /* if there is no cell widget element (no children) then the cell should not be selectable at all */
+  &:not(:has(> div)) {
+    pointer-events: none;
+    cursor: default;
   }
 
   &.editing {

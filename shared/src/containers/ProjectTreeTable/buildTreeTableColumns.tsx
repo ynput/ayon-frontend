@@ -448,6 +448,10 @@ const buildTreeTableColumns = ({
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
           const isInherited = !row.original.ownAttrib?.includes(columnIdParsed)
           if (['group', NEXT_PAGE_ID].includes(type)) return null
+          const isTypeInScope = attrib.scope?.includes(type as (typeof attrib.scope)[number])
+
+          // if the attribute is not in scope, we should nothing
+          if (!isTypeInScope) return null
 
           return (
             <CellWidget
@@ -460,7 +464,9 @@ const buildTreeTableColumns = ({
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited && ['folder', 'task'].includes(type)}
               isReadOnly={
+                // check attrib is not read only
                 attrib.readOnly ||
+                // check if there is any other reason the cell should be read only
                 meta?.readOnly?.some(
                   (id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin),
                 )
