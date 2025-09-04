@@ -5,6 +5,7 @@ import { ShareOption, UserModel } from '@shared/api'
 export interface ViewFormDialogProps {
   editingView: Partial<ViewFormData> & { viewId?: string }
   setEditingView: (viewId: string | null) => void
+  isLoading: boolean
   viewType: ViewType
   viewSettings?: ViewSettings
   currentUser?: UserModel

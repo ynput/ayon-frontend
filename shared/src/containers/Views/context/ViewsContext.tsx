@@ -45,6 +45,7 @@ export interface ViewsContextValue {
   editingViewId: string | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
+  isLoadingEditingViewData: boolean
   isLoadingViews: boolean
   isViewWorking: boolean
 
@@ -175,14 +176,15 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
       : undefined
 
   // get data for the view we are editing
-  const { currentData: editingViewDataData } = useGetViewQuery(
-    {
-      viewId: editingView as string,
-      projectName: isViewStudioScope(editingView as string, viewsList) ? undefined : projectName,
-      viewType: viewType as string,
-    },
-    { skip: !(typeof editingView === 'string') || !powerLicense },
-  )
+  const { currentData: editingViewDataData, isFetching: isLoadingEditingViewData } =
+    useGetViewQuery(
+      {
+        viewId: editingView as string,
+        projectName: isViewStudioScope(editingView as string, viewsList) ? undefined : projectName,
+        viewType: viewType as string,
+      },
+      { skip: !(typeof editingView === 'string') || !powerLicense },
+    )
 
   const editingViewData = useMemo(
     () => (editingView === editingViewDataData?.id ? editingViewDataData : undefined),
@@ -246,6 +248,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewSettings,
     workingSettings,
     editingViewData,
+    isLoadingEditingViewData,
     viewsList,
     workingView,
     editingViewId,
