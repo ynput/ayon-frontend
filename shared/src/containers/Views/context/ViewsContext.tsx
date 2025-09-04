@@ -178,7 +178,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   const { currentData: editingViewDataData } = useGetViewQuery(
     {
       viewId: editingView as string,
-      projectName: isViewProjectScope(editingView as string, viewsList) ? projectName : undefined,
+      projectName: isViewStudioScope(editingView as string, viewsList) ? undefined : projectName,
       viewType: viewType as string,
     },
     { skip: !(typeof editingView === 'string') || !powerLicense },
@@ -280,8 +280,8 @@ export const useViewsContext = (): ViewsContextValue => {
   return context
 }
 
-export const isViewProjectScope = (viewId: string | undefined, viewsList: ViewListItemModel[]) => {
-  if (!viewId) return false
+export const isViewStudioScope = (viewId: string | undefined, viewsList: ViewListItemModel[]) => {
+  if (!viewId) return true
   const view = viewsList.find((v) => v.id === viewId)
-  return view?.scope === 'project'
+  return view?.scope === 'studio'
 }

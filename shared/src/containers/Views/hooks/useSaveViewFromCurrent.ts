@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
-import { isViewProjectScope, ViewData, ViewSettings, ViewType } from '..'
+import { isViewStudioScope, ViewData, ViewSettings, ViewType } from '..'
 import { UseViewMutations } from './useViewsMutations'
 import { ViewListItemModel } from '@shared/api'
+import { toast } from 'react-toastify'
 
 type Props = {
   viewType?: ViewType
@@ -36,8 +37,10 @@ export const useSaveViewFromCurrent = ({
           {
             settings: sourceSettings,
           },
-          isViewProjectScope(viewId, viewsList),
+          isViewStudioScope(viewId, viewsList),
         )
+
+        toast.success('View settings saved')
       } catch (error) {
         const errorMessage =
           typeof error === 'string'
