@@ -25,7 +25,6 @@ export const useLoadRemotePages = ({ fallbacks, moduleKey, skip = false }: Proje
             remote,
             module,
             fallback: fallbacks?.get(module)?.component,
-            loadCSS: true,
           }
           pageModules.push(moduleSpec)
         }

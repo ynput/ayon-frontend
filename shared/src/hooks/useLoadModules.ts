@@ -2,7 +2,6 @@ import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
 import { FrontendModuleListItem } from '@shared/api'
-import { loadRemoteCSS } from '@shared/utils/loadRemoteCSS'
 
 export interface ModuleSpec<T> {
   addon: string
@@ -11,7 +10,6 @@ export interface ModuleSpec<T> {
   fallback?: T
   debug?: boolean
   minVersion?: string
-  loadCSS?: boolean // automatically load CSS for the remote module
 }
 
 type ModuleResult<T> = [
@@ -59,7 +57,6 @@ export const useLoadModules = <T extends any[]>(
     addon: string,
     fallback: T[number] | undefined,
     minVersion?: string,
-    loadCSS?: boolean,
     addonVersion?: string,
   ) => {
     try {
@@ -67,12 +64,6 @@ export const useLoadModules = <T extends any[]>(
         from: 'runtime',
       })
       updateResultWithLoaded(addon, remote, module, result?.default || fallback, minVersion)
-      
-      
-      // Load CSS if requested
-      // if (loadCSS && addonVersion) {
-      //   loadRemoteCSS(addon, addonVersion, remote)
-      // }
     } catch (error) {
       console.error('Error loading remote module', remote, module, error)
       // Don't throw error, just log it and continue
