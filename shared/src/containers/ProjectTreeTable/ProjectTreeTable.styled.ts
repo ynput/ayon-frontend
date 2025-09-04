@@ -37,7 +37,7 @@ export const TR = styled.tr`
     }
 
     /* row selection hover */
-    td {
+    td:not(.selected) {
       background-color: hsl(215 14% 15%);
     }
   }
@@ -338,6 +338,26 @@ export const TableCell = styled.td<TableCellProps>`
     bottom: 0;
     border: 2px solid var(--md-sys-color-primary);
     pointer-events: none;
+  }
+
+  /* read only fields are dimmed down for bg and border */
+  &:has(> div.readonly) {
+    &:not(.multiple-selected) {
+      --focused-readonly-color: hsl(212 14% 16% / 1);
+      &.focused {
+        background-color: var(--focused-readonly-color);
+        &::after {
+          border-color: var(--focused-readonly-color);
+        }
+      }
+    }
+
+    /* when focused is readonly and multiple-selected */
+    &.multiple-selected {
+      &.focused::after {
+        display: none;
+      }
+    }
   }
 
   &.editing {
