@@ -131,14 +131,20 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   let actionButton = null
   const subRequired = flags?.includes('licensed') && !available
-  const newestVersion = [...versions].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0]
+
+  const sortVersionsByDate = <T extends { createdAt?: string | number }>(versions: T[]): T[] => {
+    return versions.toSorted((a, b) =>
+      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    )
+  }
+
+  const sortedVersions = sortVersionsByDate(versions)
+  const newestVersion = sortedVersions[0]
   const latestVersionData = newestVersion || versions.find(v => v.version === latestVersion)
   const isLatestIncompatible = latestVersionData?.isCompatible === false
-  
+
   // Find the latest compatible version
-  const latestCompatibleVersion = versions
-    .filter(v => v.isCompatible !== false)
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0]
+  const latestCompatibleVersion = sortedVersions.find(v => v.isCompatible !== false)
 
 
   if (isLatestIncompatible && !latestCompatibleVersion) {
@@ -149,9 +155,9 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     )
   } else if (isLatestIncompatible && latestCompatibleVersion) {
     actionButton = (
-      <Button 
-        variant="filled" 
-        icon={'download'} 
+      <Button
+        variant="filled"
+        icon={'download'}
         onClick={() => handleDownload(latestCompatibleVersion.version)}
       >
         {`Download v${latestCompatibleVersion.version}`}
@@ -215,7 +221,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     () =>
       versions.map((v) => ({
         value: v.version,
-        label: !v.isCompatible? `v${v.version} (server update required)`: `v${v.version}`,
+        label: v.isCompatible ? `v${v.version}` : `v${v.version} (server update required)`,
         isDownloaded: downloaded.includes(v.version),
         disabled: v.isCompatible === false,
       })),
