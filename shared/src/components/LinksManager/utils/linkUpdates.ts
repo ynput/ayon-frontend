@@ -82,6 +82,13 @@ export const addMultipleLinks = async (
 ): Promise<void> => {
   if (!links.length) return
 
+  // Check for self-referential links
+  const selfReferencingLinks = links.filter((link) => link.sourceEntityId === link.targetEntityId)
+  if (selfReferencingLinks.length > 0) {
+    toast.error("You can't link an entity to itself")
+    return
+  }
+
   try {
     const addPromises = links.map((link) =>
       createLinkMutation({
