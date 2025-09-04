@@ -4,7 +4,7 @@ import {
   useDeleteViewMutation,
   useUpdateViewMutation,
 } from '@shared/api'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { ViewData } from '../context/ViewsContext'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
@@ -18,7 +18,7 @@ type Props = {
 }
 
 export type UseViewMutations = {
-  onCreateView: (payload: CreateViewApiArg['payload']) => Promise<void>
+  onCreateView: (payload: CreateViewApiArg['payload'], isProjectScope: boolean) => Promise<void>
   onDeleteView: (viewId: string) => Promise<void>
   onUpdateView: (viewId: string, payload: Partial<ViewData>) => Promise<void>
   onResetWorkingView: (args?: {
@@ -44,7 +44,7 @@ export const useViewsMutations = ({
   const [updateView] = useUpdateViewMutation()
 
   const onCreateView = useCallback<R['onCreateView']>(
-    async (payload) => {
+    async (payload, isProjectScope) => {
       if (!viewType) {
         throw new Error('viewType are required for creating a view')
       }
@@ -52,7 +52,7 @@ export const useViewsMutations = ({
       try {
         await createView({
           viewType: viewType,
-          projectName: projectName,
+          projectName: isProjectScope ? projectName : undefined,
           payload,
         }).unwrap()
 
