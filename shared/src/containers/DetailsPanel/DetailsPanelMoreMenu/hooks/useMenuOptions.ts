@@ -19,8 +19,8 @@ export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext }: UseM
         icon: 'add_photo_alternate',
       },
       {
-        value: 'view-details',
-        label: 'View details (raw data)',
+        value: 'view-data',
+        label: 'View data (raw data)',
         icon: 'database',
       },
     ]

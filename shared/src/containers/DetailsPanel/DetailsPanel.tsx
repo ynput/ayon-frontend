@@ -5,7 +5,7 @@ import * as Styled from './DetailsPanel.styled'
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
 import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
-import { DetailsPanelAttributes, EntityPath, Watchers, DetailsDialog } from '@shared/components'
+import { DetailsPanelAttributes, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
 import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
@@ -41,7 +41,6 @@ export type DetailsPanelProps = {
   onClose?: () => void
   onWatchersUpdate?: (added: { id: string; name: string; type: string }[], removed: { id: string; name: string; type: string }[]) => void
   onOpenViewer?: (entity: { entityId?: string; versionId?: string; projectName?: string; folderId?: string; taskId?: string; productId?: string }) => void
-  onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   // annotations
   annotations?: Record<string, unknown>
   removeAnnotation?: (id: string) => void
@@ -71,7 +70,6 @@ export const DetailsPanel = ({
   onClose,
   onWatchersUpdate,
   onOpenViewer,
-  onEntityFocus,
   // annotations
   annotations,
   removeAnnotation,
@@ -238,12 +236,6 @@ export const DetailsPanel = ({
               onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
               userName={user.name}
             />
-            <Button
-              icon="picture_in_picture"
-              variant={'text'}
-              data-tooltip="Picture in Picture"
-              onClick={handleOpenPip}
-            />
 
             {onClose && (
               <Button
@@ -270,7 +262,6 @@ export const DetailsPanel = ({
           onTabChange={setTab}
           entityTypeIcons={entityTypeIcons}
           onOpenViewer={(args) => onOpenViewer?.(args)}
-          onEntityFocus={onEntityFocus}
         />
         {isFeed && !isError && (
           <FeedWrapper
