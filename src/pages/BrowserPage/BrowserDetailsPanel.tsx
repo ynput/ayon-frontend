@@ -7,7 +7,6 @@ import { openViewer, ViewerState } from '@state/viewer'
 // shared
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery, useGetProjectsInfoQuery, ProjectModel, DetailsPanelEntityType } from '@shared/api'
-import { setFocusedVersions, setSelectedVersions } from '@state/context'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
 interface FocusedEntity {
@@ -41,12 +40,6 @@ const BrowserDetailsPanel = () => {
     console.log('BrowserDetailsPanel - entityListsContext not available:', error)
   }
 
-  const updateFocusedVersion = (versionId: string) => {
-    // set selected product
-    dispatch(setFocusedVersions([versionId]))
-    dispatch(setSelectedVersions([versionId]))
-  }
-
   if (!entities.length) return null
 
   return (
@@ -63,7 +56,6 @@ const BrowserDetailsPanel = () => {
         style={{ boxShadow: 'none' }}
         scope="project"
         onOpenViewer={handleOpenViewer}
-        onEntityFocus={updateFocusedVersion}
         entityListsContext={entityListsContext}
       />
       <DetailsPanelSlideOut
