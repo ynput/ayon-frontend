@@ -1,5 +1,6 @@
+import React from 'react'
 import { useState, useEffect } from 'react'
-import { Dropdown } from '@ynput/ayon-react-components'
+import { Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
@@ -10,6 +11,84 @@ const StyledDropdown = styled(Dropdown)`
     width: 0;
   }
 `
+
+const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
+  const isSelected = (val: $Any) => {
+    if (Array.isArray(value)) {
+      return value.includes(val)
+    }
+    return value === val
+  }
+
+  const toggleSelection = (val: $Any) => {
+    if (Array.isArray(value)) {
+      if (value.includes(val)) {
+        onSelectionChange(value.filter((v: $Any) => v !== val))
+      } else {
+        onSelectionChange([...value, val])
+      }
+    } else {
+      onSelectionChange(val)
+    }
+  }
+
+    return (
+    <div style={{
+      maxWidth: '800px',
+    }}>
+    <div
+      style={{
+        position: "relative",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+        gap: "12px 16px",
+      }}
+    >
+      {options.map((opt: any) => (
+        <div
+          key={opt.value}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <InputSwitch
+            checked={isSelected(opt.value)}
+            onChange={() => toggleSelection(opt.value)}
+          />
+          <label style={{whiteSpace:"nowrap"}}>{opt.label}</label>
+        </div>
+      ))}
+    </div>
+    </div>
+  )
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+        gap: "10px 16px",
+        alignItems: "center",
+        padding: "8px 0"
+      }}
+    >
+      {options.map((opt: any) => (
+        <React.Fragment key={opt.value}>
+          <InputSwitch
+            checked={isSelected(opt.value)}
+            onChange={() => toggleSelection(opt.value)}
+          />
+          <label>{opt.label}</label>
+        </React.Fragment>
+      ))}
+    </div>
+  )
+
+}
+
+
 
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
@@ -76,6 +155,17 @@ const SelectWidget = (props: $Any) => {
     renderableValue = value
   } else {
     renderableValue = [value]
+  }
+
+  const widget = props.schema?.widget
+  if (widget === 'switchbox' && props.multiple) {
+    return (
+      <Switchbox
+        options={options}
+        value={value}
+        onSelectionChange={setValue}
+      />
+    )
   }
 
   return (
