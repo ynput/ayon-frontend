@@ -9,7 +9,7 @@ interface UseMenuActionsProps {
   entityListsContext: any
   triggerFileUpload: () => void
   setShowDetailsDialog: (show: boolean) => void
-  setSelectedValue: (value: string[]) => void
+  setSelectedValue?: (value: string[]) => void
 }
 
 export const useMenuActions = ({
@@ -73,7 +73,7 @@ export const useMenuActions = ({
       console.log('Unknown action:', value)
     }
 
-    setSelectedValue([])
+    setSelectedValue?.([])
   }
 
   return {
