@@ -288,7 +288,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         if (canRedo) handleRedo()
       }
       // clear
-      if (e.key === 'Backspace' || e.key === 'Delete') {
+      if ((e.key === 'Backspace' && !(e.ctrlKey || e.metaKey)) || e.key === 'Delete') {
         // check we have cells selected
         if (!selectedCells.size) return
         e.preventDefault()

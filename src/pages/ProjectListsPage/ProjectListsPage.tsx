@@ -19,7 +19,7 @@ import {
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
-import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
+import { MoveEntityProvider, SettingsPanelProvider, useSettingsPanel } from '@shared/context'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
@@ -78,7 +78,9 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
           <ListsProvider isReview={isReview}>
             <ListItemsDataProvider>
               <ListsAttributesProvider>
-                <ProjectListsWithInnerProviders isReview={isReview} />
+                <MoveEntityProvider>
+                  <ProjectListsWithInnerProviders isReview={isReview} />
+                </MoveEntityProvider>
               </ListsAttributesProvider>
             </ListItemsDataProvider>
           </ListsProvider>
