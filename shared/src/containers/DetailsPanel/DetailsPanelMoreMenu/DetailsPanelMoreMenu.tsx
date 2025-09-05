@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
-import { Button, Dropdown } from '@ynput/ayon-react-components'
+import React, { useState, useRef } from 'react'
+import { Button } from '@ynput/ayon-react-components'
+import Menu from '@components/Menu/MenuComponents/Menu.jsx'
+import MenuContainer from '@components/Menu/MenuComponents/MenuContainer.jsx'
+import { useAppDispatch } from '@state/store'
+import { toggleMenuOpen, setMenuOpen } from '@state/context'
 import {
-  useDropdownStyling,
   useContextAccess,
   useThumbnailUpload,
   useMenuOptions,
@@ -27,9 +30,10 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
   entityListsContext,
 }) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
-  const [selectedValue, setSelectedValue] = useState<string[]>([])
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  
+  const dispatch = useAppDispatch()
 
-  const dropdownRef = useDropdownStyling()
   const { onOpenVersionUpload } = useContextAccess()
 
   const { triggerFileUpload } = useThumbnailUpload({
@@ -48,33 +52,41 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
     entityListsContext,
     triggerFileUpload,
     setShowDetailsDialog,
-    setSelectedValue,
   })
 
-  const handleDropdownChange = (values: string[]) => {
-    if (values.length > 0) {
-      handleMoreMenuAction(values[0])
-    }
+  const handleToggleMenu = () => {
+    dispatch(toggleMenuOpen('details-more-menu'))
   }
+
+  const handleSetMenu = (menu: string | false) => {
+    dispatch(setMenuOpen(menu))
+  }
+
+  const menuItems = moreMenuOptions.map((option: any) => ({
+    id: option.value,
+    label: option.label,
+    icon: option.icon,
+    onClick: () => {
+      handleMoreMenuAction(option.value)
+      dispatch(setMenuOpen(false))
+    },
+  }))
 
   return (
     <>
-      <Dropdown
-        ref={dropdownRef}
-        options={moreMenuOptions}
-        value={selectedValue}
-        placeholder=""
-        onChange={handleDropdownChange}
-        valueTemplate={() => (
-          <Button
-            icon="more_vert"
-            variant="text"
-            aria-label="More actions"
-            data-tooltip="More actions"
-            title="More actions"
-          />
-        )}
+      <Button
+        ref={buttonRef}
+        icon="more_vert"
+        variant="text"
+        aria-label="More actions"
+        data-tooltip="More actions"
+        title="More actions"
+        onClick={handleToggleMenu}
       />
+
+      <MenuContainer id="details-more-menu" target={buttonRef.current} align="right">
+        <Menu menu={menuItems} onClose={() => handleSetMenu(false)} />
+      </MenuContainer>
 
       <DetailsDialogWrapper
         showDetailsDialog={showDetailsDialog}
