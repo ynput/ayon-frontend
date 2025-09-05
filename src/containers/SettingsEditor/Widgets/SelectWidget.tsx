@@ -64,28 +64,6 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
     </div>
   )
 
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "10px 16px",
-        alignItems: "center",
-        padding: "8px 0"
-      }}
-    >
-      {options.map((opt: any) => (
-        <React.Fragment key={opt.value}>
-          <InputSwitch
-            checked={isSelected(opt.value)}
-            onChange={() => toggleSelection(opt.value)}
-          />
-          <label>{opt.label}</label>
-        </React.Fragment>
-      ))}
-    </div>
-  )
-
 }
 
 
