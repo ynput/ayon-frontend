@@ -344,7 +344,7 @@ export const TableCell = styled.td<TableCellProps>`
   /* read only fields are dimmed down for bg and border */
   &:has(> div.readonly) {
     &:not(.multiple-selected) {
-      --focused-readonly-color: hsl(212 14% 16% / 1);
+      --focused-readonly-color: hsl(212 15% 18% / 1);
       &.focused {
         background-color: var(--focused-readonly-color);
         &::after {

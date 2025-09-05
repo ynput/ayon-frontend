@@ -100,8 +100,8 @@ const StyledExpandIcon = styled(Icon)`
 export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   selectedOptions: AttributeEnumItem[]
   placeholder?: string
-  hasMultipleValues: boolean
-  isMultiSelect: boolean
+  hasMultipleValues?: boolean
+  isMultiSelect?: boolean
   isOpen?: boolean
   isItem?: boolean
   isSelected?: boolean
@@ -171,6 +171,7 @@ export const EnumCellValue = ({
                 src={option.icon}
                 className={clsx({ avatar: checkAvatarImg(option.icon) }, imgClassName)}
                 style={imgStyle}
+                data-tooltip={option.label}
                 {...imgRest}
               />
             ) : option.icon ? (

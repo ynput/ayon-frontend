@@ -189,6 +189,8 @@ export const ProjectTreeTable = ({
     getEntityById,
   } = useProjectTableContext()
 
+  const { projectName: contextProjectName, writableFields } = useProjectDataContext()
+
   const isLoading = isLoadingProp || isLoadingData
 
   const {
@@ -240,8 +242,8 @@ export const ProjectTreeTable = ({
 
   // Format readonly columns and attributes
   const { readOnlyColumns, readOnlyAttribs } = useMemo(
-    () => getReadOnlyLists(attribFields, readOnly),
-    [attribFields, readOnly],
+    () => getReadOnlyLists(attribFields, writableFields, readOnly),
+    [attribFields, writableFields, readOnly],
   )
 
   const { selectedCells } = useSelectionCellsContext()
@@ -467,8 +469,6 @@ export const ProjectTreeTable = ({
     },
     [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
   )
-
-  const { projectName: contextProjectName } = useProjectDataContext()
 
   // Get move entity functions for the dialog
   const {

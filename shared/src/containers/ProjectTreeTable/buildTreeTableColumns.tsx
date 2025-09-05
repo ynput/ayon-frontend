@@ -323,7 +323,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || meta?.readOnly?.includes(fieldId)}
           />
         )
       },
