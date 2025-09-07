@@ -22,6 +22,7 @@ const StyledContainer = styled.div`
   padding-right: 8px;
   padding-left: 8px;
   padding-bottom: 68px;
+  margin-top: 16px;
 `
 
 export type DetailsPanelDetailsProps = {

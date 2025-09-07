@@ -16,7 +16,7 @@ const FieldValueText = styled.div`
   text-align: right;
 
   input {
-    text-align: right;
+    text-align: left;
   }
 `
 

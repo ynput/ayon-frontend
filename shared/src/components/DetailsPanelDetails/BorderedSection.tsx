@@ -4,6 +4,9 @@ import styled from 'styled-components'
 const StyledSection = styled.div`
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
 `
 
 const StyledHeader = styled.div`
@@ -16,8 +19,10 @@ const StyledHeader = styled.div`
   color: var(--md-sys-color-on-surface);
 `
 
-const StyledContent = styled.div`
-  padding: 8px;
+const StyledContent = styled.div<{ $showHeader: boolean }>`
+  padding: ${props => props.$showHeader ? '8px' : '0 8px 8px 8px'};
+  flex: 1;
+  min-height: ${props => props.$showHeader ? 'calc(300px - 40px)' : '300px !important'};
 `
 
 interface BorderedSectionProps {
@@ -25,6 +30,7 @@ interface BorderedSectionProps {
   children: React.ReactNode
   headerContent?: React.ReactNode
   contentClassName?: string
+  showHeader?: boolean
 }
 
 export const BorderedSection: React.FC<BorderedSectionProps> = ({
@@ -32,16 +38,17 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
   children,
   headerContent,
   contentClassName,
+  showHeader = false,
 }) => {
   return (
     <StyledSection>
-      <StyledHeader>
-        <span>{title}</span>
-        {headerContent}
-      </StyledHeader>
-      <StyledContent className={contentClassName}>
-        {children}
-      </StyledContent>
+      {showHeader ? (
+        <StyledHeader>
+          <span>{title}</span>
+          {headerContent}
+        </StyledHeader>
+      ) : null}
+      <StyledContent className={contentClassName} $showHeader={showHeader}>{children}</StyledContent>
     </StyledSection>
   )
 }

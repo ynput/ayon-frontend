@@ -9,23 +9,39 @@ import remarkDirective from 'remark-directive'
 import remarkDirectiveRehype from 'remark-directive-rehype'
 import clsx from 'clsx'
 import { BorderedSection } from './BorderedSection'
+import { QuillListStyles } from '../QuillListStyles'
 
-import { getModules } from '@shared/containers/Feed/components/CommentInput/modules'
-import CommentMentionSelect from '@shared/containers/Feed/components/CommentMentionSelect/CommentMentionSelect'
-import {
-  useDescriptionEditor,
-  useMentionSystem,
-  useQuillFormats,
-} from './hooks'
+import { useDescriptionEditor, useQuillFormats } from './hooks'
+
+// Custom modules function for description editor (without checklist)
+const getDescriptionModules = ({ imageUploader, disableImageUpload = false }: { imageUploader: any; disableImageUpload?: boolean }) => {
+  const toolbar = [
+    [{ header: 2 }, 'bold', 'italic', 'link', 'code-block'],
+    [{ list: 'ordered' }, { list: 'bullet' }], // Removed { list: 'check' }
+  ]
+  
+  if (!disableImageUpload) {
+    toolbar.push(['image'])
+  }
+  
+  return {
+    toolbar,
+    imageUploader,
+    magicUrl: true,
+  }
+}
 
 const StyledContent = styled.div`
   padding: 8px;
-  min-height: 60px;
   cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   &.editing {
     cursor: default;
     padding: 0;
+    margin: 0 -8px;
   }
 `
 
@@ -42,6 +58,10 @@ const StyledDescription = styled.div`
 `
 
 const StyledEditor = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
   .ql-toolbar.ql-snow {
     border: none;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
@@ -49,6 +69,7 @@ const StyledEditor = styled.div`
     display: flex;
     height: unset;
     width: unset;
+    flex-shrink: 0;
 
     .ql-formats {
       height: 32px;
@@ -84,12 +105,15 @@ const StyledEditor = styled.div`
 
   .ql-container.ql-snow {
     border: none;
-    height: calc(100% - 41px);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100% - 49px);
 
     .ql-editor {
       padding: 12px;
       min-height: 60px;
-      max-height: 200px;
+      flex: 1;
       overflow-y: auto;
 
       &.ql-blank::before {
@@ -116,36 +140,16 @@ const StyledEditor = styled.div`
         }
       }
 
-      .mention {
-        border-radius: var(--border-radius-m);
-        user-select: none;
-        padding: 0 4px;
-        text-decoration: none;
-
-        white-space: nowrap;
-        cursor: pointer;
-
-        color: var(--md-sys-color-primary);
-        background-color: var(--md-sys-color-surface-container-high);
-
-        &:hover {
-          background-color: var(--md-sys-color-surface-container-high-hover);
-        }
-        &:active {
-          background-color: var(--md-sys-color-surface-container-high-active);
-        }
-      }
     }
   }
 `
 
 const StyledFooter = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: end;
   align-items: center;
   padding: 8px 12px;
   border-top: 1px solid var(--md-sys-color-outline-variant);
-  background-color: var(--md-sys-color-surface-container);
 `
 
 const StyledMarkdown = styled.div`
@@ -226,34 +230,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     onChange,
   })
 
-  const {
-    feedContext,
-    projectName,
-    mention,
-    mentionSelectedIndex,
-    mentionOptions,
-    mentionTypes,
-    mentionTypeOptions,
-    handleSelectMention,
-    handleMentionButton,
-    handleMentionKeyDown,
-    handleMentionChange,
-  } = useMentionSystem({
-    editorRef,
-    isEditing,
-    setEditorValue,
-  })
-
-  const conditionalFormats = useQuillFormats({ feedContext, projectName })
-
-  const handleCombinedKeyDown = (e: React.KeyboardEvent) => {
-    handleMentionKeyDown(e)
-    handleKeyDown(e)
-  }
-
-  const handleCombinedChange = (content: string, delta: any, source: any, editor: any) => {
-    handleMentionChange(content, delta, source, editor)
-  }
+  const conditionalFormats = useQuillFormats()
 
   if (isLoading) {
     return (
@@ -270,28 +247,27 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   }
 
   return (
-    <BorderedSection title="Description">
+    <BorderedSection title="Description" showHeader={!isEditing}>
       <StyledContent
         className={clsx({ editing: isEditing })}
         onClick={!isEditing ? handleStartEditing : undefined}
       >
         {isEditing ? (
           <StyledEditor className="block-shortcuts">
-            <ReactQuill
-              key={`description-editor-${isEditing}`}
-              theme="snow"
-              ref={editorRef}
-              value={editorValue}
-              onChange={handleCombinedChange}
-              placeholder={
-                feedContext
-                  ? 'Add a description or mention with @user, @@version, @@@task...'
-                  : 'Add a description...'
-              }
-              modules={getModules({ imageUploader: null, disableImageUpload: true })}
-              formats={conditionalFormats}
-              onKeyDown={handleCombinedKeyDown}
-            />
+            <QuillListStyles style={{ height: '100%' }}>
+              <ReactQuill
+                key={`description-editor-${isEditing}`}
+                theme="snow"
+                ref={editorRef}
+                value={editorValue}
+                onChange={setEditorValue}
+                placeholder="Add a description..."
+                modules={getDescriptionModules({ imageUploader: null, disableImageUpload: true })}
+                formats={conditionalFormats}
+                onKeyDown={handleKeyDown}
+                style={{ height: '100%' }}
+              />
+            </QuillListStyles>
           </StyledEditor>
         ) : (
           <StyledDescription className={clsx({ empty: !description && !isMixed })}>
@@ -317,50 +293,11 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
         )}
         {isEditing && (
           <StyledFooter>
-            {feedContext && (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Button
-                  icon="person"
-                  variant="text"
-                  onClick={() => handleMentionButton('@')}
-                  data-tooltip={'Mention user'}
-                  data-shortcut={'@'}
-                />
-                <Button
-                  icon="layers"
-                  variant="text"
-                  onClick={() => handleMentionButton('@@')}
-                  data-tooltip={'Mention version'}
-                  data-shortcut={'@@'}
-                />
-                <Button
-                  icon="check_circle"
-                  variant="text"
-                  onClick={() => handleMentionButton('@@@')}
-                  data-tooltip={'Mention task'}
-                  data-shortcut={'@@@'}
-                />
-              </div>
-            )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <Button variant="text" label="Cancel" onClick={handleCancel} />
               <Button variant="filled" label="Save" onClick={handleSave} />
             </div>
           </StyledFooter>
-        )}
-
-        {feedContext && (
-          <CommentMentionSelect
-            mention={mention}
-            options={mentionOptions}
-            onChange={handleSelectMention}
-            types={mentionTypes}
-            // @ts-ignore
-            config={mentionTypeOptions[mention?.type]}
-            noneFound={!mentionOptions.length && mention?.search}
-            noneFoundAtAll={!mentionOptions.length && !mention?.search}
-            selectedIndex={mentionSelectedIndex}
-          />
         )}
       </StyledContent>
     </BorderedSection>
