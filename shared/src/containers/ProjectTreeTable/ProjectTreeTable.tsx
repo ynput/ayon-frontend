@@ -778,10 +778,11 @@ const TableHeadCell = ({
   sortableRows,
 }: TableHeadCellProps) => {
   const { column } = header
+  const sorting = column.getIsSorted()
 
   return (
     <Styled.HeaderCell
-      className={clsx(header.id, 'shimmer-dark', 'aaa', {
+      className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
@@ -802,6 +803,7 @@ const TableHeadCell = ({
           <Styled.HeaderButtons className="actions">
             {(canHide || canPin || canSort) && (
               <ColumnHeaderMenu
+                className="header-menu"
                 header={header}
                 canHide={canHide}
                 canPin={canPin}
@@ -813,9 +815,10 @@ const TableHeadCell = ({
             {/* COLUMN SORTING */}
             {canSort && (
               <HeaderActionButton
-                icon={'sort'}
+                icon="sort"
+                className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
+                  transform: sorting === 'asc' ? 'scaleY(-1)' : 'none',
                 }}
                 onClick={column.getToggleSortingHandler()}
                 selected={!!column.getIsSorted()}

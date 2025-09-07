@@ -124,10 +124,35 @@ export const HeaderCell = styled.th`
     }
   }
 
+  /* show actions container when sort button is visible */
+  &:has(.sort-button.visible) {
+    .actions {
+      display: flex;
+    }
+
+    /* Hide the header menu when sort button is visible (not hovering) */
+    .header-menu {
+      display: none;
+    }
+  }
+
   /* show action buttons */
   &:hover {
     .actions {
-      display: flex;
+      display: flex !important;
+    }
+
+    /* Show header menu on hover */
+    .header-menu {
+      display: flex !important;
+      transform: none !important;
+    }
+
+    /* Prevent more_horiz icon from rotating on hover */
+    .header-menu button,
+    .header-menu button *,
+    .header-menu .icon {
+      transform: none !important;
     }
   }
 
@@ -173,6 +198,18 @@ export const HeaderButtons = styled.div`
   transform: translateY(-50%);
   background-color: var(--md-sys-color-surface-container-lowest);
   padding-left: 4px;
+
+  /* Ensure header menu doesn't inherit transforms */
+  .header-menu {
+    transform: none !important;
+  }
+
+  /* Prevent more_horiz icon from rotating */
+  .header-menu button,
+  .header-menu button *,
+  .header-menu .icon {
+    transform: none !important;
+  }
 
   .resizing & {
     cursor: col-resize !important;
