@@ -14,6 +14,7 @@ import FilesGrid from '../FilesGrid'
 
 // Styled components
 import * as Styled from './CommentInput.styled'
+import { QuillListStyles } from '../../../../components/QuillListStyles'
 
 // Helpers and utilities
 import getMentionOptions from '../../mentionHelpers/getMentionOptions'
@@ -596,17 +597,19 @@ const CommentInput: FC<CommentInputProps> = ({
             />
           )}
           {isOpen && !disabled ? (
-            <ReactQuill
-              theme="snow"
-              style={{ minHeight: quillMinHeight, maxHeight: 300 }}
-              ref={editorRef}
-              value={editorValue}
-              onChange={handleChange}
-              readOnly={!isOpen}
-              placeholder={'Comment or mention with @user, @@version, @@@task...'}
-              modules={modules}
-              formats={quillFormats}
-            />
+            <QuillListStyles>
+              <ReactQuill
+                theme="snow"
+                style={{ minHeight: quillMinHeight, maxHeight: 300 }}
+                ref={editorRef}
+                value={editorValue}
+                onChange={handleChange}
+                readOnly={!isOpen}
+                placeholder={'Comment or mention with @user, @@version, @@@task...'}
+                modules={modules}
+                formats={quillFormats}
+              />
+            </QuillListStyles>
           ) : (
             <Styled.Placeholder>
               {disabled ? 'Commenting is disabled across multiple projects.' : 'Add a comment...'}

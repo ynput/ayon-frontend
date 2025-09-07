@@ -27,6 +27,7 @@ import { validateClipboardData } from './clipboard/clipboardValidation'
 import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
 import { useProjectTableContext } from './ProjectTableContext'
 import { validateEntityId } from '@shared/util'
+import { safeReadClipboard, safeWriteClipboard } from '@shared/util/clipboardUtils'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
 
@@ -224,19 +225,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       if (!clipboardText) {
         return
       }
-      if (!navigator.clipboard) {
-        clipboardError('Clipboard API not supported in this browser.')
-        return
-      }
-      if (!window.isSecureContext) {
-        clipboardError('Clipboard operations require a secure HTTPS context.')
-        return
-      }
-      try {
-        await navigator.clipboard.writeText(clipboardText)
+      const success = await safeWriteClipboard(clipboardText)
+      if (success) {
         console.log('Copied to clipboard successfully', clipboardText)
-      } catch (error: any) {
-        clipboardError(`Failed to copy to clipboard: ${error.message}`)
       }
     },
     [selectedCells, entitiesMap, gridMap],
@@ -271,22 +262,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   )
 
   const getClipboardString = async (): Promise<string | void> => {
-    if (!navigator.clipboard) {
-      clipboardError('Clipboard API not supported in this browser.')
-      return
-    }
-    if (!window.isSecureContext) {
-      clipboardError('Clipboard operations require a secure HTTPS context.')
-      return
-    }
-    let clipboardText: string
-    try {
-      clipboardText = await navigator.clipboard.readText()
-      return clipboardText
-    } catch (error: any) {
-      clipboardError(`Failed to read from clipboard: ${error.message}`)
-      return
-    }
+    const result = await safeReadClipboard()
+    return result || undefined
   }
 
   const pasteFromClipboard: ClipboardContextType['pasteFromClipboard'] = useCallback(
@@ -671,15 +648,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             activeEl.isContentEditable)
         ) {
           // focus is inside an input, textarea, or content-editable element
-          const allEntityIds = await doesClipboardContainId()
-          // we might still want to paste if the clipboard contains valid entity IDs
-          if (allEntityIds) {
-            // prevent pasting into input fields and handle as paste on the cell
-            e.preventDefault()
-          } else {
-            // skip pasting
-            return
-          }
+          // Skip clipboard check to avoid permission errors when not in a direct user gesture
+          // Just let the default paste behavior handle it
+          return
         }
         pasteFromClipboard(Array.from(selectedCells), {
           method: e.shiftKey ? 'merge' : 'replace', // Use shift key to determine paste method

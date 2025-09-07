@@ -1,31 +1,28 @@
 import { toast } from 'react-toastify'
+import { safeWriteClipboard } from './clipboardUtils'
 
-export const copyToClipboard = (message: string, toastMessage = false) => {
+export const copyToClipboard = async (message: string, toastMessage = false) => {
   if (!message) {
     toast.warn('Nothing to copy')
     return
   }
 
   try {
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(message)
-        .then(() => {
-          let toastText = 'Copied To Clipboard'
-          if (toastMessage) {
-            toastText += `: ${message}`
-          }
-          toast.success(toastText, { autoClose: 1000 })
-        })
-        .catch((err) => {
-          console.error('Could not copy text: ', err)
-          toast.error('Could not copy text')
-        })
+    const success = await safeWriteClipboard(message)
+    if (success) {
+      let toastText = 'Copied To Clipboard'
+      if (toastMessage) {
+        toastText += `: ${message}`
+      }
+      toast.success(toastText, { autoClose: 1000 })
     } else {
+      // Fallback to legacy method if modern clipboard API fails
       fallbackCopyTextToClipboard(message, toastMessage)
     }
   } catch (error) {
     console.error('Unexpected error: ', error)
+    // Fallback to legacy method
+    fallbackCopyTextToClipboard(message, toastMessage)
   }
 }
 

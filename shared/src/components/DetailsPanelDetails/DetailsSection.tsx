@@ -16,6 +16,10 @@ const StyledRow = styled.div`
   .copy-icon {
     opacity: 0;
     transition: opacity 0.2s ease;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-low-hover);
@@ -44,7 +48,6 @@ const StyledValue = styled.div`
   text-overflow: ellipsis;
   justify-self: end;
   font-size: 14px;
-  font-family: monospace;
   width: 100%;
 `
 

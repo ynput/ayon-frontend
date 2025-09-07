@@ -22,6 +22,10 @@ const FormRow = styled.div`
 
   .copy-icon {
     opacity: 0;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-low-hover);
