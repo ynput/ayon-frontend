@@ -18,6 +18,7 @@ import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectTableContext } from '../context'
+import { EnumCellValue } from './EnumCellValue'
 
 const Cell = styled.div`
   position: absolute;
@@ -201,13 +202,13 @@ export const CellWidget: FC<EditorCellProps> = ({
       case !!options.length: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
+          const selectedOptions = options.filter((option) => enumValue.includes(option.value))
           return (
-            <TextWidget
-              value={enumValue.join(', ')}
-              option={
-                enumValue.length === 1 ? options.find((o) => o.value === enumValue[0]) : undefined
-              }
-              {...sharedProps}
+            <EnumCellValue
+              selectedOptions={selectedOptions}
+              isReadOnly
+              hasMultipleValues={enumValue.length > 1}
+              isMultiSelect={type?.includes('list')}
             />
           )
         }
@@ -216,7 +217,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={enumValue}
             options={options}
             type={type}
-            onOpen={() => !isReadOnly && setEditingCellId(cellId)}
+            onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             {...sharedProps}
             {...pt?.enum}

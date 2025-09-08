@@ -189,6 +189,8 @@ export const ProjectTreeTable = ({
     getEntityById,
   } = useProjectTableContext()
 
+  const { projectName: contextProjectName, writableFields } = useProjectDataContext()
+
   const isLoading = isLoadingProp || isLoadingData
 
   const {
@@ -240,8 +242,8 @@ export const ProjectTreeTable = ({
 
   // Format readonly columns and attributes
   const { readOnlyColumns, readOnlyAttribs } = useMemo(
-    () => getReadOnlyLists(attribFields, readOnly),
-    [attribFields, readOnly],
+    () => getReadOnlyLists(attribFields, writableFields, readOnly),
+    [attribFields, writableFields, readOnly],
   )
 
   const { selectedCells } = useSelectionCellsContext()
@@ -467,8 +469,6 @@ export const ProjectTreeTable = ({
     },
     [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
   )
-
-  const { projectName: contextProjectName } = useProjectDataContext()
 
   // Get move entity functions for the dialog
   const {
@@ -1136,6 +1136,7 @@ const TableCell = ({
     focusCell,
     getCellBorderClasses,
     clearSelection,
+    selectedCells,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
@@ -1148,6 +1149,7 @@ const TableCell = ({
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
   const isGroup = cell.row.original.entityType === 'group'
+  const isMultipleSelected = selectedCells.size > 1
 
   return (
     <Styled.TableCell
@@ -1163,6 +1165,7 @@ const TableCell = ({
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
           task: cell.row.original.entityType === 'task',
+          'multiple-selected': isMultipleSelected,
         },
         className,
         ...borderClasses,

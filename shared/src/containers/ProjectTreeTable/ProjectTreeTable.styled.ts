@@ -35,6 +35,11 @@ export const TR = styled.tr`
     td.${DRAG_HANDLE_CLASS} button:hover {
       opacity: 1;
     }
+
+    /* row selection hover */
+    td:not(.selected) {
+      background-color: hsl(215 14% 15%);
+    }
   }
 
   &.group-row {
@@ -132,7 +137,7 @@ export const HeaderCell = styled.th`
       display: none !important;
     }
     cursor: col-resize !important;
-    
+
     /* Ensure all child elements also have the resize cursor */
     * {
       cursor: col-resize !important;
@@ -204,22 +209,23 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
+  --task-background-color: hsl(216 15% 11.5% / 1);
   &.task {
-    background-color: hsl(216 15% 11.5% / 1);
+    background-color: var(--task-background-color);
   }
 
   &.selected-row {
     background-color: var(--md-sys-color-surface-container-high);
   }
 
-  /* show hover effect only if direct child div does NOT have .readonly */
+  /* show hover effect only if direct child div does NOT have .readonly and is not selected */
   &:not(:has(> div.readonly)) {
     cursor: pointer;
     &:hover {
       background-color: var(--md-sys-color-surface-container);
     }
 
-    .selected {
+    &.selected {
       background-color: var(--md-sys-color-secondary-container);
     }
   }
@@ -333,6 +339,32 @@ export const TableCell = styled.td<TableCellProps>`
     bottom: 0;
     border: 2px solid var(--md-sys-color-primary);
     pointer-events: none;
+  }
+
+  /* read only fields are dimmed down for bg and border */
+  &:has(> div.readonly) {
+    &:not(.multiple-selected) {
+      --focused-readonly-color: hsl(212 15% 18% / 1);
+      &.focused {
+        background-color: var(--focused-readonly-color);
+        &::after {
+          border-color: var(--focused-readonly-color);
+        }
+      }
+    }
+
+    /* when focused is readonly and multiple-selected */
+    &.multiple-selected {
+      &.focused::after {
+        display: none;
+      }
+    }
+  }
+
+  /* if there is no cell widget element (no children) then the cell should not be selectable at all */
+  &:not(:has(> div)) {
+    pointer-events: none;
+    cursor: default;
   }
 
   &.editing {
