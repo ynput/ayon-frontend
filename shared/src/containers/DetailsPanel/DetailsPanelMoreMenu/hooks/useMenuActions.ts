@@ -48,20 +48,6 @@ export const useMenuActions = ({
     'view-data': () => {
       setShowDetailsDialog(true)
     },
-    'add-to-list': () => {
-      if (entityListsContext && firstEntityData && firstProject) {
-        const selectedEntities = [
-          {
-            entityId: firstEntityData.id,
-            entityType: entityType,
-          },
-        ]
-
-        entityListsContext.openCreateNewList(entityType as any, selectedEntities)
-      } else {
-        console.log('Add to list not available in this context')
-      }
-    },
   }
 
   const handleMoreMenuAction = (value: string) => {
