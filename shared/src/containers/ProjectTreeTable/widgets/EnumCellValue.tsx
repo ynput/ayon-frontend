@@ -2,7 +2,8 @@ import { AttributeEnumItem } from '@shared/api'
 import { Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
-import { EDIT_TRIGGER_CLASS } from './CellWidget'
+// Inline the edit trigger class to avoid runtime import and circular dependency with CellWidget
+const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 const StyledWidget = styled.div`
   display: flex;

@@ -1,11 +1,12 @@
 import { FC } from 'react'
 import styled from 'styled-components'
-import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
+import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import { TextWidget } from '@shared/containers/ProjectTreeTable/widgets/TextWidget'
 import { BooleanWidget } from '@shared/containers/ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '@shared/containers/ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
-import { AttributeField } from '../DetailsPanelAttributesEditor'
+// Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
+import type { AttributeField } from '../DetailsPanelAttributesEditor'
 
 const FieldValueText = styled.div`
   width: 100%;

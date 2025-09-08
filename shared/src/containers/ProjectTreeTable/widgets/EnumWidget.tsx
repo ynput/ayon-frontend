@@ -2,7 +2,7 @@ import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-componen
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { WidgetBaseProps } from './CellWidget'
+import type { WidgetBaseProps } from './CellWidget'
 import { AttributeData, AttributeEnumItem } from '../types'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
