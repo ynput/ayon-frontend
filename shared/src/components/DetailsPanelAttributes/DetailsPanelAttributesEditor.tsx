@@ -97,14 +97,14 @@ export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builti
 }
 
 export interface DetailsPanelAttributesEditorProps {
-  isLoading?: boolean
-  enableEditing?: boolean
-  fields: AttributeField[]
+  isLoading?: boolean // show loading shimmer for 20 placeholder items
+  enableEditing?: boolean // if this is false, everything is readonly
+  fields: AttributeField[] // the schema for the form
   form: Record<
     string,
     string | number | boolean | Date | any[] | Record<string, any> | undefined | null
-  >
-  mixedFields?: string[]
+  > // the form data
+  mixedFields?: string[] // when multiple entities are selected, this is a list of fields that are mixed
   onChange?: (key: string, value: any) => void
 }
 
