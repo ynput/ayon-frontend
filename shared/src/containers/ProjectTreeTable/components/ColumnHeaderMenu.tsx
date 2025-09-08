@@ -1,12 +1,15 @@
-import { Icon, Button } from '@ynput/ayon-react-components'
-import styled, { keyframes } from 'styled-components'
+import { Button } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
-import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import clsx from 'clsx'
-
-export const MENU_ID = 'column-header-menu'
+import { useRef } from 'react'
+import { useDispatch } from 'react-redux'
+// @ts-expect-error - non TS file
+import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
+// @ts-expect-error - non TS file
+import MenuContainer from '../../../../../src/components/Menu/MenuComponents/MenuContainer'
+// @ts-expect-error - non TS file
+import { toggleMenuOpen } from '../../../../../src/features/context'
 
 const MenuButton = styled(Button)`
   background-color: unset !important;
@@ -22,98 +25,9 @@ const MenuButton = styled(Button)`
     background-color: unset !important;
   }
 
-  &:hover {
+  &:hover,  &.active {
     background-color: var(--md-sys-color-surface-container-hover) !important;
   }
-
-  &.active {
-    background-color: var(--md-sys-color-surface-container-hover) !important;
-  }
-`
-
-// Animation for menu opening
-const DialogOpenAnimation = keyframes`
-  from {
-    scale: 0.95;
-    opacity: 0.6;
-  }
-  to {
-    scale: 1;
-    opacity: 1;
-  }
-`
-
-const MenuDropdown = styled.div<{ position: { top: number; left: number } }>`
-  position: fixed;
-  top: ${(props) => props.position.top}px;
-  left: ${(props) => props.position.left}px;
-  
-  /* Menu styling from Menu.styled.js */
-  display: flex;
-  flex-direction: column;
-  gap: var(--base-gap-large);
-  padding: 8px;
-  
-  /* Colors and appearance */
-  background-color: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface);
-  border-radius: 8px;
-  overflow: hidden;
-  
-  /* Shadow and z-index */
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  
-  /* Animation */
-  animation: ${DialogOpenAnimation} 0.03s ease-in forwards;
-  transform-origin: top left;
-  
-  /* Minimum width */
-  min-width: 160px;
-`
-
-const MenuItem = styled.button`
-  /* Reset button styles */
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  
-  /* Layout from Menu.styled.js Item */
-  display: flex;
-  padding: 6px 16px 6px 12px;
-  justify-content: flex-start;
-  align-items: center;
-  gap: var(--base-gap-large);
-  align-self: stretch;
-  border-radius: 4px;
-  position: relative;
-  user-select: none;
-  
-  /* Typography */
-  font-size: 14px;
-  color: var(--md-sys-color-on-surface);
-  text-align: left;
-
-  span {
-    display: inline-block;
-  }
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-highest);
-  }
-
-  .icon {
-    font-size: 16px;
-    color: var(--md-sys-color-on-surface);
-  }
-`
-
-const Divider = styled.hr`
-  margin: 0;
-  width: 100%;
-  border-style: solid;
-  opacity: 0.5;
-  border-color: var(--md-sys-color-surface-container-highest);
 `
 
 interface ColumnHeaderMenuProps {
@@ -123,6 +37,7 @@ interface ColumnHeaderMenuProps {
   canSort?: boolean
   isResizing?: boolean
   className?: string
+  menuId?: string
 }
 
 export const ColumnHeaderMenu = ({
@@ -132,67 +47,19 @@ export const ColumnHeaderMenu = ({
   canSort,
   isResizing,
   className,
+  menuId,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
-  const [isOpen, setIsOpen] = useState(false)
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
+  const dispatch = useDispatch()
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
 
   // Hide the menu when resizing
   if (isResizing) {
     return null
   }
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false)
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
-
-  // Close menu on escape key
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
-        setIsOpen(false)
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
-    }
-  }, [isOpen])
-
-  // Calculate menu position
-  const calculateMenuPosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setMenuPosition({
-        top: rect.bottom + 8,
-        left: rect.left,
-      })
-    }
-  }
-
-  const handleMenuToggle = () => {
-    if (!isOpen) {
-      calculateMenuPosition()
-    }
-    setIsOpen(!isOpen)
+  const handleMenuToggle = (open: boolean = true) => {
+    dispatch(toggleMenuOpen(open ? menuId : false))
   }
 
   // Get current column state - we need to call these methods directly to get fresh state
@@ -204,6 +71,7 @@ export const ColumnHeaderMenu = ({
     label?: string
     icon?: string
     onClick?: () => void
+    type?: 'divider'
   }> = []
 
   if (canPin) {
@@ -218,15 +86,15 @@ export const ColumnHeaderMenu = ({
         } else {
           column.pin('left')
         }
-        setIsOpen(false)
+        handleMenuToggle(false)
       },
     })
   }
 
-  // Add divider only if there are pin options and sort options
   if (canPin && canSort) {
     menuItems.push({
       id: 'divider',
+      type: 'divider',
     })
   }
 
@@ -237,7 +105,7 @@ export const ColumnHeaderMenu = ({
       icon: 'sort',
       onClick: () => {
         column.toggleSorting(false)
-        setIsOpen(false)
+        handleMenuToggle(false)
       },
     })
 
@@ -247,15 +115,15 @@ export const ColumnHeaderMenu = ({
       icon: 'sort',
       onClick: () => {
         column.toggleSorting(true)
-        setIsOpen(false)
+        handleMenuToggle(false)
       },
     })
   }
 
-  // Add divider only if there are sort options and hide options
   if (canSort && canHide) {
     menuItems.push({
       id: 'divider',
+      type: 'divider',
     })
   }
 
@@ -266,7 +134,7 @@ export const ColumnHeaderMenu = ({
       icon: isVisible ? 'visibility_off' : 'visibility',
       onClick: () => {
         column.toggleVisibility()
-        setIsOpen(false)
+        handleMenuToggle(false)
       },
     })
   }
@@ -279,31 +147,25 @@ export const ColumnHeaderMenu = ({
     <>
       <MenuButton
         ref={buttonRef}
-        className={clsx(className, { active: isOpen })}
-        onClick={handleMenuToggle}
+        className={className}
+        onClick={(e) => {
+          e.stopPropagation()
+          handleMenuToggle()
+        }}
         icon="more_horiz"
+        id={menuId}
       />
-      {isOpen &&
-        createPortal(
-          <MenuDropdown ref={menuRef} position={menuPosition}>
-            {menuItems.map((item, index) => {
-              if (item.id === 'divider') {
-                return <Divider key={`divider-${index}`} />
-              }
-              // Only render MenuItem if it has content
-              if (!item.label && !item.icon) {
-                return null
-              }
-              return (
-                <MenuItem key={item.id} onClick={item.onClick}>
-                  {item.icon && <Icon icon={item.icon} />}
-                  {item.label}
-                </MenuItem>
-              )
-            })}
-          </MenuDropdown>,
-          document.body,
-        )}
+      <MenuContainer 
+        target={buttonRef.current} 
+        id={menuId} 
+        align="left"
+        onClose={(e: any) => {
+          e.stopPropagation()
+          handleMenuToggle(false)
+        }}
+      >
+        <Menu menu={menuItems} onClose={() => handleMenuToggle(false)} />
+      </MenuContainer>
     </>
   )
 }

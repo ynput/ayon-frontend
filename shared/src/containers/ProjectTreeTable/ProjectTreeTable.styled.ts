@@ -122,37 +122,13 @@ export const HeaderCell = styled.th`
     .resize-handle {
       opacity: 1;
     }
-  }
-
-  /* show actions container when sort button is visible */
-  &:has(.sort-button.visible) {
-    .actions {
-      display: flex;
-    }
-
-    /* Hide the header menu when sort button is visible (not hovering) */
-    .header-menu {
-      display: none;
-    }
-  }
-
-  /* show action buttons */
-  &:hover {
+    
     .actions {
       display: flex !important;
     }
-
-    /* Show header menu on hover */
-    .header-menu {
+    
+    .actions .header-menu {
       display: flex !important;
-      transform: none !important;
-    }
-
-    /* Prevent more_horiz icon from rotating on hover */
-    .header-menu button,
-    .header-menu button *,
-    .header-menu .icon {
-      transform: none !important;
     }
   }
 
@@ -163,7 +139,6 @@ export const HeaderCell = styled.th`
     }
     cursor: col-resize !important;
 
-    /* Ensure all child elements also have the resize cursor */
     * {
       cursor: col-resize !important;
     }
@@ -186,8 +161,15 @@ export const HeaderCell = styled.th`
   }
 `
 
-export const HeaderButtons = styled.div`
+export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   display: none;
+
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    display: flex !important;
+  `}
+
   gap: var(--base-gap-small);
   align-items: center;
 
@@ -199,20 +181,45 @@ export const HeaderButtons = styled.div`
   background-color: var(--md-sys-color-surface-container-lowest);
   padding-left: 4px;
 
-  /* Ensure header menu doesn't inherit transforms */
-  .header-menu {
-    transform: none !important;
-  }
-
-  /* Prevent more_horiz icon from rotating */
-  .header-menu button,
-  .header-menu button *,
-  .header-menu .icon {
-    transform: none !important;
-  }
-
   .resizing & {
     cursor: col-resize !important;
+  }
+
+  &:has(.sort-button.visible),
+  &:has(.sort-button.selected) {
+    display: flex !important;
+  }
+
+  .sort-button.visible {
+    display: flex !important;
+  }
+  
+  .sort-button.selected {
+    display: flex !important;
+  }
+
+  .header-menu {
+    display: none;
+  }
+  
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    .header-menu {
+      display: flex !important;
+    }
+  `}
+  
+  .header-menu.open,
+  .header-menu.active {
+    display: flex !important;
+  }
+
+   .resizing & {
+    .sort-button,
+    .header-menu {
+      display: none !important;
+    }
   }
 `
 
@@ -464,6 +471,13 @@ export const TableContainer = styled.div`
 
   &.isLoading {
     overflow: hidden;
+  }
+
+  /* Hide all header buttons when any column is being resized */
+  &.resizing {
+    .actions {
+      display: none !important;
+    }
   }
 
   table {

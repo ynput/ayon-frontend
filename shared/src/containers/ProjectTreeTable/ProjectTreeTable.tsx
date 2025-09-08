@@ -77,6 +77,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
+import { useSelector } from 'react-redux'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -518,7 +519,9 @@ export const ProjectTreeTable = ({
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
-          className={clsx('table-container', pt?.container?.className)}
+          className={clsx('table-container', {
+            resizing: table.getState().columnSizingInfo.isResizingColumn
+          }, pt?.container?.className)}
         >
           <table
             style={{
@@ -779,6 +782,8 @@ const TableHeadCell = ({
 }: TableHeadCellProps) => {
   const { column } = header
   const sorting = column.getIsSorted()
+  const menuId = `column-header-menu-${column.id}`
+  const isOpen = useSelector((state: any) => state.context.menuOpen) === menuId
 
   return (
     <Styled.HeaderCell
@@ -800,7 +805,7 @@ const TableHeadCell = ({
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
 
-          <Styled.HeaderButtons className="actions">
+          <Styled.HeaderButtons className="actions" $isOpen={isOpen}>
             {(canHide || canPin || canSort) && (
               <ColumnHeaderMenu
                 className="header-menu"
@@ -809,6 +814,7 @@ const TableHeadCell = ({
                 canPin={canPin}
                 canSort={canSort}
                 isResizing={column.getIsResizing()}
+                menuId={menuId}
               />
             )}
 
