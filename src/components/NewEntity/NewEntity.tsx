@@ -26,6 +26,7 @@ import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@context/SlicerContext'
+import { FormValue } from '@/types'
 
 const ContentStyled = styled.div`
   display: flex;
@@ -176,7 +177,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     (entityType === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes) || []
 
   // handlers
-  const handleChange = (value: any, id?: keyof EntityForm) => {
+  const handleChange = (value: FormValue, id?: keyof EntityForm) => {
     if (!id) return
 
     let newState = { ...entityForm }
@@ -217,7 +218,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setEntityForm(newState)
   }
 
-  const handleSeqChange = (value: any) => {
+  const handleSeqChange = (value: { base: string; type: string; increment: number; length: number; prefix: string; prefixDepth: number }) => {
     setEntityForm({ ...entityForm, label: value.base, subType: value.type })
     setSequenceForm({
       ...sequenceForm,
