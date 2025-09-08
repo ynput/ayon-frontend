@@ -3,11 +3,27 @@ import { useMemo } from 'react'
 interface UseMenuOptionsProps {
   onOpenVersionUpload: any
   entityListsContext: any
+  entityType: string
+  firstEntityData: any
 }
 
-export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext }: UseMenuOptionsProps) => {
-  const moreMenuOptions = useMemo(() => {
-    const options = [
+interface MenuOption {
+  value: string
+  label: string
+  icon: string
+  items?: Array<{
+    id: string
+    label: string
+    icon?: string
+    command: () => void
+    selected?: boolean
+    disabled?: boolean
+  }>
+}
+
+export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext, entityType, firstEntityData }: UseMenuOptionsProps) => {
+  const moreMenuOptions = useMemo((): MenuOption[] => {
+    const options: MenuOption[] = [
       {
         value: 'picture-in-picture',
         label: 'Picture in picture',
@@ -20,7 +36,7 @@ export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext }: UseM
       },
       {
         value: 'view-data',
-        label: 'View data (raw data)',
+        label: 'View data',
         icon: 'database',
       },
     ]
@@ -33,16 +49,40 @@ export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext }: UseM
       })
     }
 
-    if (entityListsContext) {
+    if (entityListsContext && firstEntityData) {
+      const selectedEntities = [
+        {
+          entityId: firstEntityData.id,
+          entityType: entityType,
+        },
+      ]
+
+      let compatibleLists: any[] = []
+
+      if (entityType === 'folder') {
+        compatibleLists = entityListsContext.folders?.data || []
+      } else if (entityType === 'task') {
+        compatibleLists = entityListsContext.tasks?.data || []
+      } else if (entityType === 'product') {
+        compatibleLists = entityListsContext.products?.data || []
+      } else if (entityType === 'version') {
+        compatibleLists = [
+          ...(entityListsContext.versions?.data || []),
+          ...(entityListsContext.reviews?.data || []),
+        ]
+      }
+      const newListMenuItem = entityListsContext.newListMenuItem(entityType as any, selectedEntities)
+
       options.push({
         value: 'add-to-list',
         label: 'Add to list',
         icon: 'playlist_add',
+        items: [...compatibleLists, newListMenuItem],
       })
     }
 
     return options
-  }, [onOpenVersionUpload, entityListsContext])
+  }, [onOpenVersionUpload, entityListsContext, entityType, firstEntityData])
 
   return moreMenuOptions
 }
