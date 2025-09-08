@@ -16,6 +16,9 @@ import { openViewer } from '@state/viewer'
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+  selectedList?: any
+  currentListItems?: any[]
+  currentListId?: string
 }
 
 type EntitySelection = {
@@ -27,6 +30,9 @@ type EntitySelection = {
 const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
+  selectedList,
+  currentListItems,
+  currentListId,
 }: ProjectOverviewDetailsPanelProps) => {
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))

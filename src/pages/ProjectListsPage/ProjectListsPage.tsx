@@ -68,10 +68,10 @@ type ProjectListsPageProps = {
 }
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
-  projectName,
-  entityListTypes,
-  isReview,
-}) => {
+                                                                     projectName,
+                                                                     entityListTypes,
+                                                                     isReview,
+                                                                   }) => {
   return (
     <ListsModuleProvider>
       <ProjectDataProvider projectName={projectName}>
@@ -231,11 +231,11 @@ type ProjectListsProps = {
 }
 
 const ProjectLists: FC<ProjectListsProps> = ({
-  extraColumns,
-  extraColumnsSettings,
-  isReview,
-  dndActiveId, // Destructure new prop
-}) => {
+                                               extraColumns,
+                                               extraColumnsSettings,
+                                               isReview,
+                                               dndActiveId, // Destructure new prop
+                                             }) => {
   const user = useAppSelector((state) => state.user?.attrib)
   const isDeveloperMode = user?.developerMode ?? false
   const navigate = useNavigate()

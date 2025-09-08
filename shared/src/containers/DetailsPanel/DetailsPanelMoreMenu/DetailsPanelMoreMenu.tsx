@@ -42,7 +42,8 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
     firstProject,
     refetch,
   })
-  const moreMenuOptions = useMenuOptions({ onOpenVersionUpload, entityListsContext })
+
+  const moreMenuOptions = useMenuOptions({ onOpenVersionUpload, entityListsContext, entityType, firstEntityData })
   const { handleMoreMenuAction } = useMenuActions({
     entityType,
     firstEntityData,
@@ -62,15 +63,32 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
     dispatch(setMenuOpen(menu))
   }
 
-  const menuItems = moreMenuOptions.map((option: any) => ({
-    id: option.value,
-    label: option.label,
-    icon: option.icon,
-    onClick: () => {
-      handleMoreMenuAction(option.value)
-      dispatch(setMenuOpen(false))
-    },
-  }))
+  const menuItems = moreMenuOptions.map((option: any) => {
+    const menuItem: any = {
+      id: option.value,
+      label: option.label,
+      icon: option.icon,
+    }
+
+    if (option.items) {
+      menuItem.items = option.items.map((subItem: any) => ({
+        id: subItem.id,
+        label: subItem.label,
+        icon: subItem.icon,
+        onClick: () => {
+          subItem.command?.()
+          dispatch(setMenuOpen(false))
+        },
+      }))
+    } else {
+      menuItem.onClick = () => {
+        handleMoreMenuAction(option.value)
+        dispatch(setMenuOpen(false))
+      }
+    }
+
+    return menuItem
+  })
 
   return (
     <>
