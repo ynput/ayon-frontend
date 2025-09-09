@@ -113,6 +113,17 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     }
   }
 
+  const handleVersionDropdownChange = (selectedVersions: string[]) => {
+    const versionNumber = selectedVersions[0]
+    const selectedVersion = versions.find(version => version.version === versionNumber)
+
+    if (selectedVersion?.isCompatible !== false) {
+      handleDownload(versionNumber)
+    } else {
+      toast.error('Addon incompatible with your server version')
+    }
+  }
+
   let groupedLinks: {
     type: LinkModel['type']
     links: LinkModel[]
@@ -132,13 +143,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   let actionButton = null
   const subRequired = flags?.includes('licensed') && !available
 
-  const sortVersionsByDate = <T extends { createdAt?: string | number }>(versions: T[]): T[] => {
-    return versions.toSorted((a, b) =>
-      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-    )
-  }
-
-  const sortedVersions = sortVersionsByDate(versions)
+  const sortedVersions = versions.toSorted((a, b) => -1 * compareBuild(a.version, b.version))
   const newestVersion = sortedVersions[0]
   const isLatestIncompatible = newestVersion?.isCompatible === false
 
@@ -151,7 +156,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     const displayVersion = newestVersion?.version || latestVersion
     const buttonText = isLatestIncompatible && latestCompatibleVersion
       ? `v${displayVersion} (server update required)`
-      : `Download v${versionToDownload}`
+      : `Download v${displayVersion}`
 
     return (
       <Button
@@ -174,7 +179,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   if (isLatestIncompatible && !latestCompatibleVersion) {
     actionButton = (
-      <Button variant="tertiary" disabled icon={'block'}>
+      <Button variant="filled" disabled icon={'block'}>
         {`v${newestVersion?.version || latestVersion} (server update required)`}
       </Button>
     )
@@ -238,7 +243,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     <Styled.PanelContainer direction="row" className={clsx({ noData: !name })}>
       {name && (
         <>
-          <Styled.Left className={Type.bodyLarge}>
+          <Styled.Left className={Type.bodyLarge} style={{height: "auto"}}>
             <Styled.Header className={clsx({ loading: isLoading })}>
               <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
@@ -293,20 +298,8 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                   options={versionsOptions}
                   align="right"
                   value={[]}
-                  onChange={(v) => {
-                    const selectedVersion = versions.find(version => version.version === v[0])
-                    if (selectedVersion?.isCompatible !== false) {
-                      handleDownload(v[0])
-                    } else {
-                      toast.error('Addon incompatible with your server version')
-                    }
-                  }}
+                  onChange={handleVersionDropdownChange}
                   itemStyle={{ justifyContent: 'space-between' }}
-                  buttonProps={{
-                    'data-tooltip': isLatestIncompatible
-                      ? 'Select a compatible version to download'
-                      : 'Download a specific version'
-                  } as any}
                   search={versions.length > 10}
                   itemTemplate={(option) => (
                     <Styled.VersionDropdownItem>
