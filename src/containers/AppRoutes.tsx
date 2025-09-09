@@ -16,7 +16,8 @@ const ServicesPage = lazy(() => import('@pages/ServicesPage'))
 const UserDashboardPage = lazy(() => import('@pages/UserDashboardPage'))
 const ErrorPage = lazy(() => import('@pages/ErrorPage'))
 
-import useLoadRemoteProjectPages from '../remote/useLoadRemotePages'
+import { useLoadRemotePages } from '../remote/useLoadRemotePages'
+
 import LoadingPage from '@pages/LoadingPage'
 import { RemoteAddon } from '@shared/context'
 
@@ -26,7 +27,7 @@ interface AppRoutesProps {
 
 const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
   // dynamically import routes
-  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages({
+  const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     moduleKey: 'Route',
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
 
