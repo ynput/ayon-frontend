@@ -35,7 +35,6 @@ const getAddonsApi = enhancedApi.injectEndpoints({
             settings: projectScope,
           })
         }
-
         return result
       },
     }),

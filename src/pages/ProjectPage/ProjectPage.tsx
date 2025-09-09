@@ -123,8 +123,6 @@ const ProjectPage = () => {
     isLoading: boolean
   }
 
-  console.log('matchedAddons', matchedAddons)
-
   // get remote project module pages
   const links: NavLink[] = useMemo(
     () => [
@@ -189,14 +187,6 @@ const ProjectPage = () => {
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
           if (addon.settings.manager && !isManager) return false
-          if (addon.name === 'report') return false
-          // Filter out addons that are already handled by Module Federation
-          const isHandledByModuleFederation = remotePages.some(remote => 
-            remote.module === addon.name || 
-            remote.name === addon.title ||
-            remote.module === addon.title
-          )
-          if (isHandledByModuleFederation) return false
           return true
         })
         .map((addon) => ({
@@ -246,13 +236,6 @@ const ProjectPage = () => {
   }
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
-    console.log('module', module, 'addonName', addonName);
-
-    // // Handle report module as an addon
-    // if (module === 'report') {
-    //   addonName = 'report'
-    // }
-
     if (module === 'overview') {
       return <ProjectOverviewPage />
     }
@@ -283,7 +266,19 @@ const ProjectPage = () => {
     if (module === 'report') {
       return <ReportPage />
     }
-    // Check if this module is handled by Module Federation first
+
+    const foundAddon = addonsData?.find((item) => item.name === addonName)
+    if (foundAddon) {
+      return (
+        <ProjectAddon
+          addonName={addonName}
+          addonVersion={foundAddon.version}
+          sidebar={foundAddon.settings.sidebar}
+          addonTitle={foundAddon.title}
+        />
+      )
+    }
+
     const foundRemotePage = remotePages.find((item) => item.module === module)
     if (foundRemotePage) {
       const RemotePage = foundRemotePage.component
@@ -293,19 +288,6 @@ const ProjectPage = () => {
             ...{ useParams, useNavigate, useLocation, useSearchParams },
           }}
           projectName={projectName}
-        />
-      )
-    }
-
-    // Handle addon-specific routes (iframe approach for non-Module Federation addons)
-    const foundAddon = addonsData?.find((item) => item.name === addonName)
-    if (foundAddon) {
-      return (
-        <ProjectAddon
-          addonName={addonName}
-          addonVersion={foundAddon.version}
-          sidebar={foundAddon.settings.sidebar}
-          addonTitle={foundAddon.title}
         />
       )
     }

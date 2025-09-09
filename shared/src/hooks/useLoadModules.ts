@@ -57,7 +57,6 @@ export const useLoadModules = <T extends any[]>(
     addon: string,
     fallback: T[number] | undefined,
     minVersion?: string,
-    addonVersion?: string,
   ) => {
     try {
       const result = await loadRemote<{ default: T[number] }>(`${remote}/${module}`, {
@@ -66,8 +65,7 @@ export const useLoadModules = <T extends any[]>(
       updateResultWithLoaded(addon, remote, module, result?.default || fallback, minVersion)
     } catch (error) {
       console.error('Error loading remote module', remote, module, error)
-      // Don't throw error, just log it and continue
-      console.warn('Continuing with fallback for failed module:', { remote, module })
+      throw error
     }
   }
 
@@ -129,7 +127,7 @@ export const useLoadModules = <T extends any[]>(
         return
       }
 
-      promises.push(loadModule(remote, module, addon, fallback, minVersion, spec.loadCSS, addonInfo.addonVersion))
+      promises.push(loadModule(remote, module, addon, fallback, minVersion))
     })
 
     if (!promises.length) {
