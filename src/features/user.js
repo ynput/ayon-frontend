@@ -19,6 +19,7 @@ const userSlice = createSlice({
       isAdmin: false,
       isManager: false,
       isUser: true,
+      isGuest: false,
     },
     attrib: {
       fullName: '',

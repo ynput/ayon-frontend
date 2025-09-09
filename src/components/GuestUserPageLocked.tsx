@@ -1,4 +1,4 @@
-const ExternalUserPageLocked = () => {
+const GuestUserPageLocked = () => {
   return (
     <main style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
       <h1>Sorry, you don't have access to this page</h1>
@@ -8,4 +8,4 @@ const ExternalUserPageLocked = () => {
 
 }
 
-export default ExternalUserPageLocked
+export default GuestUserPageLocked

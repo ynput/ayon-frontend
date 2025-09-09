@@ -56,7 +56,6 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       attrib: {},
       name: formData.Username,
       password: password ? password : undefined,
-      isGuest: formData.isGuest ? true : undefined,
     }
 
     attributes.forEach(({ name }) => {

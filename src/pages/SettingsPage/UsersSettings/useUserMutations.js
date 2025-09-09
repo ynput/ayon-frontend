@@ -5,7 +5,7 @@ const useUserMutations = () => {
     userLevel: 'user',
     userActive: true,
     UserImage: '',
-    isGuest: false,
+    isGuest: false, // DEPRECATED: legacy guest mode. to be removed
     accessGroups: {},
     defaultAccessGroups: [],
   }

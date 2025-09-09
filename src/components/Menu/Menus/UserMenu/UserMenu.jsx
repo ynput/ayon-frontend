@@ -15,7 +15,7 @@ export const UserMenu = ({ user, ...props }) => {
   }
 
   const items = []
-  if (!user.data.isExternal) {
+  if (!user.data.isGuest) {
     items.push({
       id: 'account',
       link: '/account/profile',
