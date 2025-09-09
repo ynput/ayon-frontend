@@ -171,6 +171,7 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/report`,
         module: 'report',
         viewType: 'report',
+        enabled: matchedAddons?.get('report') === '0.1.0-dev', // hide the report tab until the addon is out of development
       },
       {
         name: 'Workfiles',

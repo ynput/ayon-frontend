@@ -79,7 +79,7 @@ const ReportPage: FC<ReportPageProps> = ({}) => {
   })
 
   if (outdated) {
-    return <div>Report requires Planner addon 0.1.0 or higher</div>
+    return <div>Report requires Report addon 0.1.0 or higher</div>
   }
 
   if (!isLoaded) {
