@@ -78,22 +78,24 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
           />
         </FormRowStyled>
 
-        <FormRowStyled label="Guest">
-          <div
-            data-tooltip={isAdmin ? 'Admins cannot be guests' : undefined}
-            data-tooltip-delay={0}
-            style={{ width: 'fit-content' }}
-          >
-            <InputSwitch
-              checked={disabled || isAdmin ? false : formData?.isGuest}
-              onChange={(e) => updateFormData('isGuest', e.target.checked)}
-              disabled={disabled || isAdmin}
-              style={{
-                opacity: disabled ? 0.5 : 1,
-              }}
-            />
-          </div>
-        </FormRowStyled>
+        {formData?.isGuest && (
+          <FormRowStyled label="Legacy guest mode">
+            <div
+              data-tooltip={isAdmin ? 'Admins cannot be guests' : "This user uses a legacy guest mode. Please assign them a user level and remove this flag."}
+              data-tooltip-delay={0}
+              style={{ width: 'fit-content' }}
+            >
+              <InputSwitch
+                checked={disabled || isAdmin ? false : formData?.isGuest}
+                onChange={(e) => updateFormData('isGuest', e.target.checked)}
+                disabled={disabled || isAdmin}
+                style={{
+                  opacity: disabled ? 0.5 : 1,
+                }}
+              />
+            </div>
+          </FormRowStyled>
+        )}
 
         <FormRowStyled label="Developer">
           <div data-tooltip={getTooltip()} data-tooltip-delay={0} style={{ width: 'fit-content' }}>

@@ -78,6 +78,7 @@ const fields = [
     },
   },
   {
+    // DEPRECATED: Legacy guest mode, to be removed
     name: 'isGuest',
     label: 'Guest',
     data: {
