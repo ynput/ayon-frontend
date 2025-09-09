@@ -35,6 +35,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   entitiesMap,
   columnEnums,
   columnReadOnly,
+  visibleColumns,
 }) => {
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
@@ -46,7 +47,12 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {
       const { headers, fullRow } = config || {}
       try {
-        // First, organize selected cells by row
+        // Get visible columns in display order, excluding row selection
+        const visibleColumnIds = visibleColumns
+          .map(col => col.id)
+          .filter(id => id !== ROW_SELECTION_COLUMN_ID)
+
+        // Organize selected cells by row, filtering to only visible columns
         const cellsByRow = new Map<string, Set<string>>()
 
         // Parse all selected cells and organize by rowId and colId
@@ -55,9 +61,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           if (!position) return
 
           const { rowId, colId } = position
-
-          // do not include row selection column
-          if (colId === ROW_SELECTION_COLUMN_ID) return
+          if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
 
           if (!cellsByRow.has(rowId)) {
             cellsByRow.set(rowId, new Set())
@@ -198,7 +202,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         console.error('Failed to copy to clipboard:', error)
       }
     },
-    [selectedCells, focusedCellId, gridMap, entitiesMap, getEntityById],
+    [selectedCells, focusedCellId, gridMap, entitiesMap, getEntityById, visibleColumns],
   )
 
   const doesClipboardContainId = async () => {

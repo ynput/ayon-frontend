@@ -511,6 +511,7 @@ export const ProjectTreeTable = ({
       entitiesMap={entitiesMap}
       columnEnums={{ ...options, ...attribByField }}
       columnReadOnly={readOnlyAttribs}
+      visibleColumns={visibleColumns}
     >
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
