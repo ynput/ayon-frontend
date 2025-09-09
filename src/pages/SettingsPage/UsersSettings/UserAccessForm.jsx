@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux'
-import { InputSwitch, FormLayout, FormRow, Icon } from '@ynput/ayon-react-components'
+import { InputSwitch, FormLayout, FormRow, Icon, Button } from '@ynput/ayon-react-components'
 import { SelectButton } from 'primereact/selectbutton'
 import AccessGroupsDropdown from '@containers/AccessGroupsDropdown'
 import styled from 'styled-components'
@@ -70,7 +70,6 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
       <b>Access</b>
 
       <FormLayout>
-
         <FormRowStyled label="Disable password">
           <InputSwitch
             checked={!!formData?.disablePasswordLogin}
@@ -79,21 +78,18 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
         </FormRowStyled>
 
         {formData?.isGuest && (
-          <FormRowStyled label="Legacy guest mode">
-            <div
-              data-tooltip={isAdmin ? 'Admins cannot be guests' : "This user uses a legacy guest mode. Please assign them a user level and remove this flag."}
+          <FormRowStyled label="Guest (legacy)">
+            <Button
+              label="Remove Guest flag"
+              onClick={() => updateFormData('isGuest', false)}
+              variant="filled"
+              icon="build_circle"
+              data-tooltip={
+                'Guest mode is deprecated and will be removed in future versions. Click the button to remove the flag and fix the user.'
+              }
               data-tooltip-delay={0}
               style={{ width: 'fit-content' }}
-            >
-              <InputSwitch
-                checked={disabled || isAdmin ? false : formData?.isGuest}
-                onChange={(e) => updateFormData('isGuest', e.target.checked)}
-                disabled={disabled || isAdmin}
-                style={{
-                  opacity: disabled ? 0.5 : 1,
-                }}
-              />
-            </div>
+            />
           </FormRowStyled>
         )}
 
