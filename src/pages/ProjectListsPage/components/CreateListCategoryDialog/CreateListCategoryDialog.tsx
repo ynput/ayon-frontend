@@ -21,6 +21,7 @@ interface CreateListCategoryDialogProps {
   onClose: () => void
   onCreateCategory: (categoryName: string) => Promise<void>
   existingCategories?: string[]
+  listCount?: number
 }
 
 export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
@@ -28,6 +29,7 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
   onClose,
   onCreateCategory,
   existingCategories = [],
+  listCount = 1,
 }) => {
   const [categoryName, setCategoryName] = useState('')
   const [isCreating, setIsCreating] = useState(false)
@@ -77,8 +79,18 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
   )
 
   return (
-    <Dialog header="Create Category" isOpen={isOpen} onClose={handleCancel} size="sm">
+    <Dialog
+      header={listCount > 1 ? `Create Category for ${listCount} Lists` : 'Create Category'}
+      isOpen={isOpen}
+      onClose={handleCancel}
+      size="sm"
+    >
       <DialogContent>
+        {listCount > 1 && (
+          <p style={{ margin: '0 0 8px 0', color: 'var(--color-text-dim)', fontSize: '14px' }}>
+            This category will be assigned to {listCount} selected lists.
+          </p>
+        )}
         <InputText
           placeholder="Enter category name"
           value={categoryName}

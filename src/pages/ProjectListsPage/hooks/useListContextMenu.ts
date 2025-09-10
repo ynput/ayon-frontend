@@ -24,13 +24,18 @@ const useListContextMenu = () => {
   } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
-  const { updateCategory, createAndAssignCategory } = useUpdateListCategory({ projectName })
+  const {
+    updateCategory,
+    createAndAssignCategory,
+    updateCategoryBulk,
+    createAndAssignCategoryBulk,
+  } = useUpdateListCategory({ projectName })
 
-  // Dialog state for creating categories
+  // Dialog state for creating categories - updated to handle multiple lists
   const [createCategoryDialog, setCreateCategoryDialog] = useState<{
     isOpen: boolean
-    listId: string | null
-  }>({ isOpen: false, listId: null })
+    listIds: string[]
+  }>({ isOpen: false, listIds: [] })
 
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
@@ -45,21 +50,25 @@ const useListContextMenu = () => {
     [createReviewSessionList, projectName],
   )
 
-  const openCreateCategoryDialog = useCallback((listId: string) => {
-    setCreateCategoryDialog({ isOpen: true, listId })
+  const openCreateCategoryDialog = useCallback((listIds: string[]) => {
+    setCreateCategoryDialog({ isOpen: true, listIds })
   }, [])
 
   const closeCreateCategoryDialog = useCallback(() => {
-    setCreateCategoryDialog({ isOpen: false, listId: null })
+    setCreateCategoryDialog({ isOpen: false, listIds: [] })
   }, [])
 
   const handleCreateCategory = useCallback(
     async (categoryName: string) => {
-      if (createCategoryDialog.listId) {
-        await createAndAssignCategory(createCategoryDialog.listId, categoryName)
+      if (createCategoryDialog.listIds.length > 0) {
+        if (createCategoryDialog.listIds.length === 1) {
+          await createAndAssignCategory(createCategoryDialog.listIds[0], categoryName)
+        } else {
+          await createAndAssignCategoryBulk(createCategoryDialog.listIds, categoryName)
+        }
       }
     },
-    [createCategoryDialog.listId, createAndAssignCategory],
+    [createCategoryDialog.listIds, createAndAssignCategory, createAndAssignCategoryBulk],
   )
 
   const openContext = useCallback(
@@ -89,31 +98,47 @@ const useListContextMenu = () => {
 
       // Create category submenu items
       const createCategorySubmenu = () => {
-        if (multipleSelected || !allSelectedRowsAreLists || !selectedList) {
+        if (!allSelectedRowsAreLists || newSelectedLists.length === 0) {
           return []
         }
 
-        const currentCategory = selectedList.data?.category
         const submenuItems: any[] = []
+        const selectedListIds = newSelectedLists.map((list) => list.id)
 
         // Add "Create category" option at the top
         submenuItems.push({
           label: 'Create category',
           icon: 'add',
-          command: () => openCreateCategoryDialog(selectedList.id),
+          command: () => openCreateCategoryDialog(selectedListIds),
         })
 
-        // Add "Remove category" option if the list has a category
-        if (currentCategory) {
+        // For multiple selections, show "Remove category" if any list has a category
+        // For single selection, show "Remove category" only if that list has a category
+        const hasAnyCategory = newSelectedLists.some((list) => list.data?.category)
+        if (hasAnyCategory) {
           submenuItems.push({
             label: 'Remove category',
             icon: 'close',
-            command: () => updateCategory(selectedList.id, null),
+            command: () => {
+              if (multipleSelected) {
+                updateCategoryBulk(selectedListIds, null)
+              } else {
+                updateCategory(selectedListIds[0], null)
+              }
+            },
           })
         }
 
-        // Add available categories (excluding the current one)
-        const availableCategories = categoryEnum.filter((cat) => cat.value !== currentCategory)
+        // Get categories that are not already assigned to ALL selected lists
+        const availableCategories = categoryEnum.filter((cat) => {
+          if (multipleSelected) {
+            // For multiple selections, show categories that are not assigned to ALL lists
+            return !newSelectedLists.every((list) => list.data?.category === cat.value)
+          } else {
+            // For single selection, show categories that are not assigned to this list
+            return newSelectedLists[0]?.data?.category !== cat.value
+          }
+        })
 
         if (availableCategories.length > 0) {
           if (submenuItems.length > 0) {
@@ -124,7 +149,13 @@ const useListContextMenu = () => {
             submenuItems.push({
               label: category.label,
               icon: 'folder',
-              command: () => updateCategory(selectedList.id, category.value),
+              command: () => {
+                if (multipleSelected) {
+                  updateCategoryBulk(selectedListIds, category.value)
+                } else {
+                  updateCategory(selectedListIds[0], category.value)
+                }
+              },
             })
           })
         }
@@ -152,7 +183,7 @@ const useListContextMenu = () => {
           label: 'Add category',
           icon: 'sell',
           items: categorySubmenu,
-          disabled: multipleSelected || !allSelectedRowsAreLists,
+          disabled: !allSelectedRowsAreLists,
           hidden: !allSelectedRowsAreLists || categorySubmenu.length === 0,
         },
         {
@@ -194,6 +225,7 @@ const useListContextMenu = () => {
       deleteLists,
       createReviewSessionList,
       updateCategory,
+      updateCategoryBulk,
     ],
   )
 

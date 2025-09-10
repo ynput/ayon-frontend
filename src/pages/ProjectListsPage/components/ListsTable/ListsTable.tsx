@@ -139,6 +139,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         onClose={closeCreateCategoryDialog}
         onCreateCategory={handleCreateCategory}
         existingCategories={existingCategories}
+        listCount={createCategoryDialog.listIds.length}
       />
     </>
   )
