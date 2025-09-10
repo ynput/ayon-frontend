@@ -346,11 +346,30 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     )
 
     const selectedCellsData = currentSelectedCells.flatMap((cellId) => getCellData(cellId) || [])
+
+    // Get full row selections first
+    const fullRowSelections = selectedCellsData
+      .filter(cell => cell.columnId === ROW_SELECTION_COLUMN_ID)
+      .map(cell => cell.entityId)
+
+    // Remove duplicates based on entityId - prioritize full row selection over individual cells
+    const filteredSelectedCellsData = selectedCellsData.filter((entity, index, array) => {
+      // If this is a full row selection, always include it
+      if (entity.columnId === ROW_SELECTION_COLUMN_ID) return true
+
+      // If there's a full row selection for this entity, exclude individual cell selections
+      if (fullRowSelections.includes(entity.entityId)) return false
+
+      // For remaining cells, remove duplicates based on entityId (keep first occurrence)
+      return array.findIndex(e => e.entityId === entity.entityId) === index
+    })
+    console.log('filteredSelectedCellsData', filteredSelectedCellsData)
+
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
     const selectedCellFullRows: string[] = []
     const selectedCellsGroups: string[] = [] // find cells that are group headers
-    for (const { entityId, columnId } of selectedCellsData) {
+    for (const { entityId, columnId } of filteredSelectedCellsData) {
       if (entityId && !selectedCellRows.includes(entityId)) selectedCellRows.push(entityId)
       if (columnId && !selectedCellColumns.includes(columnId)) selectedCellColumns.push(columnId)
       if (columnId === ROW_SELECTION_COLUMN_ID && !selectedCellFullRows.includes(entityId))
@@ -363,7 +382,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         ? constructor(
             e,
             cellData,
-            selectedCellsData,
+            filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
               selectedRows: selectedCellRows,
@@ -378,7 +397,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         : builtInMenuItems[constructor]?.(
             e,
             cellData,
-            selectedCellsData,
+            filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
               selectedRows: selectedCellRows,
