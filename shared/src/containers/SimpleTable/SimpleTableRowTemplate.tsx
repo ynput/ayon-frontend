@@ -44,6 +44,7 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   depth?: number
   isDisabled?: boolean
   disabledMessage?: string
+  active?: boolean
 }
 
 export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
@@ -62,7 +63,9 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       depth = 0,
       isDisabled,
       disabledMessage,
+      active,
       style,
+      className,
       ...props
     },
     ref,
@@ -74,9 +77,6 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         style={{
           ...style,
           paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
-          ...(isDisabled && {
-            cursor: 'not-allowed',
-          }),
         }}
         title={isDisabled ? disabledMessage : undefined}
       >

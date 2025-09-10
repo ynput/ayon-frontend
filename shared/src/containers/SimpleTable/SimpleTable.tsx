@@ -102,6 +102,7 @@ export type SimpleTableRow = {
   data: RowItemData
   isDisabled?: boolean
   disabledMessage?: string
+  inactive?: boolean
 }
 
 export interface SimpleTableProps {
@@ -324,7 +325,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
             className: clsx({
               selected: row.getIsSelected(),
               loading: cellMeta?.isLoading,
-              disabled: row.original.isDisabled,
+              disabled: row.original.isDisabled, // you can't select disabled rows
+              inactive: row.original.inactive, // false: archived items but still selectable
             }),
             onKeyDown: (e) => {
               if (e.target instanceof HTMLInputElement) return

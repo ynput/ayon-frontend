@@ -36,6 +36,13 @@ export const Cell = styled.div`
     }
   }
 
+  &.inactive {
+    .icon,
+    .value {
+      color: var(--md-sys-color-outline);
+    }
+  }
+
   &.disabled {
     opacity: 0.5;
     pointer-events: none;

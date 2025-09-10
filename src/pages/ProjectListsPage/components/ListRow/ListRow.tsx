@@ -10,6 +10,7 @@ export interface ListRowProps extends React.HTMLAttributes<HTMLDivElement> {
   depth?: number
   count: number | string
   disabled?: boolean
+  inactive?: boolean
   isRenaming?: boolean
   isTableExpandable?: boolean
   isRowExpandable?: boolean
@@ -31,6 +32,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
       icon,
       count,
       disabled,
+      inactive,
       isRenaming,
       isTableExpandable,
       isRowExpandable,
@@ -100,7 +102,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
         {!isRenaming && (
           <>
             <Spacer className="spacer" />
-            <Styled.ListCount>{count}</Styled.ListCount>
+            <Styled.ListCount>{inactive ? '(archived)' : count}</Styled.ListCount>
           </>
         )}
       </Styled.Cell>
