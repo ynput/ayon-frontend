@@ -1,5 +1,5 @@
 /**
- * Unified hook for managing report page view settings.
+ * Unified hook for managing reports page view settings.
  *
  * The hook handles:
  * - Slicer row selection state
@@ -23,7 +23,7 @@ interface SlicerSettings {
   persistentRowSelectionData?: SelectionData
 }
 
-export type ReportViewSettings = {
+export type ReportsViewSettings = {
   // Slicer state management
   rowSelection: RowSelectionState
   onUpdateRowSelection: (rowSelection: RowSelectionState) => void
@@ -35,7 +35,7 @@ export type ReportViewSettings = {
   onUpdatePersistentRowSelectionData: (persistentRowSelectionData: SelectionData) => void
 }
 
-export const useReportViewSettings = (): ReportViewSettings => {
+export const useReportsViewSettings = (): ReportsViewSettings => {
   // Get views context
   const { viewSettings } = useViewsContext()
 

@@ -32,7 +32,7 @@ import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from "@components/HelpButton/HelpButton.tsx"
-import ReportPage from '@pages/ReportPage/ReportPage'
+import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 
 type NavLink = {
@@ -93,7 +93,7 @@ const ProjectPage = () => {
 
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
-    addons: ['review', 'planner', 'report'],
+    addons: ['review', 'planner', 'reports'],
   })
 
   useEffect(() => {
@@ -165,11 +165,11 @@ const ProjectPage = () => {
         enabled: matchedAddons?.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
       },
       {
-        name: 'Report',
-        path: `/projects/${projectName}/report`,
-        module: 'report',
-        viewType: 'report',
-        enabled: matchedAddons?.get('report') === '0.1.0-dev', // hide the report tab until the addon is out of development
+        name: 'Reports',
+        path: `/projects/${projectName}/reports`,
+        module: 'reports',
+        viewType: 'reports',
+        enabled: matchedAddons?.get('reports') === '0.1.0-dev', // hide the report tab until the addon is out of development
       },
       {
         name: 'Workfiles',
@@ -263,8 +263,8 @@ const ProjectPage = () => {
     if (module === 'scheduler') {
       return <SchedulerPage />
     }
-    if (module === 'report') {
-      return <ReportPage />
+    if (module === 'reports') {
+      return <ReportsPage />
     }
 
     const foundAddon = addonsData?.find((item) => item.name === addonName)

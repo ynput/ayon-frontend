@@ -2,16 +2,16 @@ import { useLoadModule } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
 import { FC, useEffect } from 'react'
-import ReportFallback from './ReportFallback'
+import ReportsFallback from './ReportsFallback'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useReportViewSettings } from '@shared/containers/Views'
+import { useReportsViewSettings } from '@shared/containers/Views'
 
-interface ReportPageProps {}
+interface ReportsPageProps {}
 
-const ReportPage: FC<ReportPageProps> = ({}) => {
+const ReportsPage: FC<ReportsPageProps> = ({}) => {
   const projectName = (useAppSelector((state) => state.project.name) as null | string) || ''
 
   // Get view settings from the Views system
@@ -22,7 +22,7 @@ const ReportPage: FC<ReportPageProps> = ({}) => {
     onUpdateExpanded,
     persistentRowSelectionData: viewPersistentData,
     onUpdatePersistentRowSelectionData,
-  } = useReportViewSettings()
+  } = useReportsViewSettings()
 
   // load slicer remote config
   const {
@@ -70,11 +70,11 @@ const ReportPage: FC<ReportPageProps> = ({}) => {
     }
   }, [persistentRowSelectionData, onUpdatePersistentRowSelectionData])
 
-  const [Report, { isLoaded, outdated }] = useLoadModule({
-    addon: 'report',
-    remote: 'report',
-    module: 'Report',
-    fallback: ReportFallback,
+  const [Reports, { isLoaded, outdated }] = useLoadModule({
+    addon: 'reports',
+    remote: 'reports',
+    module: 'Reports',
+    fallback: ReportsFallback,
     minVersion: '0.1.0-dev',
   })
 
@@ -100,7 +100,7 @@ const ReportPage: FC<ReportPageProps> = ({}) => {
           </Section>
         </SplitterPanel>
         <SplitterPanel size={80}>
-          <Report
+          <Reports
             router={{ ...{ useParams, useNavigate, useLocation, useSearchParams } }}
             projectName={projectName}
             slicer={{
@@ -116,4 +116,4 @@ const ReportPage: FC<ReportPageProps> = ({}) => {
   )
 }
 
-export default ReportPage
+export default ReportsPage
