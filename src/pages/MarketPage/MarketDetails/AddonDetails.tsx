@@ -147,51 +147,12 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   const newestVersion = sortedVersions[0]
   const isLatestIncompatible = newestVersion?.isCompatible === false
 
-  // Find the latest compatible version
-  const latestCompatibleVersion = sortedVersions.find(v => v.isCompatible !== false)
+  const displayVersion = newestVersion?.version || latestVersion
 
-  // Helper function to create download button with proper version handling
-  const createDownloadButton = () => {
-    const versionToDownload = isLatestIncompatible && latestCompatibleVersion ? latestCompatibleVersion.version : latestVersion
-    const displayVersion = newestVersion?.version || latestVersion
-    const buttonText = isLatestIncompatible && latestCompatibleVersion
-      ? `v${displayVersion} (server update required)`
-      : `Download v${displayVersion}`
-
-    return (
-      <Button
-        variant="filled"
-        icon={'download'}
-        onClick={() => {
-          if (isLatestIncompatible && !latestCompatibleVersion) {
-            toast.error('Addon incompatible with your server version')
-            return
-          }
-          versionToDownload && handleDownload(versionToDownload)
-        }}
-      >
-        {buttonText}
-      </Button>
-    )
-  }
-
-
-
-  if (isLatestIncompatible && !latestCompatibleVersion) {
+  if (isLatestIncompatible) {
     actionButton = (
       <Button variant="filled" disabled icon={'block'}>
-        {`v${newestVersion?.version || latestVersion} (server update required)`}
-      </Button>
-    )
-  } else if (isLatestIncompatible && latestCompatibleVersion) {
-    actionButton = (
-      <Button
-        variant="filled"
-        icon={'block'}
-        style={{ fontSize: '12px' }}
-        disabled
-      >
-        {`v${newestVersion?.version || latestVersion} (server update required)`}
+        {`v${displayVersion} (server update required)`}
       </Button>
     )
   } else if (isDownloading) {
@@ -210,10 +171,16 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     actionButton = <Button disabled>Pending...</Button>
   } else if (isDownloaded && !isOutdated) {
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
-  } else if (isDownloaded && isOutdated && latestVersion) {
-    actionButton = createDownloadButton()
-  } else if (latestVersion) {
-    actionButton = createDownloadButton()
+  } else if ((isDownloaded && isOutdated && latestVersion) || latestVersion) {
+    actionButton = (
+      <Button
+        variant="filled"
+        icon={'download'}
+        onClick={() => handleDownload(latestVersion)}
+      >
+        {`Download v${displayVersion}`}
+      </Button>
+    )
   } else if (subRequired) {
     actionButton = (
       <PricingLink style={{ width: '100%' }}>
