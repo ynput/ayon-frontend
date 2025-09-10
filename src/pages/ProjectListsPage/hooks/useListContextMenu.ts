@@ -180,7 +180,7 @@ const useListContextMenu = () => {
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
-          label: 'Add category',
+          label: 'Category',
           icon: 'sell',
           items: categorySubmenu,
           disabled: !allSelectedRowsAreLists,
