@@ -23,6 +23,18 @@ import {
   ListsPageParam,
 } from './types'
 
+// Helper function to safely parse entity list data field from JSON string to object
+const parseEntityListData = (data: string | null | undefined): Record<string, any> => {
+  if (!data) return {}
+
+  try {
+    return JSON.parse(data)
+  } catch (e) {
+    console.warn('Failed to parse entity list data field:', e)
+    return {}
+  }
+}
+
 // GRAPHQL API (getLists and getListItems)
 // Define the LISTS_PER_PAGE constant for pagination
 export const LISTS_PER_PAGE = 500
@@ -46,7 +58,10 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
       transformResponse: (response: GetListsQuery): GetListsResult => {
         return {
           // @ts-expect-error - entityType is string
-          lists: response.project.entityLists.edges.map((edge) => edge.node),
+          lists: response.project.entityLists.edges.map((edge) => ({
+            ...edge.node,
+            data: parseEntityListData(edge.node.data),
+          })),
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
@@ -387,6 +402,12 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
 const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
   endpoints: {
     getEntityList: {
+      transformResponse: (response: any) => {
+        return {
+          ...response,
+          data: parseEntityListData(response.data),
+        }
+      },
       providesTags: (result, _e, { listId, projectName }) => [
         { type: 'entityList', id: listId },
         { type: 'entityList', id: projectName },

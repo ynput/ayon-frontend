@@ -8,19 +8,11 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
 
   // First pass: categorize lists by category from data
   for (const list of listsData) {
-    // Try to parse data to get category
+    // Get category from data field (now guaranteed to be an object)
     let category = 'Uncategorized'
 
-    try {
-      if (list.data) {
-        const data = JSON.parse(list.data)
-        if (data.category) {
-          category = data.category
-        }
-      }
-    } catch (e) {
-      // If parsing fails, use default category
-      console.warn('Failed to parse list data:', e)
+    if (list.data && list.data.category) {
+      category = list.data.category
     }
 
     if (!listsByCategory[category]) {

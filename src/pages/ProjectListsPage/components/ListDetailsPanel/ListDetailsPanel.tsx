@@ -7,6 +7,7 @@ import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsT
 import { ListAttributeForm, ListMetaData } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@hooks/useQueryArgumentChangeLoading'
+import { useListsDataContext } from '../../context/ListsDataContext'
 import clsx from 'clsx'
 
 interface ListDetailsPanelProps {
@@ -20,6 +21,9 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     isFetching,
     isLoading,
   } = useGetEntityListQuery({ listId, projectName }, { skip: !listId })
+
+  // Get lists data for category enum
+  const { listsData } = useListsDataContext()
 
   // Use custom hook to track loading state only when arguments change
   const isLoadingOnArgChange = useQueryArgumentChangeLoading({ listId, projectName }, isFetching)
@@ -46,7 +50,12 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
         </span>
       </Styled.Header>
       <Styled.Section>
-        <ListAttributeForm list={list} isLoading={isLoadingList} projectName={projectName} />
+        <ListAttributeForm
+          list={list}
+          isLoading={isLoadingList}
+          projectName={projectName}
+          listsData={listsData}
+        />
       </Styled.Section>
       <Styled.Section>
         <ListMetaData list={list} isLoading={isLoadingList} />

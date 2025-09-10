@@ -88,6 +88,9 @@ const ShimmerRow = styled(FormRow)`
 export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
   readonly?: boolean
   hidden?: boolean
+  enableCustomValues?: boolean // Allow custom values in enum fields
+  enableSearch?: boolean // Enable search functionality in enum fields
+  allowNone?: boolean // Allow "None" option for enum fields that can be cleared
 }
 
 export interface DetailsPanelAttributesEditorProps {

@@ -7,7 +7,7 @@ import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
-import { ListsDataProvider } from './context/ListsDataContext'
+import { ListsDataProvider, useListsDataContext } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
@@ -105,6 +105,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     onUpdateColumns,
     ...props
   } = useListItemsDataContext()
+  const { listsData } = useListsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
 
