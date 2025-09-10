@@ -23,7 +23,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
   } = useGetEntityListQuery({ listId, projectName }, { skip: !listId })
 
   // Get lists data for category enum
-  const { listsData } = useListsDataContext()
+  const { categoryEnum } = useListsDataContext()
 
   // Use custom hook to track loading state only when arguments change
   const isLoadingOnArgChange = useQueryArgumentChangeLoading({ listId, projectName }, isFetching)
@@ -55,7 +55,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
             list={list}
             isLoading={isLoadingList}
             projectName={projectName}
-            listsData={listsData}
+            categoryEnum={categoryEnum}
           />
         </Styled.Section>
         <Styled.Section>

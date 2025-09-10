@@ -1,18 +1,13 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
-import {
-  EntityList,
-  EntityListModel,
-  useGetProjectQuery,
-  useUpdateEntityListMutation,
-} from '@shared/api'
+import { EntityListModel, useGetProjectQuery, useUpdateEntityListMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 
 interface ListAttributeFormProps {
   projectName: string
   list?: EntityListModel
   isLoading?: boolean
-  listsData?: EntityList[]
+  categoryEnum?: Array<{ value: string; label: string }>
 }
 
 // explicit type for the form state
@@ -43,24 +38,11 @@ const getDefinedDataFields = (fields: AttributeField[]): string[] => {
     .map((field) => getDataFieldName(field.name))
 }
 
-// Helper function to extract unique categories from all lists
-const getUniqueCategoriesFromLists = (listsData: EntityList[] = []): string[] => {
-  const categories = new Set<string>()
-
-  for (const list of listsData) {
-    if (list.data && list.data.category && typeof list.data.category === 'string') {
-      categories.add(list.data.category)
-    }
-  }
-
-  return Array.from(categories).sort()
-}
-
 export const ListAttributeForm: FC<ListAttributeFormProps> = ({
   projectName,
   list,
   isLoading,
-  listsData,
+  categoryEnum = [],
 }) => {
   const [form, setForm] = useState<ListFormData>({
     label: '',
@@ -69,15 +51,6 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
   })
 
   const { data: project } = useGetProjectQuery({ projectName })
-
-  // Get unique categories from all lists for the enum
-  const categoryEnum = useMemo(() => {
-    const uniqueCategories = getUniqueCategoriesFromLists(listsData)
-    return uniqueCategories.map((category) => ({
-      value: category,
-      label: category,
-    }))
-  }, [listsData])
 
   const fields: AttributeField[] = useMemo(
     () => [
