@@ -3,12 +3,12 @@ import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { getListIcon } from '@pages/ProjectListsPage/util'
-import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
 import { ListAttributeForm, ListMetaData } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@hooks/useQueryArgumentChangeLoading'
 import { useListsDataContext } from '../../context/ListsDataContext'
 import clsx from 'clsx'
+import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
 
 interface ListDetailsPanelProps {
   listId: string
@@ -37,11 +37,8 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   return (
     <Styled.Panel>
-      <Styled.Section className="border">
-        <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} />
-      </Styled.Section>
-      <Styled.Scrollable>
-        <Styled.Header>
+      <Styled.Header>
+        <Styled.Titles>
           <h2 className={clsx('title', { loading: isLoadingList })}>
             {isLoadingList ? 'Loading...' : list?.label}
           </h2>
@@ -49,18 +46,26 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
             {list && <Icon icon={getListIcon(list)} />}
             {upperFirst(list?.entityType)}s {isReview && '(Review)'}
           </span>
-        </Styled.Header>
-        <Styled.Section>
-          <ListAttributeForm
-            list={list}
-            isLoading={isLoadingList}
-            projectName={projectName}
-            categoryEnum={categoryEnum}
-          />
-        </Styled.Section>
-        <Styled.Section>
-          <ListMetaData list={list} isLoading={isLoadingList} />
-        </Styled.Section>
+        </Styled.Titles>
+        <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} />
+      </Styled.Header>
+      {/* <Styled.Section className="border"></Styled.Section> */}
+      <Styled.Scrollable>
+        {selectedTab === 'details' && (
+          <>
+            <Styled.Section>
+              <ListAttributeForm
+                list={list}
+                isLoading={isLoadingList}
+                projectName={projectName}
+                categoryEnum={categoryEnum}
+              />
+            </Styled.Section>
+            <Styled.Section>
+              <ListMetaData list={list} isLoading={isLoadingList} />
+            </Styled.Section>
+          </>
+        )}
       </Styled.Scrollable>
     </Styled.Panel>
   )

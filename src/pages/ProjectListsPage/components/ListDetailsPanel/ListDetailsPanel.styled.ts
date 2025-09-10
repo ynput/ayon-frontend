@@ -16,21 +16,30 @@ export const Scrollable = styled.div`
 `
 
 export const Section = styled.div`
-  padding: var(--padding-m);
+  &:has(> *) {
+    padding: var(--padding-m);
 
-  &.border {
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    &.border {
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
   }
 `
 
 export const Header = styled.div`
   display: flex;
   flex-direction: column;
-  padding: var(--padding-m) var(--padding-l);
+  padding: var(--padding-m);
   margin-bottom: var(--padding-s);
-  gap: var(--base-gap-small);
+  gap: var(--base-gap-large);
 
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+`
+
+export const Titles = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: var(--padding-m);
 
   .title {
     ${theme.titleMedium}
