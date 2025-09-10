@@ -151,7 +151,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   if (isLatestIncompatible) {
     actionButton = (
-      <Button variant="filled" disabled icon={'block'}>
+      <Button variant="filled" disabled icon={'block'} style={{fontSize: '12px'}}>
         {`v${displayVersion} (server update required)`}
       </Button>
     )
