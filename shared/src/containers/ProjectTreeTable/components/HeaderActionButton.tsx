@@ -4,6 +4,10 @@ import { FC } from 'react'
 import styled from 'styled-components'
 
 const ActionButton = styled(Button)`
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+
   &.action {
     padding: 0px;
     display: flex;

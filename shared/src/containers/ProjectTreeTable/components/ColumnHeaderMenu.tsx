@@ -3,31 +3,35 @@ import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
 import { useRef } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 // @ts-expect-error - non TS file
 import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
 // @ts-expect-error - non TS file
-import MenuContainer from '../../../../../src/components/Menu/MenuComponents/MenuContainer'
+import MenuContainer from '../../../../../src/components/Menu/MenuComponents/MenuContainer2'
 // @ts-expect-error - non TS file
 import { toggleMenuOpen } from '../../../../../src/features/context'
 
-const MenuButton = styled(Button)`
+const MenuButton = styled(Button)<{ $isOpen: boolean }>`
   background-color: unset !important;
   z-index: 110;
   position: relative;
-  padding: 4px;
+  padding: 2px;
+  width: 24px;
+  height: 24px;
 
   &.hasIcon {
-    padding: 4px;
+    padding: 2px;
   }
 
-  &.open {
-    background-color: unset !important;
-  }
-
-  &:hover,  &.active {
+  &:hover, &.active {
     background-color: var(--md-sys-color-surface-container-hover) !important;
   }
+
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    background-color: var(--md-sys-color-surface-container-hover) !important;
+  `}
 `
 
 interface ColumnHeaderMenuProps {
@@ -38,6 +42,7 @@ interface ColumnHeaderMenuProps {
   isResizing?: boolean
   className?: string
   menuId?: string
+  isOpen?: boolean
 }
 
 export const ColumnHeaderMenu = ({
@@ -48,6 +53,7 @@ export const ColumnHeaderMenu = ({
   isResizing,
   className,
   menuId,
+  isOpen
 }: ColumnHeaderMenuProps) => {
   const { column } = header
   const dispatch = useDispatch()
@@ -65,13 +71,16 @@ export const ColumnHeaderMenu = ({
   // Get current column state - we need to call these methods directly to get fresh state
   const isPinned = column.getIsPinned()
   const isVisible = column.getIsVisible()
+  const isSorted = column.getIsSorted()
 
   const menuItems: Array<{
     id: string
     label?: string
     icon?: string
+    className?: string
     onClick?: () => void
     type?: 'divider'
+    selected?: boolean
   }> = []
 
   if (canPin) {
@@ -80,6 +89,7 @@ export const ColumnHeaderMenu = ({
       id: 'pin',
       label: isPinnedLeft ? 'Unpin column' : 'Pin column',
       icon: 'push_pin',
+      selected: isPinnedLeft,
       onClick: () => {
         if (isPinnedLeft) {
           column.pin(false)
@@ -103,6 +113,8 @@ export const ColumnHeaderMenu = ({
       id: 'sort-asc',
       label: 'Sort ascending',
       icon: 'sort',
+      className: 'sort-asc-icon',
+      selected: isSorted === 'asc',
       onClick: () => {
         column.toggleSorting(false)
         handleMenuToggle(false)
@@ -113,6 +125,8 @@ export const ColumnHeaderMenu = ({
       id: 'sort-desc',
       label: 'Sort descending',
       icon: 'sort',
+      className: 'sort-desc-icon',
+      selected: isSorted === 'desc',
       onClick: () => {
         column.toggleSorting(true)
         handleMenuToggle(false)
@@ -154,6 +168,7 @@ export const ColumnHeaderMenu = ({
         }}
         icon="more_horiz"
         id={menuId}
+        $isOpen={isOpen || false}
       />
       <MenuContainer 
         target={buttonRef.current} 

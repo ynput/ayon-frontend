@@ -815,6 +815,7 @@ const TableHeadCell = ({
                 canSort={canSort}
                 isResizing={column.getIsResizing()}
                 menuId={menuId}
+                isOpen={isOpen}
               />
             )}
 
@@ -824,7 +825,7 @@ const TableHeadCell = ({
                 icon="sort"
                 className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: sorting === 'asc' ? 'scaleY(-1)' : 'none',
+                  transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
                 onClick={column.getToggleSortingHandler()}
                 selected={!!column.getIsSorted()}

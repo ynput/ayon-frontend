@@ -505,3 +505,13 @@ a {
   min-width: 20rem;
   width: auto;
 }
+
+.sort-asc-icon .icon,
+.sort-asc-icon svg {
+  transform: rotate(180deg) scaleX(-1) !important;
+}
+
+.sort-desc-icon .icon,
+.sort-desc-icon svg {
+  transform: none !important;
+}
