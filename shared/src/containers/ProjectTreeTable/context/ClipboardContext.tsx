@@ -304,7 +304,12 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       // Determine if we have a single value in the clipboard (one row, one column)
       const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
 
-      // Organize selected cells by row
+      // Get visible columns in display order, excluding row selection
+      const visibleColumnIds = visibleColumns
+        .map(col => col.id)
+        .filter(id => id !== ROW_SELECTION_COLUMN_ID)
+
+      // Organize selected cells by row, filtering to only visible columns
       const cellsByRow = new Map<string, Set<string>>()
 
       // Parse all selected cells and organize by rowId and colId
@@ -313,6 +318,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         if (!position) return
 
         const { rowId, colId } = position
+        if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
 
         if (!cellsByRow.has(rowId)) {
           cellsByRow.set(rowId, new Set())
@@ -573,6 +579,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       pasteTableLinks,
       columnEnums,
       getEntityById,
+      visibleColumns,
     ],
   )
 
