@@ -137,8 +137,6 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
     async (key: string, value: any) => {
       if (!list?.id) return console.warn('No list ID provided')
 
-      console.log(value)
-
       let updatePayload: any
 
       if (isDataField(key)) {
@@ -195,6 +193,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
       form={form}
       isLoading={isLoading}
       onChange={handleChange}
+      title="Attributes"
     />
   )
 }

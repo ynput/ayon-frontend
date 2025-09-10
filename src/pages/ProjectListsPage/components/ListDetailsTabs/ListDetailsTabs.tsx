@@ -8,14 +8,14 @@ const tabs: { label: string; id: ListDetailsTab }[] = [
   { label: 'Sharing', id: 'sharing' },
 ]
 
-interface ListDetailsTabsProps {
+interface ListDetailsTabsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   selected: ListDetailsTab
   onChange: (tab: ListDetailsTab) => void
 }
 
-const ListDetailsTabs: FC<ListDetailsTabsProps> = ({ selected, onChange }) => {
+const ListDetailsTabs: FC<ListDetailsTabsProps> = ({ selected, onChange, ...props }) => {
   return (
-    <Toolbar>
+    <Toolbar {...props}>
       {tabs.map((tab) => (
         <Button
           key={tab.id}

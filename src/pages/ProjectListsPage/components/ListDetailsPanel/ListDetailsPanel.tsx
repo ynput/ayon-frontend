@@ -37,29 +37,31 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   return (
     <Styled.Panel>
-      <Styled.Section>
+      <Styled.Section className="border">
         <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} />
       </Styled.Section>
-      <Styled.Header>
-        <h2 className={clsx('title', { loading: isLoadingList })}>
-          {isLoadingList ? 'Loading...' : list?.label}
-        </h2>
-        <span className={clsx('type', { loading: isLoadingList })}>
-          {list && <Icon icon={getListIcon(list)} />}
-          {upperFirst(list?.entityType)}s {isReview && '(Review)'}
-        </span>
-      </Styled.Header>
-      <Styled.Section>
-        <ListAttributeForm
-          list={list}
-          isLoading={isLoadingList}
-          projectName={projectName}
-          listsData={listsData}
-        />
-      </Styled.Section>
-      <Styled.Section>
-        <ListMetaData list={list} isLoading={isLoadingList} />
-      </Styled.Section>
+      <Styled.Scrollable>
+        <Styled.Header>
+          <h2 className={clsx('title', { loading: isLoadingList })}>
+            {isLoadingList ? 'Loading...' : list?.label}
+          </h2>
+          <span className={clsx('type', { loading: isLoadingList })}>
+            {list && <Icon icon={getListIcon(list)} />}
+            {upperFirst(list?.entityType)}s {isReview && '(Review)'}
+          </span>
+        </Styled.Header>
+        <Styled.Section>
+          <ListAttributeForm
+            list={list}
+            isLoading={isLoadingList}
+            projectName={projectName}
+            listsData={listsData}
+          />
+        </Styled.Section>
+        <Styled.Section>
+          <ListMetaData list={list} isLoading={isLoadingList} />
+        </Styled.Section>
+      </Styled.Scrollable>
     </Styled.Panel>
   )
 }

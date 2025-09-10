@@ -10,8 +10,17 @@ export const Panel = styled(ARCPanel)`
   overflow: scroll;
 `
 
+export const Scrollable = styled.div`
+  overflow: auto;
+  flex: 1;
+`
+
 export const Section = styled.div`
   padding: var(--padding-m);
+
+  &.border {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
 `
 
 export const Header = styled.div`
@@ -22,7 +31,6 @@ export const Header = styled.div`
   gap: var(--base-gap-small);
 
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  border-top: 1px solid var(--md-sys-color-outline-variant);
 
   .title {
     ${theme.titleMedium}
