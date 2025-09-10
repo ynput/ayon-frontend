@@ -1,4 +1,4 @@
-import { gqlApi } from '@shared/api/generated'
+import { entityListsApi, gqlApi } from '@shared/api/generated'
 import {
   FetchBaseQueryError,
   DefinitionsFromApi,
@@ -384,6 +384,18 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
   }),
 })
 
+const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
+  endpoints: {
+    getEntityList: {
+      providesTags: (result, _e, { listId, projectName }) => [
+        { type: 'entityList', id: listId },
+        { type: 'entityList', id: projectName },
+        ...(result ? [{ type: 'entityList', id: result.entityListType }] : []),
+      ],
+    },
+  },
+})
+
 export default getListsGqlApiInjected
 
 export const {
@@ -394,3 +406,5 @@ export const {
   useLazyGetListsItemsForReviewSessionQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected
+
+export const { useGetEntityListQuery } = getListsApiEnhanced

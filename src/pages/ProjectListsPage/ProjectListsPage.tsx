@@ -59,6 +59,7 @@ import {
 } from '@dnd-kit/core'
 import { useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
+import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -255,7 +256,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
   }
 
   // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  const shouldShowEntityDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || !!selectedList
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -317,7 +319,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={shouldShowDetailsPanel ? 4 : 0}
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
@@ -335,10 +336,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         minWidth: 300,
                       }}
                     >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
+                      {shouldShowEntityDetailsPanel ? (
+                        <ProjectOverviewDetailsPanel
+                          projectInfo={projectInfo}
+                          projectName={projectName}
+                        />
+                      ) : selectedList ? (
+                        <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
+                      ) : null}
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

@@ -1,4 +1,4 @@
-import { EntityList } from '@shared/api'
+import { EntityList, EntityListModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
 
@@ -41,10 +41,7 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
           id: list.id,
           name: list.label,
           label: list.label,
-          icon:
-            list.entityListType === 'review-session'
-              ? 'subscriptions'
-              : getEntityTypeIcon(list.entityType),
+          icon: getListIcon(list),
           subRows: [],
           data: {
             id: list.id,
@@ -95,3 +92,6 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
 
   return tableRows
 }
+
+export const getListIcon = (list: Pick<EntityListModel, 'entityListType' | 'entityType'>) =>
+  list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)
