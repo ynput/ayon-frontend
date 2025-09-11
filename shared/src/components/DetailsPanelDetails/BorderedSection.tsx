@@ -1,12 +1,23 @@
 import React from 'react'
 import styled from 'styled-components'
 
-const StyledSection = styled.div`
+const StyledSection = styled.div<{
+  $enableHover: boolean
+}>`
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
   min-height: auto;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.2s ease;
+
+  ${(props) =>
+    props.$enableHover &&
+    `
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low-hover);
+    }
+  `}
 `
 
 const StyledHeader = styled.div`
@@ -22,22 +33,12 @@ const StyledHeader = styled.div`
 const StyledContent = styled.div<{
   $showHeader: boolean
   $autoHeight: boolean
-  $enableHover: boolean
 }>`
   padding: ${(props) => (props.$showHeader ? '12px' : 0)};
   flex: 1;
   min-height: ${(props) =>
     props.$autoHeight ? 'auto' : props.$showHeader ? 'calc(300px - 40px)' : '300px !important'};
   border-radius: ${(props) => (props.$showHeader ? '0 0 8px 8px' : '8px')};
-  transition: background-color 0.2s ease;
-
-  ${(props) =>
-    props.$enableHover &&
-    `
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-low-hover);
-    }
-  `}
 `
 
 interface BorderedSectionProps {
@@ -60,7 +61,7 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
   enableHover = false,
 }) => {
   return (
-    <StyledSection>
+    <StyledSection $enableHover={enableHover}>
       {showHeader ? (
         <StyledHeader>
           <span>{title}</span>
@@ -71,7 +72,6 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
         className={contentClassName}
         $showHeader={showHeader}
         $autoHeight={autoHeight}
-        $enableHover={enableHover}
       >
         {children}
       </StyledContent>
