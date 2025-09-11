@@ -6,12 +6,10 @@ const StyledFieldLabel = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-left: 4px;
   font-size: 14px;
 `
 
 interface FieldLabelProps {
-  title?: string
   name: string
   data: {
     title?: string
@@ -21,7 +19,6 @@ interface FieldLabelProps {
 }
 
 export const FieldLabel: React.FC<FieldLabelProps> = ({
-  title,
   name,
   data,
   showDetailedTooltip = false,
