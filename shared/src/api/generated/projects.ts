@@ -142,7 +142,7 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
-    listProductTypes: build.query<ListProductTypesApiResponse, ListProductTypesApiArg>({
+    getProductTypes: build.query<GetProductTypesApiResponse, GetProductTypesApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/productTypes` }),
     }),
     getProject: build.query<GetProjectApiResponse, GetProjectApiArg>({
@@ -353,9 +353,9 @@ export type RemoveExternalUserApiArg = {
   email: string
   projectName: string
 }
-export type ListProductTypesApiResponse =
-  /** status 200 Successful Response */ ProductTypesListModel
-export type ListProductTypesApiArg = {
+export type GetProductTypesApiResponse =
+  /** status 200 Successful Response */ ProductTypesList
+export type GetProductTypesApiArg = {
   projectName: string
 }
 export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
@@ -691,19 +691,19 @@ export type AddExternalUserModel = {
   email: string
   fullName?: string
 }
-export type ProductTypeListItemModel = {
-  productType: string
-  productBaseType?: string
+export type ProductTypeListItem = {
+  name: string
+  baseType?: string
   color?: string
   icon?: string
 }
-export type DefaultProductTypeModel = {
+export type DefaultProductType = {
   color: string
   icon: string
 }
-export type ProductTypesListModel = {
-  productTypes?: ProductTypeListItemModel[]
-  default: DefaultProductTypeModel
+export type ProductTypesList = {
+  productTypes?: ProductTypeListItem[]
+  default: DefaultProductType
 }
 export type LinkTypeModel = {
   /** Name of the link type */

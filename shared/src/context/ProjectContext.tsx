@@ -1,7 +1,7 @@
 import { createContext, useContext, useCallback, useMemo } from 'react'
-import { useGetProjectQuery } from '@shared/api';
+import { useGetProjectQuery, useGetProductTypesQuery } from '@shared/api';
 
-import type { FolderType, ProductTypeOverride, TaskType } from '@shared/api';
+import type { FolderType, TaskType, ProductTypeListItem, DefaultProductType } from '@shared/api';
 
 
 export interface ProjectContextProps {
@@ -23,7 +23,8 @@ export interface ProjectContextProps {
 
   // Product types
 
-  productTypes: ProductTypeOverride[];
+  productTypes: ProductTypeListItem[];
+  defaultProductType?: DefaultProductType;
   getProductTypeIcon: (productType: string, baseType?: string) => string;
   getProductTypeColor: (productType: string) => string | undefined;
   getProductTypeOptions: () => { value: string; label: string, icon?: string, color?: string }[];
@@ -45,13 +46,13 @@ interface ProjectProviderProps {
 
 export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ projectName, children }: ProjectProviderProps) => {
   const { data: project, isLoading, error } = useGetProjectQuery({ projectName });
+  const { data: productTypesData } = useGetProductTypesQuery({ projectName });
 
   // Shorthands to access project data and type casting
   // (we're referencing nested objects. no need to use useMemo for these)
 
-  const productTypes: ProductTypeOverride[] = 
-    (project?.config as { productTypes?: { default: ProductTypeOverride[] } })?.productBaseTypes?.definitions || [];
-
+  const productTypes = productTypesData?.productTypes || [];
+  const defaultProductType = productTypesData?.default;
   //
   // Magic functions
   //
@@ -71,22 +72,22 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
 
   // Product types
 
-  const getProductTypeIcon = useCallback((productType: string, baseType?: string): string => {
+  const getProductTypeIcon = useCallback((productType: string, baseProductType?: string): string => {
     if (!productType) return '';
     const type = productTypes.find((type) => type.name === productType);
     if (type) {
       return type.icon || '';
     }
-    return baseType || '';
+    return defaultProductType?.icon || '';
   }, [productTypes]);
 
-  const getProductTypeColor = useCallback((productType: string): string | undefined => {
+  const getProductTypeColor = useCallback((productType: string, baseProductType?: string): string | undefined => {
     if (!productType) return;
     const type = productTypes.find((type) => type.name === productType);
     if (type) {
       return type.color;
     }
-    return;
+    return defaultProductType?.color;
   }, [productTypes]);
 
 
@@ -95,8 +96,8 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({ project
     const result = productTypes.map((type) => ({
       value: type.name,
       label: type.name,
-      icon: type.icon || '',
-      color: type.color,
+      icon: type.icon || defaultProductType?.icon || '',
+      color: type.color || defaultProductType?.color || '',
     }));
     return result;
   }, [productTypes]);
