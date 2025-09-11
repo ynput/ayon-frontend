@@ -2,7 +2,7 @@ import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-componen
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { WidgetBaseProps } from './CellWidget'
+import type { WidgetBaseProps } from './CellWidget'
 import { AttributeData, AttributeEnumItem } from '../types'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
@@ -84,7 +84,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     // when the dropdown is open, focus the first item
     useEffect(() => {
-      if (dropdownOpen) {
+      if (dropdownOpen && !dropdownProps.search) {
         const optionsUlEl = dropdownRef.current?.getOptions() as HTMLUListElement
         const firstItem = optionsUlEl?.querySelector('li')
         if (firstItem) {
@@ -93,7 +93,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           firstItem.style.outline = 'none'
         }
       }
-    }, [dropdownOpen])
+    }, [dropdownOpen, dropdownProps.search])
 
     const isMultiSelect = !!type?.includes('list')
 

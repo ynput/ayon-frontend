@@ -20,9 +20,7 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual'
 
 import clsx from 'clsx'
-import useRowKeydown, {
-  RowKeyboardEvent,
-} from '../../../../src/containers/Slicer/hooks/useRowKeydown'
+import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
@@ -221,7 +219,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       const currentRow = allProcessableRows.find((r) => r.id === currentId)
 
       if (!currentRow) return
-      
+
       // Prevent selection of disabled rows
       if (currentRow.original.isDisabled) return
 
@@ -323,10 +321,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
           const props: SimpleTableCellTemplateProps & {
             onClick?: (event: ReactMouseEvent<HTMLElement, MouseEvent>) => void
           } = {
-            className: clsx({ 
-              selected: row.getIsSelected(), 
+            className: clsx({
+              selected: row.getIsSelected(),
               loading: cellMeta?.isLoading,
-              disabled: row.original.isDisabled 
+              disabled: row.original.isDisabled,
             }),
             onKeyDown: (e) => {
               if (e.target instanceof HTMLInputElement) return

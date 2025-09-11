@@ -1,8 +1,8 @@
 ---
-name: Feature request
-about: Suggest an new feature idea
-title: '<scope>: <Feature summary>'
-type: 'Feature'
+name: Enhancement request
+about: Suggest an improvement to an existing feature
+title: '<scope>: <Enhancement summary>'
+type: 'Enhancement'
 assignees: ''
 ---
 
@@ -14,7 +14,7 @@ assignees: ''
 
 ### Problems
 
-<!-- What are the problems that this feature will solve? -->
+<!-- What are the problems that this enhancement will solve? -->
 
 ### Proposal
 
@@ -22,7 +22,7 @@ assignees: ''
 
 ## TODO
 
-<!-- action items to implement this feature -->
+<!-- action items to implement this enhancement -->
 
 - [ ] ...
 

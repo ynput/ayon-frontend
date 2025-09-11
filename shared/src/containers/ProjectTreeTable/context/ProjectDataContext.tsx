@@ -17,6 +17,7 @@ export interface ProjectDataContextProps {
   users: User[]
   // Attributes
   attribFields: ProjectTableAttribute[]
+  writableFields?: string[]
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
@@ -36,6 +37,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
 
   const {
     attribFields,
+    writableFields,
     isSuccess: isSuccessAttribs,
     isFetching: isFetchingAttribs,
   } = useAttributeFields({ projectName })
@@ -55,6 +57,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       projectName,
       users,
       attribFields,
+      writableFields,
     }),
     [
       isInitialized,
@@ -64,6 +67,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       projectName,
       users,
       attribFields,
+      writableFields,
     ],
   )
 

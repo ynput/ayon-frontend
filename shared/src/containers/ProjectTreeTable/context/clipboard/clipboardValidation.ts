@@ -30,7 +30,7 @@ export const validateClipboardData = (params: {
   if (!pasteValue) return true
 
   // Check if the column is read-only
-  if (colId.startsWith('attrib_') && columnReadOnly.includes(colId.replace('attrib_', ''))) {
+  if (columnReadOnly.includes(colId.replace('attrib_', ''))) {
     clipboardError(`This column is read-only: "${colId}". Paste operation cancelled.`)
     return false
   }

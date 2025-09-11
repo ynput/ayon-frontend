@@ -11,7 +11,6 @@ import addonsManagerReducer from '@state/addonsManager'
 import viewerReducer, { viewerSearchParams } from '@state/viewer'
 import releaseInstallerReducer, { releaseInstallerLocalItems } from '@state/releaseInstaller'
 import progressReducer from '@state/progress'
-import moveEntityReducer from '@state/moveEntity'
 
 // API
 import { api } from '@shared/api'
@@ -30,7 +29,6 @@ const store = configureStore({
     viewer: viewerReducer,
     releaseInstaller: releaseInstallerReducer,
     progress: progressReducer,
-    moveEntity: moveEntityReducer,
     [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>

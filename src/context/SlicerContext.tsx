@@ -11,7 +11,7 @@ import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useLoadModule } from '@shared/hooks'
-import type { ProjectModel, Assignees } from '@shared/api'
+import type { ProjectModel, Assignees, AttributeModel } from '@shared/api'
 import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
 import { DropdownRef } from '@ynput/ayon-react-components'
 import { SliceMap } from '@containers/Slicer/types'
@@ -34,6 +34,7 @@ type ExtraSlices = {
   formatTaskTypes: (project?: ProjectModel) => SimpleTableRow[]
   formatTypes: (project?: ProjectModel) => SimpleTableRow[]
   formatAssignees: (assignees: Assignees) => SimpleTableRow[]
+  formatAttribute: (attribute: AttributeModel) => SimpleTableRow[]
 }
 
 export type UseExtraSlices = () => ExtraSlices
@@ -76,7 +77,7 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
       fields: ['hierarchy', 'assignees', 'status', 'taskType'],
     },
     overview: {
-      fields: ['hierarchy', 'assignees', 'status', 'type', 'taskType'],
+      fields: ['hierarchy', 'assignees', 'status', 'type', 'taskType', 'attributes'],
     },
   }
 
@@ -130,7 +131,6 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     leavePersistentSlice,
     returnToPersistentSlice,
   ) => {
-    if (!sliceType.includes(sliceType)) return console.log('Invalid slice type')
     // reset selection
     setRowSelection({})
     // set slice type
@@ -187,6 +187,7 @@ const useSlicerRemotes = () => {
       formatTaskTypes: () => [],
       formatTypes: () => [],
       formatAssignees: () => [],
+      formatAttribute: () => [],
     }
   }
 

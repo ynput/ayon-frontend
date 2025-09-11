@@ -9,6 +9,8 @@ import {
 import { useProjectTableContext } from '../context/ProjectTableContext'
 import { getEntityId } from '@shared/util'
 import { PasteMethod } from '../context'
+import { useCellEditing } from '@shared/containers'
+import { toast } from 'react-toastify'
 
 /**
  * Represents a link update operation for table links
@@ -45,6 +47,7 @@ interface usePasteLinksProps {
 const usePasteLinks = (props?: usePasteLinksProps) => {
   const { getEntityById, projectName: contextProjectName } = useProjectTableContext()
   const projectName = props?.projectName || contextProjectName
+  const { history } = useCellEditing()
 
   // Add mutation hooks for link operations
   const [deleteLink] = useDeleteEntityLinkMutation()
@@ -67,6 +70,20 @@ const usePasteLinks = (props?: usePasteLinksProps) => {
       }
 
       const updatePromises: Promise<void>[] = []
+      // Collect all adds/removes across all operations to build a single history entry
+      const addedInPaste: LinkToAdd[] = []
+      const removedInPaste: LinkToRemove[] = []
+
+      // Pre-flight validation: detect any self-referential links across the whole paste
+      for (const [, updates] of operationsToProcess) {
+        const { sourceEntityId } = updates[0]
+        const targets = new Set<string>()
+        updates.forEach((u) => u.targetEntityIds.forEach((id) => targets.add(id)))
+        if (targets.has(sourceEntityId)) {
+          toast.error("You can't link an entity to itself")
+          return
+        }
+      }
       // Process each unique entity-linkType-direction combination
       for (const [key, updates] of operationsToProcess) {
         const firstUpdate = updates[0]
@@ -175,19 +192,62 @@ const usePasteLinks = (props?: usePasteLinksProps) => {
 
         if (linksToRemove.length > 0) {
           updatePromises.push(removeMultipleLinks(linksToRemove, deleteLink))
+          removedInPaste.push(...linksToRemove)
         }
         if (linksToAdd.length > 0) {
           updatePromises.push(addMultipleLinks(linksToAdd, addLink))
+          addedInPaste.push(...linksToAdd)
         }
       }
       try {
         // Execute all link operations in parallel
         await Promise.all(updatePromises)
+
+        // Push a single history entry that undoes BOTH: remove added links and re-add removed links
+        if (history && (addedInPaste.length > 0 || removedInPaste.length > 0)) {
+          // Prepare inverse operations for undo
+          const addedToRemove: LinkToRemove[] = addedInPaste.map((link) => ({
+            id: link.linkId,
+            projectName: link.projectName,
+            linkType: link.linkType,
+            direction: link.direction,
+            target: { entityId: link.targetEntityId, entityType: link.targetEntityType },
+            source: { entityId: link.sourceEntityId, entityType: link.sourceEntityType },
+          }))
+
+          const removedToAdd: LinkToAdd[] = removedInPaste.map((link) => ({
+            targetEntityId: link.target.entityId,
+            linkId: link.id,
+            sourceEntityId: link.source.entityId,
+            sourceEntityType: link.source.entityType,
+            targetEntityType: link.target.entityType,
+            linkType: link.linkType,
+            direction: link.direction,
+            projectName: link.projectName,
+          }))
+
+          // Single callbacks to keep history atomic
+          const undoCallback = () => {
+            const tasks: Promise<void>[] = []
+            if (addedToRemove.length) tasks.push(removeMultipleLinks(addedToRemove, deleteLink))
+            if (removedToAdd.length) tasks.push(addMultipleLinks(removedToAdd, addLink))
+            if (tasks.length) Promise.all(tasks).catch(() => {})
+          }
+
+          const redoCallback = () => {
+            const tasks: Promise<void>[] = []
+            if (removedInPaste.length) tasks.push(removeMultipleLinks(removedInPaste, deleteLink))
+            if (addedInPaste.length) tasks.push(addMultipleLinks(addedInPaste, addLink))
+            if (tasks.length) Promise.all(tasks).catch(() => {})
+          }
+
+          history.pushHistory([undoCallback], [redoCallback])
+        }
       } catch (error) {
         throw error
       }
     },
-    [projectName, getEntityById, deleteLink, addLink],
+    [projectName, getEntityById, deleteLink, addLink, history],
   )
 
   return { pasteTableLinks }

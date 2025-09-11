@@ -4,7 +4,7 @@ import {
   ProjectDataProvider,
   useProjectTableModules,
 } from '@shared/containers/ProjectTreeTable'
-import { SettingsPanelProvider } from '@shared/context'
+import { SettingsPanelProvider, MoveEntityProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
@@ -20,11 +20,13 @@ const ProjectOverviewDataProvider: FC = () => {
   return (
     <ProjectDataProvider projectName={projectName}>
       <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
-        <ProjectOverviewProvider modules={modules}>
-          <SettingsPanelProvider>
-            <ProjectOverviewTableProvider modules={modules} />
-          </SettingsPanelProvider>
-        </ProjectOverviewProvider>
+        <MoveEntityProvider>
+          <ProjectOverviewProvider modules={modules}>
+            <SettingsPanelProvider>
+              <ProjectOverviewTableProvider modules={modules} />
+            </SettingsPanelProvider>
+          </ProjectOverviewProvider>
+        </MoveEntityProvider>
       </ColumnSettingsProvider>
     </ProjectDataProvider>
   )

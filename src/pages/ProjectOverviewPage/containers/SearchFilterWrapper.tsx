@@ -1,6 +1,12 @@
 import { BuildFilterOptions, useBuildFilterOptions } from '@shared/components'
 import { FC, useMemo, useState, useEffect } from 'react'
-import { Filter, Icon, SearchFilter, SearchFilterProps } from '@ynput/ayon-react-components'
+import {
+  Filter,
+  Icon,
+  SearchFilter,
+  SearchFilterProps,
+  SEARCH_FILTER_ID,
+} from '@ynput/ayon-react-components'
 import type { ProjectModel } from '@shared/api'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
@@ -89,9 +95,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
     // if a filter is a date then check we have power features
     const invalidFilters = filters.filter((f) => f.type === 'datetime' && !powerLicense)
-    const validFilters = filters.filter((f) => f.type !== 'datetime' || powerLicense)
+    let validFilters = filters.filter((f) => f.type !== 'datetime' || powerLicense)
     if (invalidFilters.length) {
       setPowerpackDialog('advancedFilters')
+    }
+
+    // Merge multiple text search filters (SEARCH_FILTER_ID) into one filter
+    const searchFilters = validFilters.filter((f) => f.id.startsWith(SEARCH_FILTER_ID))
+    if (searchFilters.length > 1) {
+      // Collect all values and dedupe by id
+      const mergedValuesRaw = searchFilters.flatMap((f) => f.values || [])
+      const mergedValues = Array.from(
+        new Map(mergedValuesRaw.map((v) => [String((v as any).id), v])).values(),
+      )
+
+      // Create merged filter; set id to the canonical SEARCH_FILTER_ID so downstream logic treats it as the search filter
+      const mergedFilter = { ...searchFilters[0], id: SEARCH_FILTER_ID, values: mergedValues }
+
+      // keep all non-search filters (match any variant that startsWith SEARCH_FILTER_ID) and append the merged search filter
+      const nonSearch = validFilters.filter((f) => !f.id.startsWith(SEARCH_FILTER_ID))
+      validFilters = [...nonSearch, mergedFilter]
     }
 
     callback(validFilters)
@@ -115,9 +138,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       onFinish={handleFinish} // when changes are applied
       enableMultipleSameFilters={false}
       enableGlobalSearch={true}
-      globalSearchConfig={{
-        label: 'Folder / Task',
-      }}
       disabledFilters={disabledFilters}
       pt={{
         searchBar: {

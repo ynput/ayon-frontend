@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
-import { EntitiesMap } from '../../types/table'
+import { Column } from '@tanstack/react-table'
+import { EntitiesMap, TableRow } from '../../types/table'
 import { AttributeEnumItem, BuiltInFieldOptions } from '../../types'
 
 // Constants for field mappings
@@ -24,6 +25,7 @@ export interface ClipboardProviderProps {
   entitiesMap: EntitiesMap
   columnEnums: ColumnEnums
   columnReadOnly: string[]
+  visibleColumns: Column<TableRow, unknown>[]
 }
 
 export interface ParsedClipboardData {

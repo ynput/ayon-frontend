@@ -1,5 +1,5 @@
 import { FilterValue } from '@ynput/ayon-react-components'
-export type SliceType = 'hierarchy' | 'assignees' | 'status' | 'type' | 'taskType'
+export type SliceType = 'hierarchy' | 'assignees' | 'status' | 'type' | 'taskType' | string
 
 export type SliceDataItem = {
   id: string

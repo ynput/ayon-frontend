@@ -69,7 +69,6 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
       })
     })
 
-    console.log('registerAddonRemotes', allRemotes)
     registerRemotes(
       allRemotes.map((r) => ({
         name: r.remote,
