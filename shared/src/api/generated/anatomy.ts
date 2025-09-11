@@ -190,6 +190,20 @@ export type Tag = {
   original_name?: string
   color?: string
 }
+export type DefaultProductBaseType = {
+  color?: string
+  icon?: string
+}
+export type ProductBaseType = {
+  name?: string
+  color?: string
+  icon?: string
+}
+export type ProductBaseTypes = {
+  /** Default appearance for product types */
+  default?: DefaultProductBaseType
+  definitions?: ProductBaseType[]
+}
 export type Anatomy = {
   /** Setup root paths for the project */
   roots?: Root[]
@@ -207,6 +221,7 @@ export type Anatomy = {
   statuses?: Status[]
   /** Tags configuration */
   tags?: Tag[]
+  product_base_types?: ProductBaseTypes
 }
 export type ValidationError = {
   loc: (string | number)[]

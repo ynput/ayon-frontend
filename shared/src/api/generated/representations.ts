@@ -159,6 +159,7 @@ export type RepresentationModel = {
   files?: RepresentationFileModel[]
   /** Dict of traits */
   traits?: object
+  path?: string
   attrib?: RepresentationAttribModel
   data?: Record<string, any>
   /** Whether the representation is active */

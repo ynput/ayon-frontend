@@ -126,6 +126,25 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.deployProjectRequestModel,
       }),
     }),
+    listExternalUsers: build.query<ListExternalUsersApiResponse, ListExternalUsersApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/externalUsers` }),
+    }),
+    addExternalUser: build.mutation<AddExternalUserApiResponse, AddExternalUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/externalUsers`,
+        method: 'POST',
+        body: queryArg.addExternalUserModel,
+      }),
+    }),
+    removeExternalUser: build.mutation<RemoveExternalUserApiResponse, RemoveExternalUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/externalUsers/${queryArg.email}`,
+        method: 'DELETE',
+      }),
+    }),
+    listProductTypes: build.query<ListProductTypesApiResponse, ListProductTypesApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/productTypes` }),
+    }),
     getProject: build.query<GetProjectApiResponse, GetProjectApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}` }),
     }),
@@ -318,6 +337,26 @@ export type ListProjectsApiArg = {
 export type DeployProjectApiResponse = /** status 201 Successful Response */ any
 export type DeployProjectApiArg = {
   deployProjectRequestModel: DeployProjectRequestModel
+}
+export type ListExternalUsersApiResponse =
+  /** status 200 Successful Response */ ExternalUsersListModel
+export type ListExternalUsersApiArg = {
+  projectName: string
+}
+export type AddExternalUserApiResponse = /** status 200 Successful Response */ any
+export type AddExternalUserApiArg = {
+  projectName: string
+  addExternalUserModel: AddExternalUserModel
+}
+export type RemoveExternalUserApiResponse = /** status 200 Successful Response */ any
+export type RemoveExternalUserApiArg = {
+  email: string
+  projectName: string
+}
+export type ListProductTypesApiResponse =
+  /** status 200 Successful Response */ ProductTypesListModel
+export type ListProductTypesApiArg = {
+  projectName: string
 }
 export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
 export type GetProjectApiArg = {
@@ -577,6 +616,20 @@ export type Tag = {
   original_name?: string
   color?: string
 }
+export type DefaultProductBaseType = {
+  color?: string
+  icon?: string
+}
+export type ProductBaseType = {
+  name?: string
+  color?: string
+  icon?: string
+}
+export type ProductBaseTypes = {
+  /** Default appearance for product types */
+  default?: DefaultProductBaseType
+  definitions?: ProductBaseType[]
+}
 export type Anatomy = {
   /** Setup root paths for the project */
   roots?: Root[]
@@ -590,11 +643,11 @@ export type Anatomy = {
   task_types?: TaskType[]
   /** Link types configuration */
   link_types?: LinkType[]
-  product_types?: ProductTypes
   /** Statuses configuration */
   statuses?: Status[]
   /** Tags configuration */
   tags?: Tag[]
+  product_base_types?: ProductBaseTypes
 }
 export type ProjectBundleModel = {
   production?: string
@@ -626,6 +679,32 @@ export type DeployProjectRequestModel = {
   /** Assign default users to the project */
   assignUsers?: boolean
 }
+export type ExternalUserModel = {
+  email: string
+  fullName?: string
+  status?: 'pending' | 'active'
+}
+export type ExternalUsersListModel = {
+  users?: ExternalUserModel[]
+}
+export type AddExternalUserModel = {
+  email: string
+  fullName?: string
+}
+export type ProductTypeListItemModel = {
+  productType: string
+  productBaseType?: string
+  color?: string
+  icon?: string
+}
+export type DefaultProductTypeModel = {
+  color: string
+  icon: string
+}
+export type ProductTypesListModel = {
+  productTypes?: ProductTypeListItemModel[]
+  default: DefaultProductTypeModel
+}
 export type LinkTypeModel = {
   /** Name of the link type */
   name: string
@@ -638,17 +717,6 @@ export type LinkTypeModel = {
   /** Additional link type data */
   data?: Record<string, any>
 }
-
-export type ProductTypeOverride = {
-  name: string
-  color?: string
-  icon?: string
-}
-
-export type ProductTypes = {
-  default?: ProductTypeOverride[]
-}
-
 export type ProjectAttribModel2 = {
   priority?: 'urgent' | 'high' | 'normal' | 'low'
   /** Frame rate */
@@ -681,7 +749,7 @@ export type ProjectModel = {
   linkTypes?: LinkTypeModel[]
   statuses?: Status[]
   tags?: Tag[]
-  config: Record<string, any>
+  config?: object
   attrib?: ProjectAttribModel2
   data?: Record<string, any>
   /** Whether the project is active */

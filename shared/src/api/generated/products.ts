@@ -99,6 +99,7 @@ export type ProductModel = {
   folderId: string
   /** Product  */
   productType: string
+  path?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
   /** Whether the product is active */
