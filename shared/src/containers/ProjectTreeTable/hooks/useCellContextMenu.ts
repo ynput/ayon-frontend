@@ -363,7 +363,6 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       // For remaining cells, remove duplicates based on entityId (keep first occurrence)
       return array.findIndex(e => e.entityId === entity.entityId) === index
     })
-    console.log('filteredSelectedCellsData', filteredSelectedCellsData)
 
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
