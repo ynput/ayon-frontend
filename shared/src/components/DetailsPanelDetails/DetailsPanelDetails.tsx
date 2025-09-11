@@ -69,8 +69,6 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
   }
 
   const handleDescriptionChange = (description: string) => {
-    console.log('handleDescriptionChange called:', { description, enableEditing })
-    
     updateFormData('description', description)
     clearMixedField('description')
     updateEntity('attrib', { description })

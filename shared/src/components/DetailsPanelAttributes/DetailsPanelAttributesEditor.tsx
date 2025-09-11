@@ -7,28 +7,25 @@ import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
 import { BorderedSection } from '../DetailsPanelDetails/BorderedSection'
-
-const StyledContent = styled.div`
-  padding: 8px;
-`
+import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: 120px 1fr 40px;
-  gap: 0px;
+  grid-template-columns: minmax(200px, 1fr) 1fr 32px;
+  row-gap: 2px;
+  column-gap: 4px;
   align-items: center;
-  min-height: 37px;
+  min-height: 32px;
   position: relative;
 
   .copy-icon {
     opacity: 0;
     width: 32px;
     height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    padding: 2px;
 
     &:hover {
-      background-color: var(--md-sys-color-surface-container-low-hover);
+      background-color: transparent !important;
     }
   }
 
@@ -37,13 +34,6 @@ const FormRow = styled.div`
   }
 `
 
-const FieldLabel = styled.div`
-  color: var(--md-sys-color-on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-left: 4px;
-`
 
 const FieldValue = styled.div`
   height: 32px;
@@ -149,7 +139,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   }
 
   return (
-    <BorderedSection title="Attributes">
+    <BorderedSection title="Attributes" autoHeight showHeader>
       {fields
         .filter((f) => !f.hidden)
         .map((field) => {
@@ -160,9 +150,11 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
           return (
             <FormRow key={field.name}>
-              <FieldLabel title={field.data.description || field.data.title || field.name}>
-                {field.data.title || field.name}
-              </FieldLabel>
+              <FieldLabel
+                name={field.name}
+                data={field.data}
+                showDetailedTooltip
+              />
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
                 onClick={(e) => {
