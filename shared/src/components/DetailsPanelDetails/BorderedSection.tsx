@@ -16,13 +16,28 @@ const StyledHeader = styled.div`
   padding: 10px;
   min-height: 40px;
   font-weight: 500;
-  color: var(--md-sys-color-on-surface);
+  color: var(--md-sys-color-outline);
 `
 
-const StyledContent = styled.div<{ $showHeader: boolean }>`
-  padding: ${props => props.$showHeader ? '8px' : '0 8px 8px 8px'};
+const StyledContent = styled.div<{
+  $showHeader: boolean
+  $autoHeight: boolean
+  $enableHover: boolean
+}>`
+  padding: ${(props) => (props.$showHeader ? '12px' : 0)};
   flex: 1;
-  min-height: ${props => props.$showHeader ? 'calc(300px - 40px)' : '300px !important'};
+  min-height: ${(props) =>
+    props.$autoHeight ? 'auto' : props.$showHeader ? 'calc(300px - 40px)' : '300px !important'};
+  border-radius: ${(props) => (props.$showHeader ? '0 0 8px 8px' : '8px')};
+  transition: background-color 0.2s ease;
+
+  ${(props) =>
+    props.$enableHover &&
+    `
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-low-hover);
+    }
+  `}
 `
 
 interface BorderedSectionProps {
@@ -31,6 +46,8 @@ interface BorderedSectionProps {
   headerContent?: React.ReactNode
   contentClassName?: string
   showHeader?: boolean
+  autoHeight?: boolean
+  enableHover?: boolean
 }
 
 export const BorderedSection: React.FC<BorderedSectionProps> = ({
@@ -39,6 +56,8 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
   headerContent,
   contentClassName,
   showHeader = false,
+  autoHeight = false,
+  enableHover = false,
 }) => {
   return (
     <StyledSection>
@@ -48,7 +67,14 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
           {headerContent}
         </StyledHeader>
       ) : null}
-      <StyledContent className={contentClassName} $showHeader={showHeader}>{children}</StyledContent>
+      <StyledContent
+        className={contentClassName}
+        $showHeader={showHeader}
+        $autoHeight={autoHeight}
+        $enableHover={enableHover}
+      >
+        {children}
+      </StyledContent>
     </StyledSection>
   )
 }
