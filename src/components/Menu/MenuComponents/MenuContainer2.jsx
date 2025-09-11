@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import * as Styled from './Menu.styled'
-import useMenuPosition from './useMenuPosition'
+import { useMenuPosition } from './useMenuPosition'
 
 
 const MenuContainerV2 = ({

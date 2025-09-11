@@ -6,29 +6,63 @@ interface MenuPosition {
 }
 
 function calculateMenuPosition(
-  targetElement: HTMLElement | null, 
+  targetElement: HTMLElement | null,
 ): MenuPosition | null {
   if (!targetElement) return null
   
   const targetRect = targetElement.getBoundingClientRect()
-  const menuRect = { width: 200, height: 300, bottom: targetRect.bottom }
-  
-  const padding = 8
+  const menuWidth = 200
+  const menuHeight = 300
+  const topOffset = -8;
   const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
   
-  let left = targetRect.right - menuRect.width // Default: align to right edge of target
-
-  if (left < padding) {
-    left = targetRect.left
+  let left: number
+  let top: number
+  let padding: number
+  
+  // Check if there's enough space on the right side of the target
+  const spaceOnRight = viewportWidth - targetRect.right
+  const spaceOnLeft = targetRect.left
+  
+  if (spaceOnRight >= menuWidth + 24) {
+    // Position to the right of target
+    padding = -24
+    left = targetRect.right + padding
+  } else if (spaceOnLeft >= menuWidth + 24) {
+    // Position to the left of target
+    padding = -48
+    left = targetRect.left - menuWidth - padding
+  } else {
+    // Not enough space on either side, center it with bounds checking
+    padding = 24 // Default to positive padding for centering
+    left = targetRect.left + (targetRect.width - menuWidth) / 2
+    
+    // Ensure it doesn't go off screen
+    if (left < padding) {
+      left = padding
+    } else if (left + menuWidth > viewportWidth - padding) {
+      left = viewportWidth - menuWidth - padding
+    }
   }
   
-  if (left + menuRect.width > viewportWidth - padding) {
-    left = viewportWidth - menuRect.width - padding
+  // Vertical positioning - try to align with top of target
+  top = targetRect.top
+  
+  // Check if menu would go below viewport
+  if (top + menuHeight > viewportHeight - padding) {
+    // Position above the target instead
+    top = targetRect.bottom - menuHeight
+    
+    // If still not enough space, position at bottom of viewport
+    if (top < padding) {
+      top = viewportHeight - menuHeight - padding
+    }
   }
   
   return {
-    top: targetRect.top - 8,
-    left: left + targetRect.width / 2,
+    top: top + topOffset,
+    left,
   }
 }
 
@@ -37,15 +71,16 @@ interface UseMenuPositionReturn {
   menuRef: React.RefObject<HTMLDivElement>
 }
 
-function useMenuPosition(
-  target: HTMLElement | null, 
-  targetId: string, 
+export function useMenuPosition(
+  target: HTMLElement | null,
+  targetId: string,
 ): UseMenuPositionReturn {
   const [position, setPosition] = useState<MenuPosition | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   
   const updatePosition = useCallback(() => {
     let targetElement: HTMLElement | null = target
+    
     if (!targetElement && targetId) {
       targetElement = document.getElementById(targetId)
     }
@@ -56,17 +91,25 @@ function useMenuPosition(
     }
     
     const newPosition = calculateMenuPosition(targetElement)
-    
     if (newPosition) {
       setPosition(newPosition)
     }
   }, [target, targetId])
   
   useEffect(() => {
-      updatePosition()
+    updatePosition()
+    
+    const handleResize = () => updatePosition()
+    window.addEventListener('resize', handleResize)
+    
+    const handleScroll = () => updatePosition()
+    window.addEventListener('scroll', handleScroll)
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [updatePosition])
   
   return { position, menuRef }
 }
-
-export default useMenuPosition

@@ -15,7 +15,7 @@ const ActionButton = styled(Button)`
   }
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container);
+    background-color: var(--md-sys-color-surface-container-hover) !important;
   }
 
   &.selected {
