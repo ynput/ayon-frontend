@@ -11,6 +11,10 @@ interface ListMetaDataProps {
 }
 
 export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
+  const listData = { ...(list?.data || {}) }
+  // remove category from the meta data
+  delete listData.category
+
   const metaData = {
     Id: list?.id,
     'Entity type': list?.entityType,
@@ -21,7 +25,7 @@ export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
     'Created by': list?.createdBy,
     'Updated at': list?.updatedAt && format(new Date(list?.updatedAt), 'PPpp'),
     'Last updated by': list?.updatedBy,
-    ...list?.data,
+    ...listData,
   }
 
   return <DetailsMetaData data={metaData} isLoading={isLoading} title={'Details'} />
