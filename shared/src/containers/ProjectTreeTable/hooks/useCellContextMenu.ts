@@ -351,7 +351,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     const filteredSelectedCellsData = [
       ...new Map(selectedCellsData.map(e => [e.entityId, e])).values()
     ];
-    console.log('filteredSelectedCellsData', filteredSelectedCellsData)
+
 
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
