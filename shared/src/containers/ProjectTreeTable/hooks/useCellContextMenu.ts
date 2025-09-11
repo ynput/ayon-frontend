@@ -348,9 +348,10 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     const selectedCellsData = currentSelectedCells.flatMap((cellId) => getCellData(cellId) || [])
 
     // Remove duplicates based on entityId - prioritize full row selection over individual cells
-    const filteredSelectedCellsData = selectedCellsData.filter((entity, index, array) => {
-      return array.findIndex(e => e.entityId === entity.entityId) === index
-    })
+    const filteredSelectedCellsData = [
+      ...new Map(selectedCellsData.map(e => [e.entityId, e])).values()
+    ];
+    console.log('filteredSelectedCellsData', filteredSelectedCellsData)
 
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
