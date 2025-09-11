@@ -7,6 +7,7 @@ import { RowExpander } from '@shared/containers/SimpleTable/SimpleTableRowTempla
 export interface ListRowProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
+  iconFilled?: boolean
   depth?: number
   count: number | string
   disabled?: boolean
@@ -30,6 +31,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
       value,
       depth = 0,
       icon,
+      iconFilled,
       count,
       disabled,
       inactive,
@@ -61,7 +63,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
         ref={ref}
         style={{
           ...props.style,
-          paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
+          paddingLeft: `calc(${depth * 2.5}rem + 4px)`,
         }}
       >
         <RowExpander
@@ -69,8 +71,9 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
+          enableNonFolderIndent={false}
         />
-        {icon && <Icon icon={icon} />}
+        {icon && <Icon icon={icon} className={clsx({ filled: iconFilled })} />}
         {isRenaming ? (
           <InputText
             autoFocus

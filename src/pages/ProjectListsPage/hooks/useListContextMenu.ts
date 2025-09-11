@@ -112,12 +112,12 @@ const useListContextMenu = () => {
           command: () => openCreateCategoryDialog(selectedListIds),
         })
 
-        // For multiple selections, show "Remove category" if any list has a category
-        // For single selection, show "Remove category" only if that list has a category
+        // For multiple selections, show "Unset category" if any list has a category
+        // For single selection, show "Unset category" only if that list has a category
         const hasAnyCategory = newSelectedLists.some((list) => list.data?.category)
         if (hasAnyCategory) {
           submenuItems.push({
-            label: 'Remove category',
+            label: 'Unset category',
             icon: 'close',
             command: () => {
               if (multipleSelected) {

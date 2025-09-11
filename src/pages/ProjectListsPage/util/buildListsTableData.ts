@@ -52,7 +52,8 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
         id: `category-${category}`,
         name: category,
         label: category,
-        icon: 'folder',
+        icon: 'sell',
+        iconFilled: true,
         subRows: [],
         data: {
           id: category,

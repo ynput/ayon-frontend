@@ -122,6 +122,11 @@ export const Cell = styled.div`
       text-decoration: line-through;
     }
   }
+
+  /* filled icon */
+  .icon.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  }
 `
 
 export const Expander = styled(Button)`

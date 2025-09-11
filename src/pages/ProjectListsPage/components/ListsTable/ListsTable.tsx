@@ -76,6 +76,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         onKeyDown={props.onKeyDown}
         value={props.value}
         icon={props.icon}
+        iconFilled={props.iconFilled}
         inactive={row.original.inactive}
         count={row.original.data.count}
         isRenaming={listId === meta?.renamingList}
