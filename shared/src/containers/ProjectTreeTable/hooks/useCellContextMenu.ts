@@ -347,20 +347,8 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
 
     const selectedCellsData = currentSelectedCells.flatMap((cellId) => getCellData(cellId) || [])
 
-    // Get full row selections first
-    const fullRowSelections = selectedCellsData
-      .filter(cell => cell.columnId === ROW_SELECTION_COLUMN_ID)
-      .map(cell => cell.entityId)
-
     // Remove duplicates based on entityId - prioritize full row selection over individual cells
     const filteredSelectedCellsData = selectedCellsData.filter((entity, index, array) => {
-      // If this is a full row selection, always include it
-      if (entity.columnId === ROW_SELECTION_COLUMN_ID) return true
-
-      // If there's a full row selection for this entity, exclude individual cell selections
-      if (fullRowSelections.includes(entity.entityId)) return false
-
-      // For remaining cells, remove duplicates based on entityId (keep first occurrence)
       return array.findIndex(e => e.entityId === entity.entityId) === index
     })
 
