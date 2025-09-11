@@ -1,10 +1,12 @@
 import { forwardRef, Fragment } from 'react'
 import * as Styled from './SimpleTable.styled'
 import { Icon } from '@ynput/ayon-react-components'
+import clsx from 'clsx'
 
 export type RowExpanderProps = {
   isRowExpandable?: boolean
   isRowExpanded?: boolean
+  enableNonFolderIndent?: boolean
   isTableExpandable?: boolean
   onExpandClick?: () => void
 }
@@ -12,6 +14,7 @@ export type RowExpanderProps = {
 export const RowExpander = ({
   isRowExpandable,
   isRowExpanded,
+  enableNonFolderIndent = true,
   isTableExpandable,
   onExpandClick,
 }: RowExpanderProps) =>
@@ -26,7 +29,8 @@ export const RowExpander = ({
       style={{ cursor: 'pointer' }}
     />
   ) : (
-    isTableExpandable && <div style={{ display: 'inline-block', minWidth: 24 }} />
+    isTableExpandable &&
+    enableNonFolderIndent && <div style={{ display: 'inline-block', minWidth: 24 }} />
   )
 
 export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -34,9 +38,11 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   icon?: string
   parents?: string[]
   iconColor?: string
+  iconFilled?: boolean
   isRowExpandable?: boolean
   isRowExpanded?: boolean
   isTableExpandable?: boolean
+  enableNonFolderIndent?: boolean
   onExpandClick?: () => void
   //  when used as a template
   startContent?: React.ReactNode
@@ -44,6 +50,7 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   depth?: number
   isDisabled?: boolean
   disabledMessage?: string
+  active?: boolean
 }
 
 export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
@@ -53,16 +60,20 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       icon,
       parents,
       iconColor,
+      iconFilled,
       isRowExpandable,
       isRowExpanded,
       isTableExpandable,
+      enableNonFolderIndent = true,
       onExpandClick,
       startContent,
       endContent,
       depth = 0,
       isDisabled,
       disabledMessage,
+      active,
       style,
+      className,
       ...props
     },
     ref,
@@ -74,9 +85,6 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         style={{
           ...style,
           paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
-          ...(isDisabled && {
-            cursor: 'not-allowed',
-          }),
         }}
         title={isDisabled ? disabledMessage : undefined}
       >
@@ -85,9 +93,18 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
+          enableNonFolderIndent={enableNonFolderIndent}
         />
         {startContent && startContent}
-        {icon && <Icon icon={icon} style={{ color: iconColor }} />}
+        {icon && (
+          <Icon
+            icon={icon}
+            className={clsx({ filled: iconFilled })}
+            style={{
+              color: iconColor,
+            }}
+          />
+        )}
         {parents && (
           <span className="path">
             {parents.map((part, index) => (

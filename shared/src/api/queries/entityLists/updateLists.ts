@@ -21,6 +21,8 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           .filter((e) => e.endpointName === 'getListsInfinite')
 
         let patchResults: any[] = []
+
+        // Update getListsInfinite cache (GraphQL)
         for (const entry of infiniteEntries) {
           const patchResult = dispatch(
             gqlApi.util.updateQueryData('getListsInfinite', entry.originalArgs, (draft) => {
@@ -38,6 +40,26 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           // Store the patch result to undo it later if needed
           patchResults.push(patchResult)
         }
+
+        // Update getEntityList cache (REST API)
+        const entityListEntries = entityListsApi.util
+          .selectInvalidatedBy(state, tags)
+          .filter((e) => e.endpointName === 'getEntityList' && e.originalArgs.listId === listId)
+
+        for (const entry of entityListEntries) {
+          const patchResult = dispatch(
+            entityListsApi.util.updateQueryData('getEntityList', entry.originalArgs, (draft) => {
+              // Update the entity list with the new data
+              Object.assign(draft, {
+                ...draft,
+                ...entityListPatchModel,
+              })
+            }),
+          )
+          // Store the patch result to undo it later if needed
+          patchResults.push(patchResult)
+        }
+
         try {
           await queryFulfilled
         } catch {
@@ -47,10 +69,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
-      invalidatesTags: (_s, _e, { listId }) => {
-        const tags = [{ type: 'entityList', id: listId }]
-        return tags
-      },
+      // invalidatesTags: (_s, _e, { listId }) => {
+      //   const tags = [{ type: 'entityList', id: listId }]
+      //   return tags
+      // },
     },
     deleteEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],

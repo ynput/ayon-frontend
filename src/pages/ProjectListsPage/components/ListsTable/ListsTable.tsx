@@ -10,6 +10,7 @@ import SimpleTable, {
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
+import CreateListCategoryDialog from '../CreateListCategoryDialog'
 import { ExpandedState, Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
 
@@ -41,7 +42,13 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     [openRenameList],
   )
 
-  const handleRowContext = useListContextMenu()
+  const {
+    openContext: handleRowContext,
+    createCategoryDialog,
+    closeCreateCategoryDialog,
+    handleCreateCategory,
+    existingCategories,
+  } = useListContextMenu()
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
@@ -69,6 +76,8 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         onKeyDown={props.onKeyDown}
         value={props.value}
         icon={props.icon}
+        iconFilled={props.iconFilled}
+        inactive={row.original.inactive}
         count={row.original.data.count}
         isRenaming={listId === meta?.renamingList}
         onSubmitRename={(v) => meta?.submitRenameList(v)}
@@ -126,6 +135,13 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         </Container>
       </SimpleTableProvider>
       <NewListDialogContainer />
+      <CreateListCategoryDialog
+        isOpen={createCategoryDialog.isOpen}
+        onClose={closeCreateCategoryDialog}
+        onCreateCategory={handleCreateCategory}
+        existingCategories={existingCategories}
+        listCount={createCategoryDialog.listIds.length}
+      />
     </>
   )
 }

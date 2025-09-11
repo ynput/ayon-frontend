@@ -9,10 +9,24 @@ import { buildListsTableData } from '../util'
 
 export type ListsMap = Map<string, EntityList>
 
+// Helper function to extract unique categories from all lists
+const getUniqueCategoriesFromLists = (listsData: EntityList[] = []): string[] => {
+  const categories = new Set<string>()
+
+  for (const list of listsData) {
+    if (list.data && list.data.category && typeof list.data.category === 'string') {
+      categories.add(list.data.category)
+    }
+  }
+
+  return Array.from(categories).sort()
+}
+
 interface ListsDataContextValue {
   listsData: EntityList[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
+  categoryEnum: Array<{ value: string; label: string }>
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
@@ -72,12 +86,22 @@ export const ListsDataProvider = ({
   // convert listsData into tableData
   const listsTableData = useMemo(() => buildListsTableData(listsData), [listsData])
 
+  // Get unique categories from all lists for the enum
+  const categoryEnum = useMemo(() => {
+    const uniqueCategories = getUniqueCategoriesFromLists(listsData)
+    return uniqueCategories.map((category) => ({
+      value: category,
+      label: category,
+    }))
+  }, [listsData])
+
   return (
     <ListsDataContext.Provider
       value={{
         listsData,
         listsTableData,
         listsMap,
+        categoryEnum,
         isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || !isInitialized,
         isLoadingMore: isFetchingNextPage,
         isError,

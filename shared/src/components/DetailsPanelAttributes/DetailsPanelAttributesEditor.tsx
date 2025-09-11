@@ -12,6 +12,15 @@ const StyledForm = styled.div`
   flex-direction: column;
   overflow-y: auto;
   height: 100%;
+
+  padding: var(--padding-l);
+  border-radius: var(--border-radius-xxl);
+  border: 1px solid var(--md-sys-color-outline-variant);
+
+  h3 {
+    margin: 0;
+    padding: 4px 0;
+  }
 `
 
 const FormRow = styled.div`
@@ -21,7 +30,6 @@ const FormRow = styled.div`
   align-items: center;
   min-height: 37px;
   position: relative;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
   .copy-icon {
     opacity: 0;
@@ -37,7 +45,7 @@ const FormRow = styled.div`
 `
 
 const FieldLabel = styled.div`
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--md-sys-color-outline);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -76,10 +84,12 @@ const FieldValue = styled.div`
 `
 
 const ShimmerRow = styled(FormRow)`
-  .shimmer {
+  &.loading {
     width: 100%;
-    height: 24px;
+    height: 33px;
+    min-height: unset;
     border-radius: 4px;
+    margin-bottom: 4px;
   }
 `
 
@@ -88,9 +98,13 @@ const ShimmerRow = styled(FormRow)`
 export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
   readonly?: boolean
   hidden?: boolean
+  enableCustomValues?: boolean // Allow custom values in enum fields
+  enableSearch?: boolean // Enable search functionality in enum fields
+  allowNone?: boolean // Allow "None" option for enum fields that can be cleared
 }
 
 export interface DetailsPanelAttributesEditorProps {
+  title?: string
   isLoading?: boolean // show loading shimmer for 20 placeholder items
   enableEditing?: boolean // if this is false, everything is readonly
   fields: AttributeField[] // the schema for the form
@@ -103,6 +117,7 @@ export interface DetailsPanelAttributesEditorProps {
 }
 
 export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
+  title,
   isLoading,
   form,
   fields,
@@ -132,11 +147,9 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   if (isLoading) {
     return (
       <StyledForm>
-        {Array.from({ length: 10 }).map((_, index) => (
-          <ShimmerRow key={index}>
-            <div className="loading"></div>
-            <div className="loading"></div>
-          </ShimmerRow>
+        {title && <h3>{title}</h3>}
+        {Array.from({ length: fields.length ?? 10 }).map((_, index) => (
+          <ShimmerRow key={index} className="loading"></ShimmerRow>
         ))}
       </StyledForm>
     )
@@ -144,6 +157,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
   return (
     <StyledForm>
+      {title && <h3>{title}</h3>}
       {fields
         .filter((f) => !f.hidden)
         .map((field) => {

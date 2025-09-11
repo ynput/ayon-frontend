@@ -16,6 +16,10 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           active
           createdAt
           updatedAt
+          updatedBy
+          active
+          projectName
+          attributes
           owner
           count
         }

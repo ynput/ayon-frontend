@@ -6,7 +6,10 @@ import {
 
 // Define the type for our transformed lists data
 type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
-export type EntityList = QueryEntityList & { entityType: 'folder' | 'version' | 'task' | 'product' }
+export type EntityList = Omit<QueryEntityList, 'data'> & {
+  entityType: 'folder' | 'version' | 'task' | 'product'
+  data: Record<string, any>
+}
 
 // Define the result type for lists query
 export type GetListsResult = {
