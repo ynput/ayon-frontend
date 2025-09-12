@@ -5,8 +5,7 @@ import { UseHistoryReturn } from '../hooks/useHistory'
 
 export interface CellEditingContextType {
   editingCellId: CellId | null
-  editingCellElement: HTMLElement | null
-  setEditingCellId: (id: CellId | null, element?: HTMLElement | null) => void
+  setEditingCellId: (id: CellId | null) => void
   isEditing: (id: CellId) => boolean
   updateEntities: UpdateTableEntities
   inheritFromParent: InheritFromParent
