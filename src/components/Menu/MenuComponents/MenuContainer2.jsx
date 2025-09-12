@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { setMenuOpen } from '@state/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import * as Styled from './Menu.styled'
 import { useMenuPosition } from './useMenuPosition'
-
 
 const MenuContainerV2 = ({
   id,
@@ -17,12 +15,12 @@ const MenuContainerV2 = ({
   children,
   ...props
 }) => {
-  const dispatch = useDispatch()
   const navigate = useNavigate()
-  const isOpen = useSelector((state) => state.context.menuOpen) === id
-  
+  const { menuOpen, setMenuOpen } = useMenuContext()
+  const isOpen = menuOpen === id
+
   const handleClose = () => {
-    dispatch(setMenuOpen(false))
+    setMenuOpen(false)
   }
 
   const handleNavigate = (path) => {
@@ -59,7 +57,7 @@ const MenuInner2 = ({
   ...props
 }) => {
   const { position, menuRef } = useMenuPosition(target, targetId)
-  
+
   // Focus management
   useEffect(() => {
     if (position && menuRef.current) {
@@ -67,28 +65,28 @@ const MenuInner2 = ({
       first?.focus()
     }
   }, [position])
-  
+
   // Keyboard handling
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') handleClose()
   }
-  
+
   // Click outside handling
   const handleOnClick = (e) => {
     if (e.target.id === 'dialog') handleClose()
   }
-  
+
   // Attach props to children
   const childrenWithProps = React.Children.map(children, (child, i) => {
-    return React.cloneElement(child, { 
-      onClose: handleClose, 
-      index: i, 
-      navigate: handleNavigate 
+    return React.cloneElement(child, {
+      onClose: handleClose,
+      index: i,
+      navigate: handleNavigate,
     })
   })
-  
+
   if (!position) return null
-  
+
   return createPortal(
     <Styled.Dialog
       open={true}
@@ -98,15 +96,11 @@ const MenuInner2 = ({
       ref={menuRef}
       id="dialog"
     >
-      <Styled.DialogContent 
-        id="content" 
-        style={position} 
-        className={clsx(align)}
-      >
+      <Styled.DialogContent id="content" style={position} className={clsx(align)}>
         {childrenWithProps}
       </Styled.DialogContent>
     </Styled.Dialog>,
-    document.body
+    document.body,
   )
 }
 

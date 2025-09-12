@@ -9,7 +9,7 @@ import React, {
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { toggleMenuOpen } from '@state/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import { useLogoutMutation } from '@queries/auth/logout'
 import { useSearchParams } from 'react-router-dom'
 
@@ -19,6 +19,7 @@ function ShortcutsProvider(props) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const dispatch = useAppDispatch()
+  const { toggleMenuOpen } = useMenuContext()
 
   // review open
   const reviewOpen = useAppSelector((state) => state.viewer.isOpen)
@@ -70,13 +71,13 @@ function ShortcutsProvider(props) {
 
   const navBar = useMemo(
     () => [
-      { key: '1', action: () => dispatch(toggleMenuOpen('project')) },
-      { key: '8', action: () => dispatch(toggleMenuOpen('help')) },
-      { key: '9', action: () => dispatch(toggleMenuOpen('app')) },
+      { key: '1', action: () => toggleMenuOpen('project') },
+      { key: '8', action: () => toggleMenuOpen('help') },
+      { key: '9', action: () => toggleMenuOpen('app') },
       { key: '0+0', action: () => logout() },
-      { key: '0', action: () => dispatch(toggleMenuOpen('user')) },
+      { key: '0', action: () => toggleMenuOpen('user') },
     ],
-    [navigate],
+    [toggleMenuOpen, logout],
   )
 
   const defaultShortcuts = [...navigation, ...navBar]
