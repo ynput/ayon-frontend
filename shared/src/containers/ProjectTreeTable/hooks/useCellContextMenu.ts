@@ -346,11 +346,18 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     )
 
     const selectedCellsData = currentSelectedCells.flatMap((cellId) => getCellData(cellId) || [])
+
+    // Remove duplicates based on entityId - prioritize full row selection over individual cells
+    const filteredSelectedCellsData = [
+      ...new Map(selectedCellsData.map(e => [e.entityId, e])).values()
+    ];
+
+
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
     const selectedCellFullRows: string[] = []
     const selectedCellsGroups: string[] = [] // find cells that are group headers
-    for (const { entityId, columnId } of selectedCellsData) {
+    for (const { entityId, columnId } of filteredSelectedCellsData) {
       if (entityId && !selectedCellRows.includes(entityId)) selectedCellRows.push(entityId)
       if (columnId && !selectedCellColumns.includes(columnId)) selectedCellColumns.push(columnId)
       if (columnId === ROW_SELECTION_COLUMN_ID && !selectedCellFullRows.includes(entityId))
@@ -363,7 +370,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         ? constructor(
             e,
             cellData,
-            selectedCellsData,
+            filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
               selectedRows: selectedCellRows,
@@ -378,7 +385,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         : builtInMenuItems[constructor]?.(
             e,
             cellData,
-            selectedCellsData,
+            filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
               selectedRows: selectedCellRows,
