@@ -3,7 +3,7 @@ import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { getListIcon } from '@pages/ProjectListsPage/util'
-import { ListAttributeForm, ListMetaData } from '@shared/components'
+import { ListAccessForm, ListAttributeForm, ListMetaData } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@hooks/useQueryArgumentChangeLoading'
 import { useListsDataContext } from '../../context/ListsDataContext'
@@ -33,7 +33,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   const isReview = list?.entityListType === 'review-session'
 
-  const [selectedTab, setSelectedTab] = useState<ListDetailsTab>('details')
+  const [selectedTab, setSelectedTab] = useState<ListDetailsTab>('access')
 
   return (
     <Styled.Panel>
@@ -49,7 +49,6 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
         </Styled.Titles>
         <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} />
       </Styled.Header>
-      {/* <Styled.Section className="border"></Styled.Section> */}
       <Styled.Scrollable>
         {selectedTab === 'details' && (
           <>
@@ -66,6 +65,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
             </Styled.Section>
           </>
         )}
+        {selectedTab === 'access' && <ListAccessForm />}
       </Styled.Scrollable>
     </Styled.Panel>
   )
