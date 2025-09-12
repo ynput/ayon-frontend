@@ -8,6 +8,9 @@ export const QuillListStyles = styled.div`
   /* Fix for unordered list showing as ordered list */
   .ql-editor ol,
   .ql-editor ul {
+    margin: 16px 0 !important;
+    padding-left: 20px;
+    
     li {
       padding-left: 0;
 
