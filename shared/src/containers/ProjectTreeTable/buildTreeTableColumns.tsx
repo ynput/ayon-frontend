@@ -192,7 +192,7 @@ const buildTreeTableColumns = ({
 
         return (
             <>
-                {isEditing(cellId) && createPortal(
+                {isEditing(cellId) && (
               <CellEditingDialog
                 isEditing={isEditing(cellId)}
                 anchorId={cellId}
@@ -211,8 +211,7 @@ const buildTreeTableColumns = ({
                     console.log('Edit cancelled')
                   }}
                 />
-              </CellEditingDialog>,
-              document.body
+              </CellEditingDialog>
             )}
           <TableCellContent
             id={cellId}

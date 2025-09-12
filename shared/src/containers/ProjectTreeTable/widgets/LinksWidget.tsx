@@ -105,7 +105,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
       />
       {isEditing &&
         value &&
-        createPortal(
+        (
           <CellEditingDialog
             isEditing={isEditing}
             anchorId={cellId}
@@ -134,8 +134,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
                 onClose={onCancelEdit}
               />
             )}
-          </CellEditingDialog>,
-          document.body,
+          </CellEditingDialog>
         )}
     </>
   )

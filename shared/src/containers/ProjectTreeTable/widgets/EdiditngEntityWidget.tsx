@@ -14,32 +14,33 @@ const generateSystemName = (displayName: string): string => {
 }
 
 const EditingContainer = styled.div`
-  background: var(--md-sys-color-surface-container-lowest);
-  border: 2px solid var(--md-sys-color-primary);
-  padding: 8px;
-  width: 350px;
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 2px solid var(--md-sys-color-primary);
+    padding: 8px;
+    width: 350px;
+    border-radius: 4px;
 `
 
-
 const InputLabel = styled.label`
-  font-size: 12px;
-  color: var(--md-sys-color-outline);
+    font-size: 12px;
+    color: var(--md-sys-color-outline);
 `
 
 const StyledInput = styled.input`
-  width: 100%;
-  border: none;
-  background-color: var(--md-sys-color-surface-container-lowest);
-  color: var(--md-sys-color-on-surface);
+    width: 100%;
+    border: none;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    color: var(--md-sys-color-on-surface);
     &:focus {
-    outline: none;
+        outline: none;
     }
 `
 
 const ErrorText = styled.div`
-  font-size: 11px;
-  color: var(--md-sys-color-error);
+    font-size: 11px;
+    color: var(--md-sys-color-error);
 `
+
 interface InlineEditingWidgetProps {
     cellId: string
     rowId: string
@@ -50,16 +51,17 @@ interface InlineEditingWidgetProps {
 }
 
 const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
-                                                                     cellId,
-                                                                     rowId,
-                                                                     entityType,
-                                                                     initialName,
-                                                                     initialLabel = '',
-                                                                     onCancel
-                                                                 }) => {
+                                                                      cellId,
+                                                                      rowId,
+                                                                      entityType,
+                                                                      initialName,
+                                                                      initialLabel = '',
+                                                                      onCancel
+                                                                  }) => {
     const [label, setLabel] = useState(initialLabel)
     const [name, setName] = useState(initialName)
     const [isNameManuallyEdited, setIsNameManuallyEdited] = useState(false)
+    const [isSaving, setIsSaving] = useState(false) // Add saving state
     const { setEditingCellId, updateEntities } = useCellEditing()
     const widgetRef = useRef<HTMLDivElement>(null)
     const labelInputRef = useRef<HTMLInputElement>(null)
@@ -91,9 +93,16 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            // Prevent multiple saves if already saving
+            if (isSaving) return
+
             if (event.key === 'Escape') {
+                event.preventDefault()
+                event.stopPropagation()
                 handleCancel()
             } else if (event.key === 'Enter') {
+                event.preventDefault()
+                event.stopPropagation()
                 handleSave()
             }
         }
@@ -103,62 +112,76 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
         return () => {
             document.removeEventListener('keydown', handleKeyDown)
         }
-    }, [label, name])
+    }, [label, name, isSaving]) // Add isSaving to dependencies
 
-    const handleSave = async () => {
-        if (!label.trim()) return // Don't save if label is empty
+    const handleSave = useCallback(async () => {
+        if (!label.trim() || isSaving) return // Don't save if empty or already saving
 
-        const hasChanges = name !== initialName || label !== initialLabel
+        setIsSaving(true)
 
-        if (hasChanges) {
-            // Update name if changed
-            if (name !== initialName) {
-                await updateEntities([
-                    {
+        try {
+            const hasChanges = name !== initialName || label !== initialLabel
+
+            if (hasChanges) {
+                const updates = []
+
+                // Prepare all updates first
+                if (name !== initialName) {
+                    updates.push({
                         field: 'name',
                         value: name.trim() || generateSystemName(label.trim()),
                         type: entityType,
                         rowId,
                         id: rowId
-                    }
-                ])
-            }
+                    })
+                }
 
-            // Update label if changed
-            if (label !== initialLabel) {
-                await updateEntities([
-                    {
+                if (label !== initialLabel) {
+                    updates.push({
                         field: 'label',
                         value: label.trim(),
                         type: entityType,
                         rowId,
                         id: rowId
-                    }
-                ])
+                    })
+                }
+
+                // Execute all updates in one batch
+                if (updates.length > 0) {
+                    await updateEntities(updates)
+                }
             }
+
+            // Only exit editing mode after successful save
+            setEditingCellId(null)
+        } catch (error) {
+            console.error('Failed to save entity changes:', error)
+            // Don't exit editing mode on error, let user retry
+        } finally {
+            setIsSaving(false)
         }
+    }, [label, name, initialLabel, initialName, entityType, rowId, updateEntities, setEditingCellId, isSaving])
 
-        setEditingCellId(null)
-    }
-
-    const handleCancel = () => {
+    const handleCancel = useCallback(() => {
+        if (isSaving) return // Don't allow cancel while saving
         onCancel?.()
         setEditingCellId(null)
-    }
+    }, [onCancel, setEditingCellId, isSaving])
 
     const handleLabelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        if (isSaving) return // Don't allow changes while saving
         const value = e.target.value
         setLabel(value)
         if (!isNameManuallyEdited) {
             setName(generateSystemName(value))
         }
-    }, [isNameManuallyEdited])
+    }, [isNameManuallyEdited, isSaving])
 
     const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        if (isSaving) return // Don't allow changes while saving
         setName(e.target.value)
         setIsNameManuallyEdited(true)
-    }, [])
-
+    }, [isSaving])
 
     return (
         <EditingContainer ref={widgetRef} onClick={(e) => e.stopPropagation()}>
@@ -171,6 +194,7 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
                     className={!label.trim() ? 'error' : ''}
                     placeholder="Enter display name"
                     style={{paddingBottom: '6px'}}
+                    disabled={isSaving}
                 />
                 {!label.trim() && (
                     <ErrorText>Label is required</ErrorText>
@@ -185,6 +209,7 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
                     onChange={handleNameChange}
                     className="system-name"
                     placeholder="system_name_with_underscores"
+                    disabled={isSaving}
                 />
         </EditingContainer>
     )
