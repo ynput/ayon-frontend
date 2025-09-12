@@ -1,5 +1,5 @@
 import {Chips, ChipValue, LinkEntity, LinksManager} from '@shared/components'
-import { TableCellEditingDialog } from '@shared/components/LinksManager/TableCellEditingDialog'
+import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { createPortal } from 'react-dom'
@@ -106,7 +106,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
       {isEditing &&
         value &&
         createPortal(
-          <TableCellEditingDialog
+          <CellEditingDialog
             isEditing={isEditing}
             anchorId={cellId}
             onClose={onCancelEdit}
@@ -134,7 +134,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
                 onClose={onCancelEdit}
               />
             )}
-          </TableCellEditingDialog>,
+          </CellEditingDialog>,
           document.body,
         )}
     </>

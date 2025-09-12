@@ -16,7 +16,7 @@ import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import EdiditngEntityWidget from "@shared/containers/ProjectTreeTable/widgets/EdiditngEntityWidget";
-import { TableCellEditingDialog } from '@shared/components/LinksManager/TableCellEditingDialog';
+import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog';
 import {createPortal} from "react-dom";
 
 const MIN_SIZE = 50
@@ -193,7 +193,7 @@ const buildTreeTableColumns = ({
         return (
             <>
                 {isEditing(cellId) && createPortal(
-              <TableCellEditingDialog
+              <CellEditingDialog
                 isEditing={isEditing(cellId)}
                 anchorId={cellId}
                 onClose={() => {
@@ -211,7 +211,7 @@ const buildTreeTableColumns = ({
                     console.log('Edit cancelled')
                   }}
                 />
-              </TableCellEditingDialog>,
+              </CellEditingDialog>,
               document.body
             )}
           <TableCellContent

@@ -24,7 +24,7 @@ export interface LinksManagerDialogProps {
   children?: React.ReactNode
 }
 
-export const TableCellEditingDialog: FC<LinksManagerDialogProps> = ({
+export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   disabled,
   isEditing,
   anchorId,
