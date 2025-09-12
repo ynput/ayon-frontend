@@ -73,7 +73,6 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       disabledMessage,
       active,
       style,
-      className,
       ...props
     },
     ref,
