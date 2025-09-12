@@ -46,10 +46,13 @@ export type UserModel = {
   updatedAt?: string
 }
 export type LoginResponseModel = {
+  /** Text message, which may be displayed to the user */
   detail?: string
   error?: string
   token?: string
   user?: UserModel
+  /** URL to redirect the user after login */
+  redirectUrl?: string
 }
 export type ValidationError = {
   loc: (string | number)[]

@@ -331,7 +331,7 @@ export type EntityListSummary = {
   label: string
   count?: number
 }
-export type ListAccessLevel = 10 | 20 | 30 | 40
+export type ListAccessLevel = 0 | 10 | 20 | 30
 export type EntityListPostModel = {
   id?: string
   /** Type of the list */

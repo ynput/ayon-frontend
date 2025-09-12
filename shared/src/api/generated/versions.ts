@@ -149,6 +149,7 @@ export type VersionModel = {
   taskId?: string
   thumbnailId?: string
   author?: string
+  path?: string
   attrib?: VersionAttribModel
   data?: Record<string, any>
   /** Whether the version is active */

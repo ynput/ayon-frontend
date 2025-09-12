@@ -8,7 +8,7 @@ import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 import { linksToTableData } from '../utils'
-import { productTypes } from '@shared/util'
+import { useProjectContext } from '@shared/context/ProjectContext'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -96,8 +96,9 @@ const getSortingIds = (
 }
 
 const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
-  const { project, entities, entityType, groups = [], attribFields, showEmpty } = props
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
+  const { project: pdata, entities, entityType, groups = [], attribFields, showEmpty } = props
+  const project = useProjectContext()
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo: pdata })
 
   const entityToGroupRow = useCallback(
     (task: EditorTaskNode, group?: string): TableRow => {
@@ -123,7 +124,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
         updatedAt: task.updatedAt,
         links: linksToTableData(task.links, 'task', {
           folderTypes: project?.folderTypes || [],
-          productTypes: Object.values(productTypes) || [],
+          productTypes: project?.productTypes || [],
           taskTypes: project?.taskTypes || [],
         }),
       }

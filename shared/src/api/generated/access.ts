@@ -118,10 +118,15 @@ export type AttributeReadAccessList = {
 export type AttributeWriteAccessList = {
   enabled?: boolean
   attributes?: string[]
+  fields?: string[]
 }
 export type EndpointsAccessList = {
   enabled?: boolean
   endpoints?: string[]
+}
+export type ProjectAdvancedPermissions = {
+  /** If a user can access a task through the 'Assigned' permission, enabling this will also show all sibling tasks in the same folder. When disabled, only the assigned task is visible. */
+  show_sibling_tasks?: boolean
 }
 export type Permissions = {
   studio?: StudioManagementPermissions
@@ -142,6 +147,7 @@ export type Permissions = {
   attrib_write?: AttributeWriteAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
+  advanced?: ProjectAdvancedPermissions
 }
 export type ShareOption = {
   shareType: string

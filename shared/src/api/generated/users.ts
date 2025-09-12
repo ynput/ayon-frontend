@@ -386,8 +386,8 @@ export type AttributeReadAccessList = {
 }
 export type AttributeWriteAccessList = {
   enabled?: boolean
-  fields?: string[]
   attributes?: string[]
+  fields?: string[]
 }
 export type EndpointsAccessList = {
   enabled?: boolean
