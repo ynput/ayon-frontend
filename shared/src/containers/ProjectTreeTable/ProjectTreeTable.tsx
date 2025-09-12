@@ -41,6 +41,7 @@ import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/Sel
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
+import { useMenuContext } from '../../context/MenuContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -520,9 +521,13 @@ export const ProjectTreeTable = ({
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
-          className={clsx('table-container', {
-            resizing: table.getState().columnSizingInfo.isResizingColumn
-          }, pt?.container?.className)}
+          className={clsx(
+            'table-container',
+            {
+              resizing: table.getState().columnSizingInfo.isResizingColumn,
+            },
+            pt?.container?.className,
+          )}
         >
           <table
             style={{
@@ -784,7 +789,8 @@ const TableHeadCell = ({
   const { column } = header
   const sorting = column.getIsSorted()
   const menuId = `column-header-menu-${column.id}`
-  const isOpen = useSelector((state: any) => state.context.menuOpen) === menuId
+  const { menuOpen } = useMenuContext()
+  const isOpen = menuOpen === menuId
 
   return (
     <Styled.HeaderCell
