@@ -69,9 +69,16 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
     // Auto-generate name from label (display name)
     useEffect(() => {
         if (!isNameManuallyEdited && label) {
-            setName(generateSystemName(label))
+            const generatedName = generateSystemName(label)
+            // Only update if name matches the generated pattern (not detached)
+            if (name === generateSystemName(initialLabel) || name === generatedName) {
+                setName(generatedName)
+            } else {
+                // Name is detached from label, stop auto-updating
+                setIsNameManuallyEdited(true)
+            }
         }
-    }, [label, isNameManuallyEdited])
+    }, [label, isNameManuallyEdited, name, initialLabel])
 
     // Reset when props change
     useEffect(() => {
