@@ -47,7 +47,6 @@ const getDescriptionModules = ({
   }
 }
 
-
 interface DescriptionSectionProps {
   description: string
   isMixed: boolean
@@ -84,19 +83,22 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
 
   if (isLoading) {
     return (
-      <BorderedSection title="Description">
+      <BorderedSection title="Description" withPadding>
         <StyledLoadingSkeleton />
       </BorderedSection>
     )
   }
 
   return (
-    <BorderedSection title="Description" showHeader={!isEditing} enableHover>
-      <StyledContent
-        className={clsx({ editing: isEditing })}
-        onClick={!isEditing ? handleStartEditing : undefined}
-      >
-        {isEditing ? (
+    <BorderedSection
+      title="Description"
+      showHeader={!isEditing}
+      enableHover
+      withPadding
+      onClick={!isEditing ? handleStartEditing : undefined}
+    >
+      <StyledContent className={clsx({ editing: isEditing })}>
+        {/* {isEditing ? ( */}
           <StyledEditor className="block-shortcuts">
             <QuillListStyles>
               <StyledQuillContainer>
@@ -104,22 +106,21 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
                   key={`description-editor-${isEditing}`}
                   theme="snow"
                   ref={editorRef}
-                  value={editorValue}
+                  value={editorValue || description}
                   onChange={setEditorValue}
                   placeholder="Add a description..."
-                  modules={getDescriptionModules({ imageUploader: null, disableImageUpload: true })}
+                  modules={isEditing ? getDescriptionModules({ imageUploader: null, disableImageUpload: true }) : { toolbar: false }}
                   formats={conditionalFormats}
                   onKeyDown={handleKeyDown}
+                  readOnly={!isEditing}
                 />
               </StyledQuillContainer>
             </QuillListStyles>
           </StyledEditor>
-        ) : (
+        {/* ) : (
           <StyledDescription className={clsx({ empty: !description && !isMixed })}>
             {isMixed ? (
-              <StyledMultipleValues>
-                Multiple values
-              </StyledMultipleValues>
+              <StyledMultipleValues>Multiple values</StyledMultipleValues>
             ) : description ? (
               <StyledMarkdown>
                 <ReactMarkdown
@@ -133,7 +134,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
               ''
             )}
           </StyledDescription>
-        )}
+        )} */}
         {isEditing && (
           <StyledFooter>
             <StyledButtonContainer>

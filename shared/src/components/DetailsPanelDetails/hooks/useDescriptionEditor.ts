@@ -48,7 +48,6 @@ export const useDescriptionEditor = ({
         }
         // skip closing ```
         if (i < lines.length && /^```/.test(lines[i])) i++
-        out.push(`<pre class="ql-code-block-container"><code>${escapeHtml(code.join('\n'))}</code></pre>`) 
         continue
       }
 
@@ -59,7 +58,7 @@ export const useDescriptionEditor = ({
           quoteLines.push(lines[i].replace(/^>\s?/, ''))
           i++
         }
-        out.push(`<blockquote>${escapeHtml(quoteLines.join('\n'))}</blockquote>`) 
+        out.push(`<blockquote>${escapeHtml(quoteLines.join('\n'))}</blockquote>`)
         continue
       }
 
@@ -68,11 +67,14 @@ export const useDescriptionEditor = ({
         const items: string[] = []
         let hasOrdered = false
         let hasUnordered = false
-        
+
         // Collect all consecutive list items (both ordered and unordered)
-        const listItems: Array<{text: string, isOrdered: boolean}> = []
+        const listItems: Array<{ text: string; isOrdered: boolean }> = []
         let j = i
-        while (j < lines.length && (/^\s*[-*]\s+/.test(lines[j]) || /^\s*\d+\.\s+/.test(lines[j]))) {
+        while (
+          j < lines.length &&
+          (/^\s*[-*]\s+/.test(lines[j]) || /^\s*\d+\.\s+/.test(lines[j]))
+        ) {
           const currentLine = lines[j]
           const isOrdered = /^\s*\d+\.\s+/.test(currentLine)
           const text = currentLine.replace(/^\s*[-*]\s+/, '').replace(/^\s*\d+\.\s+/, '')
@@ -81,7 +83,7 @@ export const useDescriptionEditor = ({
           else hasUnordered = true
           j++
         }
-        
+
         // Determine list type
         let listType: 'ordered' | 'unordered' | 'mixed' = 'unordered'
         if (hasOrdered && hasUnordered) {
@@ -91,7 +93,7 @@ export const useDescriptionEditor = ({
         } else {
           listType = 'unordered'
         }
-        
+
         // Process each item
         for (const item of listItems) {
           const itemEsc = escapeHtml(item.text)
@@ -103,17 +105,23 @@ export const useDescriptionEditor = ({
             return CODE_TOKEN
           })
           tmp = tmp.replace(/\*\*([^\s][\s\S]*?)\*\*/g, '<strong>$1</strong>')
-          tmp = tmp.replace(/(^|[^*])\*([^\s][^*]*?)\*(?!\*)/g, (_m, p1, p2) => `${p1}<em>${p2}</em>`)
-          tmp = tmp.replace(/(^|\W)_([^_\s][^_]*?)_(?=\W|$)/g, (_m, p1, p2) => `${p1}<em>${p2}</em>`)
+          tmp = tmp.replace(
+            /(^|[^*])\*([^\s][^*]*?)\*(?!\*)/g,
+            (_m, p1, p2) => `${p1}<em>${p2}</em>`,
+          )
+          tmp = tmp.replace(
+            /(^|\W)_([^_\s][^_]*?)_(?=\W|$)/g,
+            (_m, p1, p2) => `${p1}<em>${p2}</em>`,
+          )
           let idx = 0
           const itemInline = tmp.replace(new RegExp(CODE_TOKEN, 'g'), () => codeSpans[idx++])
-          
+
           // Add data-list attribute and ql-ui span to match Quill's structure
           const dataListAttr = item.isOrdered ? 'data-list="ordered"' : 'data-list="bullet"'
           const qlUiSpan = '<span class="ql-ui" contenteditable="false"></span>'
           items.push(`<li ${dataListAttr}>${qlUiSpan}${itemInline}</li>`)
         }
-        
+
         // Use appropriate list tag based on the determined type
         // For mixed lists, use <ol> to match Quill's behavior
         const listTag = listType === 'unordered' ? 'ul' : 'ol'
@@ -180,7 +188,7 @@ export const useDescriptionEditor = ({
         t = t.replace(/(^|\W)_([^_\s][^_]*?)_(?=\W|$)/g, (_m, p1, p2) => `${p1}<em>${p2}</em>`)
         let cidx = 0
         const inline = t.replace(new RegExp(TOKEN, 'g'), () => codeSpans[cidx++])
-        out.push(`<h2>${inline}</h2>`) 
+        out.push(`<h2>${inline}</h2>`)
         i++
         continue
       }
@@ -200,7 +208,7 @@ export const useDescriptionEditor = ({
         t = t.replace(/(^|\W)_([^_\s][^_]*?)_(?=\W|$)/g, (_m, p1, p2) => `${p1}<em>${p2}</em>`)
         let cidx = 0
         const inline = t.replace(new RegExp(TOKEN, 'g'), () => codeSpans[cidx++])
-        out.push(`<h2>${inline}</h2>`) 
+        out.push(`<h2>${inline}</h2>`)
         i++
         continue
       }
@@ -238,8 +246,8 @@ export const useDescriptionEditor = ({
 
   useEffect(() => {
     if (isEditing && description) {
-      const html = convertMarkdownToHtml(description)
-      setEditorValue(html)
+      // Use description directly as HTML instead of converting from markdown
+      setEditorValue(description)
     }
   }, [description, isEditing])
 
@@ -267,8 +275,8 @@ export const useDescriptionEditor = ({
   const handleStartEditing = () => {
     if (enableEditing && !isMixed) {
       setIsEditing(true)
-      const html = convertMarkdownToHtml(description)
-      setEditorValue(html)
+      // Use description directly as HTML instead of converting from markdown
+      setEditorValue(description)
     }
   }
 
@@ -276,8 +284,8 @@ export const useDescriptionEditor = ({
     const quill = editorRef.current?.getEditor()
     if (quill) {
       const html = quill.root.innerHTML
-      const [markdown] = convertToMarkdown(html)
-      onChange(markdown)
+      // Preserve React Quill HTML directly instead of converting to markdown
+      onChange(html)
     }
     setIsEditing(false)
     setEditorValue('')

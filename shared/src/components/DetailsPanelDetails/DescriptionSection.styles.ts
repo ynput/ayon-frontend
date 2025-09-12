@@ -12,6 +12,14 @@ export const StyledContent = styled.div`
     padding: 0;
     margin: 0;
   }
+  
+  &:not(.editing) {
+    cursor: pointer !important;
+    
+    * {
+      cursor: pointer !important;
+    }
+  }
 `
 
 export const StyledDescription = styled.div`
@@ -126,6 +134,16 @@ export const StyledEditor = styled.div`
       min-height: 60px;
       flex: 1;
       overflow-y: auto;
+      
+      &[contenteditable="false"] {
+        cursor: pointer !important;
+        pointer-events: none !important;
+      }
+      
+      &[contenteditable="false"] * {
+        cursor: pointer !important;
+        pointer-events: none !important;
+      }
 
       &.ql-blank::before {
         color: var(--md-sys-color-on-surface-variant);
@@ -146,28 +164,22 @@ export const StyledEditor = styled.div`
 
       strong {
         em,
-        u {
+        u,
+        a {
           font-weight: 800;
         }
       }
 
       /* Match activity section typography */
-      h1 {
+      h1, h2 {
         font-size: 24px;
         margin-top: 16px;
         margin-bottom: 8px;
       }
 
-      h2 {
+      h2  {
+        a, em, strong {
         font-size: 20px;
-        margin-top: 16px;
-        margin-bottom: 8px;
-      }
-
-      h3 {
-        font-size: 16px;
-        margin-top: 16px;
-        margin-bottom: 8px;
       }
 
       p {
@@ -177,7 +189,7 @@ export const StyledEditor = styled.div`
 
       ul,
       ol {
-        margin: 16px 0;
+        margin: 16px 0 !important;
         padding-left: 20px;
       }
 
@@ -214,27 +226,17 @@ export const StyledMarkdown = styled.div`
   .markdown-content {
     color: var(--md-sys-color-on-surface);
     line-height: 1.5;
-    white-space: normal; /* prevent preserved newlines from adding extra gaps compared to editor */
+    white-space: pre-wrap; /* prevent preserved newlines from adding extra gaps compared to editor */
 
     /* Normalize spacing to match the editor */
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      font-size: 20px;
-      margin-top: 16px;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
     /* Match editor heading sizes: Quill uses ~1.5em for H2 */
     h1 {
       font-size: 1.5rem;
     }
     h2 {
-      font-size: 1.5em;
+      font-size: 24px;
+      margin-top: 16px;
+      margin-bottom: 8px;
     }
     h3 {
       font-size: 1.125rem;
@@ -242,7 +244,7 @@ export const StyledMarkdown = styled.div`
 
     /* Avoid big gaps created by consecutive blank paragraphs */
     p {
-      margin: 0 0 6px 0;
+      margin: 0;
       &:last-child {
         margin-bottom: 0;
       }
@@ -257,8 +259,11 @@ export const StyledMarkdown = styled.div`
       letter-spacing: 0.25px;
     }
 
-    strong em {
-      font-weight: 800 !important;
+    strong {
+      em,
+      a {
+        font-weight: 800 !important;
+      }
     }
 
     blockquote {
@@ -270,8 +275,18 @@ export const StyledMarkdown = styled.div`
 
     ul,
     ol {
+      white-space: nowrap;
       margin: 16px 0;
       padding-left: 20px !important;
+    }
+
+    /* Handle mixed lists with data-list attributes */
+    ol li[data-list="bullet"] {
+      list-style-type: disc !important;
+    }
+
+    ol li[data-list="ordered"] {
+      list-style-type: decimal !important;
     }
 
     /* Remove extra vertical gap when markdown renders mixed list types consecutively */
@@ -297,6 +312,16 @@ export const StyledMarkdown = styled.div`
       color: var(--md-sys-color-primary);
       text-decoration: none;
     }
+
+    h2 {
+      a,
+      em,
+      strong {
+        font-size: 20px;
+        margin-top: 16px;
+        margin-bottom: 8px;
+      }
+    }
   }
 `
 
@@ -318,4 +343,24 @@ export const StyledButtonContainer = styled.div`
 
 export const StyledQuillContainer = styled.div`
   height: 100%;
+  
+  /* Force cursor pointer when ReactQuill is readonly - comprehensive approach */
+  .ql-container.ql-snow .ql-editor[contenteditable="false"] {
+    cursor: pointer !important;
+    
+    /* Override cursor for all child elements */
+    * {
+      cursor: pointer !important;
+    }
+    
+    /* Specific overrides for common elements that might have different cursors */
+    a, strong, em, code, span, div, p, li, ol, ul, h1, h2, h3, h4, h5, h6 {
+      cursor: pointer !important;
+    }
+  }
+  
+  /* Also handle blank state */
+  .ql-editor.ql-blank {
+    cursor: pointer !important;
+  }
 `

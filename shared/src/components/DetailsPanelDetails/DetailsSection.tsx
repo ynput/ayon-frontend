@@ -31,7 +31,6 @@ const StyledRow = styled.div`
   }
 `
 
-
 const StyledValue = styled.div`
   text-align: left;
   color: var(--md-sys-color-on-surface);
@@ -101,7 +100,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
   if (isLoading) {
     return (
-      <BorderedSection title="Details">
+      <BorderedSection title="Details" withPadding>
         {Array.from({ length: 6 }).map((_, index) => (
           <StyledRow key={index}>
             <StyledShimmer style={{ width: '80px' }} />
@@ -114,7 +113,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   }
 
   return (
-    <BorderedSection title="Details" autoHeight showHeader>
+    <BorderedSection title="Details" autoHeight showHeader withPadding>
       {fields
         .filter((field) => !field.hidden)
         .map((field) => {
@@ -124,11 +123,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
           return (
             <StyledRow key={field.name}>
-              <FieldLabel
-                name={field.name}
-                data={field.data}
-                showDetailedTooltip={true}
-              />
+              <FieldLabel name={field.name} data={field.data} showDetailedTooltip={true} />
               <StyledValue
                 title={displayValue}
                 style={{
