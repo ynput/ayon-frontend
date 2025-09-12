@@ -6,28 +6,26 @@ import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidge
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
-
-const StyledForm = styled.div`
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  height: 100%;
-`
+import { BorderedSection } from '../DetailsPanelDetails/BorderedSection'
+import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: 150px 1fr auto;
-  gap: 0px;
+  grid-template-columns: minmax(200px, 1fr) 1fr 32px;
+  row-gap: 2px;
+  column-gap: 4px;
   align-items: center;
-  min-height: 37px;
+  min-height: 32px;
   position: relative;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
   .copy-icon {
     opacity: 0;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
 
     &:hover {
-      background-color: var(--md-sys-color-surface-container-low-hover);
+      background-color: transparent !important;
     }
   }
 
@@ -36,29 +34,24 @@ const FormRow = styled.div`
   }
 `
 
-const FieldLabel = styled.div`
-  color: var(--md-sys-color-on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-left: 4px;
-`
 
 const FieldValue = styled.div`
   height: 32px;
   overflow: hidden;
-  width: fit-content;
-  min-width: 160px;
-  max-width: 100%;
-  justify-self: end;
+  width: 100%;
+  justify-self: start;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   border-radius: 4px;
   padding: 0 4px;
+  text-align: left;
+  position: relative;
+  z-index: 1;
 
   &:not(.readonly) {
     cursor: pointer;
+    pointer-events: auto;
   }
 
   &:hover:not(.readonly) {
@@ -72,6 +65,11 @@ const FieldValue = styled.div`
   &.editing {
     background-color: var(--md-sys-color-surface-container);
     cursor: default;
+    justify-content: flex-start;
+  }
+
+  &.readonly {
+    pointer-events: none;
   }
 `
 
@@ -82,8 +80,6 @@ const ShimmerRow = styled(FormRow)`
     border-radius: 4px;
   }
 `
-
-// TODO: move styles to a separate file
 
 export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
   readonly?: boolean
@@ -112,14 +108,14 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
 
-  // Handler for starting to edit a field
   const handleStartEditing = (fieldName: string) => {
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {
       setEditingField(fieldName)
+    } else {
+      console.log('Editing not allowed:', { enableEditing, fieldReadonly: fields.find((field) => field.name === fieldName)?.readonly })
     }
   }
 
-  // Handler for field value changes
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
     setEditingField(null)
     onChange?.(fieldName, value)
@@ -131,19 +127,19 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
   if (isLoading) {
     return (
-      <StyledForm>
+      <BorderedSection title="Attributes">
         {Array.from({ length: 10 }).map((_, index) => (
           <ShimmerRow key={index}>
             <div className="loading"></div>
             <div className="loading"></div>
           </ShimmerRow>
         ))}
-      </StyledForm>
+      </BorderedSection>
     )
   }
 
   return (
-    <StyledForm>
+    <BorderedSection title="Attributes" autoHeight showHeader>
       {fields
         .filter((f) => !f.hidden)
         .map((field) => {
@@ -154,12 +150,20 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
           return (
             <FormRow key={field.name}>
-              <FieldLabel title={field.data.description || field.data.title || field.name}>
-                {field.data.title || field.name}
-              </FieldLabel>
+              <FieldLabel
+                name={field.name}
+                data={field.data}
+                showDetailedTooltip
+              />
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
-                onClick={() => !isEditing && handleStartEditing(field.name)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (!isEditing && !isReadOnly) {
+                    handleStartEditing(field.name)
+                  }
+                }}
               >
                 <RenderFieldWidget
                   field={field}
@@ -176,6 +180,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                 variant="text"
                 icon="content_copy"
                 onClick={(e) => {
+                  e.preventDefault()
                   e.stopPropagation()
                   const valueToDisplay =
                     fieldValue === null || fieldValue === undefined ? '' : fieldValue
@@ -185,6 +190,6 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
             </FormRow>
           )
         })}
-    </StyledForm>
+    </BorderedSection>
   )
 }

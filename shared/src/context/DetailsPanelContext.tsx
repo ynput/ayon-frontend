@@ -8,7 +8,7 @@ import { SavedAnnotationMetadata } from '@shared/containers'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
-export type DetailsPanelTab = FeedFilters | 'attribs' | 'files'
+export type DetailsPanelTab = FeedFilters | 'details' | 'files'
 
 export type SlideOut = {
   entityId: string

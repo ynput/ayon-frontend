@@ -120,9 +120,14 @@ export const useActionTriggers = ({
         throw new Error('Invalid payload: extra_clipboard')
       } else {
         // Copy content to clipboard
-        navigator.clipboard.writeText(payload.extra_clipboard).catch((err) => {
-          console.error('Failed to copy text to clipboard:', err)
-        })
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(payload.extra_clipboard).catch((err) => {
+            // Only log unexpected errors, not permission denials
+            if (err.name !== 'NotAllowedError' && !err.message.includes('not allowed')) {
+              console.error('Failed to copy text to clipboard:', err)
+            }
+          })
+        }
       }
     }
 
