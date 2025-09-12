@@ -3,13 +3,11 @@ import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
 import { useRef } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useMenuContext } from '../../../context/MenuContext'
 // @ts-expect-error - non TS file
 import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
 // @ts-expect-error - non TS file
 import MenuContainer from '../../../../../src/components/Menu/MenuComponents/MenuContainer2'
-// @ts-expect-error - non TS file
-import { toggleMenuOpen } from '../../../../../src/features/context'
 
 const MenuButton = styled(Button)<{ $isOpen: boolean }>`
   background-color: unset !important;
@@ -23,7 +21,8 @@ const MenuButton = styled(Button)<{ $isOpen: boolean }>`
     padding: 2px;
   }
 
-  &:hover, &.active {
+  &:hover,
+  &.active {
     background-color: var(--md-sys-color-surface-container-hover) !important;
   }
 
@@ -53,10 +52,10 @@ export const ColumnHeaderMenu = ({
   isResizing,
   className,
   menuId,
-  isOpen
+  isOpen,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
-  const dispatch = useDispatch()
+  const { toggleMenuOpen } = useMenuContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Hide the menu when resizing
@@ -65,7 +64,7 @@ export const ColumnHeaderMenu = ({
   }
 
   const handleMenuToggle = (open: boolean = true) => {
-    dispatch(toggleMenuOpen(open ? menuId : false))
+    toggleMenuOpen(open ? menuId || false : false)
   }
 
   // Get current column state - we need to call these methods directly to get fresh state
@@ -170,9 +169,9 @@ export const ColumnHeaderMenu = ({
         id={menuId}
         $isOpen={isOpen || false}
       />
-      <MenuContainer 
-        target={buttonRef.current} 
-        id={menuId} 
+      <MenuContainer
+        target={buttonRef.current}
+        id={menuId}
         align="left"
         onClose={(e: any) => {
           e.stopPropagation()
