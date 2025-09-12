@@ -4,6 +4,8 @@ import { ListsContextType } from '../context'
 import type { EntityListPatchModel } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
+import useRenameCategoryFolder from './useRenameCategoryFolder'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 
 export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']
@@ -19,11 +21,21 @@ export interface UseUpdateListReturn {
 
 const useUpdateList = ({ setRowSelection, onUpdateList }: UseUpdateListProps) => {
   const { listsData } = useListsDataContext()
+  const { projectName } = useProjectDataContext()
+  const { renameCategoryFolder } = useRenameCategoryFolder({ projectName, listsData })
   const [renamingList, setRenamingList] = useState<UseUpdateListReturn['renamingList']>(null)
 
   const openRenameList: UseUpdateListReturn['openRenameList'] = useCallback(
     (listId) => {
-      // find list by id
+      // Check if this is a category folder
+      if (listId.startsWith('category-')) {
+        // Category folder - just set renaming state
+        setRenamingList(listId)
+        setRowSelection({ [listId]: true })
+        return
+      }
+
+      // Regular list - find list by id
       const list = listsData.find((list) => list.id === listId)
       if (!list) return
       setRenamingList(listId)
@@ -43,18 +55,29 @@ const useUpdateList = ({ setRowSelection, onUpdateList }: UseUpdateListProps) =>
       if (!renamingList) return Promise.reject()
 
       try {
-        await onUpdateList(renamingList, {
-          label: value,
-        })
+        // Check if this is a category folder
+        if (renamingList.startsWith('category-')) {
+          const oldCategoryName = renamingList.replace('category-', '')
+          await renameCategoryFolder(oldCategoryName, value)
+        } else {
+          // Regular list renaming
+          await onUpdateList(renamingList, {
+            label: value,
+          })
+        }
+
         // close the dialog
         closeRenameList()
       } catch (error: any) {
-        console.error('Failed to rename list:', error)
-        toast.error(`Failed to rename list: ${error.data?.detail}`)
+        console.error('Failed to rename:', error)
+        const errorMessage = renamingList.startsWith('category-')
+          ? 'Failed to rename category'
+          : 'Failed to rename list'
+        toast.error(`${errorMessage}: ${error.data?.detail || error.message}`)
         throw error
       }
     },
-    [renamingList],
+    [renamingList, onUpdateList, renameCategoryFolder, closeRenameList],
   )
 
   return {
