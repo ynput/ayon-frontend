@@ -33,6 +33,7 @@ export type TableCellContextData = {
 type DefaultMenuItem =
   | 'copy-paste'
   | 'show-details'
+  | 'rename'
   | 'expand-collapse'
   | 'inherit'
   | 'delete'
@@ -79,7 +80,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
   } = useProjectTableContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
-  const { inheritFromParent, history } = useCellEditing()
+  const { inheritFromParent, history, setEditingCellId } = useCellEditing()
 
   // update entity context
 
@@ -280,9 +281,28 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
   })
 
+  const renameItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+    label: 'Rename',
+    icon: 'titlecase',
+    shortcut: 'R',
+    command: () => {
+      const nameCellId = getCellId(cell.entityId, 'name')
+      const target = e.target as HTMLElement
+      const tdEl = target.closest('td')
+      const cellElement = tdEl?.firstElementChild as HTMLElement
+      setEditingCellId(nameCellId, cellElement)
+    },
+    hidden:
+        cell.columnId !== 'name' ||
+        cell.isGroup ||
+        (cell.entityType !== 'folder' && cell.entityType !== 'task') ||
+        meta.selectedRows.length > 1,
+  })
+
   const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {
     ['copy-paste']: copyAndPasteItems,
     ['show-details']: showDetailsItem,
+    ['rename']: renameItem,
     ['expand-collapse']: expandCollapseChildrenItems,
     ['delete']: deleteItem,
     ['inherit']: inheritItem,
