@@ -117,12 +117,15 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
     const handleSave = useCallback(async () => {
         if (!label.trim() || isSaving) return // Don't save if empty or already saving
 
-        setIsSaving(true)
+        const hasChanges = name !== initialName || label !== initialLabel
 
-        try {
-            const hasChanges = name !== initialName || label !== initialLabel
+        // Exit editing mode immediately (optimistic)
+        setEditingCellId(null)
 
-            if (hasChanges) {
+        if (hasChanges) {
+            setIsSaving(true)
+
+            try {
                 const updates = []
 
                 // Prepare all updates first
@@ -150,15 +153,16 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
                 if (updates.length > 0) {
                     await updateEntities(updates)
                 }
+            } catch (error) {
+                console.error('Failed to save entity changes:', error)
+                // Rollback: re-enter editing mode with original values
+                setEditingCellId(`${rowId}:label`)
+                setLabel(initialLabel)
+                setName(initialName)
+                setIsNameManuallyEdited(false)
+            } finally {
+                setIsSaving(false)
             }
-
-            // Only exit editing mode after successful save
-            setEditingCellId(null)
-        } catch (error) {
-            console.error('Failed to save entity changes:', error)
-            // Don't exit editing mode on error, let user retry
-        } finally {
-            setIsSaving(false)
         }
     }, [label, name, initialLabel, initialName, entityType, rowId, updateEntities, setEditingCellId, isSaving])
 
