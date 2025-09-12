@@ -284,7 +284,7 @@ export type EntityListItemPostModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -299,7 +299,7 @@ export type EntityListMultiPatchItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -318,7 +318,7 @@ export type EntityListItemPatchModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -331,7 +331,7 @@ export type EntityListSummary = {
   label: string
   count?: number
 }
-export type ListAccessLevel = 10 | 20 | 30 | 40
+export type ListAccessLevel = 0 | 10 | 20 | 30
 export type EntityListPostModel = {
   id?: string
   /** Type of the list */
@@ -346,7 +346,7 @@ export type EntityListPostModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: Record<string, any>
+  data?: object
   template?: object
   /** List tags */
   tags?: string[]
@@ -367,7 +367,7 @@ export type EntityListItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
   /** Path to the folder where the item is located */
@@ -391,7 +391,7 @@ export type EntityListModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: Record<string, any>
+  data?: object
   template?: object
   /** List tags */
   tags?: string[]
@@ -414,7 +414,7 @@ export type EntityListPatchModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: Record<string, any>
+  data?: object
   /** List tags */
   tags?: string[]
   /** Name of the user who created the list */
