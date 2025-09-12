@@ -18,6 +18,9 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Memoize these functions to prevent unnecessary re-renders
   const isEditing = useCallback((id: CellId) => id === editingCellId, [editingCellId])
 
+  const handleSetEditingCellId = useCallback((id: CellId | null) => {
+      setEditingCellId(id)
+    }, [])
   // Get history functions
   const history = useHistory()
   const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = history
@@ -228,7 +231,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   const value = useMemo(
     () => ({
       editingCellId,
-      setEditingCellId,
+      setEditingCellId: handleSetEditingCellId,
       isEditing,
       updateEntities: handleUpdateEntities,
       inheritFromParent,
@@ -238,6 +241,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
     }),
     [
       editingCellId,
+      handleSetEditingCellId,
       isEditing,
       handleUpdateEntities,
       inheritFromParent,

@@ -228,6 +228,7 @@ export type FolderListItem = {
   attrib?: object
   ownAttrib?: string[]
   updatedAt: string
+  hasVersions?: boolean
 }
 export type FolderListModel = {
   detail: string

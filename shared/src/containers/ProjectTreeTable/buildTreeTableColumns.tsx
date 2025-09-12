@@ -8,13 +8,16 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
-import { TableGroupBy } from './context'
+import {TableGroupBy, useCellEditing} from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
+import EdiditngEntityWidget from "@shared/containers/ProjectTreeTable/widgets/EdiditngEntityWidget";
+import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog';
+import {createPortal} from "react-dom";
 
 const MIN_SIZE = 50
 
@@ -173,6 +176,7 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: groupBy ? false : true,
       cell: ({ row, column, table }) => {
+        const { isEditing } = useCellEditing()
         const meta = table.options.meta
         const cellId = getCellId(row.id, column.id)
 
@@ -187,6 +191,28 @@ const buildTreeTableColumns = ({
         }
 
         return (
+            <>
+                {isEditing(cellId) && (
+              <CellEditingDialog
+                isEditing={isEditing(cellId)}
+                anchorId={cellId}
+                onClose={() => {
+                  // Handle close logic
+                  console.log('Edit dialog closed')
+                }}
+              >
+                <EdiditngEntityWidget
+                  cellId={cellId}
+                  rowId={row.id}
+                  entityType={row.original.entityType}
+                  initialName={row.original.name}
+                  initialLabel={row.original.label || ''}
+                  onCancel={() => {
+                    console.log('Edit cancelled')
+                  }}
+                />
+              </CellEditingDialog>
+            )}
           <TableCellContent
             id={cellId}
             className={clsx('large', row.original.entityType, {
@@ -226,6 +252,7 @@ const buildTreeTableColumns = ({
               />
             )}
           </TableCellContent>
+          </>
         )
       },
     })
