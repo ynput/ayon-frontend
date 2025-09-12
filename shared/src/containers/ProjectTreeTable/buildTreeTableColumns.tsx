@@ -16,6 +16,8 @@ import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import EdiditngEntityWidget from "@shared/containers/ProjectTreeTable/widgets/EdiditngEntityWidget";
+import { TableCellEditingDialog } from '@shared/components/LinksManager/TableCellEditingDialog';
+import {createPortal} from "react-dom";
 
 const MIN_SIZE = 50
 
@@ -187,64 +189,31 @@ const buildTreeTableColumns = ({
             />
           )
         }
-          if (isEditing(cellId)) {
-              return (
-                  <TableCellContent
-                      id={cellId}
-                      className={clsx('large', row.original.entityType, 'editing', {
-                          loading: row.original.isLoading,
-                          hierarchy: showHierarchy,
-                      })}
-                      style={{
-                          paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
-                          position: 'relative' // Important for absolute positioning of the widget
-                      }}
-                      tabIndex={0}
-                  >
-                      {/* Show the current content as background */}
-                      {row.original.group ? (
-                          <GroupHeaderWidget
-                              id={row.id}
-                              label={row.original.group.label}
-                              name={row.original.name}
-                              icon={row.original.group.icon}
-                              img={row.original.group.img}
-                              color={row.original.group.color}
-                              count={row.original.group.count}
-                              isExpanded={row.getIsExpanded()}
-                              isEmpty={row.subRows.length === 0}
-                              toggleExpanded={row.getToggleExpandedHandler()}
-                          />
-                      ) : (
-                          <EntityNameWidget
-                              id={row.id}
-                              label={row.original.label}
-                              name={row.original.name}
-                              path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
-                              showHierarchy={showHierarchy}
-                              icon={row.original.icon}
-                              type={row.original.entityType}
-                              isExpanded={row.getIsExpanded()}
-                              toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
-                              toggleExpanded={row.getToggleExpandedHandler()}
-                          />
-                      )}
-                      <EdiditngEntityWidget
-                          cellId={cellId}
-                          rowId={row.id}
-                          entityType={row.original.entityType}
-                          initialName={row.original.name}
-                          initialLabel={row.original.label || ''}
-                          onCancel={() => {
-                              // Handle cancel logic if needed
-                              console.log('Edit cancelled')
-                          }}
-                      />
-                  </TableCellContent>
-              )
-          }
 
         return (
+            <>
+                {isEditing(cellId) && createPortal(
+              <TableCellEditingDialog
+                isEditing={isEditing(cellId)}
+                anchorId={cellId}
+                onClose={() => {
+                  // Handle close logic
+                  console.log('Edit dialog closed')
+                }}
+              >
+                <EdiditngEntityWidget
+                  cellId={cellId}
+                  rowId={row.id}
+                  entityType={row.original.entityType}
+                  initialName={row.original.name}
+                  initialLabel={row.original.label || ''}
+                  onCancel={() => {
+                    console.log('Edit cancelled')
+                  }}
+                />
+              </TableCellEditingDialog>,
+              document.body
+            )}
           <TableCellContent
             id={cellId}
             className={clsx('large', row.original.entityType, {
@@ -284,6 +253,7 @@ const buildTreeTableColumns = ({
               />
             )}
           </TableCellContent>
+          </>
         )
       },
     })

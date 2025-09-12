@@ -1,10 +1,11 @@
-import { Chips, ChipValue, LinkEntity } from '@shared/components'
-import { LinksManagerDialog } from '@shared/components/LinksManager/LinksManagerDialog'
+import {Chips, ChipValue, LinkEntity, LinksManager} from '@shared/components'
+import { TableCellEditingDialog } from '@shared/components/LinksManager/TableCellEditingDialog'
 import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { createPortal } from 'react-dom'
 import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
+import {Container} from "@shared/components/LinksManager/LinksManager.styled";
 
 export const isLinkEditable = (
   direction: 'in' | 'out',
@@ -105,23 +106,35 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
       {isEditing &&
         value &&
         createPortal(
-          <LinksManagerDialog
+          <TableCellEditingDialog
             isEditing={isEditing}
             anchorId={cellId}
-            projectName={projectName}
-            linkTypeLabel={value.link.label || ''}
-            links={value.links}
-            direction={value.direction}
-            entityId={value.entityId}
-            entityType={value.entityType}
-            targetEntityType={value.link.targetEntityType}
-            linkType={value.link.linkType}
-            selectedEntityIds={selectedEntityIds}
             onClose={onCancelEdit}
-            onEntityClick={handleEntityClick}
             disabled={disabled}
-            folderId={folderId}
-          />,
+          >
+            {disabled ? (
+              <Container
+                style={{ color: 'var(--md-sys-color-outline)' }}
+              >
+                {`${value.link.label || ''} ${value.direction} link is not of type ${value.entityType}`}
+              </Container>
+            ) : (
+              <LinksManager
+                projectName={projectName}
+                linkTypeLabel={value.link.label || ''}
+                links={value.links}
+                direction={value.direction}
+                entityId={value.entityId}
+                entityType={value.entityType}
+                targetEntityType={value.link.targetEntityType}
+                linkType={value.link.linkType}
+                selectedEntityIds={selectedEntityIds}
+                onEntityClick={handleEntityClick}
+                folderId={folderId}
+                onClose={onCancelEdit}
+              />
+            )}
+          </TableCellEditingDialog>,
           document.body,
         )}
     </>

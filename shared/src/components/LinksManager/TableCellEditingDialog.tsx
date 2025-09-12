@@ -1,7 +1,5 @@
 import { FC, useRef, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
-import { LinksManager, LinksManagerProps } from '.'
-import { Container } from './LinksManager.styled'
 
 const StyledPopUp = styled.div`
   position: fixed;
@@ -18,18 +16,20 @@ type Position = {
   showAbove?: boolean
 }
 
-export interface LinksManagerDialogProps extends LinksManagerProps {
+export interface LinksManagerDialogProps {
   disabled?: boolean
   isEditing: boolean
   anchorId: string
   onClose?: () => void
+  children?: React.ReactNode
 }
 
-export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
+export const TableCellEditingDialog: FC<LinksManagerDialogProps> = ({
   disabled,
   isEditing,
   anchorId,
   onClose,
+  children,
   ...props
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
@@ -180,13 +180,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
         }
       }}
     >
-      {disabled ? (
-        <Container
-          style={{ color: 'var(--md-sys-color-outline)' }}
-        >{`${props.linkTypeLabel} ${props.direction} link is not of type ${props.entityType}`}</Container>
-      ) : (
-        <LinksManager {...props} onClose={onClose} />
-      )}
+        {children}
     </StyledPopUp>
   )
 }
