@@ -31,6 +31,9 @@ const StyledInput = styled.input`
   border: none;
   background-color: var(--md-sys-color-surface-container-lowest);
   color: var(--md-sys-color-on-surface);
+    &:focus {
+    outline: none;
+    }
 `
 
 const ErrorText = styled.div`
@@ -90,7 +93,7 @@ const EdiditngEntityWidget: React.FC<InlineEditingWidgetProps> = ({
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 handleCancel()
-            } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+            } else if (event.key === 'Enter') {
                 handleSave()
             }
         }
