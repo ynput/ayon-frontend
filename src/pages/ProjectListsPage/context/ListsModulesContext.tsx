@@ -4,6 +4,7 @@ import { ListsAttributesContextValue } from './ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
 import { usePowerpack } from '@shared/context'
+import { ListAccessFallback } from '../components/ListAccessForm'
 
 interface ListsAttributeSettingsFallbackProps {
   listAttributes: ListsAttributesContextValue['listAttributes']
@@ -32,7 +33,11 @@ const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = 
 
 interface ListsModuleContextType {
   ListsAttributesSettings: typeof ListsAttributeSettingsFallback
-  requiredVersion?: string
+  ListAccess: typeof ListAccessFallback
+  requiredVersion: {
+    settings: string | undefined
+    access: string | undefined
+  }
 }
 
 const ListsModuleContext = createContext<ListsModuleContextType | undefined>(undefined)
@@ -43,7 +48,7 @@ interface ListsModuleProviderProps {
 
 export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ children }) => {
   const { powerLicense } = usePowerpack()
-  const [ListsAttributesSettings, { outdated }] = useLoadModule({
+  const [ListsAttributesSettings, { outdated: attributeSettingsOutdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
@@ -52,9 +57,22 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
+  const [ListAccess, { outdated: accessOutdated }] = useLoadModule({
+    addon: 'powerpack',
+    remote: 'slicer',
+    module: 'ListAccess',
+    fallback: ListAccessFallback,
+    minVersion: '1.2.4',
+    skip: !powerLicense, // skip loading if powerpack license is not available
+  })
+
   const value = {
     ListsAttributesSettings,
-    requiredVersion: outdated?.required,
+    ListAccess,
+    requiredVersion: {
+      settings: attributeSettingsOutdated?.required,
+      access: accessOutdated?.required,
+    },
   }
 
   return <ListsModuleContext.Provider value={value}>{children}</ListsModuleContext.Provider>

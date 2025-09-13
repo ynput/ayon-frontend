@@ -3,12 +3,13 @@ import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { getListIcon } from '@pages/ProjectListsPage/util'
-import { ListAccessForm, ListAttributeForm, ListMetaData } from '@shared/components'
+import { ListAttributeForm, ListMetaData } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@hooks/useQueryArgumentChangeLoading'
 import { useListsDataContext } from '../../context/ListsDataContext'
 import clsx from 'clsx'
 import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
+import { ListAccessForm } from '../ListAccessForm'
 
 interface ListDetailsPanelProps {
   listId: string
@@ -65,7 +66,11 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
             </Styled.Section>
           </>
         )}
-        {selectedTab === 'access' && <ListAccessForm />}
+        {selectedTab === 'access' && list && (
+          <Styled.Section>
+            <ListAccessForm list={list} projectName={projectName} isLoading={isLoadingList} />
+          </Styled.Section>
+        )}
       </Styled.Scrollable>
     </Styled.Panel>
   )

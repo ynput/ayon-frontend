@@ -7,6 +7,7 @@ export type PowerpackFeature =
   | 'releases'
   | 'advancedFilters'
   | 'listAttributes'
+  | 'listAccess'
   | 'groupAttributes'
   | 'sharedViews'
 export type PowerpackDialogType = {
@@ -43,6 +44,11 @@ export const powerpackFeatures: {
     label: 'List Attributes',
     description: 'Add custom attributes to your lists for better collaboration and organization.',
     bullet: 'Custom attributes for lists',
+  },
+  listAccess: {
+    label: 'List Access',
+    description: 'Manage and control access to your lists with advanced sharing options.',
+    bullet: 'Advanced list sharing options',
   },
   groupAttributes: {
     label: 'Group Attributes',
