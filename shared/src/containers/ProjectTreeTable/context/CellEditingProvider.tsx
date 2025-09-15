@@ -19,8 +19,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   const isEditing = useCallback((id: CellId) => id === editingCellId, [editingCellId])
 
   const handleSetEditingCellId = useCallback((id: CellId | null) => {
-      setEditingCellId(id)
-    }, [])
+    setEditingCellId(id)
+  }, [])
   // Get history functions
   const history = useHistory()
   const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = history

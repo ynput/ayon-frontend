@@ -1,17 +1,17 @@
-import {ContextMenuItemType, useCreateContextMenu} from '../../ContextMenu/useCreateContextMenu'
+import { ContextMenuItemType, useCreateContextMenu } from '../../ContextMenu/useCreateContextMenu'
 import useDeleteEntities from './useDeleteEntities'
-import {getPlatformShortcutKey, KeyMode} from '../../../util/platform'
-import {getCellId, parseCellId} from '../utils/cellUtils'
-import {useClipboard} from '../context/ClipboardContext'
-import {ROW_SELECTION_COLUMN_ID, useSelectionCellsContext} from '../context/SelectionCellsContext'
-import {useProjectTableContext} from '../context/ProjectTableContext'
-import {useCellEditing} from '../context/CellEditingContext'
-import {InheritFromParentEntity} from './useUpdateTableData'
-import {ProjectTableAttribute, TableRow} from '../types'
-import {UseHistoryReturn} from './useHistory'
-import {GROUP_BY_ID} from './useBuildGroupByTableData'
-import {ColumnDef} from '@tanstack/react-table'
-import {getEntityViewierIds} from '../utils'
+import { getPlatformShortcutKey, KeyMode } from '../../../util/platform'
+import { getCellId, parseCellId } from '../utils/cellUtils'
+import { useClipboard } from '../context/ClipboardContext'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/SelectionCellsContext'
+import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useCellEditing } from '../context/CellEditingContext'
+import { InheritFromParentEntity } from './useUpdateTableData'
+import { ProjectTableAttribute, TableRow } from '../types'
+import { UseHistoryReturn } from './useHistory'
+import { GROUP_BY_ID } from './useBuildGroupByTableData'
+import { ColumnDef } from '@tanstack/react-table'
+import { getEntityViewierIds } from '../utils'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -65,7 +65,7 @@ type CellContextMenuProps = {
   onOpenNew?: (type: 'folder' | 'task') => void
 }
 
-const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContextMenuProps) => {
+const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellContextMenuProps) => {
   // context hooks
   const {
     projectName,
@@ -78,9 +78,9 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
     powerpack,
     onOpenPlayer,
   } = useProjectTableContext()
-  const {copyToClipboard, exportCSV, pasteFromClipboard} = useClipboard()
-  const {selectedCells, clearSelection, selectCell, focusCell} = useSelectionCellsContext()
-  const {inheritFromParent, history, setEditingCellId} = useCellEditing()
+  const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
+  const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
+  const { inheritFromParent, history, setEditingCellId } = useCellEditing()
 
   // update entity context
 
@@ -92,7 +92,7 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
   // Helper function to identify attributes that can be inherited
   const getEntitiesToInherit = (selected: string[]): InheritFromParentEntity[] => {
     return selected.reduce((acc, cellId) => {
-      const {rowId, colId} = parseCellId(cellId) || {}
+      const { rowId, colId } = parseCellId(cellId) || {}
       if (!rowId || !colId || !colId.startsWith('attrib_')) return acc
 
       const entity = getEntityById(rowId)
@@ -184,7 +184,7 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
         const entity = getEntityById(cell.entityId)
         if (entity) {
           const targetIds = getEntityViewierIds(entity)
-          onOpenPlayer(targetIds, {quickView: true})
+          onOpenPlayer(targetIds, { quickView: true })
         }
       }
     },
@@ -292,7 +292,7 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
     hidden:
       cell.columnId !== 'name' ||
       cell.isGroup ||
-      (cell.entityType !== 'folder' && cell.entityType !== 'task')
+      (cell.entityType !== 'folder' && cell.entityType !== 'task'),
   })
 
   const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {
@@ -309,7 +309,7 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
   }
 
   const getCellData = (cellId: string): TableCellContextData | undefined => {
-    const {rowId, colId} = parseCellId(cellId) || {}
+    const { rowId, colId } = parseCellId(cellId) || {}
     if (!rowId || !colId) return undefined
     const cellEntityData = getEntityById(rowId)
     const attribField = attribs.find((attrib) => attrib.name === colId?.replace('attrib_', ''))
@@ -318,8 +318,8 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
       ? 'parentId' in cellEntityData
         ? cellEntityData.parentId
         : 'folderId' in cellEntityData
-          ? cellEntityData.folderId
-          : undefined
+        ? cellEntityData.folderId
+        : undefined
       : undefined
     return {
       cellId: cellId,
@@ -366,7 +366,7 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
     const selectedCellColumns: string[] = []
     const selectedCellFullRows: string[] = []
     const selectedCellsGroups: string[] = [] // find cells that are group headers
-    for (const {entityId, columnId} of selectedCellsData) {
+    for (const { entityId, columnId } of selectedCellsData) {
       if (entityId && !selectedCellRows.includes(entityId)) selectedCellRows.push(entityId)
       if (columnId && !selectedCellColumns.includes(columnId)) selectedCellColumns.push(columnId)
       if (columnId === ROW_SELECTION_COLUMN_ID && !selectedCellFullRows.includes(entityId))
@@ -377,39 +377,39 @@ const useCellContextMenu = ({attribs, headerLabels = [], onOpenNew}: CellContext
     const constructedMenuItems = contextMenuItems.flatMap((constructor) =>
       typeof constructor === 'function'
         ? constructor(
-          e,
-          cellData,
-          selectedCellsData,
-          {
-            selectedCells: selectedRealCells, // selected cells without row selection
-            selectedRows: selectedCellRows,
-            selectedColumns: selectedCellColumns,
-            selectedFullRows: selectedCellFullRows,
-            selectedGroups: selectedCellsGroups, // groups if any
-          },
-          {
-            history,
-          },
-        )
+            e,
+            cellData,
+            selectedCellsData,
+            {
+              selectedCells: selectedRealCells, // selected cells without row selection
+              selectedRows: selectedCellRows,
+              selectedColumns: selectedCellColumns,
+              selectedFullRows: selectedCellFullRows,
+              selectedGroups: selectedCellsGroups, // groups if any
+            },
+            {
+              history,
+            },
+          )
         : builtInMenuItems[constructor]?.(
-          e,
-          cellData,
-          selectedCellsData,
-          {
-            selectedCells: selectedRealCells, // selected cells without row selection
-            selectedRows: selectedCellRows,
-            selectedColumns: selectedCellColumns,
-            selectedFullRows: selectedCellFullRows,
-            selectedGroups: selectedCellsGroups, // groups if any
-          },
-          {history},
-        ),
+            e,
+            cellData,
+            selectedCellsData,
+            {
+              selectedCells: selectedRealCells, // selected cells without row selection
+              selectedRows: selectedCellRows,
+              selectedColumns: selectedCellColumns,
+              selectedFullRows: selectedCellFullRows,
+              selectedGroups: selectedCellsGroups, // groups if any
+            },
+            { history },
+          ),
     )
 
     cellContextMenuShow(e, constructedMenuItems)
   }
 
-  return {handleTableBodyContextMenu}
+  return { handleTableBodyContextMenu }
 }
 
 export default useCellContextMenu
