@@ -183,7 +183,6 @@ const EditingEntityWidget: React.FC<InlineEditingWidgetProps> = ({
 
   const handleCancel = useCallback(() => {
     if (isSaving) return // Don't allow cancel while saving
-    setEditingCellId(null)
 
     // Restore focus to the table cell after closing
     const cellElement = document.getElementById(cellId)
@@ -194,6 +193,7 @@ const EditingEntityWidget: React.FC<InlineEditingWidgetProps> = ({
       selectCell(cellId, false, false)
       focusCell(cellId)
     }
+    setEditingCellId(null)
   }, [setEditingCellId, isSaving, cellId, focusCell, selectCell])
 
   const handleLabelChange = useCallback(
