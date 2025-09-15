@@ -1,22 +1,14 @@
 import React from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import ReactQuill from 'react-quill-ayon'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import emoji from 'remark-emoji'
-import remarkDirective from 'remark-directive'
-import remarkDirectiveRehype from 'remark-directive-rehype'
 import clsx from 'clsx'
 import { BorderedSection } from './BorderedSection'
 import { QuillListStyles } from '../QuillListStyles'
 import {
   StyledContent,
-  StyledDescription,
   StyledEditor,
   StyledFooter,
-  StyledMarkdown,
   StyledLoadingSkeleton,
-  StyledMultipleValues,
   StyledButtonContainer,
   StyledQuillContainer,
 } from './DescriptionSection.styles'
@@ -83,58 +75,68 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
 
   if (isLoading) {
     return (
-      <BorderedSection title="Description" withPadding>
+      <BorderedSection title="Description">
         <StyledLoadingSkeleton />
       </BorderedSection>
     )
+  }
+
+  // Handle clicks on links to prevent edit mode activation
+  const handleContentClick = (e: React.MouseEvent) => {
+    // If we're in editing mode, don't prevent default behavior for links
+    if (isEditing) {
+      return
+    }
+    
+    // Check if the clicked element is a link or inside a link
+    const target = e.target as HTMLElement
+    const link = target.closest('a')
+    
+    if (link) {
+      // If clicking on a link, prevent the edit mode from activating
+      e.stopPropagation()
+      return
+    }
+    
+    // For other clicks when not editing, allow edit mode to activate
+    if (!isEditing) {
+      handleStartEditing()
+    }
   }
 
   return (
     <BorderedSection
       title="Description"
       showHeader={!isEditing}
-      enableHover
-      withPadding
+      enableHover={!isEditing}
       onClick={!isEditing ? handleStartEditing : undefined}
     >
-      <StyledContent className={clsx({ editing: isEditing })}>
-        {/* {isEditing ? ( */}
-          <StyledEditor className="block-shortcuts">
-            <QuillListStyles>
-              <StyledQuillContainer>
-                <ReactQuill
-                  key={`description-editor-${isEditing}`}
-                  theme="snow"
-                  ref={editorRef}
-                  value={editorValue || description}
-                  onChange={setEditorValue}
-                  placeholder="Add a description..."
-                  modules={isEditing ? getDescriptionModules({ imageUploader: null, disableImageUpload: true }) : { toolbar: false }}
-                  formats={conditionalFormats}
-                  onKeyDown={handleKeyDown}
-                  readOnly={!isEditing}
-                />
-              </StyledQuillContainer>
-            </QuillListStyles>
-          </StyledEditor>
-        {/* ) : (
-          <StyledDescription className={clsx({ empty: !description && !isMixed })}>
-            {isMixed ? (
-              <StyledMultipleValues>Multiple values</StyledMultipleValues>
-            ) : description ? (
-              <StyledMarkdown>
-                <ReactMarkdown
-                  className="markdown-content"
-                  remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
-                >
-                  {description}
-                </ReactMarkdown>
-              </StyledMarkdown>
-            ) : (
-              ''
-            )}
-          </StyledDescription>
-        )} */}
+      <StyledContent 
+        className={clsx({ editing: isEditing })}
+        onClick={handleContentClick}
+      >
+        <StyledEditor className="block-shortcuts">
+          <QuillListStyles>
+            <StyledQuillContainer>
+              <ReactQuill
+                key={`description-editor-${isEditing}`}
+                theme="snow"
+                ref={editorRef}
+                value={editorValue || description}
+                onChange={setEditorValue}
+                placeholder="Add a description..."
+                modules={
+                  isEditing
+                    ? getDescriptionModules({ imageUploader: null, disableImageUpload: true })
+                    : { toolbar: false }
+                }
+                formats={conditionalFormats}
+                onKeyDown={handleKeyDown}
+                readOnly={!isEditing}
+              />
+            </StyledQuillContainer>
+          </QuillListStyles>
+        </StyledEditor>
         {isEditing && (
           <StyledFooter>
             <StyledButtonContainer>

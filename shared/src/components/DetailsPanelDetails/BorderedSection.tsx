@@ -1,9 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
+import clsx from 'clsx'
 
-const StyledSection = styled.div<{
-  $enableHover: boolean
-}>`
+const StyledSection = styled.div`
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
   min-height: auto;
@@ -11,14 +10,10 @@ const StyledSection = styled.div<{
   flex-direction: column;
   transition: background-color 0.2s ease;
 
-  ${(props) =>
-    props.$enableHover &&
-    `
-    &:hover {
-      cursor: pointer;
-      background-color: var(--md-sys-color-surface-container-low-hover);
-    }
-  `}
+  &.enable-hover:hover {
+    cursor: pointer;
+    background-color: var(--md-sys-color-surface-container-low-hover);
+  }
 `
 
 const StyledHeader = styled.div`
@@ -31,16 +26,32 @@ const StyledHeader = styled.div`
   color: var(--md-sys-color-outline);
 `
 
-const StyledContent = styled.div<{
-  $showHeader: boolean
-  $withPadding: boolean
-  $autoHeight: boolean
-}>`
-  padding: ${(props) => (props.$withPadding ? '12px' : 0)};
+const StyledContent = styled.div`
   flex: 1;
-  min-height: ${(props) =>
-    props.$autoHeight ? 'auto' : props.$showHeader ? 'calc(300px - 40px)' : '300px !important'};
-  border-radius: ${(props) => (props.$showHeader ? '0 0 8px 8px' : '8px')};
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &.with-padding {
+    padding: 12px;
+  }
+
+  &.auto-height {
+    min-height: auto;
+  }
+
+  &.with-header {
+    min-height: calc(300px - 40px);
+    border-radius: 0 0 8px 8px;
+  }
+
+  &:not(.with-header):not(.auto-height) {
+    min-height: 300px !important;
+  }
+
+  &:not(.with-header) {
+    border-radius: 8px;
+  }
 `
 
 interface BorderedSectionProps {
@@ -67,7 +78,10 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
   onClick,
 }) => {
   return (
-    <StyledSection $enableHover={enableHover} onClick={onClick}>
+    <StyledSection 
+      className={clsx({ 'enable-hover': enableHover })} 
+      onClick={onClick}
+    >
       {showHeader ? (
         <StyledHeader>
           <span>{title}</span>
@@ -75,10 +89,11 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
         </StyledHeader>
       ) : null}
       <StyledContent
-        className={contentClassName}
-        $showHeader={showHeader}
-        $autoHeight={autoHeight}
-        withPadding={withPadding}
+        className={clsx(contentClassName, {
+          'with-padding': withPadding,
+          'auto-height': autoHeight,
+          'with-header': showHeader,
+        })}
       >
         {children}
       </StyledContent>

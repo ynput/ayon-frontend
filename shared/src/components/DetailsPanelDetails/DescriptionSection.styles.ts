@@ -12,10 +12,10 @@ export const StyledContent = styled.div`
     padding: 0;
     margin: 0;
   }
-  
+
   &:not(.editing) {
     cursor: pointer !important;
-    
+
     * {
       cursor: pointer !important;
     }
@@ -136,13 +136,17 @@ export const StyledEditor = styled.div`
       overflow-y: auto;
       
       &[contenteditable="false"] {
+        pointer-events: none;
         cursor: pointer !important;
-        pointer-events: none !important;
-      }
-      
-      &[contenteditable="false"] * {
-        cursor: pointer !important;
-        pointer-events: none !important;
+        
+        a {
+          pointer-events: auto;
+          cursor: pointer !important;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
       }
 
       &.ql-blank::before {
@@ -281,11 +285,11 @@ export const StyledMarkdown = styled.div`
     }
 
     /* Handle mixed lists with data-list attributes */
-    ol li[data-list="bullet"] {
+    ol li[data-list='bullet'] {
       list-style-type: disc !important;
     }
 
-    ol li[data-list="ordered"] {
+    ol li[data-list='ordered'] {
       list-style-type: decimal !important;
     }
 
@@ -343,22 +347,47 @@ export const StyledButtonContainer = styled.div`
 
 export const StyledQuillContainer = styled.div`
   height: 100%;
-  
+
   /* Force cursor pointer when ReactQuill is readonly - comprehensive approach */
-  .ql-container.ql-snow .ql-editor[contenteditable="false"] {
+  .ql-container.ql-snow .ql-editor[contenteditable='false'] {
     cursor: pointer !important;
-    
+
     /* Override cursor for all child elements */
     * {
       cursor: pointer !important;
     }
-    
+
     /* Specific overrides for common elements that might have different cursors */
-    a, strong, em, code, span, div, p, li, ol, ul, h1, h2, h3, h4, h5, h6 {
+    a,
+    strong,
+    em,
+    code,
+    span,
+    div,
+    p,
+    li,
+    ol,
+    ul,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
       cursor: pointer !important;
     }
+
+    /* Ensure links are clickable and have proper cursor */
+    a {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
-  
+
   /* Also handle blank state */
   .ql-editor.ql-blank {
     cursor: pointer !important;

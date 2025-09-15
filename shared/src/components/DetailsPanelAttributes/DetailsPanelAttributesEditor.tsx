@@ -96,6 +96,8 @@ export interface DetailsPanelAttributesEditorProps {
   > // the form data
   mixedFields?: string[] // when multiple entities are selected, this is a list of fields that are mixed
   onChange?: (key: string, value: any) => void
+  entities?: any[] // entities data for scoped statuses
+  entityType?: string // entity type for scoped statuses
 }
 
 export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
@@ -105,6 +107,8 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   enableEditing,
   mixedFields,
   onChange,
+  entities = [],
+  entityType = 'task',
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
 
@@ -127,7 +131,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
   if (isLoading) {
     return (
-      <BorderedSection title="Attributes">
+      <BorderedSection title="Attributes" withPadding>
         {Array.from({ length: 10 }).map((_, index) => (
           <ShimmerRow key={index}>
             <div className="loading"></div>
@@ -139,7 +143,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   }
 
   return (
-    <BorderedSection title="Attributes" autoHeight showHeader>
+    <BorderedSection title="Attributes" autoHeight showHeader withPadding>
       {fields
         .filter((f) => !f.hidden)
         .map((field) => {
@@ -173,6 +177,8 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                   isMixed={isMixed}
                   onChange={handleValueChange}
                   onCancelEdit={handleCancelEdit}
+                  entities={entities}
+                  entityType={entityType}
                 />
               </FieldValue>
               <Button

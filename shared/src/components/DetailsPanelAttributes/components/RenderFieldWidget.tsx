@@ -5,8 +5,10 @@ import { TextWidget } from '@shared/containers/ProjectTreeTable/widgets/TextWidg
 import { BooleanWidget } from '@shared/containers/ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '@shared/containers/ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
+import { useScopedStatuses } from '@shared/hooks'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
+import type { DetailsPanelEntityData } from '@shared/api'
 
 const FieldValueText = styled.div`
   width: 100%;
@@ -21,7 +23,8 @@ const FieldValueText = styled.div`
 `
 
 const StyledEnumWidget = styled(EnumWidget)`
-  .enum {
+  .enum,
+  .edit-trigger {
     &:hover {
       background-color: unset;
     }
@@ -39,6 +42,8 @@ interface RenderFieldWidgetProps {
   isMixed: boolean
   onChange: (fieldName: string, value: CellValue | CellValue[]) => void
   onCancelEdit: () => void
+  entities?: DetailsPanelEntityData[]
+  entityType?: string
 }
 
 const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
@@ -49,6 +54,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   isMixed,
   onChange,
   onCancelEdit,
+  entities = [],
+  entityType = 'task',
 }) => {
   const { type } = field.data
   const widgetCommonProps = {
@@ -98,10 +105,27 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         valueArray = [displayValue]
       }
 
+      // Use scoped statuses if the field name is 'status'
+      let enumOptions = field.data.enum || []
+      if (field.name === 'status' && entities.length > 0) {
+        const scopedStatuses = useScopedStatuses(
+          entities.map((entity) => entity.projectName),
+          [entityType],
+        )
+        if (scopedStatuses && scopedStatuses.length > 0) {
+          enumOptions = scopedStatuses.map((status) => ({
+            value: status.name,
+            label: status.name,
+            icon: status.icon,
+            color: status.color,
+          }))
+        }
+      }
+
       return (
         <StyledEnumWidget
           value={valueArray}
-          options={field.data.enum || []}
+          options={enumOptions}
           type={type}
           pt={{
             template: {

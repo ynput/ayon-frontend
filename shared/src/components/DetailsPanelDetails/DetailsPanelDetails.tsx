@@ -91,6 +91,8 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         isLoading={isLoading}
         enableEditing={enableEditing}
         onChange={handleChange}
+        entities={entities}
+        entityType={entityType}
       />
 
       <DetailsSection
