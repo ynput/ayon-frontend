@@ -2,13 +2,13 @@ import {
   EntityListModel,
   EntityListPatchModel,
   ShareOption,
-  useGetUserByNameQuery,
+  useGetUserQuery,
   UserModel,
 } from '@shared/api'
 import { ACCESS_LEVEL_LABELS, AccessUser, PowerpackButton } from '@shared/components'
 import { EVERYONE_GROUP_KEY } from '@shared/components/ShareOptionIcon/ShareOptionIcon'
-import { usePowerpack } from '@shared/context'
 import { FC } from 'react'
+import clsx from 'clsx'
 
 interface ListAccessFallbackProps extends EntityListModel {
   currentUser: UserModel // username of the current user
@@ -23,20 +23,26 @@ interface ListAccessFallbackProps extends EntityListModel {
 export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
   owner,
   access = {},
-  shareOptions,
   currentUser,
 }) => {
-  const ownerUser = shareOptions.find((option) => option.name === owner)
-  const {} = usePowerpack()
+  const { data: ownerUser, isFetching: isLoadingOwner } = useGetUserQuery(
+    { userName: owner || '' },
+    {
+      skip: !owner,
+    },
+  )
+
   return (
     <>
       {owner && ownerUser && (
         <AccessUser
           name={ownerUser.name || owner}
-          label={ownerUser.label || owner}
+          // @ts-ignore - ignore missing attribs in user model
+          label={ownerUser.attrib?.fullName || owner}
           isMe={currentUser?.name === owner}
           isOwner={true}
           shareType="user"
+          className={clsx({ loading: isLoadingOwner })}
         />
       )}
       <AccessUser name={EVERYONE_GROUP_KEY} label="Everyone" icon={'groups'}>

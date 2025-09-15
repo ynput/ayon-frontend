@@ -5,6 +5,7 @@ import {
   useGetShareOptionsQuery,
   useUpdateEntityListMutation,
 } from '@shared/api'
+import { usePowerpack } from '@shared/context'
 import { FC } from 'react'
 
 export interface ListAccessFormProps {
@@ -16,10 +17,14 @@ export interface ListAccessFormProps {
 export const ListAccessForm: FC<ListAccessFormProps> = ({ list, projectName, isLoading }) => {
   //   get current user data
   const { data: currentUser } = useGetCurrentUserQuery()
+  const { powerLicense } = usePowerpack()
 
-  const { data: shareOptions = [], isFetching: isShareOptionsLoading } = useGetShareOptionsQuery({
-    projectName,
-  })
+  const { data: shareOptions = [], isFetching: isShareOptionsLoading } = useGetShareOptionsQuery(
+    {
+      projectName,
+    },
+    { skip: !powerLicense },
+  )
 
   const [updateList] = useUpdateEntityListMutation()
 
