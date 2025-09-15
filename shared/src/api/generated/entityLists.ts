@@ -404,6 +404,7 @@ export type EntityListModel = {
   updatedAt?: string
   /** Whether the list is active or not */
   active: boolean
+  accessLevel?: ListAccessLevel
 }
 export type EntityListPatchModel = {
   label?: string
