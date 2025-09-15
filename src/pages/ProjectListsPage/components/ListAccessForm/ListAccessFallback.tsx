@@ -24,6 +24,7 @@ export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
   owner,
   access = {},
   currentUser,
+  isLoading,
 }) => {
   const { data: ownerUser, isFetching: isLoadingOwner } = useGetUserQuery(
     { userName: owner || '' },
@@ -42,18 +43,25 @@ export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
           isMe={currentUser?.name === owner}
           isOwner={true}
           shareType="user"
-          className={clsx({ loading: isLoadingOwner })}
+          className={clsx({ loading: isLoadingOwner || isLoading })}
         />
       )}
-      <AccessUser name={EVERYONE_GROUP_KEY} label="Everyone" icon={'groups'}>
-        <span className="suffix">{ACCESS_LEVEL_LABELS[access[EVERYONE_GROUP_KEY] || 10]}</span>
+      <AccessUser
+        name={EVERYONE_GROUP_KEY}
+        label="Everyone"
+        icon={'groups'}
+        className={clsx({ loading: isLoadingOwner || isLoading })}
+      >
+        <span className="suffix">{ACCESS_LEVEL_LABELS[access[EVERYONE_GROUP_KEY] || 30]}</span>
       </AccessUser>
-      <PowerpackButton
-        feature="listAccess"
-        label="Manage list access"
-        filled
-        style={{ marginTop: 8, width: '100%' }}
-      />
+      {!isLoading && (
+        <PowerpackButton
+          feature="listAccess"
+          label="Manage list access"
+          filled
+          style={{ marginTop: 8, width: '100%' }}
+        />
+      )}
     </>
   )
 }

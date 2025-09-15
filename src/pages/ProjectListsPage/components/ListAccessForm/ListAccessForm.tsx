@@ -30,7 +30,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({ list, projectName, isL
   const [updateList] = useUpdateEntityListMutation()
 
   // load in sharing module
-  const { ListAccess, requiredVersion } = useListsModuleContext()
+  const { ListAccess, requiredVersion, isLoading: isLoadingModule } = useListsModuleContext()
 
   if (!currentUser) return 'Loading user...'
 
@@ -40,7 +40,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({ list, projectName, isL
   return (
     <ListAccess
       {...list}
-      isLoading={isLoading}
+      isLoading={isLoading || isLoadingModule.access}
       currentUser={currentUser}
       shareOptions={shareOptions}
       isShareOptionsLoading={isShareOptionsLoading}

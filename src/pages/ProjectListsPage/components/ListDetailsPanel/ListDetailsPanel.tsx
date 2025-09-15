@@ -67,7 +67,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
           </>
         )}
         {selectedTab === 'access' && list && (
-          <Styled.Section>
+          <Styled.Section style={{ height: '100%' }}>
             <ListAccessForm list={list} projectName={projectName} isLoading={isLoadingList} />
           </Styled.Section>
         )}
