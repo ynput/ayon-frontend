@@ -5,6 +5,7 @@ import {
   useGetShareOptionsQuery,
   useUpdateEntityListMutation,
 } from '@shared/api'
+import { RequiredPowerpackVersion } from '@shared/components/Powerpack/RequiredPowerpackVersion'
 import { usePowerpack } from '@shared/context'
 import { FC } from 'react'
 
@@ -33,7 +34,8 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({ list, projectName, isL
 
   if (!currentUser) return 'Loading user...'
 
-  if (requiredVersion.access) return `New addon version required: ${requiredVersion.access}`
+  if (requiredVersion.access)
+    return <RequiredPowerpackVersion requiredVersion={requiredVersion.access} />
 
   return (
     <ListAccess

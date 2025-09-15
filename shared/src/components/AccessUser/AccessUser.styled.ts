@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from 'styled-components'
 
 export const User = styled.div`
   display: flex;
@@ -17,8 +17,13 @@ export const User = styled.div`
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
 
-  .name {
+  .label {
     flex: 1;
+  }
+
+  .name {
+    color: var(--md-sys-color-outline);
+    padding-left: var(--base-gap-small);
   }
 
   .owner,
@@ -35,4 +40,4 @@ export const User = styled.div`
     padding: 2px;
     font-size: 20px;
   }
-`;
+`

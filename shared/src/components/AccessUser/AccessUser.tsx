@@ -35,13 +35,18 @@ export const AccessUser = forwardRef<HTMLDivElement, AccessUserProps>(
     { name, label, icon, shareType, isMe, isOwner, isCompact, children, className, ...props },
     ref,
   ) => {
-    const isMeLabel = isMe ? ' (you)' : ''
+    const showUsername = label && label !== name && !name.startsWith('__') && !name.endsWith('__')
 
     return (
       <Styled.User {...props} ref={ref} className={clsx(className, { compact: isCompact })}>
         <ShareOptionIcon shareType={shareType} name={name} label={label} icon={icon} />
-        <span className="name">
-          {label || name} {isMeLabel}
+        <span className="label">
+          {label || name}
+          {isMe ? (
+            <span className="name">(you)</span>
+          ) : (
+            showUsername && <span className="name">({name})</span>
+          )}
         </span>
         {isOwner && <span className="owner">Owner</span>}
         {children}
