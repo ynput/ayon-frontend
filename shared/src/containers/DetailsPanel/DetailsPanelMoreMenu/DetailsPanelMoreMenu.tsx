@@ -1,15 +1,9 @@
 import React, { useState, useRef } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import Menu from '@components/Menu/MenuComponents/Menu.jsx'
-import MenuContainer from '@components/Menu/MenuComponents/MenuContainer.jsx'
-import { useAppDispatch } from '@state/store'
-import { toggleMenuOpen, setMenuOpen } from '@state/context'
-import {
-  useContextAccess,
-  useThumbnailUpload,
-  useMenuOptions,
-  useMenuActions,
-} from './hooks'
+import Menu from '@components/Menu/MenuComponents/Menu'
+import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import { useMenuContext } from '@shared/context/MenuContext'
+import { useContextAccess, useThumbnailUpload, useMenuOptions, useMenuActions } from './hooks'
 import { DetailsDialogWrapper } from './components'
 
 interface DetailsPanelMoreMenuProps {
@@ -31,8 +25,8 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
 }) => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  
-  const dispatch = useAppDispatch()
+
+  const { toggleMenuOpen, setMenuOpen } = useMenuContext()
 
   const { onOpenVersionUpload } = useContextAccess()
 
@@ -43,7 +37,12 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
     refetch,
   })
 
-  const moreMenuOptions = useMenuOptions({ onOpenVersionUpload, entityListsContext, entityType, firstEntityData })
+  const moreMenuOptions = useMenuOptions({
+    onOpenVersionUpload,
+    entityListsContext,
+    entityType,
+    firstEntityData,
+  })
   const { handleMoreMenuAction } = useMenuActions({
     entityType,
     firstEntityData,
@@ -56,11 +55,11 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
   })
 
   const handleToggleMenu = () => {
-    dispatch(toggleMenuOpen('details-more-menu'))
+    toggleMenuOpen('details-more-menu')
   }
 
   const handleSetMenu = (menu: string | false) => {
-    dispatch(setMenuOpen(menu))
+    setMenuOpen(menu)
   }
 
   const menuItems = moreMenuOptions.map((option: any) => {
@@ -77,13 +76,13 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
         icon: subItem.icon,
         onClick: () => {
           subItem.command?.()
-          dispatch(setMenuOpen(false))
+          setMenuOpen(false)
         },
       }))
     } else {
       menuItem.onClick = () => {
         handleMoreMenuAction(option.value)
-        dispatch(setMenuOpen(false))
+        setMenuOpen(false)
       }
     }
 
