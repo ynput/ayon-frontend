@@ -171,21 +171,20 @@ export default function useKeyboardNavigation() {
           e.preventDefault()
           // attempt to open the player
           openPlayer(rowId)
-            break
+          break
         }
-          case 'r':
-          case 'R': {
-              e.preventDefault()
-              // Check if focused cell is name column on folder/task
-              if (colId === 'name') {
-                  const entity = getEntityById(rowId)
-                  if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
-                      const nameCellId = getCellId(rowId, 'name')
-                      const cellElement = document.getElementById(nameCellId) as HTMLElement
-                      setEditingCellId(nameCellId, cellElement)
-                  }
-              }
-              break
+        case 'r':
+        case 'R': {
+          e.preventDefault()
+          // Check if focused cell is name column on folder/task
+          if (colId === 'name') {
+            const entity = getEntityById(rowId)
+            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
+              const nameCellId = getCellId(rowId, 'name')
+              setEditingCellId(nameCellId)
+            }
+          }
+          break
         }
       }
     },

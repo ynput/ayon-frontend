@@ -1,6 +1,6 @@
 import { FC, useRef, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
-import {createPortal} from "react-dom";
+import { createPortal } from 'react-dom'
 
 const StyledPopUp = styled.div`
   position: fixed;
@@ -18,7 +18,6 @@ type Position = {
 }
 
 export interface LinksManagerDialogProps {
-  disabled?: boolean
   isEditing: boolean
   anchorId: string
   onClose?: () => void
@@ -26,12 +25,10 @@ export interface LinksManagerDialogProps {
 }
 
 export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
-  disabled,
   isEditing,
   anchorId,
   onClose,
   children,
-  ...props
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
@@ -162,7 +159,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   }, [onClose, anchorElement])
 
   if (!isEditing) return null
-  return (createPortal(
+  return createPortal(
     <StyledPopUp
       ref={popupRef}
       style={{
@@ -181,7 +178,8 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         }
       }}
     >
-        {children}
-    </StyledPopUp>,document.body)
+      {children}
+    </StyledPopUp>,
+    document.body,
   )
 }
