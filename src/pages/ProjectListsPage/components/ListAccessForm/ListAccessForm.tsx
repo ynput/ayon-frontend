@@ -8,6 +8,7 @@ import {
 import { RequiredPowerpackVersion } from '@shared/components/Powerpack/RequiredPowerpackVersion'
 import { usePowerpack } from '@shared/context'
 import { FC } from 'react'
+import { toast } from 'react-toastify'
 
 export interface ListAccessFormProps {
   list: EntityListModel
@@ -51,6 +52,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({ list, projectName, isL
           entityListPatchModel: payload,
         }).unwrap()
       }
+      onError={(error) => toast.error(error)}
     />
   )
 }

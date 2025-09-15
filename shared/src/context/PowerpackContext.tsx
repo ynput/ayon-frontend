@@ -66,6 +66,7 @@ export type PowerpackContextType = {
   setPowerpackDialog: (open: PowerpackContextType['selectedPowerPack']) => void
   powerpackDialog: PowerpackDialogType | null
   powerLicense: boolean
+  isLoading: boolean
 }
 
 const PowerpackContext = createContext<PowerpackContextType | undefined>(undefined)
@@ -79,6 +80,7 @@ export const PowerpackProvider = ({
 }) => {
   const [selectedPowerPack, setPowerpackDialog] =
     useState<PowerpackContextType['selectedPowerPack']>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const resolvePowerPackDialog = (selected: PowerpackContextType['selectedPowerPack']) => {
     if (!selected) return null
@@ -95,7 +97,7 @@ export const PowerpackProvider = ({
   const fallbackCheckLicense: CheckPowerLicenseFunction = async () => false
 
   // Load the remote module
-  const [checkPowerLicense, { isLoaded, isLoading }] = useLoadModule<CheckPowerLicenseFunction>({
+  const [checkPowerLicense, { isLoaded }] = useLoadModule<CheckPowerLicenseFunction>({
     addon: 'powerpack',
     remote: 'license',
     module: 'checkPowerLicense',
@@ -107,6 +109,7 @@ export const PowerpackProvider = ({
       if (debug?.powerLicense !== undefined) {
         console.warn('Using debug power license:', debug.powerLicense)
         setPowerLicense(debug.powerLicense)
+        setIsLoading(false)
       } else if (isLoaded) {
         try {
           const hasPowerLicense = await checkPowerLicense()
@@ -114,6 +117,8 @@ export const PowerpackProvider = ({
         } catch (error) {
           console.error('Error checking power license:', error)
           setPowerLicense(false)
+        } finally {
+          setIsLoading(false)
         }
       }
     }
@@ -127,8 +132,9 @@ export const PowerpackProvider = ({
       selectedPowerPack,
       setPowerpackDialog,
       powerpackDialog: resolvePowerPackDialog(selectedPowerPack),
+      isLoading,
     }),
-    [powerLicense, selectedPowerPack, setPowerpackDialog],
+    [powerLicense, selectedPowerPack, setPowerpackDialog, isLoading],
   )
 
   return <PowerpackContext.Provider value={value}>{children}</PowerpackContext.Provider>

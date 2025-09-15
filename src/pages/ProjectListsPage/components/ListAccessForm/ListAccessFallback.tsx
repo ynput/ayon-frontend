@@ -17,7 +17,7 @@ interface ListAccessFallbackProps extends EntityListModel {
   isLoading?: boolean
   onUpdateList: (payload: EntityListPatchModel) => Promise<void>
   onSuccess?: () => void
-  onError?: (error: any) => void
+  onError?: (error: string) => void
 }
 
 export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
