@@ -34,15 +34,10 @@ export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext, entity
         label: 'Upload thumbnail',
         icon: 'add_photo_alternate',
       },
-      {
-        value: 'view-data',
-        label: 'View data',
-        icon: 'database',
-      },
     ]
 
     if (onOpenVersionUpload) {
-      options.splice(2, 0, {
+      options.push({
         value: 'upload-version',
         label: 'Upload version',
         icon: 'upload',
@@ -80,6 +75,12 @@ export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext, entity
         items: [...compatibleLists, newListMenuItem],
       })
     }
+
+    options.push({
+      value: 'view-data',
+      label: 'View data',
+      icon: 'database',
+    })
 
     return options
   }, [onOpenVersionUpload, entityListsContext, entityType, firstEntityData])
