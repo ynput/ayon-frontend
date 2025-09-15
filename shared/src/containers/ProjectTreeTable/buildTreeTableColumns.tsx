@@ -192,13 +192,7 @@ const buildTreeTableColumns = ({
         return (
           <>
             {isEditing(cellId) && (
-              <CellEditingDialog
-                isEditing={isEditing(cellId)}
-                anchorId={cellId}
-                onClose={() => {
-                  setEditingCellId(null)
-                }}
-              >
+              <CellEditingDialog isEditing={isEditing(cellId)} anchorId={cellId} onClose={() => {}}>
                 <EditingEntityWidget
                   cellId={cellId}
                   rowId={row.id}
