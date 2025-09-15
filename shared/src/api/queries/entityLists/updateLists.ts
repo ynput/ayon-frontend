@@ -69,10 +69,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
-      // invalidatesTags: (_s, _e, { listId }) => {
-      //   const tags = [{ type: 'entityList', id: listId }]
-      //   return tags
-      // },
+      invalidatesTags: (_s, _e, { listId }) => {
+        const tags = [{ type: 'entityList', id: listId }]
+        return tags
+      },
     },
     deleteEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
