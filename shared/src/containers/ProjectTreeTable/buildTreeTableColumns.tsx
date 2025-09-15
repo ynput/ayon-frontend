@@ -175,7 +175,7 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: groupBy ? false : true,
       cell: ({ row, column, table }) => {
-        const { isEditing } = useCellEditing()
+        const { isEditing, setEditingCellId } = useCellEditing()
         const meta = table.options.meta
         const cellId = getCellId(row.id, column.id)
 
@@ -196,7 +196,7 @@ const buildTreeTableColumns = ({
                 isEditing={isEditing(cellId)}
                 anchorId={cellId}
                 onClose={() => {
-                  meta?.setEditingCellId?.(null)
+                  setEditingCellId(null)
                 }}
               >
                 <EditingEntityWidget
