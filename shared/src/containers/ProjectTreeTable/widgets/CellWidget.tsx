@@ -20,6 +20,7 @@ import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectTableContext } from '../context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
+import { NameData } from '@shared/containers/ProjectTreeTable/widgets/RenameForm'
 
 const Cell = styled.div`
   position: absolute;
@@ -48,14 +49,6 @@ const Cell = styled.div`
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' }
-export type NameData = {
-  name: string;
-  label: string;
-  meta?: any;
-  type?: string;
-  entityRowId?: string;
-  columnId?: string;
-}
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -189,12 +182,10 @@ export const CellWidget: FC<EditorCellProps> = ({
       case type === 'name': {
         return (
           <NameWidget
-            rowId={rowId}
             value={value as CellValue}
             valueData={valueData as NameData}
             cellId={cellId}
             entityType={entityType as string}
-            projectName={projectName}
             {...sharedProps}
           />
         )

@@ -3,6 +3,7 @@ import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
 import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { getEntityViewierIds } from '../utils'
 
 export default function useKeyboardNavigation() {
@@ -12,6 +13,7 @@ export default function useKeyboardNavigation() {
     useSelectionCellsContext()
 
   const { setEditingCellId, editingCellId } = useCellEditing()
+  const { setSelectedEntity } = useDetailsPanelEntityContext()
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -122,9 +124,14 @@ export default function useKeyboardNavigation() {
         }
         case 'Enter': {
           e.preventDefault()
-          if (isReadOnly) return
-          // Start editing the currently focused cell
-          setEditingCellId(focusedCellId)
+          // Always open details panel for folders/tasks
+          const entity = getEntityById(rowId)
+          if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
+            setSelectedEntity({
+              entityId: rowId,
+              entityType: entity.entityType,
+            })
+          }
           break
         }
         case 'Escape': {
@@ -175,6 +182,10 @@ export default function useKeyboardNavigation() {
         }
         case 'r':
         case 'R': {
+          // Don't prevent default if Ctrl/Cmd is held (allow page reload)
+          if (e.ctrlKey || e.metaKey) {
+            return
+          }
           e.preventDefault()
           // Check if focused cell is name column on folder/task
           if (colId === 'name') {
@@ -198,6 +209,7 @@ export default function useKeyboardNavigation() {
       editingCellId,
       getEntityById,
       playerOpen,
+      setSelectedEntity,
     ],
   )
 
@@ -219,6 +231,7 @@ export default function useKeyboardNavigation() {
     setEditingCellId,
     editingCellId,
     playerOpen,
+    setSelectedEntity,
   ])
   return {
     handleKeyDown,
