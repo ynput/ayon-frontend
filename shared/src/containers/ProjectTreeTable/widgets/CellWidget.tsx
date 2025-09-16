@@ -48,7 +48,14 @@ const Cell = styled.div`
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' }
-export type NameData = { name: string; label: string }
+export type NameData = {
+  name: string;
+  label: string;
+  meta?: any;
+  type?: string;
+  entityRowId?: string;
+  columnId?: string;
+}
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -75,6 +82,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
     date?: Partial<DateWidgetProps>
     boolean?: Partial<BooleanWidgetProps>
   }
+  entityType?: string
 }
 
 export interface WidgetBaseProps {
@@ -97,6 +105,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   enableCustomValues,
   folderId,
   onChange,
+  entityType,
   pt,
   ...props
 }) => {
@@ -184,7 +193,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={value as CellValue}
             valueData={valueData as NameData}
             cellId={cellId}
-            entityType={'name'}
+            entityType={entityType as string}
             projectName={projectName}
             {...sharedProps}
           />

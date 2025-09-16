@@ -22,6 +22,7 @@ export const NameWidget: FC<NameWidgetProps> = ({
   onCancelEdit,
   rowId,
   entityType,
+  onChange,
 }) => {
   return (
     <>
@@ -34,6 +35,7 @@ export const NameWidget: FC<NameWidgetProps> = ({
             initialLabel={valueData?.label}
             onClose={onCancelEdit}
             entityType={entityType}
+            valueData={valueData}
           />
         </CellEditingDialog>
       )}

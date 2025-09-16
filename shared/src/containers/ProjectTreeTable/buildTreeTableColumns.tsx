@@ -8,7 +8,7 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
-import { TableGroupBy } from './context'
+import { TableGroupBy, useCellEditing } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
@@ -175,6 +175,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
+        const { isEditing } = useCellEditing()
         const cellId = getCellId(row.id, column.id)
 
         if (row.original.entityType === NEXT_PAGE_ID && row.original.group) {
@@ -188,7 +189,6 @@ const buildTreeTableColumns = ({
         }
 
         if (['group', NEXT_PAGE_ID].includes(type)) return null
-
         return (
           <TableCellContent
             id={cellId}
@@ -228,22 +228,25 @@ const buildTreeTableColumns = ({
                 toggleExpanded={row.getToggleExpandedHandler()}
               />
             )}
-            <CellWidget
-              rowId={id}
-              className={clsx('name', { loading: row.original.isLoading })}
-              columnId={column.id}
-              value={value}
-              valueData={{ name: row.original.name, label: row.original.label }}
-              attributeData={{ type: 'name' }}
-              isCollapsed={!!row.original.childOnlyMatch}
-              onChange={(value) =>
-                meta?.updateEntities?.(
-                  { field: column.id, value, type, rowId: id },
-                  { selection: meta?.selection },
-                )
-              }
-              isReadOnly={meta?.readOnly?.includes(column.id)}
-            />
+            {isEditing(cellId) && (
+              <CellWidget
+                rowId={id}
+                className={clsx('name', { loading: row.original.isLoading })}
+                columnId={column.id}
+                value={value}
+                valueData={{
+                  name: row.original.name,
+                  label: row.original.label,
+                  meta,
+                  type,
+                  entityRowId: id,
+                  columnId: column.id,
+                }}
+                attributeData={{ type: 'name' }}
+                isCollapsed={!!row.original.childOnlyMatch}
+                isReadOnly={meta?.readOnly?.includes(column.id)}
+              />
+            )}
           </TableCellContent>
         )
       },
