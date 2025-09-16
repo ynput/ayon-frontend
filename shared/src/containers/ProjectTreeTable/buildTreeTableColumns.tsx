@@ -8,15 +8,13 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
-import { TableGroupBy, useCellEditing } from './context'
+import { TableGroupBy } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
-import EditingEntityWidget from '@shared/containers/ProjectTreeTable/widgets/EditingEntityWidget'
-import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 
 const MIN_SIZE = 50
 
@@ -175,7 +173,7 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: groupBy ? false : true,
       cell: ({ row, column, table }) => {
-        const { isEditing, setEditingCellId } = useCellEditing()
+        const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
         const cellId = getCellId(row.id, column.id)
 
@@ -189,59 +187,64 @@ const buildTreeTableColumns = ({
           )
         }
 
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
+
         return (
-          <>
-            {isEditing(cellId) && (
-              <CellEditingDialog isEditing={isEditing(cellId)} anchorId={cellId} onClose={() => {}}>
-                <EditingEntityWidget
-                  cellId={cellId}
-                  rowId={row.id}
-                  entityType={row.original.entityType}
-                  initialName={row.original.name}
-                  initialLabel={row.original.label || ''}
-                />
-              </CellEditingDialog>
+          <TableCellContent
+            id={cellId}
+            className={clsx('large', row.original.entityType, {
+              loading: row.original.isLoading,
+              hierarchy: showHierarchy,
+            })}
+            style={{
+              paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
+            }}
+            tabIndex={0}
+          >
+            {row.original.group ? (
+              <GroupHeaderWidget
+                id={row.id}
+                label={row.original.group.label}
+                name={row.original.name}
+                icon={row.original.group.icon}
+                img={row.original.group.img}
+                color={row.original.group.color}
+                count={row.original.group.count}
+                isExpanded={row.getIsExpanded()}
+                isEmpty={row.subRows.length === 0}
+                toggleExpanded={row.getToggleExpandedHandler()}
+              />
+            ) : (
+              <EntityNameWidget
+                id={row.id}
+                label={row.original.label}
+                name={row.original.name}
+                path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
+                showHierarchy={showHierarchy}
+                icon={row.original.icon}
+                type={row.original.entityType}
+                isExpanded={row.getIsExpanded()}
+                toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
+                toggleExpanded={row.getToggleExpandedHandler()}
+              />
             )}
-            <TableCellContent
-              id={cellId}
-              className={clsx('large', row.original.entityType, {
-                loading: row.original.isLoading,
-                hierarchy: showHierarchy,
-              })}
-              style={{
-                paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
-              }}
-              tabIndex={0}
-            >
-              {row.original.group ? (
-                <GroupHeaderWidget
-                  id={row.id}
-                  label={row.original.group.label}
-                  name={row.original.name}
-                  icon={row.original.group.icon}
-                  img={row.original.group.img}
-                  color={row.original.group.color}
-                  count={row.original.group.count}
-                  isExpanded={row.getIsExpanded()}
-                  isEmpty={row.subRows.length === 0}
-                  toggleExpanded={row.getToggleExpandedHandler()}
-                />
-              ) : (
-                <EntityNameWidget
-                  id={row.id}
-                  label={row.original.label}
-                  name={row.original.name}
-                  path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
-                  showHierarchy={showHierarchy}
-                  icon={row.original.icon}
-                  type={row.original.entityType}
-                  isExpanded={row.getIsExpanded()}
-                  toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
-                  toggleExpanded={row.getToggleExpandedHandler()}
-                />
-              )}
-            </TableCellContent>
-          </>
+            <CellWidget
+              rowId={id}
+              className={clsx('name', { loading: row.original.isLoading })}
+              columnId={column.id}
+              value={value}
+              valueData={{ name: row.original.name, label: row.original.label }}
+              attributeData={{ type: 'name' }}
+              isCollapsed={!!row.original.childOnlyMatch}
+              onChange={(value) =>
+                meta?.updateEntities?.(
+                  { field: column.id, value, type, rowId: id },
+                  { selection: meta?.selection },
+                )
+              }
+              isReadOnly={meta?.readOnly?.includes(column.id)}
+            />
+          </TableCellContent>
         )
       },
     })
