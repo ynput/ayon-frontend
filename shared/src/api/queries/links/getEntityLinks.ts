@@ -128,7 +128,7 @@ const injectedQueries = foldersApi.injectEndpoints({
             result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => ({
               id: node.id,
               links:
-                node.links.edges?.map((linkEdge: EntityLinkQuery) => ({
+                node.links.edges?.filter((e: EntityLinkQuery | null) =>!!e?.node)?.map((linkEdge: EntityLinkQuery) => ({
                   ...linkEdge,
                   node: {
                     id: linkEdge.node.id,
