@@ -11,6 +11,7 @@ import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
 import { ViewerProvider } from '@context/ViewerContext'
+import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 
 // shared
 import { useGetViewerReviewablesQuery } from '@shared/api'
@@ -307,7 +308,11 @@ const Viewer = ({ onClose }: ViewerProps) => {
           />
           <div id="annotation-tools" style={{ position: 'relative' }}></div>
         </Styled.RightToolBar>
-        {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
+        {!noVersions && (
+          <EntityListsProvider entityTypes={['version']} projectName={projectName as string}>
+            <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />
+          </EntityListsProvider>
+        )}
       </Styled.Container>
     </ViewerProvider>
   )
