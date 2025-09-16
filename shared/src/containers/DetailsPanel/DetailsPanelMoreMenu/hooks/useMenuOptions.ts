@@ -55,18 +55,32 @@ export const useMenuOptions = ({ onOpenVersionUpload, entityListsContext, entity
       let compatibleLists: any[] = []
 
       if (entityType === 'folder') {
-        compatibleLists = entityListsContext.folders?.data || []
+        compatibleLists = (entityListsContext.folders?.data || []).map((list: any) =>
+          entityListsContext.buildListMenuItem(list, selectedEntities, false),
+        )
       } else if (entityType === 'task') {
-        compatibleLists = entityListsContext.tasks?.data || []
+        compatibleLists = (entityListsContext.tasks?.data || []).map((list: any) =>
+          entityListsContext.buildListMenuItem(list, selectedEntities, false),
+        )
       } else if (entityType === 'product') {
-        compatibleLists = entityListsContext.products?.data || []
+        compatibleLists = (entityListsContext.products?.data || []).map((list: any) =>
+          entityListsContext.buildListMenuItem(list, selectedEntities, false),
+        )
       } else if (entityType === 'version') {
-        compatibleLists = [
-          ...(entityListsContext.versions?.data || []),
-          ...(entityListsContext.reviews?.data || []),
-        ]
+        const hasReviews = (entityListsContext.reviews?.data?.length || 0) > 0
+        const versionItems = (entityListsContext.versions?.data || []).map((list: any) =>
+          entityListsContext.buildListMenuItem(list, selectedEntities, hasReviews),
+        )
+        const reviewItems = (entityListsContext.reviews?.data || []).map((list: any) =>
+          entityListsContext.buildListMenuItem(list, selectedEntities, true),
+        )
+        compatibleLists = [...versionItems, ...reviewItems]
       }
-      const newListMenuItem = entityListsContext.newListMenuItem(entityType as any, selectedEntities)
+
+      const newListMenuItem = entityListsContext.newListMenuItem(
+        entityType as any,
+        selectedEntities,
+      )
 
       options.push({
         value: 'add-to-list',
