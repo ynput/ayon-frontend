@@ -3,14 +3,15 @@ import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 
-import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
-import { Actions, DetailsPanelProps } from '@shared/containers'
+import { StackedThumbnails } from '@shared/components'
+import { Actions } from '@shared/containers'
 // shared
 import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
+import { EntityPanelUploader } from '@shared/components'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
 import * as Styled from './DetailsPanelHeader.styled'
@@ -37,7 +38,6 @@ type DetailsPanelHeaderProps = {
   currentTab: DetailsPanelTab
   onTabChange: (tab: DetailsPanelTab) => void
   onOpenViewer: (args: any) => void
-  onEntityFocus: DetailsPanelProps['onEntityFocus']
   entityTypeIcons: EntityTypeIcons
 }
 
@@ -92,6 +92,7 @@ const DetailsPanelHeader = ({
       tags: [],
       hasReviewables: false,
       attrib: {},
+      path: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -179,6 +180,8 @@ const DetailsPanelHeader = ({
     }
   }
 
+  // drag & drop behavior is handled by EntityPanelUploader wrapper
+
   const hasUser =
     ['task', 'version', 'representation'].includes(entityType) &&
     (entityUsers.length > 0 || entityType === 'task')
@@ -198,12 +201,11 @@ const DetailsPanelHeader = ({
 
   return (
     <Styled.HeaderContainer>
-      {/* <EntityPanelUploader
+      <EntityPanelUploader
         entities={entities}
         entityType={entityType}
         projectName={projectName}
-        onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
-      > */}
+      >
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
@@ -239,6 +241,7 @@ const DetailsPanelHeader = ({
               </div>
             </Styled.Content>
           </Styled.Header>
+          {/* overlay handled by EntityPanelUploader */}
           <Styled.StatusSelect
             value={statusesValue}
             options={statuses || []}
@@ -302,7 +305,7 @@ const DetailsPanelHeader = ({
             onTabChange={onTabChange}
           />
         </Styled.Grid>
-      {/* </EntityPanelUploader> */}
+      </EntityPanelUploader>
     </Styled.HeaderContainer>
   )
 }
