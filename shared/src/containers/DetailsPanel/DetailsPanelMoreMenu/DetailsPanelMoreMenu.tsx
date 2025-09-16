@@ -1,10 +1,19 @@
 import React, { useState, useRef } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import Menu from '@components/Menu/MenuComponents/Menu'
-import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import styled from 'styled-components'
+// @ts-ignore
+import Menu from '@/components/Menu/MenuComponents/Menu'
+// @ts-ignore
+import MenuContainer from '@/components/Menu/MenuComponents/MenuContainer'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useContextAccess, useThumbnailUpload, useMenuOptions, useMenuActions } from './hooks'
 import { DetailsDialogWrapper } from './components'
+
+const MenuButton = styled(Button)`
+  &.active {
+    background-color: var(--md-sys-color-surface-container-hover) !important;
+  }
+`
 
 interface DetailsPanelMoreMenuProps {
   entityType: string
@@ -26,7 +35,7 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  const { toggleMenuOpen, setMenuOpen } = useMenuContext()
+  const { toggleMenuOpen, setMenuOpen, menuOpen } = useMenuContext()
 
   const { onOpenVersionUpload } = useContextAccess()
 
@@ -91,14 +100,15 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
 
   return (
     <>
-      <Button
+      <MenuButton
         ref={buttonRef}
-        icon="more_vert"
+        icon="more_horiz"
         variant="text"
         aria-label="More actions"
         data-tooltip="More actions"
         title="More actions"
         onClick={handleToggleMenu}
+        className={menuOpen === 'details-more-menu' ? 'active' : undefined}
       />
 
       <MenuContainer id="details-more-menu" target={buttonRef.current} align="right">
