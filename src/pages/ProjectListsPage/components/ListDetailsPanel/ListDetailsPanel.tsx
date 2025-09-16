@@ -34,7 +34,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   const isReview = list?.entityListType === 'review-session'
 
-  const [selectedTab, setSelectedTab] = useState<ListDetailsTab>('access')
+  const [selectedTab, setSelectedTab] = useState<ListDetailsTab>('details')
 
   return (
     <Styled.Panel>
