@@ -49,8 +49,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       try {
         // Get visible columns in display order, excluding row selection
         const visibleColumnIds = visibleColumns
-          .map(col => col.id)
-          .filter(id => id !== ROW_SELECTION_COLUMN_ID)
+          .map((col) => col.id)
+          .filter((id) => id !== ROW_SELECTION_COLUMN_ID)
 
         // Organize selected cells by row, filtering to only visible columns
         const cellsByRow = new Map<string, Set<string>>()
@@ -234,7 +234,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       }
       try {
         await navigator.clipboard.writeText(clipboardText)
-        console.log('Copied to clipboard successfully', clipboardText)
       } catch (error: any) {
         clipboardError(`Failed to copy to clipboard: ${error.message}`)
       }
@@ -290,123 +289,126 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   }
 
   const pasteFromClipboard: ClipboardContextType['pasteFromClipboard'] = useCallback(
-      async (selected, config) => {
-        const { method = 'replace' } = config || {}
-        if (!selected.length) return
+    async (selected, config) => {
+      const { method = 'replace' } = config || {}
+      if (!selected.length) return
 
-        const clipboardText = await getClipboardString()
-        if (!clipboardText) return
+      const clipboardText = await getClipboardString()
+      if (!clipboardText) return
 
-        // Parse the clipboard text
-        const parsedData = parseClipboardText(clipboardText)
-        if (!parsedData.length) return
+      // Parse the clipboard text
+      const parsedData = parseClipboardText(clipboardText)
+      if (!parsedData.length) return
 
-        console.log('Clipboard data parsed:', parsedData)
+      // Determine if we have a single value in the clipboard (one row, one column)
+      const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
 
-        // Determine if we have a single value in the clipboard (one row, one column)
-        const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
+      // Get visible columns in display order, excluding row selection
+      const visibleColumnIds = visibleColumns
+        .map((col) => col.id)
+        .filter((id) => id !== ROW_SELECTION_COLUMN_ID)
 
-        // Get visible columns in display order, excluding row selection
-        const visibleColumnIds = visibleColumns
-            .map(col => col.id)
-            .filter(id => id !== ROW_SELECTION_COLUMN_ID)
+      // Helper function to map clipboard values to visible columns
+      const mapClipboardToVisibleColumns = (
+        clipboardRow: any,
+        visibleColumnIds: string[],
+        clipboardHeaders?: string[],
+      ) => {
+        const mappedValues: Record<string, string> = {}
 
-        // Helper function to map clipboard values to visible columns
-        const mapClipboardToVisibleColumns = (clipboardRow: any, visibleColumnIds: string[], clipboardHeaders?: string[]) => {
-          const mappedValues: Record<string, string> = {}
+        if (clipboardHeaders && clipboardHeaders.length > 0) {
+          // Map by header names when available
+          clipboardHeaders.forEach((header: string, index: number) => {
+            const matchingColId = visibleColumnIds.find(
+              (colId) =>
+                colId === header ||
+                colId.replace('attrib_', '') === header ||
+                colId === `attrib_${header}` ||
+                colId.toLowerCase() === header.toLowerCase(),
+            )
 
-          if (clipboardHeaders && clipboardHeaders.length > 0) {
-            // Map by header names when available
-            clipboardHeaders.forEach((header: string, index: number) => {
-              const matchingColId = visibleColumnIds.find(colId =>
-                  colId === header ||
-                  colId.replace('attrib_', '') === header ||
-                  colId === `attrib_${header}` ||
-                  colId.toLowerCase() === header.toLowerCase()
-              )
-
-              if (matchingColId && index < clipboardRow.values.length) {
-                mappedValues[matchingColId] = clipboardRow.values[index]
-              }
-            })
-          } else {
-            // Fallback: map by position, but only to visible columns
-            visibleColumnIds.forEach((colId, index) => {
-              if (index < clipboardRow.values.length) {
-                mappedValues[colId] = clipboardRow.values[index]
-              }
-            })
-          }
-
-          return mappedValues
+            if (matchingColId && index < clipboardRow.values.length) {
+              mappedValues[matchingColId] = clipboardRow.values[index]
+            }
+          })
+        } else {
+          // Fallback: map by position, but only to visible columns
+          visibleColumnIds.forEach((colId, index) => {
+            if (index < clipboardRow.values.length) {
+              mappedValues[colId] = clipboardRow.values[index]
+            }
+          })
         }
 
-        // Extract headers if they exist (assuming first row might be headers from external source)
-        // You might need to detect this differently based on your clipboard format
-        const clipboardHeaders = parsedData[0]?.colIds || undefined
+        return mappedValues
+      }
 
-        // Organize selected cells by row, filtering to only visible columns
-        const cellsByRow = new Map<string, Set<string>>()
+      // Extract headers if they exist (assuming first row might be headers from external source)
+      // You might need to detect this differently based on your clipboard format
+      const clipboardHeaders = parsedData[0]?.colIds || undefined
 
-        Array.from(selected).forEach((cellId) => {
-          const position = parseCellId(cellId)
-          if (!position) return
+      // Organize selected cells by row, filtering to only visible columns
+      const cellsByRow = new Map<string, Set<string>>()
 
-          const { rowId, colId } = position
-          if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
+      Array.from(selected).forEach((cellId) => {
+        const position = parseCellId(cellId)
+        if (!position) return
 
-          if (!cellsByRow.has(rowId)) {
-            cellsByRow.set(rowId, new Set())
-          }
-          cellsByRow.get(rowId)?.add(colId)
-        })
+        const { rowId, colId } = position
+        if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
 
-        // Get sorted row IDs and column IDs
-        const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
-          const indexA = gridMap.rowIdToIndex.get(a) ?? Infinity
-          const indexB = gridMap.rowIdToIndex.get(b) ?? Infinity
-          return indexA - indexB
-        })
+        if (!cellsByRow.has(rowId)) {
+          cellsByRow.set(rowId, new Set())
+        }
+        cellsByRow.get(rowId)?.add(colId)
+      })
 
-        const firstRow = sortedRows[0]
-        const selectedColIds = Array.from(cellsByRow.get(firstRow) || []).sort((a, b) => {
-          const indexA = gridMap.colIdToIndex.get(a) ?? Infinity
-          const indexB = gridMap.colIdToIndex.get(b) ?? Infinity
-          return indexA - indexB
-        })
+      // Get sorted row IDs and column IDs
+      const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
+        const indexA = gridMap.rowIdToIndex.get(a) ?? Infinity
+        const indexB = gridMap.rowIdToIndex.get(b) ?? Infinity
+        return indexA - indexB
+      })
 
-        // First pass: validate all values
-        for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
-          const rowId = sortedRows[rowIndex]
-          const isFolder = getEntityDataById<'folder'>(rowId, entitiesMap)?.entityType === 'folder'
+      const firstRow = sortedRows[0]
+      const selectedColIds = Array.from(cellsByRow.get(firstRow) || []).sort((a, b) => {
+        const indexA = gridMap.colIdToIndex.get(a) ?? Infinity
+        const indexB = gridMap.colIdToIndex.get(b) ?? Infinity
+        return indexA - indexB
+      })
 
-          const pasteRowIndex = rowIndex % parsedData.length
-          const clipboardRow = parsedData[pasteRowIndex]
+      // First pass: validate all values
+      for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
+        const rowId = sortedRows[rowIndex]
+        const isFolder = getEntityDataById<'folder'>(rowId, entitiesMap)?.entityType === 'folder'
 
-          // Map clipboard data to visible columns
-          const mappedValues = isSingleCellValue
-              ? { [selectedColIds[0]]: parsedData[0].values[0] }
-              : mapClipboardToVisibleColumns(clipboardRow, selectedColIds, clipboardHeaders)
+        const pasteRowIndex = rowIndex % parsedData.length
+        const clipboardRow = parsedData[pasteRowIndex]
 
-          // Validate each mapped value
-          for (const colId of selectedColIds) {
-            const pasteValue = mappedValues[colId] || ''
+        // Map clipboard data to visible columns
+        const mappedValues = isSingleCellValue
+          ? { [selectedColIds[0]]: parsedData[0].values[0] }
+          : mapClipboardToVisibleColumns(clipboardRow, selectedColIds, clipboardHeaders)
 
-            const isValid = validateClipboardData({
-              colId,
-              isFolder,
-              pasteValue,
-              parsedData,
-              columnEnums,
-              columnReadOnly,
-              rowIndex,
-              colIndex: selectedColIds.indexOf(colId),
-              isSingleCellValue,
-            })
+        // Validate each mapped value
+        for (const colId of selectedColIds) {
+          const pasteValue = mappedValues[colId] || ''
 
-            if (!isValid) return
-          }
+          const isValid = validateClipboardData({
+            colId,
+            isFolder,
+            pasteValue,
+            parsedData,
+            columnEnums,
+            columnReadOnly,
+            rowIndex,
+            colIndex: selectedColIds.indexOf(colId),
+            isSingleCellValue,
+            attribFields,
+          })
 
+          if (!isValid) return
+        }
       }
 
       // Create a map to consolidate updates for the same entity
@@ -488,7 +490,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
               // Get all columns sorted by grid position
               const allGridColumns = Array.from(gridMap.colIdToIndex.keys())
-                .filter(id => id !== ROW_SELECTION_COLUMN_ID)
+                .filter((id) => id !== ROW_SELECTION_COLUMN_ID)
                 .sort((a, b) => {
                   const indexA = gridMap.colIdToIndex.get(a) ?? Infinity
                   const indexB = gridMap.colIdToIndex.get(b) ?? Infinity
@@ -496,20 +498,27 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                 })
 
               // Find the starting position in the grid columns array
-              const startGridPos = allGridColumns.findIndex(id => gridMap.colIdToIndex.get(id) === firstVisibleColIndex)
+              const startGridPos = allGridColumns.findIndex(
+                (id) => gridMap.colIdToIndex.get(id) === firstVisibleColIndex,
+              )
 
               // The original copied columns are the consecutive ones starting from this position
-              const originalCopiedColumns = allGridColumns.slice(startGridPos, startGridPos + clipboardRow.values.length)
+              const originalCopiedColumns = allGridColumns.slice(
+                startGridPos,
+                startGridPos + clipboardRow.values.length,
+              )
 
               // Find this column's position in the original copied columns
               const clipboardColIndex = originalCopiedColumns.indexOf(colId)
-              pasteValue = clipboardRow.values[clipboardColIndex] || clipboardRow.values[clipboardColIndex % clipboardRow.values.length]
-              console.log(`Pasting (hidden columns detected) to column "${colId}" (visible index ${colIndex}, clipboard index ${clipboardColIndex}):`, pasteValue, 'from clipboard values:', clipboardRow.values, 'original columns:', originalCopiedColumns)
+              pasteValue =
+                clipboardRow.values[clipboardColIndex] ||
+                clipboardRow.values[clipboardColIndex % clipboardRow.values.length]
+              // Pasting value from hidden columns detection
             } else {
               // Normal case: map clipboard column index using modulo
               const pasteColIndex = colIndex % clipboardRow.values.length
               pasteValue = clipboardRow.values[pasteColIndex]
-              console.log(`Pasting (normal) to column "${colId}" (index ${colIndex}, paste index ${pasteColIndex}):`, pasteValue, 'from clipboard values:', clipboardRow.values)
+              // Pasting value normally
             }
           }
 
@@ -648,6 +657,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       columnEnums,
       getEntityById,
       visibleColumns,
+      attribFields,
     ],
   )
 
