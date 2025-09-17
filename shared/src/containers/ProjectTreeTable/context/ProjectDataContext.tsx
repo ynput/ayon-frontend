@@ -55,7 +55,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     writableFields,
     isSuccess: isSuccessAttribs,
     isFetching: isFetchingAttribs,
-  } = useAttributeFields({ projectName, projectPermissions })
+  } = useAttributeFields({ projectPermissions })
 
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })

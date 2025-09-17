@@ -5,11 +5,10 @@ export interface ProjectTableAttribute extends AttributeModel {
 }
 
 interface UseAttributeFieldsParams {
-  projectName: string
   projectPermissions?: Permissions
 }
 
-const useAttributeFields = ({ projectName, projectPermissions }: UseAttributeFieldsParams) => {
+const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) => {
   const { data: info, isSuccess, isFetching } = useGetSiteInfoQuery({ full: true })
   const { attributes = [] } = info || {}
 
