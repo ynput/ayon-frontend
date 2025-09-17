@@ -241,6 +241,7 @@ const buildTreeTableColumns = ({
                   entityRowId: id,
                   columnId: column.id,
                 }}
+                entityType={type}
                 attributeData={{ type: 'name' }}
                 isCollapsed={!!row.original.childOnlyMatch}
                 isReadOnly={meta?.readOnly?.includes(column.id)}

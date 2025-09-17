@@ -185,7 +185,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={value as CellValue}
             valueData={valueData as NameData}
             cellId={cellId}
-            entityType={entityType as string}
+            entityType={entityType || ''}
             {...sharedProps}
           />
         )

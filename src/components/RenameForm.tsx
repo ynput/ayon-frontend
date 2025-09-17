@@ -184,7 +184,7 @@ const RenameForm: React.FC<InlineEditingWidgetProps> = ({
           const length = labelInputRef.current.value.length
           labelInputRef.current.setSelectionRange(length, length)
         }
-      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      } else if (e.key === 'Enter') {
         // Ctrl+Enter or Cmd+Enter to save
         e.preventDefault()
         handleSave()
