@@ -2,6 +2,9 @@ import { validateEntityId } from '@shared/util'
 import { ColumnEnums, builtInFieldMappings, ParsedClipboardData } from './clipboardTypes'
 import { clipboardError } from './clipboardUtils'
 
+// Columns that should have case-insensitive matching and value correction like assignees
+const CASE_INSENSITIVE_COLUMNS = ['assignees', 'status', 'subType']
+
 // Validate clipboard data for enum fields and handle special cases
 export const validateClipboardData = (params: {
   colId: string
@@ -54,38 +57,83 @@ export const validateClipboardData = (params: {
     }
   }
 
-  // Special handling for assignees - filter out invalid values instead of canceling
-  if (colId === 'assignees') {
-    // Split assignees by comma
-    const assigneeValues = pasteValue.split(',').map((v) => v.trim())
+  // Special handling for columns that should have case-insensitive matching
+  if (CASE_INSENSITIVE_COLUMNS.includes(colId)) {
+    // Determine the enum key based on the column
+    let enumKey = colId
+    if (colId === 'assignees') {
+      enumKey = 'assignee' // assignees uses 'assignee' enum key
+    } else if (colId === 'subType') {
+      enumKey = isFolder ? 'folderType' : 'taskType'
+    } else if (colId === 'status') {
+      enumKey = 'status'
+    }
 
-    // Get assignee options from columnEnums
-    const assigneeOptions = columnEnums['assignee'] || []
+    // Get enum options
+    const enumOptions = columnEnums[enumKey as keyof typeof columnEnums] || []
 
-    // Check if any assignees are valid
-    const hasValidAssignees = assigneeValues.some((v) =>
-      assigneeOptions.some((opt) => opt.value === v || opt.label === v),
-    )
+    if (enumOptions.length === 0) {
+      // If no enum options available, skip validation
+      return true
+    }
 
-    if (!hasValidAssignees) {
+    // Split values by comma
+    const inputValues = pasteValue.split(',').map((v) => v.trim())
+    const validValues: string[] = []
+
+    for (const v of inputValues) {
+      // First try exact match
+      const exactMatch = enumOptions.find((opt) => opt.value === v || opt.label === v)
+      if (exactMatch) {
+        validValues.push(String(exactMatch.value))
+        continue
+      }
+
+      // Try case-insensitive match
+      const caseInsensitiveMatch = enumOptions.find(
+        (opt) =>
+          String(opt.value).toLowerCase() === v.toLowerCase() ||
+          String(opt.label).toLowerCase() === v.toLowerCase(),
+      )
+      if (caseInsensitiveMatch) {
+        validValues.push(String(caseInsensitiveMatch.value))
+        continue
+      }
+
+      // For assignees, skip invalid values instead of failing
+      if (colId === 'assignees') {
+        // Skip invalid assignees
+      } else {
+        // For other columns, fail validation
+        const displayName = colId === 'subType'
+          ? `${isFolder ? 'folder' : 'task'} type`
+          : colId === 'status'
+          ? 'status'
+          : colId
+        clipboardError(`Invalid ${displayName} value: "${pasteValue}". Paste operation cancelled.`)
+        return false
+      }
+    }
+
+    // For assignees, require at least one valid value
+    if (colId === 'assignees' && validValues.length === 0) {
       clipboardError(
         `Invalid assignee value: "${pasteValue}". No matching assignees found. Paste operation cancelled.`,
       )
       return false
     }
 
-    // Filter to keep only valid assignees
-    const validAssignees = assigneeValues.filter((v) =>
-      assigneeOptions.some((opt) => opt.value === v || opt.label === v),
-    )
+    // Update the paste value in the parsed data with corrected case
+    const correctedValue = validValues.join(', ')
 
-    // Update the paste value in the parsed data
-    if (isSingleCellValue) {
-      parsedData[0].values[0] = validAssignees.join(', ')
-    } else {
-      const pasteRowIndex = rowIndex % parsedData.length
-      const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
-      parsedData[pasteRowIndex].values[pasteColIndex] = validAssignees.join(', ')
+    if (correctedValue !== pasteValue) {
+      if (isSingleCellValue) {
+        parsedData[0].values[0] = correctedValue
+      } else {
+        const pasteRowIndex = rowIndex % parsedData.length
+        const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
+        parsedData[pasteRowIndex].values[pasteColIndex] = correctedValue
+      }
     }
 
     return true
@@ -132,15 +180,55 @@ export const validateClipboardData = (params: {
         attribute.data.enum.length > 0
       ) {
         const enumValues = pasteValue.split(',').map((v) => v.trim())
-        const valueExists = enumValues.every((v) =>
-          attribute.data.enum!.some((opt) => opt.value === v || opt.label === v),
+
+        // Try to match each value, with fallback to case-insensitive matching
+        const { validValues, hasInvalidValues } = enumValues.reduce(
+          (acc, v) => {
+            // First try exact match
+            const exactMatch = attribute.data.enum!.find(
+              (opt) => opt.value === v || opt.label === v,
+            )
+            if (exactMatch) {
+              acc.validValues.push(String(exactMatch.value))
+              return acc
+            }
+
+            // Try case-insensitive match
+            const caseInsensitiveMatch = attribute.data.enum!.find(
+              (opt) =>
+                String(opt.value).toLowerCase() === v.toLowerCase() ||
+                String(opt.label).toLowerCase() === v.toLowerCase(),
+            )
+            if (caseInsensitiveMatch) {
+              acc.validValues.push(String(caseInsensitiveMatch.value))
+              return acc
+            }
+
+            // No match found
+            acc.hasInvalidValues = true
+            acc.validValues.push(v) // Keep original value for error message
+            return acc
+          },
+          { validValues: [] as string[], hasInvalidValues: false },
         )
 
-        if (!valueExists) {
+        if (hasInvalidValues) {
           clipboardError(
             `Invalid ${attributeName} value: "${pasteValue}". Must be one of the available options. Paste operation cancelled.`,
           )
           return false
+        }
+
+        // Update the paste value with corrected case if any corrections were made
+        const correctedValue = validValues.join(', ')
+        if (correctedValue !== pasteValue) {
+          if (isSingleCellValue) {
+            parsedData[0].values[0] = correctedValue
+          } else {
+            const pasteRowIndex = rowIndex % parsedData.length
+            const pasteColIndex = colIndex % parsedData[pasteRowIndex].values.length
+            parsedData[pasteRowIndex].values[pasteColIndex] = correctedValue
+          }
         }
 
         return true
@@ -176,9 +264,10 @@ export const validateClipboardData = (params: {
       }
 
       // Try case-insensitive match
-      const caseInsensitiveMatch = enumOptions.find((opt) =>
-        String(opt.value).toLowerCase() === v.toLowerCase() ||
-        String(opt.label).toLowerCase() === v.toLowerCase()
+      const caseInsensitiveMatch = enumOptions.find(
+        (opt) =>
+          String(opt.value).toLowerCase() === v.toLowerCase() ||
+          String(opt.label).toLowerCase() === v.toLowerCase(),
       )
       if (caseInsensitiveMatch) {
         acc.validValues.push(String(caseInsensitiveMatch.value))
@@ -190,7 +279,7 @@ export const validateClipboardData = (params: {
       acc.validValues.push(v) // Keep original value for error message
       return acc
     },
-    { validValues: [] as string[], hasInvalidValues: false }
+    { validValues: [] as string[], hasInvalidValues: false },
   )
 
   if (hasInvalidValues) {
@@ -198,8 +287,6 @@ export const validateClipboardData = (params: {
     const displayName =
       fieldId === 'folderType' || fieldId === 'taskType'
         ? `${isFolder ? 'folder' : 'task'} type`
-        : fieldId === 'tag'
-        ? 'tag'
         : fieldId
 
     clipboardError(`Invalid ${displayName} value: "${pasteValue}". Paste operation cancelled.`)

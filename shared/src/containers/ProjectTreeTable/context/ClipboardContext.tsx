@@ -234,7 +234,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       }
       try {
         await navigator.clipboard.writeText(clipboardText)
-        console.log('Copied to clipboard successfully', clipboardText)
       } catch (error: any) {
         clipboardError(`Failed to copy to clipboard: ${error.message}`)
       }
@@ -300,8 +299,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       // Parse the clipboard text
       const parsedData = parseClipboardText(clipboardText)
       if (!parsedData.length) return
-
-      console.log('Clipboard data parsed:', parsedData)
 
       // Determine if we have a single value in the clipboard (one row, one column)
       const isSingleCellValue = parsedData.length === 1 && parsedData[0].values.length === 1
@@ -516,24 +513,12 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               pasteValue =
                 clipboardRow.values[clipboardColIndex] ||
                 clipboardRow.values[clipboardColIndex % clipboardRow.values.length]
-              console.log(
-                `Pasting (hidden columns detected) to column "${colId}" (visible index ${colIndex}, clipboard index ${clipboardColIndex}):`,
-                pasteValue,
-                'from clipboard values:',
-                clipboardRow.values,
-                'original columns:',
-                originalCopiedColumns,
-              )
+              // Pasting value from hidden columns detection
             } else {
               // Normal case: map clipboard column index using modulo
               const pasteColIndex = colIndex % clipboardRow.values.length
               pasteValue = clipboardRow.values[pasteColIndex]
-              console.log(
-                `Pasting (normal) to column "${colId}" (index ${colIndex}, paste index ${pasteColIndex}):`,
-                pasteValue,
-                'from clipboard values:',
-                clipboardRow.values,
-              )
+              // Pasting value normally
             }
           }
 

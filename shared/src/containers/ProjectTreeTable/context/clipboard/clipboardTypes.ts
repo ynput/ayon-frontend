@@ -8,7 +8,6 @@ export const builtInFieldMappings = {
   status: 'statuses',
   folderType: 'folderTypes',
   taskType: 'taskTypes',
-  tags: 'tag',
 }
 
 export interface ColumnEnums extends BuiltInFieldOptions {
