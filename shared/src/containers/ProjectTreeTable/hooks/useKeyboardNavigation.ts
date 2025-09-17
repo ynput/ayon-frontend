@@ -124,13 +124,20 @@ export default function useKeyboardNavigation() {
         }
         case 'Enter': {
           e.preventDefault()
-          // Always open details panel for folders/tasks
-          const entity = getEntityById(rowId)
-          if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
-            setSelectedEntity({
-              entityId: rowId,
-              entityType: entity.entityType,
-            })
+          // Only open details panel for name column on folders/tasks
+          if (colId === 'name') {
+            const entity = getEntityById(rowId)
+            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
+              setSelectedEntity({
+                entityId: rowId,
+                entityType: entity.entityType,
+              })
+            }
+          } else {
+            // For all other columns, start editing the cell (if not read-only)
+            if (!isReadOnly) {
+              setEditingCellId(focusedCellId)
+            }
           }
           break
         }

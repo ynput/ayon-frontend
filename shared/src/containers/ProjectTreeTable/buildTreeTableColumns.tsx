@@ -238,7 +238,6 @@ const buildTreeTableColumns = ({
                   name: row.original.name,
                   label: row.original.label,
                   meta,
-                  type,
                   entityRowId: id,
                   columnId: column.id,
                 }}
