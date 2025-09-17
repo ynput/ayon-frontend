@@ -1,17 +1,17 @@
-import { useGetSiteInfoQuery, useGetMyProjectPermissionsQuery, AttributeModel } from '@shared/api'
+import { useGetSiteInfoQuery, AttributeModel, Permissions } from '@shared/api'
 
 export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean
 }
 
-const useAttributeFields = ({ projectName }: { projectName: string }) => {
+interface UseAttributeFieldsParams {
+  projectPermissions?: Permissions
+}
+
+const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) => {
   const { data: info, isSuccess, isFetching } = useGetSiteInfoQuery({ full: true })
   const { attributes = [] } = info || {}
 
-  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
-    { projectName },
-    { skip: !projectName },
-  )
   const { attrib_read, attrib_write } = projectPermissions || {}
   const { enabled: attribReadEnabled, attributes: attribReadAttributes } = attrib_read || {}
   const {

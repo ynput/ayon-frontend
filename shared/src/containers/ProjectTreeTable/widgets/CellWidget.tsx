@@ -19,6 +19,8 @@ import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectTableContext } from '../context'
 import { EnumCellValue } from './EnumCellValue'
+import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
+import { NameData } from '../../../../../src/components/RenameForm'
 
 const Cell = styled.div`
   position: absolute;
@@ -46,7 +48,7 @@ const Cell = styled.div`
 // use this class to trigger the editing mode on a single click
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
-type WidgetAttributeData = { type: AttributeData['type'] | 'links' }
+type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' }
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -73,6 +75,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
     date?: Partial<DateWidgetProps>
     boolean?: Partial<BooleanWidgetProps>
   }
+  entityType?: string
 }
 
 export interface WidgetBaseProps {
@@ -95,6 +98,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   enableCustomValues,
   folderId,
   onChange,
+  entityType,
   pt,
   ...props
 }) => {
@@ -174,6 +178,17 @@ export const CellWidget: FC<EditorCellProps> = ({
           : undefined
         const color = firstSelectedOption?.color
         return <CollapsedWidget color={color} />
+      }
+      case type === 'name': {
+        return (
+          <NameWidget
+            value={value as CellValue}
+            valueData={valueData as NameData}
+            cellId={cellId}
+            entityType={entityType || ''}
+            {...sharedProps}
+          />
+        )
       }
 
       case type === 'links': {

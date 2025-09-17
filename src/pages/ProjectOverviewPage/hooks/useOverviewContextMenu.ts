@@ -151,6 +151,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   const contextMenuItems: ContextMenuItemConstructors = [
     'copy-paste',
     'show-details',
+    'rename',
     'open-viewer',
     'expand-collapse',
     menuItemsAddToList(),
