@@ -70,7 +70,7 @@ const RenameForm: React.FC<InlineEditingWidgetProps> = ({
 }) => {
   const [label, setLabel] = useState(initialLabel)
   const [name, setName] = useState(initialName)
-  const { setEditingCellId } = useCellEditing()
+  const { setEditingCellId, updateEntities } = useCellEditing()
   const labelInputRef = useRef<HTMLInputElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
@@ -111,30 +111,24 @@ const RenameForm: React.FC<InlineEditingWidgetProps> = ({
         if (name !== initialName && canEditName) {
           const finalName = name?.trim() || checkName(label.trim().replace(/ /g, '_')).toLowerCase()
           promises.push(
-            meta?.updateEntities?.(
-              {
-                field: 'name',
-                value: finalName,
-                type: entityType as string,
-                rowId: entityRowId as string,
-              },
-              { selection: meta?.selection },
-            ),
+            meta?.updateEntities?.({
+              field: 'name',
+              value: finalName,
+              type: entityType as string,
+              rowId: entityRowId as string,
+            }),
           )
         }
 
         if (label !== initialLabel && canEditLabel) {
           const finalLabel = label.trim()
           promises.push(
-            meta?.updateEntities?.(
-              {
-                field: 'label',
-                value: finalLabel,
-                type: entityType as string,
-                rowId: entityRowId as string,
-              },
-              { selection: meta?.selection },
-            ),
+            meta?.updateEntities?.({
+              field: 'label',
+              value: finalLabel,
+              type: entityType as string,
+              rowId: entityRowId as string,
+            }),
           )
         }
 
@@ -158,6 +152,8 @@ const RenameForm: React.FC<InlineEditingWidgetProps> = ({
     onClose,
     canEditName,
     canEditLabel,
+    updateEntities,
+    entityType,
   ])
 
   const handleCancel = useCallback(() => {

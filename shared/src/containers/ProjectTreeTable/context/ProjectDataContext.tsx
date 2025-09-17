@@ -55,20 +55,31 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     writableFields,
     isSuccess: isSuccessAttribs,
     isFetching: isFetchingAttribs,
-  } = useAttributeFields({ projectName })
+  } = useAttributeFields({ projectName, projectPermissions })
 
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
-
   // Calculate individual permissions
   const canEditName = useMemo((): boolean => {
-    if (!attrib_write?.fields) return false
+    if (!attrib_write) return false
+    // Check fields array for entity field permissions (name/label)
+    if (!attrib_write.fields || attrib_write.fields.length === 0) {
+      // If no fields specified, check if this is admin (empty attributes = unrestricted)
+      if (!attrib_write.attributes || attrib_write.attributes.length === 0) return true
+      return false // Has other attributes but no field permissions
+    }
     return attrib_write.fields.includes('name')
   }, [attrib_write])
 
   const canEditLabel = useMemo((): boolean => {
-    if (!attrib_write?.fields) return false
+    if (!attrib_write) return false
+    // Check fields array for entity field permissions (name/label)
+    if (!attrib_write.fields || attrib_write.fields.length === 0) {
+      // If no fields specified, check if this is admin (empty attributes = unrestricted)
+      if (!attrib_write.attributes || attrib_write.attributes.length === 0) return true
+      return false // Has other attributes but no field permissions
+    }
     return attrib_write.fields.includes('label')
   }, [attrib_write])
 
