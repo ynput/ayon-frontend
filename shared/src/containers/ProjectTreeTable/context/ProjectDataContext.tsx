@@ -24,6 +24,8 @@ export interface ProjectDataContextProps {
   writableFields?: string[]
   // Permissions
   canRename: boolean
+  canEditName: boolean
+  canEditLabel: boolean
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
@@ -59,12 +61,21 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
 
-  // Calculate rename permissions
-  const canRename = useMemo((): boolean => {
+  // Calculate individual permissions
+  const canEditName = useMemo((): boolean => {
     if (!attrib_write?.fields) return false
-
-    return attrib_write.fields.includes('name') || attrib_write.fields.includes('label')
+    return attrib_write.fields.includes('name')
   }, [attrib_write])
+
+  const canEditLabel = useMemo((): boolean => {
+    if (!attrib_write?.fields) return false
+    return attrib_write.fields.includes('label')
+  }, [attrib_write])
+
+  // Calculate combined rename permission
+  const canRename = useMemo((): boolean => {
+    return canEditName || canEditLabel
+  }, [canEditName, canEditLabel])
 
   const isInitialized =
     isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
@@ -79,6 +90,8 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       attribFields,
       writableFields,
       canRename,
+      canEditName,
+      canEditLabel,
     }),
     [
       isInitialized,
@@ -90,6 +103,8 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       attribFields,
       writableFields,
       canRename,
+      canEditName,
+      canEditLabel,
     ],
   )
 

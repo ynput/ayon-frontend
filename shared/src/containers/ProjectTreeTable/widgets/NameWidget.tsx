@@ -2,6 +2,7 @@ import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDi
 import { FC } from 'react'
 import { CellValue, WidgetBaseProps } from './CellWidget'
 import RenameForm, { NameData } from '../../../../../src/components/RenameForm'
+import { useProjectDataContext } from '../context'
 
 export interface NameWidgetProps extends WidgetBaseProps {
   value?: CellValue
@@ -18,6 +19,8 @@ export const NameWidget: FC<NameWidgetProps> = ({
   onCancelEdit,
   entityType,
 }) => {
+  const { canEditName, canEditLabel } = useProjectDataContext()
+
   return (
     <>
       {isEditing && value && (
@@ -29,6 +32,8 @@ export const NameWidget: FC<NameWidgetProps> = ({
             onClose={onCancelEdit}
             entityType={entityType}
             valueData={valueData}
+            canEditName={canEditName}
+            canEditLabel={canEditLabel}
           />
         </CellEditingDialog>
       )}
