@@ -5,6 +5,7 @@ import { getCellId, parseCellId } from '../utils/cellUtils'
 import { useClipboard } from '../context/ClipboardContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectDataContext } from '../context/ProjectDataContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
 import { ProjectTableAttribute, TableRow } from '../types'
@@ -78,6 +79,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     powerpack,
     onOpenPlayer,
   } = useProjectTableContext()
+  const { canRename } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history, setEditingCellId } = useCellEditing()
@@ -293,6 +295,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       cell.columnId !== 'name' ||
       cell.isGroup ||
       (cell.entityType !== 'folder' && cell.entityType !== 'task'),
+    disabled: !canRename,
   })
 
   const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {

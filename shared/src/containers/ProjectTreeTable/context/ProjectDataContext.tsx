@@ -1,5 +1,9 @@
 import { createContext, ReactNode, useContext, useMemo } from 'react'
-import { useGetUsersAssigneeQuery, useGetProjectQuery } from '@shared/api'
+import {
+  useGetUsersAssigneeQuery,
+  useGetProjectQuery,
+  useGetMyProjectPermissionsQuery,
+} from '@shared/api'
 import type { ProjectModel } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 
@@ -18,6 +22,8 @@ export interface ProjectDataContextProps {
   // Attributes
   attribFields: ProjectTableAttribute[]
   writableFields?: string[]
+  // Permissions
+  canRename: boolean
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
@@ -35,6 +41,13 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     isFetching: isFetchingProject,
   } = useGetProjectQuery({ projectName }, { skip: !projectName })
 
+  // GET PERMISSIONS
+  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+  const { attrib_write } = projectPermissions || {}
+
   const {
     attribFields,
     writableFields,
@@ -45,6 +58,13 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
+
+  // Calculate rename permissions
+  const canRename = useMemo((): boolean => {
+    if (!attrib_write?.fields) return false
+
+    return attrib_write.fields.includes('name') || attrib_write.fields.includes('label')
+  }, [attrib_write])
 
   const isInitialized =
     isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
@@ -58,6 +78,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       users,
       attribFields,
       writableFields,
+      canRename,
     }),
     [
       isInitialized,
@@ -68,6 +89,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       users,
       attribFields,
       writableFields,
+      canRename,
     ],
   )
 
