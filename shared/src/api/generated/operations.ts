@@ -33,6 +33,24 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    backgroundOperations: build.mutation<
+      BackgroundOperationsApiResponse,
+      BackgroundOperationsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/operations/background`,
+        method: 'POST',
+        body: queryArg.operationsRequestModel,
+      }),
+    }),
+    getBackgroundOperationsStatus: build.query<
+      GetBackgroundOperationsStatusApiResponse,
+      GetBackgroundOperationsStatusApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/operations/background/${queryArg.taskId}`,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -45,16 +63,24 @@ export type ActivitiesOperationsApiResponse =
   /** status 200 Successful Response */ ActivityOperationsResponseModel
 export type ActivitiesOperationsApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   activityOperationsRequestModel: ActivityOperationsRequestModel
 }
 export type OperationsApiResponse = /** status 200 Successful Response */ OperationsResponseModel
 export type OperationsApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   operationsRequestModel: OperationsRequestModel
+}
+export type BackgroundOperationsApiResponse =
+  /** status 200 Successful Response */ BackgroundOperationsResponseModel
+export type BackgroundOperationsApiArg = {
+  projectName: string
+  operationsRequestModel: OperationsRequestModel
+}
+export type GetBackgroundOperationsStatusApiResponse =
+  /** status 200 Successful Response */ BackgroundOperationsResponseModel
+export type GetBackgroundOperationsStatusApiArg = {
+  taskId: string
+  projectName: string
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -154,4 +180,9 @@ export type OperationsRequestModel = {
   canFail?: boolean
   waitForEvents?: boolean
   raiseOnError?: boolean
+}
+export type BackgroundOperationsResponseModel = {
+  id: string
+  status?: 'pending' | 'in_progress' | 'completed'
+  result?: OperationsResponseModel
 }

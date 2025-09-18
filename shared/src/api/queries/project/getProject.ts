@@ -98,6 +98,7 @@ export const {
   useGetProjectAnatomyQuery,
   useGetProjectAttribsQuery,
   useGetTasksFoldersQuery,
+  useGetProductTypesQuery,
 } = getProjectApi
 
 export default getProjectApi

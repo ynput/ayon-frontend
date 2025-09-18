@@ -225,7 +225,11 @@ export type AttributeModel = {
   data: AttributeData
 }
 export type SsoOption = {
+  /** Unique name of the SSO provider */
   name: string
+  /** If True, the provider will not be shown in the UI */
+  hidden?: boolean
+  /** Nice human-readable title of the provider */
   title?: string
   icon?: string
   color?: string
