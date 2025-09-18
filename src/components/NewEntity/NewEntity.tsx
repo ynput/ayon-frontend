@@ -1,6 +1,7 @@
 import React, { useState, useRef, KeyboardEvent } from 'react'
 import { capitalize, isEmpty } from 'lodash'
 import {
+  InputText,
   SaveButton,
   Spacer,
   Toolbar,
@@ -11,7 +12,8 @@ import {
   InputSwitch,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import checkName from '@helpers/checkName'
+import TypeEditor from './TypeEditor'
+import { checkName } from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
   useSelectionCellsContext,
@@ -24,7 +26,17 @@ import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@context/SlicerContext'
-import NewEntityForm from '@components/NewEntity/NewEntityForm.tsx'
+
+const ContentStyled = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+  form {
+    input:first-child {
+      margin-right: 8px;
+    }
+  }
+`
 
 const StyledCreateButton = styled(Dropdown)`
   overflow: visible;
@@ -139,7 +151,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
   //   build out form state
-  const initData: EntityForm = { label: '', subType: '', name: '' }
+  const initData: EntityForm = { label: '', subType: '' }
 
   //   format title
   const getDialogTitle = () => {
@@ -199,10 +211,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       }, 100)
     } else if (id === 'label') {
       // Update name based on the label (sanitizing it)
-      newState.label = value
-      newState.name = checkName(value)
-    } else if (id === 'name') {
-      newState.name = checkName(value)
+      newState.label = checkName(value)
     }
 
     setEntityForm(newState)
@@ -410,16 +419,29 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
               folders={projectInfo?.folderTypes || []}
             />
           ) : (
-            <NewEntityForm
-              handleChange={handleChange}
-              entityForm={entityForm}
-              typeOptions={typeOptions}
-              typeSelectRef={typeSelectRef}
-              labelRef={labelRef}
-              setNameFocused={setNameFocused}
-              handleTypeSelectFocus={handleTypeSelectFocus}
-              handleKeyDown={handleKeyDown}
-            />
+            <ContentStyled>
+              <TypeEditor
+                value={[entityForm.subType]}
+                onChange={(v: string) => handleChange(v, 'subType')}
+                options={typeOptions}
+                style={{ width: 160 }}
+                ref={typeSelectRef}
+                onFocus={handleTypeSelectFocus}
+                onClick={() => setNameFocused(false)}
+              />
+              <InputText
+                value={entityForm.label}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleChange(e.target.value, 'label')
+                }
+                ref={labelRef}
+                onFocus={() => setNameFocused(true)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+                  handleKeyDown(e as unknown as KeyboardEvent, true)
+                }
+                style={{ flex: 1 }}
+              />
+            </ContentStyled>
           )}
         </Dialog>
       )}

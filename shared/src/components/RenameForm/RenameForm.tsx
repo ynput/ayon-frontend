@@ -4,7 +4,7 @@ import { TableRow, useCellEditing } from '@shared/containers'
 import { theme } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { TableMeta } from '@tanstack/react-table'
-import checkName from '@helpers/checkName'
+import { checkName } from '@shared/util'
 
 const EditingContainer = styled.div`
   background: var(--md-sys-color-surface-container-lowest);
@@ -47,7 +47,7 @@ export type NameData = {
   entityRowId: string | undefined
 }
 
-interface InlineEditingWidgetProps {
+export interface InlineEditingWidgetProps {
   cellId: string
   entityType: string
   initialName?: string
@@ -58,7 +58,7 @@ interface InlineEditingWidgetProps {
   canEditLabel?: boolean
 }
 
-const RenameForm: React.FC<InlineEditingWidgetProps> = ({
+export const RenameForm: React.FC<InlineEditingWidgetProps> = ({
   cellId,
   entityType,
   initialName,
@@ -268,4 +268,3 @@ const RenameForm: React.FC<InlineEditingWidgetProps> = ({
     </EditingContainer>
   )
 }
-export default RenameForm

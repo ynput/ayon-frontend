@@ -1,7 +1,7 @@
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
 import { CellValue, WidgetBaseProps } from './CellWidget'
-import RenameForm, { NameData } from '../../../../../src/components/RenameForm'
+import { type NameData, RenameForm } from '@shared/components/RenameForm'
 import { useProjectDataContext } from '../context'
 
 export interface NameWidgetProps extends WidgetBaseProps {

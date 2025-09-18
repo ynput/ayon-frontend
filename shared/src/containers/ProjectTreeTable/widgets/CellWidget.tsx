@@ -20,7 +20,7 @@ import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectTableContext } from '../context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
-import { NameData } from '../../../../../src/components/RenameForm'
+import { NameData } from '@shared/components/RenameForm'
 
 const Cell = styled.div`
   position: absolute;
