@@ -13,7 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
-import checkName from '@helpers/checkName'
+import { checkName } from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
   useSelectionCellsContext,
