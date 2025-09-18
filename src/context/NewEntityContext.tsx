@@ -20,6 +20,7 @@ export type NewEntityType = 'folder' | 'task'
 export interface EntityForm {
   label: string
   subType: string
+  name: string
 }
 
 interface SequenceForm {
@@ -65,7 +66,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
   const [entityType, setEntityType] = useState<NewEntityType | null>(null)
 
-  const initData: EntityForm = { label: '', subType: '' }
+  const initData: EntityForm = { label: '', subType: '', name: '' }
   const [entityForm, setEntityForm] = useState<EntityForm>(initData)
   const [sequenceForm, setSequenceForm] = useState<SequenceForm>({
     active: false,
@@ -408,6 +409,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     const initData = {
       subType: firstName,
       label: generateLabel(type, firstName, projectInfo),
+      name: generateLabel(type, firstName, projectInfo),
     }
 
     console.log(config)
