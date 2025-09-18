@@ -86,7 +86,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         />
       )
 
-    case !!field.data.enum?.length: {
+    case !!field.data.enum: {
       const isListType = type.includes('list')
       // Determine the value array based on type and state
       let valueArray = []
@@ -102,10 +102,23 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         valueArray = [displayValue]
       }
 
+      // Add "None" option if allowNone is enabled and current value exists
+      let optionsWithNone = field.data.enum || []
+      if (field.allowNone && !!valueArray.length && !isListType) {
+        // Check if current field has a value (for single value fields)
+        const hasCurrentValue = displayValue && displayValue !== ''
+        if (hasCurrentValue) {
+          optionsWithNone = [
+            { value: '', label: `No ${field.data.title || field.name}` },
+            ...optionsWithNone,
+          ]
+        }
+      }
+
       return (
         <StyledEnumWidget
           value={valueArray}
-          options={field.data.enum || []}
+          options={optionsWithNone}
           type={type}
           pt={{
             template: {
@@ -117,6 +130,9 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           onClose={onCancelEdit}
           align="right"
           isReadOnly={isReadOnly}
+          enableCustomValues={field.enableCustomValues ?? false}
+          search={field.enableSearch ?? false}
+          sortBySelected={!optionsWithNone}
           {...widgetCommonProps}
         />
       )

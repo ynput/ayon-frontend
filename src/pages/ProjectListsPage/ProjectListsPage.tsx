@@ -7,7 +7,7 @@ import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
-import { ListsDataProvider } from './context/ListsDataContext'
+import { ListsDataProvider, useListsDataContext } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
@@ -59,6 +59,7 @@ import {
 } from '@dnd-kit/core'
 import { useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
+import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -104,6 +105,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     onUpdateColumns,
     ...props
   } = useListItemsDataContext()
+  const { listsData } = useListsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
 
@@ -255,7 +257,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
   }
 
   // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  const shouldShowEntityDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || !!selectedList
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -317,7 +320,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={shouldShowDetailsPanel ? 4 : 0}
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
@@ -335,10 +337,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         minWidth: 300,
                       }}
                     >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
+                      {shouldShowEntityDetailsPanel ? (
+                        <ProjectOverviewDetailsPanel
+                          projectInfo={projectInfo}
+                          projectName={projectName}
+                        />
+                      ) : selectedList ? (
+                        <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
+                      ) : null}
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

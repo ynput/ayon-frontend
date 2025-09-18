@@ -7,9 +7,11 @@ import { RowExpander } from '@shared/containers/SimpleTable/SimpleTableRowTempla
 export interface ListRowProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
+  iconFilled?: boolean
   depth?: number
   count: number | string
   disabled?: boolean
+  inactive?: boolean
   isRenaming?: boolean
   isTableExpandable?: boolean
   isRowExpandable?: boolean
@@ -29,8 +31,10 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
       value,
       depth = 0,
       icon,
+      iconFilled,
       count,
       disabled,
+      inactive,
       isRenaming,
       isTableExpandable,
       isRowExpandable,
@@ -59,7 +63,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
         ref={ref}
         style={{
           ...props.style,
-          paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
+          paddingLeft: `calc(${depth * 2.5}rem + 4px)`,
         }}
       >
         <RowExpander
@@ -67,8 +71,9 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
+          enableNonFolderIndent={false}
         />
-        {icon && <Icon icon={icon} />}
+        {icon && <Icon icon={icon} className={clsx({ filled: iconFilled })} />}
         {isRenaming ? (
           <InputText
             autoFocus
@@ -100,7 +105,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
         {!isRenaming && (
           <>
             <Spacer className="spacer" />
-            <Styled.ListCount>{count}</Styled.ListCount>
+            <Styled.ListCount>{inactive ? '(archived)' : count}</Styled.ListCount>
           </>
         )}
       </Styled.Cell>
