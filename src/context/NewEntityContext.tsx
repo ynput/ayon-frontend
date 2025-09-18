@@ -11,7 +11,7 @@ import {
 } from '@shared/api'
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
-import checkName from '@helpers/checkName'
+import { checkName } from '@shared/util'
 import { useSlicerContext } from './SlicerContext'
 import { isEmpty } from 'lodash'
 
