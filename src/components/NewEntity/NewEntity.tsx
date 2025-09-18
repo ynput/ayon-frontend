@@ -207,6 +207,9 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
         }
       }
 
+      // Reset manual editing flag when type changes - allow auto-generation again
+      setNameManuallyEdited(false)
+
       // Focus the label input after type selection
       setTimeout(() => {
         labelRef.current?.focus()
