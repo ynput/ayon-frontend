@@ -37,18 +37,43 @@ export const Content = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-
+  align-items: flex-start;
   gap: var(--base-gap-small);
+  overflow: hidden;
+  min-width: 0;
+
+  > div:first-child {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
 `
 
 export const Title = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--base-gap-small);
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+
+  /* Product name text that can be truncated */
+  > span:not(.date) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 100%;
+  }
 
   .date {
     /* by default hide */
     display: none;
+    flex-shrink: 2;
+    min-width: 0;
+    max-width: 50%;
   }
 `
 
@@ -66,6 +91,14 @@ export const Thumbnail = styled(ThumbnailSimple)`
   img {
     object-fit: cover;
   }
+`
+
+export const VersionName = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  min-width: 0;
 `
 
 export const Comment = styled.div`
