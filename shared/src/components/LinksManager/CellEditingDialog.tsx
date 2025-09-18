@@ -1,7 +1,6 @@
 import { FC, useRef, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
-import { LinksManager, LinksManagerProps } from '.'
-import { Container } from './LinksManager.styled'
+import { createPortal } from 'react-dom'
 
 const StyledPopUp = styled.div`
   position: fixed;
@@ -18,19 +17,18 @@ type Position = {
   showAbove?: boolean
 }
 
-export interface LinksManagerDialogProps extends LinksManagerProps {
-  disabled?: boolean
+export interface LinksManagerDialogProps {
   isEditing: boolean
   anchorId: string
   onClose?: () => void
+  children?: React.ReactNode
 }
 
-export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
-  disabled,
+export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   isEditing,
   anchorId,
   onClose,
-  ...props
+  children,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
@@ -161,7 +159,7 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
   }, [onClose, anchorElement])
 
   if (!isEditing) return null
-  return (
+  return createPortal(
     <StyledPopUp
       ref={popupRef}
       style={{
@@ -180,13 +178,8 @@ export const LinksManagerDialog: FC<LinksManagerDialogProps> = ({
         }
       }}
     >
-      {disabled ? (
-        <Container
-          style={{ color: 'var(--md-sys-color-outline)' }}
-        >{`${props.linkTypeLabel} ${props.direction} link is not of type ${props.entityType}`}</Container>
-      ) : (
-        <LinksManager {...props} onClose={onClose} />
-      )}
-    </StyledPopUp>
+      {children}
+    </StyledPopUp>,
+    document.body,
   )
 }

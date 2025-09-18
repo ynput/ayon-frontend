@@ -5,6 +5,7 @@ import { getCellId, parseCellId } from '../utils/cellUtils'
 import { useClipboard } from '../context/ClipboardContext'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectDataContext } from '../context/ProjectDataContext'
 import { useCellEditing } from '../context/CellEditingContext'
 import { InheritFromParentEntity } from './useUpdateTableData'
 import { ProjectTableAttribute, TableRow } from '../types'
@@ -33,6 +34,7 @@ export type TableCellContextData = {
 type DefaultMenuItem =
   | 'copy-paste'
   | 'show-details'
+  | 'rename'
   | 'expand-collapse'
   | 'inherit'
   | 'delete'
@@ -77,9 +79,10 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     powerpack,
     onOpenPlayer,
   } = useProjectTableContext()
+  const { canRename } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
-  const { inheritFromParent, history } = useCellEditing()
+  const { inheritFromParent, history, setEditingCellId } = useCellEditing()
 
   // update entity context
 
@@ -280,9 +283,25 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
   })
 
+  const renameItem: ContextMenuItemConstructor = (e, cell) => ({
+    label: 'Rename',
+    icon: 'titlecase',
+    shortcut: 'R',
+    command: () => {
+      const nameCellId = getCellId(cell.entityId, 'name')
+      setEditingCellId(nameCellId)
+    },
+    hidden:
+      cell.columnId !== 'name' ||
+      cell.isGroup ||
+      (cell.entityType !== 'folder' && cell.entityType !== 'task'),
+    disabled: !canRename,
+  })
+
   const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {
     ['copy-paste']: copyAndPasteItems,
     ['show-details']: showDetailsItem,
+    ['rename']: renameItem,
     ['expand-collapse']: expandCollapseChildrenItems,
     ['delete']: deleteItem,
     ['inherit']: inheritItem,
