@@ -1,0 +1,1 @@
+export { DetailsDialogWrapper } from './DetailsDialogWrapper'

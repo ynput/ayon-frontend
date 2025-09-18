@@ -2,6 +2,7 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { detailsPanelEntityTypes, useGetUsersAssigneeQuery } from '@shared/api'
 import type { ProjectModel } from '@shared/api'
 import {
@@ -16,6 +17,9 @@ import { openViewer } from '@state/viewer'
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+  selectedList?: any
+  currentListItems?: any[]
+  currentListId?: string
 }
 
 type EntitySelection = {

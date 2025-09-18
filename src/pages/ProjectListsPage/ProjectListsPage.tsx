@@ -179,42 +179,44 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     >
       <SettingsPanelProvider>
         <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
-          <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
-            <ProjectTableProvider
-              projectName={projectName}
-              attribFields={mergedAttribFields}
-              projectInfo={props.projectInfo}
-              users={props.users}
-              // @ts-ignore
-              entitiesMap={props.listItemsMap}
-              foldersMap={props.foldersMap}
-              tasksMap={props.tasksMap}
-              tableRows={props.listItemsTableData}
-              expanded={{}}
-              isInitialized={props.isInitialized}
-              showHierarchy={false}
-              isLoading={props.isLoadingAll}
-              contextMenuItems={contextMenuItems}
-              scopes={[selectedList?.entityType]}
-              playerOpen={viewerOpen}
-              onOpenPlayer={handleOpenPlayer}
-            >
-              <DetailsPanelEntityProvider>
-                <SelectionCellsProvider>
-                  <SelectedRowsProvider>
-                    <CellEditingProvider>
-                      <ProjectLists
-                        extraColumns={extraColumns}
-                        extraColumnsSettings={extraColumnsSettings}
-                        isReview={isReview}
-                        dndActiveId={dndActiveId}
-                      />
-                    </CellEditingProvider>
-                  </SelectedRowsProvider>
-                </SelectionCellsProvider>
-              </DetailsPanelEntityProvider>
-            </ProjectTableProvider>
-          </ProjectTableQueriesProvider>
+          <MoveEntityProvider>
+            <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
+              <ProjectTableProvider
+                projectName={projectName}
+                attribFields={mergedAttribFields}
+                projectInfo={props.projectInfo}
+                users={props.users}
+                // @ts-ignore
+                entitiesMap={props.listItemsMap}
+                foldersMap={props.foldersMap}
+                tasksMap={props.tasksMap}
+                tableRows={props.listItemsTableData}
+                expanded={{}}
+                isInitialized={props.isInitialized}
+                showHierarchy={false}
+                isLoading={props.isLoadingAll}
+                contextMenuItems={contextMenuItems}
+                scopes={[selectedList?.entityType]}
+                playerOpen={viewerOpen}
+                onOpenPlayer={handleOpenPlayer}
+              >
+                <DetailsPanelEntityProvider>
+                  <SelectionCellsProvider>
+                    <SelectedRowsProvider>
+                      <CellEditingProvider>
+                        <ProjectLists
+                          extraColumns={extraColumns}
+                          extraColumnsSettings={extraColumnsSettings}
+                          isReview={isReview}
+                          dndActiveId={dndActiveId}
+                        />
+                      </CellEditingProvider>
+                    </SelectedRowsProvider>
+                  </SelectionCellsProvider>
+                </DetailsPanelEntityProvider>
+              </ProjectTableProvider>
+            </ProjectTableQueriesProvider>
+          </MoveEntityProvider>
         </ColumnSettingsProvider>
       </SettingsPanelProvider>
     </DndContext>
@@ -242,7 +244,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
-  const { deleteListItemAction } = useListItemsDataContext()
+  const { deleteListItemAction, listItemsData } = useListItemsDataContext()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
@@ -338,6 +340,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       <ProjectOverviewDetailsPanel
                         projectInfo={projectInfo}
                         projectName={projectName}
+                        selectedList={selectedList}
+                        currentListItems={listItemsData}
+                        currentListId={selectedList?.id}
                       />
                     </SplitterPanel>
                   ) : (
