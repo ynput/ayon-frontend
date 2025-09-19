@@ -1,10 +1,18 @@
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-const useAddonSelection = (addons, setAddons, addonListRef, deps = []) => {
+type AddonLike = { name: string }
+type TableRef = { getTable: () => HTMLElement | null }
+
+function useAddonSelection<T extends AddonLike>(
+  addons: T[],
+  setAddons: React.Dispatch<React.SetStateAction<T[]>>,
+  addonListRef: React.RefObject<TableRef | null>,
+  deps: any[] = [],
+) {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const selectAndScrollToAddon = (addon) => {
+  const selectAndScrollToAddon = (addon?: T) => {
     if (addon) {
       const foundIndex = addons.findIndex((a) => a.name === addon.name)
       setAddons([addon])
@@ -12,8 +20,8 @@ const useAddonSelection = (addons, setAddons, addonListRef, deps = []) => {
       const tableEl = addonListRef?.current?.getTable()
 
       if (tableEl) {
-        const tbody = tableEl.querySelector('tbody')
-        const selectedRow = tbody.children[foundIndex]
+        const tbody = tableEl.querySelector('tbody') as HTMLTableSectionElement | null
+        const selectedRow = (tbody?.children?.[foundIndex] || null) as HTMLElement | null
 
         if (selectedRow) {
           selectedRow.scrollIntoView({
