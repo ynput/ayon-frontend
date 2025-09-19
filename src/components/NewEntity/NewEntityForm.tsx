@@ -34,6 +34,7 @@ const NameInput = styled(InputText)`
   width: 100px;
   max-width: 160px;
   min-height: 0;
+  height: 20px;
   border: 0;
   padding: 1px 6px;
 
