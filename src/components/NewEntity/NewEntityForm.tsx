@@ -102,7 +102,6 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
       setNameFocused(false)
     }
   }
-  console.log('input focused', nameInputFocused)
 
   return (
     <InputsContainer>
