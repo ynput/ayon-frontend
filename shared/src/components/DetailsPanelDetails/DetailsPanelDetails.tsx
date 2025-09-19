@@ -56,7 +56,17 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     entityType,
   })
 
-  const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
+  const handleChange: DetailsPanelAttributesEditorProps["onChange"] = (key, value) => {
+    if (key === 'tags') {
+      if (Array.isArray(value)) {
+        // keep as-is
+      } else if (value === null || value === undefined || value === '') {
+        value = []
+      } else {
+        value = [String(value)]
+      }
+    }
+
     if (key.startsWith('attrib.')) {
       value = {
         [key.replace('attrib.', '')]: value,

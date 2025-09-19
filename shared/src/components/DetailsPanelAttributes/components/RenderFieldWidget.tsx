@@ -76,7 +76,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           value={Boolean(displayValue)}
           {...widgetCommonProps}
           style={{ margin: 0 }}
-          onClick={() => onChange(field.name, !Boolean(displayValue))}
           isReadOnly={isReadOnly}
         />
       )

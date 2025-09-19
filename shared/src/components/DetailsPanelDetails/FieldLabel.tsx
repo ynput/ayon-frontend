@@ -1,3 +1,4 @@
+import { humanizeField } from '@shared/util'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -23,13 +24,13 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({
   data,
   showDetailedTooltip = false,
 }) => {
-  const displayTitle = data.title || name
-  const tooltipText = showDetailedTooltip 
-    ? `${data.title} (${name}) - ${data.description || 'No description available'}`
-    : data.description || data.title || name
+  const displayTitle = data.title ? humanizeField(data.title) :  humanizeField(name)
+  const tooltipText = showDetailedTooltip
+    ? `${displayTitle} (${name}) - ${data.description || 'No description available'}`
+    : data.description || displayTitle
 
   return (
-    <StyledFieldLabel 
+    <StyledFieldLabel
       title={tooltipText}
       data-tooltip={showDetailedTooltip ? tooltipText : undefined}
     >
