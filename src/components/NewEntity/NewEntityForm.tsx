@@ -3,35 +3,39 @@ import React, { KeyboardEvent, useState, useRef } from 'react'
 import styled from 'styled-components'
 import { EntityForm } from '@context/NewEntityContext.tsx'
 import { theme } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 
 export const InputLabel = styled.label`
   font-size: ${theme.labelMedium};
   color: var(--md-sys-color-outline);
 `
 const NameDisplay = styled.span`
-  font-style: italic;
+  padding: 2px 6px; // <- changed
   font-size: ${theme.bodySmall};
-  padding: 1px 6px;
-  border-radius: 4px;
-  min-width: 100px;
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
+  display: inline-flex;
+  gap: var(--base-gap-small);
+  cursor: pointer;
+
+  .icon {
+    display: none;
+    font-size: 14px;
+  }
   &:hover {
     background-color: var(--md-sys-color-surface-container-low);
+    border-radius: var(--border-radius-m);
+    .icon {
+      display: flex;
+    }
   }
 `
 
 const NameInput = styled(InputText)`
-  font-style: italic;
   font-size: ${theme.bodySmall};
   width: 100px;
   max-width: 160px;
   min-height: 0;
   border: 0;
-  padding: 0 6px;
+  padding: 1px 6px;
 
   input {
     color: var(--md-sys-color-outline);
@@ -40,7 +44,7 @@ const NameInput = styled(InputText)`
     &:focus {
       background: var(--md-sys-color-surface-container-low);
       border: none;
-      outline: 0.5px solid var(--md-sys-color-primary);
+      outline: 1px solid var(--md-sys-color-primary);
     }
   }
 `
@@ -76,11 +80,11 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
   handleKeyDown,
   labelRef,
 }) => {
-  const [writable, setWritable] = useState(true)
+  const [nameInputFocused, setNameInputFocused] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   const handleNameDisplayClick = () => {
-    setWritable(true)
+    setNameInputFocused(true)
     setNameFocused(true)
     setTimeout(() => {
       if (nameInputRef.current) {
@@ -89,6 +93,16 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
       }
     }, 0)
   }
+
+  const handleNameInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Check if the click target is outside the input
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (!relatedTarget || !nameInputRef.current?.contains(relatedTarget)) {
+      setNameInputFocused(false)
+      setNameFocused(false)
+    }
+  }
+  console.log('input focused', nameInputFocused)
 
   return (
     <InputsContainer>
@@ -105,8 +119,10 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
       />
       <NameRow>
         <InputLabel>Name</InputLabel>
-        {!writable ? (
-          <NameDisplay onClick={handleNameDisplayClick}>{entityForm.name}</NameDisplay>
+        {!nameInputFocused ? (
+          <NameDisplay onClick={handleNameDisplayClick}>
+            {entityForm.name} <Icon icon="edit" />
+          </NameDisplay>
         ) : (
           <NameInput
             ref={nameInputRef}
@@ -117,7 +133,7 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
               handleKeyDown(e as unknown as KeyboardEvent, true)
             }
-            onBlur={() => setWritable(false)}
+            onBlur={handleNameInputBlur}
             style={{ flex: 1 }}
           />
         )}
