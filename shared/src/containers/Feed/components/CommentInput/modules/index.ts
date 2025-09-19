@@ -32,13 +32,18 @@ export const quillFormats = [
   'mention',
 ]
 
-export const getModules = ({ imageUploader }) => {
+export const getModules = ({ imageUploader, disableImageUpload = false }) => {
+  const toolbar = [
+    [{ header: 2 }, 'bold', 'italic', 'link', 'code-block'],
+    [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+  ]
+  
+  if (!disableImageUpload) {
+    toolbar.push(['image'])
+  }
+  
   return {
-    toolbar: [
-      [{ header: 2 }, 'bold', 'italic', 'link', 'code-block'],
-      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-      ['image'],
-    ],
+    toolbar,
     imageUploader,
     magicUrl: true,
   }

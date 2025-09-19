@@ -245,6 +245,7 @@ export const CellWidget: FC<EditorCellProps> = ({
           <TextWidget
             value={value as string}
             isInherited={isInherited}
+            columnId={columnId}
             {...sharedProps}
             {...pt?.text}
           />
