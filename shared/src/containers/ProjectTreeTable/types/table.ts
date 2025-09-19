@@ -20,6 +20,7 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   hasReviewables?: boolean
+  hasVersions?: boolean
   links: EntityLink[]
 }
 
@@ -42,6 +43,7 @@ export type TableRow = {
   color?: string | null
   img?: string | null
   hasReviewables?: boolean
+  hasVersions?: boolean
   startContent?: JSX.Element
   assignees?: string[]
   attrib?: Record<string, any>
