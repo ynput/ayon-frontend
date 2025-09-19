@@ -9,6 +9,7 @@ import { useUpdateEntitiesMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 import getPreviousTagElement from '@helpers/getPreviousTagElement'
 import Shortcuts from '@containers/Shortcuts'
+import { getGroupByOptions } from '../DashboardTasksToolbar/KanBanGroupByOptions'
 
 const UserDashboardList = ({
   groupedTasks = {},
@@ -38,28 +39,58 @@ const UserDashboardList = ({
   // sort the groupedTasks by id alphabetically based on groupByValue sortBy
   // unless the groupByValue is status, then we keep the order of the statuses
   const sortedFields = useMemo(() => {
-    if (groupByValue[0] && groupByValue[0].id !== 'status') {
-      const asc = groupByValue[0].sortOrder
+    if (groupByValue[0]) {
+      const groupBy = groupByValue[0]
+      const asc = groupBy.sortOrder
+
+      // Check if this field should use enum order
+      const groupByOptions = getGroupByOptions(false)
+      const groupOption = groupByOptions.find((option) => option.id === groupBy.id)
+      const shouldSortByEnumOrder = groupOption?.sortByEnumOrder
+
+      // Get anatomy for enum sorting
+      let anatomy = []
+      if (shouldSortByEnumOrder) {
+        if (groupBy.id === 'priority') {
+          anatomy = priorities || []
+        } else if (groupBy.id === 'status') {
+          anatomy = statusesOptions || []
+        }
+      }
+
       // sort by id
       return [...filteredFields].sort((a, b) => {
         const hasATasksButBDoesNot = a.tasksCount === 0 && b.tasksCount > 0
         const hasBTasksButADoesNot = b.tasksCount === 0 && a.tasksCount > 0
         // If one group has tasks and the other does not, put the group without tasks at the end
-        if (asc) {
-          if (hasBTasksButADoesNot) return -1
-          if (hasATasksButBDoesNot) return 1
-          // if t
-          return a.id.localeCompare(b.id)
-        } else {
-          if (hasBTasksButADoesNot) return -1
-          if (hasATasksButBDoesNot) return 1
-          return b.id.localeCompare(a.id)
+        if (hasBTasksButADoesNot) return -1
+        if (hasATasksButBDoesNot) return 1
+
+        let aVal = a.id
+        let bVal = b.id
+
+        // Use enum order if specified
+        if (shouldSortByEnumOrder && anatomy.length > 0) {
+          const keyToMatch = groupBy.id === 'status' ? 'id' : 'value'
+          const aIndex = anatomy.findIndex((option) => option[keyToMatch] === a.id)
+          const bIndex = anatomy.findIndex((option) => option[keyToMatch] === b.id)
+          aVal = aIndex !== -1 ? aIndex : 999 // put unknown values at end
+          bVal = bIndex !== -1 ? bIndex : 999
         }
+
+        const order = asc ? -1 : 1
+        return typeof aVal === 'number'
+          ? aVal < bVal
+            ? -1 * order
+            : aVal > bVal
+            ? 1 * order
+            : 0
+          : aVal.localeCompare(bVal) * order
       })
     } else {
       return filteredFields
     }
-  }, [filteredFields, groupByValue])
+  }, [filteredFields, groupByValue, priorities, statusesOptions])
 
   const dispatch = useDispatch()
   // get all task ids in order
