@@ -71,9 +71,7 @@ export const Title = styled.div`
   .date {
     /* by default hide */
     display: none;
-    flex-shrink: 2;
-    min-width: 0;
-    max-width: 50%;
+    flex: 1;
   }
 `
 
