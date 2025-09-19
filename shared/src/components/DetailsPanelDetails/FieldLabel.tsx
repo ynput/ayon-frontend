@@ -24,16 +24,13 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({
   data,
   showDetailedTooltip = false,
 }) => {
-  const displayTitle = data.title ? humanizeField(data.title) :  humanizeField(name)
+  const displayTitle = data.title ? humanizeField(data.title) : humanizeField(name)
   const tooltipText = showDetailedTooltip
-    ? `${displayTitle} (${name}) - ${data.description || 'No description available'}`
+    ? `${displayTitle} (${name}) ${data.description ? '-' : ''} ${data.description || ''}`
     : data.description || displayTitle
 
   return (
-    <StyledFieldLabel
-      title={tooltipText}
-      data-tooltip={showDetailedTooltip ? tooltipText : undefined}
-    >
+    <StyledFieldLabel data-tooltip={showDetailedTooltip ? tooltipText : undefined}>
       {displayTitle}
     </StyledFieldLabel>
   )
