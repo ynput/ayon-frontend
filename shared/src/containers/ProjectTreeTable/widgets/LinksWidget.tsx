@@ -7,6 +7,15 @@ import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityConte
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
 
+export const sortEntityLinksByPath = (links: LinkEntity[]) => {
+  return [...links].sort((a, b) => {
+    const aPath = a.parents.join('/') + a.label
+    const bPath = b.parents.join('/') + b.label
+
+    return aPath.localeCompare(bPath)
+  })
+}
+
 export const isLinkEditable = (
   direction: 'in' | 'out',
   linkType: string,
@@ -91,11 +100,14 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
       console.log('Entity clicked:', entityId, entityType)
     }
   }
+
+  const sortedLinks = value?.links ? sortEntityLinksByPath(value.links) : []
+
   return (
     <>
       <Chips
         values={
-          value?.links?.map((v) => ({
+          sortedLinks.map((v) => ({
             label: v.label,
             tooltip: v.parents.join('/') + '/' + v.label,
           })) || []
@@ -115,7 +127,7 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             <LinksManager
               projectName={projectName}
               linkTypeLabel={value.link.label || ''}
-              links={value.links}
+              links={sortedLinks}
               direction={value.direction}
               entityId={value.entityId}
               entityType={value.entityType}
