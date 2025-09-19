@@ -224,6 +224,7 @@ export default function useBuildProjectDataTable({
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
         hasReviewables: folder.hasReviewables || false,
+        hasVersions: folder.hasVersions || false,
         links: links,
       }
 

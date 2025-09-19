@@ -15,6 +15,7 @@ import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
+import { NameWidgetData } from '@shared/components/RenameForm'
 
 const MIN_SIZE = 50
 
@@ -234,13 +235,16 @@ const buildTreeTableColumns = ({
                 className={clsx('name', { loading: row.original.isLoading })}
                 columnId={column.id}
                 value={value}
-                valueData={{
-                  name: row.original.name,
-                  label: row.original.label,
-                  meta,
-                  entityRowId: id,
-                  columnId: column.id,
-                }}
+                valueData={
+                  {
+                    name: row.original.name,
+                    label: row.original.label,
+                    meta,
+                    entityRowId: id,
+                    columnId: column.id,
+                    hasVersions: !!row.original.hasVersions,
+                  } as NameWidgetData
+                }
                 entityType={type}
                 attributeData={{ type: 'name' }}
                 isCollapsed={!!row.original.childOnlyMatch}

@@ -79,7 +79,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     powerpack,
     onOpenPlayer,
   } = useProjectTableContext()
-  const { canRename } = useProjectDataContext()
+  const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history, setEditingCellId } = useCellEditing()
@@ -295,7 +295,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       cell.columnId !== 'name' ||
       cell.isGroup ||
       (cell.entityType !== 'folder' && cell.entityType !== 'task'),
-    disabled: !canRename,
+    disabled: !(canWriteNamePermission || canWriteLabelPermission),
   })
 
   const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {
@@ -368,9 +368,8 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
 
     // Remove duplicates based on entityId - prioritize full row selection over individual cells
     const filteredSelectedCellsData = [
-      ...new Map(selectedCellsData.map(e => [e.entityId, e])).values()
-    ];
-
+      ...new Map(selectedCellsData.map((e) => [e.entityId, e])).values(),
+    ]
 
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []
