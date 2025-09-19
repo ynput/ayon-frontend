@@ -13,6 +13,7 @@ const NameDisplay = styled.span`
   padding: 2px 6px; // <- changed
   font-size: ${theme.bodySmall};
   display: inline-flex;
+  height: 20px;
   gap: var(--base-gap-small);
   cursor: pointer;
 
