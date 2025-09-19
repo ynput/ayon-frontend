@@ -105,36 +105,30 @@ export const RenameForm: React.FC<InlineEditingWidgetProps> = ({
       try {
         const { meta, entityRowId } = valueData || {}
 
-        const promises = []
-
         // Use rowId prop as fallback if entityRowId is undefined
 
         if (name !== initialName && !nameDisabled) {
           const finalName = name?.trim() || checkName(label.trim().replace(/ /g, '_')).toLowerCase()
-          promises.push(
-            meta?.updateEntities?.({
-              field: 'name',
-              value: finalName,
-              type: entityType as string,
-              rowId: entityRowId as string,
-            }),
-          )
+          // we must await to ensure we do not have server deadlock when multiple requests are made at the same time
+          // HACK: we should ideally batch these updates in updateEntities function, but this is a quick fix
+          await meta?.updateEntities?.({
+            field: 'name',
+            value: finalName,
+            type: entityType as string,
+            rowId: entityRowId as string,
+          })
         }
 
         if (label !== initialLabel && !labelDisabled) {
           const finalLabel = label.trim()
-          promises.push(
-            meta?.updateEntities?.({
-              field: 'label',
-              value: finalLabel,
-              type: entityType as string,
-              rowId: entityRowId as string,
-            }),
-          )
-        }
 
-        // Wait for all updates to complete
-        await Promise.all(promises)
+          meta?.updateEntities?.({
+            field: 'label',
+            value: finalLabel,
+            type: entityType as string,
+            rowId: entityRowId as string,
+          })
+        }
       } catch (error) {
         console.error('Failed to update entity:', error)
       }
