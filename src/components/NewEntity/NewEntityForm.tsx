@@ -83,11 +83,13 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
   labelRef,
 }) => {
   const [nameInputFocused, setNameInputFocused] = useState(false)
+  const [originalName, setOriginalName] = useState<string | undefined>(undefined)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   const handleNameDisplayClick = () => {
     setNameInputFocused(true)
     setNameFocused(true)
+    setOriginalName(entityForm.name) // Store original name before editing
     setTimeout(() => {
       if (nameInputRef.current) {
         nameInputRef.current.focus()
@@ -102,6 +104,53 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
     if (!relatedTarget || !nameInputRef.current?.contains(relatedTarget)) {
       setNameInputFocused(false)
       setNameFocused(false)
+      setOriginalName(undefined) // Clear original name on blur
+    }
+  }
+
+  const handleLabelKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // navigate down to name input using the down arrow or tab
+    if ((e.key === 'ArrowDown' && !e.altKey) || e.key === 'Tab') {
+      e.preventDefault()
+      handleNameDisplayClick()
+      return
+    }
+
+    // submit the form on enter
+    handleKeyDown(e as unknown as KeyboardEvent, true)
+  }
+
+  const handleNameKeydown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === 'Escape' || (e.key === 'ArrowUp' && !e.altKey)) {
+      // prevent propagation to avoid closing the dialog
+      e.stopPropagation()
+
+      // of closed then open
+      if (e.key === 'Enter' && !nameInputFocused) {
+        return handleNameDisplayClick()
+      }
+
+      // If Escape, revert to original name
+      if (e.key === 'Escape') {
+        if (originalName !== undefined) {
+          handleChange(originalName, 'name')
+        }
+      }
+
+      // close the input
+      setNameInputFocused(false)
+      setNameFocused(false)
+      setOriginalName(undefined)
+
+      setTimeout(() => {
+        // focus back to label input
+        labelRef.current?.focus()
+        // selection at the end of the input
+        const length = entityForm.label.length || 0
+        labelRef.current?.setSelectionRange(length, length)
+      }, 0)
+
+      return
     }
   }
 
@@ -113,15 +162,13 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange(e.target.value, 'label')}
         ref={labelRef}
         onFocus={() => setNameFocused(true)}
-        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
-          handleKeyDown(e as unknown as KeyboardEvent, true)
-        }
+        onKeyDown={handleLabelKeydown}
         style={{ flex: 1 }}
       />
-      <NameRow>
+      <NameRow onKeyDown={handleNameKeydown}>
         <InputLabel>Name</InputLabel>
         {!nameInputFocused ? (
-          <NameDisplay onClick={handleNameDisplayClick}>
+          <NameDisplay onClick={handleNameDisplayClick} tabIndex={0}>
             {entityForm.name} <Icon icon="edit" />
           </NameDisplay>
         ) : (
@@ -130,9 +177,6 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
             value={entityForm.name}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               handleChange(e.target.value, 'name')
-            }
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
-              handleKeyDown(e as unknown as KeyboardEvent, true)
             }
             onBlur={handleNameInputBlur}
             style={{ flex: 1 }}
