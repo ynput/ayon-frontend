@@ -11,6 +11,7 @@ interface UseEntityFieldsProps {
   statuses: any[]
   tags: any[]
   entityType?: string
+  folderHasVersions?: boolean
 }
 
 export const useEntityFields = ({
@@ -20,6 +21,7 @@ export const useEntityFields = ({
   statuses,
   tags,
   entityType,
+  folderHasVersions,
 }: UseEntityFieldsProps) => {
   const fields: AttributeField[] = useMemo(() => {
     const customFieldsData: AttributeField[] = [
@@ -95,16 +97,31 @@ export const useEntityFields = ({
       },
     ]
 
+    // Disable changing folderType for folders with published versions
+    const customFieldsWithFolderLocks: AttributeField[] = customFieldsData.map((field) =>
+      field.name === 'folderType' && entityType === 'folder' && folderHasVersions
+        ? {
+            ...field,
+            readonly: true,
+            data: {
+              ...field.data,
+              description:
+                'Folder type is locked because the folder has published versions.',
+            },
+          }
+        : field,
+    )
+
     // Mark fields readonly for versions (only tags and status remain editable)
     const customFieldsWithReadonly: AttributeField[] = (entityType === 'version'
       ? [
-          ...customFieldsData.map((field) =>
+          ...customFieldsWithFolderLocks.map((field) =>
             ['tags', 'status'].includes(field.name)
               ? field
               : { ...field, readonly: true },
           ),
         ]
-      : customFieldsData)
+      : customFieldsWithFolderLocks)
 
     const apiAttributesData: AttributeField[] = entityType
       ? attributes
@@ -112,7 +129,7 @@ export const useEntityFields = ({
           .map((attr) => ({
             name: 'attrib.' + attr.name,
             data: attr.data,
-            ...(entityType === 'version' ? { readonly: true } : {}),
+            ...(entityType === 'version' && attr.builtin ? { readonly: true } : {}),
           }))
       : []
 
@@ -137,12 +154,10 @@ export const useEntityFields = ({
     })
 
     return sortedFieldsData
-  }, [attributes, folderTypes, taskTypes, statuses, tags, entityType])
+  }, [attributes, folderTypes, taskTypes, statuses, tags, entityType, folderHasVersions])
 
-  const editableFields = fields.filter(
-    (field) =>
-      attributeFields.includes(field.name as keyof EntityForm) ||
-      field.name.startsWith('attrib.'),
+  const editableFields = fields.filter((field) =>
+    attributeFields.includes(field.name as keyof EntityForm) || field.name.startsWith('attrib.'),
   )
 
   const readOnlyFieldsData = fields.filter((field) =>
