@@ -35,6 +35,7 @@ export type TableRow = {
   tags?: string[]
   status?: string
   updatedAt?: string
+  createdAt?: string
   parentId?: string
   folderId: string | null // all entities have a folder except root folders which will be null
   parents?: string[]
