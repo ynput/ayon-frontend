@@ -78,13 +78,6 @@ const fields = [
     },
   },
   {
-    name: 'isGuest',
-    label: 'Guest',
-    data: {
-      type: 'boolean',
-    },
-  },
-  {
     name: 'isDeveloper',
     label: 'Developer',
     data: {

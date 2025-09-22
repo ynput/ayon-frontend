@@ -186,7 +186,7 @@ const Header = () => {
           </DeveloperSwitch>
         )}
 
-        {!user.data.isExternal && (
+        {!user.data.isGuest && (
           <>
             <ChatBubbleButton />
 
