@@ -3,7 +3,7 @@
 import { EntityListModel } from '@shared/api'
 import { format } from 'date-fns'
 import { FC } from 'react'
-import { DetailsMetaData } from '../DetailsMetaData'
+import { DetailsSection } from '../DetailsPanelDetails'
 
 interface ListMetaDataProps {
   list?: EntityListModel
@@ -28,5 +28,11 @@ export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
     ...listData,
   }
 
-  return <DetailsMetaData data={metaData} isLoading={isLoading} title={'Details'} />
+  const fields = Object.keys(metaData).map((key) => ({
+    name: key,
+    data: { type: 'string' as 'string' },
+    hidden: false,
+  }))
+
+  return <DetailsSection form={metaData} fields={fields} isLoading={!!isLoading} />
 }

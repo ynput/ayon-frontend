@@ -152,7 +152,13 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   }
 
   return (
-    <BorderedSection title="Attributes" autoHeight showHeader withPadding>
+    <BorderedSection
+      title="Attributes"
+      autoHeight
+      showHeader
+      withPadding
+      pt={{ content: { style: { minHeight: 'unset' } } }}
+    >
       {fields
         .filter((f) => !f.hidden)
         .map((field) => {
