@@ -30,9 +30,8 @@ export interface ListsContextType {
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog
-  infoDialogData: null | EntityList
-  setInfoDialogData: (list: EntityList | null) => void
-  openDetailsPanel: (id: string) => void
+  listDetailsOpen: boolean
+  setListDetailsOpen: (open: boolean) => void
   // Lists filters dialog
   listsFiltersOpen: boolean
   setListsFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>

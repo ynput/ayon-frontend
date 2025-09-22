@@ -12,8 +12,9 @@ import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
-import ListsContext, { ListsContextType } from './ListsContext'
+import ListsContext from './ListsContext'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import { useLocalStorage } from '@shared/hooks'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -95,18 +96,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
 
-  const [infoDialogData, setInfoDialogData] = useState<ListsContextType['infoDialogData']>(null)
-
-  const openDetailsPanel = useCallback(
-    (id: string) => {
-      // get the list from the map
-      const list = listsMap.get(id)
-      if (list) {
-        setInfoDialogData(list)
-      }
-    },
-    [listsMap, setInfoDialogData],
-  )
+  const [listDetailsOpen, setListDetailsOpen] = useLocalStorage<boolean>('list-details-open', true)
 
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()
@@ -172,9 +162,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       submitRenameList,
       deleteLists,
       // info dialog
-      infoDialogData,
-      setInfoDialogData,
-      openDetailsPanel,
+      listDetailsOpen,
+      setListDetailsOpen,
       // lists filters dialog
       listsFiltersOpen,
       setListsFiltersOpen,
@@ -198,9 +187,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     renamingList,
     submitRenameList,
     deleteLists,
-    infoDialogData,
-    setInfoDialogData,
-    openDetailsPanel,
+    listDetailsOpen,
+    setListDetailsOpen,
     listsFiltersOpen,
     setListsFiltersOpen,
     isReview,

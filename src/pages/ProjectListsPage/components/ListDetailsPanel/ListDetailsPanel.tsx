@@ -9,6 +9,7 @@ import { useQueryArgumentChangeLoading } from '@hooks/useQueryArgumentChangeLoad
 import { useListsDataContext } from '../../context/ListsDataContext'
 import clsx from 'clsx'
 import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
+import { useListsContext } from '@pages/ProjectListsPage/context'
 
 interface ListDetailsPanelProps {
   listId: string
@@ -24,6 +25,8 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   // Get lists data for category enum
   const { categoryEnum } = useListsDataContext()
+
+  const { setListDetailsOpen } = useListsContext()
 
   // Use custom hook to track loading state only when arguments change
   const isLoadingOnArgChange = useQueryArgumentChangeLoading({ listId, projectName }, isFetching)
@@ -48,8 +51,8 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
           </span>
         </Styled.Titles>
         <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} />
+        <Styled.CloseButton icon="close" variant="text" onClick={() => setListDetailsOpen(false)} />
       </Styled.Header>
-      {/* <Styled.Section className="border"></Styled.Section> */}
       <Styled.Scrollable>
         {selectedTab === 'details' && (
           <>
