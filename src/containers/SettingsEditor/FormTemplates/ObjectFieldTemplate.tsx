@@ -96,6 +96,11 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       }
     }
 
+    console.log(props.schema)
+    if (props.schema.widget === 'permissions'){
+      return <b>Magic permissions widget</b>
+    }
+
     if (props.schema.layout === 'expanded') {
       let nameField = null
       let otherFields = []
