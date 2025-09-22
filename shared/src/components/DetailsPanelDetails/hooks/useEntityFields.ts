@@ -95,12 +95,24 @@ export const useEntityFields = ({
       },
     ]
 
+    // Mark fields readonly for versions (only tags and status remain editable)
+    const customFieldsWithReadonly: AttributeField[] = (entityType === 'version'
+      ? [
+          ...customFieldsData.map((field) =>
+            ['tags', 'status'].includes(field.name)
+              ? field
+              : { ...field, readonly: true },
+          ),
+        ]
+      : customFieldsData)
+
     const apiAttributesData: AttributeField[] = entityType
       ? attributes
           .filter((attr) => attr.scope?.includes(entityType) && attr.name !== 'description')
           .map((attr) => ({
             name: 'attrib.' + attr.name,
             data: attr.data,
+            ...(entityType === 'version' ? { readonly: true } : {}),
           }))
       : []
 
@@ -113,7 +125,7 @@ export const useEntityFields = ({
       },
     }))
 
-    const allFieldsData = [...customFieldsData, ...apiAttributesData, ...readOnlyFieldsData]
+    const allFieldsData = [...customFieldsWithReadonly, ...apiAttributesData, ...readOnlyFieldsData]
     const sortToTop = ['path', 'name']
     const sortedFieldsData = [...allFieldsData].sort((a, b) => {
       const aIndex = sortToTop.indexOf(a.name)
