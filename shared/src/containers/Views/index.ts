@@ -18,6 +18,7 @@ export * from './hooks'
 export * from './hooks/pages/useTaskProgressViewSettings'
 export * from './hooks/pages/useOverviewViewSettings'
 export * from './hooks/pages/useListsViewSettings'
+export * from './hooks/pages/useReportsViewSettings'
 
 // Re-export the ViewsComponents for convenience
 export { Views } from './Views'
@@ -30,5 +31,5 @@ export type ViewFormData = Required<
   Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner' | 'access' | 'accessLevel'>
 >
 
-export const viewTypes = ['overview', 'taskProgress', 'lists', 'reviews'] as const
+export const viewTypes = ['overview', 'taskProgress', 'lists', 'reviews', 'reports'] as const
 export type ViewType = (typeof viewTypes)[number]

@@ -60,7 +60,7 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   value={value}
                   options={meta?.options?.[typeColumn.value]}
                   attributeData={{ type: 'string' }}
-                  isReadOnly={typeColumn.readonly}
+                  isReadOnly={typeColumn.readonly || meta?.readOnly?.includes(column.id)}
                   onChange={(value) =>
                     meta?.updateEntities?.([
                       { field: typeColumn.value, value, id, type, rowId: row.id },

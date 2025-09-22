@@ -8,13 +8,14 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
-import { TableGroupBy } from './context'
+import { TableGroupBy, useCellEditing } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
+import { NameWidgetData } from '@shared/components/RenameForm'
 
 const MIN_SIZE = 50
 
@@ -173,7 +174,9 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: groupBy ? false : true,
       cell: ({ row, column, table }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
+        const { isEditing } = useCellEditing()
         const cellId = getCellId(row.id, column.id)
 
         if (row.original.entityType === NEXT_PAGE_ID && row.original.group) {
@@ -186,6 +189,7 @@ const buildTreeTableColumns = ({
           )
         }
 
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
         return (
           <TableCellContent
             id={cellId}
@@ -223,6 +227,28 @@ const buildTreeTableColumns = ({
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
                 toggleExpanded={row.getToggleExpandedHandler()}
+              />
+            )}
+            {isEditing(cellId) && (
+              <CellWidget
+                rowId={id}
+                className={clsx('name', { loading: row.original.isLoading })}
+                columnId={column.id}
+                value={value}
+                valueData={
+                  {
+                    name: row.original.name,
+                    label: row.original.label,
+                    meta,
+                    entityRowId: id,
+                    columnId: column.id,
+                    hasVersions: !!row.original.hasVersions,
+                  } as NameWidgetData
+                }
+                entityType={type}
+                attributeData={{ type: 'name' }}
+                isCollapsed={!!row.original.childOnlyMatch}
+                isReadOnly={meta?.readOnly?.includes(column.id)}
               />
             )}
           </TableCellContent>
@@ -323,7 +349,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || meta?.readOnly?.includes(fieldId)}
           />
         )
       },
@@ -448,6 +474,10 @@ const buildTreeTableColumns = ({
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
           const isInherited = !row.original.ownAttrib?.includes(columnIdParsed)
           if (['group', NEXT_PAGE_ID].includes(type)) return null
+          const isTypeInScope = attrib.scope?.includes(type as (typeof attrib.scope)[number])
+
+          // if the attribute is not in scope, we should nothing
+          if (!isTypeInScope) return null
 
           return (
             <CellWidget
@@ -460,7 +490,9 @@ const buildTreeTableColumns = ({
               isCollapsed={!!row.original.childOnlyMatch}
               isInherited={isInherited && ['folder', 'task'].includes(type)}
               isReadOnly={
+                // check attrib is not read only
                 attrib.readOnly ||
+                // check if there is any other reason the cell should be read only
                 meta?.readOnly?.some(
                   (id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin),
                 )
