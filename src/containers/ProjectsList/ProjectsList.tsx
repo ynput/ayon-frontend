@@ -14,6 +14,7 @@ import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useCreateContextMenu } from '@shared/containers'
+import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
@@ -133,12 +134,14 @@ const ProjectsList: FC<ProjectsListProps> = ({
   }
 
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher()
+  const { getDefaultTab } = useProjectDefaultTab()
 
   const navigate = useAyonNavigate()
   const onOpenProject = (project: string) => {
     handleProjectSelectionDispatches(project)
 
-    const link = `/projects/${project}/overview`
+    const defaultTab = getDefaultTab()
+    const link = `/projects/${project}/${defaultTab}`
     // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
   }
