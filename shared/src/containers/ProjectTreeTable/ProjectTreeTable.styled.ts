@@ -122,12 +122,13 @@ export const HeaderCell = styled.th`
     .resize-handle {
       opacity: 1;
     }
-  }
-
-  /* show action buttons */
-  &:hover {
+    
     .actions {
-      display: flex;
+      display: flex !important;
+    }
+    
+    .actions .header-menu {
+      display: flex !important;
     }
   }
 
@@ -138,7 +139,6 @@ export const HeaderCell = styled.th`
     }
     cursor: col-resize !important;
 
-    /* Ensure all child elements also have the resize cursor */
     * {
       cursor: col-resize !important;
     }
@@ -161,8 +161,15 @@ export const HeaderCell = styled.th`
   }
 `
 
-export const HeaderButtons = styled.div`
+export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   display: none;
+
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    display: flex !important;
+  `}
+
   gap: var(--base-gap-small);
   align-items: center;
 
@@ -176,6 +183,43 @@ export const HeaderButtons = styled.div`
 
   .resizing & {
     cursor: col-resize !important;
+  }
+
+  &:has(.sort-button.visible),
+  &:has(.sort-button.selected) {
+    display: flex !important;
+  }
+
+  .sort-button.visible {
+    display: flex !important;
+  }
+  
+  .sort-button.selected {
+    display: flex !important;
+  }
+
+  .header-menu {
+    display: none;
+  }
+  
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    .header-menu {
+      display: flex !important;
+    }
+  `}
+  
+  .header-menu.open,
+  .header-menu.active {
+    display: flex !important;
+  }
+
+   .resizing & {
+    .sort-button,
+    .header-menu {
+      display: none !important;
+    }
   }
 `
 
@@ -427,6 +471,13 @@ export const TableContainer = styled.div`
 
   &.isLoading {
     overflow: hidden;
+  }
+
+  /* Hide all header buttons when any column is being resized */
+  &.resizing {
+    .actions {
+      display: none !important;
+    }
   }
 
   table {

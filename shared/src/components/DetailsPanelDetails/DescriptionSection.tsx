@@ -1,0 +1,151 @@
+import React from 'react'
+import { Button } from '@ynput/ayon-react-components'
+import ReactQuill from 'react-quill-ayon'
+import clsx from 'clsx'
+import { BorderedSection } from './BorderedSection'
+import { QuillListStyles } from '../QuillListStyles'
+import {
+  StyledContent,
+  StyledEditor,
+  StyledFooter,
+  StyledLoadingSkeleton,
+  StyledButtonContainer,
+  StyledQuillContainer,
+} from './DescriptionSection.styles'
+
+import { useDescriptionEditor, useQuillFormats } from './hooks'
+
+// Custom modules function for description editor (without checklist)
+const getDescriptionModules = ({
+  imageUploader,
+  disableImageUpload = false,
+}: {
+  imageUploader: any
+  disableImageUpload?: boolean
+}) => {
+  const toolbar = [
+    [{ header: 2 }, 'bold', 'italic', 'link', 'code-block'],
+    [{ list: 'ordered' }, { list: 'bullet' }], // Removed { list: 'check' }
+  ]
+
+  if (!disableImageUpload) {
+    toolbar.push(['image'])
+  }
+
+  return {
+    toolbar,
+    imageUploader,
+    magicUrl: true,
+  }
+}
+
+interface DescriptionSectionProps {
+  description: string
+  isMixed: boolean
+  enableEditing: boolean
+  onChange: (description: string) => void
+  isLoading: boolean
+}
+
+export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
+  description,
+  isMixed,
+  enableEditing,
+  onChange,
+  isLoading,
+}) => {
+  // Use custom hooks to manage state and logic
+  const {
+    isEditing,
+    editorValue,
+    setEditorValue,
+    editorRef,
+    handleStartEditing,
+    handleSave,
+    handleCancel,
+    handleKeyDown,
+  } = useDescriptionEditor({
+    description,
+    enableEditing,
+    isMixed,
+    onChange,
+  })
+
+  const conditionalFormats = useQuillFormats()
+
+  if (isLoading) {
+    return (
+      <BorderedSection title="Description">
+        <StyledLoadingSkeleton />
+      </BorderedSection>
+    )
+  }
+
+  // Handle clicks on links to prevent edit mode activation
+  const handleContentClick = (e: React.MouseEvent) => {
+    // If we're in editing mode, don't prevent default behavior for links
+    if (isEditing) {
+      return
+    }
+    
+    // Check if the clicked element is a link or inside a link
+    const target = e.target as HTMLElement
+    const link = target.closest('a')
+    
+    if (link) {
+      // If clicking on a link, prevent the edit mode from activating
+      e.stopPropagation()
+      return
+    }
+    
+    // For other clicks when not editing, allow edit mode to activate
+    if (!isEditing) {
+      handleStartEditing()
+    }
+  }
+
+  return (
+    <BorderedSection
+      title="Description"
+      showHeader={!isEditing}
+      enableHover={!isEditing}
+      onClick={!isEditing ? handleStartEditing : undefined}
+    >
+      <StyledContent 
+        className={clsx({ editing: isEditing })}
+        onClick={handleContentClick}
+      >
+        <StyledEditor className="block-shortcuts">
+          <QuillListStyles>
+            <StyledQuillContainer>
+              <ReactQuill
+                key={`description-editor-${isEditing}`}
+                theme="snow"
+                ref={editorRef}
+                value={editorValue || description}
+                onChange={setEditorValue}
+                placeholder="Add a description..."
+                modules={
+                  isEditing
+                    ? getDescriptionModules({ imageUploader: null, disableImageUpload: true })
+                    : { toolbar: false }
+                }
+                formats={conditionalFormats}
+                onKeyDown={handleKeyDown}
+                readOnly={!isEditing}
+              />
+            </StyledQuillContainer>
+          </QuillListStyles>
+        </StyledEditor>
+        {isEditing && (
+          <StyledFooter>
+            <StyledButtonContainer>
+              <Button variant="text" label="Cancel" onClick={handleCancel} />
+              <Button variant="filled" label="Save" onClick={handleSave} />
+            </StyledButtonContainer>
+          </StyledFooter>
+        )}
+      </StyledContent>
+    </BorderedSection>
+  )
+}

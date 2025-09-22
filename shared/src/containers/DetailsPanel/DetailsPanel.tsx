@@ -5,7 +5,7 @@ import * as Styled from './DetailsPanel.styled'
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
 import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
-import { DetailsPanelAttributes, EntityPath, Watchers } from '@shared/components'
+import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
 import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
@@ -15,6 +15,7 @@ import DetailsPanelFiles from './DetailsPanelFiles'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './FeedWrapper'
+import FeedContextWrapper from './FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 
 export const entitiesWithoutFeed = ['product', 'representation']
@@ -77,10 +78,10 @@ export const DetailsPanel = ({
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
-  // Force attribs tab for specific entity types
+  // Force details tab for specific entity types
   useEffect(() => {
-    if (entitiesWithoutFeed.includes(entityType) && currentTab !== 'attribs') {
-      setTab('attribs')
+    if (entitiesWithoutFeed.includes(entityType) && currentTab !== 'details') {
+      setTab('details')
     }
   }, [entityType, currentTab, setTab])
 
@@ -271,11 +272,26 @@ export const DetailsPanel = ({
             isLoadingVersion={isFetchingEntitiesDetails}
           />
         )}
-        {currentTab === 'attribs' && (
-          <DetailsPanelAttributes
+        {currentTab === 'details' && (
+          <FeedContextWrapper
+            entityType={entityType}
             entities={entityDetailsData}
-            isLoading={isFetchingEntitiesDetails}
-          />
+            activeUsers={activeProjectUsers || []}
+            projectInfo={firstProjectInfo}
+            projectName={firstProject}
+            isMultiProjects={projectNames.length > 1}
+            scope={scope}
+            statuses={allStatuses}
+            readOnly={false}
+            annotations={annotations}
+            removeAnnotation={removeAnnotation}
+            exportAnnotationComposite={exportAnnotationComposite}
+          >
+            <DetailsPanelDetails
+              entities={entityDetailsData}
+              isLoading={isFetchingEntitiesDetails}
+            />
+          </FeedContextWrapper>
         )}
       </Styled.Panel>
     </>

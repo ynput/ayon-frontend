@@ -41,6 +41,7 @@ import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/Sel
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
+import { useMenuContext } from '../../context/MenuContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -77,6 +78,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
+import { useSelector } from 'react-redux'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -511,6 +513,7 @@ export const ProjectTreeTable = ({
       entitiesMap={entitiesMap}
       columnEnums={{ ...options, ...attribByField }}
       columnReadOnly={readOnlyAttribs}
+      visibleColumns={visibleColumns}
     >
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
@@ -518,7 +521,13 @@ export const ProjectTreeTable = ({
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
-          className={clsx('table-container', pt?.container?.className)}
+          className={clsx(
+            'table-container',
+            {
+              resizing: table.getState().columnSizingInfo.isResizingColumn,
+            },
+            pt?.container?.className,
+          )}
         >
           <table
             style={{
@@ -778,10 +787,14 @@ const TableHeadCell = ({
   sortableRows,
 }: TableHeadCellProps) => {
   const { column } = header
+  const sorting = column.getIsSorted()
+  const menuId = `column-header-menu-${column.id}`
+  const { menuOpen } = useMenuContext()
+  const isOpen = menuOpen === menuId
 
   return (
     <Styled.HeaderCell
-      className={clsx(header.id, 'shimmer-dark', 'aaa', {
+      className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
@@ -799,23 +812,27 @@ const TableHeadCell = ({
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
 
-          <Styled.HeaderButtons className="actions">
+          <Styled.HeaderButtons className="actions" $isOpen={isOpen}>
             {(canHide || canPin || canSort) && (
               <ColumnHeaderMenu
+                className="header-menu"
                 header={header}
                 canHide={canHide}
                 canPin={canPin}
                 canSort={canSort}
                 isResizing={column.getIsResizing()}
+                menuId={menuId}
+                isOpen={isOpen}
               />
             )}
 
             {/* COLUMN SORTING */}
             {canSort && (
               <HeaderActionButton
-                icon={'sort'}
+                icon="sort"
+                className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
+                  transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
                 onClick={column.getToggleSortingHandler()}
                 selected={!!column.getIsSorted()}

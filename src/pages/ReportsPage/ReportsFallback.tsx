@@ -8,12 +8,12 @@ type Slicer = {
   persistentRowSelectionData: SelectionData
   setPersistentRowSelectionData: (data: SelectionData) => void
 }
-interface ReportFallbackProps extends RemoteAddonProjectProps {
+interface ReportsFallbackProps extends RemoteAddonProjectProps {
   slicer: Slicer
 }
 
-const ReportFallback: FC<ReportFallbackProps> = ({}) => {
+const ReportsFallback: FC<ReportsFallbackProps> = ({}) => {
   return <div>Install reports and insights addon!</div>
 }
 
-export default ReportFallback
+export default ReportsFallback

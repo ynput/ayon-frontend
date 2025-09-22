@@ -1,35 +1,36 @@
-import React, { useState, useRef, KeyboardEvent } from 'react'
+import React, { KeyboardEvent, useRef, useState } from 'react'
 import { capitalize, isEmpty } from 'lodash'
 import {
-  InputText,
+  Dialog,
+  Dropdown,
+  DropdownRef,
+  Icon,
+  InputSwitch,
   SaveButton,
   Spacer,
   Toolbar,
-  Dialog,
-  DropdownRef,
-  Dropdown,
-  Icon,
-  InputSwitch,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
-import checkName from '@helpers/checkName'
+import { checkName } from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
-  useSelectionCellsContext,
+  EditorTaskNode,
+  MatchingFolder,
   useProjectTableContext,
+  useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
-import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
 import type { OperationResponseModel, ProjectModel } from '@shared/api'
 import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@context/SlicerContext'
+import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
 
 const ContentStyled = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--base-gap-large);
   form {
     input:first-child {
@@ -150,8 +151,9 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const isRoot = isEmpty(selectedFolderIds)
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
+  const [nameManuallyEdited, setNameManuallyEdited] = useState<boolean>(false)
   //   build out form state
-  const initData: EntityForm = { label: '', subType: '' }
+  const initData: EntityForm = { label: '', subType: '', name: '' }
 
   //   format title
   const getDialogTitle = () => {
@@ -188,9 +190,10 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       const typeOption = typeOptions.find((option) => option.name === value)
 
       if (typeOption) {
+        newState.label = typeOption.name
         // If name field is empty or matches any of the current type options,
         // update it with the new type name
-        const currentNameLower = newState.label.toLowerCase()
+        const currentNameLower = newState.name.toLowerCase()
         const shouldUpdateName =
           currentNameLower === '' ||
           typeOptions.some(
@@ -198,12 +201,14 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
               currentNameLower.includes(option.name?.toLowerCase()) ||
               (option.shortName && currentNameLower.includes(option.shortName?.toLowerCase())),
           )
-
         if (shouldUpdateName) {
-          // Use the helper function to generate the label
-          newState.label = generateLabel(entityType, value, projectInfo)
+          // Generate name for backend (lowercase and sanitized)
+          newState.name = generateName(typeOption.name)
         }
       }
+
+      // Reset manual editing flag when type changes - allow auto-generation again
+      setNameManuallyEdited(false)
 
       // Focus the label input after type selection
       setTimeout(() => {
@@ -211,7 +216,15 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       }, 100)
     } else if (id === 'label') {
       // Update name based on the label (sanitizing it)
-      newState.label = checkName(value)
+      newState.label = value
+      // Only auto-generate name if user hasn't manually edited it
+      if (!nameManuallyEdited) {
+        newState.name = generateName(value)
+      }
+    } else if (id === 'name') {
+      // User is manually editing the name
+      setNameManuallyEdited(true)
+      newState.name = generateName(value)
     }
 
     setEntityForm(newState)
@@ -237,6 +250,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setEntityType(null)
     setEntityForm(initData)
     setSequenceForm((prev) => ({ ...prev, active: false }))
+    setNameManuallyEdited(false)
   }
 
   // open dropdown - delay to wait for dialog opening
@@ -420,26 +434,24 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
             />
           ) : (
             <ContentStyled>
-              <TypeEditor
-                value={[entityForm.subType]}
-                onChange={(v: string) => handleChange(v, 'subType')}
-                options={typeOptions}
-                style={{ width: 160 }}
-                ref={typeSelectRef}
-                onFocus={handleTypeSelectFocus}
-                onClick={() => setNameFocused(false)}
-              />
-              <InputText
-                value={entityForm.label}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleChange(e.target.value, 'label')
-                }
-                ref={labelRef}
-                onFocus={() => setNameFocused(true)}
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
-                  handleKeyDown(e as unknown as KeyboardEvent, true)
-                }
-                style={{ flex: 1 }}
+              <InputsContainer>
+                <InputLabel>Type</InputLabel>
+                <TypeEditor
+                  value={[entityForm.subType]}
+                  onChange={(v: string) => handleChange(v, 'subType')}
+                  options={typeOptions}
+                  style={{ width: 160 }}
+                  ref={typeSelectRef}
+                  onFocus={handleTypeSelectFocus}
+                  onClick={() => setNameFocused(false)}
+                />
+              </InputsContainer>
+              <NewEntityForm
+                handleChange={handleChange}
+                entityForm={entityForm}
+                labelRef={labelRef}
+                setNameFocused={setNameFocused}
+                handleKeyDown={handleKeyDown}
               />
             </ContentStyled>
           )}
@@ -465,7 +477,8 @@ export const generateLabel = (
 
   if (!typeOption) return ''
 
-  return type === 'folder'
-    ? typeOption.shortName || typeOption.name.toLowerCase()
-    : typeOption.name.toLowerCase()
+  return type === 'folder' ? typeOption.shortName || typeOption.name : typeOption.name
+}
+export const generateName = (value: string): string => {
+  return checkName(value.replace(/ /g, '_')).toLowerCase()
 }

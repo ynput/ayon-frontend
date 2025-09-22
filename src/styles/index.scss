@@ -71,6 +71,9 @@ strong {
   --color-sub-studio: hsl(42, 100%, 50%);
   --color-on-sub-studio: hsl(53, 100%, 11%);
   --color-sub-studio-hover: hsl(42, 100%, 45%);
+
+  // tag colors
+  --color-tag-text: hsl(180, 5%, 96%);
 }
 
 #root {
@@ -504,4 +507,14 @@ a {
 .p-sidebar-left .p-sidebar {
   min-width: 20rem;
   width: auto;
+}
+
+.sort-asc-icon .icon,
+.sort-asc-icon svg {
+  transform: rotate(180deg) scaleX(-1) !important;
+}
+
+.sort-desc-icon .icon,
+.sort-desc-icon svg {
+  transform: none !important;
 }

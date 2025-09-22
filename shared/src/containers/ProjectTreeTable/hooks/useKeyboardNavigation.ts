@@ -3,15 +3,20 @@ import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
 import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectDataContext } from '../context/ProjectDataContext'
+import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { getEntityViewierIds } from '../utils'
 
 export default function useKeyboardNavigation() {
   const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
+  const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
+  const canOpenRenameDialog = canWriteLabelPermission || canWriteNamePermission
 
   const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
     useSelectionCellsContext()
 
   const { setEditingCellId, editingCellId } = useCellEditing()
+  const { setSelectedEntity } = useDetailsPanelEntityContext()
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -122,9 +127,21 @@ export default function useKeyboardNavigation() {
         }
         case 'Enter': {
           e.preventDefault()
-          if (isReadOnly) return
-          // Start editing the currently focused cell
-          setEditingCellId(focusedCellId)
+          // Only open details panel for name column on folders/tasks
+          if (colId === 'name') {
+            const entity = getEntityById(rowId)
+            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
+              setSelectedEntity({
+                entityId: rowId,
+                entityType: entity.entityType,
+              })
+            }
+          } else {
+            // For all other columns, start editing the cell (if not read-only)
+            if (!isReadOnly) {
+              setEditingCellId(focusedCellId)
+            }
+          }
           break
         }
         case 'Escape': {
@@ -171,6 +188,24 @@ export default function useKeyboardNavigation() {
           e.preventDefault()
           // attempt to open the player
           openPlayer(rowId)
+          break
+        }
+        case 'r':
+        case 'R': {
+          // Don't prevent default if Ctrl/Cmd is held (allow page reload)
+          if (e.ctrlKey || e.metaKey) {
+            return
+          }
+          e.preventDefault()
+          // Check if focused cell is name column on folder/task and user has rename permissions
+          if (colId === 'name' && canOpenRenameDialog) {
+            const entity = getEntityById(rowId)
+            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
+              const nameCellId = getCellId(rowId, 'name')
+              setEditingCellId(nameCellId)
+            }
+          }
+          break
         }
       }
     },
@@ -184,6 +219,8 @@ export default function useKeyboardNavigation() {
       editingCellId,
       getEntityById,
       playerOpen,
+      setSelectedEntity,
+      canOpenRenameDialog,
     ],
   )
 
@@ -205,6 +242,7 @@ export default function useKeyboardNavigation() {
     setEditingCellId,
     editingCellId,
     playerOpen,
+    setSelectedEntity,
   ])
   return {
     handleKeyDown,

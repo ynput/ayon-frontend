@@ -323,6 +323,7 @@ export { api as uRIsApi } from './uRIs'
 // users
 export * from './users'
 export { api as usersApi } from './users'
+export type { Permissions } from './users'
 
 // versions
 export * from './versions'

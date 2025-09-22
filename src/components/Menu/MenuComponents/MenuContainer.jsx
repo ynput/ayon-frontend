@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { setMenuOpen } from '@state/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import * as Styled from './Menu.styled'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -15,12 +14,12 @@ const MenuContainer = ({
   children,
   ...props
 }) => {
-  const dispatch = useDispatch()
   const navigate = useNavigate()
-  const isOpen = useSelector((state) => state.context.menuOpen) === id
+  const { menuOpen, setMenuOpen } = useMenuContext()
+  const isOpen = menuOpen === id
   const handleClose = () => {
     // close menu
-    dispatch(setMenuOpen(false))
+    setMenuOpen(false)
   }
 
   const handleNavigate = (path) => {

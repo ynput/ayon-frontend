@@ -9,7 +9,7 @@ import {
   SaveButton,
   Spacer,
 } from '@ynput/ayon-react-components'
-import checkName from '@helpers/checkName'
+import { checkName } from '@shared/util'
 import UserListTeams from '../UserListTeams'
 import useSearchFilter from '@hooks/useSearchFilter'
 import * as Styled from './CreateNewTeam.styled'

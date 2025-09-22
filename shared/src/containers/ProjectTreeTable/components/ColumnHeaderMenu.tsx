@@ -1,76 +1,37 @@
-import { Dropdown, Icon } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
+import { useRef } from 'react'
+import { useMenuContext } from '../../../context/MenuContext'
+// @ts-expect-error - non TS file
+import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
+// @ts-expect-error - non TS file
+import MenuContainer from '../../../../../src/components/Menu/MenuComponents/MenuContainer2'
 
-const MenuItem = styled.div<{ isFirst?: boolean; isLast?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 12px;
-  cursor: pointer;
-  border-radius: 4px;
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container);
-  }
-
-  .icon {
-    font-size: 16px;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  span {
-    font-size: 14px;
-    color: var(--md-sys-color-on-surface);
-  }
-`
-
-const Divider = styled.div`
-  height: 1px;
-  background-color: #41474D;
-`
-
-const StyledDropdown = styled(Dropdown)`
-  height: 24px;
+const MenuButton = styled(Button)<{ $isOpen: boolean }>`
+  background-color: unset !important;
+  z-index: 110;
+  position: relative;
+  padding: 2px;
   width: 24px;
+  height: 24px;
 
-  button {
-    background-color: transparent;
-    border: none;
-    padding: 0;
-    min-height: 24px;
-    width: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-      background-color: var(--md-sys-color-surface-container);
-    }
-
-    & > div {
-      border: none;
-      padding: 0;
-      gap: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  &.hasIcon {
+    padding: 2px;
   }
 
-  .icon {
-    font-size: 16px;
-    color: var(--md-sys-color-on-surface);
+  &:hover,
+  &.active {
+    background-color: var(--md-sys-color-surface-container-hover) !important;
   }
+
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    background-color: var(--md-sys-color-surface-container-hover) !important;
+  `}
 `
-
-interface MenuOption {
-  value: string
-  label: string
-  icon: string
-}
 
 interface ColumnHeaderMenuProps {
   header: Header<TableRow, unknown>
@@ -78,6 +39,9 @@ interface ColumnHeaderMenuProps {
   canPin?: boolean
   canSort?: boolean
   isResizing?: boolean
+  className?: string
+  menuId?: string
+  isOpen?: boolean
 }
 
 export const ColumnHeaderMenu = ({
@@ -86,126 +50,136 @@ export const ColumnHeaderMenu = ({
   canPin,
   canSort,
   isResizing,
+  className,
+  menuId,
+  isOpen,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
+  const { toggleMenuOpen } = useMenuContext()
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Hide the menu when resizing
   if (isResizing) {
     return null
   }
 
+  const handleMenuToggle = (open: boolean = true) => {
+    toggleMenuOpen(open ? menuId || false : false)
+  }
+
   // Get current column state - we need to call these methods directly to get fresh state
   const isPinned = column.getIsPinned()
   const isVisible = column.getIsVisible()
+  const isSorted = column.getIsSorted()
 
-  const menuOptions: MenuOption[] = []
+  const menuItems: Array<{
+    id: string
+    label?: string
+    icon?: string
+    className?: string
+    onClick?: () => void
+    type?: 'divider'
+    selected?: boolean
+  }> = []
 
   if (canPin) {
     const isPinnedLeft = isPinned === 'left'
-    menuOptions.push({
-      value: 'pin',
+    menuItems.push({
+      id: 'pin',
       label: isPinnedLeft ? 'Unpin column' : 'Pin column',
       icon: 'push_pin',
+      selected: isPinnedLeft,
+      onClick: () => {
+        if (isPinnedLeft) {
+          column.pin(false)
+        } else {
+          column.pin('left')
+        }
+        handleMenuToggle(false)
+      },
     })
   }
 
   if (canPin && canSort) {
-    menuOptions.push({
-      value: 'divider1',
-      label: '',
-      icon: '',
+    menuItems.push({
+      id: 'divider',
+      type: 'divider',
     })
   }
 
   if (canSort) {
-    menuOptions.push({
-      value: 'sort-asc',
+    menuItems.push({
+      id: 'sort-asc',
       label: 'Sort ascending',
       icon: 'sort',
+      className: 'sort-asc-icon',
+      selected: isSorted === 'asc',
+      onClick: () => {
+        column.toggleSorting(false)
+        handleMenuToggle(false)
+      },
     })
 
-    menuOptions.push({
-      value: 'sort-desc',
+    menuItems.push({
+      id: 'sort-desc',
       label: 'Sort descending',
       icon: 'sort',
+      className: 'sort-desc-icon',
+      selected: isSorted === 'desc',
+      onClick: () => {
+        column.toggleSorting(true)
+        handleMenuToggle(false)
+      },
     })
   }
 
   if (canSort && canHide) {
-    menuOptions.push({
-      value: 'divider2',
-      label: '',
-      icon: '',
+    menuItems.push({
+      id: 'divider',
+      type: 'divider',
     })
   }
 
   if (canHide) {
-    menuOptions.push({
-      value: 'hide',
+    menuItems.push({
+      id: 'hide',
       label: isVisible ? 'Hide column' : 'Show column',
       icon: isVisible ? 'visibility_off' : 'visibility',
+      onClick: () => {
+        column.toggleVisibility()
+        handleMenuToggle(false)
+      },
     })
   }
 
-  if (menuOptions.length === 0) {
+  if (menuItems.length === 0) {
     return null
   }
 
-  const handleMenuChange = (value: string[]) => {
-    const selectedValue = value[0]
-
-    if (selectedValue === 'hide') {
-      // Toggle column visibility directly
-      column.toggleVisibility()
-    } else if (selectedValue === 'pin') {
-      const isPinnedLeft = isPinned === 'left'
-      if (isPinnedLeft) {
-        // Unpin the column
-        column.pin(false)
-      } else {
-        // Pin the column to the left
-        column.pin('left')
-      }
-    } else if (selectedValue === 'sort-asc') {
-      column.toggleSorting(false) // false for ascending
-    } else if (selectedValue === 'sort-desc') {
-      column.toggleSorting(true) // true for descending
-    }
-  }
-
   return (
-    <StyledDropdown
-      value={[]}
-      options={menuOptions}
-      onChange={handleMenuChange}
-      dropIcon="more_horiz"
-      multiSelect={false}
-      listStyle={{
-        minWidth: '160px',
-        border: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        padding: '8px',
-      }}
-      placeholder=""
-      itemTemplate={(option) => {
-        // Check if this is a divider
-        if (option.value.startsWith('divider')) {
-          return <Divider />
-        }
-
-        const menuItemIndex = menuOptions.findIndex((item) => item.value === option.value)
-        const isFirst = menuItemIndex === 0
-        const isLast = menuItemIndex === menuOptions.length - 1
-
-        return (
-          <MenuItem isFirst={isFirst} isLast={isLast}>
-            <Icon icon={option.icon} />
-            <span>{option.label}</span>
-          </MenuItem>
-        )
-      }}
-    />
+    <>
+      <MenuButton
+        ref={buttonRef}
+        className={className}
+        onClick={(e) => {
+          e.stopPropagation()
+          handleMenuToggle()
+        }}
+        icon="more_horiz"
+        id={menuId}
+        $isOpen={isOpen || false}
+      />
+      <MenuContainer
+        target={buttonRef.current}
+        id={menuId}
+        align="left"
+        onClose={(e: any) => {
+          e.stopPropagation()
+          handleMenuToggle(false)
+        }}
+      >
+        <Menu menu={menuItems} onClose={() => handleMenuToggle(false)} />
+      </MenuContainer>
+    </>
   )
 }

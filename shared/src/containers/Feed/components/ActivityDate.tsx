@@ -20,6 +20,11 @@ const DateStyled = styled.span`
   white-space: nowrap;
   display: flex;
   align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 3;
+  min-width: 0;
+  max-width: fit-content;
 
   ${theme.bodySmall}
 `
