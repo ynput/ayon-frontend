@@ -13,10 +13,13 @@ import clsx from 'clsx'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
+import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
+import { useLocation } from 'react-router-dom'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useAyonNavigate()
   const dispatch = useDispatch()
+  const location = useLocation()
   const menuRef = useRef(null)
   const searchRef = useRef(null)
   const [oldPinned, setOldPinned] = useLocalStorage('projectMenu-pinned', [])
@@ -58,6 +61,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   const [showContext] = useCreateContextMenu([])
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher([])
+  const { getDefaultTab } = useProjectDefaultTab()
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
@@ -212,10 +216,13 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
     setSearchOpen(false)
 
-    // if projects/[project] is null, projects/[projectName]/overview, else projects/[projectName]/[module]
-    const link = window.location.pathname.includes('projects')
-      ? `/projects/${projectName}/${window.location.pathname.split('/')[3] || 'overview'}`
-      : `/projects/${projectName}/overview`
+    // if projects/[project] is null, projects/[projectName]/defaultTab, else projects/[projectName]/[module]
+    const defaultTab = getDefaultTab()
+    const pathSegments = location.pathname.split('/')
+    const currentModule = pathSegments[3]
+    const link = location.pathname.includes('projects')
+      ? `/projects/${projectName}/${currentModule || defaultTab}`
+      : `/projects/${projectName}/${defaultTab}`
 
     dispatch((_, getState) => navigate(getState)(link))
   }

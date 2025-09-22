@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
@@ -12,7 +12,6 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
-
 
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
@@ -31,9 +30,10 @@ import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
-import HelpButton from "@components/HelpButton/HelpButton.tsx"
+import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 
 type NavLink = {
   name?: string
@@ -77,6 +77,7 @@ const ProjectPage = () => {
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
+  const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
     { projectName: projectName || '' },
@@ -177,12 +178,11 @@ const ProjectPage = () => {
         module: 'workfiles',
         uriSync: true,
       },
-      ...remotePages
-        .map((remote) => ({
-          name: remote.name,
-          module: remote.module,
-          path: `/projects/${projectName}/${remote.module}`,
-        })),
+      ...remotePages.map((remote) => ({
+        name: remote.name,
+        module: remote.module,
+        path: `/projects/${projectName}/${remote.module}`,
+      })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -218,6 +218,13 @@ const ProjectPage = () => {
   }, [links, module])
 
   const title = useTitle(module, links, projectName || 'AYON')
+
+  // Track current tab for default tab preference
+  const moduleRef = useRef<string>()
+  if (moduleRef.current !== module) {
+    moduleRef.current = module
+    trackCurrentTab(module)
+  }
 
   //
   // Render page
@@ -303,8 +310,8 @@ const ProjectPage = () => {
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isExternal){
-    return <ExternalUserPageLocked/>
+  if (isExternal) {
+    return <ExternalUserPageLocked />
   }
 
   return (
