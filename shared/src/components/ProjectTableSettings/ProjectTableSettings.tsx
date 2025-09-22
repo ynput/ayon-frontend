@@ -117,6 +117,5 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   ]
 
   settings.forEach((setting) => defaultSettings.push(setting))
-  console.log('Settingds ', defaultSettings)
   return <SettingsPanel settings={defaultSettings} />
 }

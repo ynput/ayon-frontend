@@ -19,6 +19,7 @@ export type FolderListItem = {
   attrib?: Record<string, any>
   ownAttrib?: string[]
   updatedAt: string
+  createdAt: string
   hasReviewables?: boolean
   hasVersions?: boolean
   links: EntityLink[]
@@ -82,6 +83,7 @@ export type EditorVersionNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string
@@ -107,6 +109,7 @@ type EditorProductNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string
