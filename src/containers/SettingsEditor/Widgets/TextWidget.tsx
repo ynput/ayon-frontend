@@ -12,7 +12,7 @@ import {
   InputTextarea,
 } from '@ynput/ayon-react-components'
 
-import {CodeEditorWrapper} from '../styledComponents'
+import {CodeEditorWrapper} from '../SettingsEditor.styled'
 
 type PermissionWidgetProps = {
   value: number

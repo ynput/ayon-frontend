@@ -1,8 +1,8 @@
 import { toast } from 'react-toastify'
-import {useState, useEffect} from 'react'
+import { useState, useEffect } from 'react'
 import { updateChangedKeys, parseContext, getDefaultValue } from '../helpers'
 import CodeEditor from '@uiw/react-textarea-code-editor'
-import {CodeEditorWrapper} from '../styledComponents'
+import { CodeEditorWrapper } from '../SettingsEditor.styled'
 
 function AccessWidget(props) {
   const { path } = parseContext(props)
@@ -15,12 +15,12 @@ function AccessWidget(props) {
   useEffect(() => {
     setTextValue(JSON.stringify(props.formData || {}, null, 2))
   }, [value])
-  
+
 
   const onCommit = () => {
     let commitValue = {}
     try {
-     commitValue = JSON.parse(textValue)
+      commitValue = JSON.parse(textValue)
     } catch (e) {
       toast.error("Invalid JSON")
       setStatus('error')
@@ -42,14 +42,14 @@ function AccessWidget(props) {
     <>
       <CodeEditorWrapper className={status}>
         <CodeEditor
-            wrap = "false"
-            value={textValue}
-            language = "json"
-            onChange={(e) => {
-              setTextValue(e.target.value)
-              setStatus('changed')
+          wrap="false"
+          value={textValue}
+          language="json"
+          onChange={(e) => {
+            setTextValue(e.target.value)
+            setStatus('changed')
           }}
-            onBlur={onCommit}
+          onBlur={onCommit}
         />
       </CodeEditorWrapper>
     </>
