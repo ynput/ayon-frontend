@@ -464,7 +464,7 @@ export type LinkEdge = {
   linkType: Scalars['String']['output'];
   name?: Maybe<Scalars['String']['output']>;
   /** Linked node */
-  node?: BaseNode;
+  node: BaseNode;
   projectName: Scalars['String']['output'];
 };
 
