@@ -8,7 +8,6 @@ import {
 } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
-import { kebabCase } from 'lodash'
 
 export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']
@@ -22,7 +21,15 @@ export interface UseUpdateListReturn {
   closeRenameList: () => void
   submitRenameList: (value: string) => Promise<void>
   setListsCategory: (listIds: string[], category: string | null) => Promise<void>
-  createAndAssignCategory: (listIds: string[], categoryLabel: string) => Promise<void>
+  createAndAssignCategory: (
+    listIds: string[],
+    category: {
+      label: string
+      value: string
+      icon?: string
+      color?: string
+    },
+  ) => Promise<void>
 }
 
 const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdateListProps) => {
@@ -142,22 +149,41 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
   )
 
   const createAndAssignCategory = useCallback(
-    async (listIds: string[], categoryLabel: string) => {
+    async (
+      listIds: string[],
+      category: {
+        label: string
+        value: string
+        icon?: string
+        color?: string
+      },
+    ) => {
       // update the attribute config to add the new category
 
-      // generate category name from label
-      const categoryValue = kebabCase(categoryLabel)
-
       // Check if category already exists
-      const categoryExists = categories?.some((item) => item.value == categoryValue)
+      const categoryExists = categories?.some((item) => item.value == category.value)
       if (categoryExists) {
-        const errorMsg = `Category "${categoryLabel}" already exists`
+        const errorMsg = `Category "${category.label}" already exists`
         console.error(errorMsg)
         toast.error(errorMsg)
         return
       }
 
-      const newEnum = [...categories, { label: categoryLabel, value: categoryValue }]
+      // Create new enum item with all properties
+      const newEnumItem: any = {
+        label: category.label,
+        value: category.value,
+      }
+
+      // Add optional properties if they exist
+      if (category.icon) {
+        newEnumItem.icon = category.icon
+      }
+      if (category.color) {
+        newEnumItem.color = category.color
+      }
+
+      const newEnum = [...categories, newEnumItem]
 
       try {
         await updateAttribute({
@@ -170,10 +196,10 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
         }).unwrap()
 
         // now assign the new category to the lists
-        await setListsCategory(listIds, categoryValue)
+        await setListsCategory(listIds, category.value)
 
         toast.success(
-          `Category "${categoryLabel}" created and assigned to ${listIds.length} list(s)`,
+          `Category "${category.label}" created and assigned to ${listIds.length} list(s)`,
         )
       } catch (error: any) {
         console.error('Failed to create and assign category:', error)

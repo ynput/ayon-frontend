@@ -55,8 +55,8 @@ const useListContextMenu = () => {
   }, [])
 
   const handleCreateCategory = useCallback(
-    async (categoryName: string) => {
-      await createAndAssignCategory(createCategoryDialog.listIds, categoryName)
+    async (category: { label: string; value: string; icon?: string; color?: string }) => {
+      await createAndAssignCategory(createCategoryDialog.listIds, category)
     },
     [createCategoryDialog.listIds, createAndAssignCategory],
   )

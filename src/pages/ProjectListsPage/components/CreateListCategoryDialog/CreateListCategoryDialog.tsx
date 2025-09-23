@@ -1,5 +1,7 @@
 import { FC, useState, useCallback } from 'react'
-import { Dialog, InputText, Button, Spacer } from '@ynput/ayon-react-components'
+import { Dialog, Button, Spacer } from '@ynput/ayon-react-components'
+import { EnumEditorItem, AttributeData } from '@shared/components/EnumEditor'
+import { uniqueId } from 'lodash'
 import styled from 'styled-components'
 
 const DialogContent = styled.div`
@@ -19,7 +21,12 @@ const ButtonGroup = styled.div`
 interface CreateListCategoryDialogProps {
   isOpen: boolean
   onClose: () => void
-  onCreateCategory: (categoryName: string) => Promise<void>
+  onCreateCategory: (category: {
+    label: string
+    value: string
+    icon?: string
+    color?: string
+  }) => Promise<void>
   listCount?: number
 }
 
@@ -29,13 +36,25 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
   onCreateCategory,
   listCount = 1,
 }) => {
-  const [categoryName, setCategoryName] = useState('')
+  const [categoryData, setCategoryData] = useState<AttributeData>(() => ({
+    id: uniqueId(),
+    isExpanded: true,
+    label: '',
+    value: '',
+    isLabelFocused: true,
+    isNewAttribute: true,
+  }))
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleCreate = useCallback(async () => {
-    if (!categoryName.trim()) {
-      setError('Category name is required')
+    if (!categoryData.label.trim()) {
+      setError('Category label is required')
+      return
+    }
+
+    if (!categoryData.value.trim()) {
+      setError('Category value is required')
       return
     }
 
@@ -43,8 +62,20 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
     setError(null)
 
     try {
-      await onCreateCategory(categoryName.trim())
-      setCategoryName('')
+      await onCreateCategory({
+        label: categoryData.label.trim(),
+        value: categoryData.value.trim(),
+        icon: categoryData.icon,
+        color: categoryData.color,
+      })
+      setCategoryData({
+        id: uniqueId(),
+        isExpanded: true,
+        label: '',
+        value: '',
+        isLabelFocused: true,
+        isNewAttribute: true,
+      })
       onClose()
     } catch (error) {
       console.error('Failed to create category:', error)
@@ -52,10 +83,17 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
     } finally {
       setIsCreating(false)
     }
-  }, [categoryName, onCreateCategory, onClose])
+  }, [categoryData, onCreateCategory, onClose])
 
   const handleCancel = useCallback(() => {
-    setCategoryName('')
+    setCategoryData({
+      id: uniqueId(),
+      isExpanded: true,
+      label: '',
+      value: '',
+      isLabelFocused: true,
+      isNewAttribute: true,
+    })
     setError(null)
     onClose()
   }, [onClose])
@@ -71,29 +109,42 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
     [handleCreate, handleCancel],
   )
 
+  const handleCategoryChange = useCallback(
+    (attrs: (keyof AttributeData)[], values: (boolean | string | undefined)[]) => {
+      setCategoryData((prev) => {
+        const updated = { ...prev }
+        attrs.forEach((attr, index) => {
+          ;(updated as any)[attr] = values[index]
+        })
+        return updated
+      })
+      setError(null)
+    },
+    [],
+  )
+
+  const isValid = categoryData.label.trim() && categoryData.value.trim()
+
   return (
     <Dialog
       header={listCount > 1 ? `Create Category for ${listCount} Lists` : 'Create Category'}
       isOpen={isOpen}
       onClose={handleCancel}
-      size="sm"
+      size="md"
+      onKeyDown={handleKeyDown}
     >
       <DialogContent>
         {listCount > 1 && (
-          <p style={{ margin: '0 0 8px 0', color: 'var(--color-text-dim)', fontSize: '14px' }}>
+          <p style={{ margin: '0 0 16px 0', color: 'var(--color-text-dim)', fontSize: '14px' }}>
             This category will be assigned to {listCount} selected lists.
           </p>
         )}
-        <InputText
-          placeholder="Enter category name"
-          value={categoryName}
-          onChange={(e) => {
-            setCategoryName(e.target.value)
-            setError(null)
-          }}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          disabled={isCreating}
+        <EnumEditorItem
+          item={categoryData}
+          onChange={handleCategoryChange}
+          showRemoveButton={false}
+          showDuplicateButton={false}
+          autoFocus={true}
         />
         {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}
         <ButtonGroup>
@@ -101,7 +152,7 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
             Cancel
           </Button>
           <Spacer />
-          <Button onClick={handleCreate} disabled={!categoryName.trim() || isCreating}>
+          <Button onClick={handleCreate} disabled={!isValid || isCreating}>
             {isCreating ? 'Creating...' : 'Create'}
           </Button>
         </ButtonGroup>
