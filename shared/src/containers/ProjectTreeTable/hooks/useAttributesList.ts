@@ -9,7 +9,7 @@ interface UseAttributeFieldsParams {
 }
 
 const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) => {
-  const { data: info, isSuccess, isFetching } = useGetSiteInfoQuery({ full: true })
+  const { data: info, isLoading } = useGetSiteInfoQuery({ full: true })
   const { attributes = [] } = info || {}
 
   const { attrib_read, attrib_write } = projectPermissions || {}
@@ -28,7 +28,7 @@ const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) =>
       readOnly: attribWriteEnabled ? !attribWriteAttributes?.includes(a.name) : false,
     }))
 
-  return { attribFields, writableFields, isSuccess, isFetching }
+  return { attribFields, writableFields, isLoading }
 }
 
 export default useAttributeFields

@@ -3,7 +3,7 @@ import { AttributeEnumItem, AttributeModel, EntityList, useGetSiteInfoQuery } fr
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
-import { useUserProjectConfig } from '@shared/hooks'
+import { useQueryArgumentChangeLoading, useUserProjectConfig } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
 
@@ -42,7 +42,9 @@ export const ListsDataProvider = ({
   entityListTypes,
   isReview,
 }: ListsDataProviderProps) => {
-  const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
+  const { projectName, isLoading: isFetchingProject } = useProjectDataContext()
+
+  const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
 
   const { data: info } = useGetSiteInfoQuery({ full: true })
   const { attributes = [] } = info || {}
@@ -92,7 +94,16 @@ export const ListsDataProvider = ({
   }, [listsData])
 
   // convert listsData into tableData
-  const listsTableData = useMemo(() => buildListsTableData(listsData, categories), [listsData])
+  const listsTableData = useMemo(
+    () => buildListsTableData(listsData, categories),
+    [listsData, categories],
+  )
+
+  console.log({
+    isLoadingLists,
+    columnsConfigReady,
+    isLoadingProject,
+  })
 
   return (
     <ListsDataContext.Provider
@@ -103,7 +114,7 @@ export const ListsDataProvider = ({
         attributes: listAttributes,
         categoryAttribute,
         categories,
-        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || !isInitialized,
+        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,

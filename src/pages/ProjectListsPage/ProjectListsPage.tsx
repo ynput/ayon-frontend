@@ -56,10 +56,11 @@ import {
   type Active,
   type Over,
 } from '@dnd-kit/core'
-import { useAppSelector } from '@state/store.ts'
+import { useAppDispatch, useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
+import api from '@shared/api/index.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -246,6 +247,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
 
+  const dispatch = useAppDispatch()
+
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
   try {
@@ -284,6 +287,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
             {selectedList && (
               <Toolbar>
                 <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
+                <button
+                  onClick={() => {
+                    console.log('invalidating')
+                    dispatch(
+                      api.util.invalidateTags([{ type: 'attribute', id: 'entityListCategory' }]),
+                    )
+                  }}
+                >
+                  TEST
+                </button>
                 {/*@ts-expect-error - we do not support product right now*/}
                 <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
                 <OpenReviewSessionButton projectName={projectName} />
