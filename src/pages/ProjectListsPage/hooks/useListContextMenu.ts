@@ -5,7 +5,9 @@ import { useCallback, useState } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
-import { useListsDataContext } from '../context/ListsDataContext'
+import { LIST_CATEGORY_ATTRIBUTE, useListsDataContext } from '../context/ListsDataContext'
+
+export const CATEGORY_ICON = 'label'
 
 const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
@@ -130,18 +132,20 @@ const useListContextMenu = () => {
         // Add "Create category" option at the top
         submenuItems.push({
           label: 'Create category',
-          icon: 'add',
+          icon: 'new_label',
           command: () => openCreateCategoryDialog(selectedListIds),
-          hidden: isUser, // only admins and managers can create categories
+          disabled: isUser, // only admins and managers can create categories
         })
 
         // For multiple selections, show "Unset category" if any list has a category
         // For single selection, show "Unset category" only if that list has a category
-        const hasAnyCategory = newSelectedLists.some((list) => list.data?.category)
+        const hasAnyCategory = newSelectedLists.some(
+          (list) => list.attrib?.[LIST_CATEGORY_ATTRIBUTE],
+        )
         if (hasAnyCategory) {
           submenuItems.push({
             label: 'Unset category',
-            icon: 'close',
+            icon: 'label_off',
             command: () => {
               setListsCategory(selectedListIds, null)
             },
@@ -167,7 +171,7 @@ const useListContextMenu = () => {
           availableCategories.forEach((category) => {
             submenuItems.push({
               label: category.label,
-              icon: category.icon || 'sell',
+              icon: category.icon || CATEGORY_ICON,
               command: () => {
                 setListsCategory(selectedListIds, category.value.toString())
               },
@@ -189,6 +193,7 @@ const useListContextMenu = () => {
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
           disabled: multipleSelected || (isSelectedRowCategory && isUser),
+          hidden: !allSelectedRowsAreLists,
         },
         {
           label: 'Edit category',

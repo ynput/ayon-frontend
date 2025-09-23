@@ -143,7 +143,7 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
             projectName,
             entityListPatchModel: {
               attrib: {
-                entityListCategory: category,
+                [LIST_CATEGORY_ATTRIBUTE]: category,
               },
             },
           }).unwrap(),

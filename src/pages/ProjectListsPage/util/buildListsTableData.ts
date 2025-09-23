@@ -1,6 +1,8 @@
 import { AttributeEnumItem, EntityList, EntityListModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
+import { CATEGORY_ICON } from '../hooks/useListContextMenu'
+import { LIST_CATEGORY_ATTRIBUTE } from '../context/ListsDataContext'
 
 export const buildListsTableData = (
   listsData: EntityList[],
@@ -20,9 +22,9 @@ export const buildListsTableData = (
     // Get category from data field (now guaranteed to be an object)
     let category = 'Uncategorized'
 
-    const listCategory = list.attrib && list.attrib.entityListCategory
+    const listCategory = list.attrib && list.attrib[LIST_CATEGORY_ATTRIBUTE]
     if (listCategory && categoryMap.has(listCategory)) {
-      category = list.attrib.entityListCategory
+      category = list.attrib[LIST_CATEGORY_ATTRIBUTE]
     }
 
     if (!listsByCategory[category]) {
@@ -60,7 +62,7 @@ export const buildListsTableData = (
       // Get category attributes from the categories data
       const categoryAttr = categoryMap.get(category)
       const categoryLabel = categoryAttr?.label || category
-      const categoryIcon = categoryAttr?.icon || 'sell'
+      const categoryIcon = categoryAttr?.icon || CATEGORY_ICON
       const categoryColor = categoryAttr?.color
 
       // Create a parent row for all categories
