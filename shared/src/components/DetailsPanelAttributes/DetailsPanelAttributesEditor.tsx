@@ -1,6 +1,6 @@
 import type { AttributeModel } from '@shared/api'
 import { copyToClipboard } from '@shared/util'
-import { FC, useState } from 'react'
+import { FC, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
@@ -111,6 +111,15 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   entityType = 'task',
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
+
+  const entitySelectionKey = useMemo(
+    () => entities.map((entity) => entity?.id).join('|'),
+    [entities],
+  )
+
+  useEffect(() => {
+    setEditingField(null)
+  }, [entitySelectionKey])
 
   const handleStartEditing = (fieldName: string) => {
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {

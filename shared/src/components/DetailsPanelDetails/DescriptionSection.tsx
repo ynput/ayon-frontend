@@ -104,6 +104,8 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     }
   }
 
+  const quillValue = isEditing ? editorValue : description
+
   return (
     <BorderedSection
       title="Description"
@@ -122,7 +124,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
                 key={`description-editor-${isEditing}`}
                 theme="snow"
                 ref={editorRef}
-                value={editorValue || description}
+                value={quillValue}
                 onChange={setEditorValue}
                 placeholder="Add a description..."
                 modules={
