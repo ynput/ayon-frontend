@@ -21,6 +21,7 @@ const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   return true
 }
 
+
 function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   const [contextMenu] = useCreateContextMenu([])
   let className = 'form-object-field'
@@ -78,6 +79,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   }, [props.properties])
 
   const fields = useMemo(() => {
+
     let hiddenFields: $Any[] = []
     for (const propName in props?.schema?.properties || {}) {
       //@ts-ignore
@@ -96,10 +98,6 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       }
     }
 
-    console.log(props.schema)
-    if (props.schema.widget === 'permissions'){
-      return <b>Magic permissions widget</b>
-    }
 
     if (props.schema.layout === 'expanded') {
       let nameField = null
@@ -166,6 +164,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   }, [props.properties, className])
 
   // aaand... render
+
 
   if (['compact', 'root', 'expanded'].includes(props.schema.layout)) return fields
 
