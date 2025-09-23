@@ -1,8 +1,17 @@
-import { EntityList, EntityListModel } from '@shared/api'
+import { AttributeEnumItem, EntityList, EntityListModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
 
-export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] => {
+export const buildListsTableData = (
+  listsData: EntityList[],
+  categories: AttributeEnumItem[],
+): SimpleTableRow[] => {
+  // Create a lookup map for category attributes
+  const categoryMap = new Map<string, AttributeEnumItem>()
+  for (const category of categories) {
+    categoryMap.set(String(category.value), category)
+  }
+
   // Group lists by data.category if available
   const listsByCategory: Record<string, EntityList[]> = {}
 
@@ -11,8 +20,9 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
     // Get category from data field (now guaranteed to be an object)
     let category = 'Uncategorized'
 
-    if (list.data && list.data.category) {
-      category = list.data.category
+    const listCategory = list.attrib && list.attrib.entityListCategory
+    if (listCategory && categoryMap.has(listCategory)) {
+      category = list.attrib.entityListCategory
     }
 
     if (!listsByCategory[category]) {
@@ -47,12 +57,18 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
         })
       }
     } else {
+      // Get category attributes from the categories data
+      const categoryAttr = categoryMap.get(category)
+      const categoryLabel = categoryAttr?.label || category
+      const categoryIcon = categoryAttr?.icon || 'sell'
+      const categoryColor = categoryAttr?.color
+
       // Create a parent row for all categories
       const parentRow: SimpleTableRow = {
         id: `category-${category}`,
-        name: category,
-        label: category,
-        icon: 'sell',
+        name: categoryLabel,
+        label: categoryLabel,
+        icon: categoryIcon,
         iconFilled: true,
         subRows: [],
         data: {
@@ -61,6 +77,7 @@ export const buildListsTableData = (listsData: EntityList[]): SimpleTableRow[] =
           count: lists.length,
           type: category,
           isFolder: true,
+          color: categoryColor,
         },
       }
 

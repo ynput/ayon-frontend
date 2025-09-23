@@ -24,7 +24,7 @@ import {
 } from './types'
 
 // Helper function to safely parse entity list data field from JSON string to object
-const parseEntityListData = (data: string | null | undefined): Record<string, any> => {
+const parseJSON = (data: string | null | undefined): Record<string, any> => {
   if (!data) return {}
 
   try {
@@ -60,7 +60,8 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           // @ts-expect-error - entityType is string
           lists: response.project.entityLists.edges.map((edge) => ({
             ...edge.node,
-            data: parseEntityListData(edge.node.data),
+            data: parseJSON(edge.node.data),
+            attrib: parseJSON(edge.node.allAttrib),
           })),
           pageInfo: response.project.entityLists.pageInfo,
         }
@@ -405,7 +406,7 @@ const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
       transformResponse: (response: any) => {
         return {
           ...response,
-          data: parseEntityListData(response.data),
+          data: parseJSON(response.data),
         }
       },
       providesTags: (result, _e, { listId, projectName }) => [

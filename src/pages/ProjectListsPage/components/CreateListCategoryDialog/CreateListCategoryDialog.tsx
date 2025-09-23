@@ -20,7 +20,6 @@ interface CreateListCategoryDialogProps {
   isOpen: boolean
   onClose: () => void
   onCreateCategory: (categoryName: string) => Promise<void>
-  existingCategories?: string[]
   listCount?: number
 }
 
@@ -28,7 +27,6 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
   isOpen,
   onClose,
   onCreateCategory,
-  existingCategories = [],
   listCount = 1,
 }) => {
   const [categoryName, setCategoryName] = useState('')
@@ -38,11 +36,6 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
   const handleCreate = useCallback(async () => {
     if (!categoryName.trim()) {
       setError('Category name is required')
-      return
-    }
-
-    if (existingCategories.includes(categoryName.trim())) {
-      setError('Category already exists')
       return
     }
 
@@ -59,7 +52,7 @@ export const CreateListCategoryDialog: FC<CreateListCategoryDialogProps> = ({
     } finally {
       setIsCreating(false)
     }
-  }, [categoryName, existingCategories, onCreateCategory, onClose])
+  }, [categoryName, onCreateCategory, onClose])
 
   const handleCancel = useCallback(() => {
     setCategoryName('')

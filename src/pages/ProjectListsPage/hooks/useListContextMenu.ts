@@ -11,8 +11,9 @@ import { useListsDataContext } from '../context/ListsDataContext'
 const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
+  const isUser = !user.data?.isAdmin && !user.data?.isManager
   const { projectName } = useProjectDataContext()
-  const { listsData, categoryEnum } = useListsDataContext()
+  const { listsData, categories } = useListsDataContext()
   const {
     rowSelection,
     setRowSelection,
@@ -24,12 +25,9 @@ const useListContextMenu = () => {
   } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
-  const {
-    updateCategory,
-    createAndAssignCategory,
-    updateCategoryBulk,
-    createAndAssignCategoryBulk,
-  } = useUpdateListCategory({ projectName })
+  const { setListsCategory, createAndAssignCategory } = useUpdateListCategory({
+    projectName,
+  })
 
   // Dialog state for creating categories - updated to handle multiple lists
   const [createCategoryDialog, setCreateCategoryDialog] = useState<{
@@ -60,15 +58,9 @@ const useListContextMenu = () => {
 
   const handleCreateCategory = useCallback(
     async (categoryName: string) => {
-      if (createCategoryDialog.listIds.length > 0) {
-        if (createCategoryDialog.listIds.length === 1) {
-          await createAndAssignCategory(createCategoryDialog.listIds[0], categoryName)
-        } else {
-          await createAndAssignCategoryBulk(createCategoryDialog.listIds, categoryName)
-        }
-      }
+      await createAndAssignCategory(createCategoryDialog.listIds, categoryName)
     },
-    [createCategoryDialog.listIds, createAndAssignCategory, createAndAssignCategoryBulk],
+    [createCategoryDialog.listIds, createAndAssignCategory],
   )
 
   const openContext = useCallback(
@@ -110,6 +102,7 @@ const useListContextMenu = () => {
           label: 'Create category',
           icon: 'add',
           command: () => openCreateCategoryDialog(selectedListIds),
+          hidden: isUser, // only admins and managers can create categories
         })
 
         // For multiple selections, show "Unset category" if any list has a category
@@ -120,17 +113,13 @@ const useListContextMenu = () => {
             label: 'Unset category',
             icon: 'close',
             command: () => {
-              if (multipleSelected) {
-                updateCategoryBulk(selectedListIds, null)
-              } else {
-                updateCategory(selectedListIds[0], null)
-              }
+              setListsCategory(selectedListIds, null)
             },
           })
         }
 
         // Get categories that are not already assigned to ALL selected lists
-        const availableCategories = categoryEnum.filter((cat) => {
+        const availableCategories = categories.filter((cat) => {
           if (multipleSelected) {
             // For multiple selections, show categories that are not assigned to ALL lists
             return !newSelectedLists.every((list) => list.data?.category === cat.value)
@@ -150,11 +139,7 @@ const useListContextMenu = () => {
               label: category.label,
               icon: 'folder',
               command: () => {
-                if (multipleSelected) {
-                  updateCategoryBulk(selectedListIds, category.value)
-                } else {
-                  updateCategory(selectedListIds[0], category.value)
-                }
+                setListsCategory(selectedListIds, category.value.toString())
               },
             })
           })
@@ -219,14 +204,15 @@ const useListContextMenu = () => {
       ctxMenuShow,
       rowSelection,
       listsData,
-      categoryEnum,
+      categories,
       setRowSelection,
       openRenameList,
       setListDetailsOpen,
       deleteLists,
       createReviewSessionList,
-      updateCategory,
-      updateCategoryBulk,
+      setListsCategory,
+      createAndAssignCategory,
+      openCreateCategoryDialog,
     ],
   )
 
@@ -235,7 +221,6 @@ const useListContextMenu = () => {
     createCategoryDialog,
     closeCreateCategoryDialog,
     handleCreateCategory,
-    existingCategories: categoryEnum.map((cat) => cat.value),
   }
 }
 

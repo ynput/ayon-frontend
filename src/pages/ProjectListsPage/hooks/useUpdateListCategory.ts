@@ -1,61 +1,19 @@
 import { useCallback } from 'react'
-import { useUpdateEntityListMutation } from '@shared/api'
+import { usePatchAttributeConfigMutation, useUpdateEntityListMutation } from '@shared/api'
 import { toast } from 'react-toastify'
+import { LIST_CATEGORY_ATTRIBUTE, useListsDataContext } from '../context/ListsDataContext'
+import { kebabCase } from 'lodash'
 
 interface UseUpdateListCategoryProps {
   projectName: string
 }
 
 export const useUpdateListCategory = ({ projectName }: UseUpdateListCategoryProps) => {
+  const { categories } = useListsDataContext()
   const [updateList] = useUpdateEntityListMutation()
+  const [updateAttribute] = usePatchAttributeConfigMutation()
 
-  const updateCategory = useCallback(
-    async (listId: string, category: string | null) => {
-      try {
-        await updateList({
-          listId,
-          projectName,
-          entityListPatchModel: {
-            data: {
-              category,
-            },
-          },
-        })
-
-        const message = category ? `Category set to "${category}"` : 'Category removed'
-        toast.success(message)
-      } catch (error: any) {
-        console.error('Failed to update category:', error)
-        toast.error(`Failed to update category: ${error.data?.detail || error.message}`)
-      }
-    },
-    [updateList, projectName],
-  )
-
-  const createAndAssignCategory = useCallback(
-    async (listId: string, categoryName: string) => {
-      try {
-        await updateList({
-          listId,
-          projectName,
-          entityListPatchModel: {
-            data: {
-              category: categoryName,
-            },
-          },
-        })
-
-        toast.success(`Created and assigned category "${categoryName}"`)
-      } catch (error: any) {
-        console.error('Failed to create and assign category:', error)
-        toast.error(`Failed to create category: ${error.data?.detail || error.message}`)
-        throw error // Re-throw to handle in dialog
-      }
-    },
-    [updateList, projectName],
-  )
-
-  const updateCategoryBulk = useCallback(
+  const setListsCategory = useCallback(
     async (listIds: string[], category: string | null) => {
       try {
         const updatePromises = listIds.map((listId) =>
@@ -63,8 +21,8 @@ export const useUpdateListCategory = ({ projectName }: UseUpdateListCategoryProp
             listId,
             projectName,
             entityListPatchModel: {
-              data: {
-                category,
+              attrib: {
+                entityListCategory: category,
               },
             },
           }).unwrap(),
@@ -87,42 +45,52 @@ export const useUpdateListCategory = ({ projectName }: UseUpdateListCategoryProp
     [updateList, projectName],
   )
 
-  const createAndAssignCategoryBulk = useCallback(
-    async (listIds: string[], categoryName: string) => {
-      try {
-        const updatePromises = listIds.map((listId) =>
-          updateList({
-            listId,
-            projectName,
-            entityListPatchModel: {
-              data: {
-                category: categoryName,
-              },
-            },
-          }).unwrap(),
-        )
+  const createAndAssignCategory = useCallback(
+    async (listIds: string[], categoryLabel: string) => {
+      // update the attribute config to add the new category
 
-        await Promise.all(updatePromises)
+      // generate category name from label
+      const categoryValue = kebabCase(categoryLabel)
+
+      // Check if category already exists
+      const categoryExists = categories?.some((item) => item.value == categoryValue)
+      if (categoryExists) {
+        const errorMsg = `Category "${categoryLabel}" already exists`
+        console.error(errorMsg)
+        toast.error(errorMsg)
+        return
+      }
+
+      const newEnum = [...categories, { label: categoryLabel, value: categoryValue }]
+
+      try {
+        await updateAttribute({
+          attributeName: LIST_CATEGORY_ATTRIBUTE,
+          attributePatchModel: {
+            data: {
+              enum: newEnum,
+            },
+          },
+        }).unwrap()
+
+        // now assign the new category to the lists
+        await setListsCategory(listIds, categoryValue)
 
         toast.success(
-          `Created and assigned category "${categoryName}" to ${listIds.length} list${
-            listIds.length === 1 ? '' : 's'
-          }`,
+          `Category "${categoryLabel}" created and assigned to ${listIds.length} list(s)`,
         )
       } catch (error: any) {
         console.error('Failed to create and assign category:', error)
-        toast.error(`Failed to create category: ${error.data?.detail || error.message}`)
+        toast.error(`Failed to create and assign category: ${error.data?.detail || error.message}`)
         throw error
       }
     },
-    [updateList, projectName],
+    [setListsCategory],
   )
 
   return {
-    updateCategory,
+    setListsCategory,
     createAndAssignCategory,
-    updateCategoryBulk,
-    createAndAssignCategoryBulk,
   }
 }
 

@@ -24,7 +24,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
   } = useGetEntityListQuery({ listId, projectName }, { skip: !listId })
 
   // Get lists data for category enum
-  const { categoryEnum } = useListsDataContext()
+  const { attributes } = useListsDataContext()
 
   const { setListDetailsOpen } = useListsContext()
 
@@ -61,7 +61,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
                 list={list}
                 isLoading={isLoadingList}
                 projectName={projectName}
-                categoryEnum={categoryEnum}
+                attributes={attributes}
               />
             </Styled.Section>
             <Styled.Section>

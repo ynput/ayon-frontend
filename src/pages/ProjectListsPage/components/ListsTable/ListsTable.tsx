@@ -44,7 +44,6 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     createCategoryDialog,
     closeCreateCategoryDialog,
     handleCreateCategory,
-    existingCategories,
   } = useListContextMenu()
 
   // Memoize the render function for the row (definition remains the same)
@@ -75,6 +74,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         value={props.value}
         icon={props.icon}
         iconFilled={props.iconFilled}
+        iconColor={row.original.data.color}
         inactive={row.original.inactive}
         count={row.original.data.count}
         isRenaming={listId === meta?.renamingList}
@@ -133,7 +133,6 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         isOpen={createCategoryDialog.isOpen}
         onClose={closeCreateCategoryDialog}
         onCreateCategory={handleCreateCategory}
-        existingCategories={existingCategories}
         listCount={createCategoryDialog.listIds.length}
       />
     </>

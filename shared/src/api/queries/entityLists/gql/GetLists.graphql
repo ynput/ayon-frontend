@@ -12,6 +12,7 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           entityListType
           tags
           data
+          allAttrib
           entityType
           active
           createdAt
@@ -19,7 +20,6 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           updatedBy
           active
           projectName
-          attributes
           owner
           count
         }

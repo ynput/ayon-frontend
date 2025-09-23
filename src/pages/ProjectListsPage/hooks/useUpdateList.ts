@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { useListsDataContext } from '../context/ListsDataContext'
+import { LIST_CATEGORY_ATTRIBUTE, useListsDataContext } from '../context/ListsDataContext'
 import { ListsContextType } from '../context'
-import type { EntityListPatchModel } from '@shared/api'
+import { usePatchAttributeConfigMutation, type EntityListPatchModel } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
-import useRenameCategoryFolder from './useRenameCategoryFolder'
-import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 
 export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']
@@ -20,9 +18,7 @@ export interface UseUpdateListReturn {
 }
 
 const useUpdateList = ({ setRowSelection, onUpdateList }: UseUpdateListProps) => {
-  const { listsData } = useListsDataContext()
-  const { projectName } = useProjectDataContext()
-  const { renameCategoryFolder } = useRenameCategoryFolder({ projectName, listsData })
+  const { listsData, categoryAttribute } = useListsDataContext()
   const [renamingList, setRenamingList] = useState<UseUpdateListReturn['renamingList']>(null)
 
   const openRenameList: UseUpdateListReturn['openRenameList'] = useCallback(
@@ -50,19 +46,42 @@ const useUpdateList = ({ setRowSelection, onUpdateList }: UseUpdateListProps) =>
     setRenamingList(null)
   }, [])
 
+  const [updateAttribute] = usePatchAttributeConfigMutation()
   const submitRenameList: UseUpdateListReturn['submitRenameList'] = useCallback(
-    async (value) => {
+    async (label) => {
       if (!renamingList) return Promise.reject()
 
       try {
         // Check if this is a category folder
         if (renamingList.startsWith('category-')) {
-          const oldCategoryName = renamingList.replace('category-', '')
-          await renameCategoryFolder(oldCategoryName, value)
+          // set new label for category enum
+          const categoryName = renamingList.replace('category-', '')
+          // get category enum from categoryAttribute
+          if (!categoryAttribute) throw new Error('Category attribute not found')
+
+          // find the enum item
+          const enumItem = categoryAttribute.data.enum?.find((item) => item.value === categoryName)
+          if (!enumItem) throw new Error('Category not found in attribute enum')
+
+          // update enums
+          const newEnum = categoryAttribute.data.enum?.map((item) =>
+            item.value === categoryName ? { ...item, label: label } : item,
+          )
+
+          if (!newEnum) throw new Error('Failed to generate new enum for category')
+
+          updateAttribute({
+            attributeName: LIST_CATEGORY_ATTRIBUTE,
+            attributePatchModel: {
+              data: {
+                enum: newEnum,
+              },
+            },
+          })
         } else {
           // Regular list renaming
           await onUpdateList(renamingList, {
-            label: value,
+            label: label,
           })
         }
 
@@ -77,7 +96,7 @@ const useUpdateList = ({ setRowSelection, onUpdateList }: UseUpdateListProps) =>
         throw error
       }
     },
-    [renamingList, onUpdateList, renameCategoryFolder, closeRenameList],
+    [renamingList, onUpdateList, closeRenameList],
   )
 
   return {

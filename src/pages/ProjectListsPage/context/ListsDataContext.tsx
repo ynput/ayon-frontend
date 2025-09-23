@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
-import { EntityList } from '@shared/api'
+import { AttributeEnumItem, AttributeModel, EntityList, useGetSiteInfoQuery } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
@@ -7,26 +7,18 @@ import { useUserProjectConfig } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
 
+const LIST_SCOPE_ID = 'list'
+export const LIST_CATEGORY_ATTRIBUTE = 'entityListCategory'
+
 export type ListsMap = Map<string, EntityList>
-
-// Helper function to extract unique categories from all lists
-const getUniqueCategoriesFromLists = (listsData: EntityList[] = []): string[] => {
-  const categories = new Set<string>()
-
-  for (const list of listsData) {
-    if (list.data && list.data.category && typeof list.data.category === 'string') {
-      categories.add(list.data.category)
-    }
-  }
-
-  return Array.from(categories).sort()
-}
 
 interface ListsDataContextValue {
   listsData: EntityList[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
-  categoryEnum: Array<{ value: string; label: string }>
+  attributes: AttributeModel[]
+  categoryAttribute?: AttributeModel
+  categories: AttributeEnumItem[] // specifically find categories
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
@@ -51,6 +43,22 @@ export const ListsDataProvider = ({
   isReview,
 }: ListsDataProviderProps) => {
   const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
+
+  const { data: info } = useGetSiteInfoQuery({ full: true })
+  const { attributes = [] } = info || {}
+  const listAttributes = useMemo(
+    () => attributes.filter((attrib) => attrib.scope?.includes(LIST_SCOPE_ID)),
+    [attributes],
+  )
+
+  const categoryAttribute = listAttributes.find((attrib) => attrib.name === LIST_CATEGORY_ATTRIBUTE)
+
+  const categories = useMemo(() => {
+    if (categoryAttribute && categoryAttribute.data.enum?.length) {
+      return categoryAttribute.data.enum
+    }
+    return []
+  }, [listAttributes])
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
     selectors: ['lists', projectName],
@@ -84,16 +92,7 @@ export const ListsDataProvider = ({
   }, [listsData])
 
   // convert listsData into tableData
-  const listsTableData = useMemo(() => buildListsTableData(listsData), [listsData])
-
-  // Get unique categories from all lists for the enum
-  const categoryEnum = useMemo(() => {
-    const uniqueCategories = getUniqueCategoriesFromLists(listsData)
-    return uniqueCategories.map((category) => ({
-      value: category,
-      label: category,
-    }))
-  }, [listsData])
+  const listsTableData = useMemo(() => buildListsTableData(listsData, categories), [listsData])
 
   return (
     <ListsDataContext.Provider
@@ -101,7 +100,9 @@ export const ListsDataProvider = ({
         listsData,
         listsTableData,
         listsMap,
-        categoryEnum,
+        attributes: listAttributes,
+        categoryAttribute,
+        categories,
         isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || !isInitialized,
         isLoadingMore: isFetchingNextPage,
         isError,
