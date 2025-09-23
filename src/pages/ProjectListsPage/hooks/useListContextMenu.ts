@@ -4,7 +4,6 @@ import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMe
 import { useCallback, useState } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
-import useUpdateListCategory from './useUpdateListCategory'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
 
@@ -22,12 +21,11 @@ const useListContextMenu = () => {
     deleteLists,
     createReviewSessionList,
     isReview,
+    setListsCategory,
+    createAndAssignCategory,
   } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
-  const { setListsCategory, createAndAssignCategory } = useUpdateListCategory({
-    projectName,
-  })
 
   // Dialog state for creating categories - updated to handle multiple lists
   const [createCategoryDialog, setCreateCategoryDialog] = useState<{

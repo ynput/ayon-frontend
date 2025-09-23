@@ -27,6 +27,8 @@ export interface ListsContextType {
   openRenameList: UseUpdateListReturn['openRenameList']
   closeRenameList: UseUpdateListReturn['closeRenameList']
   submitRenameList: UseUpdateListReturn['submitRenameList']
+  setListsCategory: UseUpdateListReturn['setListsCategory']
+  createAndAssignCategory: UseUpdateListReturn['createAndAssignCategory']
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog

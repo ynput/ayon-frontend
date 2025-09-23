@@ -125,9 +125,17 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const [updateListMutation] = useUpdateEntityListMutation()
   const onUpdateList = async (listId: string, list: EntityListPatchModel) =>
     await updateListMutation({ listId, entityListPatchModel: list, projectName }).unwrap()
-  const { closeRenameList, openRenameList, renamingList, submitRenameList } = useUpdateList({
+  const {
+    closeRenameList,
+    openRenameList,
+    renamingList,
+    submitRenameList,
+    setListsCategory,
+    createAndAssignCategory,
+  } = useUpdateList({
     setRowSelection,
     onUpdateList,
+    projectName,
   })
 
   // DELETE LIST
@@ -160,6 +168,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       openRenameList,
       renamingList,
       submitRenameList,
+      setListsCategory,
+      createAndAssignCategory,
       deleteLists,
       // info dialog
       listDetailsOpen,
@@ -186,6 +196,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     openRenameList,
     renamingList,
     submitRenameList,
+    setListsCategory,
+    createAndAssignCategory,
     deleteLists,
     listDetailsOpen,
     setListDetailsOpen,
