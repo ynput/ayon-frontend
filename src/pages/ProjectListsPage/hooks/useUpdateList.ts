@@ -8,6 +8,7 @@ import {
 } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
+import { useAppSelector } from '@state/store'
 
 export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']
@@ -35,6 +36,8 @@ export interface UseUpdateListReturn {
 const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdateListProps) => {
   const { listsData, categoryAttribute, categories } = useListsDataContext()
   const [renamingList, setRenamingList] = useState<UseUpdateListReturn['renamingList']>(null)
+  const user = useAppSelector((state) => state.user)
+  const isUser = !user.data?.isAdmin && !user.data?.isManager
 
   const openRenameList: UseUpdateListReturn['openRenameList'] = useCallback(
     (listId) => {
@@ -71,6 +74,12 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
       try {
         // Check if this is a category folder
         if (renamingList.startsWith('category-')) {
+          // Check if user has permission to rename categories
+          if (isUser) {
+            toast.error('You do not have permission to rename categories')
+            return Promise.reject(new Error('Insufficient permissions'))
+          }
+
           // set new label for category enum
           const categoryName = renamingList.replace('category-', '')
           // get category enum from categoryAttribute
@@ -113,7 +122,7 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
         throw error
       }
     },
-    [renamingList, onUpdateList, closeRenameList, categoryAttribute, updateAttribute],
+    [renamingList, onUpdateList, closeRenameList, categoryAttribute, updateAttribute, isUser],
   )
 
   const setListsCategory = useCallback(

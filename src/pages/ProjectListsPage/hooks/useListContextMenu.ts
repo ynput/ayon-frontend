@@ -148,12 +148,15 @@ const useListContextMenu = () => {
 
       const categorySubmenu = createCategorySubmenu()
 
+      // Check if the first selected row is a category
+      const isSelectedRowCategory = firstSelectedRow?.startsWith('category-')
+
       const menuItems: any[] = [
         {
           label: 'Rename',
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
-          disabled: multipleSelected,
+          disabled: multipleSelected || (isSelectedRowCategory && isUser),
         },
         {
           label: 'Create review',
