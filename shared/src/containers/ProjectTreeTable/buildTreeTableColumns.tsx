@@ -189,7 +189,6 @@ const buildTreeTableColumns = ({
           )
         }
 
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
         return (
           <TableCellContent
             id={cellId}
