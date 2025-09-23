@@ -10,7 +10,7 @@ import { FieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'
 import { matchesFilterKeys } from './searchMatcher'
 import { toast } from 'react-toastify'
-import PermissionsWidget from '../Widgets/PermissionsWidget'
+import AccessWidget from '../Widgets/AccessWidget'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -57,7 +57,7 @@ function FieldTemplate(props: FieldTemplateProps) {
   // Object fields
   
 
-  if (props.schema.type === 'object' && props.schema?.widget !== 'permissions') {
+  if (props.schema.type === 'object' && props.schema?.widget !== 'access') {
     return (
       <>
         {divider}
@@ -208,9 +208,9 @@ function FieldTemplate(props: FieldTemplateProps) {
 
 
   let mainWidget = null
-  if (props.schema.widget === 'permissions') {
+  if (props.schema.widget === 'access') {
     mainWidget = (
-      <PermissionsWidget {...props} />
+      <AccessWidget {...props} />
     )
   } else {
     mainWidget = props.children
