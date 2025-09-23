@@ -42,7 +42,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
         ))}
         <span className="label">{link.label}</span>
       </span>
-      <Button icon={'close'} variant="text" className="remove" onClick={(e) => onRemove(e, link)} />
+      <Button icon={'delete'} variant="text" className="remove" onClick={(e) => onRemove(e, link)} />
     </Styled.LinkItem>
   )
 }

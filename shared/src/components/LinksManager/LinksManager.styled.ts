@@ -18,6 +18,16 @@ export const Header = styled.h4`
   padding: 0;
   padding-bottom: var(--padding-s);
   flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .remove {
+    padding: 2px;
+    background: none;
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest);
+    }
+  }
 `
 
 export const SubHeader = styled.h5`
