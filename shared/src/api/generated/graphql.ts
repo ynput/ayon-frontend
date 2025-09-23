@@ -178,7 +178,6 @@ export type EntityListItemsConnection = {
 
 export type EntityListNode = {
   __typename?: 'EntityListNode';
-  accessLevel: Scalars['Int']['output'];
   active: Scalars['Boolean']['output'];
   attributes: Scalars['String']['output'];
   count: Scalars['Int']['output'];
@@ -302,7 +301,6 @@ export type FolderNode = BaseNode & {
   hasProducts: Scalars['Boolean']['output'];
   hasReviewables: Scalars['Boolean']['output'];
   hasTasks: Scalars['Boolean']['output'];
-  hasVersions: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
   links: LinksConnection;
@@ -466,7 +464,7 @@ export type LinkEdge = {
   linkType: Scalars['String']['output'];
   name?: Maybe<Scalars['String']['output']>;
   /** Linked node */
-  node?: Maybe<BaseNode>;
+  node?: BaseNode;
   projectName: Scalars['String']['output'];
 };
 
@@ -1279,7 +1277,6 @@ export type UserNode = {
   hasPassword: Scalars['Boolean']['output'];
   isAdmin: Scalars['Boolean']['output'];
   isDeveloper: Scalars['Boolean']['output'];
-  isExternal: Scalars['Boolean']['output'];
   isGuest: Scalars['Boolean']['output'];
   isManager: Scalars['Boolean']['output'];
   isService: Scalars['Boolean']['output'];

@@ -453,7 +453,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'createdAt',
       accessorKey: 'createdAt',
-      header: 'Created At',
+      header: 'Created at',
       minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
@@ -482,7 +482,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'updatedAt',
       accessorKey: 'updatedAt',
-      header: 'Updated At',
+      header: 'Updated at',
       minSize: MIN_SIZE,
       enableSorting: true,
       enableResizing: true,
