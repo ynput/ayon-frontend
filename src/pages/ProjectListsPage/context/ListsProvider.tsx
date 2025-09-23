@@ -132,6 +132,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     submitRenameList,
     setListsCategory,
     createAndAssignCategory,
+    editCategory,
   } = useUpdateList({
     setRowSelection,
     onUpdateList,
@@ -170,6 +171,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       submitRenameList,
       setListsCategory,
       createAndAssignCategory,
+      editCategory,
       deleteLists,
       // info dialog
       listDetailsOpen,
@@ -198,6 +200,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     submitRenameList,
     setListsCategory,
     createAndAssignCategory,
+    editCategory,
     deleteLists,
     listDetailsOpen,
     setListDetailsOpen,

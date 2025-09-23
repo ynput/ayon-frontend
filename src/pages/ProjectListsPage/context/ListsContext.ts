@@ -29,6 +29,7 @@ export interface ListsContextType {
   submitRenameList: UseUpdateListReturn['submitRenameList']
   setListsCategory: UseUpdateListReturn['setListsCategory']
   createAndAssignCategory: UseUpdateListReturn['createAndAssignCategory']
+  editCategory: UseUpdateListReturn['editCategory']
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog

@@ -10,7 +10,7 @@ import SimpleTable, {
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
-import CreateListCategoryDialog from '../CreateListCategoryDialog'
+import ListCategoryFormDialog from '../ListCategoryFormDialog'
 import { ExpandedState, Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
 
@@ -41,9 +41,9 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
 
   const {
     openContext: handleRowContext,
-    createCategoryDialog,
-    closeCreateCategoryDialog,
-    handleCreateCategory,
+    categoryFormDialog,
+    closeCategoryFormDialog,
+    handleSaveCategory,
   } = useListContextMenu()
 
   // Memoize the render function for the row (definition remains the same)
@@ -129,11 +129,13 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         </Container>
       </SimpleTableProvider>
       <NewListDialogContainer />
-      <CreateListCategoryDialog
-        isOpen={createCategoryDialog.isOpen}
-        onClose={closeCreateCategoryDialog}
-        onCreateCategory={handleCreateCategory}
-        listCount={createCategoryDialog.listIds.length}
+      <ListCategoryFormDialog
+        isOpen={categoryFormDialog.isOpen}
+        onClose={closeCategoryFormDialog}
+        onSaveCategory={handleSaveCategory}
+        mode={categoryFormDialog.mode}
+        initialCategory={categoryFormDialog.initialCategory}
+        listCount={categoryFormDialog.listIds.length}
       />
     </>
   )

@@ -31,6 +31,15 @@ export interface UseUpdateListReturn {
       color?: string
     },
   ) => Promise<void>
+  editCategory: (
+    categoryValue: string,
+    updatedCategory: {
+      label: string
+      value: string
+      icon?: string
+      color?: string
+    },
+  ) => Promise<void>
 }
 
 const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdateListProps) => {
@@ -219,6 +228,86 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
     [categories, setListsCategory, updateAttribute],
   )
 
+  const editCategory = useCallback(
+    async (
+      originalCategoryValue: string,
+      updatedCategory: {
+        label: string
+        value: string
+        icon?: string
+        color?: string
+      },
+    ) => {
+      try {
+        // Find the existing category
+        const existingCategory = categories?.find((item) => item.value === originalCategoryValue)
+        if (!existingCategory) {
+          throw new Error('Category not found')
+        }
+
+        // Check if the new value conflicts with existing categories (if value is changing)
+        if (originalCategoryValue !== updatedCategory.value) {
+          const valueConflicts = categories?.some((item) => item.value === updatedCategory.value)
+          if (valueConflicts) {
+            const errorMsg = `Category value "${updatedCategory.value}" already exists`
+            toast.error(errorMsg)
+            throw new Error(errorMsg)
+          }
+        }
+
+        // Update the enum array
+        const newEnum = categories?.map((item) => {
+          if (item.value === originalCategoryValue) {
+            const updatedItem: any = {
+              label: updatedCategory.label,
+              value: updatedCategory.value,
+            }
+            if (updatedCategory.icon) {
+              updatedItem.icon = updatedCategory.icon
+            }
+            if (updatedCategory.color) {
+              updatedItem.color = updatedCategory.color
+            }
+            return updatedItem
+          }
+          return item
+        })
+
+        if (!newEnum) {
+          throw new Error('Failed to generate updated enum for categories')
+        }
+
+        await updateAttribute({
+          attributeName: LIST_CATEGORY_ATTRIBUTE,
+          attributePatchModel: {
+            data: {
+              enum: newEnum,
+            },
+          },
+        }).unwrap()
+
+        // If the value changed, we need to update all lists that had the old category value
+        if (originalCategoryValue !== updatedCategory.value) {
+          // Find all lists with the old category value and update them
+          const listsToUpdate = listsData
+            .filter((list) => list.data?.category === originalCategoryValue)
+            .map((list) => list.id)
+
+          if (listsToUpdate.length > 0) {
+            await setListsCategory(listsToUpdate, updatedCategory.value)
+          }
+        }
+
+        toast.success(`Category "${updatedCategory.label}" updated successfully`)
+      } catch (error: any) {
+        console.error('Failed to update category:', error)
+        toast.error(`Failed to update category: ${error.data?.detail || error.message}`)
+        throw error
+      }
+    },
+    [categories, updateAttribute, listsData, setListsCategory],
+  )
+
   return {
     renamingList,
     openRenameList,
@@ -226,6 +315,7 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
     submitRenameList,
     setListsCategory,
     createAndAssignCategory,
+    editCategory,
   }
 }
 

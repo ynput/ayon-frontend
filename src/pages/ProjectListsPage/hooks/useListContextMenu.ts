@@ -23,15 +23,23 @@ const useListContextMenu = () => {
     isReview,
     setListsCategory,
     createAndAssignCategory,
+    editCategory,
   } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
 
-  // Dialog state for creating categories - updated to handle multiple lists
-  const [createCategoryDialog, setCreateCategoryDialog] = useState<{
+  // Dialog state for creating/editing categories
+  const [categoryFormDialog, setCategoryFormDialog] = useState<{
     isOpen: boolean
+    mode: 'create' | 'edit'
     listIds: string[]
-  }>({ isOpen: false, listIds: [] })
+    initialCategory?: {
+      label: string
+      value: string
+      icon?: string
+      color?: string
+    }
+  }>({ isOpen: false, mode: 'create', listIds: [] })
 
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
@@ -47,18 +55,42 @@ const useListContextMenu = () => {
   )
 
   const openCreateCategoryDialog = useCallback((listIds: string[]) => {
-    setCreateCategoryDialog({ isOpen: true, listIds })
+    setCategoryFormDialog({ isOpen: true, mode: 'create', listIds })
   }, [])
 
-  const closeCreateCategoryDialog = useCallback(() => {
-    setCreateCategoryDialog({ isOpen: false, listIds: [] })
-  }, [])
-
-  const handleCreateCategory = useCallback(
-    async (category: { label: string; value: string; icon?: string; color?: string }) => {
-      await createAndAssignCategory(createCategoryDialog.listIds, category)
+  const openEditCategoryDialog = useCallback(
+    (categoryValue: string) => {
+      const category = categories.find((cat) => cat.value === categoryValue)
+      if (category) {
+        setCategoryFormDialog({
+          isOpen: true,
+          mode: 'edit',
+          listIds: [],
+          initialCategory: {
+            label: category.label,
+            value: category.value.toString(),
+            icon: category.icon,
+            color: category.color,
+          },
+        })
+      }
     },
-    [createCategoryDialog.listIds, createAndAssignCategory],
+    [categories],
+  )
+
+  const closeCategoryFormDialog = useCallback(() => {
+    setCategoryFormDialog({ isOpen: false, mode: 'create', listIds: [] })
+  }, [])
+
+  const handleSaveCategory = useCallback(
+    async (category: { label: string; value: string; icon?: string; color?: string }) => {
+      if (categoryFormDialog.mode === 'create') {
+        await createAndAssignCategory(categoryFormDialog.listIds, category)
+      } else if (categoryFormDialog.mode === 'edit' && categoryFormDialog.initialCategory) {
+        await editCategory(categoryFormDialog.initialCategory.value, category)
+      }
+    },
+    [categoryFormDialog, createAndAssignCategory, editCategory],
   )
 
   const openContext = useCallback(
@@ -159,6 +191,16 @@ const useListContextMenu = () => {
           disabled: multipleSelected || (isSelectedRowCategory && isUser),
         },
         {
+          label: 'Edit category',
+          icon: 'settings',
+          command: () => {
+            const categoryValue = firstSelectedRow.replace('category-', '')
+            openEditCategoryDialog(categoryValue)
+          },
+          hidden: !isSelectedRowCategory || multipleSelected,
+          disabled: isUser, // only admins and managers can edit categories
+        },
+        {
           label: 'Create review',
           icon: 'subscriptions',
           command: () => handleCreateReviewSessionList(selectedList.id),
@@ -214,14 +256,15 @@ const useListContextMenu = () => {
       setListsCategory,
       createAndAssignCategory,
       openCreateCategoryDialog,
+      openEditCategoryDialog,
     ],
   )
 
   return {
     openContext,
-    createCategoryDialog,
-    closeCreateCategoryDialog,
-    handleCreateCategory,
+    categoryFormDialog,
+    closeCategoryFormDialog,
+    handleSaveCategory,
   }
 }
 
