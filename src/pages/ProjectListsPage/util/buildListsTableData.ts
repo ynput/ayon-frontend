@@ -117,8 +117,18 @@ export const buildListsTableData = (
     }
   }
 
-  // Sort category rows alphabetically
-  categoryRows.sort((a, b) => a.label.localeCompare(b.label))
+  // Sort category rows based on the order in categories array
+  categoryRows.sort((a, b) => {
+    const aIndex = categories.findIndex((cat) => cat.value === a.data.id)
+    const bIndex = categories.findIndex((cat) => cat.value === b.data.id)
+
+    // If either category is not found in the categories array, fall back to alphabetical
+    if (aIndex === -1 && bIndex === -1) return a.label.localeCompare(b.label)
+    if (aIndex === -1) return 1
+    if (bIndex === -1) return -1
+
+    return aIndex - bIndex
+  })
 
   // Sort uncategorized rows: active first (by createdAt newest first), then inactive (by createdAt newest first)
   uncategorizedRows.sort((a, b) => {

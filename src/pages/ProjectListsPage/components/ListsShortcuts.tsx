@@ -5,7 +5,7 @@ import { useListsContext } from '../context'
 interface ListsShortcutsProps {}
 
 const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
-  const { openNewList, openRenameList, selectedList } = useListsContext()
+  const { openNewList, openRenameList, rowSelection } = useListsContext()
 
   const shortcuts = [
     {
@@ -14,7 +14,7 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
     },
     {
       key: 'r',
-      action: () => selectedList && openRenameList(selectedList?.id),
+      action: () => rowSelection && openRenameList(Object.keys(rowSelection)[0]),
     },
   ]
 

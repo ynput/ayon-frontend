@@ -135,7 +135,7 @@ const useListContextMenu = () => {
           availableCategories.forEach((category) => {
             submenuItems.push({
               label: category.label,
-              icon: 'folder',
+              icon: category.icon || 'sell',
               command: () => {
                 setListsCategory(selectedListIds, category.value.toString())
               },

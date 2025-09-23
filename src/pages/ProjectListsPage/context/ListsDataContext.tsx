@@ -99,12 +99,6 @@ export const ListsDataProvider = ({
     [listsData, categories],
   )
 
-  console.log({
-    isLoadingLists,
-    columnsConfigReady,
-    isLoadingProject,
-  })
-
   return (
     <ListsDataContext.Provider
       value={{
