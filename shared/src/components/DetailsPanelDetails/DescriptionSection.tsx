@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import ReactQuill from 'react-quill-ayon'
 import clsx from 'clsx'
@@ -11,9 +11,10 @@ import {
   StyledLoadingSkeleton,
   StyledButtonContainer,
   StyledQuillContainer,
+  StyledHiddenMarkdown,
 } from './DescriptionSection.styles'
-
-import { useDescriptionEditor, useQuillFormats } from './hooks'
+import InputMarkdownConvert from '@shared/containers/Feed/components/CommentInput/InputMarkdownConvert'
+import { mentionTypeOptions, useDescriptionEditor, useQuillFormats } from './hooks'
 
 // Custom modules function for description editor (without checklist)
 const getDescriptionModules = ({
@@ -54,6 +55,21 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   onChange,
   isLoading,
 }) => {
+  const markdownRef = useRef<HTMLDivElement>(null)
+  const [descriptionHtml, setDescriptionHtml] = useState('')
+
+  useEffect(() => {
+    if (!description?.trim()) {
+      setDescriptionHtml('')
+      return
+    }
+
+    if (!markdownRef.current) return
+
+    const html = markdownRef.current.innerHTML
+    setDescriptionHtml(html)
+  }, [description])
+
   // Use custom hooks to manage state and logic
   const {
     isEditing,
@@ -65,7 +81,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     handleCancel,
     handleKeyDown,
   } = useDescriptionEditor({
-    description,
+    descriptionHtml,
     enableEditing,
     isMixed,
     onChange,
@@ -104,7 +120,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     }
   }
 
-  const quillValue = isEditing ? editorValue : description
+  const quillValue = isEditing ? editorValue : descriptionHtml
 
   return (
     <BorderedSection
@@ -148,6 +164,12 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
           </StyledFooter>
         )}
       </StyledContent>
+      <StyledHiddenMarkdown ref={markdownRef}>
+        <InputMarkdownConvert
+          typeOptions={mentionTypeOptions}
+          initValue={description || ''}
+        />
+      </StyledHiddenMarkdown>
     </BorderedSection>
   )
 }

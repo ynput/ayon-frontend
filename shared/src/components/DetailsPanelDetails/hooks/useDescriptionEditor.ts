@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
+import { convertToMarkdown } from '@shared/containers/Feed/components/CommentInput/quillToMarkdown'
 
 interface UseDescriptionEditorProps {
-  description: string
+  descriptionHtml: string
   enableEditing: boolean
   isMixed: boolean
   onChange: (description: string) => void
 }
 
 export const useDescriptionEditor = ({
-  description,
+  descriptionHtml,
   enableEditing,
   isMixed,
   onChange,
@@ -21,10 +22,9 @@ export const useDescriptionEditor = ({
 
   useEffect(() => {
     if (isEditing) {
-      // Use description directly as HTML instead of converting from markdown
-      setEditorValue(description)
+      setEditorValue(descriptionHtml)
     }
-  }, [description,, isEditing])
+  }, [descriptionHtml, isEditing])
 
   // Autofocus editor when entering edit mode and place cursor at end
   useEffect(() => {
@@ -50,8 +50,7 @@ export const useDescriptionEditor = ({
   const handleStartEditing = () => {
     if (enableEditing && !isMixed) {
       setIsEditing(true)
-      // Use description directly as HTML instead of converting from markdown
-      setEditorValue(description)
+      setEditorValue(descriptionHtml)
     }
   }
 
@@ -59,8 +58,9 @@ export const useDescriptionEditor = ({
     const quill = editorRef.current?.getEditor()
     if (quill) {
       const html = quill.root.innerHTML
-      // Preserve React Quill HTML directly instead of converting to markdown
-      onChange(html)
+      // Convert Quill HTML to Markdown for persistence
+      const [markdown] = convertToMarkdown(html)
+      onChange(markdown)
     }
     setIsEditing(false)
     setEditorValue('')
