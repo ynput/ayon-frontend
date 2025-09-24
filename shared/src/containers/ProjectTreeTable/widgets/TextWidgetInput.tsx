@@ -126,6 +126,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
         const validatedValue = validateAndConvertValue(value)
 
         if (!hasValueChanged(validatedValue)) {
+          onCancel?.()
           return
         }
 

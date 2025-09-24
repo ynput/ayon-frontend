@@ -34,7 +34,6 @@ const FormRow = styled.div`
   }
 `
 
-
 const FieldValue = styled.div`
   height: 32px;
   overflow: hidden;
@@ -125,11 +124,15 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {
       setEditingField(fieldName)
     } else {
-      console.log('Editing not allowed:', { enableEditing, fieldReadonly: fields.find((field) => field.name === fieldName)?.readonly })
+      console.log('Editing not allowed:', {
+        enableEditing,
+        fieldReadonly: fields.find((field) => field.name === fieldName)?.readonly,
+      })
     }
   }
 
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
+    console.log('editing field changed')
     setEditingField(null)
     onChange?.(fieldName, value)
   }
@@ -163,17 +166,13 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
           return (
             <FormRow key={field.name}>
-              <FieldLabel
-                name={field.name}
-                data={field.data}
-                showDetailedTooltip
-              />
+              <FieldLabel name={field.name} data={field.data} showDetailedTooltip />
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  if (!isEditing && !isReadOnly) {
+                  if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
                     handleStartEditing(field.name)
                   }
                 }}
