@@ -133,7 +133,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
             },
           }}
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
-          onClose={onCancelEdit}
+          onCancelEdit={onCancelEdit}
           align="right"
           isReadOnly={isReadOnly}
           {...widgetCommonProps}
