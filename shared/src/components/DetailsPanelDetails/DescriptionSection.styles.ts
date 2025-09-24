@@ -393,3 +393,12 @@ export const StyledQuillContainer = styled.div`
     cursor: pointer !important;
   }
 `
+
+export const StyledHiddenMarkdown = styled.div`
+  position: fixed;
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  top: -9999px;
+  left: -9999px;
+`

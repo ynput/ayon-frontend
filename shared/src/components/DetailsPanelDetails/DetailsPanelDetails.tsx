@@ -3,6 +3,7 @@ import {
   DetailsPanelAttributesEditorProps,
 } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData } from '@shared/api'
+import { useGetActivitiesInfiniteInfiniteQuery } from '@shared/api'
 import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
@@ -41,6 +42,22 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     isProjectNameMixed: mixedFields.includes('projectName'),
   })
 
+  // Determine if any selected folder has published versions
+  const folderEntities = (entities || []).filter((entity) => entity.entityType === 'folder')
+  const { data: versionActivitiesData } = useGetActivitiesInfiniteInfiniteQuery(
+    {
+      entityIds: folderEntities.map((e) => e.id),
+      projectName: formData?.projectName || '',
+      referenceTypes: ['origin', 'mention', 'relation'],
+      activityTypes: ['version.publish'],
+    },
+    {
+      skip: !formData?.projectName || folderEntities.length === 0,
+    },
+  )
+
+  const folderHasVersions = Boolean(versionActivitiesData?.pages?.[0]?.activities?.length)
+
   const { editableFields, readOnlyFieldsData } = useEntityFields({
     attributes,
     folderTypes,
@@ -48,6 +65,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     statuses,
     tags,
     entityType: formData?.entityType,
+    folderHasVersions,
   })
 
   const entityType = formData?.entityType || 'task'
