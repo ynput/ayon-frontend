@@ -87,7 +87,7 @@ const ProjectUserAccess = () => {
     isError: usersFetchError,
   } = useGetUsersQuery({ selfName })
 
-  const users = userList.filter((user: UserNode) => !user.isAdmin && !user.isManager && user.active)
+  const users = userList.filter((user: UserNode) => !user.isAdmin && !user.isManager && user.active && !user.isService)
   const mappedUsers = mapUsersByAccessGroups(projectUsers)
 
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
