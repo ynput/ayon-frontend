@@ -7,7 +7,6 @@ import { Spacer } from '@ynput/ayon-react-components'
 type Props = {
   data: $Any
   selected: boolean
-  showAddButton: boolean
   hovering: boolean
   addButtonDisabled: boolean
   readOnly: boolean
@@ -17,7 +16,6 @@ type Props = {
 export const AccessGroupsCell = ({
   data,
   selected = false,
-  showAddButton = false,
   hovering = false,
   addButtonDisabled = false,
   readOnly,
@@ -34,23 +32,23 @@ export const AccessGroupsCell = ({
         ),
       )}
       <Spacer />
-      {!readOnly && showAddButton && (
+      {!readOnly && (
         <Styled.ActionButton
           className="action"
           disabled={addButtonDisabled}
           data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
-          variant={showAddButton ? 'filled' : 'text'}
+          variant="filled"
           icon={'add'}
           onClick={(e) => {
             e.stopPropagation()
             onAdd(data.name)
           }}
         >
-          {showAddButton && (
+
             <>
               Add <span className="shortcut">A</span>
             </>
-          )}
+
         </Styled.ActionButton>
       )}
     </Styled.DataColumn>

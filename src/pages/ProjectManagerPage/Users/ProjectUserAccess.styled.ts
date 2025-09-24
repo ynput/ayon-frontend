@@ -30,11 +30,6 @@ export const DataColumn = styled.div`
       border-radius: var(--border-radius-m);
     }
   }
-  &.hovering {
-    button {
-      visibility: visible;
-    }
-  }
 `
 export const ActionButton = styled(Button)`
   padding: 0;
@@ -61,6 +56,13 @@ export const DataTable = styled(BaseDataTable)`
   overflow: hidden;
   &.fullBorderRadius {
     border-radius: 4px;
+  }
+
+  /* Make buttons visible on row hover for instant response */
+  tr:hover {
+    button {
+      visibility: visible;
+    }
   }
 `
 

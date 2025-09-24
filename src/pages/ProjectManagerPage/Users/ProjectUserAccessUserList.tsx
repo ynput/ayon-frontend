@@ -137,7 +137,6 @@ const ProjectUserAccessUserList = ({
                   <AccessGroupsCell
                     data={data}
                     data-testid={`accessGroupUser-${data.name}`}
-                    showAddButton={showAddButton}
                     readOnly={readOnly}
                     onAdd={(user: string) => onAdd({ accessGroup, users: [user] })}
                     hovering={
