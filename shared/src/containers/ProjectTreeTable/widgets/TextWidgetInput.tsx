@@ -35,11 +35,13 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
     const [value, setValue] = useState(initialValue)
     const inputRef = useRef<HTMLInputElement>(null)
     const escapePressed = useRef(false)
-    
+
     const originalValue = useRef(initialValue)
 
     // Helper function to validate and convert value based on type
-    const validateAndConvertValue = (inputValue: string): any => {
+    const validateAndConvertValue = (inputValue?: string): any => {
+      if (!inputValue) return ''
+
       const trimmedValue = inputValue.trim()
 
       // Handle empty values
@@ -63,21 +65,21 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
     // Helper function to check if the value has actually changed
     const hasValueChanged = (newValue: any): boolean => {
       const original = originalValue.current
-      
+
       // For non-string types, treat empty values (null, undefined, empty string) as equivalent
       if (type !== 'string') {
         const newIsEmpty = newValue === null || newValue === undefined || newValue === ''
         const originalIsEmpty = original === null || original === undefined || original === ''
-        
+
         if (newIsEmpty && originalIsEmpty) {
           return false
         }
-        
+
         if (newIsEmpty !== originalIsEmpty) {
           return true
         }
       }
-      
+
       return newValue !== original
     }
 
@@ -94,12 +96,12 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
       if (e.key === 'Enter') {
         e.preventDefault()
         const validatedValue = validateAndConvertValue(value)
-        
+
         if (!hasValueChanged(validatedValue)) {
           onCancel?.()
           return
         }
-        
+
         if (type === 'string' || validatedValue !== null) {
           onChange(validatedValue, 'Enter')
         } else {
@@ -122,11 +124,12 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
 
       if (!escapePressed.current) {
         const validatedValue = validateAndConvertValue(value)
-        
+
         if (!hasValueChanged(validatedValue)) {
+          onCancel?.()
           return
         }
-        
+
         if (type === 'string' || validatedValue !== null) {
           onChange(validatedValue, 'Click')
         } else {

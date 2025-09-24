@@ -1,6 +1,6 @@
 import type { AttributeModel } from '@shared/api'
 import { copyToClipboard } from '@shared/util'
-import { FC, useState } from 'react'
+import { FC, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
@@ -33,7 +33,6 @@ const FormRow = styled.div`
     opacity: 1;
   }
 `
-
 
 const FieldValue = styled.div`
   height: 32px;
@@ -112,15 +111,28 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
 
+  const entitySelectionKey = useMemo(
+    () => entities.map((entity) => entity?.id).join('|'),
+    [entities],
+  )
+
+  useEffect(() => {
+    setEditingField(null)
+  }, [entitySelectionKey])
+
   const handleStartEditing = (fieldName: string) => {
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {
       setEditingField(fieldName)
     } else {
-      console.log('Editing not allowed:', { enableEditing, fieldReadonly: fields.find((field) => field.name === fieldName)?.readonly })
+      console.log('Editing not allowed:', {
+        enableEditing,
+        fieldReadonly: fields.find((field) => field.name === fieldName)?.readonly,
+      })
     }
   }
 
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
+    console.log('editing field changed')
     setEditingField(null)
     onChange?.(fieldName, value)
   }
@@ -154,17 +166,13 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
           return (
             <FormRow key={field.name}>
-              <FieldLabel
-                name={field.name}
-                data={field.data}
-                showDetailedTooltip
-              />
+              <FieldLabel name={field.name} data={field.data} showDetailedTooltip />
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  if (!isEditing && !isReadOnly) {
+                  if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
                     handleStartEditing(field.name)
                   }
                 }}
