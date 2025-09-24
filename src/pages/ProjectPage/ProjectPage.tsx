@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo} from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
@@ -219,12 +219,9 @@ const ProjectPage = () => {
 
   const title = useTitle(module, links, projectName || 'AYON')
 
-  // Track current tab for default tab preference
-  const moduleRef = useRef<string>()
-  if (moduleRef.current !== module) {
-    moduleRef.current = module
-    trackCurrentTab(module)
-  }
+  const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
+  const isAddon = !!addonName // Check if we're on an addon page
+  trackCurrentTab(tab, isAddon)
 
   //
   // Render page

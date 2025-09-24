@@ -32,9 +32,11 @@ export const useProjectDefaultTab = () => {
    * Track the current tab and store it as default when the tab changes
    * This should be called from the ProjectPage component
    */
-  const trackCurrentTab = (currentTab: string): void => {
-    if (currentTab && currentTab !== 'addon') {
-      setDefaultTab(currentTab)
+  const trackCurrentTab = (currentTab: string, isAddon: boolean = false): void => {
+    if (currentTab) {
+      // For addon pages, prefix with 'addon/' to distinguish from built-in modules
+      const tabToStore = isAddon ? `addon/${currentTab}` : currentTab
+      setDefaultTab(tabToStore)
     }
   }
 
