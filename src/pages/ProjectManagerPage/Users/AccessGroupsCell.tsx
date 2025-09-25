@@ -7,8 +7,6 @@ import { Spacer } from '@ynput/ayon-react-components'
 type Props = {
   data: $Any
   selected: boolean
-  showAddButton: boolean
-  hovering: boolean
   addButtonDisabled: boolean
   readOnly: boolean
   onAdd: (user: string) => void
@@ -17,14 +15,12 @@ type Props = {
 export const AccessGroupsCell = ({
   data,
   selected = false,
-  showAddButton = false,
-  hovering = false,
   addButtonDisabled = false,
   readOnly,
   onAdd,
 }: Props) => {
   return (
-    <Styled.DataColumn className={clsx({ actionable: true, selected, hovering })}>
+    <Styled.DataColumn className={clsx({ actionable: true, selected })}>
       {data.assignedAccessGroups.map(
         (ag: { accessGroup: string; complete: boolean }, idx: number) => (
           <span key={ag.accessGroup} className={clsx({ 'partial-match': !ag.complete })}>
@@ -34,23 +30,21 @@ export const AccessGroupsCell = ({
         ),
       )}
       <Spacer />
-      {!readOnly && showAddButton && (
+      {!readOnly && (
         <Styled.ActionButton
           className="action"
           disabled={addButtonDisabled}
           data-tooltip={addButtonDisabled ? 'No project selected' : undefined}
-          variant={showAddButton ? 'filled' : 'text'}
+          variant="filled"
           icon={'add'}
           onClick={(e) => {
             e.stopPropagation()
             onAdd(data.name)
           }}
         >
-          {showAddButton && (
-            <>
-              Add <span className="shortcut">A</span>
-            </>
-          )}
+          <>
+            Add <span className="shortcut">A</span>
+          </>
         </Styled.ActionButton>
       )}
     </Styled.DataColumn>
