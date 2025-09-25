@@ -7,14 +7,12 @@ import { UserNode } from '@shared/api'
 import { CompactPlaceholder, DataTable } from './ProjectUserAccess.styled'
 import UserCell from './UserCell'
 import AccessGroupsCell from './AccessGroupsCell'
-import { HoveredUser } from './types'
 
 type Props = {
   selectedProjects: string[]
   selectedUsers: string[]
   tableList: $Any
   accessGroup?: string
-  hoveredUser?: HoveredUser
   isLoading: boolean
   readOnly: boolean
   header?: string
@@ -26,7 +24,6 @@ type Props = {
   showAccessGroups?: boolean
   shimmerEnabled?: boolean
   onContextMenu?: $Any
-  onHoverRow: $Any
   onSelectUsers?: (selectedUsers: string[]) => void
   onAdd: ({ accessGroup, users }: { accessGroup?: string; users: string[] }) => void
   onRemove?: (users?: string[]) => void
@@ -37,7 +34,6 @@ const ProjectUserAccessUserList = ({
   selectedUsers,
   tableList,
   accessGroup,
-  hoveredUser,
   isLoading,
   readOnly,
   header,
@@ -51,7 +47,6 @@ const ProjectUserAccessUserList = ({
   onRemove,
   onContextMenu,
   onSelectUsers,
-  onHoverRow,
 }: Props) => {
   const onSelectionChange = (e: $Any) => {
     const result = e.value.map((user: UserNode) => user.name)
@@ -97,8 +92,6 @@ const ProjectUserAccessUserList = ({
             })
           }
           onContextMenu={!readOnly && onContextMenu}
-          onRowMouseEnter={(e) => onHoverRow(e.data.name)}
-          onRowMouseLeave={() => onHoverRow()}
           onSelectionChange={(selection) => onSelectUsers && onSelectionChange(selection)}
         >
           <Column
@@ -115,9 +108,6 @@ const ProjectUserAccessUserList = ({
                   showAddMoreButton={showAddMoreButton}
                   readOnly={readOnly}
                   onAdd={(user: string) => onAdd({ accessGroup, users: [user] })}
-                  hovering={
-                    hoveredUser?.user == rowData.name && hoveredUser?.accessGroup === accessGroup
-                  }
                   onRemove={() => {
                     onRemove && onRemove([rowData.name])
                   }}
@@ -139,9 +129,6 @@ const ProjectUserAccessUserList = ({
                     data-testid={`accessGroupUser-${data.name}`}
                     readOnly={readOnly}
                     onAdd={(user: string) => onAdd({ accessGroup, users: [user] })}
-                    hovering={
-                      hoveredUser?.user == data.name && hoveredUser?.accessGroup === accessGroup
-                    }
                     addButtonDisabled={selectedProjects.length === 0}
                     selected={selectedUnassignedUserNames.includes(data.name)}
                   />

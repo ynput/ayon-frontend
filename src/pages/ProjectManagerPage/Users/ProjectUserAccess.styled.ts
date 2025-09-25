@@ -64,6 +64,15 @@ export const DataTable = styled(BaseDataTable)`
       visibility: visible;
     }
   }
+
+  /* Data attribute-based hover highlighting for better performance */
+  tr[data-hover="true"] {
+    background-color: rgba(0, 0, 0, 0.05);
+
+    button {
+      visibility: visible;
+    }
+  }
 `
 
 export const AccessGroupsWrapper = styled.div`
