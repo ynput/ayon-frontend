@@ -77,8 +77,23 @@ export const LinkItem = styled.li`
 
   &.selected {
     background-color: var(--md-sys-color-primary-container);
+    &,
+    .icon {
+      color: var(--md-sys-color-on-primary-container);
+    }
+
     &:hover {
       background-color: var(--md-sys-color-primary-container-hover);
+    }
+
+    .remove {
+      /* show remove icon when selected */
+      visibility: visible;
+      /* use selected hover */
+      &:hover {
+        background-color: var(--md-sys-color-on-primary);
+        color: var(--md-sys-color-primary);
+      }
     }
   }
 
@@ -98,11 +113,19 @@ export const LinkItem = styled.li`
     font-weight: bold;
   }
 
+  /* show remove icon when hovering item */
+  &:hover {
+    .remove {
+      visibility: visible;
+    }
+  }
+
   .remove {
     padding: 2px;
+    visibility: hidden;
 
-    .icon:not(:hover) {
-      color: var(--md-sys-color-outline);
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
 `

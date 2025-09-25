@@ -74,7 +74,14 @@ export const LinksManager: FC<LinksManagerProps> = ({
       <Styled.Container>
         <Styled.Header>
           {upperFirst(linkTypeLabel)} links ({direction})
-          <Button icon={'close'} variant="text" className="remove" onClick={onClose}/>
+          <Button
+            icon={'close'}
+            variant="text"
+            className="remove"
+            onClick={onClose}
+            data-shortcut={'Escape'}
+            data-tooltip-delay={500}
+          />
         </Styled.Header>
         <Styled.LinksList>
           {links?.map((link) => (
