@@ -4,13 +4,13 @@ import { onTaskSelected } from '@state/dashboard'
 import { useSelector } from 'react-redux'
 import useOpenTaskInViewer from './useOpenTaskInViewer'
 import { useScopedDetailsPanel } from '@shared/context'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
 export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {}) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const { setOpen, isOpen } = useScopedDetailsPanel('dashboard')
 
   const openTaskInViewer = useOpenTaskInViewer()
-  const isMacOS = /Macintosh|MacIntel|MacPPC|Mac68K/.test(navigator.userAgent)
 
   const getContextMenuItems = (task) => {
     return [
@@ -30,7 +30,7 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {})
         label: 'Open in browser',
         command: () => onOpenInBrowser(task),
         icon: 'open_in_new',
-        shortcut: `${isMacOS ? '⌘' : 'Ctrl'} + Double Click`,
+        shortcut: `${getPlatformShortcutKey('Double Click', [KeyMode.Ctrl])}`,
       },
       {
         label: 'Copy task ID',

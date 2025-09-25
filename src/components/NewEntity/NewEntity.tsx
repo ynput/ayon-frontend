@@ -12,7 +12,7 @@ import {
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
-import { checkName } from '@shared/util'
+import { checkName, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
   EditorTaskNode,
@@ -401,8 +401,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 label={`Create ${capitalize(entityType)}`}
                 onClick={() => handleSubmit(createMore)}
                 active={!addDisabled || isSubmitting}
-                title="Ctrl/Cmd + Enter"
-                data-shortcut="Ctrl/Cmd+Enter"
+                data-shortcut={getPlatformShortcutKey('Enter', [ KeyMode.Ctrl])}
                 saving={isSubmitting}
               />
             </Toolbar>

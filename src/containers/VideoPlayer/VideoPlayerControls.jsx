@@ -3,6 +3,7 @@ import { Button, Spacer } from '@ynput/ayon-react-components'
 import Timecode from './Timecode'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleFullscreen } from '@state/viewer'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
 const VideoPlayerControls = ({
   /* playback controls */
@@ -166,14 +167,14 @@ const VideoPlayerControls = ({
       <Button
         icon="skip_previous"
         data-tooltip="Go to Start"
-        data-shortcut="Shift + A"
+        data-shortcut={getPlatformShortcutKey('A', [KeyMode.Shift])}
         onClick={handleGoToStart}
       />
 
       <Button
         icon="keyboard_double_arrow_left"
         data-tooltip="Back 5 frames"
-        data-shortcut="Shift + ←"
+        data-shortcut={getPlatformShortcutKey('←', [KeyMode.Shift])}
         onClick={handleGoBack5}
       />
 
@@ -201,14 +202,14 @@ const VideoPlayerControls = ({
       <Button
         icon="keyboard_double_arrow_right"
         data-tooltip="Forward 5 frames"
-        data-shortcut="Shift + →"
+        data-shortcut={getPlatformShortcutKey('→', [KeyMode.Shift])}
         onClick={handleGoForward5}
       />
 
       <Button
         icon="skip_next"
         data-tooltip="Go to End"
-        data-shortcut="Shift + D"
+        data-shortcut={getPlatformShortcutKey('D', [KeyMode.Shift])}
         onClick={handleGoToEnd}
       />
 
