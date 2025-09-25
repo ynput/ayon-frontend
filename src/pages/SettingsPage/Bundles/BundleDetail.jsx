@@ -8,6 +8,7 @@ import { upperFirst } from 'lodash'
 import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
 const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatus, addons }) => {
   const [selectedBundle, setSelectedBundle] = useState(null)
@@ -82,7 +83,7 @@ const BundleDetail = ({ bundles = [], onDuplicate, installers, toggleBundleStatu
           onClick={() => onDuplicate(bundle.name)}
           disabled={bundles.length > 1}
           data-tooltip="Creates new duplicated bundle"
-          data-shortcut="shift+D"
+          data-shortcut={getPlatformShortcutKey('D', [KeyMode.Shift])}
         />
       </Toolbar>
       {bundles.length > 1 && bundles.length < 5 ? (
