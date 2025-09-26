@@ -25,11 +25,22 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
+  const currentRowHeightRef = React.useRef<number>(40) // Track current row height
+
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
-  const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
+  const onChangeWithColumns = (next: ColumnsConfig) => {
+    console.log('ColumnSettingsProvider: onChangeWithColumns called with', next)
+    // Update our ref when rowHeight changes
+    if (next.rowHeight !== undefined) {
+      currentRowHeightRef.current = next.rowHeight
+    }
+    onChange(next, allColumnsRef.current)
+  }
   const columnsConfig = config as ColumnsConfig
+  console.log('ColumnSettingsProvider: received config', config) // Debug log
+
   const {
     columnOrder: columnOrderInit = [],
     columnPinning: columnPinningInit = {},
@@ -38,7 +49,15 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
-  } = columnsConfig
+    rowHeight: configRowHeight,
+  } = columnsConfig || {}
+
+  // Use the rowHeight from config if provided, otherwise use our tracked value, otherwise default to 40
+  const rowHeight = configRowHeight !== undefined ? configRowHeight : currentRowHeightRef.current
+  console.log('ColumnSettingsProvider: extracted rowHeight from config is', configRowHeight, 'using rowHeight', rowHeight) // Debug log
+
+  // Update our ref to the current value
+  currentRowHeightRef.current = rowHeight
 
   const sorting = [...sortingInit]
   const columnOrder = [...columnOrderInit]
@@ -137,6 +156,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     resizingTimeoutRef.current = setTimeout(() => {
       // we have finished resizing now!
       // update the external column sizing
+      console.log('ColumnSettingsProvider: column sizing timeout fired, calling onChangeWithColumns with', {
+        ...columnsConfig,
+        columnSizing: sizing,
+      }) // Debug log
       onChangeWithColumns({
         ...columnsConfig,
         columnSizing: sizing,
@@ -233,6 +256,30 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateRowHeight = (newRowHeight: number) => {
+    console.log('ColumnSettingsProvider: updateRowHeight called with', newRowHeight, 'current rowHeight is', rowHeight) // Debug log
+
+    // Get current thumbnail column width
+    const currentThumbnailWidth = columnSizing.thumbnail || 150 // Default to 150 if not set
+    console.log('ColumnSettingsProvider: current thumbnail width is', currentThumbnailWidth, 'new row height is', newRowHeight) // Debug log
+
+    // Only update thumbnail width if current width is smaller than new row height
+    const shouldUpdateThumbnailWidth = currentThumbnailWidth < newRowHeight
+    console.log('ColumnSettingsProvider: should update thumbnail width?', shouldUpdateThumbnailWidth) // Debug log
+
+    const updatedColumnSizing = shouldUpdateThumbnailWidth
+      ? { ...columnSizing, thumbnail: newRowHeight }
+      : columnSizing
+
+    const updatedConfig = {
+      ...columnsConfig,
+      rowHeight: newRowHeight,
+      columnSizing: updatedColumnSizing,
+    }
+    console.log('ColumnSettingsProvider: calling onChangeWithColumns with', updatedConfig) // Debug log
+    onChangeWithColumns(updatedConfig)
+  }
+
   // Remove redundant local updater functions in favor of unified updaters with all columns
 
   // ON-CHANGE HANDLERS (TanStack-compatible)
@@ -294,6 +341,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         updateGroupBy,
         groupByConfig,
         updateGroupByConfig,
+        // row height
+        rowHeight,
+        updateRowHeight,
 
         // global change
         setColumnsConfig: (config: ColumnsConfig) => onChangeWithColumns(config),

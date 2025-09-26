@@ -24,6 +24,7 @@ export type ColumnsConfig = {
   groupByConfig?: {
     showEmpty?: boolean
   }
+  rowHeight?: number
 }
 
 export interface ColumnSettingsContextType {
@@ -63,6 +64,10 @@ export interface ColumnSettingsContextType {
   updateGroupBy: (groupBy: TableGroupBy | undefined) => void
   groupByConfig: GroupByConfig
   updateGroupByConfig: (config: GroupByConfig) => void
+
+  // Row height
+  rowHeight?: number
+  updateRowHeight: (rowHeight: number) => void
 
   // Global change
   setColumnsConfig: (config: ColumnsConfig) => void

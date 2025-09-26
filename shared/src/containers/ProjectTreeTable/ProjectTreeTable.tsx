@@ -439,20 +439,8 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  // Get selection context functions for dynamic row height
-  const { isCellSelected: tableIsCellSelected } = useSelectionCellsContext()
-  const { isRowSelected: tableIsRowSelected } = useSelectedRowsContext()
-
-  // Check if thumbnail column is being resized
-  const isResizingThumbnail = table.getState().columnSizingInfo.isResizingColumn === 'thumbnail'
-
-  // Calculate dynamic row height based on thumbnail column width and selection state
-  const { getRowHeight, thumbnailRowHeight, defaultRowHeight } = useDynamicRowHeight(
-    columnSizing,
-    tableIsRowSelected,
-    tableIsCellSelected,
-    isResizingThumbnail,
-  )
+  // Calculate dynamic row height based on user setting from Customize panel
+  const { getRowHeight, thumbnailRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
     return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
@@ -642,7 +630,7 @@ export const ProjectTreeTable = ({
                           width: getColumnWidth(overlayRowInstance.id, cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
-                          height: 40,
+                          height: defaultRowHeight,
                         }
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
@@ -950,6 +938,11 @@ const TableBody = ({
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 
+  // Force row virtualizer to recalculate when row height changes
+  useEffect(() => {
+    rowVirtualizer.measure()
+  }, [defaultRowHeight, rowVirtualizer])
+
   // Memoize the measureElement callback
   const measureRowElement = useCallback(
     (node: HTMLTableRowElement | null) => {
@@ -1224,7 +1217,7 @@ const TableCell = ({
       style={{
         ...getCommonPinningStyles(cell.column),
         width: getColumnWidth(cell.row.id, cell.column.id),
-        height: rowHeight || 40,
+        height: rowHeight,
       }}
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks
