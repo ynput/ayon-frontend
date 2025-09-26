@@ -15,7 +15,7 @@ import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import { useLocalStorage } from '@shared/hooks'
-import { buildListFolderRowId } from '../util/buildListsTableData'
+import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -139,14 +139,41 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     [setRowSelection, setExpanded],
   )
 
-  const { closeNewList, createNewList, newList, openNewList, setNewList, createReviewSessionList } =
-    useNewList({
-      onCreateNewList,
-      onCreated: handleCreatedList,
-      isReview,
-      projectName,
-      reviewVersion,
-    })
+  const {
+    closeNewList,
+    createNewList,
+    newList,
+    openNewList: rawOpenNewList,
+    setNewList,
+    createReviewSessionList,
+  } = useNewList({
+    onCreateNewList,
+    onCreated: handleCreatedList,
+    isReview,
+    projectName,
+    reviewVersion,
+  })
+
+  // Wrap openNewList to automatically set folder if a folder is selected
+  const openNewList = useCallback(
+    (init?: Partial<EntityListPostModel>) => {
+      let enhancedInit = { ...init }
+
+      // If no entityListFolderId is explicitly provided, check if a folder is selected
+      if (!enhancedInit.entityListFolderId && selectedRows.length === 1) {
+        const selectedRowId = selectedRows[0]
+        const selectedFolderId = parseListFolderRowId(selectedRowId)
+
+        if (selectedFolderId) {
+          // A folder is selected, set it as the parent folder for the new list
+          enhancedInit.entityListFolderId = selectedFolderId
+        }
+      }
+
+      rawOpenNewList(enhancedInit)
+    },
+    [rawOpenNewList, selectedRows],
+  )
 
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()

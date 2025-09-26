@@ -319,7 +319,7 @@ const useListContextMenu = () => {
           hidden: !developerMode || multipleSelected || !allSelectedRowsAreLists,
         },
         {
-          label: 'Delete',
+          label: `Delete ${allSelectedRowsAreFolders ? '(folder only)' : ''}`,
           icon: 'delete',
           danger: true,
           command: (e: CommandEvent) => {
