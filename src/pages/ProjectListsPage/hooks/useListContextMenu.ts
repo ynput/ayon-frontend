@@ -8,6 +8,7 @@ import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util'
 import { EntityListFolderModel } from '@shared/api'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
 export const FOLDER_ICON = 'snippet_folder'
 export const FOLDER_ICON_ADD = 'create_new_folder'
@@ -187,6 +188,7 @@ const useListContextMenu = () => {
           icon: FOLDER_ICON_ADD,
           command: () => onOpenFolderList({ listIds: selectedListIds }),
           disabled: isUser, // only admins and managers can create listFolders
+          shortcut: 'F',
         })
 
         // For multiple selections, show "Unset folder" if any list has a folder
@@ -199,6 +201,7 @@ const useListContextMenu = () => {
             command: () => {
               onRemoveListsFromFolder(selectedListIds)
             },
+            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
           })
         }
 
@@ -229,6 +232,7 @@ const useListContextMenu = () => {
           icon: FOLDER_ICON_ADD,
           command: () => onOpenFolderList({ parentId: selectedFolderId || undefined }),
           disabled: isUser, // only admins and managers can create listFolders
+          shortcut: 'F',
         })
 
         // Show "Unset parent folder" if folder has a parent
@@ -237,6 +241,7 @@ const useListContextMenu = () => {
             label: 'Make root folder',
             icon: FOLDER_ICON_REMOVE,
             command: () => onRemoveFolderFromFolder(selectedFolderId!),
+            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
           })
         }
 
