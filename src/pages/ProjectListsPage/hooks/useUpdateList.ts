@@ -28,6 +28,7 @@ export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']
   onUpdateList: (listId: string, list: EntityListPatchModel) => Promise<void>
   projectName: string
+  onCreatedFolder?: (folderId: string, hadListIds: boolean) => void
 }
 
 export interface UseUpdateListReturn {
@@ -47,7 +48,12 @@ export interface UseUpdateListReturn {
   onRemoveFolderFromFolder: (folderId: string) => Promise<void>
 }
 
-const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdateListProps) => {
+const useUpdateList = ({
+  setRowSelection,
+  onUpdateList,
+  projectName,
+  onCreatedFolder,
+}: UseUpdateListProps) => {
   const { listsData, listFolders } = useListsDataContext()
   const [renamingList, setRenamingList] = useState<UseUpdateListReturn['renamingList']>(null)
   const user = useAppSelector((state) => state.user)
@@ -190,6 +196,11 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
 
       if (listIds?.length && res.id) {
         await onPutListsInFolder(listIds, res.id)
+      }
+
+      // Call the callback to handle selection/expansion
+      if (res.id && onCreatedFolder) {
+        onCreatedFolder(res.id, !!listIds?.length)
       }
     } catch (error) {
       throw getErrorMessage(error, 'Failed to create folder')

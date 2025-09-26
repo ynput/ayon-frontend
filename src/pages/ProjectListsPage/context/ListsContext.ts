@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import { RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import { UseNewListReturn } from '../hooks/useNewList'
 
 import { UseDeleteListReturn } from '../hooks/useDeleteList'
@@ -28,6 +28,9 @@ export interface ListsContextType {
   selectedList: EntityList | undefined
   // meta
   isReview?: boolean
+  // expanded state
+  expanded: ExpandedState
+  setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
   // Creating new lists
   newList: UseNewListReturn['newList']
   setNewList: UseNewListReturn['setNewList']

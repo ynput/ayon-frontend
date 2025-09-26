@@ -1,5 +1,5 @@
 import { useState, ReactNode, useMemo, useCallback } from 'react'
-import { RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import useNewList from '../hooks/useNewList'
 import {
   useCreateEntityListMutation,
@@ -15,6 +15,7 @@ import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import { useLocalStorage } from '@shared/hooks'
+import { buildListFolderRowId } from '../util/buildListsTableData'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -100,6 +101,9 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
 
   const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
 
+  // expanded state for folder hierarchy
+  const [expanded, setExpanded] = useState<ExpandedState>({})
+
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()
   const onCreateNewList = async (list: EntityListPostModel) =>
@@ -112,6 +116,27 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       }
     },
     [setRowSelection],
+  )
+
+  const handleCreatedFolder = useCallback(
+    (folderId: string, hadListIds: boolean) => {
+      if (!folderId) return
+
+      const folderRowId = buildListFolderRowId(folderId)
+
+      if (!hadListIds) {
+        // No lists were added to the folder, so select the new folder
+        setRowSelection({ [folderRowId]: true })
+      } else {
+        // Lists were added to the folder, so keep current selection and expand the folder
+        setExpanded((prev) => {
+          const newExpanded = { ...((prev as Record<string, boolean>) || {}) }
+          newExpanded[folderRowId] = true
+          return newExpanded
+        })
+      }
+    },
+    [setRowSelection, setExpanded],
   )
 
   const { closeNewList, createNewList, newList, openNewList, setNewList, createReviewSessionList } =
@@ -143,6 +168,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     setRowSelection,
     onUpdateList,
     projectName,
+    onCreatedFolder: handleCreatedFolder,
   })
 
   const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds, parentId }) => {
@@ -153,13 +179,15 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       let resolvedParentId = parentId
       if (!resolvedParentId && listIds && listIds.length > 0) {
         // Find all selected lists that have a folder
-        const listsWithFolders = listsData.filter((list) => 
-          listIds.includes(list.id) && list.entityListFolderId
+        const listsWithFolders = listsData.filter(
+          (list) => listIds.includes(list.id) && list.entityListFolderId,
         )
-        
+
         if (listsWithFolders.length > 0) {
           // If all lists are in the same folder, use that folder as parentId
-          const uniqueFolderIds = new Set(listsWithFolders.map(list => list.entityListFolderId).filter(Boolean))
+          const uniqueFolderIds = new Set(
+            listsWithFolders.map((list) => list.entityListFolderId).filter(Boolean),
+          )
           if (uniqueFolderIds.size === 1) {
             resolvedParentId = listsWithFolders[0].entityListFolderId || undefined
           }
@@ -167,7 +195,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
           // This is the safest default behavior
         }
       }
-      
+
       return setListFolderOpen({ isOpen: true, listIds, initial: { parentId: resolvedParentId } }) // open in create mode if folder not found
     }
 
@@ -205,6 +233,9 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         createReviewSessionList,
         isCreatingList,
         isReview,
+        // expanded state
+        expanded,
+        setExpanded,
         // list editing
         closeRenameList,
         openRenameList,

@@ -10,7 +10,7 @@ import SimpleTable, {
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
-import { ExpandedState, Row, Table } from '@tanstack/react-table'
+import { Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import ListFolderFormDialog from '../ListFolderFormDialog'
 
@@ -26,9 +26,10 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     onRenameList,
     renamingList,
     setListDetailsOpen,
+    expanded,
+    setExpanded,
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
-  const [expanded, setExpanded] = useState<ExpandedState>({})
   const [clientSearch, setClientSearch] = useState<null | string>(null)
 
   // Define stable event handlers using useCallback
