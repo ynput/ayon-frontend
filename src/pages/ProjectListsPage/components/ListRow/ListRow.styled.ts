@@ -53,6 +53,13 @@ export const Cell = styled.div`
   .icon.filled {
     font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
   }
+
+  /* update expander styles */
+  .expander {
+    &:hover {
+      background-color: var(--md-sys-color-on-primary);
+    }
+  }
 `
 
 export const ListCount = styled.span`
