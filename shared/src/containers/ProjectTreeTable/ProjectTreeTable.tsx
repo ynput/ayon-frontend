@@ -439,8 +439,20 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  // Calculate dynamic row height based on thumbnail column width and row data
-  const { getRowHeight, thumbnailRowHeight, defaultRowHeight } = useDynamicRowHeight(columnSizing)
+  // Get selection context functions for dynamic row height
+  const { isCellSelected: tableIsCellSelected } = useSelectionCellsContext()
+  const { isRowSelected: tableIsRowSelected } = useSelectedRowsContext()
+
+  // Check if thumbnail column is being resized
+  const isResizingThumbnail = table.getState().columnSizingInfo.isResizingColumn === 'thumbnail'
+
+  // Calculate dynamic row height based on thumbnail column width and selection state
+  const { getRowHeight, thumbnailRowHeight, defaultRowHeight } = useDynamicRowHeight(
+    columnSizing,
+    tableIsRowSelected,
+    tableIsCellSelected,
+    isResizingThumbnail,
+  )
 
   const attribByField = useMemo(() => {
     return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
