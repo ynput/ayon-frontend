@@ -52,8 +52,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   const {
     attribFields,
     writableFields,
-    isSuccess: isSuccessAttribs,
-    isFetching: isFetchingAttribs,
+    isLoading: isLoadingAttribs,
   } = useAttributeFields({ projectPermissions })
 
   // GET USERS
@@ -82,13 +81,12 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     return attrib_write.fields.includes('label')
   }, [attrib_write])
 
-  const isInitialized =
-    isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
+  const isInitialized = isSuccessProject && !isFetchingProject && !isLoadingAttribs
 
   const value = useMemo(
     () => ({
       isInitialized,
-      isLoading: isFetchingProject || isFetchingAttribs,
+      isLoading: isFetchingProject || isLoadingAttribs,
       projectInfo,
       projectName,
       users,
@@ -100,7 +98,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     [
       isInitialized,
       isFetchingProject,
-      isFetchingAttribs,
+      isLoadingAttribs,
       projectInfo,
       projectName,
       users,

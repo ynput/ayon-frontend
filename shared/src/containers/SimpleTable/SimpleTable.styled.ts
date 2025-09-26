@@ -95,12 +95,26 @@ export const Cell = styled.div`
     .icon {
       color: var(--md-sys-color-on-primary-container);
     }
+
+    /* update expander styles */
+    .expander {
+      &:hover {
+        background-color: var(--md-sys-color-on-primary);
+      }
+    }
+  }
+
+  &.inactive {
+    .icon,
+    .value {
+      color: var(--md-sys-color-outline);
+    }
   }
 
   &.disabled {
     opacity: 0.5;
     cursor: not-allowed !important;
-    
+
     &,
     .value,
     .icon {
@@ -114,6 +128,11 @@ export const Cell = styled.div`
     .value {
       text-decoration: line-through;
     }
+  }
+
+  /* filled icon */
+  .icon.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
   }
 `
 

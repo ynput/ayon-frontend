@@ -9,7 +9,6 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
-import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
 import {
@@ -57,8 +56,10 @@ import {
   type Active,
   type Over,
 } from '@dnd-kit/core'
-import { useAppSelector } from '@state/store.ts'
+import { useAppDispatch, useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
+import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
+import ListsShortcuts from './components/ListsShortcuts.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -209,6 +210,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                         isReview={isReview}
                         dndActiveId={dndActiveId}
                       />
+                      <ListsShortcuts />
                     </CellEditingProvider>
                   </SelectedRowsProvider>
                 </SelectionCellsProvider>
@@ -240,9 +242,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList } = useListsContext()
+  const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
+
+  const dispatch = useAppDispatch()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
@@ -255,7 +259,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
   }
 
   // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  const shouldShowEntityDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
+  const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || shouldShowListDetailsPanel
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -317,7 +323,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={shouldShowDetailsPanel ? 4 : 0}
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
@@ -335,10 +340,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         minWidth: 300,
                       }}
                     >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
+                      {shouldShowEntityDetailsPanel ? (
+                        <ProjectOverviewDetailsPanel
+                          projectInfo={projectInfo}
+                          projectName={projectName}
+                        />
+                      ) : selectedList ? (
+                        <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
+                      ) : null}
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
@@ -365,7 +374,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
           </Section>
         </SplitterPanel>
       </Splitter>
-      <ListInfoDialog />
       <ListsFiltersDialog />
     </main>
   )

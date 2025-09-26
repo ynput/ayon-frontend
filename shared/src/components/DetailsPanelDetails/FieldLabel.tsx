@@ -30,7 +30,10 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({
     : data.description || displayTitle
 
   return (
-    <StyledFieldLabel data-tooltip={showDetailedTooltip ? tooltipText : undefined}>
+    <StyledFieldLabel
+      data-tooltip={showDetailedTooltip ? tooltipText : undefined}
+      data-tooltip-delay={700}
+    >
       {displayTitle}
     </StyledFieldLabel>
   )

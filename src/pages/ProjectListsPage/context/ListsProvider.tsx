@@ -1,5 +1,5 @@
 import { useState, ReactNode, useMemo, useCallback } from 'react'
-import { RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import useNewList from '../hooks/useNewList'
 import {
   useCreateEntityListMutation,
@@ -12,8 +12,10 @@ import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
-import ListsContext, { ListsContextType } from './ListsContext'
+import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import { useLocalStorage } from '@shared/hooks'
+import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -42,7 +44,7 @@ interface ListsProviderProps {
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
-  const { listsMap } = useListsDataContext()
+  const { listsMap, listFolders, listsData } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -95,18 +97,12 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
 
-  const [infoDialogData, setInfoDialogData] = useState<ListsContextType['infoDialogData']>(null)
+  const [listDetailsOpen, setListDetailsOpen] = useLocalStorage<boolean>('list-details-open', true)
 
-  const openDetailsPanel = useCallback(
-    (id: string) => {
-      // get the list from the map
-      const list = listsMap.get(id)
-      if (list) {
-        setInfoDialogData(list)
-      }
-    },
-    [listsMap, setInfoDialogData],
-  )
+  const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
+
+  // expanded state for folder hierarchy
+  const [expanded, setExpanded] = useState<ExpandedState>({})
 
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()
@@ -122,23 +118,121 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     [setRowSelection],
   )
 
-  const { closeNewList, createNewList, newList, openNewList, setNewList, createReviewSessionList } =
-    useNewList({
-      onCreateNewList,
-      onCreated: handleCreatedList,
-      isReview,
-      projectName,
-      reviewVersion,
-    })
+  const handleCreatedFolder = useCallback(
+    (folderId: string, hadListIds: boolean) => {
+      if (!folderId) return
+
+      const folderRowId = buildListFolderRowId(folderId)
+
+      if (!hadListIds) {
+        // No lists were added to the folder, so select the new folder
+        setRowSelection({ [folderRowId]: true })
+      } else {
+        // Lists were added to the folder, so keep current selection and expand the folder
+        setExpanded((prev) => {
+          const newExpanded = { ...((prev as Record<string, boolean>) || {}) }
+          newExpanded[folderRowId] = true
+          return newExpanded
+        })
+      }
+    },
+    [setRowSelection, setExpanded],
+  )
+
+  const {
+    closeNewList,
+    createNewList,
+    newList,
+    openNewList: rawOpenNewList,
+    setNewList,
+    createReviewSessionList,
+  } = useNewList({
+    onCreateNewList,
+    onCreated: handleCreatedList,
+    isReview,
+    projectName,
+    reviewVersion,
+  })
+
+  // Wrap openNewList to automatically set folder if a folder is selected
+  const openNewList = useCallback(
+    (init?: Partial<EntityListPostModel>) => {
+      let enhancedInit = { ...init }
+
+      // If no entityListFolderId is explicitly provided, check if a folder is selected
+      if (!enhancedInit.entityListFolderId && selectedRows.length === 1) {
+        const selectedRowId = selectedRows[0]
+        const selectedFolderId = parseListFolderRowId(selectedRowId)
+
+        if (selectedFolderId) {
+          // A folder is selected, set it as the parent folder for the new list
+          enhancedInit.entityListFolderId = selectedFolderId
+        }
+      }
+
+      rawOpenNewList(enhancedInit)
+    },
+    [rawOpenNewList, selectedRows],
+  )
 
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()
   const onUpdateList = async (listId: string, list: EntityListPatchModel) =>
     await updateListMutation({ listId, entityListPatchModel: list, projectName }).unwrap()
-  const { closeRenameList, openRenameList, renamingList, submitRenameList } = useUpdateList({
+  const {
+    closeRenameList,
+    openRenameList,
+    renamingList,
+    onRenameList,
+    onPutListsInFolder,
+    onRemoveListsFromFolder,
+    onCreateListFolder,
+    onUpdateListFolder,
+    onDeleteListFolder,
+    onPutFolderInFolder,
+    onRemoveFolderFromFolder,
+  } = useUpdateList({
     setRowSelection,
     onUpdateList,
+    projectName,
+    onCreatedFolder: handleCreatedFolder,
   })
+
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds, parentId }) => {
+    // get folder data
+    const folder = listFolders.find((f) => f.id === folderId)
+    if (!folder) {
+      // If no explicit parentId provided and we have listIds, determine parentId from selected lists
+      let resolvedParentId = parentId
+      if (!resolvedParentId && listIds && listIds.length > 0) {
+        // Find all selected lists that have a folder
+        const listsWithFolders = listsData.filter(
+          (list) => listIds.includes(list.id) && list.entityListFolderId,
+        )
+
+        if (listsWithFolders.length > 0) {
+          // If all lists are in the same folder, use that folder as parentId
+          const uniqueFolderIds = new Set(
+            listsWithFolders.map((list) => list.entityListFolderId).filter(Boolean),
+          )
+          if (uniqueFolderIds.size === 1) {
+            resolvedParentId = listsWithFolders[0].entityListFolderId || undefined
+          }
+          // If lists are in different folders, don't set a parentId (create root folder)
+          // This is the safest default behavior
+        }
+      }
+
+      return setListFolderOpen({ isOpen: true, listIds, initial: { parentId: resolvedParentId } }) // open in create mode if folder not found
+    }
+
+    // open dialog in edit mode
+    setListFolderOpen({
+      isOpen: true,
+      folderId,
+      initial: { label: folder.label, parentId: folder.parentId, ...folder.data },
+    })
+  }
 
   // DELETE LIST
   const [deleteListMutation] = useDeleteEntityListMutation()
@@ -150,61 +244,51 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 
-  const value = useMemo(() => {
-    return {
-      rowSelection,
-      setRowSelection,
-      selectedRows,
-      selectedLists,
-      selectedList,
-      closeNewList,
-      createNewList,
-      newList,
-      openNewList,
-      setNewList,
-      createReviewSessionList,
-      isCreatingList,
-      isReview,
-      // list editing
-      closeRenameList,
-      openRenameList,
-      renamingList,
-      submitRenameList,
-      deleteLists,
-      // info dialog
-      infoDialogData,
-      setInfoDialogData,
-      openDetailsPanel,
-      // lists filters dialog
-      listsFiltersOpen,
-      setListsFiltersOpen,
-    }
-  }, [
-    rowSelection,
-    setRowSelection,
-    selectedRows,
-    selectedLists,
-    selectedList,
-    // new list
-    closeNewList,
-    createNewList,
-    newList,
-    openNewList,
-    setNewList,
-    createReviewSessionList,
-    isCreatingList,
-    closeRenameList,
-    openRenameList,
-    renamingList,
-    submitRenameList,
-    deleteLists,
-    infoDialogData,
-    setInfoDialogData,
-    openDetailsPanel,
-    listsFiltersOpen,
-    setListsFiltersOpen,
-    isReview,
-  ])
-
-  return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>
+  return (
+    <ListsContext.Provider
+      value={{
+        rowSelection,
+        setRowSelection,
+        selectedRows,
+        selectedLists,
+        selectedList,
+        closeNewList,
+        createNewList,
+        newList,
+        openNewList,
+        setNewList,
+        createReviewSessionList,
+        isCreatingList,
+        isReview,
+        // expanded state
+        expanded,
+        setExpanded,
+        // list editing
+        closeRenameList,
+        openRenameList,
+        renamingList,
+        onRenameList,
+        onPutListsInFolder,
+        onRemoveListsFromFolder,
+        onCreateListFolder,
+        onUpdateListFolder,
+        onDeleteListFolder,
+        onPutFolderInFolder,
+        onRemoveFolderFromFolder,
+        deleteLists,
+        // info dialog
+        listDetailsOpen,
+        setListDetailsOpen,
+        // lists filters dialog
+        listsFiltersOpen,
+        setListsFiltersOpen,
+        // list folders dialog
+        listFolderOpen,
+        setListFolderOpen,
+        onOpenFolderList, // helper function to open folder dialog in edit/create mode
+      }}
+    >
+      {children}
+    </ListsContext.Provider>
+  )
 }

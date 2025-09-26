@@ -1,9 +1,9 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
-import { EntityList } from '@shared/api'
+import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
-import { useUserProjectConfig } from '@shared/hooks'
+import { useQueryArgumentChangeLoading, useUserProjectConfig } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
 
@@ -13,6 +13,7 @@ interface ListsDataContextValue {
   listsData: EntityList[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
+  listFolders: EntityListFolderModel[]
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
@@ -36,7 +37,14 @@ export const ListsDataProvider = ({
   entityListTypes,
   isReview,
 }: ListsDataProviderProps) => {
-  const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
+  const { projectName, isLoading: isFetchingProject } = useProjectDataContext()
+
+  const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
+
+  const { data: listFolders = [] } = useGetEntityListFoldersQuery(
+    { projectName },
+    { skip: !projectName },
+  )
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
     selectors: ['lists', projectName],
@@ -70,7 +78,10 @@ export const ListsDataProvider = ({
   }, [listsData])
 
   // convert listsData into tableData
-  const listsTableData = useMemo(() => buildListsTableData(listsData), [listsData])
+  const listsTableData = useMemo(
+    () => buildListsTableData(listsData, listFolders),
+    [listsData, listFolders],
+  )
 
   return (
     <ListsDataContext.Provider
@@ -78,7 +89,8 @@ export const ListsDataProvider = ({
         listsData,
         listsTableData,
         listsMap,
-        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || !isInitialized,
+        listFolders,
+        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,

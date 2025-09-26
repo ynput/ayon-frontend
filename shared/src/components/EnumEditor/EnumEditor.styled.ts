@@ -41,6 +41,7 @@ export const EnumItemWrapper = styled.div`
   justify-content: stretch;
   border-radius: 4px;
   overflow: hidden;
+  background-color: var(--md-sys-color-surface-container-high);
   &.dragged {
     opacity: 0;
   }
@@ -101,7 +102,6 @@ export const EnumItemBodyExpander = styled.div`
 
 export const EnumItemBody = styled.div`
   ${centeredContentFlexColumn}
-  background-color: var(--md-sys-color-surface-container-high);
   align-items: stretch;
   padding: 0 8px;
   min-height: 0;

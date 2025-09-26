@@ -1,10 +1,24 @@
 import { createContext, useContext } from 'react'
-import { RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import { UseNewListReturn } from '../hooks/useNewList'
 
 import { UseDeleteListReturn } from '../hooks/useDeleteList'
 import { UseUpdateListReturn } from '../hooks/useUpdateList'
 import { EntityList } from '@shared/api'
+import { FolderFormData } from '../components/ListFolderFormDialog'
+
+export type ListDetailsOpenState = {
+  isOpen: boolean
+  folderId?: string // id of folder being edited, undefined for create
+  listIds?: string[] // ids of lists to add to folder on create
+  initial?: Partial<FolderFormData>
+}
+
+export type OnOpenFolderListParams = (params: {
+  folderId?: string
+  listIds?: string[]
+  parentId?: string
+}) => void
 
 export interface ListsContextType {
   rowSelection: RowSelectionState
@@ -14,6 +28,9 @@ export interface ListsContextType {
   selectedList: EntityList | undefined
   // meta
   isReview?: boolean
+  // expanded state
+  expanded: ExpandedState
+  setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
   // Creating new lists
   newList: UseNewListReturn['newList']
   setNewList: UseNewListReturn['setNewList']
@@ -26,16 +43,26 @@ export interface ListsContextType {
   renamingList: UseUpdateListReturn['renamingList']
   openRenameList: UseUpdateListReturn['openRenameList']
   closeRenameList: UseUpdateListReturn['closeRenameList']
-  submitRenameList: UseUpdateListReturn['submitRenameList']
+  onRenameList: UseUpdateListReturn['onRenameList']
+  onPutListsInFolder: UseUpdateListReturn['onPutListsInFolder']
+  onRemoveListsFromFolder: UseUpdateListReturn['onRemoveListsFromFolder']
+  onCreateListFolder: UseUpdateListReturn['onCreateListFolder']
+  onUpdateListFolder: UseUpdateListReturn['onUpdateListFolder']
+  onDeleteListFolder: UseUpdateListReturn['onDeleteListFolder']
+  onPutFolderInFolder: UseUpdateListReturn['onPutFolderInFolder']
+  onRemoveFolderFromFolder: UseUpdateListReturn['onRemoveFolderFromFolder']
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog
-  infoDialogData: null | EntityList
-  setInfoDialogData: (list: EntityList | null) => void
-  openDetailsPanel: (id: string) => void
+  listDetailsOpen: boolean
+  setListDetailsOpen: (open: boolean) => void
   // Lists filters dialog
   listsFiltersOpen: boolean
   setListsFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>
+  // List folders dialog
+  listFolderOpen: ListDetailsOpenState
+  setListFolderOpen: React.Dispatch<React.SetStateAction<ListDetailsOpenState>>
+  onOpenFolderList: OnOpenFolderListParams
 }
 
 export const ListsContext = createContext<ListsContextType | undefined>(undefined)

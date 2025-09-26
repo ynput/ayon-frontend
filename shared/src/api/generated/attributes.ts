@@ -24,6 +24,16 @@ const injectedRtkApi = api.injectEndpoints({
     deleteAttribute: build.mutation<DeleteAttributeApiResponse, DeleteAttributeApiArg>({
       query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}`, method: 'DELETE' }),
     }),
+    patchAttributeConfig: build.mutation<
+      PatchAttributeConfigApiResponse,
+      PatchAttributeConfigApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/attributes/${queryArg.attributeName}`,
+        method: 'PATCH',
+        body: queryArg.attributePatchModel,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -48,6 +58,11 @@ export type DeleteAttributeApiResponse = unknown
 export type DeleteAttributeApiArg = {
   attributeName: string
 }
+export type PatchAttributeConfigApiResponse = unknown
+export type PatchAttributeConfigApiArg = {
+  attributeName: string
+  attributePatchModel: AttributePatchModel
+}
 export type AttributeEnumItem = {
   value: string | number | number | boolean
   label: string
@@ -58,7 +73,7 @@ export type AttributeEnumItem = {
 }
 export type AttributeData = {
   /** Type of attribute value */
-  type:
+  type?:
     | 'string'
     | 'integer'
     | 'float'
@@ -103,9 +118,9 @@ export type AttributeModel = {
     | ('project' | 'user')
     | 'list'
   )[]
+  data: AttributeData
   /** Is attribute builtin. Built-in attributes cannot be removed. */
   builtin?: boolean
-  data: AttributeData
 }
 export type GetAttributeListModel = {
   attributes?: AttributeModel[]
@@ -132,7 +147,16 @@ export type AttributePutModel = {
     | ('project' | 'user')
     | 'list'
   )[]
-  /** Is attribute builtin. Built-in attributes cannot be removed. */
-  builtin?: boolean
   data: AttributeData
+}
+export type AttributePatchModel = {
+  /** Default order */
+  position?: number
+  /** List of entity types the attribute is available on */
+  scope?: (
+    | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
+    | ('project' | 'user')
+    | 'list'
+  )[]
+  data?: AttributeData
 }
