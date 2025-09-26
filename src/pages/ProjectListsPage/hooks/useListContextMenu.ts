@@ -77,8 +77,8 @@ const useListContextMenu = () => {
     onRemoveListsFromFolder,
     onOpenFolderList,
     onDeleteListFolders,
-    onPutFolderInFolder,
-    onRemoveFolderFromFolder,
+    onPutFoldersInFolder,
+    onRemoveFoldersFromFolder,
   } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
@@ -122,6 +122,9 @@ const useListContextMenu = () => {
       const selectedFolder = isSelectedRowFolder
         ? listFolders.find((f) => f.id === selectedFolderId)
         : null
+      const selectedFolderIds = newSelectedRows
+        .map((id) => parseListFolderRowId(id))
+        .filter((id): id is string => !!id)
 
       // some rows are folders
       const allSelectedRowsAreLists = newSelectedRows.every((selected) =>
@@ -157,7 +160,7 @@ const useListContextMenu = () => {
             label: folder.label,
             icon: folder.data?.icon || FOLDER_ICON,
             command: allSelectedRowsAreFolders
-              ? () => onPutFolderInFolder(selectedFolderId!, folder.id)
+              ? () => onPutFoldersInFolder(selectedFolderIds, folder.id)
               : () =>
                   onPutListsInFolder(
                     newSelectedLists.map((l) => l.id),
@@ -240,7 +243,7 @@ const useListContextMenu = () => {
           submenuItems.push({
             label: 'Make root folder',
             icon: FOLDER_ICON_REMOVE,
-            command: () => onRemoveFolderFromFolder(selectedFolderId!),
+            command: () => onRemoveFoldersFromFolder(selectedFolderIds),
             shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
           })
         }
@@ -357,8 +360,8 @@ const useListContextMenu = () => {
       onRemoveListsFromFolder,
       onOpenFolderList,
       onDeleteListFolders,
-      onPutFolderInFolder,
-      onRemoveFolderFromFolder,
+      onPutFoldersInFolder,
+      onRemoveFoldersFromFolder,
       isUser,
       developerMode,
       handleCreateReviewSessionList,

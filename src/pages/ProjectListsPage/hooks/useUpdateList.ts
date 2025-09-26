@@ -44,8 +44,8 @@ export interface UseUpdateListReturn {
   ) => Promise<void>
   onUpdateListFolder: (folderId: string, data: EntityListFolderPatchModel) => Promise<void>
   onDeleteListFolders: (folderIds: string[]) => Promise<void>
-  onPutFolderInFolder: (folderId: string, parentFolderId: string) => Promise<void>
-  onRemoveFolderFromFolder: (folderId: string) => Promise<void>
+  onPutFoldersInFolder: (folderIds: string[], parentFolderId: string) => Promise<void>
+  onRemoveFoldersFromFolder: (folderIds: string[]) => Promise<void>
 }
 
 const useUpdateList = ({
@@ -256,16 +256,20 @@ const useUpdateList = ({
     [projectName, deleteListFolder],
   )
 
-  const onPutFolderInFolder: UseUpdateListReturn['onPutFolderInFolder'] = useCallback(
-    async (folderId, parentFolderId) => {
+  const onPutFoldersInFolder: UseUpdateListReturn['onPutFoldersInFolder'] = useCallback(
+    async (folderIds, parentFolderId) => {
       try {
-        await updateListFolder({
-          projectName,
-          folderId,
-          entityListFolderPatchModel: {
-            parentId: parentFolderId,
-          },
-        }).unwrap()
+        await Promise.all(
+          folderIds.map((id) =>
+            updateListFolder({
+              projectName,
+              folderId: id,
+              entityListFolderPatchModel: {
+                parentId: parentFolderId,
+              },
+            }).unwrap(),
+          ),
+        )
       } catch (error) {
         throw getErrorMessage(error, 'Failed to move folder')
       }
@@ -273,16 +277,20 @@ const useUpdateList = ({
     [projectName, updateListFolder],
   )
 
-  const onRemoveFolderFromFolder: UseUpdateListReturn['onRemoveFolderFromFolder'] = useCallback(
-    async (folderId) => {
+  const onRemoveFoldersFromFolder: UseUpdateListReturn['onRemoveFoldersFromFolder'] = useCallback(
+    async (folderIds) => {
       try {
-        await updateListFolder({
-          projectName,
-          folderId,
-          entityListFolderPatchModel: {
-            parentId: null as unknown as string | undefined,
-          },
-        }).unwrap()
+        await Promise.all(
+          folderIds.map((id) =>
+            updateListFolder({
+              projectName,
+              folderId: id,
+              entityListFolderPatchModel: {
+                parentId: null as unknown as string | undefined,
+              },
+            }).unwrap(),
+          ),
+        )
       } catch (error) {
         throw getErrorMessage(error, 'Failed to remove folder from parent')
       }
@@ -300,8 +308,8 @@ const useUpdateList = ({
     onCreateListFolder,
     onUpdateListFolder,
     onDeleteListFolders,
-    onPutFolderInFolder,
-    onRemoveFolderFromFolder,
+    onPutFoldersInFolder,
+    onRemoveFoldersFromFolder,
   }
 }
 

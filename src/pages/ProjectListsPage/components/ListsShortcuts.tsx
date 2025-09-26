@@ -13,7 +13,7 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
     rowSelection,
     onOpenFolderList,
     onRemoveListsFromFolder,
-    onRemoveFolderFromFolder,
+    onRemoveFoldersFromFolder,
     selectedLists,
   } = useListsContext()
   const { listFolders } = useListsDataContext()
@@ -74,7 +74,7 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
           onOpenFolderList({ listIds: selectedListIds })
         }
         actionExecuted = true
-      } else if (key === 'f' && isShift && isAlt && !isMeta) {
+      } else if (key === 'f' && isShift) {
         // 'shift+alt+f' - Remove folder/list from parent folder
         e.preventDefault()
         // Don't allow removing from folders if user is not admin/manager
@@ -83,15 +83,13 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
         const selectedRowIds = Object.keys(rowSelection)
         if (selectedRowIds.length === 0) return
 
-        const firstSelectedRow = selectedRowIds[0]
-        const selectedFolderId = parseListFolderRowId(firstSelectedRow)
+        const selectedFolderIds = selectedRowIds
+          .map((rowId) => parseListFolderRowId(rowId))
+          .filter((id): id is string => !!id)
 
-        if (selectedFolderId) {
-          // Selected row is a folder, remove it from its parent folder
-          const selectedFolder = listFolders.find((f) => f.id === selectedFolderId)
-          if (selectedFolder?.parentId) {
-            onRemoveFolderFromFolder(selectedFolderId)
-          }
+        if (selectedFolderIds?.length) {
+          // remove parents from all selected folders
+          onRemoveFoldersFromFolder(selectedFolderIds)
         } else {
           // Selected rows are lists, remove them from their folders
           const selectedListIds = selectedRowIds.filter((rowId) => !parseListFolderRowId(rowId))
@@ -103,37 +101,6 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
             onRemoveListsFromFolder(selectedListIds)
           }
         }
-        actionExecuted = true
-      } else if (key === 'f' && isShift && isAlt) {
-        // 'shift+ctrl+f' - Remove folder/list from parent folder (alternative)
-        e.preventDefault()
-        // Don't allow removing from folders if user is not admin/manager
-        if (isUser) return
-
-        const selectedRowIds = Object.keys(rowSelection)
-        if (selectedRowIds.length === 0) return
-
-        const firstSelectedRow = selectedRowIds[0]
-        const selectedFolderId = parseListFolderRowId(firstSelectedRow)
-
-        if (selectedFolderId) {
-          // Selected row is a folder, remove it from its parent folder
-          const selectedFolder = listFolders.find((f) => f.id === selectedFolderId)
-          if (selectedFolder?.parentId) {
-            onRemoveFolderFromFolder(selectedFolderId)
-          }
-        } else {
-          // Selected rows are lists, remove them from their folders
-          const selectedListIds = selectedRowIds.filter((rowId) => !parseListFolderRowId(rowId))
-          const listsWithFolders = selectedLists.filter(
-            (list) => selectedListIds.includes(list.id) && list.entityListFolderId,
-          )
-
-          if (listsWithFolders.length > 0) {
-            onRemoveListsFromFolder(selectedListIds)
-          }
-        }
-        actionExecuted = true
       } else if (key === 'r' && !isMeta && !isShift && !isAlt) {
         // 'r' - Rename selected item
         if (!rowSelection) return
@@ -157,7 +124,7 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
       rowSelection,
       onOpenFolderList,
       onRemoveListsFromFolder,
-      onRemoveFolderFromFolder,
+      onRemoveFoldersFromFolder,
       selectedLists,
       listFolders,
       openRenameList,

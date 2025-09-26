@@ -189,8 +189,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     onCreateListFolder,
     onUpdateListFolder,
     onDeleteListFolders,
-    onPutFolderInFolder,
-    onRemoveFolderFromFolder,
+    onPutFoldersInFolder,
+    onRemoveFoldersFromFolder,
   } = useUpdateList({
     setRowSelection,
     onUpdateList,
@@ -277,8 +277,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         onCreateListFolder,
         onUpdateListFolder,
         onDeleteListFolders,
-        onPutFolderInFolder,
-        onRemoveFolderFromFolder,
+        onPutFoldersInFolder,
+        onRemoveFoldersFromFolder,
         deleteLists,
         // info dialog
         listDetailsOpen,

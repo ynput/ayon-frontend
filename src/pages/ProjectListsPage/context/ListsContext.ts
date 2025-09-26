@@ -49,8 +49,8 @@ export interface ListsContextType {
   onCreateListFolder: UseUpdateListReturn['onCreateListFolder']
   onUpdateListFolder: UseUpdateListReturn['onUpdateListFolder']
   onDeleteListFolders: UseUpdateListReturn['onDeleteListFolders']
-  onPutFolderInFolder: UseUpdateListReturn['onPutFolderInFolder']
-  onRemoveFolderFromFolder: UseUpdateListReturn['onRemoveFolderFromFolder']
+  onPutFoldersInFolder: UseUpdateListReturn['onPutFoldersInFolder']
+  onRemoveFoldersFromFolder: UseUpdateListReturn['onRemoveFoldersFromFolder']
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog
