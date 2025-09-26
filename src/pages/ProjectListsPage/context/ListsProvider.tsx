@@ -43,7 +43,7 @@ interface ListsProviderProps {
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
-  const { listsMap, listFolders } = useListsDataContext()
+  const { listsMap, listFolders, listsData } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -148,7 +148,28 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds, parentId }) => {
     // get folder data
     const folder = listFolders.find((f) => f.id === folderId)
-    if (!folder) return setListFolderOpen({ isOpen: true, listIds, initial: { parentId } }) // open in create mode if folder not found
+    if (!folder) {
+      // If no explicit parentId provided and we have listIds, determine parentId from selected lists
+      let resolvedParentId = parentId
+      if (!resolvedParentId && listIds && listIds.length > 0) {
+        // Find all selected lists that have a folder
+        const listsWithFolders = listsData.filter((list) => 
+          listIds.includes(list.id) && list.entityListFolderId
+        )
+        
+        if (listsWithFolders.length > 0) {
+          // If all lists are in the same folder, use that folder as parentId
+          const uniqueFolderIds = new Set(listsWithFolders.map(list => list.entityListFolderId).filter(Boolean))
+          if (uniqueFolderIds.size === 1) {
+            resolvedParentId = listsWithFolders[0].entityListFolderId || undefined
+          }
+          // If lists are in different folders, don't set a parentId (create root folder)
+          // This is the safest default behavior
+        }
+      }
+      
+      return setListFolderOpen({ isOpen: true, listIds, initial: { parentId: resolvedParentId } }) // open in create mode if folder not found
+    }
 
     // open dialog in edit mode
     setListFolderOpen({
