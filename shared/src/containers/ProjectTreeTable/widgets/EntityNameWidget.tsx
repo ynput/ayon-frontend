@@ -28,6 +28,7 @@ const StyledContentWrapper = styled.div`
   height: 24px;
   overflow: hidden;
   position: relative;
+  transition: height 0.2s ease-out;
 `
 
 const StyledContentAbsolute = styled.div`
@@ -56,15 +57,25 @@ const StyledContent = styled.div`
   } */
 `
 
-const StyledTextContent = styled.div`
+const StyledTextContent = styled.div<{ $isCompact: boolean }>`
   display: flex;
-  flex-direction: column;
+  flex-direction: ${props => props.$isCompact ? 'row' : 'column'};
+  align-items: ${props => props.$isCompact ? 'center' : 'flex-start'};
+  gap: ${props => props.$isCompact ? '8px' : '0px'};
   overflow: hidden;
+  transition: flex-direction 0.2s ease-out, align-items 0.2s ease-out, gap 0.2s ease-out;
 
   .path {
-    ${theme.labelSmall}
-    margin-bottom: -4px;
+    ${theme.bodyMedium}
+    font-size: 14px;
+    margin-bottom: ${props => props.$isCompact ? '0' : '-4px'};
     color: var(--md-sys-color-outline);
+    transition: margin-bottom 0.2s ease-out;
+  }
+
+  .label {
+    ${theme.bodyMedium}
+    font-size: 14px;
   }
 
   span {
@@ -85,6 +96,7 @@ type EntityNameWidgetProps = {
   isExpanded: boolean
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
+  rowHeight?: number
 }
 
 export const EntityNameWidget = ({
@@ -98,7 +110,16 @@ export const EntityNameWidget = ({
   isExpanded,
   toggleExpandAll,
   toggleExpanded,
+  rowHeight = 40,
 }: EntityNameWidgetProps) => {
+  // Determine layout based on row height
+  // < 50px = single line (compact), >= 50px = stacked
+  const isCompact = rowHeight < 50
+
+  // For compact mode, show single line with "path / label"
+  // For stacked mode, show path above label
+  const contentHeight = isCompact ? 24 : (path ? 32 : 24)
+
   return (
     <StyledEntityNameWidget>
       {showHierarchy ? (
@@ -121,12 +142,12 @@ export const EntityNameWidget = ({
           <div style={{ display: 'inline-block', minWidth: 24 }} />
         )
       ) : null}
-      <StyledContentWrapper style={{ height: path ? 32 : 24 }}>
+      <StyledContentWrapper style={{ height: contentHeight }}>
         <StyledContentAbsolute>
           <StyledContent>
             {icon && <Icon icon={icon} />}
-            <StyledTextContent>
-              {path && <span className="path">{path}</span>}
+            <StyledTextContent $isCompact={isCompact}>
+              {path && <span className="path">{path} {isCompact && path && "/"}</span>}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>

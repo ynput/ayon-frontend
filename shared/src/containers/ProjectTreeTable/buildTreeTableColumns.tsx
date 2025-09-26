@@ -8,7 +8,7 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
-import { TableGroupBy, useCellEditing } from './context'
+import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
@@ -179,6 +179,7 @@ const buildTreeTableColumns = ({
         const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
         const { isEditing } = useCellEditing()
+        const { rowHeight = 40 } = useColumnSettingsContext()
         const cellId = getCellId(row.id, column.id)
 
         if (row.original.entityType === NEXT_PAGE_ID && row.original.group) {
@@ -228,6 +229,7 @@ const buildTreeTableColumns = ({
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
                 toggleExpanded={row.getToggleExpandedHandler()}
+                rowHeight={rowHeight}
               />
             )}
             {isEditing(cellId) && (

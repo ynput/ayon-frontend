@@ -19,6 +19,7 @@ export const TR = styled.tr`
   display: flex;
   position: absolute;
   width: 100%;
+  transition: height 0.2s ease-out;
 
   &:hover {
     // When the row (TR) is hovered...
@@ -231,6 +232,7 @@ export const TableCell = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
   background-color: var(--md-sys-color-surface-container-low);
+  transition: height 0.2s ease-out;
 
   &.${DRAG_HANDLE_CLASS} {
     // Styles for the button inside the drag handle cell

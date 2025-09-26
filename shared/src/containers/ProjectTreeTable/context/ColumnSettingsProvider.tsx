@@ -25,13 +25,12 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
-  const currentRowHeightRef = React.useRef<number>(40) // Track current row height
+  const currentRowHeightRef = React.useRef<number>(24) // Track current row height
 
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
   const onChangeWithColumns = (next: ColumnsConfig) => {
-    console.log('ColumnSettingsProvider: onChangeWithColumns called with', next)
     // Update our ref when rowHeight changes
     if (next.rowHeight !== undefined) {
       currentRowHeightRef.current = next.rowHeight
@@ -39,7 +38,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     onChange(next, allColumnsRef.current)
   }
   const columnsConfig = config as ColumnsConfig
-  console.log('ColumnSettingsProvider: received config', config) // Debug log
 
   const {
     columnOrder: columnOrderInit = [],
@@ -52,9 +50,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     rowHeight: configRowHeight,
   } = columnsConfig || {}
 
-  // Use the rowHeight from config if provided, otherwise use our tracked value, otherwise default to 40
+  // Use the rowHeight from config if provided, otherwise use our tracked value, otherwise default to 24
   const rowHeight = configRowHeight !== undefined ? configRowHeight : currentRowHeightRef.current
-  console.log('ColumnSettingsProvider: extracted rowHeight from config is', configRowHeight, 'using rowHeight', rowHeight) // Debug log
 
   // Update our ref to the current value
   currentRowHeightRef.current = rowHeight
@@ -156,10 +153,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     resizingTimeoutRef.current = setTimeout(() => {
       // we have finished resizing now!
       // update the external column sizing
-      console.log('ColumnSettingsProvider: column sizing timeout fired, calling onChangeWithColumns with', {
-        ...columnsConfig,
-        columnSizing: sizing,
-      }) // Debug log
       onChangeWithColumns({
         ...columnsConfig,
         columnSizing: sizing,
@@ -257,15 +250,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   const updateRowHeight = (newRowHeight: number) => {
-    console.log('ColumnSettingsProvider: updateRowHeight called with', newRowHeight, 'current rowHeight is', rowHeight) // Debug log
-
     // Get current thumbnail column width
     const currentThumbnailWidth = columnSizing.thumbnail || 150 // Default to 150 if not set
-    console.log('ColumnSettingsProvider: current thumbnail width is', currentThumbnailWidth, 'new row height is', newRowHeight) // Debug log
 
     // Only update thumbnail width if current width is smaller than new row height
     const shouldUpdateThumbnailWidth = currentThumbnailWidth < newRowHeight
-    console.log('ColumnSettingsProvider: should update thumbnail width?', shouldUpdateThumbnailWidth) // Debug log
 
     const updatedColumnSizing = shouldUpdateThumbnailWidth
       ? { ...columnSizing, thumbnail: newRowHeight }
@@ -276,7 +265,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
       rowHeight: newRowHeight,
       columnSizing: updatedColumnSizing,
     }
-    console.log('ColumnSettingsProvider: calling onChangeWithColumns with', updatedConfig) // Debug log
     onChangeWithColumns(updatedConfig)
   }
 

@@ -1,6 +1,23 @@
-import { FC } from 'react'
+import { FC, useState, useCallback, useEffect } from 'react'
 import styled from 'styled-components'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
+
+// Debounce hook for smooth slider performance
+const useDebounce = (value: number, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
 
 const Container = styled.div`
   padding: 16px;
@@ -69,25 +86,30 @@ const ValueDisplay = styled.span`
 `
 
 const RowHeightSettings: FC = () => {
-  const { rowHeight = 40, updateRowHeight } = useColumnSettingsContext()
+  const { rowHeight: contextRowHeight = 40, updateRowHeight } = useColumnSettingsContext()
 
-  console.log('RowHeightSettings: current rowHeight from context is', rowHeight) // Debug log
+  // Local state for immediate UI updates (smooth slider)
+  const [localRowHeight, setLocalRowHeight] = useState(contextRowHeight)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Debounced value for context updates (reduce expensive re-renders)
+  const debouncedRowHeight = useDebounce(localRowHeight, 100) // 150ms delay
+
+  // Update context when debounced value changes
+  useEffect(() => {
+    if (debouncedRowHeight !== contextRowHeight) {
+      updateRowHeight(debouncedRowHeight)
+    }
+  }, [debouncedRowHeight, contextRowHeight, updateRowHeight])
+
+  // Sync local state when context changes externally
+  useEffect(() => {
+    setLocalRowHeight(contextRowHeight)
+  }, [contextRowHeight])
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value, 10)
-    console.log('RowHeightSettings: slider onChange event with', newValue, 'current context rowHeight is', rowHeight) // Debug log
-    updateRowHeight(newValue)
-  }
-
-  const handleMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
-    const newValue = parseInt(e.currentTarget.value, 10)
-    console.log('RowHeightSettings: slider mouseup event with', newValue, 'current context rowHeight is', rowHeight) // Debug log
-  }
-
-  const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
-    const newValue = parseInt(e.currentTarget.value, 10)
-    console.log('RowHeightSettings: slider input event with', newValue, 'current context rowHeight is', rowHeight) // Debug log
-  }
+    setLocalRowHeight(newValue) // Immediate UI update
+  }, [])
 
   return (
     <Container>
@@ -96,15 +118,13 @@ const RowHeightSettings: FC = () => {
         <Slider
           id="row-height-slider"
           type="range"
-          min={30}
+          min={24}
           max={200}
-          step={5}
-          value={rowHeight}
+          step={2}
+          value={localRowHeight} // Use local state for smooth slider
           onChange={handleChange}
-          onMouseUp={handleMouseUp}
-          onInput={handleInput}
         />
-        <ValueDisplay>{rowHeight}px</ValueDisplay>
+        <ValueDisplay>{localRowHeight}px</ValueDisplay>
       </SliderContainer>
     </Container>
   )
