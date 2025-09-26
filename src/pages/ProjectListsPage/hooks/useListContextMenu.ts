@@ -76,7 +76,7 @@ const useListContextMenu = () => {
     onPutListsInFolder,
     onRemoveListsFromFolder,
     onOpenFolderList,
-    onDeleteListFolder,
+    onDeleteListFolders,
     onPutFolderInFolder,
     onRemoveFolderFromFolder,
   } = useListsContext()
@@ -326,13 +326,12 @@ const useListContextMenu = () => {
             const forceDelete = e.originalEvent.metaKey || e.originalEvent.ctrlKey
 
             if (allSelectedRowsAreFolders) {
+              const folderIds = newSelectedRows
+                .map((rowId) => parseListFolderRowId(rowId))
+                .filter((id): id is string => !!id)
+
               // Delete folders
-              newSelectedRows.forEach((rowId) => {
-                const folderId = parseListFolderRowId(rowId)
-                if (folderId) {
-                  onDeleteListFolder(folderId)
-                }
-              })
+              onDeleteListFolders(folderIds)
             } else if (allSelectedRowsAreLists) {
               // Delete lists
               deleteLists(Object.keys(newSelection), { force: forceDelete })
@@ -357,7 +356,7 @@ const useListContextMenu = () => {
       onPutListsInFolder,
       onRemoveListsFromFolder,
       onOpenFolderList,
-      onDeleteListFolder,
+      onDeleteListFolders,
       onPutFolderInFolder,
       onRemoveFolderFromFolder,
       isUser,

@@ -14,7 +14,7 @@ import { toast } from 'react-toastify'
 import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import { parseListFolderRowId } from '../util'
-import { getEntityId } from '@shared/util'
+import { confirmDelete, getEntityId } from '@shared/util'
 
 const getErrorMessage = (error: unknown, prefix: string): string => {
   const errorString = error instanceof Error ? error.message : String(error)
@@ -43,7 +43,7 @@ export interface UseUpdateListReturn {
     listIds?: string[],
   ) => Promise<void>
   onUpdateListFolder: (folderId: string, data: EntityListFolderPatchModel) => Promise<void>
-  onDeleteListFolder: (folderId: string) => Promise<void>
+  onDeleteListFolders: (folderIds: string[]) => Promise<void>
   onPutFolderInFolder: (folderId: string, parentFolderId: string) => Promise<void>
   onRemoveFolderFromFolder: (folderId: string) => Promise<void>
 }
@@ -227,16 +227,31 @@ const useUpdateList = ({
     [projectName, updateListFolder],
   )
 
-  const onDeleteListFolder = useCallback(
-    async (folderId: string) => {
-      try {
-        await deleteListFolder({
-          projectName,
-          folderId,
-        }).unwrap()
-      } catch (error) {
-        throw getErrorMessage(error, 'Failed to delete folder')
-      }
+  const onDeleteListFolders: UseUpdateListReturn['onDeleteListFolders'] = useCallback(
+    async (folderIds) => {
+      const ids = Array.isArray(folderIds) ? folderIds : [folderIds]
+
+      confirmDelete({
+        accept: async () => {
+          try {
+            await Promise.all(
+              ids.map((folderId) =>
+                deleteListFolder({
+                  projectName,
+                  folderId,
+                }).unwrap(),
+              ),
+            )
+
+            // deselect everything
+            setRowSelection({})
+          } catch (error) {
+            throw getErrorMessage(error, 'Failed to delete folder(s)')
+          }
+        },
+        label: ids.length > 1 ? 'folders?' : 'folder?',
+        message: 'Only the folder(s) will be deleted. Lists inside the folder will remain.',
+      })
     },
     [projectName, deleteListFolder],
   )
@@ -284,7 +299,7 @@ const useUpdateList = ({
     onRemoveListsFromFolder,
     onCreateListFolder,
     onUpdateListFolder,
-    onDeleteListFolder,
+    onDeleteListFolders,
     onPutFolderInFolder,
     onRemoveFolderFromFolder,
   }

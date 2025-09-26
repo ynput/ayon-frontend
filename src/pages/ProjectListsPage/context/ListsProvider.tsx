@@ -188,7 +188,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     onRemoveListsFromFolder,
     onCreateListFolder,
     onUpdateListFolder,
-    onDeleteListFolder,
+    onDeleteListFolders,
     onPutFolderInFolder,
     onRemoveFolderFromFolder,
   } = useUpdateList({
@@ -276,7 +276,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         onRemoveListsFromFolder,
         onCreateListFolder,
         onUpdateListFolder,
-        onDeleteListFolder,
+        onDeleteListFolders,
         onPutFolderInFolder,
         onRemoveFolderFromFolder,
         deleteLists,

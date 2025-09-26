@@ -5,6 +5,7 @@ import { FC } from 'react'
 import styled from 'styled-components'
 import { ListsFiltersButton } from './ListsFiltersButton'
 import ListsSearch from './ListsSearch'
+import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
 const HeaderStyled = styled(Header)`
   flex-direction: column;
@@ -66,7 +67,13 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   buttonLabels = {},
   hiddenButtons = [],
 }) => {
-  const { openNewList, deleteLists, selectedRows } = useListsContext()
+  const { openNewList, deleteLists, selectedRows, onOpenFolderList, onDeleteListFolders } =
+    useListsContext()
+
+  const selectedLists = selectedRows.filter((id) => !parseListFolderRowId(id))
+  const selectedFolders = selectedRows
+    .filter((id) => !!parseListFolderRowId(id))
+    .map((id) => parseListFolderRowId(id)!)
 
   // Default button configurations
   const deleteButton = {
@@ -96,9 +103,22 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     ...buttonLabels.filter,
   }
 
+  const folderButton = {
+    icon: 'create_new_folder',
+    tooltip: 'Create new folder',
+    shortcut: 'F',
+  }
+
   const handleDelete = () => {
-    // delete selected list items
-    deleteLists(selectedRows)
+    if (!selectedRows.length) return
+
+    if (selectedLists.length) {
+      // delete selected list items
+      deleteLists(selectedRows)
+    } else if (selectedFolders.length) {
+      // delete selected folders
+      onDeleteListFolders(selectedFolders)
+    }
   }
 
   return (
@@ -113,6 +133,19 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
               onClick={handleDelete}
               data-tooltip={deleteButton.tooltip}
               data-shortcut={deleteButton.shortcut}
+            />
+          )}
+          {!hiddenButtons.includes('add') && (
+            <HeaderButton
+              icon={folderButton.icon}
+              data-tooltip={folderButton.tooltip}
+              data-shortcut={folderButton.shortcut}
+              onClick={() =>
+                onOpenFolderList({
+                  parentId: selectedFolders[0],
+                  listIds: selectedLists.length ? selectedLists : undefined,
+                })
+              }
             />
           )}
           {!hiddenButtons.includes('add') && (
