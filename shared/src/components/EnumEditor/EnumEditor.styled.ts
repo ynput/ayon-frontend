@@ -137,6 +137,7 @@ export const LabelColor = styled.div`
 
 export const IconSelect = styled(BaseIconSelect)`
   flex-grow: 1;
+  width: 100%;
   button div {
     width: 100%;
   }
@@ -160,6 +161,7 @@ export const PlaceholderWrapper = styled.div`
   justify-content: start;
   flex-grow: 1;
   gap: var(--base-gap-small);
+  width: 100%;
 `
 export const Placeholder = styled.div`
   ${inputLikeColorsAndBorder}

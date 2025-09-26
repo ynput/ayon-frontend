@@ -129,7 +129,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
           )}
           {!hidden?.includes('entityType') && (
             <Styled.Row>
-              <label htmlFor="entityType">{labels.entityType}</label>
+              <label htmlFor="entityType">{labels.entityType || 'Entity type'} </label>
               <Dropdown
                 value={[form.entityType]}
                 onChange={(e) => handleChange(e[0] as NewListForm['entityType'], 'entityType')}

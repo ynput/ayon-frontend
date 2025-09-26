@@ -118,14 +118,19 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
       size="md"
       onKeyDown={handleKeyDown}
       enableBackdropClose={false}
-      style={{ maxWidth: 550 }}
+      style={{ maxWidth: 450, maxHeight: '90vh' }}
       footer={
         <>
           <Button variant="text" onClick={handleClose} disabled={isSaving}>
             Cancel
           </Button>
           <Spacer />
-          <SaveButton onClick={handleSave} disabled={!isValid || isSaving} saving={isSaving}>
+          <SaveButton
+            onClick={handleSave}
+            disabled={!isValid || isSaving}
+            saving={isSaving}
+            icon={mode === 'edit' ? 'check' : 'add'}
+          >
             {mode === 'edit' ? 'Save folder' : 'Create folder'}
           </SaveButton>
         </>

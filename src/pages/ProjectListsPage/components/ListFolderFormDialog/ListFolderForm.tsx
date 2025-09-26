@@ -10,10 +10,10 @@ const FormContainer = styled.div`
 `
 
 const FormRow = styled.div`
+  padding-top: var(--padding-s);
   display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 40px;
+  flex-direction: column;
+  gap: var(--base-gap-small);
 `
 
 const Label = styled.label`
@@ -44,9 +44,12 @@ interface ListFolderFormProps {
   autoFocus?: boolean
 }
 
+export const ALL_SCOPE = '__all__'
+
 const SCOPE_OPTIONS = [
-  { value: 'generic', label: 'Generic' },
-  { value: 'review-session', label: 'Review Session' },
+  { value: 'generic', label: 'Lists' },
+  { value: 'review-session', label: 'Review Sessions' },
+  { value: ALL_SCOPE, label: 'All' },
 ]
 
 export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFocus = false }) => {
@@ -71,7 +74,13 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFo
 
   const handleScopeChange = useCallback(
     (added: string[]) => {
-      onChange('scope', added)
+      if (added.includes(ALL_SCOPE)) {
+        // if 'All' is selected, clear scope (means available for all)
+        onChange('scope', [])
+        return
+      } else {
+        onChange('scope', added)
+      }
     },
     [onChange],
   )
@@ -100,6 +109,13 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFo
               onClick={() => {
                 iconDropdownRef.current?.open()
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  iconDropdownRef.current?.open()
+                }
+              }}
+              tabIndex={0}
             >
               Pick an icon...
             </EnumStyled.Placeholder>
@@ -114,6 +130,11 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFo
               }}
               onChange={(value) => {
                 onChange('icon', value[0] || undefined)
+
+                if (!data.icon) {
+                  // focus the colour button or input
+                  colorInputRef?.current?.parentElement?.focus()
+                }
               }}
             />
             {data.icon && (
@@ -131,6 +152,13 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFo
               className={data.color ? 'active' : ''}
               style={{ backgroundColor: data.color || undefined }}
               onClick={handleColorClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleColorClick()
+                }
+              }}
+              tabIndex={0}
             >
               {!data.color ? 'Pick a color...' : ''}
               <input
@@ -151,13 +179,11 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFo
         <Label>Scope</Label>
         <InputWrapper>
           <Dropdown
-            value={data.scope || []}
+            value={data.scope?.length ? data.scope : [ALL_SCOPE]}
             options={SCOPE_OPTIONS}
             onChange={handleScopeChange}
             placeholder="Select scope"
-            multiSelect
             widthExpand
-            minSelected={1}
             style={{ flex: 1 }}
             dataKey="value"
             labelKey="label"

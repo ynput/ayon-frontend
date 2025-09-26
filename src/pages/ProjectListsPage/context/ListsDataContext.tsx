@@ -41,9 +41,22 @@ export const ListsDataProvider = ({
 
   const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
 
-  const { data: listFolders = [] } = useGetEntityListFoldersQuery(
+  const { data: listFoldersAll = [] } = useGetEntityListFoldersQuery(
     { projectName },
     { skip: !projectName },
+  )
+
+  // filter out folders by scope (right now we only have 'generic' and 'review-session')
+  // we only show 'generic' folders in non-review mode, and 'review-session' in review mode
+  const listFolders = useMemo(
+    () =>
+      listFoldersAll.filter((f) => {
+        const scope = f.data?.scope
+        if (!scope || scope.length === 0) return true // no scope means available for all
+        const hasReviewScope = scope.includes('review-session')
+        return isReview ? hasReviewScope : !hasReviewScope
+      }),
+    [isReview, listFoldersAll],
   )
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({

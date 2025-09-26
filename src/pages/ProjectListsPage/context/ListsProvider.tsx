@@ -223,7 +223,11 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         }
       }
 
-      return setListFolderOpen({ isOpen: true, listIds, initial: { parentId: resolvedParentId } }) // open in create mode if folder not found
+      return setListFolderOpen({
+        isOpen: true,
+        listIds,
+        initial: { parentId: resolvedParentId, scope: isReview ? ['review-session'] : ['generic'] },
+      }) // open in create mode if folder not found
     }
 
     // open dialog in edit mode
