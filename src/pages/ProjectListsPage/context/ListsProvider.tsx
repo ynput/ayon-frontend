@@ -136,19 +136,26 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     onRemoveListsFromFolder,
     onCreateListFolder,
     onUpdateListFolder,
+    onDeleteListFolder,
+    onPutFolderInFolder,
+    onRemoveFolderFromFolder,
   } = useUpdateList({
     setRowSelection,
     onUpdateList,
     projectName,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds, parentId }) => {
     // get folder data
     const folder = listFolders.find((f) => f.id === folderId)
-    if (!folder) return setListFolderOpen({ isOpen: true, listIds }) // open in create mode if folder not found
+    if (!folder) return setListFolderOpen({ isOpen: true, listIds, initial: { parentId } }) // open in create mode if folder not found
 
     // open dialog in edit mode
-    setListFolderOpen({ isOpen: true, folderId, initial: { label: folder.label, ...folder.data } })
+    setListFolderOpen({
+      isOpen: true,
+      folderId,
+      initial: { label: folder.label, parentId: folder.parentId, ...folder.data },
+    })
   }
 
   // DELETE LIST
@@ -186,6 +193,9 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         onRemoveListsFromFolder,
         onCreateListFolder,
         onUpdateListFolder,
+        onDeleteListFolder,
+        onPutFolderInFolder,
+        onRemoveFolderFromFolder,
         deleteLists,
         // info dialog
         listDetailsOpen,

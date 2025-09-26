@@ -7,11 +7,56 @@ import useClearListItems from './useClearListItems'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util'
+import { EntityListFolderModel } from '@shared/api'
 
 export const FOLDER_ICON = 'snippet_folder'
 export const FOLDER_ICON_ADD = 'create_new_folder'
 export const FOLDER_ICON_EDIT = 'folder_managed'
 export const FOLDER_ICON_REMOVE = 'folder_off'
+
+// Helper function to build hierarchical folder structure for menu
+const buildFolderHierarchy = (folders: EntityListFolderModel[]) => {
+  const folderMap = new Map<string, EntityListFolderModel & { children: EntityListFolderModel[] }>()
+  const rootFolders: (EntityListFolderModel & { children: EntityListFolderModel[] })[] = []
+
+  // Create nodes for all folders
+  for (const folder of folders) {
+    folderMap.set(folder.id, { ...folder, children: [] })
+  }
+
+  // Build parent-child relationships
+  for (const folder of folders) {
+    const folderNode = folderMap.get(folder.id)!
+    if (folder.parentId && folderMap.has(folder.parentId)) {
+      folderMap.get(folder.parentId)!.children.push(folderNode)
+    } else {
+      rootFolders.push(folderNode)
+    }
+  }
+
+  return { folderMap, rootFolders }
+}
+
+// Helper function to prevent circular dependencies
+const wouldCreateCircularDependency = (
+  folderId: string,
+  targetParentId: string,
+  folders: EntityListFolderModel[],
+): boolean => {
+  if (folderId === targetParentId) return true
+
+  const folderMap = new Map(folders.map((f) => [f.id, f]))
+
+  // Check if targetParentId is a descendant of folderId
+  const isDescendant = (currentId: string, ancestorId: string): boolean => {
+    const current = folderMap.get(currentId)
+    if (!current || !current.parentId) return false
+    if (current.parentId === ancestorId) return true
+    return isDescendant(current.parentId, ancestorId)
+  }
+
+  return isDescendant(targetParentId, folderId)
+}
 
 const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
@@ -30,6 +75,9 @@ const useListContextMenu = () => {
     onPutListsInFolder,
     onRemoveListsFromFolder,
     onOpenFolderList,
+    onDeleteListFolder,
+    onPutFolderInFolder,
+    onRemoveFolderFromFolder,
   } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
@@ -66,13 +114,66 @@ const useListContextMenu = () => {
       const selectedList = newSelectedLists[0]
       const firstSelectedRow = Object.keys(newSelection)[0]
       const multipleSelected = Object.keys(newSelection).length > 1
+
+      // Check if the first selected row is a folder
+      const selectedFolderId = parseListFolderRowId(firstSelectedRow)
+      const isSelectedRowFolder = !!selectedFolderId
+      const selectedFolder = isSelectedRowFolder
+        ? listFolders.find((f) => f.id === selectedFolderId)
+        : null
+
       // some rows are folders
       const allSelectedRowsAreLists = newSelectedRows.every((selected) =>
         newSelectedLists.some((list) => list?.id === selected),
       )
+      const allSelectedRowsAreFolders = newSelectedRows.every((selected) =>
+        parseListFolderRowId(selected),
+      )
 
-      // Create folder submenu items
-      const createFolderSubmenu = () => {
+      // Create recursive folder submenu
+      const createFolderHierarchy = (
+        folders: (EntityListFolderModel & { children: EntityListFolderModel[] })[],
+        excludeFolderId?: string,
+        depth = 0,
+      ): any[] => {
+        const items: any[] = []
+
+        for (const folder of folders) {
+          if (folder.id === excludeFolderId) continue
+
+          const hasChildren = folder.children.length > 0
+          const childItems = hasChildren
+            ? createFolderHierarchy(
+                folder.children as (EntityListFolderModel & {
+                  children: EntityListFolderModel[]
+                })[],
+                excludeFolderId,
+                depth + 1,
+              )
+            : []
+
+          items.push({
+            label: folder.label,
+            icon: folder.data?.icon || FOLDER_ICON,
+            command: allSelectedRowsAreFolders
+              ? () => onPutFolderInFolder(selectedFolderId!, folder.id)
+              : () =>
+                  onPutListsInFolder(
+                    newSelectedLists.map((l) => l.id),
+                    folder.id,
+                  ),
+            disabled:
+              allSelectedRowsAreFolders &&
+              wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
+            ...(hasChildren && { items: childItems }),
+          })
+        }
+
+        return items
+      }
+
+      // Create folder submenu items for lists
+      const createListFolderSubmenu = () => {
         if (!allSelectedRowsAreLists || newSelectedLists.length === 0) {
           return []
         }
@@ -101,57 +202,83 @@ const useListContextMenu = () => {
           })
         }
 
-        // Get listFolders that are not already assigned to ALL selected lists
-        const availableFolders = listFolders.filter((cat) => {
-          if (multipleSelected) {
-            // For multiple selections, show listFolders that are not assigned to ALL lists
-            return !newSelectedLists.every((list) => list.data?.folder === cat.id)
-          } else {
-            // For single selection, show listFolders that are not assigned to this list
-            return newSelectedLists[0]?.data?.folder !== cat.id
-          }
-        })
-
-        if (availableFolders.length > 0) {
+        if (listFolders.length > 0) {
           if (submenuItems.length > 0) {
             submenuItems.push({ separator: true })
           }
 
-          availableFolders.forEach((folder) => {
-            submenuItems.push({
-              label: folder.label,
-              icon: folder.data?.icon || FOLDER_ICON,
-              command: () => {
-                onPutListsInFolder(selectedListIds, folder.id)
-              },
-            })
-          })
+          const { rootFolders } = buildFolderHierarchy(listFolders)
+          const hierarchyItems = createFolderHierarchy(rootFolders)
+          submenuItems.push(...hierarchyItems)
         }
 
         return submenuItems
       }
 
-      const folderSubmenu = createFolderSubmenu()
+      // Create folder submenu items for folders
+      const createFolderFolderSubmenu = () => {
+        if (!allSelectedRowsAreFolders || !selectedFolder) {
+          return []
+        }
 
-      // Check if the first selected row is a folder
-      const selectedFolderId = parseListFolderRowId(firstSelectedRow)
+        const submenuItems: any[] = []
+
+        // Add "Create subfolder" option at the top
+        submenuItems.push({
+          label: 'Create subfolder',
+          icon: FOLDER_ICON_ADD,
+          command: () => onOpenFolderList({ parentId: selectedFolderId || undefined }),
+          disabled: isUser, // only admins and managers can create listFolders
+        })
+
+        // Show "Unset parent folder" if folder has a parent
+        if (selectedFolder.parentId) {
+          submenuItems.push({
+            label: 'Make root folder',
+            icon: FOLDER_ICON_REMOVE,
+            command: () => onRemoveFolderFromFolder(selectedFolderId!),
+          })
+        }
+
+        // Show available parent folders (excluding self and its descendants)
+        const availableParents = listFolders.filter(
+          (folder) =>
+            folder.id !== selectedFolderId &&
+            !wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
+        )
+
+        if (availableParents.length > 0) {
+          if (submenuItems.length > 0) {
+            submenuItems.push({ separator: true })
+          }
+
+          const { rootFolders } = buildFolderHierarchy(availableParents)
+          const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
+          submenuItems.push(...hierarchyItems)
+        }
+
+        return submenuItems
+      }
+
+      const listFolderSubmenu = createListFolderSubmenu()
+      const folderFolderSubmenu = createFolderFolderSubmenu()
 
       const menuItems: any[] = [
         {
           label: 'Rename',
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
-          disabled: multipleSelected || (selectedFolderId && isUser),
-          hidden: !allSelectedRowsAreLists,
+          disabled: multipleSelected || (isSelectedRowFolder && isUser),
+          hidden: !allSelectedRowsAreLists && !isSelectedRowFolder,
         },
         {
           label: 'Edit folder',
           icon: FOLDER_ICON_EDIT,
           command: () => {
-            if (!selectedFolderId) return
-            onOpenFolderList({ folderId: selectedFolderId })
+            const folderId = firstSelectedRow.replace('folder-', '')
+            onOpenFolderList({ folderId })
           },
-          hidden: !selectedFolderId || multipleSelected,
+          hidden: !isSelectedRowFolder || multipleSelected,
           disabled: isUser, // only admins and managers can edit listFolders
         },
         {
@@ -164,9 +291,12 @@ const useListContextMenu = () => {
         {
           label: 'Folder',
           icon: FOLDER_ICON,
-          items: folderSubmenu,
-          disabled: !allSelectedRowsAreLists,
-          hidden: !allSelectedRowsAreLists || folderSubmenu.length === 0,
+          items: allSelectedRowsAreLists ? listFolderSubmenu : folderFolderSubmenu,
+          disabled: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
+          hidden:
+            (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
+            (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
+            (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0),
         },
         {
           label: 'Details',
@@ -187,11 +317,23 @@ const useListContextMenu = () => {
           label: 'Delete',
           icon: 'delete',
           danger: true,
-          command: (e: CommandEvent) =>
-            deleteLists(Object.keys(newSelection), {
-              force: e.originalEvent.metaKey || e.originalEvent.ctrlKey,
-            }),
-          hidden: !allSelectedRowsAreLists,
+          command: (e: CommandEvent) => {
+            const forceDelete = e.originalEvent.metaKey || e.originalEvent.ctrlKey
+
+            if (allSelectedRowsAreFolders) {
+              // Delete folders
+              newSelectedRows.forEach((rowId) => {
+                const folderId = parseListFolderRowId(rowId)
+                if (folderId) {
+                  onDeleteListFolder(folderId)
+                }
+              })
+            } else if (allSelectedRowsAreLists) {
+              // Delete lists
+              deleteLists(Object.keys(newSelection), { force: forceDelete })
+            }
+          },
+          hidden: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
         },
       ]
 
@@ -208,6 +350,16 @@ const useListContextMenu = () => {
       deleteLists,
       createReviewSessionList,
       onPutListsInFolder,
+      onRemoveListsFromFolder,
+      onOpenFolderList,
+      onDeleteListFolder,
+      onPutFolderInFolder,
+      onRemoveFolderFromFolder,
+      isUser,
+      developerMode,
+      handleCreateReviewSessionList,
+      clearListItems,
+      isReview,
     ],
   )
 

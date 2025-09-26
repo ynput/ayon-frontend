@@ -34,6 +34,12 @@ export const Cell = styled.div`
     .icon {
       color: var(--md-sys-color-on-primary-container);
     }
+    /* update expander styles */
+    .expander {
+      &:hover {
+        background-color: var(--md-sys-color-on-primary);
+      }
+    }
   }
 
   &.inactive {
@@ -52,13 +58,6 @@ export const Cell = styled.div`
   /* filled icon */
   .icon.filled {
     font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-  }
-
-  /* update expander styles */
-  .expander {
-    &:hover {
-      background-color: var(--md-sys-color-on-primary);
-    }
   }
 `
 

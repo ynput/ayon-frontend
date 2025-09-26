@@ -14,7 +14,11 @@ export type ListDetailsOpenState = {
   initial?: Partial<FolderFormData>
 }
 
-export type OnOpenFolderListParams = (params: { folderId?: string; listIds?: string[] }) => void
+export type OnOpenFolderListParams = (params: {
+  folderId?: string
+  listIds?: string[]
+  parentId?: string
+}) => void
 
 export interface ListsContextType {
   rowSelection: RowSelectionState
@@ -41,6 +45,9 @@ export interface ListsContextType {
   onRemoveListsFromFolder: UseUpdateListReturn['onRemoveListsFromFolder']
   onCreateListFolder: UseUpdateListReturn['onCreateListFolder']
   onUpdateListFolder: UseUpdateListReturn['onUpdateListFolder']
+  onDeleteListFolder: UseUpdateListReturn['onDeleteListFolder']
+  onPutFolderInFolder: UseUpdateListReturn['onPutFolderInFolder']
+  onRemoveFolderFromFolder: UseUpdateListReturn['onRemoveFolderFromFolder']
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
   // Info dialog

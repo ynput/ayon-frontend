@@ -35,6 +35,7 @@ export interface ListFolderFormData {
   icon?: string
   color?: string
   scope?: string[]
+  parentId?: string
 }
 
 interface ListFolderFormProps {

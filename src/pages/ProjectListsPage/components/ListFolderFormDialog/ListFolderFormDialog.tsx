@@ -54,11 +54,11 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
 
     const listIdsToAdd = mode === 'create' ? listIds : []
     const label = folderForm.label.trim()
-    const { color, icon, scope } = folderForm
+    const { color, icon, scope, parentId } = folderForm
 
     try {
       if (mode === 'edit' && folderId) {
-        await onUpdateListFolder(folderId, { label, data: { color, icon, scope } })
+        await onUpdateListFolder(folderId, { label, parentId, data: { color, icon, scope } })
       } else {
         await onCreateListFolder(
           {
@@ -66,6 +66,7 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
             icon: icon,
             color: color,
             scope: scope,
+            parentId: parentId,
           },
           listIdsToAdd,
         )

@@ -42,6 +42,9 @@ export interface UseUpdateListReturn {
     listIds?: string[],
   ) => Promise<void>
   onUpdateListFolder: (folderId: string, data: EntityListFolderPatchModel) => Promise<void>
+  onDeleteListFolder: (folderId: string) => Promise<void>
+  onPutFolderInFolder: (folderId: string, parentFolderId: string) => Promise<void>
+  onRemoveFolderFromFolder: (folderId: string) => Promise<void>
 }
 
 const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdateListProps) => {
@@ -149,7 +152,7 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
             listId,
             projectName,
             entityListPatchModel: {
-              entityListFolderId: undefined,
+              entityListFolderId: null as unknown as string | undefined,
             },
           }).unwrap(),
         )
@@ -227,6 +230,40 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
     [projectName, deleteListFolder],
   )
 
+  const onPutFolderInFolder: UseUpdateListReturn['onPutFolderInFolder'] = useCallback(
+    async (folderId, parentFolderId) => {
+      try {
+        await updateListFolder({
+          projectName,
+          folderId,
+          entityListFolderPatchModel: {
+            parentId: parentFolderId,
+          },
+        }).unwrap()
+      } catch (error) {
+        throw getErrorMessage(error, 'Failed to move folder')
+      }
+    },
+    [projectName, updateListFolder],
+  )
+
+  const onRemoveFolderFromFolder: UseUpdateListReturn['onRemoveFolderFromFolder'] = useCallback(
+    async (folderId) => {
+      try {
+        await updateListFolder({
+          projectName,
+          folderId,
+          entityListFolderPatchModel: {
+            parentId: null as unknown as string | undefined,
+          },
+        }).unwrap()
+      } catch (error) {
+        throw getErrorMessage(error, 'Failed to remove folder from parent')
+      }
+    },
+    [projectName, updateListFolder],
+  )
+
   return {
     renamingList,
     openRenameList,
@@ -237,6 +274,8 @@ const useUpdateList = ({ setRowSelection, onUpdateList, projectName }: UseUpdate
     onCreateListFolder,
     onUpdateListFolder,
     onDeleteListFolder,
+    onPutFolderInFolder,
+    onRemoveFolderFromFolder,
   }
 }
 

@@ -15,145 +15,225 @@ export const parseListFolderRowId = (rowId: string) => {
 export const buildListsTableData = (
   listsData: EntityList[],
   folders: EntityListFolderModel[],
+  showEmptyFolders: boolean = true,
 ): SimpleTableRow[] => {
-  // Create a lookup map for folder attributes
+  // Create lookup maps
   const foldersMap = new Map<string, EntityListFolderModel>()
   for (const folder of folders) {
     foldersMap.set(String(folder.id), folder)
   }
 
-  // Group lists by data.folder if available
-  const listsByFolder: Record<string, EntityList[]> = {}
-
-  // First pass: categorize lists by folder from data
-  for (const list of listsData) {
-    // Get folder from data field (now guaranteed to be an object)
-    let folder = 'Uncategorized'
-
-    const listFolder = list.entityListFolderId
-    if (!!listFolder && foldersMap.has(listFolder)) {
-      folder = listFolder
-    }
-
-    if (!listsByFolder[folder]) {
-      listsByFolder[folder] = []
-    }
-
-    listsByFolder[folder].push(list)
+  // Build hierarchical folder structure iteratively
+  interface FolderNode {
+    id: string
+    folder: EntityListFolderModel
+    children: Map<string, FolderNode>
+    lists: EntityList[]
+    hasAnyLists: boolean
   }
 
-  const folderRows: SimpleTableRow[] = []
-  const rootLists: SimpleTableRow[] = []
+  const folderNodes = new Map<string, FolderNode>()
+  const rootFolderIds = new Set<string>()
 
-  // Second pass: create table rows from the categorized lists
-  for (const [folder, lists] of Object.entries(listsByFolder)) {
-    if (folder === 'Uncategorized') {
-      // Add uncategorized lists to separate array for later sorting
-      for (const list of lists) {
-        rootLists.push({
-          id: list.id,
-          name: list.label,
-          label: list.label,
-          icon: getListIcon(list),
-          inactive: !list.active,
-          subRows: [],
-          data: {
-            id: list.id,
-            count: list.count,
-            owner: list.owner,
-            entityListType: list.entityListType,
-            createdAt: list.createdAt,
-          },
-        })
-      }
+  // Create all folder nodes first
+  for (const folder of folders) {
+    folderNodes.set(folder.id, {
+      id: folder.id,
+      folder,
+      children: new Map(),
+      lists: [],
+      hasAnyLists: false,
+    })
+
+    // Track root folders (those without parentId)
+    if (!folder.parentId) {
+      rootFolderIds.add(folder.id)
+    }
+  }
+
+  // Build parent-child relationships
+  for (const folder of folders) {
+    if (folder.parentId && folderNodes.has(folder.parentId)) {
+      const parentNode = folderNodes.get(folder.parentId)!
+      const childNode = folderNodes.get(folder.id)!
+      parentNode.children.set(folder.id, childNode)
+    }
+  }
+
+  // Assign lists to their folders and mark folders as having lists
+  const rootLists: EntityList[] = []
+
+  for (const list of listsData) {
+    const listFolderId = list.entityListFolderId
+
+    if (listFolderId && folderNodes.has(listFolderId)) {
+      const folderNode = folderNodes.get(listFolderId)!
+      folderNode.lists.push(list)
+      folderNode.hasAnyLists = true
     } else {
-      // Get folder attributes from the folders data
-      const folderAttr = foldersMap.get(folder)
-      const folderLabel = folderAttr?.label || folder
-      const folderIcon = folderAttr?.data?.icon || FOLDER_ICON
-      const folderColor = folderAttr?.data?.color
+      rootLists.push(list)
+    }
+  }
 
-      // Create a parent row for all folders
-      const parentRow: SimpleTableRow = {
-        id: buildListFolderRowId(folder),
-        name: folderLabel,
-        label: folderLabel,
-        icon: folderIcon,
+  // Mark all parent folders that contain lists (directly or indirectly)
+  for (const node of folderNodes.values()) {
+    if (node.hasAnyLists) {
+      // Find all parent paths and mark them
+      let currentFolder = node.folder
+      while (currentFolder.parentId) {
+        const parentNode = folderNodes.get(currentFolder.parentId)
+        if (parentNode) {
+          parentNode.hasAnyLists = true
+          currentFolder = parentNode.folder
+        } else {
+          break
+        }
+      }
+    }
+  }
+
+  // Helper function to sort lists
+  const sortLists = (lists: EntityList[]): EntityList[] => {
+    return [...lists].sort((a, b) => {
+      // Active lists come first
+      if (a.active && !b.active) return -1
+      if (!a.active && b.active) return 1
+
+      // Both active or both inactive: sort by createdAt (newest first)
+      const aDate = new Date(a.createdAt || 0)
+      const bDate = new Date(b.createdAt || 0)
+      return bDate.getTime() - aDate.getTime()
+    })
+  }
+
+  // Helper function to create list table row
+  const createListRow = (list: EntityList, parentType?: string): SimpleTableRow => ({
+    id: list.id,
+    name: list.label,
+    label: list.label,
+    icon: getListIcon(list),
+    inactive: !list.active,
+    subRows: [],
+    data: {
+      id: list.id,
+      count: list.count,
+      owner: list.owner,
+      entityListType: list.entityListType,
+      createdAt: list.createdAt,
+      ...(parentType && { parentType }),
+    },
+  })
+
+  // Helper function to sort folder nodes by original folders array order
+  const sortFolderNodes = (nodes: FolderNode[]): FolderNode[] => {
+    return nodes.sort((a, b) => {
+      const aIndex = folders.findIndex((folder) => folder.id === a.id)
+      const bIndex = folders.findIndex((folder) => folder.id === b.id)
+
+      if (aIndex === -1 && bIndex === -1) return a.folder.label.localeCompare(b.folder.label)
+      if (aIndex === -1) return 1
+      if (bIndex === -1) return -1
+
+      return aIndex - bIndex
+    })
+  }
+
+  // Build table rows iteratively using depth-first traversal
+  const buildTableRowsIteratively = (): SimpleTableRow[] => {
+    const result: SimpleTableRow[] = []
+
+    // Get root folders that have lists and sort them
+    const rootNodes = Array.from(folderNodes.values()).filter(
+      (node) => rootFolderIds.has(node.id) && (showEmptyFolders || node.hasAnyLists),
+    )
+    const sortedRootNodes = sortFolderNodes(rootNodes)
+
+    // Stack for iterative depth-first traversal: [node, targetArray, processed]
+    type StackItem = {
+      node: FolderNode
+      targetArray: SimpleTableRow[]
+      isProcessed: boolean
+    }
+
+    const stack: StackItem[] = []
+
+    // Add root nodes to stack in reverse order (so first item is processed first)
+    for (let i = sortedRootNodes.length - 1; i >= 0; i--) {
+      stack.push({
+        node: sortedRootNodes[i],
+        targetArray: result,
+        isProcessed: false,
+      })
+    }
+
+    while (stack.length > 0) {
+      const item = stack[stack.length - 1] // Peek at top
+
+      if (item.isProcessed) {
+        // This node has been processed, remove from stack
+        stack.pop()
+        continue
+      }
+
+      // Mark as processed to avoid infinite loops
+      item.isProcessed = true
+      const { node, targetArray } = item
+
+      // Create folder row
+      const folderRow: SimpleTableRow = {
+        id: buildListFolderRowId(node.id),
+        name: node.folder.label,
+        label: node.folder.label,
+        icon: node.folder.data?.icon || FOLDER_ICON,
         iconFilled: true,
         subRows: [],
         data: {
-          id: folder,
+          id: node.id,
           isGroupRow: true,
-          count: lists.length,
-          type: folder,
+          count: node.lists.length,
+          type: node.id,
           isFolder: true,
-          color: folderColor,
+          color: node.folder.data?.color,
         },
       }
 
-      // Sort lists within folder: active first (by createdAt newest first), then inactive (by createdAt newest first)
-      const sortedLists = [...lists].sort((a, b) => {
-        // Active lists come first
-        if (a.active && !b.active) return -1
-        if (!a.active && b.active) return 1
+      // Add to target array
+      targetArray.push(folderRow)
 
-        // Both active or both inactive: sort by createdAt (newest first)
-        const aDate = new Date(a.createdAt || 0)
-        const bDate = new Date(b.createdAt || 0)
-        return bDate.getTime() - aDate.getTime()
-      })
-
-      // Add child lists to this parent
+      // Add sorted lists to this folder
+      const sortedLists = sortLists(node.lists)
       for (const list of sortedLists) {
-        parentRow.subRows.push({
-          id: list.id,
-          name: list.label,
-          label: list.label,
-          icon: getListIcon(list),
-          inactive: !list.active,
-          subRows: [],
-          data: {
-            id: list.id,
-            count: list.count,
-            owner: list.owner,
-            entityListType: list.entityListType,
-            parentType: folder,
-            createdAt: list.createdAt,
-          },
-        })
+        folderRow.subRows.push(createListRow(list, node.id))
       }
 
-      folderRows.push(parentRow)
+      // Get child folders that have lists and sort them
+      const childNodes = Array.from(node.children.values()).filter(
+        (child) => showEmptyFolders || child.hasAnyLists,
+      )
+      const sortedChildNodes = sortFolderNodes(childNodes)
+
+      // Add child folders to stack in reverse order (for correct processing order)
+      for (let i = sortedChildNodes.length - 1; i >= 0; i--) {
+        stack.push({
+          node: sortedChildNodes[i],
+          targetArray: folderRow.subRows,
+          isProcessed: false,
+        })
+      }
     }
+
+    return result
   }
 
-  // Sort folder rows based on the order in folders array
-  folderRows.sort((a, b) => {
-    const aIndex = folders.findIndex((folder) => folder.id === a.id)
-    const bIndex = folders.findIndex((folder) => folder.id === b.id)
+  // Build folder rows from the hierarchical structure
+  const folderRows = buildTableRowsIteratively()
 
-    // If either folder is not found in the folders array, fall back to alphabetical
-    if (aIndex === -1 && bIndex === -1) return a.label.localeCompare(b.label)
-    if (aIndex === -1) return 1
-    if (bIndex === -1) return -1
+  // Sort root lists: active first (by createdAt newest first), then inactive (by createdAt newest first)
+  const sortedRootLists = sortLists(rootLists)
+  const rootListRows = sortedRootLists.map((list) => createListRow(list))
 
-    return aIndex - bIndex
-  })
-
-  // Sort root lists rows: active first (by createdAt newest first), then inactive (by createdAt newest first)
-  rootLists.sort((a, b) => {
-    // Active lists come first
-    if (!a.inactive && a.inactive) return -1
-    if (a.inactive && !b.inactive) return 1
-
-    // Both active or both inactive: sort by createdAt (newest first)
-    const aDate = new Date(a.data.createdAt || 0)
-    const bDate = new Date(b.data.createdAt || 0)
-    return bDate.getTime() - aDate.getTime()
-  })
-
-  // Combine in the specified order: folder parents first, then uncategorized lists
-  return [...folderRows, ...rootLists]
+  // Combine in the specified order: folder hierarchy first, then root lists
+  return [...folderRows, ...rootListRows]
 }
 
 export const getListIcon = (list: Pick<EntityListModel, 'entityListType' | 'entityType'>) =>
