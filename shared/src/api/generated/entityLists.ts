@@ -68,6 +68,20 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    setEntityListFoldersOrder: build.mutation<
+      SetEntityListFoldersOrderApiResponse,
+      SetEntityListFoldersOrderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders/order`,
+        method: 'POST',
+        body: queryArg.entityListFolderOrderModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     createEntityListItem: build.mutation<
       CreateEntityListItemApiResponse,
       CreateEntityListItemApiArg
@@ -218,6 +232,13 @@ export type UpdateEntityListFolderApiArg = {
   'x-sender-type'?: string
   entityListFolderPatchModel: EntityListFolderPatchModel
 }
+export type SetEntityListFoldersOrderApiResponse = /** status 200 Successful Response */ any
+export type SetEntityListFoldersOrderApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListFolderOrderModel: EntityListFolderOrderModel
+}
 export type CreateEntityListItemApiResponse = /** status 201 Successful Response */ any
 export type CreateEntityListItemApiArg = {
   listId: string
@@ -357,6 +378,7 @@ export type EntityListFolderModel = {
   id: string
   label: string
   parentId?: string
+  position?: number
   owner?: string
   access?: {
     [key: string]: number
@@ -386,6 +408,9 @@ export type EntityListFolderPatchModel = {
     [key: string]: number
   }
   data?: EntityListFolderData
+}
+export type EntityListFolderOrderModel = {
+  order: string[]
 }
 export type EntityListItemPostModel = {
   id?: string
