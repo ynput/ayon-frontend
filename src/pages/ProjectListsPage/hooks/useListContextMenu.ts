@@ -1,20 +1,24 @@
 import { RowSelectionState } from '@tanstack/react-table'
 import { useListsContext } from '../context'
 import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
-import { LIST_CATEGORY_ATTRIBUTE, useListsDataContext } from '../context/ListsDataContext'
+import { useListsDataContext } from '../context/ListsDataContext'
+import { parseListFolderRowId } from '../util'
 
-export const CATEGORY_ICON = 'label'
+export const FOLDER_ICON = 'snippet_folder'
+export const FOLDER_ICON_ADD = 'create_new_folder'
+export const FOLDER_ICON_EDIT = 'folder_managed'
+export const FOLDER_ICON_REMOVE = 'folder_off'
 
 const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const isUser = !user.data?.isAdmin && !user.data?.isManager
   const { projectName } = useProjectDataContext()
-  const { listsData, categories } = useListsDataContext()
+  const { listsData, listFolders } = useListsDataContext()
   const {
     rowSelection,
     setRowSelection,
@@ -23,26 +27,12 @@ const useListContextMenu = () => {
     deleteLists,
     createReviewSessionList,
     isReview,
-    setListsCategory,
-    createAndAssignCategory,
-    editCategory,
+    onPutListsInFolder,
+    onRemoveListsFromFolder,
+    onOpenFolderList,
   } = useListsContext()
 
   const { clearListItems } = useClearListItems({ projectName })
-
-  // Dialog state for creating/editing categories
-  const [categoryFormDialog, setCategoryFormDialog] = useState<{
-    isOpen: boolean
-    mode: 'create' | 'edit'
-    listIds: string[]
-    initialCategory?: {
-      label: string
-      value: string
-      icon?: string
-      color?: string
-    }
-  }>({ isOpen: false, mode: 'create', listIds: [] })
-
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
 
@@ -54,45 +44,6 @@ const useListContextMenu = () => {
       })
     },
     [createReviewSessionList, projectName],
-  )
-
-  const openCreateCategoryDialog = useCallback((listIds: string[]) => {
-    setCategoryFormDialog({ isOpen: true, mode: 'create', listIds })
-  }, [])
-
-  const openEditCategoryDialog = useCallback(
-    (categoryValue: string) => {
-      const category = categories.find((cat) => cat.value === categoryValue)
-      if (category) {
-        setCategoryFormDialog({
-          isOpen: true,
-          mode: 'edit',
-          listIds: [],
-          initialCategory: {
-            label: category.label,
-            value: category.value.toString(),
-            icon: category.icon,
-            color: category.color,
-          },
-        })
-      }
-    },
-    [categories],
-  )
-
-  const closeCategoryFormDialog = useCallback(() => {
-    setCategoryFormDialog({ isOpen: false, mode: 'create', listIds: [] })
-  }, [])
-
-  const handleSaveCategory = useCallback(
-    async (category: { label: string; value: string; icon?: string; color?: string }) => {
-      if (categoryFormDialog.mode === 'create') {
-        await createAndAssignCategory(categoryFormDialog.listIds, category)
-      } else if (categoryFormDialog.mode === 'edit' && categoryFormDialog.initialCategory) {
-        await editCategory(categoryFormDialog.initialCategory.value, category)
-      }
-    },
-    [categoryFormDialog, createAndAssignCategory, editCategory],
   )
 
   const openContext = useCallback(
@@ -120,8 +71,8 @@ const useListContextMenu = () => {
         newSelectedLists.some((list) => list?.id === selected),
       )
 
-      // Create category submenu items
-      const createCategorySubmenu = () => {
+      // Create folder submenu items
+      const createFolderSubmenu = () => {
         if (!allSelectedRowsAreLists || newSelectedLists.length === 0) {
           return []
         }
@@ -129,51 +80,49 @@ const useListContextMenu = () => {
         const submenuItems: any[] = []
         const selectedListIds = newSelectedLists.map((list) => list.id)
 
-        // Add "Create category" option at the top
+        // Add "Create folder" option at the top
         submenuItems.push({
-          label: 'Create category',
-          icon: 'new_label',
-          command: () => openCreateCategoryDialog(selectedListIds),
-          disabled: isUser, // only admins and managers can create categories
+          label: 'Create folder',
+          icon: FOLDER_ICON_ADD,
+          command: () => onOpenFolderList({ listIds: selectedListIds }),
+          disabled: isUser, // only admins and managers can create listFolders
         })
 
-        // For multiple selections, show "Unset category" if any list has a category
-        // For single selection, show "Unset category" only if that list has a category
-        const hasAnyCategory = newSelectedLists.some(
-          (list) => list.attrib?.[LIST_CATEGORY_ATTRIBUTE],
-        )
-        if (hasAnyCategory) {
+        // For multiple selections, show "Unset folder" if any list has a folder
+        // For single selection, show "Unset folder" only if that list has a folder
+        const hasAnyFolder = newSelectedLists.some((list) => list.entityListFolderId)
+        if (hasAnyFolder) {
           submenuItems.push({
-            label: 'Unset category',
-            icon: 'label_off',
+            label: 'Unset folder',
+            icon: FOLDER_ICON_REMOVE,
             command: () => {
-              setListsCategory(selectedListIds, null)
+              onRemoveListsFromFolder(selectedListIds)
             },
           })
         }
 
-        // Get categories that are not already assigned to ALL selected lists
-        const availableCategories = categories.filter((cat) => {
+        // Get listFolders that are not already assigned to ALL selected lists
+        const availableFolders = listFolders.filter((cat) => {
           if (multipleSelected) {
-            // For multiple selections, show categories that are not assigned to ALL lists
-            return !newSelectedLists.every((list) => list.data?.category === cat.value)
+            // For multiple selections, show listFolders that are not assigned to ALL lists
+            return !newSelectedLists.every((list) => list.data?.folder === cat.id)
           } else {
-            // For single selection, show categories that are not assigned to this list
-            return newSelectedLists[0]?.data?.category !== cat.value
+            // For single selection, show listFolders that are not assigned to this list
+            return newSelectedLists[0]?.data?.folder !== cat.id
           }
         })
 
-        if (availableCategories.length > 0) {
+        if (availableFolders.length > 0) {
           if (submenuItems.length > 0) {
             submenuItems.push({ separator: true })
           }
 
-          availableCategories.forEach((category) => {
+          availableFolders.forEach((folder) => {
             submenuItems.push({
-              label: category.label,
-              icon: category.icon || CATEGORY_ICON,
+              label: folder.label,
+              icon: folder.data?.icon || FOLDER_ICON,
               command: () => {
-                setListsCategory(selectedListIds, category.value.toString())
+                onPutListsInFolder(selectedListIds, folder.id)
               },
             })
           })
@@ -182,28 +131,28 @@ const useListContextMenu = () => {
         return submenuItems
       }
 
-      const categorySubmenu = createCategorySubmenu()
+      const folderSubmenu = createFolderSubmenu()
 
-      // Check if the first selected row is a category
-      const isSelectedRowCategory = firstSelectedRow?.startsWith('category-')
+      // Check if the first selected row is a folder
+      const selectedFolderId = parseListFolderRowId(firstSelectedRow)
 
       const menuItems: any[] = [
         {
           label: 'Rename',
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
-          disabled: multipleSelected || (isSelectedRowCategory && isUser),
+          disabled: multipleSelected || (selectedFolderId && isUser),
           hidden: !allSelectedRowsAreLists,
         },
         {
-          label: 'Edit category',
-          icon: 'settings',
+          label: 'Edit folder',
+          icon: FOLDER_ICON_EDIT,
           command: () => {
-            const categoryValue = firstSelectedRow.replace('category-', '')
-            openEditCategoryDialog(categoryValue)
+            if (!selectedFolderId) return
+            onOpenFolderList({ folderId: selectedFolderId })
           },
-          hidden: !isSelectedRowCategory || multipleSelected,
-          disabled: isUser, // only admins and managers can edit categories
+          hidden: !selectedFolderId || multipleSelected,
+          disabled: isUser, // only admins and managers can edit listFolders
         },
         {
           label: 'Create review',
@@ -213,11 +162,11 @@ const useListContextMenu = () => {
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
-          label: 'Category',
-          icon: 'sell',
-          items: categorySubmenu,
+          label: 'Folder',
+          icon: FOLDER_ICON,
+          items: folderSubmenu,
           disabled: !allSelectedRowsAreLists,
-          hidden: !allSelectedRowsAreLists || categorySubmenu.length === 0,
+          hidden: !allSelectedRowsAreLists || folderSubmenu.length === 0,
         },
         {
           label: 'Details',
@@ -252,24 +201,18 @@ const useListContextMenu = () => {
       ctxMenuShow,
       rowSelection,
       listsData,
-      categories,
+      listFolders,
       setRowSelection,
       openRenameList,
       setListDetailsOpen,
       deleteLists,
       createReviewSessionList,
-      setListsCategory,
-      createAndAssignCategory,
-      openCreateCategoryDialog,
-      openEditCategoryDialog,
+      onPutListsInFolder,
     ],
   )
 
   return {
     openContext,
-    categoryFormDialog,
-    closeCategoryFormDialog,
-    handleSaveCategory,
   }
 }
 

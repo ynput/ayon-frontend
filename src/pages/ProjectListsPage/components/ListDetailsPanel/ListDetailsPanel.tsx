@@ -6,7 +6,6 @@ import { getListIcon } from '@pages/ProjectListsPage/util'
 import { ListAttributeForm, ListMetaData } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
-import { useListsDataContext } from '../../context/ListsDataContext'
 import clsx from 'clsx'
 import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
 import { useListsContext } from '@pages/ProjectListsPage/context'
@@ -22,9 +21,6 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     isFetching,
     isLoading,
   } = useGetEntityListQuery({ listId, projectName }, { skip: !listId })
-
-  // Get lists data for category enum
-  const { attributes } = useListsDataContext()
 
   const { setListDetailsOpen } = useListsContext()
 
@@ -57,12 +53,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
         {selectedTab === 'details' && (
           <>
             <Styled.Section>
-              <ListAttributeForm
-                list={list}
-                isLoading={isLoadingList}
-                projectName={projectName}
-                attributes={attributes}
-              />
+              <ListAttributeForm list={list} isLoading={isLoadingList} projectName={projectName} />
             </Styled.Section>
             <Styled.Section>
               <ListMetaData list={list} isLoading={isLoadingList} />

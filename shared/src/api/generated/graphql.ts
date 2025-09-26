@@ -187,6 +187,7 @@ export type EntityListNode = {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data: Scalars['String']['output'];
+  entityListFolderId?: Maybe<Scalars['String']['output']>;
   entityListType: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   id: Scalars['String']['output'];
@@ -1597,7 +1598,7 @@ export type GetListsQueryVariables = Exact<{
 }>;
 
 
-export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, tags: Array<string>, data: string, allAttrib: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, updatedBy?: string | null, projectName: string, owner?: string | null, count: number } }> } } };
+export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityListFolderId?: string | null, tags: Array<string>, data: string, allAttrib: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, updatedBy?: string | null, projectName: string, owner?: string | null, count: number } }> } } };
 
 export type GetListsItemsForReviewSessionQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2316,6 +2317,7 @@ export const GetListsDocument = `
           id
           label
           entityListType
+          entityListFolderId
           tags
           data
           allAttrib

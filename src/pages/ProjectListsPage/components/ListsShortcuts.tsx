@@ -2,6 +2,7 @@ import Shortcuts from '@containers/Shortcuts'
 import { FC } from 'react'
 import { useListsContext } from '../context'
 import { useAppSelector } from '@state/store'
+import { parseListFolderRowId } from '../util'
 
 interface ListsShortcutsProps {}
 
@@ -20,10 +21,9 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
       action: () => {
         if (!rowSelection) return
         const firstSelectedRow = Object.keys(rowSelection)[0]
-        const isSelectedRowCategory = firstSelectedRow?.startsWith('category-')
 
-        // Don't allow renaming categories if user is not admin/manager
-        if (isSelectedRowCategory && isUser) return
+        // Don't allow renaming folders if user is not admin/manager
+        if (parseListFolderRowId(firstSelectedRow) && isUser) return
 
         openRenameList(firstSelectedRow)
       },

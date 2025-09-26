@@ -1,48 +1,56 @@
-import { AttributeEnumItem, EntityList, EntityListModel } from '@shared/api'
+import { EntityList, EntityListFolderModel, EntityListModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { getEntityTypeIcon } from '@shared/util'
-import { CATEGORY_ICON } from '../hooks/useListContextMenu'
-import { LIST_CATEGORY_ATTRIBUTE } from '../context/ListsDataContext'
+import { FOLDER_ICON } from '../hooks/useListContextMenu'
+
+export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
+export const buildListFolderRowId = (folderId: string) => `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
+export const parseListFolderRowId = (rowId: string) => {
+  if (rowId.startsWith(LIST_FOLDER_ROW_ID_PREFIX + '-')) {
+    return rowId.substring((LIST_FOLDER_ROW_ID_PREFIX + '-').length)
+  }
+  return null
+}
 
 export const buildListsTableData = (
   listsData: EntityList[],
-  categories: AttributeEnumItem[],
+  folders: EntityListFolderModel[],
 ): SimpleTableRow[] => {
-  // Create a lookup map for category attributes
-  const categoryMap = new Map<string, AttributeEnumItem>()
-  for (const category of categories) {
-    categoryMap.set(String(category.value), category)
+  // Create a lookup map for folder attributes
+  const foldersMap = new Map<string, EntityListFolderModel>()
+  for (const folder of folders) {
+    foldersMap.set(String(folder.id), folder)
   }
 
-  // Group lists by data.category if available
-  const listsByCategory: Record<string, EntityList[]> = {}
+  // Group lists by data.folder if available
+  const listsByFolder: Record<string, EntityList[]> = {}
 
-  // First pass: categorize lists by category from data
+  // First pass: categorize lists by folder from data
   for (const list of listsData) {
-    // Get category from data field (now guaranteed to be an object)
-    let category = 'Uncategorized'
+    // Get folder from data field (now guaranteed to be an object)
+    let folder = 'Uncategorized'
 
-    const listCategory = list.attrib && list.attrib[LIST_CATEGORY_ATTRIBUTE]
-    if (listCategory && categoryMap.has(listCategory)) {
-      category = list.attrib[LIST_CATEGORY_ATTRIBUTE]
+    const listFolder = list.entityListFolderId
+    if (!!listFolder && foldersMap.has(listFolder)) {
+      folder = listFolder
     }
 
-    if (!listsByCategory[category]) {
-      listsByCategory[category] = []
+    if (!listsByFolder[folder]) {
+      listsByFolder[folder] = []
     }
 
-    listsByCategory[category].push(list)
+    listsByFolder[folder].push(list)
   }
 
-  const categoryRows: SimpleTableRow[] = []
-  const uncategorizedRows: SimpleTableRow[] = []
+  const folderRows: SimpleTableRow[] = []
+  const rootLists: SimpleTableRow[] = []
 
   // Second pass: create table rows from the categorized lists
-  for (const [category, lists] of Object.entries(listsByCategory)) {
-    if (category === 'Uncategorized') {
+  for (const [folder, lists] of Object.entries(listsByFolder)) {
+    if (folder === 'Uncategorized') {
       // Add uncategorized lists to separate array for later sorting
       for (const list of lists) {
-        uncategorizedRows.push({
+        rootLists.push({
           id: list.id,
           name: list.label,
           label: list.label,
@@ -59,31 +67,31 @@ export const buildListsTableData = (
         })
       }
     } else {
-      // Get category attributes from the categories data
-      const categoryAttr = categoryMap.get(category)
-      const categoryLabel = categoryAttr?.label || category
-      const categoryIcon = categoryAttr?.icon || CATEGORY_ICON
-      const categoryColor = categoryAttr?.color
+      // Get folder attributes from the folders data
+      const folderAttr = foldersMap.get(folder)
+      const folderLabel = folderAttr?.label || folder
+      const folderIcon = folderAttr?.data?.icon || FOLDER_ICON
+      const folderColor = folderAttr?.data?.color
 
-      // Create a parent row for all categories
+      // Create a parent row for all folders
       const parentRow: SimpleTableRow = {
-        id: `category-${category}`,
-        name: categoryLabel,
-        label: categoryLabel,
-        icon: categoryIcon,
+        id: buildListFolderRowId(folder),
+        name: folderLabel,
+        label: folderLabel,
+        icon: folderIcon,
         iconFilled: true,
         subRows: [],
         data: {
-          id: category,
+          id: folder,
           isGroupRow: true,
           count: lists.length,
-          type: category,
+          type: folder,
           isFolder: true,
-          color: categoryColor,
+          color: folderColor,
         },
       }
 
-      // Sort lists within category: active first (by createdAt newest first), then inactive (by createdAt newest first)
+      // Sort lists within folder: active first (by createdAt newest first), then inactive (by createdAt newest first)
       const sortedLists = [...lists].sort((a, b) => {
         // Active lists come first
         if (a.active && !b.active) return -1
@@ -109,22 +117,22 @@ export const buildListsTableData = (
             count: list.count,
             owner: list.owner,
             entityListType: list.entityListType,
-            parentType: category,
+            parentType: folder,
             createdAt: list.createdAt,
           },
         })
       }
 
-      categoryRows.push(parentRow)
+      folderRows.push(parentRow)
     }
   }
 
-  // Sort category rows based on the order in categories array
-  categoryRows.sort((a, b) => {
-    const aIndex = categories.findIndex((cat) => cat.value === a.data.id)
-    const bIndex = categories.findIndex((cat) => cat.value === b.data.id)
+  // Sort folder rows based on the order in folders array
+  folderRows.sort((a, b) => {
+    const aIndex = folders.findIndex((folder) => folder.id === a.id)
+    const bIndex = folders.findIndex((folder) => folder.id === b.id)
 
-    // If either category is not found in the categories array, fall back to alphabetical
+    // If either folder is not found in the folders array, fall back to alphabetical
     if (aIndex === -1 && bIndex === -1) return a.label.localeCompare(b.label)
     if (aIndex === -1) return 1
     if (bIndex === -1) return -1
@@ -132,8 +140,8 @@ export const buildListsTableData = (
     return aIndex - bIndex
   })
 
-  // Sort uncategorized rows: active first (by createdAt newest first), then inactive (by createdAt newest first)
-  uncategorizedRows.sort((a, b) => {
+  // Sort root lists rows: active first (by createdAt newest first), then inactive (by createdAt newest first)
+  rootLists.sort((a, b) => {
     // Active lists come first
     if (!a.inactive && a.inactive) return -1
     if (a.inactive && !b.inactive) return 1
@@ -144,8 +152,8 @@ export const buildListsTableData = (
     return bDate.getTime() - aDate.getTime()
   })
 
-  // Combine in the specified order: category parents first, then uncategorized lists
-  return [...categoryRows, ...uncategorizedRows]
+  // Combine in the specified order: folder parents first, then uncategorized lists
+  return [...folderRows, ...rootLists]
 }
 
 export const getListIcon = (list: Pick<EntityListModel, 'entityListType' | 'entityType'>) =>

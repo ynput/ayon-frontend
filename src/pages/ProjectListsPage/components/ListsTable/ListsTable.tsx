@@ -10,9 +10,9 @@ import SimpleTable, {
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
-import ListCategoryFormDialog from '../ListCategoryFormDialog'
 import { ExpandedState, Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
+import ListFolderFormDialog from '../ListFolderFormDialog'
 
 interface ListsTableProps {
   isReview?: boolean
@@ -23,7 +23,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     rowSelection,
     setRowSelection,
     closeRenameList,
-    submitRenameList,
+    onRenameList,
     renamingList,
     setListDetailsOpen,
   } = useListsContext()
@@ -39,12 +39,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     }
   }, [])
 
-  const {
-    openContext: handleRowContext,
-    categoryFormDialog,
-    closeCategoryFormDialog,
-    handleSaveCategory,
-  } = useListContextMenu()
+  const { openContext: handleRowContext } = useListContextMenu()
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
@@ -78,7 +73,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         inactive={row.original.inactive}
         count={row.original.data.count}
         isRenaming={listId === meta?.renamingList}
-        onSubmitRename={(v) => meta?.submitRenameList(v)}
+        onSubmitRename={(v) => meta?.onRenameList(v)}
         onCancelRename={meta?.closeRenameList}
         onContextMenu={meta?.handleRowContext}
         isTableExpandable={props.isTableExpandable}
@@ -120,7 +115,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
               handleRowContext,
               handleDoubleClick,
               closeRenameList,
-              submitRenameList,
+              onRenameList,
               renamingList,
             }}
           >
@@ -129,14 +124,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         </Container>
       </SimpleTableProvider>
       <NewListDialogContainer />
-      <ListCategoryFormDialog
-        isOpen={categoryFormDialog.isOpen}
-        onClose={closeCategoryFormDialog}
-        onSaveCategory={handleSaveCategory}
-        mode={categoryFormDialog.mode}
-        initialCategory={categoryFormDialog.initialCategory}
-        listCount={categoryFormDialog.listIds.length}
-      />
+      <ListFolderFormDialog />
     </>
   )
 }

@@ -1813,6 +1813,18 @@
             "deprecationReason": null
           },
           {
+            "name": "entityListFolderId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "entityListType",
             "description": null,
             "args": [],

@@ -12,7 +12,7 @@ import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
-import ListsContext from './ListsContext'
+import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import { useLocalStorage } from '@shared/hooks'
 
@@ -43,7 +43,7 @@ interface ListsProviderProps {
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
-  const { listsMap } = useListsDataContext()
+  const { listsMap, listFolders } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -98,6 +98,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
 
   const [listDetailsOpen, setListDetailsOpen] = useLocalStorage<boolean>('list-details-open', true)
 
+  const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
+
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()
   const onCreateNewList = async (list: EntityListPostModel) =>
@@ -129,15 +131,25 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     closeRenameList,
     openRenameList,
     renamingList,
-    submitRenameList,
-    setListsCategory,
-    createAndAssignCategory,
-    editCategory,
+    onRenameList,
+    onPutListsInFolder,
+    onRemoveListsFromFolder,
+    onCreateListFolder,
+    onUpdateListFolder,
   } = useUpdateList({
     setRowSelection,
     onUpdateList,
     projectName,
   })
+
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds }) => {
+    // get folder data
+    const folder = listFolders.find((f) => f.id === folderId)
+    if (!folder) return setListFolderOpen({ isOpen: true, listIds }) // open in create mode if folder not found
+
+    // open dialog in edit mode
+    setListFolderOpen({ isOpen: true, folderId, initial: { label: folder.label, ...folder.data } })
+  }
 
   // DELETE LIST
   const [deleteListMutation] = useDeleteEntityListMutation()
@@ -149,65 +161,45 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 
-  const value = useMemo(() => {
-    return {
-      rowSelection,
-      setRowSelection,
-      selectedRows,
-      selectedLists,
-      selectedList,
-      closeNewList,
-      createNewList,
-      newList,
-      openNewList,
-      setNewList,
-      createReviewSessionList,
-      isCreatingList,
-      isReview,
-      // list editing
-      closeRenameList,
-      openRenameList,
-      renamingList,
-      submitRenameList,
-      setListsCategory,
-      createAndAssignCategory,
-      editCategory,
-      deleteLists,
-      // info dialog
-      listDetailsOpen,
-      setListDetailsOpen,
-      // lists filters dialog
-      listsFiltersOpen,
-      setListsFiltersOpen,
-    }
-  }, [
-    rowSelection,
-    setRowSelection,
-    selectedRows,
-    selectedLists,
-    selectedList,
-    // new list
-    closeNewList,
-    createNewList,
-    newList,
-    openNewList,
-    setNewList,
-    createReviewSessionList,
-    isCreatingList,
-    closeRenameList,
-    openRenameList,
-    renamingList,
-    submitRenameList,
-    setListsCategory,
-    createAndAssignCategory,
-    editCategory,
-    deleteLists,
-    listDetailsOpen,
-    setListDetailsOpen,
-    listsFiltersOpen,
-    setListsFiltersOpen,
-    isReview,
-  ])
-
-  return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>
+  return (
+    <ListsContext.Provider
+      value={{
+        rowSelection,
+        setRowSelection,
+        selectedRows,
+        selectedLists,
+        selectedList,
+        closeNewList,
+        createNewList,
+        newList,
+        openNewList,
+        setNewList,
+        createReviewSessionList,
+        isCreatingList,
+        isReview,
+        // list editing
+        closeRenameList,
+        openRenameList,
+        renamingList,
+        onRenameList,
+        onPutListsInFolder,
+        onRemoveListsFromFolder,
+        onCreateListFolder,
+        onUpdateListFolder,
+        deleteLists,
+        // info dialog
+        listDetailsOpen,
+        setListDetailsOpen,
+        // lists filters dialog
+        listsFiltersOpen,
+        setListsFiltersOpen,
+        // list folders dialog
+        listFolderOpen,
+        setListFolderOpen,
+        onOpenFolderList, // helper function to open folder dialog in edit/create mode
+      }}
+    >
+      {children}
+    </ListsContext.Provider>
+  )
 }

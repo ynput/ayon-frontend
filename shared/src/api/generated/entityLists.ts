@@ -24,6 +24,50 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/entities`,
       }),
     }),
+    getEntityListFolders: build.query<GetEntityListFoldersApiResponse, GetEntityListFoldersApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/entityListFolders` }),
+    }),
+    createEntityListFolder: build.mutation<
+      CreateEntityListFolderApiResponse,
+      CreateEntityListFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders`,
+        method: 'POST',
+        body: queryArg.entityListFolderPostModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    deleteEntityListFolder: build.mutation<
+      DeleteEntityListFolderApiResponse,
+      DeleteEntityListFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders/${queryArg.folderId}`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    updateEntityListFolder: build.mutation<
+      UpdateEntityListFolderApiResponse,
+      UpdateEntityListFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders/${queryArg.folderId}`,
+        method: 'PATCH',
+        body: queryArg.entityListFolderPatchModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     createEntityListItem: build.mutation<
       CreateEntityListItemApiResponse,
       CreateEntityListItemApiArg
@@ -146,6 +190,34 @@ export type GetListEntitiesApiArg = {
   listId: string
   projectName: string
 }
+export type GetEntityListFoldersApiResponse =
+  /** status 200 Successful Response */ EntityListFoldersResponseModel
+export type GetEntityListFoldersApiArg = {
+  projectName: string
+}
+export type CreateEntityListFolderApiResponse =
+  /** status 200 Successful Response */ EntityIdResponse
+export type CreateEntityListFolderApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListFolderPostModel: EntityListFolderPostModel
+}
+export type DeleteEntityListFolderApiResponse = /** status 200 Successful Response */ any
+export type DeleteEntityListFolderApiArg = {
+  projectName: string
+  folderId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+}
+export type UpdateEntityListFolderApiResponse = /** status 200 Successful Response */ any
+export type UpdateEntityListFolderApiArg = {
+  projectName: string
+  folderId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListFolderPatchModel: EntityListFolderPatchModel
+}
 export type CreateEntityListItemApiResponse = /** status 201 Successful Response */ any
 export type CreateEntityListItemApiArg = {
   listId: string
@@ -222,7 +294,7 @@ export type AttributeEnumItem = {
 }
 export type AttributeData = {
   /** Type of attribute value */
-  type:
+  type?:
     | 'string'
     | 'integer'
     | 'float'
@@ -273,6 +345,48 @@ export type EntityListEnities = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   entityIds: string[]
 }
+export type EntityListFolderData = {
+  /** Hex color code */
+  color?: string
+  /** Icon name */
+  icon?: string
+  /** Folder scope */
+  scope?: string[]
+}
+export type EntityListFolderModel = {
+  id: string
+  label: string
+  parentId?: string
+  owner?: string
+  access?: {
+    [key: string]: number
+  }
+  data?: EntityListFolderData
+}
+export type EntityListFoldersResponseModel = {
+  folders?: EntityListFolderModel[]
+}
+export type EntityIdResponse = {
+  /** Entity ID */
+  id: string
+}
+export type EntityListFolderPostModel = {
+  id?: string
+  label: string
+  parentId?: string
+  access?: {
+    [key: string]: number
+  }
+  data?: EntityListFolderData
+}
+export type EntityListFolderPatchModel = {
+  label?: string
+  parentId?: string
+  access?: {
+    [key: string]: number
+  }
+  data?: EntityListFolderData
+}
 export type EntityListItemPostModel = {
   id?: string
   /** ID of the entity in the list */
@@ -284,7 +398,7 @@ export type EntityListItemPostModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -299,7 +413,7 @@ export type EntityListMultiPatchItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -318,7 +432,7 @@ export type EntityListItemPatchModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -331,11 +445,13 @@ export type EntityListSummary = {
   label: string
   count?: number
 }
-export type ListAccessLevel = 10 | 20 | 30 | 40
+export type ListAccessLevel = 0 | 10 | 20 | 30
 export type EntityListPostModel = {
   id?: string
   /** Type of the list */
   entityListType?: string
+  /** ID of the folder containing the list */
+  entityListFolderId?: string
   /** Type of the entity that can be included in the list */
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   label: string
@@ -346,7 +462,7 @@ export type EntityListPostModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: Record<string, any>
+  data?: object
   template?: object
   /** List tags */
   tags?: string[]
@@ -367,7 +483,7 @@ export type EntityListItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: Record<string, any>
+  data?: object
   /** Tags associated with the item */
   tags?: string[]
   /** Path to the folder where the item is located */
@@ -381,6 +497,8 @@ export type EntityListModel = {
   id?: string
   /** Type of the list */
   entityListType: string
+  /** ID of the folder containing the list */
+  entityListFolderId?: string
   /** Type of the entity that can be included in the list */
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   label: string
@@ -391,7 +509,7 @@ export type EntityListModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: Record<string, any>
+  data?: object
   template?: object
   /** List tags */
   tags?: string[]
@@ -404,6 +522,7 @@ export type EntityListModel = {
   updatedAt?: string
   /** Whether the list is active or not */
   active: boolean
+  accessLevel?: ListAccessLevel
 }
 export type EntityListPatchModel = {
   label?: string
@@ -413,8 +532,10 @@ export type EntityListPatchModel = {
   }
   /** List attributes */
   attrib?: object
+  /** ID of the folder containing the list */
+  entityListFolderId?: string
   /** Additional data associated with the list */
-  data?: Record<string, any>
+  data?: object
   /** List tags */
   tags?: string[]
   /** Name of the user who created the list */

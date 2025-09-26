@@ -12,7 +12,7 @@ interface ListAttributeFormProps {
   projectName: string
   list?: EntityListModel
   isLoading?: boolean
-  attributes: AttributeField[]
+  attributes?: AttributeField[]
 }
 
 // explicit type for the form state
@@ -78,7 +78,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         ...attribFieldValues,
       })
     }
-  }, [list, fields])
+  }, [list, JSON.stringify(attributes)])
 
   const [updateList] = useUpdateEntityListMutation()
 
