@@ -28,7 +28,6 @@ const StyledContentWrapper = styled.div`
   height: 24px;
   overflow: hidden;
   position: relative;
-  transition: height 0.2s ease-out;
 `
 
 const StyledContentAbsolute = styled.div`
@@ -63,14 +62,12 @@ const StyledTextContent = styled.div<{ $isCompact: boolean }>`
   align-items: ${props => props.$isCompact ? 'center' : 'flex-start'};
   gap: ${props => props.$isCompact ? '8px' : '0px'};
   overflow: hidden;
-  transition: flex-direction 0.2s ease-out, align-items 0.2s ease-out, gap 0.2s ease-out;
 
   .path {
     ${theme.bodyMedium}
     font-size: 14px;
     margin-bottom: ${props => props.$isCompact ? '0' : '-4px'};
     color: var(--md-sys-color-outline);
-    transition: margin-bottom 0.2s ease-out;
   }
 
   .label {
