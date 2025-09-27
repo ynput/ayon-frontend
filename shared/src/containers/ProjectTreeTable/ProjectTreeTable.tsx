@@ -49,6 +49,7 @@ import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
+import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 
 // EntityPickerDialog import
 import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
@@ -438,6 +439,9 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
+  // Calculate dynamic row height based on user setting from Customize panel
+  const { getRowHeight, thumbnailRowHeight, defaultRowHeight } = useDynamicRowHeight()
+
   const attribByField = useMemo(() => {
     return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
       if (attrib.data?.enum?.length) {
@@ -562,6 +566,8 @@ export const ProjectTreeTable = ({
               sortableRows={sortableRows}
               error={error}
               isGrouping={isGrouping}
+              getRowHeight={getRowHeight}
+              defaultRowHeight={defaultRowHeight}
             />
           </table>
         </Styled.TableContainer>
@@ -624,7 +630,7 @@ export const ProjectTreeTable = ({
                           width: getColumnWidth(overlayRowInstance.id, cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
-                          height: 40,
+                          height: defaultRowHeight,
                         }
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
@@ -870,6 +876,8 @@ interface TableBodyProps {
   sortableRows: boolean
   error?: string
   isGrouping: boolean
+  getRowHeight: (row: TableRow) => number
+  defaultRowHeight: number
 }
 
 const TableBody = ({
@@ -885,6 +893,8 @@ const TableBody = ({
   sortableRows,
   error,
   isGrouping,
+  getRowHeight,
+  defaultRowHeight,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -912,7 +922,11 @@ const TableBody = ({
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
-    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
+    estimateSize: (index) => {
+      // Calculate dynamic row height based on specific row data
+      const row = rows[index]
+      return row ? getRowHeight(row.original) : defaultRowHeight
+    },
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -923,6 +937,15 @@ const TableBody = ({
   })
 
   const virtualRows = rowVirtualizer.getVirtualItems()
+
+  // Force row virtualizer to recalculate when row height changes (debounced for performance)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      rowVirtualizer.measure()
+    }, 100) // Small delay to batch multiple rapid changes
+
+    return () => clearTimeout(timeout)
+  }, [defaultRowHeight, rowVirtualizer])
 
   // Memoize the measureElement callback
   const measureRowElement = useCallback(
@@ -969,6 +992,7 @@ const TableBody = ({
             offsetTop={virtualRow.start}
             sortableRows={sortableRows}
             isGrouping={isGrouping}
+            rowHeight={getRowHeight(row.original)}
           />
         )
       })}
@@ -1008,6 +1032,7 @@ interface TableBodyRowProps {
   offsetTop: number
   sortableRows: boolean
   isGrouping: boolean
+  rowHeight: number
 }
 
 const TableBodyRow = ({
@@ -1022,6 +1047,7 @@ const TableBodyRow = ({
   offsetTop,
   sortableRows,
   isGrouping = false,
+  rowHeight,
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
@@ -1045,7 +1071,7 @@ const TableBodyRow = ({
     top: offsetTop, // Position based on virtualizer's calculation (virtualRow.start)
     left: 0, // Span full width of the relative parent (tbody)
     right: 0, // Span full width
-    height: 40, // Explicit height can be beneficial for absolute positioning
+    height: rowHeight, // Use dynamic row height
     zIndex: sortable && sortable.isDragging ? 0 : 1, // Ensure dragged item is above others
     display: 'flex', // Styled.TR is display:flex
     transform:
@@ -1081,7 +1107,7 @@ const TableBodyRow = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: 40,
+                height: rowHeight,
                 pointerEvents: 'all',
                 cursor: 'grab',
               }}
@@ -1113,6 +1139,7 @@ const TableBodyRow = ({
             key={cell.id + i.toString()}
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
+            rowHeight={rowHeight}
           />
         )
       })}
@@ -1132,6 +1159,7 @@ interface TableCellProps {
   className?: string
   showHierarchy: boolean
   sortableRows?: boolean
+  rowHeight?: number
 }
 
 const TableCell = ({
@@ -1141,6 +1169,7 @@ const TableCell = ({
   className,
   showHierarchy,
   sortableRows,
+  rowHeight,
   ...props
 }: TableCellProps) => {
   const { getEntityById, onOpenPlayer } = useProjectTableContext()
@@ -1192,7 +1221,7 @@ const TableCell = ({
       style={{
         ...getCommonPinningStyles(cell.column),
         width: getColumnWidth(cell.row.id, cell.column.id),
-        height: 40,
+        height: rowHeight,
       }}
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks

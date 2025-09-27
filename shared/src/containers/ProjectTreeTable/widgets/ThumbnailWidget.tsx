@@ -13,7 +13,7 @@ const Inner = styled.div`
   position: relative;
   max-height: 100%;
   height: auto;
-  width: 100%;
+  width: calc(100% - 8px);
   aspect-ratio: 1.77;
 
   border-radius: 2px;

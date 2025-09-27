@@ -25,11 +25,20 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
+  const currentRowHeightRef = React.useRef<number>(24) // Track current row height
+
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
-  const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
+  const onChangeWithColumns = (next: ColumnsConfig) => {
+    // Update our ref when rowHeight changes
+    if (next.rowHeight !== undefined) {
+      currentRowHeightRef.current = next.rowHeight
+    }
+    onChange(next, allColumnsRef.current)
+  }
   const columnsConfig = config as ColumnsConfig
+
   const {
     columnOrder: columnOrderInit = [],
     columnPinning: columnPinningInit = {},
@@ -38,7 +47,14 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
-  } = columnsConfig
+    rowHeight: configRowHeight,
+  } = columnsConfig || {}
+
+  // Use the rowHeight from config if provided, otherwise use our tracked value, otherwise default to 24
+  const rowHeight = configRowHeight !== undefined ? configRowHeight : currentRowHeightRef.current
+
+  // Update our ref to the current value
+  currentRowHeightRef.current = rowHeight
 
   const sorting = [...sortingInit]
   const columnOrder = [...columnOrderInit]
@@ -233,6 +249,25 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateRowHeight = (newRowHeight: number) => {
+    // Get current thumbnail column width
+    const currentThumbnailWidth = columnSizing.thumbnail || 150 // Default to 150 if not set
+
+    // Only update thumbnail width if current width is smaller than new row height
+    const shouldUpdateThumbnailWidth = currentThumbnailWidth < newRowHeight
+
+    const updatedColumnSizing = shouldUpdateThumbnailWidth
+      ? { ...columnSizing, thumbnail: newRowHeight }
+      : columnSizing
+
+    const updatedConfig = {
+      ...columnsConfig,
+      rowHeight: newRowHeight,
+      columnSizing: updatedColumnSizing,
+    }
+    onChangeWithColumns(updatedConfig)
+  }
+
   // Remove redundant local updater functions in favor of unified updaters with all columns
 
   // ON-CHANGE HANDLERS (TanStack-compatible)
@@ -294,6 +329,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         updateGroupBy,
         groupByConfig,
         updateGroupByConfig,
+        // row height
+        rowHeight,
+        updateRowHeight,
 
         // global change
         setColumnsConfig: (config: ColumnsConfig) => onChangeWithColumns(config),
