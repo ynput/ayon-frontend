@@ -190,11 +190,10 @@ const useListContextMenu = () => {
         // Add "Create folder" option at the top
         submenuItems.push({
           label: 'Create folder',
-          icon: !powerLicense ? 'bolt' : FOLDER_ICON_ADD,
+          icon: FOLDER_ICON_ADD,
           command: () => onOpenFolderList({ listIds: selectedListIds }),
           disabled: isUser, // only admins and managers can create listFolders
           shortcut: 'F',
-          powerFeature: 'listFolders',
         })
 
         // For multiple selections, show "Unset folder" if any list has a folder
@@ -235,11 +234,10 @@ const useListContextMenu = () => {
         // Add "Create subfolder" option at the top
         submenuItems.push({
           label: 'Create subfolder',
-          icon: !powerLicense ? 'bolt' : FOLDER_ICON_ADD,
+          icon: FOLDER_ICON_ADD,
           command: () => onOpenFolderList({ parentId: selectedFolderId || undefined }),
           disabled: isUser, // only admins and managers can create listFolders
           shortcut: 'F',
-          powerFeature: 'listFolders',
         })
 
         // Show "Unset parent folder" if folder has a parent
@@ -290,7 +288,7 @@ const useListContextMenu = () => {
       } else {
         folderMenuItems.push({
           label: 'Create folder',
-          icon: 'bolt',
+          icon: FOLDER_ICON_ADD,
           powerFeature: 'listFolders',
           hidden: !allSelectedRowsAreLists,
           command: () => setPowerpackDialog('listFolders'),
