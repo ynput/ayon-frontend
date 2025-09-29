@@ -10,6 +10,7 @@ import {
   foldersApi,
 } from '@shared/api/generated'
 import { formatEntityLabel } from './utils/formatEntityLinks'
+import { toast } from 'react-toastify'
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -128,22 +129,25 @@ const injectedQueries = foldersApi.injectEndpoints({
             result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => ({
               id: node.id,
               links:
-                node.links.edges?.filter((e: EntityLinkQuery | null) =>!!e?.node)?.map((linkEdge: EntityLinkQuery) => ({
-                  ...linkEdge,
-                  node: {
-                    id: linkEdge.node.id,
-                    name: linkEdge.node.name,
-                    label: formatEntityLabel(linkEdge.node),
-                    parents: linkEdge.node.parents || [],
-                    subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                  },
-                })) || [], // Flatten the edges structure
+                node.links.edges
+                  ?.filter((e: EntityLinkQuery | null) => !!e?.node)
+                  ?.map((linkEdge: EntityLinkQuery) => ({
+                    ...linkEdge,
+                    node: {
+                      id: linkEdge.node.id,
+                      name: linkEdge.node.name,
+                      label: formatEntityLabel(linkEdge.node),
+                      parents: linkEdge.node.parents || [],
+                      subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                    },
+                  })) || [], // Flatten the edges structure
             })) || []
 
           // Return the new entities - the merge function will handle combining with existing cache
           return { data: newEntities }
         } catch (error: any) {
           console.error(`Error in getEntityLinks queryFn for ${entityType}:`, error)
+          toast.error(`Error fetching ${entityType} links`)
           return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
         }
       },

@@ -132,7 +132,6 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   }
 
   const handleValueChange = (fieldName: string, value: CellValue | CellValue[]) => {
-    console.log('editing field changed')
     setEditingField(null)
     onChange?.(fieldName, value)
   }
