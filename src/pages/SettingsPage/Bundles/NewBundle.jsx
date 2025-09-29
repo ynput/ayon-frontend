@@ -14,6 +14,7 @@ import Shortcuts from '@containers/Shortcuts'
 import { useCheckBundleCompatibilityQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
 const removeEmptyDevAddons = (addons = {}) => {
   if (!addons) return addons
@@ -306,14 +307,14 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
             label="Select all addons"
             icon="select_all"
             onClick={() => setSelectedAddons(addons)}
-            data-shortcut={`shift+A`}
+            data-shortcut={getPlatformShortcutKey('a', [ KeyMode.Shift])}
             id="select"
           />
           <Button
             label="Deselect all addons"
             icon="deselect"
             onClick={() => setSelectedAddons([])}
-            data-shortcut={`shift+A`}
+            data-shortcut={getPlatformShortcutKey('a', [ KeyMode.Shift])}
             id="deselect"
           />
           <Button
