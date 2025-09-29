@@ -7,13 +7,13 @@ import { usePaste } from '@context/PasteContext'
 import useUserProjectPermissions, { PermissionLevel } from '@hooks/useUserProjectPermissions'
 import { useSelector } from 'react-redux'
 // shared
-import { useUpdateProjectAnatomyMutation } from '@shared/api'
+import { useSetProjectAnatomyMutation } from '@shared/api'
 import { copyToClipboard } from '@shared/util'
 import { EmptyPlaceholder } from '@shared/components'
 
 const ProjectAnatomy = ({ projectName, projectList }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
-  const [updateProjectAnatomy, { isLoading: isUpdating }] = useUpdateProjectAnatomyMutation()
+  const [updateProjectAnatomy, { isLoading: isUpdating }] = useSetProjectAnatomyMutation()
   const { requestPaste } = usePaste()
 
   const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)

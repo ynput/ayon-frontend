@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -15,12 +15,13 @@ import {
 } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 
-import AddonList from '@containers/AddonList'
+import SettingsAddonList from '@containers/AddonSettings/SettingsAddonList'
 import SiteList from '@containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
+import BundlesSelector from './BundlesSelector'
 import CopySettingsDialog from '@containers/CopySettings/CopySettingsDialog'
 import RawSettingsDialog from '@containers/RawSettingsDialog'
 
@@ -28,6 +29,7 @@ import {
   useSetAddonSettingsMutation,
   useDeleteAddonSettingsMutation,
   useModifyAddonOverrideMutation,
+  useGetAddonSettingsListQuery,
 } from '@queries/addonSettings'
 
 import { usePromoteBundleMutation } from '@queries/bundles/updateBundles'
@@ -44,6 +46,7 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
+import PerProjectBundleConfig from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -65,6 +68,25 @@ const StyledEmptyPlaceholder = styled(EmptyPlaceholder)`
   widows: 100%;
 `
 
+const StyledBundleLabel = styled.div`
+  padding: 6px var(--padding-m);
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  .label {
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    flex: 1;
+    color: var(--md-sys-color-outline);
+  }
+`
+
 const isChildPath = (childPath, parentPath) => {
   if (childPath.length < parentPath.length) return false
   for (let i = 0; i < parentPath.length; i++) {
@@ -84,8 +106,18 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const [unpinnedKeys, setUnpinnedKeys] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
-  const [variant, setVariant] = useState('production')
-  const [bundleName, setBundleName] = useState()
+
+  const siteId = showSites ? selectedSites[0] || '_' : undefined
+
+
+  const [selectedBundle, setSelectedBundle] = useState(/** @type {BundleIdentifier} */({ 
+    variant: 'production', 
+    bundleName: null, 
+    projectBundleName: undefined 
+  }))
+
+  const [loadedBundleName, setLoadedBundleName] = useState("????")
+
   const [addonSchemas, setAddonSchemas] = useState({})
 
   const [showCopySettings, setShowCopySettings] = useState(false)
@@ -101,6 +133,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const { requestPaste } = usePaste()
 
   const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
+
 
   const projectKey = projectName || '_'
 
@@ -384,7 +417,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Remove selected override',
       message,
       accept: executeRemove,
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -421,7 +454,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Remove all overrides',
       message,
       accept: executeRemove,
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -459,7 +492,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Pin override',
       message,
       accept: executePin,
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -467,9 +500,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     // Push a value to a given path of the settings
     // Validate that the value is compatible with the existing value
 
-    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${
-      projectKey || '_'
-    }`
+    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey || '_'
+      }`
     const allData = localData[key]
     if (!allData) {
       toast.error('No data to paste')
@@ -527,7 +559,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     const message = (
       <>
         <p>
-          Are you sure you want to push <strong>{bundleName}</strong> to production?
+          Are you sure you want to push <strong>{loadedBundleName}</strong> to production?
         </p>
         <p>
           This will mark the current staging bundle as production and copy all staging studio
@@ -537,17 +569,17 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     )
 
     confirmDialog({
-      header: `Push ${bundleName} to production`,
+      header: `Push ${loadedBundleName} to production`,
       message,
       accept: async () => {
-        await promoteBundle({ name: bundleName }).unwrap()
+        await promoteBundle({ name: loadedBundleName }).unwrap()
         setLocalData({})
         setOriginalData({})
         setSelectedAddons([])
         toast.success('Bundle pushed to production')
-        setVariant('production')
+        setSelectedBundle({ variant: 'production', bundleName: null })
       },
-      reject: () => {},
+      reject: () => { },
     })
   }
 
@@ -583,49 +615,45 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     // site settings do not have variants
     if (showSites) return
 
-    const copySettingsButton = (
-      <CopyBundleSettingsButton
-        bundleName={bundleName}
-        variant={variant}
-        disabled={canCommit}
-        localData={localData}
-        changedKeys={changedKeys}
-        unpinnedKeys={unpinnedKeys}
-        setLocalData={setLocalData}
-        setChangedKeys={setChangedKeys}
-        setUnpinnedKeys={setUnpinnedKeys}
-        setSelectedAddons={setSelectedAddons}
-        originalData={originalData}
-        setOriginalData={setOriginalData}
-        projectName={projectName}
-      />
-    )
-
     return (
       <>
         <Toolbar>
-          <VariantSelector variant={variant} setVariant={setVariant} />
-          {developerMode && copySettingsButton}
+          <VariantSelector
+            variant={selectedBundle.variant}
+            setVariant={(v) => setSelectedBundle({ variant: v, bundleName: null })}
+            showDev
+          />
+          <Spacer />
+          {projectName && <PerProjectBundleConfig projectName={projectName} variant={selectedBundle.variant} />}
+          <CopyBundleSettingsButton
+            bundleName={loadedBundleName}
+            variant={selectedBundle.variant}
+            disabled={canCommit}
+            localData={localData}
+            changedKeys={changedKeys}
+            unpinnedKeys={unpinnedKeys}
+            setLocalData={setLocalData}
+            setChangedKeys={setChangedKeys}
+            setUnpinnedKeys={setUnpinnedKeys}
+            setSelectedAddons={setSelectedAddons}
+            originalData={originalData}
+            setOriginalData={setOriginalData}
+            projectName={projectName}
+          />
         </Toolbar>
-        {!developerMode && (
-          <Toolbar>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {bundleName}
-            </span>
-            <Spacer />
-            {copySettingsButton}
-            <Button
-              icon="rocket_launch"
-              data-tooltip="Push bundle to production"
-              onClick={onPushToProduction}
-              disabled={variant !== 'staging' || canCommit}
-              style={{ zIndex: 100 }}
-            />
-          </Toolbar>
+        { projectName ? (
+          <div>
+            { loadedBundleName }
+          </div>
+        ) : (
+        <BundlesSelector
+          selected={selectedBundle}
+          onChange={setSelectedBundle}
+        />
         )}
       </>
     )
-  }, [variant, changedKeys, bundleName, projectName, developerMode])
+  }, [selectedBundle, changedKeys, loadedBundleName, projectName, developerMode])
 
   const commitToolbar = useMemo(
     () => (
@@ -719,18 +747,20 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               variant={variant}
               reloadAddons={reloadAddons}
               projectName={projectName}
-              siteId={showSites ? selectedSites[0] || '_' : undefined}
+              siteId={siteId}
               onClose={() => {
                 setShowRawEdit(false)
               }}
             />
           )}
-          <AddonList
+          <SettingsAddonList
             selectedAddons={selectedAddons}
             setSelectedAddons={onSelectAddon}
-            variant={variant}
+            setBundleName={setLoadedBundleName}
+            bundleName={selectedBundle.bundleName}
+            projectBundleName={selectedBundle.projectBundleName}
+            variant={selectedBundle.variant}
             onAddonFocus={onAddonFocus}
-            setBundleName={setBundleName}
             changedAddonKeys={Object.keys(changedKeys || {})}
             projectName={projectName}
             siteSettings={showSites}

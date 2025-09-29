@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
+import type { Addon } from './types'
 
 import BundleForm from './BundleForm'
 import * as Styled from './Bundles.styled'
@@ -16,9 +17,11 @@ import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
-const removeEmptyDevAddons = (addons = {}) => {
+type AddonDevelopment = Record<string, { enabled?: boolean; path?: string }>
+
+const removeEmptyDevAddons = (addons: AddonDevelopment = {}): AddonDevelopment => {
   if (!addons) return addons
-  const newAddonDevelopment = {}
+  const newAddonDevelopment: AddonDevelopment = {}
   for (const [key, value] of Object.entries(addons)) {
     if (value.enabled || value.path) {
       newAddonDevelopment[key] = value
@@ -27,23 +30,52 @@ const removeEmptyDevAddons = (addons = {}) => {
   return newAddonDevelopment
 }
 
-const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMode }) => {
+type Installer = { version: string; platforms?: string[] }
+
+interface LocalBundleFormData {
+  addons?: Record<string, any>
+  isDev?: boolean
+  isProject?: boolean
+  addonDevelopment?: Record<string, any>
+  dependencyPackages?: Record<string, string | null>
+  name?: string
+  installers?: any[]
+  [key: string]: any
+}
+
+type NewBundleProps = {
+  initBundle: LocalBundleFormData | null
+  onSave: (name: string) => void
+  addons: Addon[]
+  installers: Installer[]
+  isDev: boolean
+  developerMode?: boolean
+}
+
+const NewBundle: React.FC<NewBundleProps> = ({
+  initBundle,
+  onSave,
+  addons,
+  installers,
+  isDev,
+  developerMode,
+}) => {
   // when updating a dev bundle, we need to track changes
-  const [formData, setFormData] = useState(null)
-  const [skipBundleCheck, setSkipBundleCheck] = useState(false)
-  const [selectedAddons, setSelectedAddons] = useState([])
+  const [formData, setFormData] = useState<LocalBundleFormData | null>(null)
+  const [skipBundleCheck, setSkipBundleCheck] = useState<boolean>(false)
+  const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const previousFormData = usePrevious(formData)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
-  const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation()
+  const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation() as any
 
   useEffect(() => {
     if (!formData || !previousFormData) {
       return
     }
     if (
-      isEqual(formData.addonDevelopment, previousFormData.addonDevelopment) &&
-      formData.name === previousFormData.name
+      isEqual(formData.addonDevelopment, (previousFormData as any)?.addonDevelopment) &&
+      formData.name === (previousFormData as any)?.name
     ) {
       setSkipBundleCheck(false)
     } else {
@@ -57,13 +89,12 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
     isError: isCheckError,
   } = useCheckBundleCompatibilityQuery(
     {
-      bundleModel: formData,
+      bundleModel: formData as any,
     },
     { skip: !formData || skipBundleCheck },
-  )
+  ) as any
 
-  const bundleCheckError = bundleCheckData.issues?.some((issue) => issue.severity === 'error')
-
+  const bundleCheckError = bundleCheckData.issues?.some((issue: any) => issue.severity === 'error')
 
   //   build initial form data
   useEffect(() => {
@@ -72,8 +103,8 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
     if (initBundle) {
       // addons = [{name: 'addon1', versions:{'1.0.0': {}}}]
       // reduce down addons to latest version
-      const initAddons = {}
-      const initAddonsDev = {}
+      const initAddons: Record<string, string> = {}
+      const initAddonsDev: AddonDevelopment = {}
       for (const addon of addons) {
         const versionList = Object.keys(addon.versions || {})
         if (versionList.length) {
@@ -90,19 +121,20 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
         }
       }
 
-      const initForm = {
+      const initForm: LocalBundleFormData = {
+        ...initBundle,
         addons: initAddons,
         isDev: developerMode || isDev,
+        isProject: false,
         addonDevelopment: { ...initBundle.addonDevelopment, ...initAddonsDev },
-        ...initBundle,
       }
 
       setFormData(initForm)
     }
-  }, [initBundle])
+  }, [initBundle]) //, currentProductionAddons])
 
   // Select addon if query search has addon=addonName
-  const addonListRef = useRef()
+  const addonListRef = useRef<any>()
   const { selectAndScrollToAddon } = useAddonSelection(addons, setSelectedAddons, addonListRef, [
     formData,
   ])
@@ -126,7 +158,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
         if (!addonObject) continue
 
         // check addon has version
-        if (version in addonObject.versions && addon in formData.addons) {
+        if (version in addonObject.versions && formData.addons && addon in formData.addons) {
           // update from formData
           const newFormData = { ...formData, addons: { ...formData.addons, [addon]: version } }
 
@@ -161,11 +193,11 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
       onSave(data.name)
     } catch (error) {
       console.log(error)
-      toast.error('Error: ' + error?.data?.detail)
+      toast.error('Error: ' + (error as any)?.data?.detail)
     }
   }
 
-  const [devChanges, setDevChanges] = useState(false)
+  const [devChanges, setDevChanges] = useState<boolean>(false)
 
   useEffect(() => {
     if (!initBundle) return
@@ -176,10 +208,12 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
   }, [initBundle, formData])
 
   const handleUpdate = async () => {
+    if (!initBundle || !formData) return
+
     // find the changes between initBundle and formData
-    const changes = {}
+    const changes: any = {}
     // create a unique list of keys
-    var allKeys = union(Object.keys(initBundle), Object.keys(formData))
+    var allKeys = union(Object.keys(initBundle || {}), Object.keys(formData || {}))
     // for each key, check if the values are the same, if not, add to changes
     for (const key of allKeys) {
       if (!isEqual(initBundle[key], formData[key])) {
@@ -205,6 +239,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
 
   const setSelectedVersion = (latest = false) => {
     setFormData((prev) => {
+      if (!prev) return prev
       // set all selected addons to latest version if in formData
       const newFormData = { ...prev }
       const newAddons = { ...newFormData.addons }
@@ -224,7 +259,11 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
     })
   }
 
-  const handleAddonDevChange = (names = [], { key, value }) => {
+  const handleAddonDevChange = (
+    names: string[] = [],
+    { key, value }: { key: 'enabled' | 'path'; value: any },
+  ) => {
+    if (!formData) return
     const newFormData = { ...formData }
     const addonDevelopment = { ...(newFormData.addonDevelopment || {}) }
     for (const name of names) {
@@ -235,13 +274,13 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
   }
 
   // when dep packages are changed in dev mode
-  const handleDepPackagesDevChange = (packages) => {
+  const handleDepPackagesDevChange = (packages: Record<string, string | null>) => {
     setFormData((prev) => {
       return { ...prev, dependencyPackages: packages }
     })
   }
 
-  const handleIssueClick = (addonName) => {
+  const handleIssueClick = (addonName: string) => {
     const addon = addons.find((a) => a.name === addonName)
     if (!addon) return
 
@@ -250,7 +289,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
   }
 
   // SHORTCUTS
-  const shortcuts = [
+  const shortcuts: Array<{ key: string; action: () => void }> = [
     {
       key: 'A',
       action: () =>
@@ -260,7 +299,9 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
 
   return (
     <>
-      <Shortcuts shortcuts={shortcuts} deps={[addons, selectedAddons]} />
+      {Shortcuts && (
+        <Shortcuts shortcuts={shortcuts as any} deps={[addons, selectedAddons] as any} />
+      )}
       <Toolbar>
         <Spacer />
         {isDev && (
@@ -277,6 +318,7 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
             </Button>
           </>
         )}
+
         <SaveButton
           label={isDev ? 'Save dev bundle' : 'Create new bundle'}
           onClick={isDev ? handleUpdate : handleSave}
@@ -301,6 +343,9 @@ const NewBundle = ({ initBundle, onSave, addons, installers, isDev, developerMod
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
         addonListRef={addonListRef}
+        onProjectSwitchChange={() =>
+          formData && setFormData({ ...formData, isProject: !formData?.isProject })
+        }
       >
         <Styled.AddonTools>
           <Button

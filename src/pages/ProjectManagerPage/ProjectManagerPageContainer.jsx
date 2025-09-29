@@ -12,8 +12,10 @@ const ProjectManagerPageContainer = ({
   onDeleteProject,
   onNewProject,
   onActivateProject,
+  onNoProject,
   ...props
 }) => {
+
   // for each child, add the project list react node with the props
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
@@ -24,10 +26,11 @@ const ProjectManagerPageContainer = ({
         projectList: (
           <>
             <ProjectsList
-              selection={[selection]}
+              selection={selection ? [selection] : []}
               onDeleteProject={onDeleteProject}
               onActivateProject={onActivateProject}
               onNewProject={onNewProject}
+              onNoProjectSelected={onNoProject}
               onSelect={onSelect}
               multiSelect={false}
               showInactive={true}
