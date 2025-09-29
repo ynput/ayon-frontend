@@ -107,10 +107,15 @@ export const buildListsTableData = (
   }
 
   // Helper function to create list table row
-  const createListRow = (list: EntityList, parentType?: string): SimpleTableRow => ({
+  const createListRow = (
+    list: EntityList,
+    parentType?: string,
+    parents: string[] = [],
+  ): SimpleTableRow => ({
     id: list.id,
     name: list.label,
     label: list.label,
+    parents,
     icon: getListIcon(list),
     inactive: !list.active,
     subRows: [],
@@ -153,6 +158,7 @@ export const buildListsTableData = (
       node: FolderNode
       targetArray: SimpleTableRow[]
       isProcessed: boolean
+      parentPath: string[]
     }
 
     const stack: StackItem[] = []
@@ -163,6 +169,7 @@ export const buildListsTableData = (
         node: sortedRootNodes[i],
         targetArray: result,
         isProcessed: false,
+        parentPath: [],
       })
     }
 
@@ -177,13 +184,14 @@ export const buildListsTableData = (
 
       // Mark as processed to avoid infinite loops
       item.isProcessed = true
-      const { node, targetArray } = item
+      const { node, targetArray, parentPath } = item
 
       // Create folder row
       const folderRow: SimpleTableRow = {
         id: buildListFolderRowId(node.id),
         name: node.folder.label,
         label: node.folder.label,
+        parents: parentPath,
         icon: node.folder.data?.icon || FOLDER_ICON,
         iconFilled: true,
         subRows: [],
@@ -203,7 +211,7 @@ export const buildListsTableData = (
       // Add sorted lists to this folder
       const sortedLists = sortLists(node.lists)
       for (const list of sortedLists) {
-        folderRow.subRows.push(createListRow(list, node.id))
+        folderRow.subRows.push(createListRow(list, node.id, [...parentPath, node.folder.label]))
       }
 
       // Get child folders that have lists and sort them
@@ -218,6 +226,7 @@ export const buildListsTableData = (
           node: sortedChildNodes[i],
           targetArray: folderRow.subRows,
           isProcessed: false,
+          parentPath: [...parentPath, node.folder.label],
         })
       }
     }

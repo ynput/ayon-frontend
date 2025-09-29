@@ -115,8 +115,14 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   hiddenButtons = [],
   isReview = false,
 }) => {
-  const { openNewList, onOpenFolderList, selectedRows, deleteLists, onDeleteListFolders } =
-    useListsContext()
+  const {
+    openNewList,
+    onOpenFolderList,
+    selectedRows,
+    deleteLists,
+    onDeleteListFolders,
+    setListsFiltersOpen,
+  } = useListsContext()
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
 
@@ -199,9 +205,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             id: 'filter',
             label: 'Filter lists',
             icon: 'filter_list',
-            onClick: () => {
-              console.log('Filter lists')
-            },
+            onClick: () => setListsFiltersOpen(true),
             isPinned: false,
           },
         ]
