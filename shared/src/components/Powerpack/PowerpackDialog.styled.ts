@@ -87,6 +87,18 @@ export const FeaturesList = styled.div`
   }
 `
 
+export const ShowAll = styled.div`
+  cursor: pointer;
+  text-align: center;
+  margin-top: 16px;
+  color: var(--md-sys-color-tertiary);
+  ${theme.bodyMedium}
+
+  &:hover {
+    text-decoration: underline;
+  }
+`
+
 export const MoreButton = styled(Button)`
   background-color: var(--md-sys-color-tertiary);
   color: var(--md-sys-color-on-tertiary);

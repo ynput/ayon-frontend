@@ -17,18 +17,44 @@ export type PowerpackDialogType = {
   icon?: string
 }
 
+export const powerpackFeatureOrder: PowerpackFeature[] = [
+  'annotations',
+  'sharedViews',
+  'listFolders',
+  'groupAttributes',
+  'slicer',
+  'releases',
+  'advancedFilters',
+  'listAttributes',
+]
+
 export const powerpackFeatures: {
-  [key in PowerpackFeature]: PowerpackDialogType
+  [key in PowerpackFeature]: Omit<PowerpackDialogType, 'priority'>
 } = {
-  slicer: {
-    label: 'Slicer',
-    description: 'Advanced filtering system for project organization.',
-    bullet: 'Powerful project filtering tools',
-  },
   annotations: {
     label: 'Annotations',
     description: 'Create detailed visual feedback directly on media files.',
     bullet: 'Advanced media review tools',
+  },
+  sharedViews: {
+    label: 'Shared Views',
+    description: 'Save custom views and share them with team members for better collaboration.',
+    bullet: 'Save and share custom views',
+  },
+  listFolders: {
+    label: 'List Folders',
+    description: 'Organize your lists into folders for a cleaner and more structured view.',
+    bullet: 'Organize lists into folders',
+  },
+  groupAttributes: {
+    label: 'Group Attributes',
+    description: 'Group tasks by assignees, status, or other attributes for better organization.',
+    bullet: 'Group tasks by attributes',
+  },
+  slicer: {
+    label: 'Slicer',
+    description: 'Advanced filtering system for project organization.',
+    bullet: 'Powerful project filtering tools',
   },
   releases: {
     label: 'Release History',
@@ -44,21 +70,6 @@ export const powerpackFeatures: {
     label: 'List Attributes',
     description: 'Add custom attributes to your lists for better collaboration and organization.',
     bullet: 'Custom attributes for lists',
-  },
-  listFolders: {
-    label: 'List Folders',
-    description: 'Organize your lists into folders for a cleaner and more structured view.',
-    bullet: 'Organize lists into folders',
-  },
-  groupAttributes: {
-    label: 'Group Attributes',
-    description: 'Group tasks by assignees, status, or other attributes for better organization.',
-    bullet: 'Group tasks by attributes',
-  },
-  sharedViews: {
-    label: 'Shared Views',
-    description: 'Save custom views and share them with team members for better collaboration.',
-    bullet: 'Save and share custom views',
   },
 }
 export type PowerpackContextType = {
