@@ -13,7 +13,7 @@ import { GroupByConfig } from '@shared/containers/ProjectTreeTable/components/Gr
  * Converts ColumnItemModel array from OverviewSettings to TanStack table states
  */
 export function convertColumnConfigToTanstackStates(settings: OverviewSettings): ColumnsConfig {
-  const { columns = [], groupBy: groupByField, showEmptyGroups, sortBy, sortDesc } = settings || {}
+  const { columns = [], groupBy: groupByField, showEmptyGroups, sortBy, sortDesc, rowHeight } = settings || {}
 
   // Initialize state objects
   const columnVisibility: VisibilityState = {}
@@ -62,6 +62,7 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     sorting,
     groupBy,
     groupByConfig,
+    rowHeight: rowHeight ?? 34,
   }
 }
 
@@ -167,6 +168,7 @@ export function convertTanstackStatesToColumnConfig(
     sorting,
     groupBy,
     groupByConfig,
+    rowHeight,
   } = states
 
   // Collect all columns that have any state
@@ -213,6 +215,11 @@ export function convertTanstackStatesToColumnConfig(
       result.sortBy = undefined
       result.sortDesc = undefined
     }
+  }
+
+  // Add row height if present
+  if (rowHeight !== undefined) {
+    result.rowHeight = rowHeight
   }
 
   return result

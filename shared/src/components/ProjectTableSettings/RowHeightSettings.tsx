@@ -92,7 +92,7 @@ const RowHeightSettings: FC = () => {
   const [localRowHeight, setLocalRowHeight] = useState(contextRowHeight)
 
   // Debounced value for context updates (reduce expensive re-renders)
-  const debouncedRowHeight = useDebounce(localRowHeight, 100) // 150ms delay
+  const debouncedRowHeight = useDebounce(localRowHeight, 70) // 150ms delay
 
   // Update context when debounced value changes
   useEffect(() => {
@@ -113,7 +113,7 @@ const RowHeightSettings: FC = () => {
 
   return (
     <Container>
-      <Label htmlFor="row-height-slider">Row Height</Label>
+      <Label htmlFor="row-height-slider">Row height</Label>
       <SliderContainer>
         <Slider
           id="row-height-slider"
@@ -124,7 +124,7 @@ const RowHeightSettings: FC = () => {
           value={localRowHeight} // Use local state for smooth slider
           onChange={handleChange}
         />
-        <ValueDisplay>{localRowHeight}px</ValueDisplay>
+        <ValueDisplay>{localRowHeight}</ValueDisplay>
       </SliderContainer>
     </Container>
   )

@@ -115,13 +115,6 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       preview: `${visibleCount}/${columns.length}`,
       component: <ColumnsSettings columns={columns} highlighted={highlighted} />,
     },
-    {
-      id: 'row-height',
-      title: 'Row Height',
-      icon: 'height',
-      preview: `${rowHeight}px`,
-      component: <RowHeightSettings />,
-    },
   ]
 
   settings.forEach((setting) => defaultSettings.push(setting))

@@ -6,15 +6,17 @@ import styled from 'styled-components'
 const Wrapper = styled.div`
   position: absolute;
   inset: 0;
-  padding: 4px;
+  padding: 2px 2px 2px 2px;
+  display: flex;
+  align-items: center;
 `
 
 const Inner = styled.div`
   position: relative;
   max-height: 100%;
-  height: auto;
-  width: calc(100% - 8px);
-  aspect-ratio: 1.77;
+  height: 100%;
+  width: 100%;
+  //aspect-ratio: 1.77;
 
   border-radius: 2px;
   overflow: hidden;
