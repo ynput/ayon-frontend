@@ -11,12 +11,14 @@ const StyledWidget = styled.div`
   align-items: center;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   border-radius: var(--border-radius-m);
+  padding: 0 1px;
 
   &.item {
     padding: 4px 2px;
     border-radius: 0;
+    overflow: hidden;
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);
@@ -47,16 +49,12 @@ const StyledValueWrapper = styled.div`
   gap: var(--base-gap-small);
   align-items: center;
 
-  overflow: hidden;
   max-width: 100%;
   min-width: 20px;
 `
 
 const StyledValue = styled.span`
-  overflow: hidden;
-  white-space: nowrap;
   width: 100%;
-  text-overflow: ellipsis;
   text-align: left;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
@@ -77,13 +75,17 @@ const StyledImg = styled.img`
 `
 
 const StyledExpandButton = styled.div`
-  width: 32px;
-  height: 32px;
+  width: min(32px, 100%);
+  height: min(32px, 100%);
+  min-width: 20px;
+  min-height: 20px;
+  aspect-ratio: 1;
   border-radius: var(--border-radius-m);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest-hover);

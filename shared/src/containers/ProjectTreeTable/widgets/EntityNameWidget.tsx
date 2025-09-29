@@ -60,25 +60,46 @@ const StyledTextContent = styled.div<{ $isCompact: boolean }>`
   display: flex;
   flex-direction: ${props => props.$isCompact ? 'row' : 'column'};
   align-items: ${props => props.$isCompact ? 'center' : 'flex-start'};
-  gap: ${props => props.$isCompact ? '8px' : '0px'};
+  gap: ${props => props.$isCompact ? '0px' : '0px'};
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 
   .path {
     ${theme.bodyMedium}
     font-size: 14px;
     margin-bottom: ${props => props.$isCompact ? '0' : '-4px'};
     color: var(--md-sys-color-outline);
+    ${props => props.$isCompact && 'margin-right: 4px;'}
+    white-space: nowrap;
+    overflow: hidden;
+    ${props => props.$isCompact ? `
+      text-overflow: unset;
+      flex-shrink: 0 1 auto;
+    ` : `
+      text-overflow: ellipsis;
+    `}
   }
+  
 
   .label {
     ${theme.bodyMedium}
     font-size: 14px;
-  }
-
-  span {
+    ${props => props.$isCompact && 'margin-left: 4px;'}
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    flex: 1 1 auto;            /* ✅ allow shrinking so ellipsis can appear */
+    min-width: 0;              /* ✅ critical inside flex to enable ellipsis */
+  }
+
+  .divider {
+    ${theme.bodyMedium}
+    font-size: 14px;
+    color: var(--md-sys-color-outline);
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
   }
 `
 
@@ -144,7 +165,8 @@ export const EntityNameWidget = ({
           <StyledContent>
             {icon && <Icon icon={icon} />}
             <StyledTextContent $isCompact={isCompact}>
-              {path && <span className="path">{path} {isCompact && path && "/"}</span>}
+              {path && <span className="path">{path}</span>}
+              {isCompact && path && <span className="divider">/</span>}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>
