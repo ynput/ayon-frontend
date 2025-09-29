@@ -15,6 +15,7 @@ import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import { parseListFolderRowId } from '../util'
 import { confirmDelete, getEntityId } from '@shared/util'
+import { usePowerpack } from '@shared/context'
 
 const getErrorMessage = (error: unknown, prefix: string): string => {
   const errorString = error instanceof Error ? error.message : String(error)
@@ -58,6 +59,7 @@ const useUpdateList = ({
   const [renamingList, setRenamingList] = useState<UseUpdateListReturn['renamingList']>(null)
   const user = useAppSelector((state) => state.user)
   const isUser = !user.data?.isAdmin && !user.data?.isManager
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
 
   const openRenameList: UseUpdateListReturn['openRenameList'] = useCallback(
     (listId) => {
@@ -175,6 +177,11 @@ const useUpdateList = ({
     payload,
     listIds,
   ) => {
+    if (!powerLicense) {
+      setPowerpackDialog('listFolders')
+      return
+    }
+
     try {
       const { id, label, parentId, color, icon, scope } = payload
 

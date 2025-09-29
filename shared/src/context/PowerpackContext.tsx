@@ -7,6 +7,7 @@ export type PowerpackFeature =
   | 'releases'
   | 'advancedFilters'
   | 'listAttributes'
+  | 'listFolders'
   | 'groupAttributes'
   | 'sharedViews'
 export type PowerpackDialogType = {
@@ -44,6 +45,11 @@ export const powerpackFeatures: {
     description: 'Add custom attributes to your lists for better collaboration and organization.',
     bullet: 'Custom attributes for lists',
   },
+  listFolders: {
+    label: 'List Folders',
+    description: 'Organize your lists into folders for a cleaner and more structured view.',
+    bullet: 'Organize lists into folders',
+  },
   groupAttributes: {
     label: 'Group Attributes',
     description: 'Group tasks by assignees, status, or other attributes for better organization.',
@@ -60,6 +66,7 @@ export type PowerpackContextType = {
   setPowerpackDialog: (open: PowerpackContextType['selectedPowerPack']) => void
   powerpackDialog: PowerpackDialogType | null
   powerLicense: boolean
+  isLoading: boolean
 }
 
 const PowerpackContext = createContext<PowerpackContextType | undefined>(undefined)
@@ -118,11 +125,12 @@ export const PowerpackProvider = ({
   const value = useMemo(
     () => ({
       powerLicense: powerLicense,
+      isLoading,
       selectedPowerPack,
       setPowerpackDialog,
       powerpackDialog: resolvePowerPackDialog(selectedPowerPack),
     }),
-    [powerLicense, selectedPowerPack, setPowerpackDialog],
+    [powerLicense, selectedPowerPack, setPowerpackDialog, isLoading],
   )
 
   return <PowerpackContext.Provider value={value}>{children}</PowerpackContext.Provider>

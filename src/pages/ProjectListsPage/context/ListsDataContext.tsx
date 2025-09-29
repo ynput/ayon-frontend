@@ -6,6 +6,7 @@ import { Filter } from '@ynput/ayon-react-components'
 import { useQueryArgumentChangeLoading, useUserProjectConfig } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
+import { usePowerpack } from '@shared/context'
 
 export type ListsMap = Map<string, EntityList>
 
@@ -37,6 +38,7 @@ export const ListsDataProvider = ({
   entityListTypes,
   isReview,
 }: ListsDataProviderProps) => {
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
   const { projectName, isLoading: isFetchingProject } = useProjectDataContext()
 
   const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
@@ -92,8 +94,8 @@ export const ListsDataProvider = ({
 
   // convert listsData into tableData
   const listsTableData = useMemo(
-    () => buildListsTableData(listsData, listFolders),
-    [listsData, listFolders],
+    () => buildListsTableData(listsData, listFolders, true, powerLicense),
+    [listsData, listFolders, powerLicense],
   )
 
   return (
@@ -103,7 +105,7 @@ export const ListsDataProvider = ({
         listsTableData,
         listsMap,
         listFolders,
-        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject,
+        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || isLoadingLicense,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,

@@ -9,6 +9,7 @@ import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
+import { usePowerpack } from '@shared/context'
 
 export const MENU_ID = 'lists-table-menu'
 
@@ -95,6 +96,7 @@ interface MenuItemDefinition {
   }
   className?: string
   hiddenButtonType?: ButtonType
+  powerFeature?: string
   buttonOnClick?: () => void
 }
 
@@ -125,6 +127,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   } = useListsContext()
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
+
+  const { powerLicense } = usePowerpack()
 
   const toggleMenu = (open: boolean = true) => {
     toggleMenuOpen(open ? MENU_ID : false)
@@ -175,7 +179,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       isPinned: true,
       buttonProps: {
         icon: 'add',
-        tooltip: 'Create new list',
+        tooltip: 'Create list',
         shortcut: 'N',
         ...buttonLabels.add,
       },
@@ -185,10 +189,11 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     },
     {
       id: 'new-folder',
-      label: 'Create new folder',
+      label: 'Create folder',
       icon: 'create_new_folder',
       onClick: () => onOpenFolderList({}),
-      isPinned: true,
+      isPinned: powerLicense,
+      powerFeature: 'listFolders',
       buttonProps: {
         icon: 'create_new_folder',
         tooltip: 'Create new folder',

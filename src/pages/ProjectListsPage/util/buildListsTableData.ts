@@ -16,6 +16,7 @@ export const buildListsTableData = (
   listsData: EntityList[],
   folders: EntityListFolderModel[],
   showEmptyFolders: boolean = true,
+  powerLicense: boolean = false,
 ): SimpleTableRow[] => {
   // Create lookup maps
   const foldersMap = new Map<string, EntityListFolderModel>()
@@ -66,7 +67,7 @@ export const buildListsTableData = (
   for (const list of listsData) {
     const listFolderId = list.entityListFolderId
 
-    if (listFolderId && folderNodes.has(listFolderId)) {
+    if (powerLicense && listFolderId && folderNodes.has(listFolderId)) {
       const folderNode = folderNodes.get(listFolderId)!
       folderNode.lists.push(list)
       folderNode.hasAnyLists = true
@@ -235,7 +236,7 @@ export const buildListsTableData = (
   }
 
   // Build folder rows from the hierarchical structure
-  const folderRows = buildTableRowsIteratively()
+  const folderRows = powerLicense ? buildTableRowsIteratively() : []
 
   // Sort root lists: active first (by createdAt newest first), then inactive (by createdAt newest first)
   const sortedRootLists = sortLists(rootLists)

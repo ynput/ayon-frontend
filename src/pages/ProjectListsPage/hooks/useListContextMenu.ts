@@ -9,6 +9,7 @@ import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util'
 import { EntityListFolderModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { usePowerpack } from '@shared/context'
 
 export const FOLDER_ICON = 'snippet_folder'
 export const FOLDER_ICON_ADD = 'create_new_folder'
@@ -80,6 +81,7 @@ const useListContextMenu = () => {
     onPutFoldersInFolder,
     onRemoveFoldersFromFolder,
   } = useListsContext()
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
 
   const { clearListItems } = useClearListItems({ projectName })
   // create the ref and model
@@ -188,10 +190,11 @@ const useListContextMenu = () => {
         // Add "Create folder" option at the top
         submenuItems.push({
           label: 'Create folder',
-          icon: FOLDER_ICON_ADD,
+          icon: !powerLicense ? 'bolt' : FOLDER_ICON_ADD,
           command: () => onOpenFolderList({ listIds: selectedListIds }),
           disabled: isUser, // only admins and managers can create listFolders
           shortcut: 'F',
+          powerFeature: 'listFolders',
         })
 
         // For multiple selections, show "Unset folder" if any list has a folder
@@ -232,10 +235,11 @@ const useListContextMenu = () => {
         // Add "Create subfolder" option at the top
         submenuItems.push({
           label: 'Create subfolder',
-          icon: FOLDER_ICON_ADD,
+          icon: !powerLicense ? 'bolt' : FOLDER_ICON_ADD,
           command: () => onOpenFolderList({ parentId: selectedFolderId || undefined }),
           disabled: isUser, // only admins and managers can create listFolders
           shortcut: 'F',
+          powerFeature: 'listFolders',
         })
 
         // Show "Unset parent folder" if folder has a parent
@@ -271,6 +275,28 @@ const useListContextMenu = () => {
       const listFolderSubmenu = createListFolderSubmenu()
       const folderFolderSubmenu = createFolderFolderSubmenu()
 
+      const folderMenuItems: any[] = []
+      if (powerLicense) {
+        folderMenuItems.push({
+          label: 'Folder',
+          icon: FOLDER_ICON,
+          items: allSelectedRowsAreLists ? listFolderSubmenu : folderFolderSubmenu,
+          disabled: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
+          hidden:
+            (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
+            (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
+            (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0),
+        })
+      } else {
+        folderMenuItems.push({
+          label: 'Create folder',
+          icon: 'bolt',
+          powerFeature: 'listFolders',
+          hidden: !allSelectedRowsAreLists,
+          command: () => setPowerpackDialog('listFolders'),
+        })
+      }
+
       const menuItems: any[] = [
         {
           label: 'Rename',
@@ -296,16 +322,7 @@ const useListContextMenu = () => {
           disabled: multipleSelected || !allSelectedRowsAreLists,
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
-        {
-          label: 'Folder',
-          icon: FOLDER_ICON,
-          items: allSelectedRowsAreLists ? listFolderSubmenu : folderFolderSubmenu,
-          disabled: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
-          hidden:
-            (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
-            (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
-            (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0),
-        },
+        ...folderMenuItems,
         {
           label: 'Details',
           icon: 'info',
@@ -367,6 +384,7 @@ const useListContextMenu = () => {
       handleCreateReviewSessionList,
       clearListItems,
       isReview,
+      powerLicense,
     ],
   )
 
