@@ -199,7 +199,9 @@ export const buildListsTableData = (
         data: {
           id: node.id,
           isGroupRow: true,
-          count: node.lists.length,
+          count:
+            node.lists.length +
+            Array.from(node.children.values()).reduce((acc, child) => acc + child.lists.length, 0),
           type: node.id,
           isFolder: true,
           color: node.folder.data?.color,
