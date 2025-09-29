@@ -50,9 +50,25 @@ declare module '@tanstack/react-table' {
 }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
+  const cellValue = row.getValue(columnId)
+  // convert non-string cell values to string
+  let searchString =
+    typeof cellValue === 'string'
+      ? cellValue
+      : Array.isArray(cellValue)
+      ? cellValue.join(' ')
+      : JSON.stringify(cellValue)
+
+  // combine label and parents into a single string for searching if columnId is 'label'
+  if (columnId === 'label') {
+    searchString = [row.original.label, row.original.name, ...(row.original.parents || [])].join(
+      ' ',
+    )
+  }
+
   // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
+  const itemRank = rankItem(searchString, searchValue)
 
   // Store the itemRank info
   addMeta({
@@ -412,6 +428,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
     filterFns: {
       fuzzy: fuzzyFilter,
     },
+    globalFilterFn: 'fuzzy',
     enableRowSelection: true, //enable row selection for all rows
     enableRowPinning: !!onRowPinningChange,
     getRowId: (row) => row.id,
