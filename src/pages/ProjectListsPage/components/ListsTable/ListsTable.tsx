@@ -103,6 +103,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
             hiddenButtons={isReview ? ['filter'] : []}
             search={clientSearch}
             onSearch={setClientSearch}
+            isReview={isReview}
           />
           <SimpleTable
             data={listsTableData}
