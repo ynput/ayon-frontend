@@ -1,4 +1,4 @@
-import { FC, useState, useCallback, useEffect, useRef } from 'react'
+import { FC, useState, useCallback, useEffect } from 'react'
 import styled from 'styled-components'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 
@@ -86,35 +86,32 @@ const ValueDisplay = styled.span`
 `
 
 const RowHeightSettings: FC = () => {
-  const { rowHeight: contextRowHeight = 40, updateRowHeight, setRowHeightWithAPI } = useColumnSettingsContext()
+  const { rowHeight: contextRowHeight = 34, updateRowHeight, updateRowHeightWithPersistence } = useColumnSettingsContext()
 
-  // Local state for immediate UI updates (smooth slider)
+  // Local state for immediate UI updates during slider drag
   const [localRowHeight, setLocalRowHeight] = useState(contextRowHeight)
 
+  // Debounced value for smooth table updates during drag
   const debouncedRowHeight = useDebounce(localRowHeight, 25)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalRowHeight(parseInt(e.target.value, 10))
-  }
+  // Sync with context row height when it changes externally
+  useEffect(() => {
+    setLocalRowHeight(contextRowHeight)
+  }, [contextRowHeight])
 
-  // Update table rows immediately (no API call)
+  // Update table rows immediately during slider drag (no API persistence)
   useEffect(() => {
     updateRowHeight(localRowHeight)
   }, [debouncedRowHeight, updateRowHeight, localRowHeight])
 
-  const handleMouseDown = () => {
-    // User started dragging slider
-  }
+  const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalRowHeight(parseInt(e.target.value, 10))
+  }, [])
 
-  const handleMouseUp = () => {
-    // User released slider - now make API call
-    setRowHeightWithAPI(localRowHeight)
-  }
-
-  // Sync with context when not dragging
-  useEffect(() => {
-    setLocalRowHeight(contextRowHeight)
-  }, [contextRowHeight])
+  const handleSliderRelease = useCallback(() => {
+    // Persist to API only when user finishes adjusting
+    updateRowHeightWithPersistence(localRowHeight)
+  }, [localRowHeight, updateRowHeightWithPersistence])
 
   return (
     <Container>
@@ -127,9 +124,8 @@ const RowHeightSettings: FC = () => {
           max={200}
           step={2}
           value={localRowHeight}
-          onChange={handleChange}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
+          onChange={handleSliderChange}
+          onMouseUp={handleSliderRelease}
         />
         <ValueDisplay>{localRowHeight}</ValueDisplay>
       </SliderContainer>
