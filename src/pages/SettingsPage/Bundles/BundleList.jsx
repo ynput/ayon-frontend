@@ -10,6 +10,7 @@ import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
 const BundleList = ({
   selectedBundles = [],
@@ -120,7 +121,7 @@ const BundleList = ({
     ctxMenuItems.push({
       label: 'Duplicate and Edit',
       icon: 'edit_document',
-      shortcut: 'Shift+D',
+      shortcut: getPlatformShortcutKey('D', [KeyMode.Shift]),
       command: () => onDuplicate(activeBundleName),
       disabled: selectedBundles.length > 1,
     })

@@ -197,14 +197,14 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     {
       label: 'Expand children',
       icon: 'expand_all',
-      shortcut: 'Alt + click',
+      shortcut: getPlatformShortcutKey('click', [ KeyMode.Alt]),
       command: () => toggleExpandAll(meta.selectedRows, true),
       hidden: cell.columnId !== 'name' || cell.entityType !== 'folder',
     },
     {
       label: 'Collapse children',
       icon: 'collapse_all',
-      shortcut: 'Alt + click',
+      shortcut: getPlatformShortcutKey('click', [ KeyMode.Alt]),
       command: () => toggleExpandAll(meta.selectedRows, false),
       hidden: cell.columnId !== 'name' || cell.entityType !== 'folder',
     },
