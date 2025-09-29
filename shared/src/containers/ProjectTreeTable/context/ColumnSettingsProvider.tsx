@@ -27,6 +27,16 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const allColumnsRef = React.useRef<string[]>([])
   const currentRowHeightRef = React.useRef<number>(24) // Track current row height
 
+  // Internal state for immediate updates (similar to column sizing)
+  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
+  const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
+
+  // Local row height state that persists and doesn't get overridden by API
+  const [localRowHeight, setLocalRowHeight] = useState<number>(34)
+
+  // Flag to prevent API updates during active row height adjustments
+  const isAdjustingRowHeightRef = React.useRef(false)
+
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
@@ -50,8 +60,15 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     rowHeight: configRowHeight,
   } = columnsConfig || {}
 
-  // Use the rowHeight from config if provided, otherwise use our tracked value, otherwise default to 24
-  const rowHeight = configRowHeight !== undefined ? configRowHeight : currentRowHeightRef.current
+  // Initialize local row height from API when config first loads, but don't override during user adjustments
+  React.useEffect(() => {
+    if (configRowHeight !== undefined && !isAdjustingRowHeightRef.current) {
+      setLocalRowHeight(configRowHeight)
+    }
+  }, [configRowHeight])
+
+  // Use internal row height during slider adjustments, otherwise use local persistent state
+  const rowHeight = internalRowHeight ?? localRowHeight
 
   // Update our ref to the current value
   currentRowHeightRef.current = rowHeight
@@ -135,12 +152,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
-  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
-
   // use internalColumnSizing if it exists, otherwise use the external column sizing
   const columnSizing = internalColumnSizing || columnsSizingExternal
 
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   const setColumnSizing = (sizing: ColumnSizingState) => {
     setInternalColumnSizing(sizing)
@@ -249,23 +265,53 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
-  const updateRowHeight = (newRowHeight: number) => {
-    // Get current thumbnail column width
-    const currentThumbnailWidth = columnSizing.thumbnail || 150 // Default to 150 if not set
+  const setRowHeight = (newRowHeight: number) => {
+    // Update local persistent state immediately for UI
+    setLocalRowHeight(newRowHeight)
+  }
 
-    // Only update thumbnail width if current width is smaller than new row height
-    const shouldUpdateThumbnailWidth = currentThumbnailWidth < newRowHeight
+  const setRowHeightWithAPI = (newRowHeight: number) => {
+    // Update local persistent state immediately
+    setLocalRowHeight(newRowHeight)
 
-    const updatedColumnSizing = shouldUpdateThumbnailWidth
-      ? { ...columnSizing, thumbnail: newRowHeight }
-      : columnSizing
+    // Set flag to block external updates during adjustment
+    isAdjustingRowHeightRef.current = true
+    setInternalRowHeight(newRowHeight)
 
-    const updatedConfig = {
-      ...columnsConfig,
-      rowHeight: newRowHeight,
-      columnSizing: updatedColumnSizing,
+    // if there is a timeout already set, clear it
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
     }
-    onChangeWithColumns(updatedConfig)
+    // set a timeout that tracks if the row height adjustment has finished
+    rowHeightTimeoutRef.current = setTimeout(() => {
+      // we have finished adjusting now!
+      // Get current thumbnail column width from the most up-to-date columnSizing
+      const currentColumnSizing = internalColumnSizing || columnsSizingExternal
+      const currentThumbnailWidth = currentColumnSizing.thumbnail || 150 // Default to 150 if not set
+
+      // Only update thumbnail width if current width is smaller than new row height
+      const shouldUpdateThumbnailWidth = currentThumbnailWidth < newRowHeight
+
+      const updatedColumnSizing = shouldUpdateThumbnailWidth
+        ? { ...currentColumnSizing, thumbnail: newRowHeight }
+        : currentColumnSizing
+
+      // update the external row height (send to API)
+      onChangeWithColumns({
+        ...columnsConfig,
+        rowHeight: newRowHeight,
+        columnSizing: updatedColumnSizing,
+      })
+      // reset the internal row height to not be used anymore
+      setInternalRowHeight(null)
+      // Allow external updates again
+      isAdjustingRowHeightRef.current = false
+    }, 200) // Extended timeout to 200ms to ensure API responses don't interfere
+  }
+
+  const updateRowHeight = (newRowHeight: number) => {
+    // Only update UI, no API call (API call happens on mouse release)
+    setRowHeight(newRowHeight)
   }
 
   // Remove redundant local updater functions in favor of unified updaters with all columns
@@ -332,6 +378,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         // row height
         rowHeight,
         updateRowHeight,
+        setRowHeightWithAPI,
 
         // global change
         setColumnsConfig: (config: ColumnsConfig) => onChangeWithColumns(config),

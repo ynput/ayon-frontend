@@ -68,6 +68,7 @@ export interface ColumnSettingsContextType {
   // Row height
   rowHeight?: number
   updateRowHeight: (rowHeight: number) => void
+  setRowHeightWithAPI: (rowHeight: number) => void
 
   // Global change
   setColumnsConfig: (config: ColumnsConfig) => void
