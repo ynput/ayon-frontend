@@ -54,7 +54,7 @@ const WatchActivities: FC<WatchActivitiesProps> = ({}) => {
       const entries = activitiesQueries.util.selectInvalidatedBy(state, tags)
 
       // add to the invalidateTags as we go and then invalidate all at the end
-      const invalidateTags = []
+      const invalidateTags: Array<{ type: string; id: string }> = []
 
       if (topic === 'activity.deleted') {
         for (const entry of entries) {

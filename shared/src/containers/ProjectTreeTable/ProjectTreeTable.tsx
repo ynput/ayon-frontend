@@ -16,6 +16,7 @@ import {
   Header,
   HeaderGroup,
   RowData,
+  ExpandedState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -30,9 +31,9 @@ import buildTreeTableColumns, {
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
-import HeaderActionButton from './components/HeaderActionButton'
-import RowDragHandleCellContent from './components/RowDragHandleCellContent' // Added import
+import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
+import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
@@ -40,6 +41,7 @@ import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/Sel
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
+import { useMenuContext } from '../../context/MenuContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -47,6 +49,12 @@ import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
+
+// EntityPickerDialog import
+import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
+// Move entity hook
+import { useMoveEntities } from './hooks/useMoveEntities'
+import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
@@ -69,6 +77,8 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
+import { EntityMoveData } from '@shared/context/MoveEntityContext'
+import { useSelector } from 'react-redux'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -181,6 +191,8 @@ export const ProjectTreeTable = ({
     getEntityById,
   } = useProjectTableContext()
 
+  const { projectName: contextProjectName, writableFields } = useProjectDataContext()
+
   const isLoading = isLoadingProp || isLoadingData
 
   const {
@@ -232,8 +244,8 @@ export const ProjectTreeTable = ({
 
   // Format readonly columns and attributes
   const { readOnlyColumns, readOnlyAttribs } = useMemo(
-    () => getReadOnlyLists(attribFields, readOnly),
-    [attribFields, readOnly],
+    () => getReadOnlyLists(attribFields, writableFields, readOnly),
+    [attribFields, writableFields, readOnly],
   )
 
   const { selectedCells } = useSelectionCellsContext()
@@ -460,11 +472,48 @@ export const ProjectTreeTable = ({
     [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
   )
 
+  // Get move entity functions for the dialog
+  const {
+    isEntityPickerOpen,
+    handleMoveSubmit,
+    closeMoveDialog,
+    movingEntities,
+    handleMoveToRoot,
+    getDisabledFolderIds,
+    getDisabledMessage,
+  } = useMoveEntities({
+    projectName: contextProjectName || projectName || '',
+  })
+
+  const handleMoveSubmitWithExpand = (selection: string[]) => {
+    handleMoveSubmit(selection)
+    const folderIdToExpand = selection[0]
+
+    updateExpanded((prevExpanded: ExpandedState) => {
+      if (typeof prevExpanded === 'boolean') {
+        if (prevExpanded) {
+          return prevExpanded
+        }
+        return { [folderIdToExpand]: true }
+      }
+
+      if (prevExpanded[folderIdToExpand]) {
+        return prevExpanded
+      }
+
+      return {
+        ...prevExpanded,
+        [folderIdToExpand]: true,
+      }
+    })
+  }
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
       columnEnums={{ ...options, ...attribByField }}
       columnReadOnly={readOnlyAttribs}
+      visibleColumns={visibleColumns}
     >
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
@@ -472,7 +521,13 @@ export const ProjectTreeTable = ({
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
-          className={clsx('table-container', pt?.container?.className)}
+          className={clsx(
+            'table-container',
+            {
+              resizing: table.getState().columnSizingInfo.isResizingColumn,
+            },
+            pt?.container?.className,
+          )}
         >
           <table
             style={{
@@ -481,6 +536,7 @@ export const ProjectTreeTable = ({
               userSelect: 'none',
               ...columnSizeVars,
               width: table.getTotalSize(),
+              cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
             }}
           >
             <TableHead
@@ -510,6 +566,24 @@ export const ProjectTreeTable = ({
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>
+      {/* Render EntityPickerDialog alongside table content */}
+      {isEntityPickerOpen &&
+        projectName &&
+        movingEntities?.entities &&
+        movingEntities.entities.length > 0 && (
+          <EntityPickerDialog
+            projectName={projectName}
+            entityType="folder"
+            onSubmit={handleMoveSubmitWithExpand}
+            onClose={closeMoveDialog}
+            showMoveToRoot={movingEntities.entities.every(
+              (entity: EntityMoveData) => entity.entityType === 'folder',
+            )}
+            onMoveToRoot={handleMoveToRoot}
+            disabledIds={getDisabledFolderIds()}
+            getDisabledMessage={getDisabledMessage}
+          />
+        )}
     </ClipboardProvider>
   )
 
@@ -713,12 +787,17 @@ const TableHeadCell = ({
   sortableRows,
 }: TableHeadCellProps) => {
   const { column } = header
+  const sorting = column.getIsSorted()
+  const menuId = `column-header-menu-${column.id}`
+  const { menuOpen } = useMenuContext()
+  const isOpen = menuOpen === menuId
 
   return (
     <Styled.HeaderCell
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
+        resizing: column.getIsResizing(),
       })}
       key={header.id}
       style={{
@@ -733,36 +812,27 @@ const TableHeadCell = ({
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
 
-          <Styled.HeaderButtons className="actions">
-            {/* COLUMN HIDING */}
-            {canHide && (
-              <HeaderActionButton
-                icon="visibility_off"
-                selected={!column.getIsVisible()}
-                onClick={column.getToggleVisibilityHandler()}
-              />
-            )}
-            {/* COLUMN PINNING */}
-            {canPin && (
-              <HeaderActionButton
-                icon="push_pin"
-                selected={header.column.getIsPinned() === 'left'}
-                onClick={() => {
-                  if (header.column.getIsPinned() === 'left') {
-                    header.column.pin(false)
-                  } else {
-                    header.column.pin('left')
-                  }
-                }}
+          <Styled.HeaderButtons className="actions" $isOpen={isOpen}>
+            {(canHide || canPin || canSort) && (
+              <ColumnHeaderMenu
+                className="header-menu"
+                header={header}
+                canHide={canHide}
+                canPin={canPin}
+                canSort={canSort}
+                isResizing={column.getIsResizing()}
+                menuId={menuId}
+                isOpen={isOpen}
               />
             )}
 
             {/* COLUMN SORTING */}
             {canSort && (
               <HeaderActionButton
-                icon={'sort'}
+                icon="sort"
+                className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
+                  transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
                 onClick={column.getToggleSortingHandler()}
                 selected={!!column.getIsSorted()}
@@ -832,7 +902,9 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+
+  const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -1010,6 +1082,8 @@ const TableBodyRow = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: 40,
+                pointerEvents: 'all',
+                cursor: 'grab',
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':
@@ -1081,6 +1155,7 @@ const TableCell = ({
     focusCell,
     getCellBorderClasses,
     clearSelection,
+    selectedCells,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
@@ -1093,6 +1168,7 @@ const TableCell = ({
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
   const isGroup = cell.row.original.entityType === 'group'
+  const isMultipleSelected = selectedCells.size > 1
 
   return (
     <Styled.TableCell
@@ -1108,6 +1184,7 @@ const TableCell = ({
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
           task: cell.row.original.entityType === 'task',
+          'multiple-selected': isMultipleSelected,
         },
         className,
         ...borderClasses,

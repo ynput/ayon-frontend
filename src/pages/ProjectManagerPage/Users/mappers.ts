@@ -1,10 +1,25 @@
 import { AccessGroupUsers, ListingError, SelectedAccessGroupUsers, SelectionStatus } from './types'
-import { Filter, FilterValue, Option } from '@components/SearchFilter/types'
+import { Filter, FilterValue, Option } from '@ynput/ayon-react-components'
 import { ProjectNode, UserNode } from '@shared/api'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 import { $Any } from '@types'
 import { matchSorter } from 'match-sorter'
 import { GetProjectsUsersApiResponse, ProjectUserData } from '@queries/accessGroups/getAccessGroups'
+
+// Safe Set helpers – avoid relying on nonstandard Set.prototype methods
+const setIntersection = <T>(a: Set<T>, b: Set<T>): Set<T> => {
+  const out = new Set<T>()
+  // iterate smaller set for perf
+  const [small, large] = a.size <= b.size ? [a, b] : [b, a]
+  for (const v of small) if (large.has(v)) out.add(v)
+  return out
+}
+
+const setDifference = <T>(a: Set<T>, b: Set<T>): Set<T> => {
+  const out = new Set<T>()
+  for (const v of a) if (!b.has(v)) out.add(v)
+  return out
+}
 
 const getAllProjectUsers = (groupedUsers: AccessGroupUsers): string[] => {
   let allUsers: string[] = []
@@ -125,23 +140,27 @@ const getFilteredEntities = <T extends { name: string }>(
       continue
     }
 
-    for (const filterItem of filter.values.filter((filterValue) => filterValue.isCustom)) {
+    for (const filterItem of filter.values.filter(
+      (filterValue: FilterValue) => filterValue.isCustom,
+    )) {
       matches.push(...fuzzyFilter(entities, filterItem))
     }
     const exactMatches = exactFilter(
       entities,
-      filter.values.filter((filterValue) => !filterValue.isCustom),
+      filter.values.filter((filterValue: FilterValue) => !filterValue.isCustom),
     )
     matches.push(...exactMatches)
 
-    matchesSet = filter.inverted ? new Set(entities).difference(new Set(matches)) : new Set(matches)
+    matchesSet = filter.inverted
+      ? setDifference(new Set(entities), new Set(matches))
+      : new Set(matches)
 
     if (intersection === null) {
       intersection = matchesSet
       continue
     }
 
-    intersection = intersection.intersection(matchesSet)
+    intersection = setIntersection(intersection, matchesSet)
   }
 
   return Array.from(intersection || [])
@@ -166,8 +185,8 @@ const mapInitialAccessGroupStates = (
   const getStatus = (agName: string, users: string[], accessGroupUsers: string[]) => {
     const usersSet = new Set(users)
     const accessGroupUsersSet = new Set(accessGroupUsers)
-    const intersection = usersSet.intersection(accessGroupUsersSet)
-    const diff = usersSet.difference(accessGroupUsersSet)
+    const intersection = setIntersection(usersSet, accessGroupUsersSet)
+    const diff = setDifference(usersSet, accessGroupUsersSet)
 
     // No users in ag users
     if (intersection.size == 0) {

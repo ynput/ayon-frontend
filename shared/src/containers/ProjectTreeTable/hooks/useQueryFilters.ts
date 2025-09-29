@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Filter } from '@ynput/ayon-react-components'
+import { Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { type QueryTasksFoldersApiArg } from '@shared/api'
 import { clientFilterToQueryFilter } from '../utils'
 import { QueryFilter, QueryCondition } from '../types/operations'
@@ -42,14 +42,35 @@ export const useQueryFilters = ({
     // This excludes slice filters, except for hierarchy when slice type changes
     let displayQueryFilter = queryFilters
 
+    //  extract text search conditions, remove them from combinedQueryFilter and merge to fuzzySearchFilter
+    let fuzzySearchFilter = ''
+
+    if (combinedQueryFilter?.conditions?.length) {
+      const searchValues: string[] = []
+
+      const remainingConditions = combinedQueryFilter.conditions.filter((condition) => {
+        if ((condition as QueryCondition).key === SEARCH_FILTER_ID) {
+          const val = (condition as QueryCondition).value
+          if (val !== undefined && val !== null && String(val).trim() !== '') {
+            searchValues.push(String(val))
+          }
+          return false // remove search condition
+        }
+        return true
+      })
+
+      // Join multiple search conditions into one space-separated fuzzy search string
+      fuzzySearchFilter = searchValues.join(' ')
+
+      // If there are remaining conditions, keep them; otherwise set empty conditions
+      combinedQueryFilter = remainingConditions.length
+        ? { ...combinedQueryFilter, conditions: remainingConditions }
+        : { ...combinedQueryFilter, conditions: [] }
+    }
+
     const queryFilterString = combinedQueryFilter?.conditions?.length
       ? JSON.stringify(combinedQueryFilter)
       : ''
-
-    // For text search, we'll need to extract it from the slice filter if it contains text
-    const fuzzySearchFilter = sliceFilter?.id?.includes('text')
-      ? sliceFilter?.values?.[0]?.id
-      : undefined
 
     return {
       filterString: queryFilterString,

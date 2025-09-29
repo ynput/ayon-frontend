@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
 import SubChip from '@components/SubChip/SubChip'
 import { PricingLink } from '@shared/components/Powerpack/PricingLink'
+import { toast } from 'react-toastify'
 
 type ExtendedAddonDetail = AddonDetail & {
   downloadedVersions: Record<string, string>
@@ -112,6 +113,17 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     }
   }
 
+  const handleVersionDropdownChange = (selectedVersions: string[]) => {
+    const versionNumber = selectedVersions[0]
+    const selectedVersion = versions.find(version => version.version === versionNumber)
+
+    if (selectedVersion?.isCompatible !== false) {
+      handleDownload(versionNumber)
+    } else {
+      toast.error('Addon incompatible with your server version')
+    }
+  }
+
   let groupedLinks: {
     type: LinkModel['type']
     links: LinkModel[]
@@ -131,8 +143,19 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   let actionButton = null
   const subRequired = flags?.includes('licensed') && !available
 
-  // Download button (top right)
-  if (isDownloading) {
+  const sortedVersions = versions.toSorted((a, b) => -1 * compareBuild(a.version, b.version))
+  const newestVersion = sortedVersions[0]
+  const isLatestIncompatible = newestVersion?.isCompatible === false
+
+  const displayVersion = newestVersion?.version || latestVersion
+
+  if (isLatestIncompatible) {
+    actionButton = (
+      <Button variant="filled" disabled icon={'block'} style={{fontSize: '12px'}}>
+        {`v${displayVersion} (server update required)`}
+      </Button>
+    )
+  } else if (isDownloading) {
     actionButton = (
       <SaveButton active saving disabled>
         Downloading...
@@ -148,18 +171,14 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     actionButton = <Button disabled>Pending...</Button>
   } else if (isDownloaded && !isOutdated) {
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
-  } else if (isDownloaded && isOutdated && latestVersion) {
+  } else if ((isDownloaded && isOutdated && latestVersion) || latestVersion) {
     actionButton = (
       <Button
         variant="filled"
         icon={'download'}
         onClick={() => handleDownload(latestVersion)}
-      >{`Download v${latestVersion}`}</Button>
-    )
-  } else if (latestVersion) {
-    actionButton = (
-      <Button variant="filled" icon={'download'} onClick={() => handleDownload(latestVersion)}>
-        {`Download v${latestVersion}`}
+      >
+        {`Download v${displayVersion}`}
       </Button>
     )
   } else if (subRequired) {
@@ -176,8 +195,9 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     () =>
       versions.map((v) => ({
         value: v.version,
-        label: `v${v.version}`,
+        label: v.isCompatible ? `v${v.version}` : `v${v.version} (server update required)`,
         isDownloaded: downloaded.includes(v.version),
+        disabled: v.isCompatible === false,
       })),
     [versions, downloaded],
   )
@@ -190,7 +210,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     <Styled.PanelContainer direction="row" className={clsx({ noData: !name })}>
       {name && (
         <>
-          <Styled.Left className={Type.bodyLarge}>
+          <Styled.Left className={Type.bodyLarge} style={{height: "auto"}}>
             <Styled.Header className={clsx({ loading: isLoading })}>
               <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
@@ -245,15 +265,20 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                   options={versionsOptions}
                   align="right"
                   value={[]}
-                  widthExpand
-                  onChange={(v) => handleDownload(v[0])}
+                  onChange={handleVersionDropdownChange}
                   itemStyle={{ justifyContent: 'space-between' }}
-                  // @ts-expect-error
-                  buttonProps={{ 'data-tooltip': 'Download a specific version' }}
                   search={versions.length > 10}
                   itemTemplate={(option) => (
                     <Styled.VersionDropdownItem>
-                      <Icon icon={option.isDownloaded ? 'check' : 'download'} />
+                      <Icon
+                        icon={
+                          option.disabled
+                            ? 'block'
+                            : option.isDownloaded
+                              ? 'check'
+                              : 'download'
+                        }
+                      />
                       {option.label}
                     </Styled.VersionDropdownItem>
                   )}

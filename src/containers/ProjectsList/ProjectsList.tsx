@@ -8,7 +8,7 @@ import ProjectsListTableHeader, { MENU_ID } from './ProjectsListTableHeader'
 import ProjectsListRow from './ProjectsListRow'
 import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
 import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
-import { toggleMenuOpen } from '@state/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import { useAppDispatch } from '@state/store'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
@@ -124,8 +124,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
     [onSelect],
   )
   const dispatch = useAppDispatch()
+  const { toggleMenuOpen } = useMenuContext()
   const toggleMenu = (open: boolean = true) => {
-    dispatch(toggleMenuOpen(open ? MENU_ID : false))
+    toggleMenuOpen(open ? MENU_ID : false)
   }
 
   const toggleSelectAll = () => {

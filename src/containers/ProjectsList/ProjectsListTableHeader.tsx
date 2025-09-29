@@ -5,7 +5,7 @@ import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { FC } from 'react'
-import { useSelector } from 'react-redux'
+import { useMenuContext } from '@shared/context/MenuContext'
 import styled from 'styled-components'
 
 export const MENU_ID = 'projects-list-menu'
@@ -108,7 +108,8 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
   menuItems = [],
   toggleMenu,
 }) => {
-  const isOpen = useSelector((state: any) => state.context.menuOpen) === MENU_ID
+  const { menuOpen } = useMenuContext()
+  const isOpen = menuOpen === MENU_ID
 
   const addButton = {
     icon: 'add',

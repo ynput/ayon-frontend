@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a bug report to help us improve
 title: "<scope>: <Bug summary>"
-labels: "type: bug"
+type: "Bug"
 assignees: ""
 ---
 

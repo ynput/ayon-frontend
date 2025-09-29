@@ -21,7 +21,6 @@ export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilte
   // Process each filter as its own condition
   const conditions: (QueryCondition | QueryFilter)[] = filters
     .filter((f) => !!f.values?.length)
-    .filter((f) => !f.id.includes('text')) // remove text search filters as they are handled separately
     .filter((f) => f.id !== 'hierarchy') // remove hierarchy filter as it is handled separately
     .flatMap((filter) => convertFilterToCondition(filter))
 

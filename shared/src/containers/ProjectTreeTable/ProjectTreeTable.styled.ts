@@ -35,6 +35,11 @@ export const TR = styled.tr`
     td.${DRAG_HANDLE_CLASS} button:hover {
       opacity: 1;
     }
+
+    /* row selection hover */
+    td:not(.selected) {
+      background-color: hsl(215 14% 15%);
+    }
   }
 
   &.group-row {
@@ -77,6 +82,10 @@ export const TableCellContent = styled.div`
   &:focus-visible {
     outline: none;
   }
+
+  .resizing & {
+    cursor: col-resize !important;
+  }
 `
 
 export const ResizedHandler = styled.div`
@@ -85,7 +94,7 @@ export const ResizedHandler = styled.div`
   top: 0;
   bottom: 0;
   width: 6px;
-  cursor: col-resize;
+  cursor: col-resize !important;
   background-color: var(--md-sys-color-surface-container-high);
 
   opacity: 0;
@@ -93,6 +102,7 @@ export const ResizedHandler = styled.div`
   &.resizing {
     background-color: var(--md-sys-color-primary);
     opacity: 1;
+    cursor: col-resize !important;
   }
 `
 
@@ -112,12 +122,25 @@ export const HeaderCell = styled.th`
     .resize-handle {
       opacity: 1;
     }
+    
+    .actions {
+      display: flex !important;
+    }
+    
+    .actions .header-menu {
+      display: flex !important;
+    }
   }
 
-  /* show action button */
-  &:hover {
-    .action {
-      display: flex;
+  /* Hide action buttons when resizing */
+  &.resizing {
+    .actions {
+      display: none !important;
+    }
+    cursor: col-resize !important;
+
+    * {
+      cursor: col-resize !important;
     }
   }
 
@@ -138,9 +161,17 @@ export const HeaderCell = styled.th`
   }
 `
 
-export const HeaderButtons = styled.div`
-  display: flex;
+export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
+  display: none;
+
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    display: flex !important;
+  `}
+
   gap: var(--base-gap-small);
+  align-items: center;
 
   position: absolute;
   z-index: 10;
@@ -149,6 +180,47 @@ export const HeaderButtons = styled.div`
   transform: translateY(-50%);
   background-color: var(--md-sys-color-surface-container-lowest);
   padding-left: 4px;
+
+  .resizing & {
+    cursor: col-resize !important;
+  }
+
+  &:has(.sort-button.visible),
+  &:has(.sort-button.selected) {
+    display: flex !important;
+  }
+
+  .sort-button.visible {
+    display: flex !important;
+  }
+  
+  .sort-button.selected {
+    display: flex !important;
+  }
+
+  .header-menu {
+    display: none;
+  }
+  
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    .header-menu {
+      display: flex !important;
+    }
+  `}
+  
+  .header-menu.open,
+  .header-menu.active {
+    display: flex !important;
+  }
+
+   .resizing & {
+    .sort-button,
+    .header-menu {
+      display: none !important;
+    }
+  }
 `
 
 type TableCellProps = {
@@ -181,22 +253,23 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
+  --task-background-color: hsl(216 15% 11.5% / 1);
   &.task {
-    background-color: hsl(216 15% 11.5% / 1);
+    background-color: var(--task-background-color);
   }
 
   &.selected-row {
     background-color: var(--md-sys-color-surface-container-high);
   }
 
-  /* show hover effect only if direct child div does NOT have .readonly */
+  /* show hover effect only if direct child div does NOT have .readonly and is not selected */
   &:not(:has(> div.readonly)) {
     cursor: pointer;
     &:hover {
       background-color: var(--md-sys-color-surface-container);
     }
 
-    .selected {
+    &.selected {
       background-color: var(--md-sys-color-secondary-container);
     }
   }
@@ -312,6 +385,32 @@ export const TableCell = styled.td<TableCellProps>`
     pointer-events: none;
   }
 
+  /* read only fields are dimmed down for bg and border */
+  &:has(> div.readonly) {
+    &:not(.multiple-selected) {
+      --focused-readonly-color: hsl(212 15% 18% / 1);
+      &.focused {
+        background-color: var(--focused-readonly-color);
+        &::after {
+          border-color: var(--focused-readonly-color);
+        }
+      }
+    }
+
+    /* when focused is readonly and multiple-selected */
+    &.multiple-selected {
+      &.focused::after {
+        display: none;
+      }
+    }
+  }
+
+  /* if there is no cell widget element (no children) then the cell should not be selectable at all */
+  &:not(:has(> div)) {
+    pointer-events: none;
+    cursor: default;
+  }
+
   &.editing {
     z-index: 10 !important;
     /* light border around the outside */
@@ -346,6 +445,10 @@ export const TableHeader = styled.thead`
   min-height: 34px;
   z-index: 10;
   background-color: var(--md-sys-color-surface-container-lowest);
+
+  .resizing & {
+    cursor: col-resize !important;
+  }
 `
 
 export const TableWrapper = styled.div`
@@ -368,6 +471,13 @@ export const TableContainer = styled.div`
 
   &.isLoading {
     overflow: hidden;
+  }
+
+  /* Hide all header buttons when any column is being resized */
+  &.resizing {
+    .actions {
+      display: none !important;
+    }
   }
 
   table {

@@ -1,4 +1,4 @@
-import { ProjectModel, useGetProjectQuery } from '@shared/api'
+import { ProjectModel, useGetCurrentUserQuery, useGetProjectQuery, UserModel } from '@shared/api'
 import { createContext, FC, useContext } from 'react'
 import router from 'react-router-dom'
 
@@ -30,6 +30,7 @@ export interface AddonProjectContextProps extends RemoteAddonProjectProps {
 // types returned by context
 export interface AddonProjectContextType extends RemoteAddonProjectProps {
   project: ProjectModel | undefined
+  user: UserModel | undefined
 }
 
 const AddonProjectContext = createContext<AddonProjectContextType | undefined>(undefined)
@@ -39,12 +40,16 @@ export const AddonProjectProvider = ({
   projectName,
   ...props
 }: AddonProjectContextProps) => {
+  // get current project data
   const { data: project } = useGetProjectQuery(
     { projectName: projectName as string },
     { skip: !projectName },
   )
+
+  // get current user data
+  const { data: user } = useGetCurrentUserQuery()
   return (
-    <AddonProjectContext.Provider value={{ ...props, projectName, project }}>
+    <AddonProjectContext.Provider value={{ ...props, projectName, project, user }}>
       {children}
     </AddonProjectContext.Provider>
   )

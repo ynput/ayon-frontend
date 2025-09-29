@@ -1,7 +1,7 @@
-const checkName = (name) => {
+export const checkName = (name: string) => {
   let newName = name
   // check name matches regex
-  const regex = /^[a-zA-Z0-9_]+$/
+  const regex = /^[a-zA-Z0-9_]([a-zA-Z0-9_\\.\\-]*[a-zA-Z0-9_])?$/
   // if not, convert to snake_case
   if (name && !name.match(regex)) {
     // remove any trailing or leading special characters
@@ -12,5 +12,3 @@ const checkName = (name) => {
 
   return newName
 }
-
-export default checkName

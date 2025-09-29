@@ -12,6 +12,8 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
+
+
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
@@ -19,7 +21,6 @@ import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@context/SlicerContext'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
-import useLoadRemoteProjectPages from '../../remote/useLoadRemotePages'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
@@ -28,9 +29,11 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
+import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from "@components/HelpButton/HelpButton.tsx"
+import ReportsPage from '@pages/ReportsPage/ReportsPage'
+import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 
 type NavLink = {
   name?: string
@@ -70,7 +73,7 @@ const ProjectPage = () => {
 
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
-  const isExternal = useAppSelector((state) => state.user.data.isExternal)
+  const isGuest = useAppSelector((state) => state.user.data.isGuest)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -90,7 +93,7 @@ const ProjectPage = () => {
 
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
-    addons: ['review', 'planner'],
+    addons: ['review', 'planner', 'reports'],
   })
 
   useEffect(() => {
@@ -111,7 +114,7 @@ const ProjectPage = () => {
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
-  const { remotePages, isLoading: isLoadingModules } = useLoadRemoteProjectPages({
+  const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     // fallbacks: permanentAddons,
     moduleKey: 'Project',
     skip: !projectName || !addonsData || addonsLoading || isLoading,
@@ -162,16 +165,24 @@ const ProjectPage = () => {
         enabled: matchedAddons?.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
       },
       {
+        name: 'Reports',
+        path: `/projects/${projectName}/reports`,
+        module: 'reports',
+        viewType: 'reports',
+        enabled: matchedAddons?.get('reports'), // hide the report tab until the addon is out of development
+      },
+      {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
         module: 'workfiles',
         uriSync: true,
       },
-      ...remotePages.map((remote) => ({
-        name: remote.name,
-        module: remote.module,
-        path: `/projects/${projectName}/${remote.module}`,
-      })),
+      ...remotePages
+        .map((remote) => ({
+          name: remote.name,
+          module: remote.module,
+          path: `/projects/${projectName}/${remote.module}`,
+        })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -252,6 +263,9 @@ const ProjectPage = () => {
     if (module === 'scheduler') {
       return <SchedulerPage />
     }
+    if (module === 'reports') {
+      return <ReportsPage />
+    }
 
     const foundAddon = addonsData?.find((item) => item.name === addonName)
     if (foundAddon) {
@@ -289,8 +303,8 @@ const ProjectPage = () => {
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isExternal){
-    return <ExternalUserPageLocked/>
+  if (isGuest){
+    return <GuestUserPageLocked/>
   }
 
   return (

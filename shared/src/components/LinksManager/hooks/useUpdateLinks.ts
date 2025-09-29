@@ -7,6 +7,7 @@ import {
   LinkToAdd,
   LinkToRemove,
 } from '../utils/linkUpdates'
+import { toast } from 'react-toastify'
 
 type Props = {
   projectName: string
@@ -43,6 +44,13 @@ const useUpdateLinks = ({
   const addLinks = useCallback<AddLinks>(
     async (links, addToHistory = true) => {
       try {
+        // prevent self-referential links
+        const hasSelf = links.some((l) => l.targetEntityId === entityId)
+        if (hasSelf) {
+          toast.error("You can't link an entity to itself")
+          return
+        }
+
         const linksToAdd: LinkToAdd[] = links.map((link) => ({
           targetEntityId: link.targetEntityId,
           linkId: link.linkId,
@@ -83,6 +91,13 @@ const useUpdateLinks = ({
       addToHistory: boolean = true,
     ) => {
       try {
+        // prevent removing if any link is self-referential (shouldn't happen, but guard)
+        const hasSelf = links.some((l) => l.target.entityId === entityId)
+        if (hasSelf) {
+          toast.error("You can't link an entity to itself")
+          return
+        }
+
         const linksToRemove: LinkToRemove[] = links.map((link) => ({
           id: link.id,
           target: link.target,

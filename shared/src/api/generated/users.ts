@@ -209,18 +209,15 @@ export type PasswordResetApiArg = {
 }
 export type GetMyPermissionsApiResponse = /** status 200 Successful Response */ UserPermissionsModel
 export type GetMyPermissionsApiArg = void
-export type GetMyProjectPermissionsApiResponse =
-  /** status 200 Successful Response */ ProjectPermissions
+export type GetMyProjectPermissionsApiResponse = /** status 200 Successful Response */ Permissions
 export type GetMyProjectPermissionsApiArg = {
   projectName: string
 }
-export type GetUserStudioPermissionsApiResponse =
-  /** status 200 Successful Response */ StudioPermissions
+export type GetUserStudioPermissionsApiResponse = /** status 200 Successful Response */ Permissions
 export type GetUserStudioPermissionsApiArg = {
   userName: string
 }
-export type GetUserProjectPermissionsApiResponse =
-  /** status 200 Successful Response */ ProjectPermissions
+export type GetUserProjectPermissionsApiResponse = /** status 200 Successful Response */ Permissions
 export type GetUserProjectPermissionsApiArg = {
   projectName: string
   userName: string
@@ -348,10 +345,13 @@ export type UserModel = {
   updatedAt?: string
 }
 export type LoginResponseModel = {
+  /** Text message, which may be displayed to the user */
   detail?: string
   error?: string
   token?: string
   user?: UserModel
+  /** URL to redirect the user after login */
+  redirectUrl?: string
 }
 export type PasswordResetModel = {
   token: string
@@ -386,13 +386,19 @@ export type AttributeReadAccessList = {
 }
 export type AttributeWriteAccessList = {
   enabled?: boolean
+  fields?: string[]
   attributes?: string[]
 }
 export type EndpointsAccessList = {
   enabled?: boolean
   endpoints?: string[]
 }
-export type ProjectPermissions = {
+export type ProjectAdvancedPermissions = {
+  /** If a user can access a task through the 'Assigned' permission, enabling this will also show all sibling tasks in the same folder. When disabled, only the assigned task is visible. */
+  show_sibling_tasks?: boolean
+}
+export type Permissions = {
+  studio?: StudioManagementPermissions
   project?: ProjectManagementPermissions
   /** Whitelist folders a user can create */
   create?: FolderAccessList
@@ -410,6 +416,7 @@ export type ProjectPermissions = {
   attrib_write?: AttributeWriteAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
+  advanced?: ProjectAdvancedPermissions
 }
 export type UserPermissionsModel = {
   user_level?: 'admin' | 'manager' | 'user'
@@ -417,11 +424,8 @@ export type UserPermissionsModel = {
   studio?: StudioManagementPermissions
   /** Permissions for individual projects */
   projects?: {
-    [key: string]: ProjectPermissions
+    [key: string]: Permissions
   }
-}
-export type StudioPermissions = {
-  studio?: StudioManagementPermissions
 }
 export type NewUserModel = {
   attrib?: UserAttribModel

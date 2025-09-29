@@ -2,7 +2,8 @@ import { AttributeEnumItem } from '@shared/api'
 import { Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
-import { EDIT_TRIGGER_CLASS } from './CellWidget'
+// Inline the edit trigger class to avoid runtime import and circular dependency with CellWidget
+const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 const StyledWidget = styled.div`
   display: flex;
@@ -100,8 +101,8 @@ const StyledExpandIcon = styled(Icon)`
 export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
   selectedOptions: AttributeEnumItem[]
   placeholder?: string
-  hasMultipleValues: boolean
-  isMultiSelect: boolean
+  hasMultipleValues?: boolean
+  isMultiSelect?: boolean
   isOpen?: boolean
   isItem?: boolean
   isSelected?: boolean
@@ -171,6 +172,7 @@ export const EnumCellValue = ({
                 src={option.icon}
                 className={clsx({ avatar: checkAvatarImg(option.icon) }, imgClassName)}
                 style={imgStyle}
+                data-tooltip={option.label}
                 {...imgRest}
               />
             ) : option.icon ? (

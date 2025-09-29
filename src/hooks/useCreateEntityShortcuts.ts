@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { NewEntityType } from '@context/NewEntityContext'
-import { useAppSelector } from '@state/store'
+import { useMenuContext } from '@shared/context/MenuContext'
+import { useCellEditing } from '@shared/containers'
 
 interface EntityOption {
   label: string
@@ -22,7 +23,8 @@ interface UseCreateEntityShortcutsProps {
  * @param onOpenNew Callback function to open entity creation dialog
  */
 const useCreateEntityShortcuts = ({ options, onOpenNew }: UseCreateEntityShortcutsProps) => {
-  const menuOpen = useAppSelector((state) => state.context.menuOpen)
+  const { menuOpen } = useMenuContext()
+  const { editingCellId } = useCellEditing()
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // skip if the menu is open
@@ -37,6 +39,9 @@ const useCreateEntityShortcuts = ({ options, onOpenNew }: UseCreateEntityShortcu
       ) {
         return
       }
+
+      // skip if currently editing a cell
+      if (editingCellId) return
 
       // Skip if key modifiers are pressed
       if (e.ctrlKey || e.metaKey || e.altKey) {
@@ -61,7 +66,7 @@ const useCreateEntityShortcuts = ({ options, onOpenNew }: UseCreateEntityShortcu
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [options, onOpenNew])
+  }, [options, onOpenNew, editingCellId])
 }
 
 export default useCreateEntityShortcuts

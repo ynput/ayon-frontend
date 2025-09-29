@@ -113,27 +113,35 @@ const patchEntityLinksCache = (
     otherEntity: Entity,
     linkDirection: 'in' | 'out',
   ) => {
-    // Get the entity links cache entries for this project and entity type
-    const tags = [{ type: 'link', id: `${projectName}-${entityToPatch.entityType}` }]
-    const entries = entityLinksApi.util.selectInvalidatedBy(state, tags)
+    // Get all cached query arguments for the getEntityLinks endpoint
+    const cachedArgs = entityLinksApi.util.selectCachedArgsForQuery(state, 'getEntityLinks')
 
-    for (const entry of entries) {
-      if (entry.endpointName === 'getEntityLinks') {
-        console.log(`Patching ${entityToPatch.entityType} links cache`, entry)
+    // Filter for queries that match our project and entity type
+    const relevantArgs = cachedArgs.filter(
+      (args) => args.projectName === projectName && args.entityType === entityToPatch.entityType,
+    )
+
+    let entityFoundInAnyCache = false
+
+    for (const args of relevantArgs) {
+      try {
         const patch = dispatch(
           entityLinksApi.util.updateQueryData(
             'getEntityLinks',
-            entry.originalArgs,
+            args,
             (draft: EntityWithLinks[]) => {
-              console.log(`Patching ${entityToPatch.entityType} links cache`)
               // Find the entity in the cache
               const entityInCache = draft.find((entity) => entity.id === entityToPatch.entityId)
               if (!entityInCache) {
-                console.warn(
-                  `${entityToPatch.entityType} ${entityToPatch.entityId} not found in cache`,
-                )
+                // Entity not in this specific cache, continue to next one
                 return
               }
+
+              entityFoundInAnyCache = true
+              console.log(
+                `Found and patching ${entityToPatch.entityType} ${entityToPatch.entityId} in cache`,
+              )
+
               if (isDelete) {
                 // Remove the link from the entity
                 entityInCache.links = entityInCache.links.filter((link) => link.id !== linkId)
@@ -175,6 +183,30 @@ const patchEntityLinksCache = (
         )
 
         patches.push(patch)
+      } catch (error) {
+        console.error(`Error patching cache for ${entityToPatch.entityType}:`, error)
+      }
+    }
+
+    // If entity was not found in any cache, handle based on context
+    if (!entityFoundInAnyCache) {
+      // For source entities (where user is creating the link from), we need to invalidate
+      // to ensure the user sees the new link appear in the UI
+      if (entityToPatch.entityId === sourceEntity.entityId) {
+        console.warn(
+          `Source ${entityToPatch.entityType} ${entityToPatch.entityId} not in cache - invalidating to refresh UI`,
+        )
+        dispatch(
+          entityLinksApi.util.invalidateTags([
+            { type: 'link', id: `${projectName}-${entityToPatch.entityType}` },
+          ]),
+        )
+      } else {
+        // For target entities, we can skip since they're not currently visible
+        console.log(
+          `Target ${entityToPatch.entityType} ${entityToPatch.entityId} not in cache - skipping patch (entity not currently visible)`,
+        )
+        // No action needed - when the entity is eventually loaded, it will have the correct links from the server
       }
     }
   }
@@ -229,6 +261,14 @@ const enhancedApi = linksApi.enhanceEndpoints({
             for (const patch of patches) {
               patch.undo()
             }
+
+            // Invalidate entity links queries as fallback
+            dispatch(
+              entityLinksApi.util.invalidateTags([
+                { type: 'link', id: `${projectName}-${sourceEntity.entityType}` },
+                { type: 'link', id: `${projectName}-${targetEntity.entityType}` },
+              ]),
+            )
           }
         } else {
           console.warn('Source or target entity not provided for link deletion')
@@ -331,6 +371,16 @@ const enhancedApi = linksApi.enhanceEndpoints({
           // Undo patches if the mutation fails
           for (const patch of patches) {
             patch.undo()
+          }
+
+          // Invalidate entity links queries as fallback
+          if (sourceEntity && targetEntity) {
+            dispatch(
+              entityLinksApi.util.invalidateTags([
+                { type: 'link', id: `${projectName}-${sourceEntity.entityType}` },
+                { type: 'link', id: `${projectName}-${targetEntity.entityType}` },
+              ]),
+            )
           }
         }
       },

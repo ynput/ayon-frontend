@@ -4,7 +4,7 @@ import {
   useDeleteViewMutation,
   useUpdateViewMutation,
 } from '@shared/api'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { ViewData } from '../context/ViewsContext'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
@@ -18,9 +18,13 @@ type Props = {
 }
 
 export type UseViewMutations = {
-  onCreateView: (payload: CreateViewApiArg['payload']) => Promise<void>
-  onDeleteView: (viewId: string) => Promise<void>
-  onUpdateView: (viewId: string, payload: Partial<ViewData>) => Promise<void>
+  onCreateView: (payload: CreateViewApiArg['payload'], isStudioScope: boolean) => Promise<void>
+  onDeleteView: (viewId: string, isStudioScope: boolean) => Promise<void>
+  onUpdateView: (
+    viewId: string,
+    payload: Partial<ViewData>,
+    isStudioScope: boolean,
+  ) => Promise<void>
   onResetWorkingView: (args?: {
     existingWorkingViewId?: string
     selectedViewId?: string
@@ -44,7 +48,7 @@ export const useViewsMutations = ({
   const [updateView] = useUpdateViewMutation()
 
   const onCreateView = useCallback<R['onCreateView']>(
-    async (payload) => {
+    async (payload, isStudioScope) => {
       if (!viewType) {
         throw new Error('viewType are required for creating a view')
       }
@@ -52,7 +56,7 @@ export const useViewsMutations = ({
       try {
         await createView({
           viewType: viewType,
-          projectName: projectName,
+          projectName: isStudioScope ? undefined : projectName,
           payload,
         }).unwrap()
 
@@ -68,7 +72,7 @@ export const useViewsMutations = ({
   )
 
   const onUpdateView = useCallback<R['onUpdateView']>(
-    async (viewId, payload) => {
+    async (viewId, payload, isStudioScope) => {
       if (!viewType) {
         throw new Error('viewType are required for updating a view')
       }
@@ -77,7 +81,7 @@ export const useViewsMutations = ({
         await updateView({
           viewId,
           viewType,
-          projectName,
+          projectName: isStudioScope ? undefined : projectName,
           payload,
         }).unwrap()
 
@@ -93,7 +97,7 @@ export const useViewsMutations = ({
   )
 
   const onDeleteView = useCallback<R['onDeleteView']>(
-    async (viewId) => {
+    async (viewId, isStudioScope) => {
       if (!viewType) {
         throw new Error('viewType are required for deleting a view')
       }
@@ -101,7 +105,7 @@ export const useViewsMutations = ({
       try {
         await deleteView({
           viewType: viewType,
-          projectName: projectName,
+          projectName: isStudioScope ? undefined : projectName,
           viewId,
         }).unwrap()
 

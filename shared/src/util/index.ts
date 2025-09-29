@@ -12,6 +12,9 @@ export * from './getEntityId'
 export * from './extractVersionFromFilename'
 export * from './versionUploadHelpers'
 export * from './columnConfigConverter'
+export * from './checkName'
+export * from './humanizeFieldName'
+export * from './parseHtmlToPlainTextWithLinks'
 
 export { productTypes }
 import PubSub from './pubsub'

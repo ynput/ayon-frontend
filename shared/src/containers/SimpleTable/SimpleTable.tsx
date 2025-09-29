@@ -20,9 +20,7 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual'
 
 import clsx from 'clsx'
-import useRowKeydown, {
-  RowKeyboardEvent,
-} from '../../../../src/containers/Slicer/hooks/useRowKeydown'
+import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
 import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
@@ -102,6 +100,8 @@ export type SimpleTableRow = {
   endContent?: JSX.Element
   subRows: SimpleTableRow[]
   data: RowItemData
+  isDisabled?: boolean
+  disabledMessage?: string
 }
 
 export interface SimpleTableProps {
@@ -220,6 +220,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       if (!currentRow) return
 
+      // Prevent selection of disabled rows
+      if (currentRow.original.isDisabled) return
+
       // If click-to-deselect is enabled and only one row is selected and it's the current row
       if (
         enableClickToDeselect &&
@@ -318,7 +321,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
           const props: SimpleTableCellTemplateProps & {
             onClick?: (event: ReactMouseEvent<HTMLElement, MouseEvent>) => void
           } = {
-            className: clsx({ selected: row.getIsSelected(), loading: cellMeta?.isLoading }),
+            className: clsx({
+              selected: row.getIsSelected(),
+              loading: cellMeta?.isLoading,
+              disabled: row.original.isDisabled,
+            }),
             onKeyDown: (e) => {
               if (e.target instanceof HTMLInputElement) return
               // Corrected typo: handleRowKeydown -> handleRowKeyDown
@@ -337,6 +344,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
             onExpandClick: row.getToggleExpandedHandler(),
             startContent: row.original.startContent,
             endContent: row.original.endContent,
+            isDisabled: row.original.isDisabled,
+            disabledMessage: row.original.disabledMessage,
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate

@@ -33,6 +33,7 @@ const ProjectManagerPageContainer = ({
               onNoProjectSelected={onNoProject}
               onSelect={onSelect}
               multiSelect={false}
+              showInactive={true}
             />
           </>
         ),

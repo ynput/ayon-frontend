@@ -9,6 +9,7 @@ import BundleCompare from './BundleCompare'
 import useAddonSelection from './useAddonSelection'
 import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
 
 type Installer = { version: string; platforms?: string[] }
@@ -147,7 +148,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           onClick={() => onDuplicate(bundle.name)}
           disabled={selectedBundles.length > 1}
           data-tooltip="Creates new duplicated bundle"
-          data-shortcut="shift+D"
+          data-shortcut={getPlatformShortcutKey('D', [KeyMode.Shift])}
         />
       </Toolbar>
       {selectedBundles.length > 1 && selectedBundles.length < 5 ? (

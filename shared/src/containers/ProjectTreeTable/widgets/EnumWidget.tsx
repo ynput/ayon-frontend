@@ -2,7 +2,7 @@ import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-componen
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { WidgetBaseProps } from './CellWidget'
+import type { WidgetBaseProps } from './CellWidget'
 import { AttributeData, AttributeEnumItem } from '../types'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
@@ -53,22 +53,25 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     )
 
     // Check if all values are present in options, if not, add a warning
+    const invalidOptions: AttributeEnumItem[] = []
     valueAsStrings.forEach((val) => {
       if (!options.find((option) => option.value === val)) {
-        selectedOptions = [
-          ...selectedOptions,
-          {
-            label: val,
-            value: val,
-            color: enableCustomValues
-              ? 'var(--md-sys-color-surface-container)'
-              : 'var(--md-sys-color-error)',
-            icon: enableCustomValues ? undefined : 'warning',
-          },
-        ]
+        const invalidOption = {
+          label: val,
+          value: val,
+          color: enableCustomValues
+            ? 'var(--md-sys-color-surface-container)'
+            : 'var(--md-sys-color-error)',
+          icon: enableCustomValues ? undefined : 'warning',
+        }
+        selectedOptions = [...selectedOptions, invalidOption]
+        invalidOptions.push(invalidOption)
       }
     })
     const hasMultipleValues = selectedOptions.length > 1
+
+    // Merge valid options with invalid options for the dropdown
+    const allOptions = [...options, ...invalidOptions]
 
     const dropdownRef = useRef<DropdownRef>(null)
 
@@ -84,7 +87,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     // when the dropdown is open, focus the first item
     useEffect(() => {
-      if (dropdownOpen) {
+      if (dropdownOpen && !dropdownProps.search) {
         const optionsUlEl = dropdownRef.current?.getOptions() as HTMLUListElement
         const firstItem = optionsUlEl?.querySelector('li')
         if (firstItem) {
@@ -93,7 +96,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           firstItem.style.outline = 'none'
         }
       }
-    }, [dropdownOpen])
+    }, [dropdownOpen, dropdownProps.search])
 
     const isMultiSelect = !!type?.includes('list')
 
@@ -113,7 +116,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     if (isEditing) {
       return (
         <StyledDropdown
-          options={options}
+          options={allOptions}
           value={valueAsStrings}
           ref={dropdownRef}
           valueTemplate={(_value, selected, isOpen) => (
