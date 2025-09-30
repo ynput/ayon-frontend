@@ -27,7 +27,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const allColumnsRef = React.useRef<string[]>([])
 
   // Internal state for immediate updates (similar to column sizing)
-  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
   const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
 
   // Local row height state that persists and doesn't get overridden by API
@@ -39,9 +38,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
-  const onChangeWithColumns = (next: ColumnsConfig) => {
-    onChange(next, allColumnsRef.current)
-  }
+  const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
   const columnsConfig = config as ColumnsConfig
 
   const {
@@ -55,10 +52,12 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     rowHeight: configRowHeight,
   } = columnsConfig || {}
 
-  // Initialize local row height from API when config first loads, but don't override during user adjustments
+  // Initialize local row height from API only once on mount
+  const hasInitializedRef = React.useRef(false)
   React.useEffect(() => {
-    if (configRowHeight !== undefined && !isAdjustingRowHeightRef.current) {
+    if (!hasInitializedRef.current && configRowHeight !== undefined && configRowHeight !== null) {
       setLocalRowHeight(configRowHeight)
+      hasInitializedRef.current = true
     }
   }, [configRowHeight])
 
@@ -145,29 +144,17 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   // use internalColumnSizing if it exists, otherwise use the external column sizing
-  const columnSizing = internalColumnSizing || columnsSizingExternal
+  const columnSizing = columnsSizingExternal
 
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   const setColumnSizing = (sizing: ColumnSizingState) => {
-    setInternalColumnSizing(sizing)
 
     // if there is a timeout already set, clear it
     if (resizingTimeoutRef.current) {
       clearTimeout(resizingTimeoutRef.current)
     }
-    // set a timeout that tracks if the column sizing has finished
-    resizingTimeoutRef.current = setTimeout(() => {
-      // we have finished resizing now!
-      // update the external column sizing
-      onChangeWithColumns({
-        ...columnsConfig,
-        columnSizing: sizing,
-      })
-      // reset the internal column sizing to not be used anymore
-      setInternalColumnSizing(null)
-    }, 500)
   }
 
   // SIDE EFFECT UTILITIES
@@ -279,7 +266,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     // Debounce API call to avoid excessive requests
     rowHeightTimeoutRef.current = setTimeout(() => {
       // Auto-adjust thumbnail width if needed
-      const currentColumnSizing = internalColumnSizing || columnsSizingExternal
+      const currentColumnSizing =  columnsSizingExternal
       const currentThumbnailWidth = currentColumnSizing.thumbnail || 150
       const shouldUpdateThumbnailWidth = currentThumbnailWidth < newRowHeight
 
