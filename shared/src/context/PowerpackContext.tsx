@@ -100,6 +100,9 @@ export const PowerpackProvider = ({
   // check license state
   const [powerLicense, setPowerLicense] = useState(false)
 
+  // loading state
+  const [isLoading, setIsLoading] = useState(true)
+
   // Define the type for the license check function
   type CheckPowerLicenseFunction = () => Promise<boolean>
 
@@ -107,7 +110,7 @@ export const PowerpackProvider = ({
   const fallbackCheckLicense: CheckPowerLicenseFunction = async () => false
 
   // Load the remote module
-  const [checkPowerLicense, { isLoaded, isLoading }] = useLoadModule<CheckPowerLicenseFunction>({
+  const [checkPowerLicense, { isLoaded }] = useLoadModule<CheckPowerLicenseFunction>({
     addon: 'powerpack',
     remote: 'license',
     module: 'checkPowerLicense',
@@ -119,6 +122,7 @@ export const PowerpackProvider = ({
       if (debug?.powerLicense !== undefined) {
         console.warn('Using debug power license:', debug.powerLicense)
         setPowerLicense(debug.powerLicense)
+        setIsLoading(false)
       } else if (isLoaded) {
         try {
           const hasPowerLicense = await checkPowerLicense()
@@ -127,6 +131,7 @@ export const PowerpackProvider = ({
           console.error('Error checking power license:', error)
           setPowerLicense(false)
         }
+        setIsLoading(false)
       }
     }
 
