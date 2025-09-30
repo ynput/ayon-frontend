@@ -6,6 +6,7 @@ const userSlice = createSlice({
   initialState: {
     name: '',
     redirectUrl: null,
+    avatarKey: '',
     data: {
       frontendPreferences: {
         notifications: false,
@@ -75,6 +76,9 @@ const userSlice = createSlice({
         ...action.payload,
       }
     },
+    updateAvatarKey: (state) => {
+      state.avatarKey = `?${Date.now()}`
+    },
   },
 })
 
@@ -85,5 +89,6 @@ export const {
   updateUserData,
   updateUserPreferences,
   toggleDevMode,
+  updateAvatarKey,
 } = userSlice.actions
 export default userSlice.reducer

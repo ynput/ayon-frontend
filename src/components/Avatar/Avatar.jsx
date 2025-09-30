@@ -7,8 +7,11 @@ import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
 import Menu from '@components/Menu/MenuComponents/Menu'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useDeleteAvatarMutation } from '@shared/api'
+import { useDispatch } from 'react-redux'
+import { updateAvatarKey } from '@state/user'
 
 const Avatar = ({ user }) => {
+  const dispatch = useDispatch()
   const fileInput = useRef(null)
   const [imageKey, setImageKey] = useState(null)
   const { setMenuOpen } = useMenuContext()
@@ -27,6 +30,8 @@ const Avatar = ({ user }) => {
       await axios.put(`/api/users/${user_name}/avatar`, file, opts)
       toast.success('Profile updated')
       setImageKey(imageKey)
+      // Update global avatar key to refresh all avatar instances
+      dispatch(updateAvatarKey())
     } catch (error) {
       console.log(error)
       toast.error('Unable to update avatar')
@@ -45,6 +50,8 @@ const Avatar = ({ user }) => {
       await deleteAvatar({ userName: user.name }).unwrap()
       toast.success('Avatar removed')
       setImageKey(`?${Date.now()}`)
+      // Update global avatar key to refresh all avatar instances
+      dispatch(updateAvatarKey())
     } catch (error) {
       console.log(error)
       toast.error('Unable to remove avatar')

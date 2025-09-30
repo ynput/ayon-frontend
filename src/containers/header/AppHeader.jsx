@@ -81,6 +81,7 @@ const Header = () => {
   const navigate = useNavigate()
   // get user from redux store
   const user = useAppSelector((state) => state.user)
+  const avatarKey = useAppSelector((state) => state.user.avatarKey)
 
   // restart server notification
   const { isSnoozing } = useRestart()
@@ -231,7 +232,7 @@ const Header = () => {
           variant="nav"
           style={{ padding: 6 }}
         >
-          <UserImage size={26} name={user?.name} />
+          <UserImage size={26} name={user?.name} imageKey={avatarKey} />
         </HeaderButton>
         <MenuContainer id="user" target={userButtonRef.current}>
           <UserMenu user={user} />
