@@ -7,7 +7,7 @@ import { dependencies } from './package.json'
 export default ({ mode }) => {
   Object.assign(process?.env, loadEnv(mode, process?.cwd(), ''))
 
-  let SERVER_URL = 'https://demo1.ayon.dev'
+  let SERVER_URL = 'http://localhost:5000'
 
   // use .env if valid
   if (process?.env?.SERVER_URL) {

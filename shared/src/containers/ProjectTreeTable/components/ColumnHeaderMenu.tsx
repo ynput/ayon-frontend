@@ -79,7 +79,8 @@ export const ColumnHeaderMenu = ({
 
   // helpers for group by logic
   const columnId = String(column.id)
-  const { canGroupThisColumn, groupLabel, groupBySelectedColumn } = useColumnGroupBy(columnId)
+  const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } = useColumnGroupBy(columnId)
+  const { groupBy } = useColumnSettingsContext()
 
   const menuItems: Array<{
     id: string
@@ -154,12 +155,19 @@ export const ColumnHeaderMenu = ({
     columnId !== 'name' &&
     columnId !== 'thumbnail'
   ) {
+    // Check if this column is currently being used for grouping
+    const isCurrentlyGrouped = groupBy?.id === targetGroupById
+    
     menuItems.push({
       id: 'group-by',
-      label: `Group by ${groupLabel}`,
+      label: isCurrentlyGrouped ? 'Ungroup' : `Group by ${groupLabel}`,
       icon: 'splitscreen',
       onClick: () => {
-        groupBySelectedColumn()
+        if (isCurrentlyGrouped) {
+          updateGroupBy(undefined)
+        } else {
+          groupBySelectedColumn()
+        }
         handleMenuToggle(false)
       },
     })
