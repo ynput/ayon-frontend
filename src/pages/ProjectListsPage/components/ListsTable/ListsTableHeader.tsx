@@ -176,7 +176,15 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       label: isReview ? 'Create review session' : 'Create list',
       icon: 'add',
       shortcut: 'N',
-      onClick: () => openNewList(),
+      onClick: () => {
+        // If a single folder is selected, create list inside that folder
+        if (selectedFolders.length === 1) {
+          openNewList({ entityListFolderId: selectedFolders[0] })
+        } else {
+          // No selection or multiple folders, create at root level
+          openNewList()
+        }
+      },
       isPinned: true,
       buttonProps: {
         icon: 'add',

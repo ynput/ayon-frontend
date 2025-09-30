@@ -41,77 +41,101 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
 
       let actionExecuted = false
 
+      const selectedRowIds = Object.keys(rowSelection)
+      const selectedFolderIds = selectedRowIds
+        .map((rowId) => parseListFolderRowId(rowId))
+        .filter((id): id is string => !!id)
+      const selectedListIds = selectedRowIds.filter((rowId) => !parseListFolderRowId(rowId))
+
+      // Categorize selection types
+      const allSelectedRowsAreLists =
+        selectedRowIds.length > 0 &&
+        selectedRowIds.every((selected) => selectedLists.some((list) => list?.id === selected))
+      const allSelectedRowsAreFolders =
+        selectedRowIds.length > 0 &&
+        selectedRowIds.every((selected) => parseListFolderRowId(selected))
+      const hasMultipleSelected = selectedRowIds.length > 1
+      const firstSelectedRow = selectedRowIds[0]
+      const isFirstRowFolder = !!parseListFolderRowId(firstSelectedRow)
+
       // Handle different key combinations
       if (key === 'n' && !isMeta && !isShift && !isAlt) {
         // 'n' - Create new list
-        e.preventDefault()
-        openNewList()
-        actionExecuted = true
+        // Only allow if no selection, single folder selected, or only folders selected
+        if (selectedRowIds.length === 0) {
+          // No selection, create list at root level
+          e.preventDefault()
+          openNewList()
+          actionExecuted = true
+        } else if (allSelectedRowsAreFolders && !hasMultipleSelected) {
+          // Single folder selected, create list inside that folder
+          e.preventDefault()
+          openNewList({ entityListFolderId: selectedFolderIds[0] })
+          actionExecuted = true
+        }
       } else if (key === 'f' && !isMeta && !isShift && !isAlt) {
         // 'f' - Create folder
         e.preventDefault()
         // Don't allow creating folders if user is not admin/manager
         if (isUser) return
 
-        const selectedRowIds = Object.keys(rowSelection)
-
         if (selectedRowIds.length === 0) {
           // No selection, create root folder
           onOpenFolderList({})
-          return
+          actionExecuted = true
+        } else if (allSelectedRowsAreFolders) {
+          // All selected rows are folders, create subfolder(s)
+          onOpenFolderList({ parentIds: selectedFolderIds })
+          actionExecuted = true
+        } else if (allSelectedRowsAreLists) {
+          // All selected rows are lists, create folder with these lists
+          const firstListParentId = selectedLists.find((list) =>
+            selectedListIds.includes(list.id),
+          )?.entityListFolderId
+          onOpenFolderList({
+            listIds: selectedListIds,
+            parentIds: firstListParentId ? [firstListParentId] : [],
+          })
+          actionExecuted = true
         }
-
-        // Check if first selected row is a folder
-        const firstSelectedRow = selectedRowIds[0]
-        const selectedFolderId = parseListFolderRowId(firstSelectedRow)
-
-        if (selectedFolderId) {
-          // Selected row is a folder, create subfolder
-          onOpenFolderList({ parentId: selectedFolderId })
-        } else {
-          // Selected rows are lists, create folder with these lists
-          const selectedListIds = selectedRowIds.filter((rowId) => !parseListFolderRowId(rowId))
-          onOpenFolderList({ listIds: selectedListIds })
-        }
-        actionExecuted = true
-      } else if (key === 'f' && isShift) {
-        // 'shift+alt+f' - Remove folder/list from parent folder
+        // Mixed selection - no action
+      } else if (key === 'f' && isShift && !isAlt) {
+        // 'shift+f' - Remove folder/list from parent folder
         e.preventDefault()
         // Don't allow removing from folders if user is not admin/manager
         if (isUser) return
 
-        const selectedRowIds = Object.keys(rowSelection)
         if (selectedRowIds.length === 0) return
 
-        const selectedFolderIds = selectedRowIds
-          .map((rowId) => parseListFolderRowId(rowId))
-          .filter((id): id is string => !!id)
-
-        if (selectedFolderIds?.length) {
-          // remove parents from all selected folders
+        if (allSelectedRowsAreFolders) {
+          // Remove parent from all selected folders
           onRemoveFoldersFromFolder(selectedFolderIds)
-        } else {
+          actionExecuted = true
+        } else if (allSelectedRowsAreLists) {
           // Selected rows are lists, remove them from their folders
-          const selectedListIds = selectedRowIds.filter((rowId) => !parseListFolderRowId(rowId))
           const listsWithFolders = selectedLists.filter(
             (list) => selectedListIds.includes(list.id) && list.entityListFolderId,
           )
 
           if (listsWithFolders.length > 0) {
             onRemoveListsFromFolder(selectedListIds)
+            actionExecuted = true
           }
         }
+        // Mixed selection - no action
       } else if (key === 'r' && !isMeta && !isShift && !isAlt) {
-        // 'r' - Rename selected item
-        if (!rowSelection) return
-        const firstSelectedRow = Object.keys(rowSelection)[0]
+        // 'r' - Rename selected item (only works with single selection)
+        if (!rowSelection || hasMultipleSelected) return
 
         // Don't allow renaming folders if user is not admin/manager
-        if (parseListFolderRowId(firstSelectedRow) && isUser) return
+        if (isFirstRowFolder && isUser) return
 
-        e.preventDefault()
-        openRenameList(firstSelectedRow)
-        actionExecuted = true
+        // Only allow renaming if it's a single list or single folder
+        if (allSelectedRowsAreLists || allSelectedRowsAreFolders) {
+          e.preventDefault()
+          openRenameList(firstSelectedRow)
+          actionExecuted = true
+        }
       }
 
       if (actionExecuted) {

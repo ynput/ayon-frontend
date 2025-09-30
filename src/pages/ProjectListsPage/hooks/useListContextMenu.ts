@@ -310,7 +310,14 @@ const useListContextMenu = () => {
         {
           label: 'Create list',
           icon: 'add',
-          command: () => openNewList(),
+          command: () => {
+            // If a single folder is selected, create list inside that folder
+            if (selectedFolderIds.length === 1) {
+              openNewList({ entityListFolderId: selectedFolderIds[0] })
+            } else {
+              openNewList()
+            }
+          },
           shortcut: 'N',
           hidden: !isSelectedRowFolder,
           disabled: selectedFolderIds.length > 1,
