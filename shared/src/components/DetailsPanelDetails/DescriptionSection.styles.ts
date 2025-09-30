@@ -159,6 +159,15 @@ export const StyledEditor = styled.div`
         background-color: var(--md-sys-color-surface-container-lowest);
         padding: var(--padding-m);
         border-radius: var(--border-radius-m);
+        font-family: monospace;
+        margin-bottom: 12px;
+      }
+
+      .ql-code-block-container .ql-code-block,
+      .ql-code-block-container .ql-code-block *,
+      .ql-code-block-container * {
+        font-family: monospace;
+        font-size: var(--md-sys-typescale-body-small-font-size);
       }
 
       a {
@@ -381,7 +390,7 @@ export const StyledQuillContainer = styled.div`
     a {
       pointer-events: auto !important;
       cursor: pointer !important;
-      
+
       &:hover {
         text-decoration: underline;
       }
