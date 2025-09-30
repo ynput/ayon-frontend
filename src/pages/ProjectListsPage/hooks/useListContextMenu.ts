@@ -138,6 +138,19 @@ const useListContextMenu = () => {
         parseListFolderRowId(selected),
       )
 
+      // ownership / permissions
+      const currentUserName =
+        (user as any)?.data?.name || (user as any)?.data?.username || (user as any)?.name
+      const userOwnsAllSelectedLists =
+        newSelectedLists.length > 0 &&
+        newSelectedLists.every((l) => !!currentUserName && l.owner === currentUserName)
+      const selectedFoldersAll: EntityListFolderModel[] = selectedFolderIds
+        .map((id) => listFolders.find((f) => f.id === id))
+        .filter((f): f is EntityListFolderModel => !!f)
+      const userOwnsAllSelectedFolders =
+        selectedFoldersAll.length > 0 &&
+        selectedFoldersAll.every((f) => !!currentUserName && f.owner === currentUserName)
+
       // Create recursive folder submenu
       const createFolderHierarchy = (
         folders: (EntityListFolderModel & { children: EntityListFolderModel[] })[],
@@ -259,11 +272,15 @@ const useListContextMenu = () => {
           label: allSelectedRowsAreFolders ? 'Move folder' : 'Move list',
           icon: FOLDER_ICON,
           items: allSelectedRowsAreLists ? listFolderSubmenu : folderFolderSubmenu,
+          // Structural disabling only (no selection); ownership handled via hidden
           disabled: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
           hidden:
             (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
             (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
-            (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0),
+            (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0) ||
+            (isUser &&
+              ((allSelectedRowsAreLists && !userOwnsAllSelectedLists) ||
+                (allSelectedRowsAreFolders && !userOwnsAllSelectedFolders))),
         })
       }
 
@@ -272,8 +289,13 @@ const useListContextMenu = () => {
           label: 'Rename',
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
-          disabled: multipleSelected || (isSelectedRowFolder && isUser),
-          hidden: !allSelectedRowsAreLists && !isSelectedRowFolder,
+          // Hide for users without ownership; still disable for multi-select
+          disabled: multipleSelected,
+          hidden:
+            (!allSelectedRowsAreLists && !isSelectedRowFolder) ||
+            (isUser &&
+              ((isSelectedRowFolder && selectedFolder?.owner !== currentUserName) ||
+                (!isSelectedRowFolder && selectedList?.owner !== currentUserName))),
         },
         {
           label: 'Create review',
@@ -289,7 +311,10 @@ const useListContextMenu = () => {
             const folderId = firstSelectedRow.replace('folder-', '')
             onOpenFolderList({ folderId })
           },
-          hidden: !isSelectedRowFolder || multipleSelected,
+          hidden:
+            !isSelectedRowFolder ||
+            multipleSelected ||
+            (isSelectedRowFolder && isUser && selectedFolder?.owner !== currentUserName),
         },
         {
           label: 'Create list',
@@ -368,7 +393,11 @@ const useListContextMenu = () => {
               deleteLists(Object.keys(newSelection), { force: forceDelete })
             }
           },
-          hidden: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
+          hidden:
+            (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
+            (isUser &&
+              ((allSelectedRowsAreLists && !userOwnsAllSelectedLists) ||
+                (allSelectedRowsAreFolders && !userOwnsAllSelectedFolders))),
         },
       ]
 

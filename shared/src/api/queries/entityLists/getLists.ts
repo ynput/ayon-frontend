@@ -130,7 +130,10 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             getListsGqlApiEnhanced.endpoints.GetLists.initiate(queryParams, { forceRefetch: true }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            // Preserve original error (e.g. 403) so the UI can react accordingly
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -254,7 +257,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -371,7 +376,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {

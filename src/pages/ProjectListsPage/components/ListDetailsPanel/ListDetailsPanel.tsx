@@ -20,6 +20,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     data: list,
     isFetching,
     isLoading,
+    error,
   } = useGetEntityListQuery({ listId, projectName }, { skip: !listId })
 
   const { setListDetailsOpen } = useListsContext()
@@ -33,6 +34,29 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
   const isReview = list?.entityListType === 'review-session'
 
   const [selectedTab, setSelectedTab] = useState<ListDetailsTab>('details')
+
+  // derive error message
+  let errorMessage: string | null = null
+  if (error && 'status' in error) {
+    const status = error.status
+    if (status === 403) {
+      errorMessage = 'You do not have access to this folder.'
+    } else if (typeof status === 'number') {
+      errorMessage = `Failed to load list (Error ${status}).`
+    } else {
+      errorMessage = 'Failed to load list.'
+    }
+  }
+
+  if (errorMessage)
+    return (
+      <Styled.Panel>
+        <Styled.CloseButton icon="close" variant="text" onClick={() => setListDetailsOpen(false)} />
+        <Styled.Section>
+          <p>{errorMessage}</p>
+        </Styled.Section>
+      </Styled.Panel>
+    )
 
   return (
     <Styled.Panel>
