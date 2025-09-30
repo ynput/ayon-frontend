@@ -17,6 +17,7 @@ import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './FeedWrapper'
 import FeedContextWrapper from './FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
+import { DetailsPanelMoreMenu } from './DetailsPanelMoreMenu'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -41,11 +42,11 @@ export type DetailsPanelProps = {
   onClose?: () => void
   onWatchersUpdate?: (added: any[], removed: any[]) => void
   onOpenViewer?: (entity: any) => void
-  onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   // annotations
-  annotations?: any
+  annotations?: Record<string, unknown>
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
+  entityListsContext?: Record<string, unknown>
 }
 
 export const DetailsPanel = ({
@@ -69,11 +70,11 @@ export const DetailsPanel = ({
   onClose,
   onWatchersUpdate,
   onOpenViewer,
-  onEntityFocus,
   // annotations
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
+  entityListsContext,
 }: DetailsPanelProps) => {
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
@@ -133,6 +134,7 @@ export const DetailsPanel = ({
     isFetching: isFetchingEntitiesDetails,
     isError,
     originalArgs,
+    refetch,
   } = useGetEntitiesDetailsPanelQuery(
     { entityType, entities: entitiesToQuery },
     {
@@ -208,18 +210,20 @@ export const DetailsPanel = ({
             entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
+            <DetailsPanelMoreMenu
+              entityType={entityType}
+              firstEntityData={firstEntityData}
+              firstProject={firstProject}
+              onOpenPip={handleOpenPip}
+              refetch={refetch}
+              entityListsContext={entityListsContext}
+            />
             <Watchers
               entities={entitiesToQuery}
               entityType={entityType}
               options={projectUsers || []}
               onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
               userName={user.name}
-            />
-            <Button
-              icon="picture_in_picture"
-              variant={'text'}
-              data-tooltip="Picture in Picture"
-              onClick={handleOpenPip}
             />
 
             {onClose && (
@@ -247,7 +251,6 @@ export const DetailsPanel = ({
           onTabChange={setTab}
           entityTypeIcons={entityTypeIcons}
           onOpenViewer={(args) => onOpenViewer?.(args)}
-          onEntityFocus={onEntityFocus}
         />
         {isFeed && !isError && (
           <FeedWrapper

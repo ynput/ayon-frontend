@@ -2,6 +2,7 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import { detailsPanelEntityTypes, useGetUsersAssigneeQuery } from '@shared/api'
 import type { ProjectModel } from '@shared/api'
 import {
@@ -16,6 +17,9 @@ import { openViewer } from '@state/viewer'
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+  selectedList?: any
+  currentListItems?: any[]
+  currentListId?: string
 }
 
 type EntitySelection = {
@@ -73,22 +77,31 @@ const ProjectOverviewDetailsPanel = ({
   }
 
   return (
-    <>
-      <DetailsPanel
-        entityType={entityType}
-        entities={entities}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName]}
-        tagsOptions={projectInfo.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="overview"
-        onClose={handleClose}
-        onOpenViewer={handleOpenViewer}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          <DetailsPanel
+            entityType={entityType}
+            entities={entities}
+            projectsInfo={projectsInfo}
+            projectNames={[projectName]}
+            tagsOptions={projectInfo.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="overview"
+            onClose={handleClose}
+            onOpenViewer={handleOpenViewer}
+            entityListsContext={entityListsContext}
+          />
+          <DetailsPanelSlideOut
+            projectsInfo={projectsInfo}
+            scope="overview"
+            entityListsContext={entityListsContext}
+          />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 
