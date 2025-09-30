@@ -20,6 +20,7 @@ import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { openViewer } from '@state/viewer'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -253,23 +254,34 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
             minWidth: isDragging ? 0 : detailsMinWidth,
           }}
         >
-          <DetailsPanel
-            onClose={handlePanelClose}
-            entitiesData={selectedTasksData}
-            disabledStatuses={disabledStatuses}
-            tagsOptions={tagsOptions}
-            projectUsers={projectUsers}
-            activeProjectUsers={activeProjectUsers}
-            disabledProjectUsers={disabledProjectUsers}
-            selectedTasksProjects={selectedTasksProjects}
-            projectsInfo={projectsInfo}
-            projectNames={selectedTasksProjects}
-            entityType="task"
-            entitySubTypes={taskTypes}
-            scope="dashboard"
-            onOpenViewer={handleOpenViewer}
-          />
-          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
+          <EntityListsContextBoundary projectName={selectedTasksProjects[0]}>
+            {(entityListsContext) => (
+              <>
+                <DetailsPanel
+                  onClose={handlePanelClose}
+                  entitiesData={selectedTasksData}
+                  disabledStatuses={disabledStatuses}
+                  tagsOptions={tagsOptions}
+                  projectUsers={projectUsers}
+                  activeProjectUsers={activeProjectUsers}
+                  disabledProjectUsers={disabledProjectUsers}
+                  selectedTasksProjects={selectedTasksProjects}
+                  projectsInfo={projectsInfo}
+                  projectNames={selectedTasksProjects}
+                  entityType="task"
+                  entitySubTypes={taskTypes}
+                  scope="dashboard"
+                  onOpenViewer={handleOpenViewer}
+                  entityListsContext={entityListsContext}
+                />
+                <DetailsPanelSlideOut
+                  projectsInfo={projectsInfo}
+                  scope="dashboard"
+                  entityListsContext={entityListsContext}
+                />
+              </>
+            )}
+          </EntityListsContextBoundary>
         </SplitterPanel>
       ) : (
         <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
