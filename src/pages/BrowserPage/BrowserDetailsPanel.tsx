@@ -7,7 +7,7 @@ import { openViewer, ViewerState } from '@state/viewer'
 // shared
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery, useGetProjectsInfoQuery, ProjectModel, DetailsPanelEntityType } from '@shared/api'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 interface FocusedEntity {
   id: string
@@ -33,36 +33,34 @@ const BrowserDetailsPanel = () => {
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
-  let entityListsContext: Record<string, unknown> | undefined = undefined
-  try {
-    entityListsContext = useEntityListsContext() as unknown as Record<string, unknown>
-  } catch (error) {
-    console.log('BrowserDetailsPanel - entityListsContext not available:', error)
-  }
-
   if (!entities.length) return null
 
   return (
-    <>
-      <DetailsPanel
-        entitySubTypes={subTypes}
-        entityType={entityType}
-        entities={entities}
-        projectsInfo={projectsInfo as Record<string, ProjectModel>}
-        projectNames={[projectName]}
-        tagsOptions={projectInfo?.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="project"
-        onOpenViewer={handleOpenViewer}
-        entityListsContext={entityListsContext}
-      />
-      <DetailsPanelSlideOut
-        projectsInfo={projectsInfo as Record<string, ProjectModel>}
-        scope="project"
-      />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          <DetailsPanel
+            entitySubTypes={subTypes}
+            entityType={entityType}
+            entities={entities}
+            projectsInfo={projectsInfo as Record<string, ProjectModel>}
+            projectNames={[projectName]}
+            tagsOptions={projectInfo?.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="project"
+            onOpenViewer={handleOpenViewer}
+            entityListsContext={entityListsContext}
+          />
+          <DetailsPanelSlideOut
+            projectsInfo={projectsInfo as Record<string, ProjectModel>}
+            scope="project"
+            entityListsContext={entityListsContext}
+          />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

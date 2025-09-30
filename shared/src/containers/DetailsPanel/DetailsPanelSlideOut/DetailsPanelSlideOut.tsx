@@ -7,9 +7,14 @@ import type { ProjectModel } from '@shared/api'
 export type DetailsPanelSlideOutProps = {
   projectsInfo: Record<string, ProjectModel>
   scope: string
+  entityListsContext?: Record<string, unknown>
 }
 
-export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideOutProps) => {
+export const DetailsPanelSlideOut = ({
+  projectsInfo,
+  scope,
+  entityListsContext,
+}: DetailsPanelSlideOutProps) => {
   const { slideOut, onOpenViewer } = useDetailsPanelContext()
   const { entityType, entityId, projectName } = slideOut || {}
   const isSlideOutOpen = !!entityType && !!entityId && !!projectName
@@ -39,6 +44,7 @@ export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideO
         scope={scope}
         onClose={handleClose}
         onOpenViewer={handleOpenViewer}
+        entityListsContext={entityListsContext}
       />
     </Styled.SlideOut>
   )
