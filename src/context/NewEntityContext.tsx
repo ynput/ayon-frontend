@@ -267,6 +267,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               folderType: operation.data.folderType,
               parents: [],
               updatedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
               status: firstStatusForFolder,
               ownAttrib: [],
               path: path,
@@ -298,6 +299,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
               ownAttrib: [],
               path: '',
               updatedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
               attrib: filteredAttribs,
               hasReviewables: false, // Add required field
               links: [], // Add empty links object

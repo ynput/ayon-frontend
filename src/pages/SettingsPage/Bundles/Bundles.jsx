@@ -481,7 +481,7 @@ const Bundles = () => {
                   />
                 ) : (
                   <BundleDetail
-                    bundles={bundlesData}
+                    selectedBundles={bundlesData}
                     onDuplicate={handleDuplicateBundle}
                     isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
                     installers={installerVersions}

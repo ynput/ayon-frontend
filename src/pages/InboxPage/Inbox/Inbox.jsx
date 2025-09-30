@@ -23,6 +23,7 @@ import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
 import { useListProjectsQuery } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -346,7 +347,7 @@ const Inbox = ({ filter }) => {
             icon="done_all"
             onClick={handleClearAll}
             disabled={!messages.length}
-            shortcut={{ children: 'Shift+C' }}
+            shortcut={{ children: getPlatformShortcutKey('c', [ KeyMode.Shift]) }}
           >
             Clear all
           </Button>

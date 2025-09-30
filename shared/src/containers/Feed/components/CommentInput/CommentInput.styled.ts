@@ -90,6 +90,8 @@ export const Comment = styled.div`
     height: calc(100% - 41px);
 
     .ql-editor {
+      max-height: 259px !important;
+
       /* code block */
       .ql-code-block-container {
         background-color: var(--md-sys-color-surface-container-lowest);

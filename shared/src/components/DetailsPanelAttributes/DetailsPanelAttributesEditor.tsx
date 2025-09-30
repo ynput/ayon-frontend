@@ -1,6 +1,6 @@
 import type { AttributeModel } from '@shared/api'
 import { copyToClipboard } from '@shared/util'
-import { FC, useState } from 'react'
+import { FC, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
@@ -118,6 +118,15 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
 
+  const entitySelectionKey = useMemo(
+    () => entities.map((entity) => entity?.id).join('|'),
+    [entities],
+  )
+
+  useEffect(() => {
+    setEditingField(null)
+  }, [entitySelectionKey])
+
   const handleStartEditing = (fieldName: string) => {
     if (enableEditing && !fields.find((field) => field.name === fieldName)?.readonly) {
       setEditingField(fieldName)
@@ -175,7 +184,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  if (!isEditing && !isReadOnly) {
+                  if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
                     handleStartEditing(field.name)
                   }
                 }}

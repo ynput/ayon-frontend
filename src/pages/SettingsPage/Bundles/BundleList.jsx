@@ -10,6 +10,7 @@ import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
 const BundleList = ({
   selectedBundles = [],
@@ -102,7 +103,7 @@ const BundleList = ({
     // you can only set production, staging, dev status on one bundle at a time
     const activeBundle = e?.data
     if (!activeBundle) return
-    const { name: activeBundleName, isArchived, isProduction, isStaging, isDev } = e?.data || {}
+    const { name: activeBundleName, isArchived, isProduction, isStaging, isDev, isProject } = e?.data || {}
     if (!activeBundleName) {
       return
     }
@@ -120,7 +121,7 @@ const BundleList = ({
     ctxMenuItems.push({
       label: 'Duplicate and Edit',
       icon: 'edit_document',
-      shortcut: 'Shift+D',
+      shortcut: getPlatformShortcutKey('D', [KeyMode.Shift]),
       command: () => onDuplicate(activeBundleName),
       disabled: selectedBundles.length > 1,
     })
@@ -206,6 +207,11 @@ const BundleList = ({
         {rowData.isDev && (
           <Badge hl="developer" data-testid={`${rowData.name}-dev`}>
             Dev{rowData.activeUser && ` (${rowData.activeUser})`}
+          </Badge>
+        )}
+        {rowData.isProject && (
+          <Badge hl="project" data-testid={`${rowData.name}-prj`}>
+            Project
           </Badge>
         )}
       </BadgeWrapper>
