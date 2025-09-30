@@ -1,4 +1,4 @@
-import { Button, Panel } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo } from 'react'
 import * as Styled from './DetailsPanel.styled'
 
@@ -193,17 +193,7 @@ export const DetailsPanel = ({
 
   return (
     <>
-      <Panel
-        style={{
-          gap: 0,
-          height: '100%',
-          padding: 0,
-          boxShadow: '-2px 0 6px #00000047',
-          zIndex: 300,
-          ...style,
-        }}
-        className="details-panel"
-      >
+      <Styled.Panel className="details-panel">
         <Styled.Toolbar>
           {/* TODO FIX PATH */}
           <EntityPath
@@ -303,7 +293,7 @@ export const DetailsPanel = ({
             />
           </FeedContextWrapper>
         )}
-      </Panel>
+      </Styled.Panel>
     </>
   )
 }

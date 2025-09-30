@@ -92,7 +92,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         />
       )
 
-    case !!field.data.enum?.length: {
+    case !!field.data.enum: {
       const isListType = type.includes('list')
       let valueArray = []
 
@@ -121,6 +121,17 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         }
       }
 
+      if (field.allowNone && !!valueArray.length && !isListType) {
+        // Check if current field has a value (for single value fields)
+        const hasCurrentValue = displayValue && displayValue !== ''
+        if (hasCurrentValue) {
+          enumOptions = [
+            { value: '', label: `No ${field.data.title || field.name}` },
+            ...enumOptions,
+          ]
+        }
+      }
+
       return (
         <StyledEnumWidget
           value={valueArray}
@@ -136,6 +147,9 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           onCancelEdit={onCancelEdit}
           align="right"
           isReadOnly={isReadOnly}
+          enableCustomValues={field.enableCustomValues ?? false}
+          search={field.enableSearch ?? false}
+          sortBySelected={!enumOptions}
           {...widgetCommonProps}
         />
       )

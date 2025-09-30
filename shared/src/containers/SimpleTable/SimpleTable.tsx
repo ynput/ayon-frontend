@@ -50,9 +50,25 @@ declare module '@tanstack/react-table' {
 }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
+  const cellValue = row.getValue(columnId)
+  // convert non-string cell values to string
+  let searchString =
+    typeof cellValue === 'string'
+      ? cellValue
+      : Array.isArray(cellValue)
+      ? cellValue.join(' ')
+      : JSON.stringify(cellValue)
+
+  // combine label and parents into a single string for searching if columnId is 'label'
+  if (columnId === 'label') {
+    searchString = [row.original.label, row.original.name, ...(row.original.parents || [])].join(
+      ' ',
+    )
+  }
+
   // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
+  const itemRank = rankItem(searchString, searchValue)
 
   // Store the itemRank info
   addMeta({
@@ -95,6 +111,7 @@ export type SimpleTableRow = {
   parents?: string[]
   icon?: string | null
   iconColor?: string
+  iconFilled?: boolean
   img?: string | null
   startContent?: JSX.Element
   endContent?: JSX.Element
@@ -102,6 +119,7 @@ export type SimpleTableRow = {
   data: RowItemData
   isDisabled?: boolean
   disabledMessage?: string
+  inactive?: boolean
 }
 
 export interface SimpleTableProps {
@@ -111,6 +129,7 @@ export interface SimpleTableProps {
   isExpandable?: boolean // show expand/collapse icons
   isMultiSelect?: boolean // enable multi-select with shift+click and ctrl/cmd+click
   enableClickToDeselect?: boolean // allow deselecting a single selected row by clicking it again & clicking outside clears selection
+  enableNonFolderIndent?: boolean // indent non-folder rows to align with folder rows
   forceUpdateTable?: any
   globalFilter?: string
   meta?: Record<string, any>
@@ -168,6 +187,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   isExpandable,
   isMultiSelect = true,
   enableClickToDeselect = true,
+  enableNonFolderIndent = true,
   forceUpdateTable,
   globalFilter,
   meta,
@@ -324,7 +344,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
             className: clsx({
               selected: row.getIsSelected(),
               loading: cellMeta?.isLoading,
-              disabled: row.original.isDisabled,
+              disabled: row.original.isDisabled, // you can't select disabled rows
+              inactive: row.original.inactive, // false: archived items but still selectable
             }),
             onKeyDown: (e) => {
               if (e.target instanceof HTMLInputElement) return
@@ -338,7 +359,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
             parents: row.original.parents,
             icon: row.original.icon || undefined,
             iconColor: row.original.iconColor,
+            iconFilled: row.original.iconFilled,
             isRowExpandable: row.getCanExpand(),
+            enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
             isTableExpandable: cellMeta?.isExpandable,
             onExpandClick: row.getToggleExpandedHandler(),
@@ -357,7 +380,13 @@ const SimpleTable: FC<SimpleTableProps> = ({
         },
       },
     ],
-    [forceUpdateTable, handleSelectionLogic, handleRowKeyDown, enableClickToDeselect], // include enableClickToDeselect for completeness
+    [
+      forceUpdateTable,
+      handleSelectionLogic,
+      handleRowKeyDown,
+      enableClickToDeselect,
+      enableNonFolderIndent,
+    ], // include enableClickToDeselect for completeness
   )
 
   const handleRowSelectionChangeCallback: OnChangeFn<RowSelectionState> = useCallback(
@@ -399,6 +428,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
     filterFns: {
       fuzzy: fuzzyFilter,
     },
+    globalFilterFn: 'fuzzy',
     enableRowSelection: true, //enable row selection for all rows
     enableRowPinning: !!onRowPinningChange,
     getRowId: (row) => row.id,

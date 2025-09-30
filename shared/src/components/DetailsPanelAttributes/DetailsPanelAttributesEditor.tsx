@@ -73,19 +73,25 @@ const FieldValue = styled.div`
 `
 
 const ShimmerRow = styled(FormRow)`
-  .shimmer {
+  &.loading {
     width: 100%;
-    height: 24px;
+    height: 33px;
+    min-height: unset;
     border-radius: 4px;
+    margin-bottom: 4px;
   }
 `
 
 export type AttributeField = Omit<AttributeModel, 'position' | 'scope' | 'builtin'> & {
   readonly?: boolean
   hidden?: boolean
+  enableCustomValues?: boolean // Allow custom values in enum fields
+  enableSearch?: boolean // Enable search functionality in enum fields
+  allowNone?: boolean // Allow "None" option for enum fields that can be cleared
 }
 
 export interface DetailsPanelAttributesEditorProps {
+  title?: string
   isLoading?: boolean // show loading shimmer for 20 placeholder items
   enableEditing?: boolean // if this is false, everything is readonly
   fields: AttributeField[] // the schema for the form
@@ -100,6 +106,7 @@ export interface DetailsPanelAttributesEditorProps {
 }
 
 export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
+  title,
   isLoading,
   form,
   fields,
@@ -154,7 +161,13 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   }
 
   return (
-    <BorderedSection title="Attributes" autoHeight showHeader withPadding>
+    <BorderedSection
+      title="Attributes"
+      autoHeight
+      showHeader
+      withPadding
+      pt={{ content: { style: { minHeight: 'unset' } } }}
+    >
       {fields
         .filter((f) => !f.hidden)
         .map((field) => {

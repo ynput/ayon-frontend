@@ -223,6 +223,16 @@ export const Item = styled.li`
     }
   }
 
+  &.power {
+    &,
+    .icon {
+      color: var(--md-sys-color-tertiary);
+    }
+    [icon='bolt'] {
+      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+    }
+  }
+
   &.disabled {
     user-select: none;
     pointer-events: none;

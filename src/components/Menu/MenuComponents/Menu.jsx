@@ -3,8 +3,11 @@ import * as Styled from './Menu.styled'
 import MenuList from './MenuList'
 import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
+import { usePowerpack } from '@shared/context'
 
 const Menu = ({ menu = [], onClose, header, footer = '' }) => {
+  const { setPowerpackDialog } = usePowerpack()
+
   const [subMenus, setSubMenus] = useState([])
   //   When a menu item is clicked, the following happens:
   const handleClick = (e, onClick, url, disableClose) => {
@@ -56,7 +59,13 @@ const Menu = ({ menu = [], onClose, header, footer = '' }) => {
     <>
       <Styled.Section>
         {header && header}
-        <MenuList items={menu} handleClick={handleClick} onSubMenu={handleSubMenu} level={0} />
+        <MenuList
+          items={menu}
+          handleClick={handleClick}
+          onSubMenu={handleSubMenu}
+          level={0}
+          setPowerpackDialog={setPowerpackDialog}
+        />
         {footer && (
           <Styled.Footer>
             {footer}
@@ -74,6 +83,7 @@ const Menu = ({ menu = [], onClose, header, footer = '' }) => {
           onSubMenu={handleSubMenu}
           onClose={() => setSubMenus(subMenus.filter((m) => m.id !== menu.id))}
           onChange={onMenuEnter}
+          setPowerpackDialog={setPowerpackDialog}
         />
       ))}
     </>
