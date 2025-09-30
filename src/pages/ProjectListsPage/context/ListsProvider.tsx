@@ -16,6 +16,7 @@ import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './Li
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import { useLocalStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
+import useInitialListsExpanded from '../hooks/useInitialListsExpanded'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -44,7 +45,7 @@ interface ListsProviderProps {
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
-  const { listsMap, listFolders } = useListsDataContext()
+  const { listsMap, listsData, listFolders } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -103,6 +104,13 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
 
   // expanded state for folder hierarchy
   const [expanded, setExpanded] = useState<ExpandedState>({})
+
+  useInitialListsExpanded({
+    selectedRows,
+    lists: listsData,
+    listFolders,
+    setExpanded,
+  })
 
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()

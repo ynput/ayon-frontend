@@ -56,7 +56,7 @@ import {
   type Active,
   type Over,
 } from '@dnd-kit/core'
-import { useAppDispatch, useAppSelector } from '@state/store.ts'
+import { useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
@@ -245,8 +245,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
-
-  const dispatch = useAppDispatch()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null

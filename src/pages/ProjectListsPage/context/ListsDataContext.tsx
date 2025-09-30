@@ -43,7 +43,7 @@ export const ListsDataProvider = ({
 
   const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
 
-  const { data: listFoldersAll = [] } = useGetEntityListFoldersQuery(
+  const { data: listFoldersAll = [], isLoading: isLoadingFolders } = useGetEntityListFoldersQuery(
     { projectName },
     { skip: !projectName },
   )
@@ -105,7 +105,12 @@ export const ListsDataProvider = ({
         listsTableData,
         listsMap,
         listFolders,
-        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || isLoadingLicense,
+        isLoadingAll:
+          isLoadingLists ||
+          !columnsConfigReady ||
+          isLoadingProject ||
+          isLoadingFolders ||
+          isLoadingLicense,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,
