@@ -89,14 +89,10 @@ const Avatar = ({ user }) => {
         accept=".png, .jpeg, .jpg"
       />
       <Styled.ImageIcon>
-        <Styled.AvatarIcon
-          ref={editButtonRef}
-          onClick={handleEditClick}
-          icon="edit"
-        />
+        <Styled.AvatarIcon ref={editButtonRef} onClick={handleEditClick} icon="edit" />
         <UserImage size={100} name={user.name} imageKey={imageKey} />
       </Styled.ImageIcon>
-      <MenuContainer id="avatar-menu" target={editButtonRef.current}>
+      <MenuContainer id="avatar-menu" target={editButtonRef.current} align="left">
         <Menu menu={menuItems} />
       </MenuContainer>
     </Styled.Avatar>
