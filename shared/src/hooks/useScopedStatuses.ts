@@ -17,7 +17,7 @@ export const useScopedStatuses = (projects: string[], entityTypes: string[]) => 
   for (const item of Object.values(response.data) as ProjectModel[]) {
     const filteredStatuses =
       item.statuses?.filter((status: EntityStatus) =>
-        entityTypes.every((type) => !status.scope || status.scope?.includes(type)),
+        !status.scope || entityTypes.some((type) => status.scope?.includes(type)),
       ) || []
     if (currentStatuses === undefined) {
       currentStatuses = filteredStatuses

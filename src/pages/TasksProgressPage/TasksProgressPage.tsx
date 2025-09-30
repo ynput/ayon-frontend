@@ -25,7 +25,7 @@ const TasksProgressPage: FC = () => {
   // Get attributes so we can use priority
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task')
-  const statuses = useScopedStatuses([projectName], ['task'])
+  const statuses = useScopedStatuses([projectName], ['task', 'folder'])
 
   return (
     <main>
