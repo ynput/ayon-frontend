@@ -77,7 +77,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
         </Styled.ThumbnailCard>
         <Styled.Path
           onClick={() => onFolderOpen?.(folder.id)}
-          className={clsx({ selected: isSelected })}
+          className={clsx({ selected: isSelected, expanded: isExpanded })}
         >
           <span className="small-title">{folder.name}</span>
         </Styled.Path>
