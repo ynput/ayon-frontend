@@ -110,12 +110,13 @@ export const PowerpackProvider = ({
   const fallbackCheckLicense: CheckPowerLicenseFunction = async () => false
 
   // Load the remote module
-  const [checkPowerLicense, { isLoaded }] = useLoadModule<CheckPowerLicenseFunction>({
-    addon: 'powerpack',
-    remote: 'license',
-    module: 'checkPowerLicense',
-    fallback: fallbackCheckLicense,
-  })
+  const [checkPowerLicense, { isLoaded, isLoading: isLoadingModule }] =
+    useLoadModule<CheckPowerLicenseFunction>({
+      addon: 'powerpack',
+      remote: 'license',
+      module: 'checkPowerLicense',
+      fallback: fallbackCheckLicense,
+    })
 
   useEffect(() => {
     const checkLicense = async () => {
@@ -123,7 +124,7 @@ export const PowerpackProvider = ({
         console.warn('Using debug power license:', debug.powerLicense)
         setPowerLicense(debug.powerLicense)
         setIsLoading(false)
-      } else if (isLoaded) {
+      } else if (isLoaded || !isLoadingModule) {
         try {
           const hasPowerLicense = await checkPowerLicense()
           setPowerLicense(hasPowerLicense)
@@ -136,7 +137,7 @@ export const PowerpackProvider = ({
     }
 
     checkLicense()
-  }, [debug, isLoaded, checkPowerLicense])
+  }, [debug, isLoaded, isLoadingModule, checkPowerLicense])
 
   const value = useMemo(
     () => ({
