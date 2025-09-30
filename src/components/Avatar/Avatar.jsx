@@ -3,10 +3,17 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import UserImage from '@shared/components/UserImage'
 import * as Styled from './Avatar.styled'
+import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import Menu from '@components/Menu/MenuComponents/Menu'
+import { useMenuContext } from '@shared/context/MenuContext'
+import { useDeleteAvatarMutation } from '@shared/api'
 
 const Avatar = ({ user }) => {
   const fileInput = useRef(null)
   const [imageKey, setImageKey] = useState(null)
+  const { setMenuOpen } = useMenuContext()
+  const editButtonRef = useRef(null)
+  const [deleteAvatar, { isLoading: isDeleting }] = useDeleteAvatarMutation()
 
   const onUpdateAvatar = async (file) => {
     try {
@@ -33,6 +40,37 @@ const Avatar = ({ user }) => {
     onUpdateAvatar(e.target.files[0])
   }
 
+  const handleDeleteAvatar = async () => {
+    try {
+      await deleteAvatar({ userName: user.name }).unwrap()
+      toast.success('Avatar removed')
+      setImageKey(`?${Date.now()}`)
+    } catch (error) {
+      console.log(error)
+      toast.error('Unable to remove avatar')
+    }
+  }
+
+  const handleEditClick = () => {
+    setMenuOpen('avatar-menu')
+  }
+
+  const menuItems = [
+    {
+      id: 'edit',
+      label: 'Upload photo...',
+      icon: 'edit',
+      onClick: () => fileInput.current.click(),
+    },
+    {
+      id: 'delete',
+      label: 'Reset to default',
+      icon: 'delete',
+      onClick: handleDeleteAvatar,
+      disabled: isDeleting,
+    },
+  ]
+
   return (
     <Styled.Avatar>
       <input
@@ -44,9 +82,16 @@ const Avatar = ({ user }) => {
         accept=".png, .jpeg, .jpg"
       />
       <Styled.ImageIcon>
-        <Styled.AvatarIcon onClick={() => fileInput.current.click()} icon="edit" />
+        <Styled.AvatarIcon
+          ref={editButtonRef}
+          onClick={handleEditClick}
+          icon="edit"
+        />
         <UserImage size={100} name={user.name} imageKey={imageKey} />
       </Styled.ImageIcon>
+      <MenuContainer id="avatar-menu" target={editButtonRef.current}>
+        <Menu menu={menuItems} />
+      </MenuContainer>
     </Styled.Avatar>
   )
 }
