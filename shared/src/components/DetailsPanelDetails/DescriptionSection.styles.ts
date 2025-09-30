@@ -160,6 +160,7 @@ export const StyledEditor = styled.div`
         padding: var(--padding-m);
         border-radius: var(--border-radius-m);
         font-family: monospace;
+        margin-bottom: 12px;
       }
 
       .ql-code-block-container .ql-code-block,
@@ -389,7 +390,7 @@ export const StyledQuillContainer = styled.div`
     a {
       pointer-events: auto !important;
       cursor: pointer !important;
-      
+
       &:hover {
         text-decoration: underline;
       }
