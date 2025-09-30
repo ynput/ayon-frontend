@@ -81,6 +81,7 @@ const useListContextMenu = () => {
     onDeleteListFolders,
     onPutFoldersInFolder,
     onRemoveFoldersFromFolder,
+    selectAllLists,
   } = useListsContext()
   const { powerLicense, setPowerpackDialog } = usePowerpack()
 
@@ -334,6 +335,12 @@ const useListContextMenu = () => {
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         ...folderMenuItems,
+        {
+          label: 'Select all lists',
+          icon: 'checklist',
+          hidden: !selectedFolderIds.length, // hide if no folders selected per spec
+          command: () => selectAllLists({ rowIds: Object.keys(newSelection) }),
+        },
         {
           label: 'Details',
           icon: 'info',

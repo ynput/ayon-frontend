@@ -124,6 +124,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     deleteLists,
     onDeleteListFolders,
     setListsFiltersOpen,
+    selectAllLists,
   } = useListsContext()
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
@@ -152,6 +153,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     }
   }
 
+  const handleSelectAllLists = () => selectAllLists()
+
   // Define all menu items in order (matching right-to-left button order)
   const menuItems: MenuItemDefinition[] = [
     {
@@ -168,6 +171,13 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       },
       className: 'search-lists',
       hiddenButtonType: 'search' as ButtonType,
+    },
+    {
+      id: 'select-all-lists',
+      label: 'Select all lists',
+      icon: 'checklist',
+      onClick: handleSelectAllLists,
+      isPinned: false,
     },
     { id: 'divider' },
     {

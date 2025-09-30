@@ -260,6 +260,76 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 
+  // Helper to select all lists within selected folders (including descendants) or root lists
+  const selectAllLists = useCallback(
+    ({ rowIds }: { rowIds?: string[] } = {}) => {
+      // Use provided rowIds (row ids from table) or fallback to current selectedRows
+      const activeRowIds = rowIds ?? selectedRows
+
+      // Extract folder ids from active row ids
+      const selectedFolderIds = activeRowIds
+        .map((id) => parseListFolderRowId(id))
+        .filter((id): id is string => !!id)
+
+      // BFS to collect descendant folder ids
+      const getDescendantFolderIds = (folderIds: string[]) => {
+        const queue = [...folderIds]
+        const result = new Set(folderIds)
+        while (queue.length) {
+          const current = queue.shift()!
+          ;(listFolders || [])
+            .filter((f) => f.parentId === current)
+            .forEach((child) => {
+              if (!result.has(child.id)) {
+                result.add(child.id)
+                queue.push(child.id)
+              }
+            })
+        }
+        return [...result]
+      }
+
+      let listsToSelect = [] as EntityListSummary[]
+
+      if (selectedFolderIds.length) {
+        const allFolderIds = getDescendantFolderIds(selectedFolderIds)
+        // Build a map for quick parent lookup
+        const folderMap = new Map<string, (typeof listFolders)[number]>(
+          listFolders.map((f) => [f.id, f]),
+        )
+
+        // Helper to check if the full ancestor chain is expanded
+        const isFolderChainExpanded = (folderId: string): boolean => {
+          let currentId: string | undefined = folderId
+          while (currentId) {
+            const rowId = buildListFolderRowId(currentId)
+            // If this folder itself isn't marked expanded and it's not a root in the selection path, stop
+            if (!(expanded as Record<string, boolean>)[rowId]) return false
+            const parentId: string | undefined = folderMap.get(currentId)?.parentId
+            currentId = parentId
+          }
+          return true
+        }
+
+        listsToSelect = listsData.filter((l) => {
+          if (!l.entityListFolderId) return false
+          if (!allFolderIds.includes(l.entityListFolderId)) return false
+          return isFolderChainExpanded(l.entityListFolderId)
+        })
+      } else {
+        // No folders selected: select all root lists (lists without folder)
+        listsToSelect = listsData.filter((l) => !l.entityListFolderId)
+      }
+
+      const selection = listsToSelect.reduce(
+        (acc, l) => ({ ...acc, [l.id as string]: true }),
+        {} as RowSelectionState,
+      )
+      setRowSelection(selection)
+    },
+    [selectedRows, listsData, listFolders, expanded, setRowSelection],
+  )
+
   return (
     <ListsContext.Provider
       value={{
@@ -302,6 +372,8 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         listFolderOpen,
         setListFolderOpen,
         onOpenFolderList, // helper function to open folder dialog in edit/create mode
+        // helpers
+        selectAllLists,
       }}
     >
       {children}

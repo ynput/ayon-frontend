@@ -58,6 +58,8 @@ export interface ListsContextType {
   listFolderOpen: ListDetailsOpenState
   setListFolderOpen: React.Dispatch<React.SetStateAction<ListDetailsOpenState>>
   onOpenFolderList: OnOpenFolderListParams
+  // helpers
+  selectAllLists: (options?: { rowIds?: string[] }) => void
 }
 
 export const ListsContext = createContext<ListsContextType | undefined>(undefined)
