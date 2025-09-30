@@ -17,6 +17,7 @@ import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import { useLocalStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
 import useInitialListsExpanded from '../hooks/useInitialListsExpanded'
+import { usePowerpack } from '@shared/context'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -44,6 +45,7 @@ interface ListsProviderProps {
 }
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectDataContext()
   const { listsMap, listsData, listFolders } = useListsDataContext()
 
@@ -228,6 +230,10 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   })
 
   const onOpenFolderList: OnOpenFolderListParams = ({ folderId }) => {
+    if (!powerLicense) {
+      setPowerpackDialog('listFolders')
+      return
+    }
     // get folder data
     const folder = listFolders.find((f) => f.id === folderId)
     // if no folderId, open create dialog

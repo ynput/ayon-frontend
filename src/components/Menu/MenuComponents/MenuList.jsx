@@ -14,6 +14,7 @@ const MenuList = ({
   parentRef,
   style,
   onClose,
+  onMenuClose,
   itemClassName,
   itemStyle,
   setPowerpackDialog,
@@ -106,6 +107,9 @@ const MenuList = ({
               e.preventDefault()
               e.stopPropagation()
               setPowerpackDialog(powerFeature)
+
+              // close the menu
+              onMenuClose && onMenuClose()
             }
 
             return (

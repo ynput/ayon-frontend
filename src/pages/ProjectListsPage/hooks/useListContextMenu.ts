@@ -83,7 +83,7 @@ const useListContextMenu = () => {
     onRemoveFoldersFromFolder,
     selectAllLists,
   } = useListsContext()
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const { powerLicense } = usePowerpack()
 
   const { clearListItems } = useClearListItems({ projectName })
   // create the ref and model
@@ -307,29 +307,26 @@ const useListContextMenu = () => {
           disabled: selectedFolderIds.length > 1,
         },
         // Root level Create folder (lists selection) / gated if no power license
-        powerLicense
-          ? {
-              label: 'Create folder',
-              icon: FOLDER_ICON_ADD,
-              command: () => onOpenFolderList({}),
-              shortcut: 'F',
-              hidden: !allSelectedRowsAreLists,
-            }
-          : {
-              label: 'Create folder',
-              icon: FOLDER_ICON_ADD,
-              powerFeature: 'listFolders',
-              hidden: !allSelectedRowsAreLists,
-              command: () => setPowerpackDialog('listFolders'),
-            },
-        // Root level Create subfolder (single folder selection)
-        powerLicense && {
-          label: 'Create subfolder',
+        {
+          label: 'Create folder',
           icon: FOLDER_ICON_ADD,
           command: () => onOpenFolderList({}),
           shortcut: 'F',
-          hidden: !allSelectedRowsAreFolders || selectedFolderIds.length !== 1,
+          hidden: !allSelectedRowsAreLists,
+          powerFeature: powerLicense ? 'listFolders' : undefined,
         },
+        // Root level Create subfolder (single folder selection)
+        ...(powerLicense
+          ? [
+              {
+                label: 'Create subfolder',
+                icon: FOLDER_ICON_ADD,
+                command: () => onOpenFolderList({}),
+                shortcut: 'F',
+                hidden: !allSelectedRowsAreFolders || selectedFolderIds.length !== 1,
+              },
+            ]
+          : []),
         ...moveMenuItems,
         {
           label: 'Select all lists',
