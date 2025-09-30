@@ -187,17 +187,12 @@ const useListContextMenu = () => {
 
         const submenuItems: any[] = []
         const selectedListIds = newSelectedLists.map((list) => list.id)
-        const firstListIdParentId = newSelectedLists[0].entityListFolderId
 
         // Add "Create folder" option at the top
         submenuItems.push({
           label: 'Create folder',
           icon: FOLDER_ICON_ADD,
-          command: () =>
-            onOpenFolderList({
-              listIds: selectedListIds,
-              parentIds: firstListIdParentId ? [firstListIdParentId] : [],
-            }),
+          command: () => onOpenFolderList({}),
           shortcut: 'F',
         })
 
@@ -240,7 +235,7 @@ const useListContextMenu = () => {
         submenuItems.push({
           label: 'Create subfolder',
           icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({ parentIds: selectedFolderIds }),
+          command: () => onOpenFolderList({}),
           shortcut: 'F',
         })
 

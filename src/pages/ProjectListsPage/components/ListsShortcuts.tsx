@@ -78,26 +78,8 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
         e.preventDefault()
         // Don't allow creating folders if user is not admin/manager
         if (isUser) return
-
-        if (selectedRowIds.length === 0) {
-          // No selection, create root folder
-          onOpenFolderList({})
-          actionExecuted = true
-        } else if (allSelectedRowsAreFolders) {
-          // All selected rows are folders, create subfolder(s)
-          onOpenFolderList({ parentIds: selectedFolderIds })
-          actionExecuted = true
-        } else if (allSelectedRowsAreLists) {
-          // All selected rows are lists, create folder with these lists
-          const firstListParentId = selectedLists.find((list) =>
-            selectedListIds.includes(list.id),
-          )?.entityListFolderId
-          onOpenFolderList({
-            listIds: selectedListIds,
-            parentIds: firstListParentId ? [firstListParentId] : [],
-          })
-          actionExecuted = true
-        }
+        onOpenFolderList({})
+        actionExecuted = true
         // Mixed selection - no action
       } else if (key === 'f' && isShift && !isAlt) {
         // 'shift+f' - Remove folder/list from parent folder

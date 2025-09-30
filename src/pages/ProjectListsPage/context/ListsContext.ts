@@ -10,15 +10,10 @@ import { FolderFormData } from '../components/ListFolderFormDialog'
 export type ListDetailsOpenState = {
   isOpen: boolean
   folderId?: string // id of folder being edited, undefined for create
-  listIds?: string[] // ids of lists to add to folder on create
   initial?: Partial<FolderFormData>
 }
 
-export type OnOpenFolderListParams = (params: {
-  folderId?: string
-  listIds?: string[]
-  parentIds?: string[]
-}) => void
+export type OnOpenFolderListParams = (params: { folderId?: string }) => void
 
 export interface ListsContextType {
   rowSelection: RowSelectionState

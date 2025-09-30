@@ -3,26 +3,27 @@ import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { ListFolderForm, ListFolderFormData } from './ListFolderForm'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
 export interface FolderFormData extends ListFolderFormData {
   id?: string // if id is present, it's edit mode
-  parentIds?: string[]
 }
 
 interface ListFolderFormDialogProps {}
 
 export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const {
-    listFolderOpen: { isOpen, initial, folderId, listIds = [] },
+    listFolderOpen: { isOpen, initial, folderId },
     setListFolderOpen,
     onCreateListFolder,
     onUpdateListFolder,
+    selectedRows,
+    selectedList,
   } = useListsContext()
 
   const { listFolders } = useListsDataContext()
 
   const mode = folderId ? 'edit' : 'create'
-  const listCount = listIds.length
 
   const editingFolder = listFolders?.find((f) => f.id === folderId)
 
@@ -31,10 +32,26 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const parentIds = folderForm.parentIds || []
+  // when creating a folder, we need to derive the context from the selection
+  const selectedListIds = selectedRows.filter((id) => !parseListFolderRowId(id))
+  const selectedFolderIds = selectedRows
+    .map((id) => parseListFolderRowId(id))
+    .filter((id): id is string => !!id)
+
+  const listIdsToAdd = mode === 'create' && selectedFolderIds.length === 0 ? selectedListIds : []
+  const parentIdsToCreateIn =
+    mode === 'create'
+      ? selectedFolderIds.length > 0
+        ? selectedFolderIds
+        : selectedList?.entityListFolderId
+        ? [selectedList.entityListFolderId]
+        : []
+      : []
+
+  const listCount = listIdsToAdd.length
 
   const foldersToCreateIn =
-    parentIds?.map((id) => listFolders?.find((f) => f.id === id)).filter((f) => !!f) || []
+    parentIdsToCreateIn?.map((id) => listFolders?.find((f) => f.id === id)).filter((f) => !!f) || []
 
   // Update folder data when initial folder changes (for edit mode)
   useEffect(() => {
@@ -63,9 +80,8 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     setIsSaving(true)
     setError(null)
 
-    const listIdsToAdd = mode === 'create' ? listIds : []
     const label = folderForm.label.trim()
-    const { color, icon, scope, parentId, parentIds } = folderForm
+    const { color, icon, scope, parentId } = folderForm
 
     try {
       if (mode === 'edit' && folderId) {
@@ -83,7 +99,7 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
             scope: scope,
           },
           listIdsToAdd,
-          parentIds,
+          parentIdsToCreateIn,
         )
       }
     } catch (error) {
@@ -92,7 +108,16 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     } finally {
       handleClose()
     }
-  }, [folderForm, onCreateListFolder, mode, listIds])
+  }, [
+    folderForm,
+    onCreateListFolder,
+    mode,
+    listIdsToAdd,
+    parentIdsToCreateIn,
+    onUpdateListFolder,
+    folderId,
+    handleClose,
+  ])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

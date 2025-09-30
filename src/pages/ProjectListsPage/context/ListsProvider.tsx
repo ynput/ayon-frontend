@@ -44,7 +44,7 @@ interface ListsProviderProps {
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const { projectName } = useProjectDataContext()
-  const { listsMap, listFolders, listsData } = useListsDataContext()
+  const { listsMap, listFolders } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -125,15 +125,21 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   )
 
   const handleCreatedFolders = useCallback(
-    (folderIds: string[], hadListIds: boolean) => {
+    (folderIds: string[], hadListIds: boolean, parentIds: string[] = []) => {
       if (!folderIds.length) return
 
       const folderRowIds = folderIds.map((id) => buildListFolderRowId(id))
+      const parentFolderRowIds = parentIds.map((id) => buildListFolderRowId(id))
 
-      if (hadListIds) {
+      if (hadListIds || parentIds.length) {
         // Lists were added to the folder, so keep current selection and expand the folder
         setExpanded((prev) => {
           const newExpanded = { ...((prev as Record<string, boolean>) || {}) }
+          // expand all parents
+          parentFolderRowIds.forEach((id) => {
+            newExpanded[id] = true
+          })
+          // expand all new folders
           folderRowIds.forEach((id) => {
             newExpanded[id] = true
           })
@@ -213,42 +219,19 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     onCreatedFolders: handleCreatedFolders,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds, parentIds }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId }) => {
     // get folder data
     const folder = listFolders.find((f) => f.id === folderId)
-    if (!folder) {
-      // If no explicit parentId provided and we have listIds, determine parentId from selected lists
-      let resolvedParentId
-      if (parentIds?.length === 1) {
-        resolvedParentId = parentIds[0]
-      } else if (!parentIds && listIds && listIds.length > 0) {
-        // Find all selected lists that have a folder
-        const listsWithFolders = listsData.filter(
-          (list) => listIds.includes(list.id) && list.entityListFolderId,
-        )
-
-        if (listsWithFolders.length > 0) {
-          // If all lists are in the same folder, use that folder as parentId
-          const uniqueFolderIds = new Set(
-            listsWithFolders.map((list) => list.entityListFolderId).filter(Boolean),
-          )
-          if (uniqueFolderIds.size === 1) {
-            resolvedParentId = listsWithFolders[0].entityListFolderId || undefined
-          }
-          // If lists are in different folders, don't set a parentId (create root folder)
-          // This is the safest default behavior
-        }
-      }
-
+    // if no folderId, open create dialog
+    if (!folderId) {
       return setListFolderOpen({
         isOpen: true,
-        listIds,
-        initial: {
-          parentId: resolvedParentId,
-          parentIds: parentIds,
-          scope: isReview ? ['review-session'] : ['generic'],
-        },
-      }) // open in create mode if folder not found
+      })
+    }
+
+    if (!folder) {
+      console.error('Folder not found')
+      return
     }
 
     // open dialog in edit mode

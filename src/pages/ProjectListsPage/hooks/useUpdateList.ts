@@ -29,7 +29,7 @@ export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']
   onUpdateList: (listId: string, list: EntityListPatchModel) => Promise<void>
   projectName: string
-  onCreatedFolders?: (folderIds: string[], hadListIds: boolean) => void
+  onCreatedFolders?: (folderIds: string[], hadListIds: boolean, parentIds?: string[]) => void
 }
 
 export interface UseUpdateListReturn {
@@ -206,7 +206,7 @@ const useUpdateList = ({
       }
 
       const responses = await Promise.all(
-        parentIds?.length ? parentIds.map((pId) => createFolder(pId)) : [await createFolder()],
+        parentIds?.length ? parentIds.map((pId) => createFolder(pId)) : [createFolder()],
       )
       // for now we only care about the first folder created
       const resIds = responses.map((r) => r.id).filter((id) => !!id)
@@ -216,7 +216,7 @@ const useUpdateList = ({
       }
 
       if (resIds.length && onCreatedFolders) {
-        onCreatedFolders(resIds, !!listIds?.length)
+        onCreatedFolders(resIds, !!listIds?.length, parentIds)
       }
     } catch (error) {
       throw getErrorMessage(error, 'Failed to create folder')

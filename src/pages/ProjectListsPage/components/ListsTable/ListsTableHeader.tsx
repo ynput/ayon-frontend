@@ -121,7 +121,6 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     openNewList,
     onOpenFolderList,
     selectedRows,
-    selectedList,
     deleteLists,
     onDeleteListFolders,
     setListsFiltersOpen,
@@ -201,22 +200,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       label: 'Create folder',
       icon: 'create_new_folder',
       shortcut: 'F',
-      onClick: () => {
-        const listIds = selectedRows.filter((id) => !parseListFolderRowId(id))
-        const folderIds = selectedRows
-          .map((id) => parseListFolderRowId(id))
-          .filter((id): id is string => !!id)
-
-        onOpenFolderList({
-          listIds: folderIds.length > 0 ? [] : listIds,
-          parentIds:
-            folderIds.length > 0
-              ? folderIds
-              : selectedList?.entityListFolderId
-              ? [selectedList.entityListFolderId]
-              : [],
-        })
-      },
+      onClick: () => onOpenFolderList({}),
       isPinned: powerLicense,
       powerFeature: 'listFolders',
       buttonProps: {
