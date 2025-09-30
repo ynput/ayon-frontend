@@ -189,18 +189,18 @@ const useListContextMenu = () => {
         const submenuItems: any[] = []
         const selectedListIds = newSelectedLists.map((list) => list.id)
 
-        // Add "Create folder" option at the top
-        submenuItems.push({
-          label: 'Create folder',
-          icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({}),
-          shortcut: 'F',
-        })
+        // Add hierarchy items first (available destination folders)
+        if (listFolders.length > 0) {
+          const { rootFolders } = buildFolderHierarchy(listFolders)
+          const hierarchyItems = createFolderHierarchy(rootFolders)
+          submenuItems.push(...hierarchyItems)
+        }
 
         // For multiple selections, show "Unset folder" if any list has a folder
         // For single selection, show "Unset folder" only if that list has a folder
         const hasAnyFolder = newSelectedLists.some((list) => list.entityListFolderId)
         if (hasAnyFolder) {
+          if (submenuItems.length > 0) submenuItems.push({ separator: true })
           submenuItems.push({
             label: 'Unset folder',
             icon: FOLDER_ICON_REMOVE,
@@ -209,16 +209,6 @@ const useListContextMenu = () => {
             },
             shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
           })
-        }
-
-        if (listFolders.length > 0) {
-          if (submenuItems.length > 0) {
-            submenuItems.push({ separator: true })
-          }
-
-          const { rootFolders } = buildFolderHierarchy(listFolders)
-          const hierarchyItems = createFolderHierarchy(rootFolders)
-          submenuItems.push(...hierarchyItems)
         }
 
         return submenuItems
@@ -232,16 +222,22 @@ const useListContextMenu = () => {
 
         const submenuItems: any[] = []
 
-        // Add "Create subfolder" option at the top
-        submenuItems.push({
-          label: 'Create subfolder',
-          icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({}),
-          shortcut: 'F',
-        })
+        // Show available parent folders (excluding self and its descendants) first
+        const availableParents = listFolders.filter(
+          (folder) =>
+            folder.id !== selectedFolderId &&
+            !wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
+        )
 
-        // Show "Unset parent folder" if folder has a parent
+        if (availableParents.length > 0) {
+          const { rootFolders } = buildFolderHierarchy(availableParents)
+          const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
+          submenuItems.push(...hierarchyItems)
+        }
+
+        // Show "Unset parent" (make root) at bottom if folder has a parent
         if (selectedFolder.parentId) {
+          if (submenuItems.length > 0) submenuItems.push({ separator: true })
           submenuItems.push({
             label: 'Make root folder',
             icon: FOLDER_ICON_REMOVE,
@@ -250,33 +246,17 @@ const useListContextMenu = () => {
           })
         }
 
-        // Show available parent folders (excluding self and its descendants)
-        const availableParents = listFolders.filter(
-          (folder) =>
-            folder.id !== selectedFolderId &&
-            !wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
-        )
-
-        if (availableParents.length > 0) {
-          if (submenuItems.length > 0) {
-            submenuItems.push({ separator: true })
-          }
-
-          const { rootFolders } = buildFolderHierarchy(availableParents)
-          const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
-          submenuItems.push(...hierarchyItems)
-        }
-
         return submenuItems
       }
 
       const listFolderSubmenu = createListFolderSubmenu()
       const folderFolderSubmenu = createFolderFolderSubmenu()
 
-      const folderMenuItems: any[] = []
+      // Build move submenu (formerly "Folder")
+      const moveMenuItems: any[] = []
       if (powerLicense) {
-        folderMenuItems.push({
-          label: 'Folder',
+        moveMenuItems.push({
+          label: allSelectedRowsAreFolders ? 'Move folder' : 'Move list',
           icon: FOLDER_ICON,
           items: allSelectedRowsAreLists ? listFolderSubmenu : folderFolderSubmenu,
           disabled: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
@@ -284,14 +264,6 @@ const useListContextMenu = () => {
             (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
             (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
             (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0),
-        })
-      } else {
-        folderMenuItems.push({
-          label: 'Create folder',
-          icon: FOLDER_ICON_ADD,
-          powerFeature: 'listFolders',
-          hidden: !allSelectedRowsAreLists,
-          command: () => setPowerpackDialog('listFolders'),
         })
       }
 
@@ -302,6 +274,22 @@ const useListContextMenu = () => {
           command: () => openRenameList(firstSelectedRow),
           disabled: multipleSelected || (isSelectedRowFolder && isUser),
           hidden: !allSelectedRowsAreLists && !isSelectedRowFolder,
+        },
+        {
+          label: 'Create review',
+          icon: 'subscriptions',
+          command: () => handleCreateReviewSessionList(selectedList.id),
+          disabled: multipleSelected || !allSelectedRowsAreLists,
+          hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
+        },
+        {
+          label: 'Edit folder',
+          icon: FOLDER_ICON_EDIT,
+          command: () => {
+            const folderId = firstSelectedRow.replace('folder-', '')
+            onOpenFolderList({ folderId })
+          },
+          hidden: !isSelectedRowFolder || multipleSelected,
         },
         {
           label: 'Create list',
@@ -318,23 +306,31 @@ const useListContextMenu = () => {
           hidden: !isSelectedRowFolder,
           disabled: selectedFolderIds.length > 1,
         },
-        {
-          label: 'Edit folder',
-          icon: FOLDER_ICON_EDIT,
-          command: () => {
-            const folderId = firstSelectedRow.replace('folder-', '')
-            onOpenFolderList({ folderId })
-          },
-          hidden: !isSelectedRowFolder || multipleSelected,
+        // Root level Create folder (lists selection) / gated if no power license
+        powerLicense
+          ? {
+              label: 'Create folder',
+              icon: FOLDER_ICON_ADD,
+              command: () => onOpenFolderList({}),
+              shortcut: 'F',
+              hidden: !allSelectedRowsAreLists,
+            }
+          : {
+              label: 'Create folder',
+              icon: FOLDER_ICON_ADD,
+              powerFeature: 'listFolders',
+              hidden: !allSelectedRowsAreLists,
+              command: () => setPowerpackDialog('listFolders'),
+            },
+        // Root level Create subfolder (single folder selection)
+        powerLicense && {
+          label: 'Create subfolder',
+          icon: FOLDER_ICON_ADD,
+          command: () => onOpenFolderList({}),
+          shortcut: 'F',
+          hidden: !allSelectedRowsAreFolders || selectedFolderIds.length !== 1,
         },
-        {
-          label: 'Create review',
-          icon: 'subscriptions',
-          command: () => handleCreateReviewSessionList(selectedList.id),
-          disabled: multipleSelected || !allSelectedRowsAreLists,
-          hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
-        },
-        ...folderMenuItems,
+        ...moveMenuItems,
         {
           label: 'Select all lists',
           icon: 'checklist',
