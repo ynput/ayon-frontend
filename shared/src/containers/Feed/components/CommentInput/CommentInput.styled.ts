@@ -99,6 +99,13 @@ export const Comment = styled.div`
         border-radius: var(--border-radius-m);
       }
 
+      .ql-code-block-container .ql-code-block,
+      .ql-code-block-container .ql-code-block *,
+      .ql-code-block-container * {
+        font-family: monospace;
+        font-size: var(--md-sys-typescale-body-small-font-size);
+      }
+
       a {
         &::before,
         &::after {

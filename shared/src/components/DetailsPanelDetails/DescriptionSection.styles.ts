@@ -159,6 +159,14 @@ export const StyledEditor = styled.div`
         background-color: var(--md-sys-color-surface-container-lowest);
         padding: var(--padding-m);
         border-radius: var(--border-radius-m);
+        font-family: monospace;
+      }
+
+      .ql-code-block-container .ql-code-block,
+      .ql-code-block-container .ql-code-block *,
+      .ql-code-block-container * {
+        font-family: monospace;
+        font-size: var(--md-sys-typescale-body-small-font-size);
       }
 
       a {
