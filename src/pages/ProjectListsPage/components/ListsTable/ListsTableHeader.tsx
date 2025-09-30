@@ -85,6 +85,7 @@ interface MenuItemDefinition {
   id: string
   label?: string
   icon?: string
+  shortcut?: string
   onClick?: () => void
   isPinned?: boolean
   disabled?: boolean
@@ -97,7 +98,6 @@ interface MenuItemDefinition {
   className?: string
   hiddenButtonType?: ButtonType
   powerFeature?: string
-  buttonOnClick?: () => void
 }
 
 interface ListsTableHeaderProps {
@@ -121,6 +121,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     openNewList,
     onOpenFolderList,
     selectedRows,
+    selectedList,
     deleteLists,
     onDeleteListFolders,
     setListsFiltersOpen,
@@ -135,7 +136,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   }
   const isOpen = menuOpen === MENU_ID
 
-  const selectedLists = selectedRows.filter((id) => !parseListFolderRowId(id))
+  const selectedListsIds = selectedRows.filter((id) => !parseListFolderRowId(id))
   const selectedFolders = selectedRows
     .filter((id) => !!parseListFolderRowId(id))
     .map((id) => parseListFolderRowId(id)!)
@@ -143,7 +144,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const handleDelete = () => {
     if (!selectedRows.length) return
 
-    if (selectedLists.length) {
+    if (selectedListsIds.length) {
       // delete selected list items
       deleteLists(selectedRows)
     } else if (selectedFolders.length) {
@@ -156,7 +157,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const menuItems: MenuItemDefinition[] = [
     {
       id: 'search',
-      label: isReview ? 'Search review sessions' : 'Search lists',
+      label: 'Search',
       icon: 'search',
       onClick: () => onSearch(''),
       isPinned: true,
@@ -168,13 +169,13 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       },
       className: 'search-lists',
       hiddenButtonType: 'search' as ButtonType,
-      buttonOnClick: () => typeof search !== 'string' && onSearch(''),
     },
     { id: 'divider' },
     {
       id: 'new-list',
-      label: isReview ? 'Create new review session' : 'Create new list',
+      label: isReview ? 'Create review session' : 'Create list',
       icon: 'add',
+      shortcut: 'N',
       onClick: () => openNewList(),
       isPinned: true,
       buttonProps: {
@@ -185,13 +186,29 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       },
       className: 'add-list',
       hiddenButtonType: 'add' as ButtonType,
-      buttonOnClick: () => openNewList(),
+      disabled: selectedFolders.length > 1,
     },
     {
       id: 'new-folder',
       label: 'Create folder',
       icon: 'create_new_folder',
-      onClick: () => onOpenFolderList({}),
+      shortcut: 'F',
+      onClick: () => {
+        const listIds = selectedRows.filter((id) => !parseListFolderRowId(id))
+        const folderIds = selectedRows
+          .map((id) => parseListFolderRowId(id))
+          .filter((id): id is string => !!id)
+
+        onOpenFolderList({
+          listIds: folderIds.length > 0 ? [] : listIds,
+          parentIds:
+            folderIds.length > 0
+              ? folderIds
+              : selectedList?.entityListFolderId
+              ? [selectedList.entityListFolderId]
+              : [],
+        })
+      },
       isPinned: powerLicense,
       powerFeature: 'listFolders',
       buttonProps: {
@@ -201,7 +218,6 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       },
       className: 'add-folder',
       hiddenButtonType: 'add' as ButtonType,
-      buttonOnClick: () => onOpenFolderList({}),
     },
     { id: 'divider' },
     ...(!isReview
@@ -261,14 +277,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
                     icon={item.buttonProps?.icon}
                     data-tooltip={item.buttonProps?.tooltip}
                     data-shortcut={item.buttonProps?.shortcut}
-                    onClick={() => {
-                      if (item.buttonOnClick) {
-                        item.buttonOnClick()
-                      } else {
-                        item.onClick?.()
-                      }
-                    }}
+                    onClick={item.onClick}
                     className={item.className}
+                    disabled={item.disabled}
                   />
                 ),
             )}

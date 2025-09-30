@@ -110,30 +110,38 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     await createNewListMutation({ entityListPostModel: list, projectName }).unwrap()
 
   const handleCreatedList = useCallback(
-    (list: Pick<EntityListSummary, 'id'>) => {
-      if (list.id) {
-        setRowSelection({ [list.id]: true })
+    (lists: Pick<EntityListSummary, 'id'> | Pick<EntityListSummary, 'id'>[]) => {
+      if (Array.isArray(lists)) {
+        const newSelection = lists.reduce(
+          (acc, list) => ({ ...acc, [list.id as string]: true }),
+          {} as RowSelectionState,
+        )
+        setRowSelection(newSelection)
+      } else if (lists.id) {
+        setRowSelection({ [lists.id]: true })
       }
     },
     [setRowSelection],
   )
 
-  const handleCreatedFolder = useCallback(
-    (folderId: string, hadListIds: boolean) => {
-      if (!folderId) return
+  const handleCreatedFolders = useCallback(
+    (folderIds: string[], hadListIds: boolean) => {
+      if (!folderIds.length) return
 
-      const folderRowId = buildListFolderRowId(folderId)
+      const folderRowIds = folderIds.map((id) => buildListFolderRowId(id))
 
-      if (!hadListIds) {
-        // No lists were added to the folder, so select the new folder
-        setRowSelection({ [folderRowId]: true })
-      } else {
+      if (hadListIds) {
         // Lists were added to the folder, so keep current selection and expand the folder
         setExpanded((prev) => {
           const newExpanded = { ...((prev as Record<string, boolean>) || {}) }
-          newExpanded[folderRowId] = true
+          folderRowIds.forEach((id) => {
+            newExpanded[id] = true
+          })
           return newExpanded
         })
+      } else {
+        // No lists were added to the folder, so select the new folder
+        setRowSelection(folderRowIds.reduce((acc, id) => ({ ...acc, [id]: true }), {}))
       }
     },
     [setRowSelection, setExpanded],
@@ -156,17 +164,24 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
 
   // Wrap openNewList to automatically set folder if a folder is selected
   const openNewList = useCallback(
-    (init?: Partial<EntityListPostModel>) => {
+    (init?: Partial<EntityListPostModel & { entityListFolderIds?: string[] }>) => {
       let enhancedInit = { ...init }
 
-      // If no entityListFolderId is explicitly provided, check if a folder is selected
-      if (!enhancedInit.entityListFolderId && selectedRows.length === 1) {
-        const selectedRowId = selectedRows[0]
-        const selectedFolderId = parseListFolderRowId(selectedRowId)
+      // If no entityListFolderId is explicitly provided, check if folders are selected
+      if (
+        !enhancedInit.entityListFolderId &&
+        !enhancedInit.entityListFolderIds &&
+        selectedRows.length > 0
+      ) {
+        const selectedFolderIds = selectedRows
+          .map((id) => parseListFolderRowId(id))
+          .filter((id): id is string => !!id)
 
-        if (selectedFolderId) {
-          // A folder is selected, set it as the parent folder for the new list
-          enhancedInit.entityListFolderId = selectedFolderId
+        if (selectedFolderIds.length > 0) {
+          // Folders are selected, set them as the parent folders for the new list(s)
+          enhancedInit.entityListFolderIds = selectedFolderIds
+          // also remove entityListFolderId if it exists
+          delete enhancedInit.entityListFolderId
         }
       }
 
@@ -195,16 +210,18 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     setRowSelection,
     onUpdateList,
     projectName,
-    onCreatedFolder: handleCreatedFolder,
+    onCreatedFolders: handleCreatedFolders,
   })
 
-  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds, parentId }) => {
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId, listIds, parentIds }) => {
     // get folder data
     const folder = listFolders.find((f) => f.id === folderId)
     if (!folder) {
       // If no explicit parentId provided and we have listIds, determine parentId from selected lists
-      let resolvedParentId = parentId
-      if (!resolvedParentId && listIds && listIds.length > 0) {
+      let resolvedParentId
+      if (parentIds?.length === 1) {
+        resolvedParentId = parentIds[0]
+      } else if (!parentIds && listIds && listIds.length > 0) {
         // Find all selected lists that have a folder
         const listsWithFolders = listsData.filter(
           (list) => listIds.includes(list.id) && list.entityListFolderId,
@@ -226,7 +243,11 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
       return setListFolderOpen({
         isOpen: true,
         listIds,
-        initial: { parentId: resolvedParentId, scope: isReview ? ['review-session'] : ['generic'] },
+        initial: {
+          parentId: resolvedParentId,
+          parentIds: parentIds,
+          scope: isReview ? ['review-session'] : ['generic'],
+        },
       }) // open in create mode if folder not found
     }
 

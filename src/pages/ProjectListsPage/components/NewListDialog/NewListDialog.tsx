@@ -79,6 +79,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
         {...props}
         ref={ref}
         size="sm"
+        enableBackdropClose={false}
         header={dialogTitle}
         footer={
           <Styled.Footer>

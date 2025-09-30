@@ -55,7 +55,11 @@ const MenuItem = forwardRef(
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
-        {shortcut && <ShortcutTag align={'right'}>{shortcut}</ShortcutTag>}
+        {shortcut && (
+          <ShortcutTag style={{ minWidth: 22, textAlign: 'center' }} align={'right'}>
+            {shortcut}
+          </ShortcutTag>
+        )}
 
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>

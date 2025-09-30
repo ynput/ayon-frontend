@@ -29,7 +29,7 @@ export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']
   onUpdateList: (listId: string, list: EntityListPatchModel) => Promise<void>
   projectName: string
-  onCreatedFolder?: (folderId: string, hadListIds: boolean) => void
+  onCreatedFolders?: (folderIds: string[], hadListIds: boolean) => void
 }
 
 export interface UseUpdateListReturn {
@@ -40,8 +40,9 @@ export interface UseUpdateListReturn {
   onPutListsInFolder: (listIds: string[], listFolderId: string) => Promise<void>
   onRemoveListsFromFolder: (listIds: string[]) => Promise<void>
   onCreateListFolder: (
-    payload: EntityListFolderData & { label: string; parentId?: string; id?: string },
+    payload: Omit<EntityListFolderData, 'id'> & { label: string },
     listIds?: string[],
+    parentIds?: string[],
   ) => Promise<void>
   onUpdateListFolder: (folderId: string, data: EntityListFolderPatchModel) => Promise<void>
   onDeleteListFolders: (folderIds: string[]) => Promise<void>
@@ -53,7 +54,7 @@ const useUpdateList = ({
   setRowSelection,
   onUpdateList,
   projectName,
-  onCreatedFolder,
+  onCreatedFolders,
 }: UseUpdateListProps) => {
   const { listsData, listFolders } = useListsDataContext()
   const [renamingList, setRenamingList] = useState<UseUpdateListReturn['renamingList']>(null)
@@ -176,6 +177,7 @@ const useUpdateList = ({
   const onCreateListFolder: UseUpdateListReturn['onCreateListFolder'] = async (
     payload,
     listIds,
+    parentIds = [],
   ) => {
     if (!powerLicense) {
       setPowerpackDialog('listFolders')
@@ -183,31 +185,38 @@ const useUpdateList = ({
     }
 
     try {
-      const { id, label, parentId, color, icon, scope } = payload
+      const { label, color, icon, scope } = payload
 
-      const newListId = id || getEntityId()
-
-      const res = await createListFolder({
-        projectName,
-        entityListFolderPostModel: {
-          id: newListId,
-          label,
-          parentId,
-          data: {
-            color,
-            icon,
-            scope,
+      const createFolder = async (pId?: string) => {
+        const newListId = getEntityId()
+        const res = await createListFolder({
+          projectName,
+          entityListFolderPostModel: {
+            id: newListId,
+            label,
+            parentId: pId,
+            data: {
+              color,
+              icon,
+              scope,
+            },
           },
-        },
-      }).unwrap()
-
-      if (listIds?.length && res.id) {
-        await onPutListsInFolder(listIds, res.id)
+        }).unwrap()
+        return res
       }
 
-      // Call the callback to handle selection/expansion
-      if (res.id && onCreatedFolder) {
-        onCreatedFolder(res.id, !!listIds?.length)
+      const responses = await Promise.all(
+        parentIds?.length ? parentIds.map((pId) => createFolder(pId)) : [await createFolder()],
+      )
+      // for now we only care about the first folder created
+      const resIds = responses.map((r) => r.id).filter((id) => !!id)
+
+      if (listIds?.length && resIds.length) {
+        await onPutListsInFolder(listIds, resIds[0])
+      }
+
+      if (resIds.length && onCreatedFolders) {
+        onCreatedFolders(resIds, !!listIds?.length)
       }
     } catch (error) {
       throw getErrorMessage(error, 'Failed to create folder')

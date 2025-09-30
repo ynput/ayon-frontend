@@ -77,6 +77,7 @@ const useListContextMenu = () => {
     onPutListsInFolder,
     onRemoveListsFromFolder,
     onOpenFolderList,
+    openNewList,
     onDeleteListFolders,
     onPutFoldersInFolder,
     onRemoveFoldersFromFolder,
@@ -186,13 +187,17 @@ const useListContextMenu = () => {
 
         const submenuItems: any[] = []
         const selectedListIds = newSelectedLists.map((list) => list.id)
+        const firstListIdParentId = newSelectedLists[0].entityListFolderId
 
         // Add "Create folder" option at the top
         submenuItems.push({
           label: 'Create folder',
           icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({ listIds: selectedListIds }),
-          disabled: isUser, // only admins and managers can create listFolders
+          command: () =>
+            onOpenFolderList({
+              listIds: selectedListIds,
+              parentIds: firstListIdParentId ? [firstListIdParentId] : [],
+            }),
           shortcut: 'F',
         })
 
@@ -235,8 +240,7 @@ const useListContextMenu = () => {
         submenuItems.push({
           label: 'Create subfolder',
           icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({ parentId: selectedFolderId || undefined }),
-          disabled: isUser, // only admins and managers can create listFolders
+          command: () => onOpenFolderList({ parentIds: selectedFolderIds }),
           shortcut: 'F',
         })
 
@@ -304,6 +308,14 @@ const useListContextMenu = () => {
           hidden: !allSelectedRowsAreLists && !isSelectedRowFolder,
         },
         {
+          label: 'Create list',
+          icon: 'add',
+          command: () => openNewList(),
+          shortcut: 'N',
+          hidden: !isSelectedRowFolder,
+          disabled: selectedFolderIds.length > 1,
+        },
+        {
           label: 'Edit folder',
           icon: FOLDER_ICON_EDIT,
           command: () => {
@@ -311,7 +323,6 @@ const useListContextMenu = () => {
             onOpenFolderList({ folderId })
           },
           hidden: !isSelectedRowFolder || multipleSelected,
-          disabled: isUser, // only admins and managers can edit listFolders
         },
         {
           label: 'Create review',

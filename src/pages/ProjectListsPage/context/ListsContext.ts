@@ -17,7 +17,7 @@ export type ListDetailsOpenState = {
 export type OnOpenFolderListParams = (params: {
   folderId?: string
   listIds?: string[]
-  parentId?: string
+  parentIds?: string[]
 }) => void
 
 export interface ListsContextType {
