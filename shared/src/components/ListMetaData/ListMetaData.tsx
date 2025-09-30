@@ -12,8 +12,11 @@ interface ListMetaDataProps {
 
 export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
   const listData = { ...(list?.data || {}) }
-  // remove category from the meta data
+  // remove category and count from the meta data
+  // @ts-expect-error
   delete listData.category
+  // @ts-expect-error
+  delete listData.count
 
   const metaData = {
     Id: list?.id,
