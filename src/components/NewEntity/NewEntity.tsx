@@ -390,6 +390,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
           onShow={handleShow}
           size={sequenceForm.active ? 'lg' : 'md'}
           style={{ maxWidth: sequenceForm.active ? 'unset' : 430 }}
+          enableBackdropClose={false}
           footer={
             <Toolbar onFocus={() => setNameFocused(false)} style={{ width: '100%' }}>
               {entityType === 'folder' && (
