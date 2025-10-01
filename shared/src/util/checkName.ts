@@ -9,17 +9,20 @@ export interface CheckNameResult {
 // Validation ONLY: does not mutate/transform name. Returns validity + human readable error.
 export const checkName = (name?: string | null): CheckNameResult => {
   if (!name) return { valid: false, error: 'Name is required' }
-  if (/\s/.test(name)) return { valid: false, error: 'Spaces are not allowed' }
+  if (/\s/.test(name)) return { valid: false, error: 'Spaces are not allowed in name' }
 
   // Allowed char set (underscore, dash, dot included)
   const allowed = /^[a-zA-Z0-9_\.\-]+$/
   if (!allowed.test(name)) {
-    return { valid: false, error: 'Only letters, numbers, underscores, dashes and dots allowed' }
+    return {
+      valid: false,
+      error: 'Name can only contain letters, numbers, underscores, dashes or dots',
+    }
   }
 
   // Leading/trailing dot or dash not allowed; underscore IS allowed
-  if (/^[.-]/.test(name)) return { valid: false, error: 'Cannot start with dot or dash' }
-  if (/[.-]$/.test(name)) return { valid: false, error: 'Cannot end with dot or dash' }
+  if (/^[.-]/.test(name)) return { valid: false, error: 'Name cannot start with dot or dash' }
+  if (/[.-]$/.test(name)) return { valid: false, error: 'Name cannot end with dot or dash' }
 
   return { valid: true }
 }
