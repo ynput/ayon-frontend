@@ -6,9 +6,8 @@ import styled from 'styled-components'
 const Wrapper = styled.div`
   position: absolute;
   inset: 0;
-  padding: 2px 2px 2px 2px;
+  padding: 6px;
   display: flex;
-  align-items: center;
 `
 
 const Inner = styled.div`
@@ -18,7 +17,6 @@ const Inner = styled.div`
   width: 100%;
   //aspect-ratio: 1.77;
 
-  border-radius: 2px;
   overflow: hidden;
 `
 
