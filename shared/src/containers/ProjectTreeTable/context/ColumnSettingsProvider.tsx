@@ -262,7 +262,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     setLocalRowHeight(newRowHeight)
   }
 
-  // Update row height and persist to API with thumbnail width adjustment
+  // Update row height and persist to API
   const updateRowHeightWithPersistence = (newRowHeight: number) => {
     // Update UI immediately
     setLocalRowHeight(newRowHeight)
@@ -278,20 +278,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
     // Debounce API call to avoid excessive requests
     rowHeightTimeoutRef.current = setTimeout(() => {
-      // Auto-adjust thumbnail width if needed
-      const currentColumnSizing = internalColumnSizing || columnsSizingExternal
-      const currentThumbnailWidth = currentColumnSizing.thumbnail || 150
-      const shouldUpdateThumbnailWidth = currentThumbnailWidth < newRowHeight
-
-      const updatedColumnSizing = shouldUpdateThumbnailWidth
-        ? { ...currentColumnSizing, thumbnail: newRowHeight }
-        : currentColumnSizing
-
       // Persist to API
       onChangeWithColumns({
         ...columnsConfig,
         rowHeight: newRowHeight,
-        columnSizing: updatedColumnSizing,
       })
 
       // Clean up internal state

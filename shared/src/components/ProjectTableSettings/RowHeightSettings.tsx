@@ -90,25 +90,35 @@ const RowHeightSettings: FC = () => {
 
   // Local state for immediate UI updates during slider drag
   const [localRowHeight, setLocalRowHeight] = useState(contextRowHeight)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Debounced value for smooth table updates during drag
   const debouncedRowHeight = useDebounce(localRowHeight, 25)
 
-  // Sync with context row height when it changes externally
+  // Sync with context row height when it changes externally (but not while dragging)
   useEffect(() => {
-    setLocalRowHeight(contextRowHeight)
-  }, [contextRowHeight])
+    if (!isDragging) {
+      setLocalRowHeight(contextRowHeight)
+    }
+  }, [contextRowHeight, isDragging])
 
-  // Update table rows immediately during slider drag (no API persistence)
+  // Update table rows during slider drag (no API persistence)
   useEffect(() => {
-    updateRowHeight(localRowHeight)
-  }, [debouncedRowHeight, updateRowHeight, localRowHeight])
+    if (isDragging) {
+      updateRowHeight(debouncedRowHeight)
+    }
+  }, [debouncedRowHeight, updateRowHeight, isDragging])
 
   const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalRowHeight(parseInt(e.target.value, 10))
   }, [])
 
+  const handleSliderStart = useCallback(() => {
+    setIsDragging(true)
+  }, [])
+
   const handleSliderRelease = useCallback(() => {
+    setIsDragging(false)
     // Persist to API only when user finishes adjusting
     updateRowHeightWithPersistence(localRowHeight)
   }, [localRowHeight, updateRowHeightWithPersistence])
@@ -125,6 +135,7 @@ const RowHeightSettings: FC = () => {
           step={2}
           value={localRowHeight}
           onChange={handleSliderChange}
+          onMouseDown={handleSliderStart}
           onMouseUp={handleSliderRelease}
         />
         <ValueDisplay>{localRowHeight}</ValueDisplay>

@@ -139,7 +139,7 @@ const buildTreeTableColumns = ({
       id: 'thumbnail',
       header: 'Thumbnail',
       size: 63,
-      minSize: 64,
+      minSize: 24,
       enableResizing: true,
       enableSorting: false,
       cell: ({ row, column, table }) => {
