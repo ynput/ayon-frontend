@@ -3,9 +3,8 @@ import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
 import { useRef } from 'react'
-import { useMenuContext } from '../../../context/MenuContext'
+import { useMenuContext } from '@shared/context'
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
-import { isAttribGroupable } from '../hooks/useGetGroupedFields'
 import { useColumnGroupBy } from '../hooks'
 // @ts-expect-error - non TS file
 import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
@@ -58,10 +57,13 @@ export const ColumnHeaderMenu = ({
   isOpen,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
+  const columnId = String(column.id)
   const { toggleMenuOpen } = useMenuContext()
-  const { updateGroupBy } = useColumnSettingsContext()
-  const { attribFields } = useProjectTableContext()
+  const { updateGroupBy, groupBy } = useColumnSettingsContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
+
+  const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } =
+    useColumnGroupBy(columnId)
 
   // Hide the menu when resizing
   if (isResizing) {
@@ -78,9 +80,6 @@ export const ColumnHeaderMenu = ({
   const isSorted = column.getIsSorted()
 
   // helpers for group by logic
-  const columnId = String(column.id)
-  const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } = useColumnGroupBy(columnId)
-  const { groupBy } = useColumnSettingsContext()
 
   const menuItems: Array<{
     id: string
@@ -150,14 +149,10 @@ export const ColumnHeaderMenu = ({
     })
   }
 
-  if (
-    canGroupThisColumn &&
-    columnId !== 'name' &&
-    columnId !== 'thumbnail'
-  ) {
+  if (canGroupThisColumn && columnId !== 'name' && columnId !== 'thumbnail') {
     // Check if this column is currently being used for grouping
     const isCurrentlyGrouped = groupBy?.id === targetGroupById
-    
+
     menuItems.push({
       id: 'group-by',
       label: isCurrentlyGrouped ? 'Ungroup' : `Group by ${groupLabel}`,
