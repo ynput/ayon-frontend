@@ -195,7 +195,12 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           This folder will be assigned to {listCount} selected lists.
         </p>
       )}
-      <ListFolderForm data={folderForm} onChange={handleFieldChange} autoFocus={true} />
+      <ListFolderForm
+        data={folderForm}
+        onChange={handleFieldChange}
+        autoFocus={true}
+        scopes={isReview ? ['review-session'] : ['generic']}
+      />
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}
     </Dialog>
   )
