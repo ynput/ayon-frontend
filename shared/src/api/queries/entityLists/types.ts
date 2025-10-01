@@ -9,6 +9,7 @@ type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number][
 export type EntityList = Omit<QueryEntityList, 'data'> & {
   entityType: 'folder' | 'version' | 'task' | 'product'
   data: Record<string, any>
+  attrib: Record<string, any>
 }
 
 // Define the result type for lists query

@@ -1,13 +1,18 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
-import { EntityListModel, useGetProjectQuery, useUpdateEntityListMutation } from '@shared/api'
+import {
+  attributesApi,
+  EntityListModel,
+  useGetProjectQuery,
+  useUpdateEntityListMutation,
+} from '@shared/api'
 import { toast } from 'react-toastify'
 
 interface ListAttributeFormProps {
   projectName: string
   list?: EntityListModel
   isLoading?: boolean
-  categoryEnum?: Array<{ value: string; label: string }>
+  attributes?: AttributeField[]
 }
 
 // explicit type for the form state
@@ -21,28 +26,11 @@ interface ListFormData {
   [key: string]: FormValue
 }
 
-// Helper function to check if a field should be stored in data
-const isDataField = (fieldName: string): boolean => {
-  return fieldName.startsWith('data.')
-}
-
-// Helper function to extract data field name
-const getDataFieldName = (fieldName: string): string => {
-  return fieldName.replace('data.', '')
-}
-
-// Helper function to get all data field names from field definitions
-const getDefinedDataFields = (fields: AttributeField[]): string[] => {
-  return fields
-    .filter((field) => isDataField(field.name))
-    .map((field) => getDataFieldName(field.name))
-}
-
 export const ListAttributeForm: FC<ListAttributeFormProps> = ({
   projectName,
   list,
   isLoading,
-  categoryEnum = [],
+  attributes = [],
 }) => {
   const [form, setForm] = useState<ListFormData>({
     label: '',
@@ -66,32 +54,20 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         },
       },
       { name: 'active', data: { type: 'boolean', title: 'Active' } },
-      {
-        name: 'data.category',
-        data: {
-          type: 'string',
-          title: 'Category',
-          enum: categoryEnum,
-        },
-        enableCustomValues: true,
-        enableSearch: true,
-        allowNone: true,
-      },
+      ...attributes,
     ],
-    [project?.tags, categoryEnum],
+    [project?.tags, attributes],
   )
 
   useEffect(() => {
     if (list) {
-      const parsedData = list.data || {}
+      const parsedAttrib = list.attrib || {}
 
-      // Get only the data fields that are defined in the fields array
-      const definedDataFields = getDefinedDataFields(fields)
-      const dataFieldValues = definedDataFields.reduce((acc, dataFieldName) => {
-        const fieldKey = `data.${dataFieldName}`
-        const fieldValue = (parsedData as Record<string, any>)[dataFieldName]
-        // Default to empty string for all data fields
-        acc[fieldKey] = fieldValue || ''
+      // get the data for the attrib fields only
+      const attribFieldValues = attributes.reduce((acc, { name }) => {
+        const fieldValue = (parsedAttrib as Record<string, any>)[name]
+        // Default to empty string for all attrib fields
+        acc[name] = fieldValue || ''
         return acc
       }, {} as Record<string, any>)
 
@@ -99,12 +75,16 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         label: list?.label || '',
         tags: list?.tags || [],
         active: list?.active ?? false,
-        ...dataFieldValues,
+        ...attribFieldValues,
       })
     }
-  }, [list, fields])
+  }, [list, JSON.stringify(attributes)])
 
   const [updateList] = useUpdateEntityListMutation()
+
+  const isAttribField = (fieldName: string): boolean => {
+    return attributes.some((attr) => attr.name === fieldName)
+  }
 
   const handleChange = useCallback(
     async (key: string, value: any) => {
@@ -112,24 +92,22 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
 
       let updatePayload: any
 
-      if (isDataField(key)) {
-        // For data fields, we need to update the nested data structure
-        const dataFieldName = getDataFieldName(key)
-        const currentData = list.data || {}
+      if (isAttribField(key)) {
+        const currentAttrib = list.attrib || {}
 
         // If the value is empty string for category, set it to null to clear it
-        if (value === '' && dataFieldName === 'category') {
+        if (value === '' && key === 'category') {
           updatePayload = {
-            data: {
-              ...currentData,
-              [dataFieldName]: null,
+            attrib: {
+              ...currentAttrib,
+              [key]: null,
             },
           }
         } else {
           updatePayload = {
-            data: {
-              ...currentData,
-              [dataFieldName]: value,
+            attrib: {
+              ...currentAttrib,
+              [key]: value,
             },
           }
         }
@@ -153,10 +131,10 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         })
       } catch (error: any) {
         console.error(error)
-        toast.error('Failed to update list attribute: ', error.data.detail)
+        toast.error('Failed to update list attribute: ', error.attrib.detail)
       }
     },
-    [list?.id, list?.data, projectName, updateList],
+    [list?.id, list?.attrib, projectName, updateList],
   )
 
   return (

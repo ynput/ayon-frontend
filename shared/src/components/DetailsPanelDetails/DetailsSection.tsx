@@ -1,39 +1,35 @@
 import React from 'react'
 import styled from 'styled-components'
-import { AttributeField } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
+import { AttributeField } from '@shared/components'
 import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
 import { BorderedSection } from './BorderedSection'
+import { FieldLabel } from './FieldLabel'
+import { format } from 'date-fns'
 
 const StyledRow = styled.div`
   display: grid;
-  grid-template-columns: 120px 1fr 40px;
-  gap: 0px;
+  grid-template-columns: minmax(200px, 1fr) 1fr 32px;
+  row-gap: 2px;
+  column-gap: 4px;
   align-items: center;
-  min-height: 37px;
+  min-height: 32px;
   position: relative;
 
   .copy-icon {
     opacity: 0;
-    transition: opacity 0.2s ease;
+    width: 32px;
+    height: 32px;
+    padding: 2px;
 
     &:hover {
-      background-color: var(--md-sys-color-surface-container-low-hover);
+      background-color: transparent !important;
     }
   }
 
   &:hover .copy-icon {
     opacity: 1;
   }
-`
-
-const StyledLabel = styled.div`
-  color: var(--md-sys-color-on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-left: 4px;
-  font-size: 14px;
 `
 
 const StyledValue = styled.div`
@@ -44,7 +40,6 @@ const StyledValue = styled.div`
   text-overflow: ellipsis;
   justify-self: end;
   font-size: 14px;
-  font-family: monospace;
   width: 100%;
 `
 
@@ -67,17 +62,19 @@ const StyledShimmer = styled.div`
   }
 `
 
+type DetailsField = Pick<AttributeField, 'name' | 'data' | 'hidden'>
+
 interface DetailsSectionProps {
-  fields: AttributeField[]
+  fields: DetailsField[]
   form: Record<string, any>
-  mixedFields: string[]
+  mixedFields?: string[]
   isLoading: boolean
 }
 
 export const DetailsSection: React.FC<DetailsSectionProps> = ({
   fields,
   form,
-  mixedFields,
+  mixedFields = [],
   isLoading,
 }) => {
   const formatValue = (value: any, fieldName: string): string => {
@@ -87,18 +84,10 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     if (fieldName === 'createdAt' || fieldName === 'updatedAt') {
       try {
-        return new Date(value).toLocaleString()
+        return format(new Date(value), 'PPpp')
       } catch {
         return value.toString()
       }
-    }
-
-    if (fieldName === 'path') {
-      return value.toString()
-    }
-
-    if (fieldName === 'entityType') {
-      return value.toString().charAt(0).toUpperCase() + value.toString().slice(1)
     }
 
     return value.toString()
@@ -106,7 +95,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
   if (isLoading) {
     return (
-      <BorderedSection title="Details">
+      <BorderedSection title="Details" withPadding>
         {Array.from({ length: 6 }).map((_, index) => (
           <StyledRow key={index}>
             <StyledShimmer style={{ width: '80px' }} />
@@ -119,7 +108,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   }
 
   return (
-    <BorderedSection title="Details">
+    <BorderedSection title="Details" autoHeight showHeader withPadding>
       {fields
         .filter((field) => !field.hidden)
         .map((field) => {
@@ -129,11 +118,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
           return (
             <StyledRow key={field.name}>
-              <StyledLabel title={field.data.description || field.data.title || field.name}>
-                {field.data.title || field.name}
-              </StyledLabel>
+              <FieldLabel name={field.name} data={field.data} showDetailedTooltip={true} />
               <StyledValue
-                title={displayValue}
                 style={{
                   color: isMixed
                     ? 'var(--md-sys-color-on-surface-variant)'

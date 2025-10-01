@@ -79,7 +79,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     powerpack,
     onOpenPlayer,
   } = useProjectTableContext()
-  const { canRename } = useProjectDataContext()
+  const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
   const { inheritFromParent, history, setEditingCellId } = useCellEditing()
@@ -197,14 +197,14 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     {
       label: 'Expand children',
       icon: 'expand_all',
-      shortcut: 'Alt + click',
+      shortcut: getPlatformShortcutKey('click', [ KeyMode.Alt]),
       command: () => toggleExpandAll(meta.selectedRows, true),
       hidden: cell.columnId !== 'name' || cell.entityType !== 'folder',
     },
     {
       label: 'Collapse children',
       icon: 'collapse_all',
-      shortcut: 'Alt + click',
+      shortcut: getPlatformShortcutKey('click', [ KeyMode.Alt]),
       command: () => toggleExpandAll(meta.selectedRows, false),
       hidden: cell.columnId !== 'name' || cell.entityType !== 'folder',
     },
@@ -295,7 +295,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       cell.columnId !== 'name' ||
       cell.isGroup ||
       (cell.entityType !== 'folder' && cell.entityType !== 'task'),
-    disabled: !canRename,
+    disabled: !(canWriteNamePermission || canWriteLabelPermission),
   })
 
   const builtInMenuItems: Record<DefaultMenuItem, ContextMenuItemConstructor> = {
@@ -368,9 +368,8 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
 
     // Remove duplicates based on entityId - prioritize full row selection over individual cells
     const filteredSelectedCellsData = [
-      ...new Map(selectedCellsData.map(e => [e.entityId, e])).values()
-    ];
-
+      ...new Map(selectedCellsData.map((e) => [e.entityId, e])).values(),
+    ]
 
     const selectedCellRows: string[] = []
     const selectedCellColumns: string[] = []

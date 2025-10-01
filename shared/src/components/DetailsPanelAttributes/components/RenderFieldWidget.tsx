@@ -5,8 +5,10 @@ import { TextWidget } from '@shared/containers/ProjectTreeTable/widgets/TextWidg
 import { BooleanWidget } from '@shared/containers/ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '@shared/containers/ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
+import { useScopedStatuses } from '@shared/hooks'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
+import type { DetailsPanelEntityData } from '@shared/api'
 
 const FieldValueText = styled.div`
   width: 100%;
@@ -16,12 +18,13 @@ const FieldValueText = styled.div`
   text-align: right;
 
   input {
-    text-align: right;
+    text-align: left;
   }
 `
 
 const StyledEnumWidget = styled(EnumWidget)`
-  .enum {
+  .enum,
+  .edit-trigger {
     &:hover {
       background-color: unset;
     }
@@ -39,6 +42,8 @@ interface RenderFieldWidgetProps {
   isMixed: boolean
   onChange: (fieldName: string, value: CellValue | CellValue[]) => void
   onCancelEdit: () => void
+  entities?: DetailsPanelEntityData[]
+  entityType?: string
 }
 
 const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
@@ -49,6 +54,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   isMixed,
   onChange,
   onCancelEdit,
+  entities = [],
+  entityType = 'task',
 }) => {
   const { type } = field.data
   const widgetCommonProps = {
@@ -69,7 +76,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           value={Boolean(displayValue)}
           {...widgetCommonProps}
           style={{ margin: 0 }}
-          onClick={() => onChange(field.name, !Boolean(displayValue))}
           isReadOnly={isReadOnly}
         />
       )
@@ -88,29 +94,40 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
     case !!field.data.enum: {
       const isListType = type.includes('list')
-      // Determine the value array based on type and state
       let valueArray = []
 
       if (isListType) {
-        // If it's a list type attribute
         valueArray = Array.isArray(displayValue) ? displayValue : []
       } else if (isMixed) {
-        // If this field has mixed values (multiple selection)
         valueArray = []
       } else {
-        // For single values, wrap in array for EnumWidget
         valueArray = [displayValue]
       }
 
-      // Add "None" option if allowNone is enabled and current value exists
-      let optionsWithNone = field.data.enum || []
+      // Use scoped statuses if the field name is 'status'
+      let enumOptions = field.data.enum || []
+      if (field.name === 'status' && entities.length > 0) {
+        const scopedStatuses = useScopedStatuses(
+          entities.map((entity) => entity.projectName),
+          [entityType],
+        )
+        if (scopedStatuses && scopedStatuses.length > 0) {
+          enumOptions = scopedStatuses.map((status) => ({
+            value: status.name,
+            label: status.name,
+            icon: status.icon,
+            color: status.color,
+          }))
+        }
+      }
+
       if (field.allowNone && !!valueArray.length && !isListType) {
         // Check if current field has a value (for single value fields)
         const hasCurrentValue = displayValue && displayValue !== ''
         if (hasCurrentValue) {
-          optionsWithNone = [
+          enumOptions = [
             { value: '', label: `No ${field.data.title || field.name}` },
-            ...optionsWithNone,
+            ...enumOptions,
           ]
         }
       }
@@ -118,7 +135,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
       return (
         <StyledEnumWidget
           value={valueArray}
-          options={optionsWithNone}
+          options={enumOptions}
           type={type}
           pt={{
             template: {
@@ -127,12 +144,12 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
             },
           }}
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
-          onClose={onCancelEdit}
+          onCancelEdit={onCancelEdit}
           align="right"
           isReadOnly={isReadOnly}
           enableCustomValues={field.enableCustomValues ?? false}
           search={field.enableSearch ?? false}
-          sortBySelected={!optionsWithNone}
+          sortBySelected={!enumOptions}
           {...widgetCommonProps}
         />
       )
@@ -145,6 +162,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           <TextWidget
             value={displayValue.toString()}
             onCancelEdit={onCancelEdit}
+            type={type as 'string' | 'integer' | 'float'}
             {...widgetCommonProps}
           />
         </FieldValueText>

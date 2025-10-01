@@ -197,9 +197,9 @@ export const TasksProgressTable = ({
 
   const {
     buildAddToListMenu,
-    buildListMenuItem,
     newListMenuItem,
     tasks: tasksLists,
+    buildHierarchicalMenuItems,
   } = useEntityListsContext()
 
   const buildContextMenu = (selection: string[], taskId: string) => {
@@ -218,7 +218,11 @@ export const TasksProgressTable = ({
         command: () => onOpenViewer({ taskId, quickView: true }),
       },
       buildAddToListMenu([
-        ...tasksLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        ...buildHierarchicalMenuItems(
+          tasksLists.data,
+          selectedEntities,
+          () => false, // no icon needed
+        ),
         newListMenuItem('task', selectedEntities),
       ]),
     ]

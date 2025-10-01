@@ -24,6 +24,64 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/entities`,
       }),
     }),
+    getEntityListFolders: build.query<GetEntityListFoldersApiResponse, GetEntityListFoldersApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/entityListFolders` }),
+    }),
+    createEntityListFolder: build.mutation<
+      CreateEntityListFolderApiResponse,
+      CreateEntityListFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders`,
+        method: 'POST',
+        body: queryArg.entityListFolderPostModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    deleteEntityListFolder: build.mutation<
+      DeleteEntityListFolderApiResponse,
+      DeleteEntityListFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders/${queryArg.folderId}`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    updateEntityListFolder: build.mutation<
+      UpdateEntityListFolderApiResponse,
+      UpdateEntityListFolderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders/${queryArg.folderId}`,
+        method: 'PATCH',
+        body: queryArg.entityListFolderPatchModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    setEntityListFoldersOrder: build.mutation<
+      SetEntityListFoldersOrderApiResponse,
+      SetEntityListFoldersOrderApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/entityListFolders/order`,
+        method: 'POST',
+        body: queryArg.entityListFolderOrderModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
     createEntityListItem: build.mutation<
       CreateEntityListItemApiResponse,
       CreateEntityListItemApiArg
@@ -146,6 +204,41 @@ export type GetListEntitiesApiArg = {
   listId: string
   projectName: string
 }
+export type GetEntityListFoldersApiResponse =
+  /** status 200 Successful Response */ EntityListFoldersResponseModel
+export type GetEntityListFoldersApiArg = {
+  projectName: string
+}
+export type CreateEntityListFolderApiResponse =
+  /** status 200 Successful Response */ EntityIdResponse
+export type CreateEntityListFolderApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListFolderPostModel: EntityListFolderPostModel
+}
+export type DeleteEntityListFolderApiResponse = /** status 200 Successful Response */ any
+export type DeleteEntityListFolderApiArg = {
+  projectName: string
+  folderId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+}
+export type UpdateEntityListFolderApiResponse = /** status 200 Successful Response */ any
+export type UpdateEntityListFolderApiArg = {
+  projectName: string
+  folderId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListFolderPatchModel: EntityListFolderPatchModel
+}
+export type SetEntityListFoldersOrderApiResponse = /** status 200 Successful Response */ any
+export type SetEntityListFoldersOrderApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListFolderOrderModel: EntityListFolderOrderModel
+}
 export type CreateEntityListItemApiResponse = /** status 201 Successful Response */ any
 export type CreateEntityListItemApiArg = {
   listId: string
@@ -222,7 +315,7 @@ export type AttributeEnumItem = {
 }
 export type AttributeData = {
   /** Type of attribute value */
-  type:
+  type?:
     | 'string'
     | 'integer'
     | 'float'
@@ -272,6 +365,52 @@ export type HttpValidationError = {
 export type EntityListEnities = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   entityIds: string[]
+}
+export type EntityListFolderData = {
+  /** Hex color code */
+  color?: string
+  /** Icon name */
+  icon?: string
+  /** Folder scope */
+  scope?: string[]
+}
+export type EntityListFolderModel = {
+  id: string
+  label: string
+  parentId?: string
+  position?: number
+  owner?: string
+  access?: {
+    [key: string]: number
+  }
+  data?: EntityListFolderData
+}
+export type EntityListFoldersResponseModel = {
+  folders?: EntityListFolderModel[]
+}
+export type EntityIdResponse = {
+  /** Entity ID */
+  id: string
+}
+export type EntityListFolderPostModel = {
+  id?: string
+  label: string
+  parentId?: string
+  access?: {
+    [key: string]: number
+  }
+  data?: EntityListFolderData
+}
+export type EntityListFolderPatchModel = {
+  label?: string
+  parentId?: string
+  access?: {
+    [key: string]: number
+  }
+  data?: EntityListFolderData
+}
+export type EntityListFolderOrderModel = {
+  order: string[]
 }
 export type EntityListItemPostModel = {
   id?: string
@@ -336,6 +475,8 @@ export type EntityListPostModel = {
   id?: string
   /** Type of the list */
   entityListType?: string
+  /** ID of the folder containing the list */
+  entityListFolderId?: string
   /** Type of the entity that can be included in the list */
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   label: string
@@ -381,6 +522,8 @@ export type EntityListModel = {
   id?: string
   /** Type of the list */
   entityListType: string
+  /** ID of the folder containing the list */
+  entityListFolderId?: string
   /** Type of the entity that can be included in the list */
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   label: string
@@ -414,6 +557,8 @@ export type EntityListPatchModel = {
   }
   /** List attributes */
   attrib?: object
+  /** ID of the folder containing the list */
+  entityListFolderId?: string
   /** Additional data associated with the list */
   data?: object
   /** List tags */

@@ -37,6 +37,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         assignees: item.assignees || [],
         ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
         updatedAt: item.updatedAt,
+        createdAt: item.createdAt,
         attrib: item.attrib,
         ownAttrib: item.ownAttrib
           ? [...item.ownAttrib, ...item.ownItemAttrib]

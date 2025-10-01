@@ -8,6 +8,7 @@ export interface ListRowProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
   icon?: string
   iconFilled?: boolean
+  iconColor?: string
   depth?: number
   count: number | string
   disabled?: boolean
@@ -32,6 +33,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
       depth = 0,
       icon,
       iconFilled,
+      iconColor,
       count,
       disabled,
       inactive,
@@ -73,7 +75,13 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
           onExpandClick={onExpandClick}
           enableNonFolderIndent={false}
         />
-        {icon && <Icon icon={icon} className={clsx({ filled: iconFilled })} />}
+        {icon && (
+          <Icon
+            icon={icon}
+            className={clsx({ filled: iconFilled })}
+            style={iconColor ? { color: iconColor } : undefined}
+          />
+        )}
         {isRenaming ? (
           <InputText
             autoFocus

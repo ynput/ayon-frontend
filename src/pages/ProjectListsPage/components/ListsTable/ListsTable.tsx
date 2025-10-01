@@ -10,9 +10,9 @@ import SimpleTable, {
 import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
-import CreateListCategoryDialog from '../CreateListCategoryDialog'
-import { ExpandedState, Row, Table } from '@tanstack/react-table'
+import { Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
+import ListFolderFormDialog from '../ListFolderFormDialog'
 
 interface ListsTableProps {
   isReview?: boolean
@@ -22,33 +22,25 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
   const {
     rowSelection,
     setRowSelection,
-    openRenameList,
     closeRenameList,
-    submitRenameList,
+    onRenameList,
     renamingList,
+    setListDetailsOpen,
+    expanded,
+    setExpanded,
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
-  const [expanded, setExpanded] = useState<ExpandedState>({})
   const [clientSearch, setClientSearch] = useState<null | string>(null)
 
   // Define stable event handlers using useCallback
-  const handleValueDoubleClick = useCallback(
-    (e: MouseEvent<HTMLSpanElement>, id: string) => {
-      if (e.detail === 2) {
-        e.preventDefault()
-        openRenameList(id)
-      }
-    },
-    [openRenameList],
-  )
+  const handleDoubleClick = useCallback((e: MouseEvent<HTMLSpanElement>) => {
+    if (e.detail === 2) {
+      e.preventDefault()
+      setListDetailsOpen(true)
+    }
+  }, [])
 
-  const {
-    openContext: handleRowContext,
-    createCategoryDialog,
-    closeCreateCategoryDialog,
-    handleCreateCategory,
-    existingCategories,
-  } = useListContextMenu()
+  const { openContext: handleRowContext } = useListContextMenu()
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
@@ -73,25 +65,22 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         depth={row.depth}
         className={props.className}
         onClick={handleClick}
+        onDoubleClick={(e) => meta?.handleDoubleClick(e)}
         onKeyDown={props.onKeyDown}
         value={props.value}
         icon={props.icon}
         iconFilled={props.iconFilled}
+        iconColor={row.original.data.color}
         inactive={row.original.inactive}
         count={row.original.data.count}
         isRenaming={listId === meta?.renamingList}
-        onSubmitRename={(v) => meta?.submitRenameList(v)}
+        onSubmitRename={(v) => meta?.onRenameList(v)}
         onCancelRename={meta?.closeRenameList}
         onContextMenu={meta?.handleRowContext}
         isTableExpandable={props.isTableExpandable}
         isRowExpandable={row.getCanExpand()}
         isRowExpanded={row.getIsExpanded()}
         onExpandClick={row.getToggleExpandedHandler()}
-        pt={{
-          value: {
-            onClick: (e) => meta?.handleValueDoubleClick(e, listId),
-          },
-        }}
       />
     )
   }, [])
@@ -114,6 +103,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
             hiddenButtons={isReview ? ['filter'] : []}
             search={clientSearch}
             onSearch={setClientSearch}
+            isReview={isReview}
           />
           <SimpleTable
             data={listsTableData}
@@ -122,11 +112,12 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
             onScrollBottom={fetchNextPage}
+            enableClickToDeselect={false}
             meta={{
               handleRowContext,
-              handleValueDoubleClick,
+              handleDoubleClick,
               closeRenameList,
-              submitRenameList,
+              onRenameList,
               renamingList,
             }}
           >
@@ -135,13 +126,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
         </Container>
       </SimpleTableProvider>
       <NewListDialogContainer />
-      <CreateListCategoryDialog
-        isOpen={createCategoryDialog.isOpen}
-        onClose={closeCreateCategoryDialog}
-        onCreateCategory={handleCreateCategory}
-        existingCategories={existingCategories}
-        listCount={createCategoryDialog.listIds.length}
-      />
+      <ListFolderFormDialog />
     </>
   )
 }

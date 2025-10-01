@@ -1,32 +1,20 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
-import { EntityList } from '@shared/api'
+import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
-import { useUserProjectConfig } from '@shared/hooks'
+import { useQueryArgumentChangeLoading, useUserProjectConfig } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
+import { usePowerpack } from '@shared/context'
 
 export type ListsMap = Map<string, EntityList>
-
-// Helper function to extract unique categories from all lists
-const getUniqueCategoriesFromLists = (listsData: EntityList[] = []): string[] => {
-  const categories = new Set<string>()
-
-  for (const list of listsData) {
-    if (list.data && list.data.category && typeof list.data.category === 'string') {
-      categories.add(list.data.category)
-    }
-  }
-
-  return Array.from(categories).sort()
-}
 
 interface ListsDataContextValue {
   listsData: EntityList[]
   listsTableData: SimpleTableRow[]
   listsMap: ListsMap
-  categoryEnum: Array<{ value: string; label: string }>
+  listFolders: EntityListFolderModel[]
   fetchNextPage: () => void
   isLoadingAll: boolean
   isLoadingMore: boolean
@@ -50,7 +38,28 @@ export const ListsDataProvider = ({
   entityListTypes,
   isReview,
 }: ListsDataProviderProps) => {
-  const { projectName, isInitialized, isLoading: isLoadingProject } = useProjectDataContext()
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
+  const { projectName, isLoading: isFetchingProject } = useProjectDataContext()
+
+  const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
+
+  const { data: listFoldersAll = [], isLoading: isLoadingFolders } = useGetEntityListFoldersQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+
+  // filter out folders by scope (right now we only have 'generic' and 'review-session')
+  // we only show 'generic' folders in non-review mode, and 'review-session' in review mode
+  const listFolders = useMemo(
+    () =>
+      listFoldersAll.filter((f) => {
+        const scope = f.data?.scope
+        if (!scope || scope.length === 0) return true // no scope means available for all
+        const hasReviewScope = scope.includes('review-session')
+        return isReview ? hasReviewScope : !hasReviewScope
+      }),
+    [isReview, listFoldersAll],
+  )
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
     selectors: ['lists', projectName],
@@ -84,16 +93,10 @@ export const ListsDataProvider = ({
   }, [listsData])
 
   // convert listsData into tableData
-  const listsTableData = useMemo(() => buildListsTableData(listsData), [listsData])
-
-  // Get unique categories from all lists for the enum
-  const categoryEnum = useMemo(() => {
-    const uniqueCategories = getUniqueCategoriesFromLists(listsData)
-    return uniqueCategories.map((category) => ({
-      value: category,
-      label: category,
-    }))
-  }, [listsData])
+  const listsTableData = useMemo(
+    () => buildListsTableData(listsData, listFolders, true, powerLicense),
+    [listsData, listFolders, powerLicense],
+  )
 
   return (
     <ListsDataContext.Provider
@@ -101,8 +104,13 @@ export const ListsDataProvider = ({
         listsData,
         listsTableData,
         listsMap,
-        categoryEnum,
-        isLoadingAll: isLoadingLists || !columnsConfigReady || isLoadingProject || !isInitialized,
+        listFolders,
+        isLoadingAll:
+          isLoadingLists ||
+          !columnsConfigReady ||
+          isLoadingProject ||
+          isLoadingFolders ||
+          isLoadingLicense,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,

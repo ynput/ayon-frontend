@@ -1,5 +1,5 @@
 import { useState, ReactNode, useMemo, useCallback } from 'react'
-import { RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import useNewList from '../hooks/useNewList'
 import {
   useCreateEntityListMutation,
@@ -12,8 +12,12 @@ import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
-import ListsContext, { ListsContextType } from './ListsContext'
+import ListsContext, { ListDetailsOpenState, OnOpenFolderListParams } from './ListsContext'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import { useLocalStorage } from '@shared/hooks'
+import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
+import useInitialListsExpanded from '../hooks/useInitialListsExpanded'
+import { usePowerpack } from '@shared/context'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -41,8 +45,9 @@ interface ListsProviderProps {
 }
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectDataContext()
-  const { listsMap } = useListsDataContext()
+  const { listsMap, listsData, listFolders } = useListsDataContext()
 
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
@@ -95,18 +100,19 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   // dialogs
   const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
 
-  const [infoDialogData, setInfoDialogData] = useState<ListsContextType['infoDialogData']>(null)
+  const [listDetailsOpen, setListDetailsOpen] = useLocalStorage<boolean>('list-details-open', true)
 
-  const openDetailsPanel = useCallback(
-    (id: string) => {
-      // get the list from the map
-      const list = listsMap.get(id)
-      if (list) {
-        setInfoDialogData(list)
-      }
-    },
-    [listsMap, setInfoDialogData],
-  )
+  const [listFolderOpen, setListFolderOpen] = useState<ListDetailsOpenState>({ isOpen: false })
+
+  // expanded state for folder hierarchy
+  const [expanded, setExpanded] = useState<ExpandedState>({})
+
+  useInitialListsExpanded({
+    selectedRows,
+    lists: listsData,
+    listFolders,
+    setExpanded,
+  })
 
   // CREATE NEW LIST
   const [createNewListMutation, { isLoading: isCreatingList }] = useCreateEntityListMutation()
@@ -114,31 +120,141 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     await createNewListMutation({ entityListPostModel: list, projectName }).unwrap()
 
   const handleCreatedList = useCallback(
-    (list: Pick<EntityListSummary, 'id'>) => {
-      if (list.id) {
-        setRowSelection({ [list.id]: true })
+    (lists: Pick<EntityListSummary, 'id'> | Pick<EntityListSummary, 'id'>[]) => {
+      if (Array.isArray(lists)) {
+        const newSelection = lists.reduce(
+          (acc, list) => ({ ...acc, [list.id as string]: true }),
+          {} as RowSelectionState,
+        )
+        setRowSelection(newSelection)
+      } else if (lists.id) {
+        setRowSelection({ [lists.id]: true })
       }
     },
     [setRowSelection],
   )
 
-  const { closeNewList, createNewList, newList, openNewList, setNewList, createReviewSessionList } =
-    useNewList({
-      onCreateNewList,
-      onCreated: handleCreatedList,
-      isReview,
-      projectName,
-      reviewVersion,
-    })
+  const handleCreatedFolders = useCallback(
+    (folderIds: string[], hadListIds: boolean, parentIds: string[] = []) => {
+      if (!folderIds.length) return
+
+      const folderRowIds = folderIds.map((id) => buildListFolderRowId(id))
+      const parentFolderRowIds = parentIds.map((id) => buildListFolderRowId(id))
+
+      if (hadListIds || parentIds.length) {
+        // Lists were added to the folder, so keep current selection and expand the folder
+        setExpanded((prev) => {
+          const newExpanded = { ...((prev as Record<string, boolean>) || {}) }
+          // expand all parents
+          parentFolderRowIds.forEach((id) => {
+            newExpanded[id] = true
+          })
+          // expand all new folders
+          folderRowIds.forEach((id) => {
+            newExpanded[id] = true
+          })
+          return newExpanded
+        })
+      } else {
+        // No lists were added to the folder, so select the new folder
+        setRowSelection(folderRowIds.reduce((acc, id) => ({ ...acc, [id]: true }), {}))
+      }
+    },
+    [setRowSelection, setExpanded],
+  )
+
+  const {
+    closeNewList,
+    createNewList,
+    newList,
+    openNewList: rawOpenNewList,
+    setNewList,
+    createReviewSessionList,
+  } = useNewList({
+    onCreateNewList,
+    onCreated: handleCreatedList,
+    isReview,
+    projectName,
+    reviewVersion,
+  })
+
+  // Wrap openNewList to automatically set folder if a folder is selected
+  const openNewList = useCallback(
+    (init?: Partial<EntityListPostModel & { entityListFolderIds?: string[] }>) => {
+      let enhancedInit = { ...init }
+
+      // If no entityListFolderId is explicitly provided, check if folders are selected
+      if (
+        !enhancedInit.entityListFolderId &&
+        !enhancedInit.entityListFolderIds &&
+        selectedRows.length > 0
+      ) {
+        const selectedFolderIds = selectedRows
+          .map((id) => parseListFolderRowId(id))
+          .filter((id): id is string => !!id)
+
+        if (selectedFolderIds.length > 0) {
+          // Folders are selected, set them as the parent folders for the new list(s)
+          enhancedInit.entityListFolderIds = selectedFolderIds
+          // also remove entityListFolderId if it exists
+          delete enhancedInit.entityListFolderId
+        }
+      }
+
+      rawOpenNewList(enhancedInit)
+    },
+    [rawOpenNewList, selectedRows],
+  )
 
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()
   const onUpdateList = async (listId: string, list: EntityListPatchModel) =>
     await updateListMutation({ listId, entityListPatchModel: list, projectName }).unwrap()
-  const { closeRenameList, openRenameList, renamingList, submitRenameList } = useUpdateList({
+  const {
+    closeRenameList,
+    openRenameList,
+    renamingList,
+    onRenameList,
+    onPutListsInFolder,
+    onRemoveListsFromFolder,
+    onCreateListFolder,
+    onUpdateListFolder,
+    onDeleteListFolders,
+    onPutFoldersInFolder,
+    onRemoveFoldersFromFolder,
+  } = useUpdateList({
     setRowSelection,
     onUpdateList,
+    projectName,
+    onCreatedFolders: handleCreatedFolders,
   })
+
+  const onOpenFolderList: OnOpenFolderListParams = ({ folderId }) => {
+    if (!powerLicense) {
+      setPowerpackDialog('listFolders')
+      return
+    }
+    // get folder data
+    const folder = listFolders.find((f) => f.id === folderId)
+    // if no folderId, open create dialog
+    if (!folderId) {
+      return setListFolderOpen({
+        isOpen: true,
+      })
+    }
+
+    if (!folder) {
+      console.error('Folder not found')
+      return
+    }
+
+    // open dialog in edit mode
+    setListFolderOpen({
+      isOpen: true,
+      folderId,
+      initial: { label: folder.label, parentId: folder.parentId, ...folder.data },
+    })
+  }
 
   // DELETE LIST
   const [deleteListMutation] = useDeleteEntityListMutation()
@@ -150,61 +266,123 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
 
-  const value = useMemo(() => {
-    return {
-      rowSelection,
-      setRowSelection,
-      selectedRows,
-      selectedLists,
-      selectedList,
-      closeNewList,
-      createNewList,
-      newList,
-      openNewList,
-      setNewList,
-      createReviewSessionList,
-      isCreatingList,
-      isReview,
-      // list editing
-      closeRenameList,
-      openRenameList,
-      renamingList,
-      submitRenameList,
-      deleteLists,
-      // info dialog
-      infoDialogData,
-      setInfoDialogData,
-      openDetailsPanel,
-      // lists filters dialog
-      listsFiltersOpen,
-      setListsFiltersOpen,
-    }
-  }, [
-    rowSelection,
-    setRowSelection,
-    selectedRows,
-    selectedLists,
-    selectedList,
-    // new list
-    closeNewList,
-    createNewList,
-    newList,
-    openNewList,
-    setNewList,
-    createReviewSessionList,
-    isCreatingList,
-    closeRenameList,
-    openRenameList,
-    renamingList,
-    submitRenameList,
-    deleteLists,
-    infoDialogData,
-    setInfoDialogData,
-    openDetailsPanel,
-    listsFiltersOpen,
-    setListsFiltersOpen,
-    isReview,
-  ])
+  // Helper to select all lists within selected folders (including descendants) or root lists
+  const selectAllLists = useCallback(
+    ({ rowIds }: { rowIds?: string[] } = {}) => {
+      // Use provided rowIds (row ids from table) or fallback to current selectedRows
+      const activeRowIds = rowIds ?? selectedRows
 
-  return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>
+      // Extract folder ids from active row ids
+      const selectedFolderIds = activeRowIds
+        .map((id) => parseListFolderRowId(id))
+        .filter((id): id is string => !!id)
+
+      // BFS to collect descendant folder ids
+      const getDescendantFolderIds = (folderIds: string[]) => {
+        const queue = [...folderIds]
+        const result = new Set(folderIds)
+        while (queue.length) {
+          const current = queue.shift()!
+          ;(listFolders || [])
+            .filter((f) => f.parentId === current)
+            .forEach((child) => {
+              if (!result.has(child.id)) {
+                result.add(child.id)
+                queue.push(child.id)
+              }
+            })
+        }
+        return [...result]
+      }
+
+      let listsToSelect = [] as EntityListSummary[]
+
+      if (selectedFolderIds.length) {
+        const allFolderIds = getDescendantFolderIds(selectedFolderIds)
+        // Build a map for quick parent lookup
+        const folderMap = new Map<string, (typeof listFolders)[number]>(
+          listFolders.map((f) => [f.id, f]),
+        )
+
+        // Helper to check if the full ancestor chain is expanded
+        const isFolderChainExpanded = (folderId: string): boolean => {
+          let currentId: string | undefined = folderId
+          while (currentId) {
+            const rowId = buildListFolderRowId(currentId)
+            // If this folder itself isn't marked expanded and it's not a root in the selection path, stop
+            if (!(expanded as Record<string, boolean>)[rowId]) return false
+            const parentId: string | undefined = folderMap.get(currentId)?.parentId
+            currentId = parentId
+          }
+          return true
+        }
+
+        listsToSelect = listsData.filter((l) => {
+          if (!l.entityListFolderId) return false
+          if (!allFolderIds.includes(l.entityListFolderId)) return false
+          return isFolderChainExpanded(l.entityListFolderId)
+        })
+      } else {
+        // No folders selected: select all root lists (lists without folder)
+        listsToSelect = listsData.filter((l) => !l.entityListFolderId)
+      }
+
+      const selection = listsToSelect.reduce(
+        (acc, l) => ({ ...acc, [l.id as string]: true }),
+        {} as RowSelectionState,
+      )
+      setRowSelection(selection)
+    },
+    [selectedRows, listsData, listFolders, expanded, setRowSelection],
+  )
+
+  return (
+    <ListsContext.Provider
+      value={{
+        rowSelection,
+        setRowSelection,
+        selectedRows,
+        selectedLists,
+        selectedList,
+        closeNewList,
+        createNewList,
+        newList,
+        openNewList,
+        setNewList,
+        createReviewSessionList,
+        isCreatingList,
+        isReview,
+        // expanded state
+        expanded,
+        setExpanded,
+        // list editing
+        closeRenameList,
+        openRenameList,
+        renamingList,
+        onRenameList,
+        onPutListsInFolder,
+        onRemoveListsFromFolder,
+        onCreateListFolder,
+        onUpdateListFolder,
+        onDeleteListFolders,
+        onPutFoldersInFolder,
+        onRemoveFoldersFromFolder,
+        deleteLists,
+        // info dialog
+        listDetailsOpen,
+        setListDetailsOpen,
+        // lists filters dialog
+        listsFiltersOpen,
+        setListsFiltersOpen,
+        // list folders dialog
+        listFolderOpen,
+        setListFolderOpen,
+        onOpenFolderList, // helper function to open folder dialog in edit/create mode
+        // helpers
+        selectAllLists,
+      }}
+    >
+      {children}
+    </ListsContext.Provider>
+  )
 }

@@ -19,7 +19,9 @@ export type FolderListItem = {
   attrib?: Record<string, any>
   ownAttrib?: string[]
   updatedAt: string
+  createdAt: string
   hasReviewables?: boolean
+  hasVersions?: boolean
   links: EntityLink[]
 }
 
@@ -34,6 +36,7 @@ export type TableRow = {
   tags?: string[]
   status?: string
   updatedAt?: string
+  createdAt: string
   parentId?: string
   folderId: string | null // all entities have a folder except root folders which will be null
   parents?: string[]
@@ -42,6 +45,7 @@ export type TableRow = {
   color?: string | null
   img?: string | null
   hasReviewables?: boolean
+  hasVersions?: boolean
   startContent?: JSX.Element
   assignees?: string[]
   attrib?: Record<string, any>
@@ -79,6 +83,7 @@ export type EditorVersionNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string
@@ -104,6 +109,7 @@ type EditorProductNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string

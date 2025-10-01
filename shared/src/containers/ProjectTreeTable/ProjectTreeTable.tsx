@@ -1082,6 +1082,8 @@ const TableBodyRow = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: 40,
+                pointerEvents: 'all',
+                cursor: 'grab',
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':

@@ -20,7 +20,7 @@ import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectTableContext } from '../context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
-import { NameData } from '@shared/components/RenameForm'
+import { NameWidgetData } from '@shared/components/RenameForm'
 
 const Cell = styled.div`
   position: absolute;
@@ -183,7 +183,7 @@ export const CellWidget: FC<EditorCellProps> = ({
         return (
           <NameWidget
             value={value as CellValue}
-            valueData={valueData as NameData}
+            valueData={valueData as NameWidgetData}
             cellId={cellId}
             entityType={entityType || ''}
             {...sharedProps}
@@ -245,6 +245,7 @@ export const CellWidget: FC<EditorCellProps> = ({
           <TextWidget
             value={value as string}
             isInherited={isInherited}
+            columnId={columnId}
             {...sharedProps}
             {...pt?.text}
           />

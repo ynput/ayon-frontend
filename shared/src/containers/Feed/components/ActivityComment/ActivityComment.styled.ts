@@ -149,6 +149,14 @@ export const Body = styled.div`
     }
   }
 
+  /* Inline code elements (not in pre blocks) */
+  code:not(pre code) {
+    font-family: monospace;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    padding: 2px 4px;
+    border-radius: 2px;
+  }
+
   &.isEditing {
     padding: 0;
     border-radius: var(--border-radius-l);
@@ -226,10 +234,17 @@ export const BlockCode = styled.pre`
   padding: var(--padding-m);
   border-radius: var(--padding-s);
   background-color: var(--md-sys-color-surface-container-lowest);
+  font-family: monospace;
+  font-size: var(--md-sys-typescale-body-small-font-size);
 
   line-break: anywhere;
   word-break: break-word;
   overflow: hidden;
+
+  /* Ensure all child elements use monospace font */
+  * {
+    font-family: monospace !important;
+  }
 `
 
 export const Tools = styled.div`

@@ -9,6 +9,7 @@ import UserAccessForm from './UserAccessForm'
 import styled from 'styled-components'
 import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -56,7 +57,6 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
       attrib: {},
       name: formData.Username,
       password: password ? password : undefined,
-      isGuest: formData.isGuest ? true : undefined,
     }
 
     attributes.forEach(({ name }) => {
@@ -139,14 +139,14 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
             label="Create user"
             onClick={() => handleSubmit(false)}
             disabled={!formData.Username}
-            data-shortcut="Shift+Enter"
+            data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Shift])}
           ></Button>
           <SaveButton
             onClick={() => handleSubmit(true)}
             label="Create and close"
             disabled={!formData.Username}
             saving={isCreatingUser}
-            data-shortcut="Ctrl/Cmd+Enter"
+            data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
           />
         </>
       }

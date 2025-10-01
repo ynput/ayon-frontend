@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Panel as ARCPanel, theme } from '@ynput/ayon-react-components'
+import { Panel as ARCPanel, Button, theme } from '@ynput/ayon-react-components'
 
 export const Panel = styled(ARCPanel)`
   gap: 0px;
@@ -51,4 +51,10 @@ export const Titles = styled.div`
     gap: 4px;
     width: 100%;
   }
+`
+
+export const CloseButton = styled(Button)`
+  position: absolute;
+  top: var(--padding-m);
+  right: 2px;
 `

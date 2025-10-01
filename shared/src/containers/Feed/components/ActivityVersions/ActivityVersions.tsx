@@ -69,7 +69,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                     <span>{productName}</span>
                     <ActivityDate date={createdAt} isExact />
                   </Styled.Title>
-                  <span className="version">{name}</span>
+                  <Styled.VersionName className="version">{name}</Styled.VersionName>
                 </div>
                 <Styled.Thumbnail
                   {...{ projectName }}

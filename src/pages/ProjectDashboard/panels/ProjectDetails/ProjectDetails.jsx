@@ -152,7 +152,7 @@ const ProjectDetails = ({ projectName }) => {
         attrib[key] = value
       }
 
-      await updateProject({ projectName, update: { ...data, attrib } }).unwrap()
+      await updateProject({ projectName, projectPatchModel: { ...data, attrib } }).unwrap()
 
       setEditing(false)
       toast.success('Project updated')

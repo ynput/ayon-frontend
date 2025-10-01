@@ -23,9 +23,8 @@ export interface ProjectDataContextProps {
   attribFields: ProjectTableAttribute[]
   writableFields?: string[]
   // Permissions
-  canRename: boolean
-  canEditName: boolean
-  canEditLabel: boolean
+  canWriteNamePermission: boolean
+  canWriteLabelPermission: boolean
 }
 
 const ProjectDataContext = createContext<ProjectDataContextProps | undefined>(undefined)
@@ -53,15 +52,14 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   const {
     attribFields,
     writableFields,
-    isSuccess: isSuccessAttribs,
-    isFetching: isFetchingAttribs,
+    isLoading: isLoadingAttribs,
   } = useAttributeFields({ projectPermissions })
 
   // GET USERS
   const { data: usersData = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
   const users = usersData as User[]
   // Calculate individual permissions
-  const canEditName = useMemo((): boolean => {
+  const canWriteNamePermission = useMemo((): boolean => {
     if (!attrib_write) return false
     // Check fields array for entity field permissions (name/label)
     if (!attrib_write.fields || attrib_write.fields.length === 0) {
@@ -72,7 +70,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     return attrib_write.fields.includes('name')
   }, [attrib_write])
 
-  const canEditLabel = useMemo((): boolean => {
+  const canWriteLabelPermission = useMemo((): boolean => {
     if (!attrib_write) return false
     // Check fields array for entity field permissions (name/label)
     if (!attrib_write.fields || attrib_write.fields.length === 0) {
@@ -83,39 +81,31 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     return attrib_write.fields.includes('label')
   }, [attrib_write])
 
-  // Calculate combined rename permission
-  const canRename = useMemo((): boolean => {
-    return canEditName || canEditLabel
-  }, [canEditName, canEditLabel])
-
-  const isInitialized =
-    isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
+  const isInitialized = isSuccessProject && !isFetchingProject && !isLoadingAttribs
 
   const value = useMemo(
     () => ({
       isInitialized,
-      isLoading: isFetchingProject || isFetchingAttribs,
+      isLoading: isFetchingProject || isLoadingAttribs,
       projectInfo,
       projectName,
       users,
       attribFields,
       writableFields,
-      canRename,
-      canEditName,
-      canEditLabel,
+      canWriteNamePermission,
+      canWriteLabelPermission,
     }),
     [
       isInitialized,
       isFetchingProject,
-      isFetchingAttribs,
+      isLoadingAttribs,
       projectInfo,
       projectName,
       users,
       attribFields,
       writableFields,
-      canRename,
-      canEditName,
-      canEditLabel,
+      canWriteNamePermission,
+      canWriteLabelPermission,
     ],
   )
 

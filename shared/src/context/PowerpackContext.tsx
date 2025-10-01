@@ -7,6 +7,7 @@ export type PowerpackFeature =
   | 'releases'
   | 'advancedFilters'
   | 'listAttributes'
+  | 'listFolders'
   | 'listAccess'
   | 'groupAttributes'
   | 'sharedViews'
@@ -17,18 +18,45 @@ export type PowerpackDialogType = {
   icon?: string
 }
 
+export const powerpackFeatureOrder: PowerpackFeature[] = [
+  'annotations',
+  'sharedViews',
+  'listFolders',
+  'groupAttributes',
+  'listAccess',
+  'slicer',
+  'releases',
+  'advancedFilters',
+  'listAttributes',
+]
+
 export const powerpackFeatures: {
-  [key in PowerpackFeature]: PowerpackDialogType
+  [key in PowerpackFeature]: Omit<PowerpackDialogType, 'priority'>
 } = {
-  slicer: {
-    label: 'Slicer',
-    description: 'Advanced filtering system for project organization.',
-    bullet: 'Powerful project filtering tools',
-  },
   annotations: {
     label: 'Annotations',
     description: 'Create detailed visual feedback directly on media files.',
     bullet: 'Advanced media review tools',
+  },
+  sharedViews: {
+    label: 'Shared Views',
+    description: 'Save custom views and share them with team members for better collaboration.',
+    bullet: 'Save and share custom views',
+  },
+  listFolders: {
+    label: 'List Folders',
+    description: 'Organize your lists into folders for a cleaner and more structured view.',
+    bullet: 'Organize lists into folders',
+  },
+  groupAttributes: {
+    label: 'Group Attributes',
+    description: 'Group tasks by assignees, status, or other attributes for better organization.',
+    bullet: 'Group tasks by attributes',
+  },
+  slicer: {
+    label: 'Slicer',
+    description: 'Advanced filtering system for project organization.',
+    bullet: 'Powerful project filtering tools',
   },
   releases: {
     label: 'Release History',
@@ -49,16 +77,6 @@ export const powerpackFeatures: {
     label: 'List Access',
     description: 'Manage and control access to your lists with advanced sharing options.',
     bullet: 'Advanced list sharing options',
-  },
-  groupAttributes: {
-    label: 'Group Attributes',
-    description: 'Group tasks by assignees, status, or other attributes for better organization.',
-    bullet: 'Group tasks by attributes',
-  },
-  sharedViews: {
-    label: 'Shared Views',
-    description: 'Save custom views and share them with team members for better collaboration.',
-    bullet: 'Save and share custom views',
   },
 }
 export type PowerpackContextType = {
@@ -90,6 +108,9 @@ export const PowerpackProvider = ({
   // check license state
   const [powerLicense, setPowerLicense] = useState(false)
 
+  // loading state
+  const [isLoading, setIsLoading] = useState(true)
+
   // Define the type for the license check function
   type CheckPowerLicenseFunction = () => Promise<boolean>
 
@@ -97,12 +118,13 @@ export const PowerpackProvider = ({
   const fallbackCheckLicense: CheckPowerLicenseFunction = async () => false
 
   // Load the remote module
-  const [checkPowerLicense, { isLoaded }] = useLoadModule<CheckPowerLicenseFunction>({
-    addon: 'powerpack',
-    remote: 'license',
-    module: 'checkPowerLicense',
-    fallback: fallbackCheckLicense,
-  })
+  const [checkPowerLicense, { isLoaded, isLoading: isLoadingModule }] =
+    useLoadModule<CheckPowerLicenseFunction>({
+      addon: 'powerpack',
+      remote: 'license',
+      module: 'checkPowerLicense',
+      fallback: fallbackCheckLicense,
+    })
 
   useEffect(() => {
     const checkLicense = async () => {
@@ -110,7 +132,7 @@ export const PowerpackProvider = ({
         console.warn('Using debug power license:', debug.powerLicense)
         setPowerLicense(debug.powerLicense)
         setIsLoading(false)
-      } else if (isLoaded) {
+      } else if (isLoaded || !isLoadingModule) {
         try {
           const hasPowerLicense = await checkPowerLicense()
           setPowerLicense(hasPowerLicense)
@@ -120,19 +142,20 @@ export const PowerpackProvider = ({
         } finally {
           setIsLoading(false)
         }
+        setIsLoading(false)
       }
     }
 
     checkLicense()
-  }, [debug, isLoaded, checkPowerLicense])
+  }, [debug, isLoaded, isLoadingModule, checkPowerLicense])
 
   const value = useMemo(
     () => ({
       powerLicense: powerLicense,
+      isLoading,
       selectedPowerPack,
       setPowerpackDialog,
       powerpackDialog: resolvePowerPackDialog(selectedPowerPack),
-      isLoading,
     }),
     [powerLicense, selectedPowerPack, setPowerpackDialog, isLoading],
   )

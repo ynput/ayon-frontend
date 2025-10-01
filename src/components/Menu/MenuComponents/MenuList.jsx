@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import MenuItem from './MenuItem'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
+import { usePowerpack } from '@shared/context'
 
 const MenuList = ({
   items,
@@ -13,8 +14,10 @@ const MenuList = ({
   parentRef,
   style,
   onClose,
+  onMenuClose,
   itemClassName,
   itemStyle,
+  setPowerpackDialog,
   ...props
 }) => {
   const itemRefs = useRef([])
@@ -93,23 +96,40 @@ const MenuList = ({
               disableClose,
               selected,
               disabled,
+              powerFeature,
               ...props
             } = item
+
+            const { powerLicense } = usePowerpack()
+            const isPowerFeature = !powerLicense && powerFeature
+
+            const handleClickPowerFeature = (e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setPowerpackDialog(powerFeature)
+
+              // close the menu
+              onMenuClose && onMenuClose()
+            }
 
             return (
               <MenuItem
                 tabIndex={0}
                 key={`${id}-${i}`}
-                {...{ label, icon, img, highlighted, items, selected, disabled }}
+                {...{ label, icon, img, highlighted, items, selected, disabled, powerFeature }}
                 isLink={link}
                 onClick={(e) =>
-                  items.length
+                  isPowerFeature
+                    ? handleClickPowerFeature(e)
+                    : items.length
                     ? handleSubMenu(e, id, items)
                     : handleClick(e, onClick, link, disableClose)
                 }
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    if (items.length) {
+                    if (isPowerFeature) {
+                      handleClickPowerFeature(e)
+                    } else if (items.length) {
                       handleSubMenu(e, id, items)
                     } else {
                       handleClick(e, onClick, link)

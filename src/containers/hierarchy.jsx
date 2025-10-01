@@ -326,6 +326,7 @@ const Hierarchy = (props) => {
     buildListMenuItem,
     newListMenuItem,
     folders: foldersList,
+    buildHierarchicalMenuItems,
   } = useEntityListsContext()
 
   // Context Menu
@@ -348,7 +349,11 @@ const Hierarchy = (props) => {
         hidden: !props.onOpenVersionUpload,
       },
       buildAddToListMenu([
-        ...foldersList.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        ...buildHierarchicalMenuItems(
+          foldersList.data,
+          selectedEntities,
+          () => false, // no icon needed in hierarchy tree
+        ),
         newListMenuItem('folder', selectedEntities),
       ]),
       {

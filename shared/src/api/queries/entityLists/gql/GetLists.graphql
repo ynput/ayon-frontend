@@ -10,8 +10,10 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           id
           label
           entityListType
+          entityListFolderId
           tags
           data
+          allAttrib
           entityType
           active
           createdAt
@@ -19,7 +21,6 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           updatedBy
           active
           projectName
-          attributes
           owner
           count
         }

@@ -99,6 +99,12 @@ export const Path = styled.span`
       background-color: var(--md-sys-color-primary-hover);
     }
   }
+
+  &.expanded {
+    opacity: 0;
+    width: 0;
+    padding: 0;
+  }
 `
 
 export const ExpandButton = styled(Button)`

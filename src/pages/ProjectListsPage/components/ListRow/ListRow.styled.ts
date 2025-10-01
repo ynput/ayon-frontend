@@ -34,6 +34,12 @@ export const Cell = styled.div`
     .icon {
       color: var(--md-sys-color-on-primary-container);
     }
+    /* update expander styles */
+    .expander {
+      &:hover {
+        background-color: var(--md-sys-color-on-primary);
+      }
+    }
   }
 
   &.inactive {

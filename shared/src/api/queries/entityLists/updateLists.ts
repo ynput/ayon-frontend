@@ -69,6 +69,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
+      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: (_s, _e, { listId }) => {
         const tags = [{ type: 'entityList', id: listId }]
         return tags

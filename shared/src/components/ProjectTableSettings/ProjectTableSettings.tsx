@@ -75,6 +75,14 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       value: 'tags',
       label: 'Tags',
     },
+    {
+      value: 'createdAt',
+      label: 'Created At',
+    },
+    {
+      value: 'updatedAt',
+      label: 'Updated At',
+    },
     ...attribFields.map((field) => ({
       value: `attrib_${field.name}`,
       label: field.data.title || field.name,
@@ -109,6 +117,5 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   ]
 
   settings.forEach((setting) => defaultSettings.push(setting))
-
   return <SettingsPanel settings={defaultSettings} />
 }

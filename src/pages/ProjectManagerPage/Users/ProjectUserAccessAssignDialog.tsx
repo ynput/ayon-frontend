@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 
-import { FormLayout, Dialog, Button, Icon, Spacer, ShortcutTag } from '@ynput/ayon-react-components'
+import { Button, Dialog, FormLayout, Icon, Spacer } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import Shortcuts from '@containers/Shortcuts'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
@@ -128,11 +128,16 @@ const ProjectUserAccessAssignDialog = ({
               className={clsx({ 'all-selected': allSelected })}
               label={allSelected ? 'Deselect all' : 'Select all'}
               onClick={() => handleToggleAll(!allSelected)}
-            >
-              <ShortcutTag>{getPlatformShortcutKey('a', [KeyMode.Ctrl])}</ShortcutTag>
-            </Styled.Button>
+              data-shortcut={getPlatformShortcutKey('a', [KeyMode.Ctrl])}
+            ></Styled.Button>
             <Spacer />
-            <Button icon="check" variant="filled" label="Save" onClick={() => handleSave()} />
+            <Button
+              icon="check"
+              variant="filled"
+              label="Save"
+              onClick={() => handleSave()}
+              data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
+            />
           </>
         }
         isOpen={true}

@@ -1,42 +1,91 @@
 import { RowSelectionState } from '@tanstack/react-table'
 import { useListsContext } from '../context'
 import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
-import useUpdateListCategory from './useUpdateListCategory'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
+import { parseListFolderRowId } from '../util'
+import { EntityListFolderModel } from '@shared/api'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { usePowerpack } from '@shared/context'
+
+export const FOLDER_ICON = 'snippet_folder'
+export const FOLDER_ICON_ADD = 'create_new_folder'
+export const FOLDER_ICON_EDIT = 'folder_managed'
+export const FOLDER_ICON_REMOVE = 'folder_off'
+
+// Helper function to build hierarchical folder structure for menu
+const buildFolderHierarchy = (folders: EntityListFolderModel[]) => {
+  const folderMap = new Map<string, EntityListFolderModel & { children: EntityListFolderModel[] }>()
+  const rootFolders: (EntityListFolderModel & { children: EntityListFolderModel[] })[] = []
+
+  // Create nodes for all folders
+  for (const folder of folders) {
+    folderMap.set(folder.id, { ...folder, children: [] })
+  }
+
+  // Build parent-child relationships
+  for (const folder of folders) {
+    const folderNode = folderMap.get(folder.id)!
+    if (folder.parentId && folderMap.has(folder.parentId)) {
+      folderMap.get(folder.parentId)!.children.push(folderNode)
+    } else {
+      rootFolders.push(folderNode)
+    }
+  }
+
+  return { folderMap, rootFolders }
+}
+
+// Helper function to prevent circular dependencies
+const wouldCreateCircularDependency = (
+  folderId: string,
+  targetParentId: string,
+  folders: EntityListFolderModel[],
+): boolean => {
+  if (folderId === targetParentId) return true
+
+  const folderMap = new Map(folders.map((f) => [f.id, f]))
+
+  // Check if targetParentId is a descendant of folderId
+  const isDescendant = (currentId: string, ancestorId: string): boolean => {
+    const current = folderMap.get(currentId)
+    if (!current || !current.parentId) return false
+    if (current.parentId === ancestorId) return true
+    return isDescendant(current.parentId, ancestorId)
+  }
+
+  return isDescendant(targetParentId, folderId)
+}
 
 const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
+  const isUser = !user.data?.isAdmin && !user.data?.isManager
   const { projectName } = useProjectDataContext()
-  const { listsData, categoryEnum } = useListsDataContext()
+  const { listsData, listFolders } = useListsDataContext()
   const {
     rowSelection,
     setRowSelection,
     openRenameList,
-    openDetailsPanel,
+    setListDetailsOpen,
     deleteLists,
     createReviewSessionList,
     isReview,
+    onPutListsInFolder,
+    onRemoveListsFromFolder,
+    onOpenFolderList,
+    openNewList,
+    onDeleteListFolders,
+    onPutFoldersInFolder,
+    onRemoveFoldersFromFolder,
+    selectAllLists,
   } = useListsContext()
+  const { powerLicense } = usePowerpack()
 
   const { clearListItems } = useClearListItems({ projectName })
-  const {
-    updateCategory,
-    createAndAssignCategory,
-    updateCategoryBulk,
-    createAndAssignCategoryBulk,
-  } = useUpdateListCategory({ projectName })
-
-  // Dialog state for creating categories - updated to handle multiple lists
-  const [createCategoryDialog, setCreateCategoryDialog] = useState<{
-    isOpen: boolean
-    listIds: string[]
-  }>({ isOpen: false, listIds: [] })
-
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
 
@@ -48,27 +97,6 @@ const useListContextMenu = () => {
       })
     },
     [createReviewSessionList, projectName],
-  )
-
-  const openCreateCategoryDialog = useCallback((listIds: string[]) => {
-    setCreateCategoryDialog({ isOpen: true, listIds })
-  }, [])
-
-  const closeCreateCategoryDialog = useCallback(() => {
-    setCreateCategoryDialog({ isOpen: false, listIds: [] })
-  }, [])
-
-  const handleCreateCategory = useCallback(
-    async (categoryName: string) => {
-      if (createCategoryDialog.listIds.length > 0) {
-        if (createCategoryDialog.listIds.length === 1) {
-          await createAndAssignCategory(createCategoryDialog.listIds[0], categoryName)
-        } else {
-          await createAndAssignCategoryBulk(createCategoryDialog.listIds, categoryName)
-        }
-      }
-    },
-    [createCategoryDialog.listIds, createAndAssignCategory, createAndAssignCategoryBulk],
   )
 
   const openContext = useCallback(
@@ -91,13 +119,82 @@ const useListContextMenu = () => {
       const selectedList = newSelectedLists[0]
       const firstSelectedRow = Object.keys(newSelection)[0]
       const multipleSelected = Object.keys(newSelection).length > 1
+
+      // Check if the first selected row is a folder
+      const selectedFolderId = parseListFolderRowId(firstSelectedRow)
+      const isSelectedRowFolder = !!selectedFolderId
+      const selectedFolder = isSelectedRowFolder
+        ? listFolders.find((f) => f.id === selectedFolderId)
+        : null
+      const selectedFolderIds = newSelectedRows
+        .map((id) => parseListFolderRowId(id))
+        .filter((id): id is string => !!id)
+
       // some rows are folders
       const allSelectedRowsAreLists = newSelectedRows.every((selected) =>
         newSelectedLists.some((list) => list?.id === selected),
       )
+      const allSelectedRowsAreFolders = newSelectedRows.every((selected) =>
+        parseListFolderRowId(selected),
+      )
 
-      // Create category submenu items
-      const createCategorySubmenu = () => {
+      // ownership / permissions
+      const currentUserName =
+        (user as any)?.data?.name || (user as any)?.data?.username || (user as any)?.name
+      const userOwnsAllSelectedLists =
+        newSelectedLists.length > 0 &&
+        newSelectedLists.every((l) => !!currentUserName && l.owner === currentUserName)
+      const selectedFoldersAll: EntityListFolderModel[] = selectedFolderIds
+        .map((id) => listFolders.find((f) => f.id === id))
+        .filter((f): f is EntityListFolderModel => !!f)
+      const userOwnsAllSelectedFolders =
+        selectedFoldersAll.length > 0 &&
+        selectedFoldersAll.every((f) => !!currentUserName && f.owner === currentUserName)
+
+      // Create recursive folder submenu
+      const createFolderHierarchy = (
+        folders: (EntityListFolderModel & { children: EntityListFolderModel[] })[],
+        excludeFolderId?: string,
+        depth = 0,
+      ): any[] => {
+        const items: any[] = []
+
+        for (const folder of folders) {
+          if (folder.id === excludeFolderId) continue
+
+          const hasChildren = folder.children.length > 0
+          const childItems = hasChildren
+            ? createFolderHierarchy(
+                folder.children as (EntityListFolderModel & {
+                  children: EntityListFolderModel[]
+                })[],
+                excludeFolderId,
+                depth + 1,
+              )
+            : []
+
+          items.push({
+            label: folder.label,
+            icon: folder.data?.icon || FOLDER_ICON,
+            command: allSelectedRowsAreFolders
+              ? () => onPutFoldersInFolder(selectedFolderIds, folder.id)
+              : () =>
+                  onPutListsInFolder(
+                    newSelectedLists.map((l) => l.id),
+                    folder.id,
+                  ),
+            disabled:
+              allSelectedRowsAreFolders &&
+              wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
+            ...(hasChildren && { items: childItems }),
+          })
+        }
+
+        return items
+      }
+
+      // Create folder submenu items for lists
+      const createListFolderSubmenu = () => {
         if (!allSelectedRowsAreLists || newSelectedLists.length === 0) {
           return []
         }
@@ -105,72 +202,100 @@ const useListContextMenu = () => {
         const submenuItems: any[] = []
         const selectedListIds = newSelectedLists.map((list) => list.id)
 
-        // Add "Create category" option at the top
-        submenuItems.push({
-          label: 'Create category',
-          icon: 'add',
-          command: () => openCreateCategoryDialog(selectedListIds),
-        })
-
-        // For multiple selections, show "Unset category" if any list has a category
-        // For single selection, show "Unset category" only if that list has a category
-        const hasAnyCategory = newSelectedLists.some((list) => list.data?.category)
-        if (hasAnyCategory) {
-          submenuItems.push({
-            label: 'Unset category',
-            icon: 'close',
-            command: () => {
-              if (multipleSelected) {
-                updateCategoryBulk(selectedListIds, null)
-              } else {
-                updateCategory(selectedListIds[0], null)
-              }
-            },
-          })
+        // Add hierarchy items first (available destination folders)
+        if (listFolders.length > 0) {
+          const { rootFolders } = buildFolderHierarchy(listFolders)
+          const hierarchyItems = createFolderHierarchy(rootFolders)
+          submenuItems.push(...hierarchyItems)
         }
 
-        // Get categories that are not already assigned to ALL selected lists
-        const availableCategories = categoryEnum.filter((cat) => {
-          if (multipleSelected) {
-            // For multiple selections, show categories that are not assigned to ALL lists
-            return !newSelectedLists.every((list) => list.data?.category === cat.value)
-          } else {
-            // For single selection, show categories that are not assigned to this list
-            return newSelectedLists[0]?.data?.category !== cat.value
-          }
-        })
-
-        if (availableCategories.length > 0) {
-          if (submenuItems.length > 0) {
-            submenuItems.push({ separator: true })
-          }
-
-          availableCategories.forEach((category) => {
-            submenuItems.push({
-              label: category.label,
-              icon: 'folder',
-              command: () => {
-                if (multipleSelected) {
-                  updateCategoryBulk(selectedListIds, category.value)
-                } else {
-                  updateCategory(selectedListIds[0], category.value)
-                }
-              },
-            })
+        // For multiple selections, show "Unset folder" if any list has a folder
+        // For single selection, show "Unset folder" only if that list has a folder
+        const hasAnyFolder = newSelectedLists.some((list) => list.entityListFolderId)
+        if (hasAnyFolder) {
+          if (submenuItems.length > 0) submenuItems.push({ separator: true })
+          submenuItems.push({
+            label: 'Unset folder',
+            icon: FOLDER_ICON_REMOVE,
+            command: () => {
+              onRemoveListsFromFolder(selectedListIds)
+            },
+            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
           })
         }
 
         return submenuItems
       }
 
-      const categorySubmenu = createCategorySubmenu()
+      // Create folder submenu items for folders
+      const createFolderFolderSubmenu = () => {
+        if (!allSelectedRowsAreFolders || !selectedFolder) {
+          return []
+        }
+
+        const submenuItems: any[] = []
+
+        // Show available parent folders (excluding self and its descendants) first
+        const availableParents = listFolders.filter(
+          (folder) =>
+            folder.id !== selectedFolderId &&
+            !wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
+        )
+
+        if (availableParents.length > 0) {
+          const { rootFolders } = buildFolderHierarchy(availableParents)
+          const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
+          submenuItems.push(...hierarchyItems)
+        }
+
+        // Show "Unset parent" (make root) at bottom if folder has a parent
+        if (selectedFolder.parentId) {
+          if (submenuItems.length > 0) submenuItems.push({ separator: true })
+          submenuItems.push({
+            label: 'Make root folder',
+            icon: FOLDER_ICON_REMOVE,
+            command: () => onRemoveFoldersFromFolder(selectedFolderIds),
+            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
+          })
+        }
+
+        return submenuItems
+      }
+
+      const listFolderSubmenu = createListFolderSubmenu()
+      const folderFolderSubmenu = createFolderFolderSubmenu()
+
+      // Build move submenu (formerly "Folder")
+      const moveMenuItems: any[] = []
+      if (powerLicense) {
+        moveMenuItems.push({
+          label: allSelectedRowsAreFolders ? 'Move folder' : 'Move list',
+          icon: FOLDER_ICON,
+          items: allSelectedRowsAreLists ? listFolderSubmenu : folderFolderSubmenu,
+          // Structural disabling only (no selection); ownership handled via hidden
+          disabled: !allSelectedRowsAreLists && !allSelectedRowsAreFolders,
+          hidden:
+            (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
+            (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
+            (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0) ||
+            (isUser &&
+              ((allSelectedRowsAreLists && !userOwnsAllSelectedLists) ||
+                (allSelectedRowsAreFolders && !userOwnsAllSelectedFolders))),
+        })
+      }
 
       const menuItems: any[] = [
         {
           label: 'Rename',
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
+          // Hide for users without ownership; still disable for multi-select
           disabled: multipleSelected,
+          hidden:
+            (!allSelectedRowsAreLists && !isSelectedRowFolder) ||
+            (isUser &&
+              ((isSelectedRowFolder && selectedFolder?.owner !== currentUserName) ||
+                (!isSelectedRowFolder && selectedList?.owner !== currentUserName))),
         },
         {
           label: 'Create review',
@@ -180,18 +305,67 @@ const useListContextMenu = () => {
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
-          label: 'Category',
-          icon: 'sell',
-          items: categorySubmenu,
-          disabled: !allSelectedRowsAreLists,
-          hidden: !allSelectedRowsAreLists || categorySubmenu.length === 0,
+          label: 'Edit folder',
+          icon: FOLDER_ICON_EDIT,
+          command: () => {
+            const folderId = firstSelectedRow.replace('folder-', '')
+            onOpenFolderList({ folderId })
+          },
+          hidden:
+            !isSelectedRowFolder ||
+            multipleSelected ||
+            (isSelectedRowFolder && isUser && selectedFolder?.owner !== currentUserName),
         },
         {
-          label: 'Info',
+          label: 'Create list',
+          icon: 'add',
+          command: () => {
+            // If a single folder is selected, create list inside that folder
+            if (selectedFolderIds.length === 1) {
+              openNewList({ entityListFolderId: selectedFolderIds[0] })
+            } else {
+              openNewList()
+            }
+          },
+          shortcut: 'N',
+          hidden: !isSelectedRowFolder,
+          disabled: selectedFolderIds.length > 1,
+        },
+        // Root level Create folder (lists selection) / gated if no power license
+        {
+          label: 'Create folder',
+          icon: FOLDER_ICON_ADD,
+          command: () => onOpenFolderList({}),
+          shortcut: 'F',
+          hidden: !allSelectedRowsAreLists,
+          powerFeature: powerLicense ? 'listFolders' : undefined,
+        },
+        // Root level Create subfolder (single folder selection)
+        ...(powerLicense
+          ? [
+              {
+                label: 'Create subfolder',
+                icon: FOLDER_ICON_ADD,
+                command: () => onOpenFolderList({}),
+                shortcut: 'F',
+                hidden: !allSelectedRowsAreFolders || selectedFolderIds.length !== 1,
+              },
+            ]
+          : []),
+        ...moveMenuItems,
+        {
+          label: 'Select all lists',
+          icon: 'checklist',
+          hidden: !selectedFolderIds.length, // hide if no folders selected per spec
+          command: () => selectAllLists({ rowIds: Object.keys(newSelection) }),
+        },
+        {
+          label: 'Details',
           icon: 'info',
-          command: () => openDetailsPanel(firstSelectedRow),
+          command: () => setListDetailsOpen(true),
           disabled: multipleSelected,
           hidden: !allSelectedRowsAreLists,
+          shortcut: 'Double click',
         },
         {
           label: 'Clear list',
@@ -201,14 +375,29 @@ const useListContextMenu = () => {
           hidden: !developerMode || multipleSelected || !allSelectedRowsAreLists,
         },
         {
-          label: 'Delete',
+          label: `Delete ${allSelectedRowsAreFolders ? '(folder only)' : ''}`,
           icon: 'delete',
           danger: true,
-          command: (e: CommandEvent) =>
-            deleteLists(Object.keys(newSelection), {
-              force: e.originalEvent.metaKey || e.originalEvent.ctrlKey,
-            }),
-          hidden: !allSelectedRowsAreLists,
+          command: (e: CommandEvent) => {
+            const forceDelete = e.originalEvent.metaKey || e.originalEvent.ctrlKey
+
+            if (allSelectedRowsAreFolders) {
+              const folderIds = newSelectedRows
+                .map((rowId) => parseListFolderRowId(rowId))
+                .filter((id): id is string => !!id)
+
+              // Delete folders
+              onDeleteListFolders(folderIds)
+            } else if (allSelectedRowsAreLists) {
+              // Delete lists
+              deleteLists(Object.keys(newSelection), { force: forceDelete })
+            }
+          },
+          hidden:
+            (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
+            (isUser &&
+              ((allSelectedRowsAreLists && !userOwnsAllSelectedLists) ||
+                (allSelectedRowsAreFolders && !userOwnsAllSelectedFolders))),
         },
       ]
 
@@ -218,23 +407,29 @@ const useListContextMenu = () => {
       ctxMenuShow,
       rowSelection,
       listsData,
-      categoryEnum,
+      listFolders,
       setRowSelection,
       openRenameList,
-      openDetailsPanel,
+      setListDetailsOpen,
       deleteLists,
       createReviewSessionList,
-      updateCategory,
-      updateCategoryBulk,
+      onPutListsInFolder,
+      onRemoveListsFromFolder,
+      onOpenFolderList,
+      onDeleteListFolders,
+      onPutFoldersInFolder,
+      onRemoveFoldersFromFolder,
+      isUser,
+      developerMode,
+      handleCreateReviewSessionList,
+      clearListItems,
+      isReview,
+      powerLicense,
     ],
   )
 
   return {
     openContext,
-    createCategoryDialog,
-    closeCreateCategoryDialog,
-    handleCreateCategory,
-    existingCategories: categoryEnum.map((cat) => cat.value),
   }
 }
 

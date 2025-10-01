@@ -24,7 +24,7 @@ import {
 } from './types'
 
 // Helper function to safely parse entity list data field from JSON string to object
-const parseEntityListData = (data: string | null | undefined): Record<string, any> => {
+const parseJSON = (data: string | null | undefined): Record<string, any> => {
   if (!data) return {}
 
   try {
@@ -33,7 +33,7 @@ const parseEntityListData = (data: string | null | undefined): Record<string, an
     }
     return JSON.parse(data)
   } catch (e) {
-    console.warn('Failed to parse entity list data field:', e)
+    console.warn('Failed to parse entity list data field:', e, data)
     return {}
   }
 }
@@ -63,7 +63,8 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           // @ts-expect-error - entityType is string
           lists: response.project.entityLists.edges.map((edge) => ({
             ...edge.node,
-            data: parseEntityListData(edge.node.data),
+            data: parseJSON(edge.node.data),
+            attrib: parseJSON(edge.node.allAttrib),
           })),
           pageInfo: response.project.entityLists.pageInfo,
         }
@@ -132,7 +133,10 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             getListsGqlApiEnhanced.endpoints.GetLists.initiate(queryParams, { forceRefetch: true }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            // Preserve original error (e.g. 403) so the UI can react accordingly
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -150,17 +154,17 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
-      providesTags: (result) => [
-        { type: 'entityList', id: 'LIST' },
-        ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
-          type: 'entityList' as const,
-          id: list.id,
-        })),
-        ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
-          type: 'entityList' as const,
-          id: list.entityListType,
-        })),
-      ],
+      providesTags: (result) => {
+        const lists = result?.pages.flatMap((page) => page.lists) || []
+        return [
+          { type: 'entityList', id: 'LIST' },
+          ...lists.flatMap((list) => [
+            { type: 'entityList' as const, id: list.id },
+            { type: 'entityList' as const, id: list.entityListType },
+            { type: 'entityList' as const, id: list.entityListFolderId || 'NO_FOLDER' },
+          ]),
+        ]
+      },
       async onCacheEntryAdded(
         _args,
         { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
@@ -256,7 +260,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -373,7 +379,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -402,19 +410,21 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
   }),
 })
 
-const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
+export const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
   endpoints: {
     getEntityList: {
-      transformResponse: (response: any) => {
-        return {
-          ...response,
-          data: parseEntityListData(response.data),
-        }
-      },
       providesTags: (result, _e, { listId, projectName }) => [
         { type: 'entityList', id: listId },
         { type: 'entityList', id: projectName },
-        ...(result ? [{ type: 'entityList', id: result.entityListType }] : []),
+        ...(result
+          ? [
+              { type: 'entityList', id: result.entityListType },
+              {
+                type: 'entityList',
+                id: result.entityListFolderId || 'NO_FOLDER',
+              },
+            ]
+          : []),
       ],
     },
   },

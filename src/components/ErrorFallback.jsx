@@ -4,6 +4,7 @@ import { Button, Panel, Section } from '@ynput/ayon-react-components'
 import React from 'react'
 import styled from 'styled-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
 const StyledPanel = styled(Panel)`
   max-width: 300px;
@@ -46,9 +47,9 @@ const ErrorFallback = ({ error }) => {
           variant="filled"
           onClick={() => window.location.reload(true)}
         />
-        <span>1. If that does not work: try shift + ctrl/cmd + R</span>
+        <span>1. If that does not work: try {getPlatformShortcutKey('r', [KeyMode.Shift, KeyMode.Ctrl])}</span>
         <span>
-          2. If reloading does not work: try shift + ctrl/cmd + delete. Then clear Cached images and
+          2. If reloading does not work: try {getPlatformShortcutKey('Delete', [KeyMode.Shift, KeyMode.Ctrl])}. Then clear Cached images and
           files.
         </span>
         </StyledPanel>
@@ -83,7 +84,7 @@ Chrome version: ${navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0] || 'Unknown'}
 Page: ${window.location.href}
 User: ${user?.name || 'Unknown'} - ${
     user?.data?.isAdmin ? 'Admin' : user?.data?.isManager ? 'Manager' : 'User'
-  } 
+  }
 `
 
   return (

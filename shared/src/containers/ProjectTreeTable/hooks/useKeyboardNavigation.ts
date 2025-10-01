@@ -9,7 +9,8 @@ import { getEntityViewierIds } from '../utils'
 
 export default function useKeyboardNavigation() {
   const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
-  const { canRename } = useProjectDataContext()
+  const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
+  const canOpenRenameDialog = canWriteLabelPermission || canWriteNamePermission
 
   const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
     useSelectionCellsContext()
@@ -197,7 +198,7 @@ export default function useKeyboardNavigation() {
           }
           e.preventDefault()
           // Check if focused cell is name column on folder/task and user has rename permissions
-          if (colId === 'name' && canRename) {
+          if (colId === 'name' && canOpenRenameDialog) {
             const entity = getEntityById(rowId)
             if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
               const nameCellId = getCellId(rowId, 'name')
@@ -219,7 +220,7 @@ export default function useKeyboardNavigation() {
       getEntityById,
       playerOpen,
       setSelectedEntity,
-      canRename,
+      canOpenRenameDialog,
     ],
   )
 

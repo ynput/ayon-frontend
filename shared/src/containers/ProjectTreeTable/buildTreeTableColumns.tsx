@@ -15,6 +15,7 @@ import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
+import { NameWidgetData } from '@shared/components/RenameForm'
 
 const MIN_SIZE = 50
 
@@ -86,6 +87,8 @@ export type DefaultColumns =
   | 'subType'
   | 'assignees'
   | 'tags'
+  | 'createdAt'
+  | 'updatedAt'
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
@@ -188,7 +191,6 @@ const buildTreeTableColumns = ({
           )
         }
 
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
         return (
           <TableCellContent
             id={cellId}
@@ -234,13 +236,16 @@ const buildTreeTableColumns = ({
                 className={clsx('name', { loading: row.original.isLoading })}
                 columnId={column.id}
                 value={value}
-                valueData={{
-                  name: row.original.name,
-                  label: row.original.label,
-                  meta,
-                  entityRowId: id,
-                  columnId: column.id,
-                }}
+                valueData={
+                  {
+                    name: row.original.name,
+                    label: row.original.label,
+                    meta,
+                    entityRowId: id,
+                    columnId: column.id,
+                    hasVersions: !!row.original.hasVersions,
+                  } as NameWidgetData
+                }
                 entityType={type}
                 attributeData={{ type: 'name' }}
                 isCollapsed={!!row.original.childOnlyMatch}
@@ -437,6 +442,64 @@ const buildTreeTableColumns = ({
             }
             isReadOnly={meta?.readOnly?.includes(column.id)}
             enableCustomValues
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('createdAt')) {
+    staticColumns.push({
+      id: 'createdAt',
+      accessorKey: 'createdAt',
+      header: 'Created at',
+      minSize: MIN_SIZE,
+      enableSorting: true,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(sortingFns.datetime),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('createdAt', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={value}
+            attributeData={{ type: 'datetime' }}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly={true}
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('updatedAt')) {
+    staticColumns.push({
+      id: 'updatedAt',
+      accessorKey: 'updatedAt',
+      header: 'Updated at',
+      minSize: MIN_SIZE,
+      enableSorting: true,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(sortingFns.datetime),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('updatedAt', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={value}
+            attributeData={{ type: 'datetime' }}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly={true}
           />
         )
       },

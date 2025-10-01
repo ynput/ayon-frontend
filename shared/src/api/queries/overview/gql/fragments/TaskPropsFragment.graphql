@@ -8,6 +8,7 @@ fragment TaskPropsFragment on TaskNode {
   tags
   taskType
   updatedAt
+  createdAt
   active
   assignees
   allAttrib

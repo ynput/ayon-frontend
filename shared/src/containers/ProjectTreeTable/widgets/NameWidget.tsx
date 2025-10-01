@@ -1,12 +1,12 @@
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
 import { CellValue, WidgetBaseProps } from './CellWidget'
-import { type NameData, RenameForm } from '@shared/components/RenameForm'
+import { type NameWidgetData, RenameForm } from '@shared/components/RenameForm'
 import { useProjectDataContext } from '../context'
 
 export interface NameWidgetProps extends WidgetBaseProps {
   value?: CellValue
-  valueData?: NameData
+  valueData?: NameWidgetData
   cellId: string
   entityType: string
 }
@@ -19,7 +19,7 @@ export const NameWidget: FC<NameWidgetProps> = ({
   onCancelEdit,
   entityType,
 }) => {
-  const { canEditName, canEditLabel } = useProjectDataContext()
+  const { canWriteNamePermission, canWriteLabelPermission } = useProjectDataContext()
 
   return (
     <>
@@ -32,8 +32,16 @@ export const NameWidget: FC<NameWidgetProps> = ({
             onClose={onCancelEdit}
             entityType={entityType}
             valueData={valueData}
-            canEditName={canEditName}
-            canEditLabel={canEditLabel}
+            nameDisabled={
+              !canWriteNamePermission
+                ? 'You do not have permission to edit the name.'
+                : valueData?.hasVersions
+                ? 'Cannot edit name when versions exist.'
+                : false
+            }
+            labelDisabled={
+              !canWriteLabelPermission ? 'You do not have permission to edit the label.' : false
+            }
           />
         </CellEditingDialog>
       )}

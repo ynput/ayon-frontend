@@ -16,7 +16,7 @@ import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
+import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import styled from 'styled-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
@@ -38,7 +38,7 @@ const UserDashboardPage = () => {
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
-  const isExternal = user?.data?.isExternal
+  const isGuest = user?.data?.isGuest
 
   const {
     data: addonsData = [],
@@ -128,7 +128,7 @@ const UserDashboardPage = () => {
   }
 
   const handleActivateProject = async (sel, active) => {
-    await updateProject({ projectName: sel, update: { active } }).unwrap()
+    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
   }
 
   const isProjectsMultiSelect = module === 'tasks'
@@ -165,8 +165,8 @@ const UserDashboardPage = () => {
     }
   }
 
-  if (isExternal) {
-    return <ExternalUserPageLocked />
+  if (isGuest) {
+    return <GuestUserPageLocked />
   }
 
 
