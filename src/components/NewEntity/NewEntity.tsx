@@ -468,6 +468,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 labelRef={labelRef}
                 setNameFocused={setNameFocused}
                 handleKeyDown={handleKeyDown}
+                nameInfo={`Names are auto generated from the label using the Entity Naming setting on the project anatomy. Capitalization: ${config.capitalization}. Separator: "${config.separator}"`}
               />
             </ContentStyled>
           )}
