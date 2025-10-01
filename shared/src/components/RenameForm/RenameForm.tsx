@@ -4,8 +4,9 @@ import { TableRow, useCellEditing, useProjectDataContext } from '@shared/contain
 import { theme } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { TableMeta } from '@tanstack/react-table'
-import { checkName, NamingConfig, parseAndFormatName } from '@shared/util'
+import { checkName, parseAndFormatName } from '@shared/util'
 import { toast } from 'react-toastify'
+import { EntityNaming } from '@shared/api'
 
 const EditingContainer = styled.div`
   background: var(--md-sys-color-surface-container-lowest);
@@ -72,7 +73,7 @@ export const RenameForm: React.FC<InlineEditingWidgetProps> = ({
 }) => {
   const { anatomy } = useProjectDataContext()
   const { entity_naming: config = { capitalization: 'lower', separator: '_' } } = anatomy as {
-    entity_naming?: NamingConfig
+    entity_naming?: EntityNaming
   }
 
   const [label, setLabel] = useState(initialLabel)

@@ -1,13 +1,9 @@
+import { EntityNaming } from '@shared/api'
 import { snakeCase } from 'lodash'
 
 export interface CheckNameResult {
   valid: boolean
   error?: string
-}
-
-export type NamingConfig = {
-  capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
-  separator?: '' | '_' | '-' | '.'
 }
 
 // Validation ONLY: does not mutate/transform name. Returns validity + human readable error.
@@ -32,7 +28,7 @@ export const checkName = (name?: string | null): CheckNameResult => {
 // It will sanitize and then apply capitalization + separator rules.
 export const parseAndFormatName = (
   raw: string,
-  config: NamingConfig = { capitalization: 'lower', separator: '' },
+  config: EntityNaming = { capitalization: 'lower', separator: '' },
 ): string => {
   const { capitalization = 'lower', separator = '' } = config
 

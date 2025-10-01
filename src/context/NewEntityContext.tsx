@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react'
-import { getEntityId, NamingConfig } from '@shared/util'
+import { getEntityId } from '@shared/util'
 import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
 import { generateLabel } from '@components/NewEntity/NewEntity'
@@ -8,6 +8,7 @@ import {
   useUpdateOverviewEntitiesMutation,
   OperationModel,
   OperationResponseModel,
+  EntityNaming,
 } from '@shared/api'
 import { useProjectDataContext, useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
@@ -32,7 +33,7 @@ interface SequenceForm {
 }
 
 interface NewEntityContextProps {
-  config: NamingConfig
+  config: EntityNaming
   entityType: NewEntityType | null
   setEntityType: React.Dispatch<React.SetStateAction<NewEntityType | null>>
   entityForm: EntityForm
@@ -56,7 +57,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
   const { anatomy } = useProjectDataContext()
   const { entity_naming: config = { capitalization: 'lower', separator: '_' } } = anatomy as {
-    entity_naming?: NamingConfig
+    entity_naming?: EntityNaming
   }
 
   const { rowSelection, sliceType } = useSlicerContext()

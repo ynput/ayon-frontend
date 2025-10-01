@@ -476,9 +476,9 @@ export type ProjectTeamsResponseModel = {
 }
 export type EntityNaming = {
   /** How to capitalize the entity names */
-  capitalization?: string
+  capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
   /** Character to separate different parts of the name */
-  separator?: string
+  separator?: '' | '_' | '-' | '.'
 }
 export type Root = {
   name: string
