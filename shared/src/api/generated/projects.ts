@@ -474,6 +474,12 @@ export type ProjectTeamsResponseModel = {
     [key: string]: number
   }
 }
+export type EntityNaming = {
+  /** How to capitalize the entity names */
+  capitalization?: string
+  /** Character to separate different parts of the name */
+  separator?: string
+}
 export type Root = {
   name: string
   windows?: string
@@ -578,6 +584,8 @@ export type Tag = {
   color?: string
 }
 export type Anatomy = {
+  /** Settings for automatic entity name generation */
+  entity_naming?: EntityNaming
   /** Setup root paths for the project */
   roots?: Root[]
   /** Path templates configuration */

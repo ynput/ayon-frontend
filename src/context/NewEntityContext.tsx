@@ -1,17 +1,17 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react'
-import { getEntityId } from '@shared/util'
+import { getEntityId, NamingConfig } from '@shared/util'
 import { toast } from 'react-toastify'
 import getSequence from '@helpers/getSequence'
-import { generateLabel, generateName } from '@components/NewEntity/NewEntity'
+import { generateLabel } from '@components/NewEntity/NewEntity'
 import {
   PatchOperation,
   useUpdateOverviewEntitiesMutation,
   OperationModel,
   OperationResponseModel,
 } from '@shared/api'
-import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
+import { useProjectDataContext, useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
-import { checkName } from '@shared/util'
+import { parseAndFormatName } from '@shared/util'
 import { useSlicerContext } from './SlicerContext'
 import { isEmpty } from 'lodash'
 
@@ -32,6 +32,7 @@ interface SequenceForm {
 }
 
 interface NewEntityContextProps {
+  config: NamingConfig
   entityType: NewEntityType | null
   setEntityType: React.Dispatch<React.SetStateAction<NewEntityType | null>>
   entityForm: EntityForm
@@ -52,6 +53,11 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
   const { findNonInheritedValues, projectName, attribFields, projectInfo, getEntityById } =
     useProjectTableContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
+
+  const { anatomy } = useProjectDataContext()
+  const { entity_naming: config = { capitalization: 'lower', separator: '_' } } = anatomy as {
+    entity_naming?: NamingConfig
+  }
 
   const { rowSelection, sliceType } = useSlicerContext()
 
@@ -108,7 +114,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
         [`${entityType}Type`]: subType,
         id: getEntityId(),
         label: entity.label || entity.name,
-        name: checkName(entity.name),
+        name: parseAndFormatName(entity.name, config),
         ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
         ...slicerData,
       },
@@ -403,7 +409,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     }
   }
 
-  const onOpenNew: NewEntityContextProps['onOpenNew'] = (type, config) => {
+  const onOpenNew: NewEntityContextProps['onOpenNew'] = (type, c) => {
     // set entityType
     setEntityType(type)
     // set any default values
@@ -411,18 +417,17 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       (type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes) || []
     const firstType = typeOptions[0]
     const firstName = firstType.name || ''
+    const label = generateLabel(type, firstName, projectInfo)
 
     // Use the helper function to generate the label
     const initData = {
       subType: firstName,
-      label: generateLabel(type, firstName, projectInfo),
-      name: generateName(generateLabel(type, firstName, projectInfo)),
+      label: label,
+      name: parseAndFormatName(label, config),
     }
 
-    console.log(config)
-
     // if sequence, set sequenceForm active
-    if (config?.isSequence) {
+    if (c?.isSequence) {
       setSequenceForm((prev) => ({
         ...prev,
         active: true,
@@ -433,6 +438,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
   }
 
   const value: NewEntityContextProps = {
+    config,
     entityType,
     setEntityType,
     entityForm,
