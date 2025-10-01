@@ -35,6 +35,9 @@ export const TooltipInner = styled.div`
   white-space: break-spaces;
   overflow-wrap: break-word;
 
+  /* only break words aggressively when content overflows */
+  word-break: ${(props) => (props.$hasOverflow ? 'break-word' : 'normal')};
+
   /* box shadow */
   z-index: 1200;
 `
