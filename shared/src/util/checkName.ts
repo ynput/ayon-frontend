@@ -1,5 +1,5 @@
 import { EntityNaming } from '@shared/api'
-import { snakeCase } from 'lodash'
+import { snakeCase, deburr } from 'lodash'
 
 export interface CheckNameResult {
   valid: boolean
@@ -41,8 +41,15 @@ export const parseAndFormatName = (
   // Remove disallowed characters from each part
   const cleanedParts = parts
     .map((part) => {
+      // Transliterate non-ASCII characters
+      // 1. Normalize Unicode (NFD = decomposed form)
+      // 2. Use lodash deburr to remove diacritics
+      // 3. Replace remaining non-ASCII with empty string
+      let cleaned = part.normalize('NFD')
+      cleaned = deburr(cleaned)
+
       // Remove disallowed characters, keep _, -, .
-      let cleaned = part.replace(/[^a-zA-Z0-9_\-\.]+/g, '')
+      cleaned = cleaned.replace(/[^a-zA-Z0-9_\-\.]+/g, '')
       // Remove trailing - or .
       cleaned = cleaned.replace(/[.-]+$/g, '')
       return cleaned
