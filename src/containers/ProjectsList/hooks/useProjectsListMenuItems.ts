@@ -140,6 +140,7 @@ const useProjectsListMenuItems = ({
           [command ? 'command' : 'onClick']: onShowArchivedToggle,
           selected: showArchived,
           active: showArchived,
+          hidden: command, // hide on context menu
         },
         { id: 'divider', label: '' },
         {
