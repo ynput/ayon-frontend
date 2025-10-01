@@ -14,17 +14,18 @@ import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useCreateContextMenu } from '@shared/containers'
+import { useLocalStorage } from '@shared/hooks'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
 interface ProjectsListProps {
   selection: string[]
   onSelect: (ids: string[]) => void
-  showInactive?: boolean
   multiSelect?: boolean
   onNewProject?: () => void
   onActivateProject?: (projectName: string, active: boolean) => void
   onDeleteProject?: (projectName: string) => void
+  onNoProjectSelected?: (projectName: string) => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -33,7 +34,6 @@ interface ProjectsListProps {
 const ProjectsList: FC<ProjectsListProps> = ({
   selection,
   onSelect,
-  showInactive,
   multiSelect,
   onNewProject,
   onActivateProject,
@@ -41,14 +41,17 @@ const ProjectsList: FC<ProjectsListProps> = ({
   onNoProjectSelected,
   pt,
 }) => {
+  // GET USER PREFERENCES (moved to hook)
+  const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
+
+  // Show archived state (stored in local storage)
+  const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
+
   const {
     data = [],
     isLoading,
     error,
-  } = useListProjectsQuery({ active: showInactive ? undefined : true })
-
-  // GET USER PREFERENCES (moved to hook)
-  const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
+  } = useListProjectsQuery({ active: showArchived ? undefined : true })
 
   // transformations
   // sort projects by active pinned, active, inactive (active=false) and then alphabetically
@@ -76,7 +79,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     if (!onNoProjectSelected) return
     onNoProjectSelected(projects[0].name)
   }, [selection, projects, onNoProjectSelected])
-
 
   // if not multi-select, remove selected projects except the first one
   // if there is no project selected, select the first one
@@ -168,6 +170,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     projects: projects,
     multiSelect,
     pinned: rowPinning,
+    showArchived,
     onNewProject,
     onSearch: () => setClientSearch(''),
     onPin: (pinned) => onRowPinningChange({ top: pinned }),
@@ -176,6 +179,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onDelete: onDeleteProject,
     onOpen: onOpenProject,
     onManage: onOpenProjectManage,
+    onShowArchivedToggle: () => setShowArchived(!showArchived),
   })
 
   // attach context menu

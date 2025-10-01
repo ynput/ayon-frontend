@@ -71,14 +71,17 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
-    links.push({ node: 'spacer' })
-    links.push({
-        node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'} />,
-    })
-  
+  links.push({ node: 'spacer' })
+  links.push({
+    node: (
+      <HelpButton
+        module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'}
+      />
+    ),
+  })
+
   const title = useTitle(addonName || module, links, 'AYON', '')
-  
-  
+
   const addonData = addonsData.find((addon) => addon.name === addonName)
 
   const addonModule = addonData ? (
@@ -169,7 +172,6 @@ const UserDashboardPage = () => {
     return <GuestUserPageLocked />
   }
 
-
   return (
     <>
       <DocumentTitle title={title} />
@@ -180,7 +182,6 @@ const UserDashboardPage = () => {
             <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
               <SplitterPanel size={15}>
                 <ProjectsList
-                  showInactive={module === 'overview'}
                   multiSelect={isProjectsMultiSelect}
                   selection={selectedProjects}
                   onSelect={setSelectedProjects}
