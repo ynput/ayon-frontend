@@ -3,9 +3,11 @@ import {
   useGetUsersAssigneeQuery,
   useGetProjectQuery,
   useGetMyProjectPermissionsQuery,
+  useGetProjectAnatomyQuery,
 } from '@shared/api'
 import type { ProjectModel } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
+import { Anatomy } from '@shared/api/generated/projects'
 
 type User = {
   name: string
@@ -19,6 +21,7 @@ export interface ProjectDataContextProps {
   projectInfo?: ProjectModel
   projectName: string
   users: User[]
+  anatomy: Anatomy
   // Attributes
   attribFields: ProjectTableAttribute[]
   writableFields?: string[]
@@ -41,6 +44,9 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     isSuccess: isSuccessProject,
     isFetching: isFetchingProject,
   } = useGetProjectQuery({ projectName }, { skip: !projectName })
+
+  // GET PROJECT ANATOMY
+  const { data: anatomy = {} } = useGetProjectAnatomyQuery({ projectName })
 
   // GET PERMISSIONS
   const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
@@ -90,6 +96,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       projectInfo,
       projectName,
       users,
+      anatomy,
       attribFields,
       writableFields,
       canWriteNamePermission,
@@ -102,6 +109,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
       projectInfo,
       projectName,
       users,
+      anatomy,
       attribFields,
       writableFields,
       canWriteNamePermission,
