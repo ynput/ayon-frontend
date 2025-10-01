@@ -1,7 +1,7 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import styled from 'styled-components'
 import ListsSearch from './ListsSearch'
 import Menu from '@components/Menu/MenuComponents/Menu'
@@ -10,6 +10,13 @@ import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
 import { usePowerpack } from '@shared/context'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useAppSelector } from '@state/store'
+import {
+  canDeleteAllLists,
+  canDeleteAllFolders,
+  UserPermissions,
+} from '@pages/ProjectListsPage/utils/listAccessControl'
 
 export const MENU_ID = 'lists-table-menu'
 
@@ -128,8 +135,19 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   } = useListsContext()
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
-
   const { powerLicense } = usePowerpack()
+  const { listsData, listFolders } = useListsDataContext()
+  const user = useAppSelector((state) => state.user)
+
+  // Create user permissions object for access control checks
+  const userPermissions: UserPermissions = useMemo(
+    () => ({
+      isAdmin: !!user.data?.isAdmin,
+      isManager: !!user.data?.isManager,
+      userName: (user as any)?.data?.name || (user as any)?.data?.username || (user as any)?.name,
+    }),
+    [user],
+  )
 
   const toggleMenu = (open: boolean = true) => {
     toggleMenuOpen(open ? MENU_ID : false)
@@ -140,6 +158,31 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const selectedFolders = selectedRows
     .filter((id) => !!parseListFolderRowId(id))
     .map((id) => parseListFolderRowId(id)!)
+
+  // Get selected items as full objects for permission checks
+  const selectedListsData = useMemo(
+    () => listsData.filter((list) => selectedListsIds.includes(list.id)),
+    [listsData, selectedListsIds],
+  )
+
+  const selectedFoldersData = useMemo(
+    () =>
+      selectedFolders
+        .map((id) => listFolders.find((f) => f.id === id))
+        .filter((f): f is NonNullable<typeof f> => !!f),
+    [listFolders, selectedFolders],
+  )
+
+  // Check if user has permission to delete selected items
+  const canDeleteSelection = useMemo(() => {
+    if (selectedListsIds.length > 0) {
+      return canDeleteAllLists(selectedListsData, userPermissions)
+    }
+    if (selectedFolders.length > 0) {
+      return canDeleteAllFolders(selectedFoldersData, userPermissions)
+    }
+    return false
+  }, [selectedListsIds, selectedFolders, selectedListsData, selectedFoldersData, userPermissions])
 
   const handleDelete = () => {
     if (!selectedRows.length) return
@@ -240,7 +283,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       icon: 'delete',
       onClick: handleDelete,
       isPinned: false,
-      disabled: selectedRows.length < 0,
+      disabled: selectedRows.length === 0 || !canDeleteSelection,
       danger: true,
     },
   ]

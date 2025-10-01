@@ -38,6 +38,8 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
     active: false,
   })
 
+  const canEdit = (list?.accessLevel || 0) >= 20
+
   const { data: project } = useGetProjectQuery({ projectName })
 
   const fields: AttributeField[] = useMemo(
@@ -139,7 +141,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
 
   return (
     <DetailsPanelAttributesEditor
-      enableEditing
+      enableEditing={canEdit}
       fields={fields}
       form={form}
       isLoading={isLoading}
