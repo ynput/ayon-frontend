@@ -6,6 +6,7 @@ import { FOLDER_ICON } from '../hooks/useListContextMenu'
 export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
 export const buildListFolderRowId = (folderId: string) => `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
 export const parseListFolderRowId = (rowId: string) => {
+  if (!rowId || typeof rowId !== 'string') return null
   if (rowId.startsWith(LIST_FOLDER_ROW_ID_PREFIX + '-')) {
     return rowId.substring((LIST_FOLDER_ROW_ID_PREFIX + '-').length)
   }

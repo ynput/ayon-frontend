@@ -76,18 +76,16 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
       } else if (key === 'f' && !isMeta && !isShift && !isAlt) {
         // 'f' - Create folder
         e.preventDefault()
-        // Don't allow creating folders if user is not admin/manager
-        if (isUser) return
         onOpenFolderList({})
         actionExecuted = true
-        // Mixed selection - no action
       } else if (key === 'f' && isShift && !isAlt) {
         // 'shift+f' - Remove folder/list from parent folder
-        e.preventDefault()
         // Don't allow removing from folders if user is not admin/manager
         if (isUser) return
 
         if (selectedRowIds.length === 0) return
+
+        e.preventDefault()
 
         if (allSelectedRowsAreFolders) {
           // Remove parent from all selected folders
@@ -107,7 +105,7 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
         // Mixed selection - no action
       } else if (key === 'r' && !isMeta && !isShift && !isAlt) {
         // 'r' - Rename selected item (only works with single selection)
-        if (!rowSelection || hasMultipleSelected) return
+        if (selectedRowIds.length === 0 || hasMultipleSelected) return
 
         // Don't allow renaming folders if user is not admin/manager
         if (isFirstRowFolder && isUser) return
