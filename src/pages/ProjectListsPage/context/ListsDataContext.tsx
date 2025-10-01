@@ -3,7 +3,7 @@ import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from 
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
-import { useQueryArgumentChangeLoading, useUserProjectConfig } from '@shared/hooks'
+import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
 import { usePowerpack } from '@shared/context'
@@ -22,6 +22,9 @@ interface ListsDataContextValue {
   // filters
   listsFilters: Filter[]
   setListsFilters: (filters: Filter[]) => Promise<void>
+  // show archived
+  showArchived: boolean
+  setShowArchived: (show: boolean) => void
 }
 
 const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefined)
@@ -75,6 +78,8 @@ export const ListsDataProvider = ({
     await updatePageConfig({ listsFilters: filters })
   }
 
+  const [showArchived, setShowArchived] = useLocalStorage<boolean>('lists-show-archived', false)
+
   const {
     data: listsData,
     isLoading: isLoadingLists,
@@ -94,8 +99,8 @@ export const ListsDataProvider = ({
 
   // convert listsData into tableData
   const listsTableData = useMemo(
-    () => buildListsTableData(listsData, listFolders, true, powerLicense),
-    [listsData, listFolders, powerLicense],
+    () => buildListsTableData(listsData, listFolders, true, powerLicense, showArchived),
+    [listsData, listFolders, powerLicense, showArchived],
   )
 
   return (
@@ -117,6 +122,9 @@ export const ListsDataProvider = ({
         // filters
         listsFilters,
         setListsFilters,
+        // show archived
+        showArchived,
+        setShowArchived,
       }}
     >
       {children}

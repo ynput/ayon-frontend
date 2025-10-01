@@ -18,6 +18,7 @@ export const buildListsTableData = (
   folders: EntityListFolderModel[],
   showEmptyFolders: boolean = true,
   powerLicense: boolean = false,
+  showArchived: boolean = false,
 ): SimpleTableRow[] => {
   // Create lookup maps
   const foldersMap = new Map<string, EntityListFolderModel>()
@@ -62,10 +63,13 @@ export const buildListsTableData = (
     }
   }
 
+  // Filter out archived lists if showArchived is false
+  const filteredLists = showArchived ? listsData : listsData.filter((list) => list.active)
+
   // Assign lists to their folders and mark folders as having lists
   const rootLists: EntityList[] = []
 
-  for (const list of listsData) {
+  for (const list of filteredLists) {
     const listFolderId = list.entityListFolderId
 
     if (powerLicense && listFolderId && folderNodes.has(listFolderId)) {

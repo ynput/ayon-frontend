@@ -371,10 +371,10 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         // info dialog
         listDetailsOpen,
         setListDetailsOpen,
-        // lists filters dialog
+        // Lists filters dialog
         listsFiltersOpen,
         setListsFiltersOpen,
-        // list folders dialog
+        // List folders dialog
         listFolderOpen,
         setListFolderOpen,
         onOpenFolderList, // helper function to open folder dialog in edit/create mode
