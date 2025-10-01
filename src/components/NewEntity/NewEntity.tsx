@@ -417,6 +417,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 label={`Create ${capitalize(entityType)}`}
                 onClick={() => handleSubmit(createMore)}
                 active={!addDisabled || isSubmitting}
+                disabled={!entityForm.name || !entityForm.label}
                 data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
                 saving={isSubmitting}
               />
