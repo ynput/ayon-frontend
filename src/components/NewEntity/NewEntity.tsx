@@ -29,6 +29,12 @@ import { useSlicerContext } from '@context/SlicerContext'
 import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
 import { toast } from 'react-toastify'
 
+const StyledDialog = styled(Dialog)`
+  .body {
+    overflow: visible;
+  }
+`
+
 const ContentStyled = styled.div`
   display: flex;
   align-items: flex-start;
@@ -377,7 +383,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
         data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
       />
       {entityType && (
-        <Dialog
+        <StyledDialog
           header={getDialogTitle()}
           isOpen
           onClose={handleClose}
@@ -463,7 +469,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
               />
             </ContentStyled>
           )}
-        </Dialog>
+        </StyledDialog>
       )}
     </>
   )

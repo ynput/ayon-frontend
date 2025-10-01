@@ -10,10 +10,11 @@ export const InputLabel = styled.label`
   color: var(--md-sys-color-outline);
 `
 const NameDisplay = styled.span`
-  padding: 2px 6px; // <- changed
+  position: relative;
+  padding: 2px 6px;
   font-size: ${theme.bodySmall};
   display: inline-flex;
-  height: 20px;
+  min-height: 20px;
   gap: var(--base-gap-small);
   cursor: pointer;
 
@@ -57,6 +58,10 @@ export const InputsContainer = styled.div`
   align-items: flex-start;
   gap: var(--base-gap-small);
   margin-bottom: calc(var(--base-gap-large) - 16px);
+
+  label {
+    white-space: nowrap;
+  }
 `
 
 export const NameRow = styled.div`
@@ -65,6 +70,7 @@ export const NameRow = styled.div`
   margin-top: 6px;
   gap: var(--base-gap-small);
   width: 100%;
+  word-break: break-all;
 `
 
 type NewEntityFormProps = {
