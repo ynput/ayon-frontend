@@ -98,7 +98,6 @@ export const PowerpackProvider = ({
 }) => {
   const [selectedPowerPack, setPowerpackDialog] =
     useState<PowerpackContextType['selectedPowerPack']>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   const resolvePowerPackDialog = (selected: PowerpackContextType['selectedPowerPack']) => {
     if (!selected) return null
