@@ -34,7 +34,7 @@ export interface ListFolderFormData {
   label: string
   icon?: string
   color?: string
-  scope?: string[]
+  scope?: ('generic' | 'review-session')[]
   parentId?: string
 }
 
