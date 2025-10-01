@@ -97,6 +97,7 @@ const MenuList = ({
               selected,
               disabled,
               powerFeature,
+              active,
               ...props
             } = item
 
@@ -116,7 +117,17 @@ const MenuList = ({
               <MenuItem
                 tabIndex={0}
                 key={`${id}-${i}`}
-                {...{ label, icon, img, highlighted, items, selected, disabled, powerFeature }}
+                {...{
+                  label,
+                  icon,
+                  img,
+                  highlighted,
+                  items,
+                  selected,
+                  disabled,
+                  powerFeature,
+                  active,
+                }}
                 isLink={link}
                 onClick={(e) =>
                   isPowerFeature
