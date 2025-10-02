@@ -1,4 +1,5 @@
 import { AttributeEnumItem } from '@shared/api'
+import { Badge } from '@shared/components'
 import { Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
@@ -50,20 +51,6 @@ const StyledValueWrapper = styled.div`
   overflow: hidden;
   max-width: 100%;
   min-width: 20px;
-`
-
-const StyledValue = styled.span`
-  overflow: hidden;
-  white-space: nowrap;
-  width: 100%;
-  text-overflow: ellipsis;
-  text-align: left;
-  border-radius: var(--border-radius-m);
-  padding: 0px 2px;
-
-  &.placeholder {
-    color: var(--md-sys-color-outline);
-  }
 `
 
 const StyledImg = styled.img`
@@ -213,20 +200,13 @@ export const EnumCellValue = ({
             ) : null}
 
             {(showLabels || !option.icon) && (
-              <StyledValue
-                style={{
-                  color: backgroundColor ? getTextColor(option.color || '#ffffff') : option.color,
-                  backgroundColor: backgroundColor
-                    ? option.color || 'var(--md-sys-color-surface-container)'
-                    : 'transparent',
-                  ...valueStyle,
-                }}
-                className={clsx({ placeholder: isPlaceholder }, valueClassName)}
-                aria-label={option.label}
+              <Badge 
+                label={option.label} 
+                color={backgroundColor ? option.color : undefined} 
+                className={clsx({ placeholder: isPlaceholder }, valueClassName)} 
+                style={valueStyle}
                 {...valueRest}
-              >
-                {option.label}
-              </StyledValue>
+              />
             )}
           </StyledValueWrapper>
         ))}
