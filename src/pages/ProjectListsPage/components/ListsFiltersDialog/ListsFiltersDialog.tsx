@@ -5,6 +5,8 @@ import { entityTypeOptions } from '../NewListDialog/NewListDialog'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
+import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import { getAttributeIcon } from '@shared/util'
 
 const Dialog = styled.div`
   position: fixed;
@@ -25,8 +27,9 @@ const Dialog = styled.div`
 interface ListsFiltersDialogProps {}
 
 const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
-  const { listsFilters, setListsFilters } = useListsDataContext()
+  const { listsFilters, setListsFilters, listsData } = useListsDataContext()
   const { listsFiltersOpen, setListsFiltersOpen } = useListsContext()
+  const { projectInfo } = useProjectDataContext()
 
   const filtersRef = useRef<SearchFilterRef>(null)
 
@@ -44,8 +47,8 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
     setFilters(listsFilters)
   }, [listsFilters, setFilters])
 
-  const options = useMemo<Option[]>(
-    () => [
+  const options = useMemo<Option[]>(() => {
+    const opts: Option[] = [
       {
         id: 'entityType',
         label: 'Entity Type',
@@ -53,9 +56,59 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
         icon: 'check_circle',
         values: entityTypeOptions.map((option) => ({ ...option, id: option.value })),
       },
-    ],
-    [],
-  )
+    ]
+
+    // Add tags option if there are any tags in the lists
+    const allTags = new Set<string>()
+    listsData.forEach((list) => {
+      if (list.tags && Array.isArray(list.tags)) {
+        list.tags.forEach((tag) => allTags.add(tag))
+      }
+    })
+
+    if (allTags.size > 0) {
+      // Get tag anatomy from project info
+      const tagsAnatomy = new Map(
+        projectInfo?.tags?.map((tag) => [tag.name, tag]) || [],
+      )
+
+      // Create tag option values with counts
+      const tagCounts = new Map<string, number>()
+      listsData.forEach((list) => {
+        if (list.tags && Array.isArray(list.tags)) {
+          list.tags.forEach((tag) => {
+            tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1)
+          })
+        }
+      })
+
+      const tagValues = Array.from(allTags)
+        .map((tag) => {
+          const tagData = tagsAnatomy.get(tag)
+          return {
+            id: tag,
+            label: tag,
+            type: 'string' as const,
+            values: [],
+            color: tagData?.color || null,
+            count: tagCounts.get(tag) || 0,
+          }
+        })
+        .sort((a, b) => b.count - a.count)
+
+      opts.push({
+        id: 'tags',
+        label: 'Tags',
+        type: 'list_of_strings',
+        icon: getAttributeIcon('tags'),
+        operator: 'OR',
+        values: tagValues,
+        allowsCustomValues: true,
+      })
+    }
+
+    return opts
+  }, [listsData, projectInfo])
 
   //   on keydown, close the dialog
   useEffect(() => {
