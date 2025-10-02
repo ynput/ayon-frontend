@@ -194,26 +194,10 @@ const BundleList = ({
           marginLeft: 0,
         }}
       >
-        {rowData.isProduction && (
-          <Badge hl="production" data-testid={`${rowData.name}-production`}>
-            Production
-          </Badge>
-        )}
-        {rowData.isStaging && (
-          <Badge hl="staging" data-testid={`${rowData.name}-staging`}>
-            Staging
-          </Badge>
-        )}
-        {rowData.isDev && (
-          <Badge hl="developer" data-testid={`${rowData.name}-dev`}>
-            Dev{rowData.activeUser && ` (${rowData.activeUser})`}
-          </Badge>
-        )}
-        {rowData.isProject && (
-          <Badge hl="project" data-testid={`${rowData.name}-prj`}>
-            Project
-          </Badge>
-        )}
+        {rowData.isProduction && <Badge  data-testid={`${rowData.name}-production`} label="Production" /> }
+        {rowData.isStaging && <Badge data-testid={`${rowData.name}-staging`} label="Staging" /> }
+        {rowData.isDev && <Badge color="developer" data-testid={`${rowData.name}-dev`} label={`Dev${rowData.activeUser ? ` (${rowData.activeUser})` : ''}`} />}
+        {rowData.isProject && <Badge data-testid={`${rowData.name}-prj`} label="Project" />}
       </BadgeWrapper>
     )
   }
