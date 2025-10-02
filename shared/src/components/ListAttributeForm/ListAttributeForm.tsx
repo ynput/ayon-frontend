@@ -1,11 +1,6 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
-import {
-  attributesApi,
-  EntityListModel,
-  useGetProjectQuery,
-  useUpdateEntityListMutation,
-} from '@shared/api'
+import { EntityListModel, useGetProjectQuery, useUpdateEntityListMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 
 interface ListAttributeFormProps {
@@ -38,7 +33,8 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
     active: false,
   })
 
-  const canEdit = (list?.accessLevel || 0) >= 20
+  // You must be an admin to edit the list itself
+  const canEdit = (list?.accessLevel || 0) >= 30
 
   const { data: project } = useGetProjectQuery({ projectName })
 

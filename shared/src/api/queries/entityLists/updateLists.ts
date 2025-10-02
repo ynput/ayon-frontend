@@ -181,6 +181,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         ]
         return tags
       },
+      transformErrorResponse: (error: any) => error.data.detail,
     },
     updateEntityListItem: {
       async onQueryStarted(

@@ -66,7 +66,7 @@ export const canEditList = (
   userPermissions: UserPermissions,
 ): boolean => {
   const accessLevel = getEffectiveAccessLevel(list, userPermissions)
-  return accessLevel >= ACCESS_LEVEL.EDITOR
+  return accessLevel >= ACCESS_LEVEL.ADMIN
 }
 
 /**
