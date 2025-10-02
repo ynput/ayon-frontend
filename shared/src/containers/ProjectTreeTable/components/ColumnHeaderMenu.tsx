@@ -4,7 +4,7 @@ import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
 import { useRef } from 'react'
 import { useMenuContext } from '@shared/context'
-import { useColumnSettingsContext, useProjectTableContext } from '../context'
+import { useColumnSettingsContext } from '../context'
 import { useColumnGroupBy } from '../hooks'
 // @ts-expect-error - non TS file
 import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
