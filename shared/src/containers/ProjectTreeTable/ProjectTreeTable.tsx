@@ -353,7 +353,10 @@ export const ProjectTreeTable = ({
     // EXPANDABLE
     onExpandedChange: updateExpanded,
     // SORTING
-    getSortedRowModel: clientSorting ? getSortedRowModel() : undefined,
+    enableSorting: true,
+    getSortedRowModel: getSortedRowModel(),
+    sortDescFirst: false,
+    manualSorting: !clientSorting,
     onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
     onColumnPinningChange: columnPinningOnChange,
@@ -389,7 +392,6 @@ export const ProjectTreeTable = ({
       columnVisibility,
       columnOrder,
     },
-    enableSorting: true,
     meta: {
       projectName,
       options,
