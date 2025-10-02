@@ -3,14 +3,19 @@ import styled from 'styled-components'
 export const StyledContent = styled.div`
   padding: 0;
   cursor: pointer;
-  height: 100%;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  height: 100%;
 
   &.editing {
     cursor: default;
     padding: 0;
     margin: 0;
+
+    .ql-container.ql-snow {
+      max-height: calc(100% - 57px);
+    }
   }
 
   &:not(.editing) {
@@ -38,6 +43,7 @@ export const StyledEditor = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
 
   .ql-toolbar.ql-snow {
     height: 40px;
@@ -127,17 +133,52 @@ export const StyledEditor = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column;
-    max-height: calc(100% - 57px);
+    min-width: 0;
+    padding: 12px;
 
     .ql-editor {
-      padding: 12px;
       min-height: 60px;
       flex: 1;
       overflow-y: auto;
+      overflow-x: auto;
+      min-width: 0;
+      padding: 0;
+      white-space: normal;   
+      word-break: keep-all;  
+      overflow-wrap: normal;
+
+      /* Consistent scrollbar styling across edit/read-only */
+      scrollbar-width: thin;
+      scrollbar-color: var(--md-sys-color-outline) transparent;
+
+      &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: var(--md-sys-color-outline);
+        border-radius: 8px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+
+      &::-webkit-scrollbar-thumb:hover {
+        background-color: var(--md-sys-color-outline-variant);
+      }
+
+      width: 100%;
+      max-width: 100%;
       
       &[contenteditable="false"] {
-        pointer-events: none;
+        /* Allow scrolling in read-only mode */
+        pointer-events: auto;
         cursor: pointer !important;
+        -webkit-overflow-scrolling: touch;
         
         a {
           pointer-events: auto;
@@ -173,6 +214,12 @@ export const StyledEditor = styled.div`
       a {
         color: var(--md-sys-color-primary);
         text-decoration: none;
+        /* Handle very long URLs and paths */
+        word-break: break-all;
+        overflow-wrap: break-word;
+        overflow-x: auto;
+        display: inline-block;
+        max-width: 100%;
       }
 
       strong {
@@ -198,6 +245,9 @@ export const StyledEditor = styled.div`
       p {
         word-break: break-word;
         margin-bottom: 8px;
+        /* Handle very long unbreakable content like file paths */
+        overflow-x: auto;
+        min-width: 0;
       }
 
       ul,
@@ -221,6 +271,13 @@ export const StyledEditor = styled.div`
           background-color: var(--md-sys-color-outline-variant);
           border-radius: 2px;
         }
+      }
+
+      /* Handle very long unbreakable content like file paths */
+      * {
+        /* Allow horizontal scroll for any element with very long content */
+        overflow-x: auto;
+        min-width: 0;
       }
     }
   }
@@ -356,6 +413,11 @@ export const StyledButtonContainer = styled.div`
 
 export const StyledQuillContainer = styled.div`
   height: 100%;
+  min-width: 0;
+
+  .quill {
+    height: 100%;
+  }
 
   /* Force cursor pointer when ReactQuill is readonly - comprehensive approach */
   .ql-container.ql-snow .ql-editor[contenteditable='false'] {
