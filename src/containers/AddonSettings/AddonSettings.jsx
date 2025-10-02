@@ -764,7 +764,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           {showCopySettings && (
             <CopySettingsDialog
               selectedAddons={selectedAddons}
-              variant={variant}
+              variant={selectedBundle.variant}
               originalData={originalData}
               setOriginalData={setOriginalData}
               localData={localData}
@@ -781,7 +781,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             <RawSettingsDialog
               addonName={selectedAddons[0].name}
               addonVersion={selectedAddons[0].version}
-              variant={variant}
+              variant={selectedBundle.variant}
               reloadAddons={reloadAddons}
               projectName={projectName}
               siteId={siteId}
