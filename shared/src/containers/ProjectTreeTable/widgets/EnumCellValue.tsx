@@ -34,7 +34,7 @@ const StyledWidget = styled.div`
   }
 `
 
-const StyledValuesContainer = styled.div<{ $allowWrap?: boolean }>`
+const StyledValuesContainer = styled.div`
   flex: 1;
   display: flex;
   gap: var(--base-gap-small);
@@ -42,7 +42,11 @@ const StyledValuesContainer = styled.div<{ $allowWrap?: boolean }>`
   overflow: hidden;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
-  flex-wrap: ${({ $allowWrap }) => ($allowWrap ? 'wrap' : 'nowrap')};
+  flex-wrap: nowrap;
+
+  &.wrap {
+    flex-wrap: wrap;
+  }
 `
 
 const StyledValueWrapper = styled.div`
@@ -174,7 +178,7 @@ export const EnumCellValue = ({
 
   return (
     <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
-      <StyledValuesContainer $allowWrap={allowWrap}>
+      <StyledValuesContainer className={clsx({ wrap: allowWrap })}>
         {selectedOptions.map((option, i) => (
           <StyledValueWrapper key={option.value.toString() + i}>
             {option.icon && checkForImgSrc(option.icon) ? (

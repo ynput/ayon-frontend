@@ -440,7 +440,7 @@ export const ProjectTreeTable = ({
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
   // Calculate dynamic row height based on user setting from Customize panel
-  const { getRowHeight, thumbnailRowHeight, defaultRowHeight } = useDynamicRowHeight()
+  const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
     return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {

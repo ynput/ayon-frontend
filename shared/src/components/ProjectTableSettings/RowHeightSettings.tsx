@@ -116,8 +116,15 @@ const RowHeightSettings: FC = () => {
   }, [debouncedRowHeight, updateRowHeight, isDragging])
 
   const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalRowHeight(parseInt(e.target.value, 10))
-  }, [])
+    const newValue = parseInt(e.target.value, 10)
+    setLocalRowHeight(newValue)
+
+    // If not dragging (e.g., arrow keys), update immediately
+    if (!isDragging) {
+      updateRowHeight(newValue)
+      updateRowHeightWithPersistence(newValue)
+    }
+  }, [isDragging, updateRowHeight, updateRowHeightWithPersistence])
 
   const handleSliderStart = useCallback(() => {
     setIsDragging(true)

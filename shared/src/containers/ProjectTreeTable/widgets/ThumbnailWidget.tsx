@@ -6,7 +6,7 @@ import styled from 'styled-components'
 const Wrapper = styled.div`
   position: absolute;
   inset: 0;
-  padding: 6px;
+  padding: 4px;
   display: flex;
 `
 

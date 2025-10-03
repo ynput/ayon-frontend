@@ -10,7 +10,6 @@ import styled from 'styled-components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
-import RowHeightSettings from './RowHeightSettings'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
@@ -49,7 +48,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   highlighted,
 }) => {
   const { attribFields, projectInfo } = useProjectTableContext()
-  const { columnVisibility, rowHeight = 40 } = useColumnSettingsContext()
+  const { columnVisibility } = useColumnSettingsContext()
 
   const columns = [
     {

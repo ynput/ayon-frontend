@@ -1,5 +1,6 @@
 import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import clsx from 'clsx'
 
 const Expander = styled(Button)`
   &.expander {
@@ -56,50 +57,50 @@ const StyledContent = styled.div`
   } */
 `
 
-const StyledTextContent = styled.div<{ $isCompact: boolean }>`
+const StyledTextContent = styled.div`
   display: flex;
-  flex-direction: ${props => props.$isCompact ? 'row' : 'column'};
-  align-items: ${props => props.$isCompact ? 'center' : 'flex-start'};
-  gap: ${props => props.$isCompact ? '0px' : '0px'};
+  flex-direction: column;
+  align-items: flex-start;
   overflow: hidden;
   flex: 1;
   min-width: 0;
 
+  &.compact {
+    flex-direction: row;
+    align-items: center;
+  }
+
   .path {
     ${theme.bodyMedium}
     font-size: 14px;
-    margin-bottom: ${props => props.$isCompact ? '0' : '-4px'};
+    margin-bottom: -4px;
     color: var(--md-sys-color-outline);
-    ${props => props.$isCompact && 'margin-right: 4px;'}
     white-space: nowrap;
     overflow: hidden;
-    ${props => props.$isCompact ? `
-      text-overflow: unset;
-      flex-shrink: 0 1 auto;
-    ` : `
-      text-overflow: ellipsis;
-    `}
+    text-overflow: ellipsis;
   }
-  
+
+  &.compact .path {
+    margin-bottom: 0;
+    text-overflow: unset;
+    flex-shrink: 0 1 auto;
+  }
 
   .label {
     ${theme.bodyMedium}
     font-size: 14px;
-    ${props => props.$isCompact && 'margin-left: 4px;'}
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    flex: 1 1 auto;            /* ✅ allow shrinking so ellipsis can appear */
-    min-width: 0;              /* ✅ critical inside flex to enable ellipsis */
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .divider {
     ${theme.bodyMedium}
     font-size: 14px;
     color: var(--md-sys-color-outline);
-    margin: 0 4px;
     flex-shrink: 0;
-  }
   }
 `
 
@@ -134,9 +135,9 @@ export const EntityNameWidget = ({
   // < 50px = single line (compact), >= 50px = stacked
   const isCompact = rowHeight < 50
 
-  // For compact mode, show single line with "path / label"
-  // For stacked mode, show path above label
-  const contentHeight = isCompact ? 24 : (path ? 32 : 24)
+  // Always keep content height at 24px in compact mode or hierarchy mode to prevent jumping
+  // Only allow expansion to 32px in non-hierarchy mode when not compact and path exists
+  const contentHeight = (isCompact || showHierarchy) ? 24 : (path ? 32 : 24)
 
   return (
     <StyledEntityNameWidget>
@@ -164,7 +165,7 @@ export const EntityNameWidget = ({
         <StyledContentAbsolute>
           <StyledContent>
             {icon && <Icon icon={icon} />}
-            <StyledTextContent $isCompact={isCompact}>
+            <StyledTextContent className={clsx({ compact: isCompact })}>
               {path && <span className="path">{path}</span>}
               {isCompact && path && <span className="divider">/</span>}
               <span className="label">{label || name}</span>
