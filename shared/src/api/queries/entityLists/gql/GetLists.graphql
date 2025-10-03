@@ -22,6 +22,8 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           active
           projectName
           owner
+          accessLevel
+          access
           count
         }
       }

@@ -146,6 +146,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     projectName: projectName,
     listId: selectedListId,
     listItemsMap,
+    accessLevel: selectedList?.accessLevel,
   })
 
   const handleReorderFinished = () => {

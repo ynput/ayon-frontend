@@ -1,4 +1,5 @@
 import { ViewListItemModel } from '@shared/api'
+import { AccessLevel } from '@shared/components'
 
 export * from './Views'
 export * from './context/ViewsContext'
@@ -28,7 +29,9 @@ export { WORKING_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuCont
 
 // types
 export type ViewFormData = Required<
-  Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner' | 'access' | 'accessLevel'>
+  Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner' | 'accessLevel'> & {
+    access: Record<string, AccessLevel>
+  }
 >
 
 export const viewTypes = ['overview', 'taskProgress', 'lists', 'reviews', 'reports'] as const

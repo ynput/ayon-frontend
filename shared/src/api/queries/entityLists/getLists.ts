@@ -28,6 +28,9 @@ const parseJSON = (data: string | null | undefined): Record<string, any> => {
   if (!data) return {}
 
   try {
+    if (typeof data !== 'string') {
+      return (data as unknown as Record<string, any>) ?? {}
+    }
     return JSON.parse(data)
   } catch (e) {
     console.warn('Failed to parse entity list data field:', e, data)
