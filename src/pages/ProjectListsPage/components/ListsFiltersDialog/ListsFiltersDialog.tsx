@@ -58,21 +58,11 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
       },
     ]
 
-    // Add tags option if there are any tags in the lists
-    const allTags = new Set<string>()
-    listsData.forEach((list) => {
-      if (list.tags && Array.isArray(list.tags)) {
-        list.tags.forEach((tag) => allTags.add(tag))
-      }
-    })
+    // Add tags option based on project anatomy
+    const projectTags = projectInfo?.tags || []
 
-    if (allTags.size > 0) {
-      // Get tag anatomy from project info
-      const tagsAnatomy = new Map(
-        projectInfo?.tags?.map((tag) => [tag.name, tag]) || [],
-      )
-
-      // Create tag option values with counts
+    if (projectTags.length > 0) {
+      // Create tag count map from current lists
       const tagCounts = new Map<string, number>()
       listsData.forEach((list) => {
         if (list.tags && Array.isArray(list.tags)) {
@@ -82,18 +72,15 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
         }
       })
 
-      const tagValues = Array.from(allTags)
-        .map((tag) => {
-          const tagData = tagsAnatomy.get(tag)
-          return {
-            id: tag,
-            label: tag,
-            type: 'string' as const,
-            values: [],
-            color: tagData?.color || null,
-            count: tagCounts.get(tag) || 0,
-          }
-        })
+      const tagValues = projectTags
+        .map((tag) => ({
+          id: tag.name,
+          label: tag.name,
+          type: 'string' as const,
+          values: [],
+          color: tag.color || null,
+          count: tagCounts.get(tag.name) || 0,
+        }))
         .sort((a, b) => b.count - a.count)
 
       opts.push({
