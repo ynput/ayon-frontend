@@ -130,7 +130,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     selectAllLists,
   } = useListsContext()
 
-  const { showArchived, setShowArchived } = useListsDataContext()
+  const { showArchived, setShowArchived, listsFilters } = useListsDataContext()
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
 
@@ -244,6 +244,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             icon: 'filter_list',
             onClick: () => setListsFiltersOpen(true),
             isPinned: false,
+            selected: listsFilters.length > 0,
+            active: listsFilters.length > 0,
           },
         ]
       : []),
