@@ -11,12 +11,14 @@ const StyledWidget = styled.div`
   align-items: center;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   border-radius: var(--border-radius-m);
+  padding: 0 1px;
 
   &.item {
     padding: 4px 2px;
     border-radius: 0;
+    overflow: hidden;
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);
@@ -40,6 +42,11 @@ const StyledValuesContainer = styled.div`
   overflow: hidden;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
+  flex-wrap: nowrap;
+
+  &.wrap {
+    flex-wrap: wrap;
+  }
 `
 
 const StyledValueWrapper = styled.div`
@@ -47,19 +54,18 @@ const StyledValueWrapper = styled.div`
   gap: var(--base-gap-small);
   align-items: center;
 
-  overflow: hidden;
   max-width: 100%;
   min-width: 20px;
 `
 
 const StyledValue = styled.span`
-  overflow: hidden;
-  white-space: nowrap;
-  width: 100%;
-  text-overflow: ellipsis;
   text-align: left;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 
   &.placeholder {
     color: var(--md-sys-color-outline);
@@ -78,12 +84,15 @@ const StyledImg = styled.img`
 
 const StyledExpandButton = styled.div`
   width: 32px;
-  height: 32px;
+  height: fit-content;
+  min-height: 32px;
+  aspect-ratio: 1;
   border-radius: var(--border-radius-m);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest-hover);
@@ -107,6 +116,7 @@ export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement>
   isItem?: boolean
   isSelected?: boolean
   isReadOnly?: boolean
+  rowHeight?: number
   pt?: {
     icon?: Partial<IconProps>
     img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
@@ -125,6 +135,7 @@ export const EnumCellValue = ({
   isItem,
   isSelected,
   isReadOnly,
+  rowHeight,
   className,
   pt,
   ...props
@@ -162,9 +173,12 @@ export const EnumCellValue = ({
     ]
   }
 
+  // Allow wrapping when row height is above 100px
+  const allowWrap = rowHeight !== undefined && rowHeight > 100
+
   return (
     <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
-      <StyledValuesContainer>
+      <StyledValuesContainer className={clsx({ wrap: allowWrap })}>
         {selectedOptions.map((option, i) => (
           <StyledValueWrapper key={option.value.toString() + i}>
             {option.icon && checkForImgSrc(option.icon) ? (

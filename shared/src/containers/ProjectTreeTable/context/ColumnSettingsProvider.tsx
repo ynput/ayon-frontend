@@ -25,11 +25,23 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
+
+  // Internal state for immediate updates (similar to column sizing)
+  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
+  const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
+
+  // Local row height state that persists and doesn't get overridden by API
+  const [localRowHeight, setLocalRowHeight] = useState<number>(34)
+
+  // Flag to prevent API updates during active row height adjustments
+  const isAdjustingRowHeightRef = React.useRef(false)
+
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
   const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
   const columnsConfig = config as ColumnsConfig
+
   const {
     columnOrder: columnOrderInit = [],
     columnPinning: columnPinningInit = {},
@@ -38,7 +50,20 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
-  } = columnsConfig
+    rowHeight: configRowHeight,
+  } = columnsConfig || {}
+
+  // Initialize local row height from API only once on mount
+  const hasInitializedRef = React.useRef(false)
+  React.useEffect(() => {
+    if (!hasInitializedRef.current && configRowHeight !== undefined && configRowHeight !== null) {
+      setLocalRowHeight(configRowHeight)
+      hasInitializedRef.current = true
+    }
+  }, [configRowHeight])
+
+  // Use internal row height during slider adjustments, otherwise use local persistent state
+  const rowHeight = internalRowHeight ?? localRowHeight
 
   const sorting = [...sortingInit]
   const columnOrder = [...columnOrderInit]
@@ -119,12 +144,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
-  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
-
   // use internalColumnSizing if it exists, otherwise use the external column sizing
   const columnSizing = internalColumnSizing || columnsSizingExternal
 
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   const setColumnSizing = (sizing: ColumnSizingState) => {
     setInternalColumnSizing(sizing)
@@ -233,6 +257,42 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  // Update row height for immediate UI feedback (no API call)
+  const updateRowHeightUI = (newRowHeight: number) => {
+    setLocalRowHeight(newRowHeight)
+  }
+
+  // Update row height and persist to API
+  const updateRowHeightWithPersistence = (newRowHeight: number) => {
+    // Update UI immediately
+    setLocalRowHeight(newRowHeight)
+
+    // Block external API updates during adjustment period
+    isAdjustingRowHeightRef.current = true
+    setInternalRowHeight(newRowHeight)
+
+    // Clear any existing timeout to debounce API calls
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
+    }
+
+    // Debounce API call to avoid excessive requests
+    rowHeightTimeoutRef.current = setTimeout(() => {
+      // Persist to API
+      onChangeWithColumns({
+        ...columnsConfig,
+        rowHeight: newRowHeight,
+      })
+
+      // Clean up internal state
+      setInternalRowHeight(null)
+      isAdjustingRowHeightRef.current = false
+    }, 200)
+  }
+
+  // Public API for immediate UI updates (used during slider drag)
+  const updateRowHeight = updateRowHeightUI
+
   // Remove redundant local updater functions in favor of unified updaters with all columns
 
   // ON-CHANGE HANDLERS (TanStack-compatible)
@@ -294,6 +354,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         updateGroupBy,
         groupByConfig,
         updateGroupByConfig,
+        // row height
+        rowHeight,
+        updateRowHeight,
+        updateRowHeightWithPersistence,
 
         // global change
         setColumnsConfig: (config: ColumnsConfig) => onChangeWithColumns(config),

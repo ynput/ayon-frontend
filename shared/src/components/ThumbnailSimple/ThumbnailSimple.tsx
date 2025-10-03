@@ -22,7 +22,6 @@ const ThumbnailStyled = styled.div`
   max-width: 500px;
   aspect-ratio: 1.77;
   overflow: hidden;
-  border-radius: 3px;
   margin: auto;
   max-width: 250px;
   background-color: var(--md-sys-color-surface-container-lowest);

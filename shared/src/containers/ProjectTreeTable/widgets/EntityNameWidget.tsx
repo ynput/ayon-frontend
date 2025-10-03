@@ -1,5 +1,6 @@
 import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import clsx from 'clsx'
 
 const Expander = styled(Button)`
   &.expander {
@@ -59,18 +60,47 @@ const StyledContent = styled.div`
 const StyledTextContent = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 
-  .path {
-    ${theme.labelSmall}
-    margin-bottom: -4px;
-    color: var(--md-sys-color-outline);
+  &.compact {
+    flex-direction: row;
+    align-items: center;
   }
 
-  span {
+  .path {
+    ${theme.bodyMedium}
+    font-size: 14px;
+    margin-bottom: -4px;
+    color: var(--md-sys-color-outline);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.compact .path {
+    margin-bottom: 0;
+    text-overflow: unset;
+    flex-shrink: 0 1 auto;
+  }
+
+  .label {
+    ${theme.bodyMedium}
+    font-size: 14px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .divider {
+    ${theme.bodyMedium}
+    font-size: 14px;
+    color: var(--md-sys-color-outline);
+    flex-shrink: 0;
   }
 `
 
@@ -85,6 +115,7 @@ type EntityNameWidgetProps = {
   isExpanded: boolean
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
+  rowHeight?: number
 }
 
 export const EntityNameWidget = ({
@@ -98,7 +129,16 @@ export const EntityNameWidget = ({
   isExpanded,
   toggleExpandAll,
   toggleExpanded,
+  rowHeight = 40,
 }: EntityNameWidgetProps) => {
+  // Determine layout based on row height
+  // < 50px = single line (compact), >= 50px = stacked
+  const isCompact = rowHeight < 50
+
+  // Always keep content height at 24px in compact mode or hierarchy mode to prevent jumping
+  // Only allow expansion to 32px in non-hierarchy mode when not compact and path exists
+  const contentHeight = (isCompact || showHierarchy) ? 24 : (path ? 32 : 24)
+
   return (
     <StyledEntityNameWidget>
       {showHierarchy ? (
@@ -121,12 +161,13 @@ export const EntityNameWidget = ({
           <div style={{ display: 'inline-block', minWidth: 24 }} />
         )
       ) : null}
-      <StyledContentWrapper style={{ height: path ? 32 : 24 }}>
+      <StyledContentWrapper style={{ height: contentHeight }}>
         <StyledContentAbsolute>
           <StyledContent>
             {icon && <Icon icon={icon} />}
-            <StyledTextContent>
+            <StyledTextContent className={clsx({ compact: isCompact })}>
               {path && <span className="path">{path}</span>}
+              {isCompact && path && <span className="divider">/</span>}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>
