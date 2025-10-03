@@ -38,7 +38,7 @@ const GLOBAL_FIELDS: GlobalFieldEntry[] = [
   { value: 'example', scope: null },
   // @ts-expect-error - project is not a scope?
   { value: 'default', scope: ['project'] },
-  { value: 'inherit', scope: null },
+  { value: 'inherit', scope: ['project', 'folder', 'task', 'product', 'version', 'representation', 'user'] },
 ]
 
 interface TypeOptionDef {
