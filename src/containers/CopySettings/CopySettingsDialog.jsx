@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
@@ -59,6 +59,54 @@ const CopySettingsDialog = ({
     isError: bundlesError,
   } = useListBundlesQuery({})
 
+
+  useEffect(() => {
+    // find the produciton bundle
+    let defaultBundle = null
+    if (bundles && bundles.length > 0) {
+      defaultBundle = bundles.find((b) => {
+        if (variant === 'production') return b.isProduction
+        else if (variant === 'staging') return b.isStaging
+        else return b.isDev
+      }) 
+      if (defaultBundle) {
+        console.debug('Auto-selected source bundle:', defaultBundle.name, 'for variant', variant)
+        setSourceBundle(defaultBundle.name)
+        setSourceVariant(variant)
+      }
+    }
+  }, [bundles])
+
+  const selectBundleByVariant = (variant) => {
+    if (!variant) return
+    if (!bundles || bundles.length === 0) return
+    let bundle = null
+    bundle = bundles.find((b) => {
+      if (variant === 'production') return b.isProduction
+      else if (variant === 'staging') return b.isStaging
+      else return b.isDev
+    })
+    if (bundle) {
+      setSourceBundle(bundle.name)
+      setSourceVariant(bundle.isDev ? bundle.name : variant)
+      console.debug('Selected source bundle:', bundle.name, 'for variant', variant)
+    }
+  }
+
+  useEffect(() => {
+    // if selected bundle is dev,
+    // ensure sourceVariant is set to the bundle name
+    if (!sourceBundle) return
+    if (!bundles || bundles.length === 0) return
+    const sb = bundles.find((b) => b.name === sourceBundle)
+    if (sb && sb.isDev) {
+      setSourceVariant(sb.name)
+      console.debug('Source bundle is dev, setting source variant to bundle name:', sb.name)
+    }
+  }, [sourceBundle, bundles])
+
+
+
   const sourceVersions = useMemo(() => {
     if (!sourceBundle) return {}
 
@@ -67,6 +115,7 @@ const CopySettingsDialog = ({
     if (!bundles) return {}
 
     const sb = bundles.find((i) => i.name === sourceBundle)
+    console.log('Source bundle versions:', sb?.addons)
     return sb?.addons || {}
   }, [sourceBundle, bundles, bundlesLoading, bundlesError])
 
@@ -176,25 +225,27 @@ const CopySettingsDialog = ({
   const dropSize = 270
   const dropStyle = { maxWidth: dropSize, minWidth: dropSize, marginRight: 8 }
 
+  const allowBundleSelect = pickByBundle || !['production', 'staging'].includes(sourceVariant || 'production')
+
   const toolbar = (
     <Toolbar style={{ marginBottom: 15 }}>
-      {pickByBundle && (
-        <>
-          Source bundle:
-          <BundleDropdown
-            style={dropStyle}
-            bundleName={sourceBundle}
-            setBundleName={setSourceBundle}
-            setVariant={setSourceVariant}
-          />
-        </>
-      )}
+      Source bundle:
+      <BundleDropdown
+        style={dropStyle}
+        bundleName={sourceBundle}
+        setBundleName={setSourceBundle}
+        setVariant={setSourceVariant}
+        disabled={!allowBundleSelect}
+        devOnly={!['production', 'staging'].includes(sourceVariant || variant)}
+      />
       Source variant:
       <VariantSelector
         variant={sourceVariant}
+        showDev={true}
         style={dropStyle}
         setVariant={(val) => {
           setSourceVariant(val)
+          selectBundleByVariant(val)
         }}
       />
       <Spacer />
@@ -243,7 +294,7 @@ const CopySettingsDialog = ({
             }}
           >
             {selectedAddons
-              .filter((addon) => !pickByBundle || sourceVersions[addon.name])
+              .filter((addon) => !sourceBundle || sourceVersions[addon.name])
               .map((addon) => (
                 <CopySettingsNode
                   key={`${addon.name}_${addon.version}`}
@@ -262,7 +313,7 @@ const CopySettingsDialog = ({
                     setNodeState((o) => ({ ...o, [addon.name]: state }))
                   }}
                   forcedSourceVariant={sourceVariant}
-                  forcedSourceVersion={pickByBundle ? sourceVersions[addon.name] : null}
+                  forcedSourceVersion={sourceBundle ? sourceVersions[addon.name] : null}
                   forcedSourceProjectName={sourceProjectName || null}
                 />
               ))}
