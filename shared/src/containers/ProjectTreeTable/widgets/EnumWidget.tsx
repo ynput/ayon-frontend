@@ -87,7 +87,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     // when the dropdown is open, focus the first item
     useEffect(() => {
-      if (dropdownOpen && !dropdownProps.search) {
+      if (dropdownOpen && !dropdownProps.search && allOptions.length < 20) {
         const optionsUlEl = dropdownRef.current?.getOptions() as HTMLUListElement
         const firstItem = optionsUlEl?.querySelector('li')
         if (firstItem) {
@@ -96,7 +96,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           firstItem.style.outline = 'none'
         }
       }
-    }, [dropdownOpen, dropdownProps.search])
+    }, [dropdownOpen, dropdownProps.search, allOptions.length])
 
     const isMultiSelect = !!type?.includes('list')
 
@@ -150,6 +150,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           disableOpen={isReadOnly}
           disabled={isReadOnly}
           sortBySelected
+          searchOnNumber={10}
           {...dropdownProps}
           onChange={handleChange}
           onClose={onCancelEdit}
