@@ -24,6 +24,7 @@ const SCOPE_OPTIONS = [
   { value: 'version', label: 'Version' },
   { value: 'representation', label: 'Representation' },
   { value: 'user', label: 'User' },
+  { value: 'list', label: 'List' },
 ]
 
 // Define types for constants

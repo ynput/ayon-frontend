@@ -5,6 +5,7 @@ import { entityTypeOptions } from '../NewListDialog/NewListDialog'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
+import { useGetAttributeListQuery } from '@shared/api'
 
 const Dialog = styled.div`
   position: fixed;
@@ -30,6 +31,9 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
 
   const filtersRef = useRef<SearchFilterRef>(null)
 
+  // Fetch list-scoped attributes
+  const { data: allAttributes = [] } = useGetAttributeListQuery()
+
   useEffect(() => {
     if (listsFiltersOpen && filtersRef.current) {
       filtersRef.current.open()
@@ -44,8 +48,31 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
     setFilters(listsFilters)
   }, [listsFilters, setFilters])
 
-  const options = useMemo<Option[]>(
-    () => [
+  const options = useMemo<Option[]>(() => {
+    const listScopedAttributes = allAttributes.filter((attr) => attr.scope?.includes('list'))
+
+    const attributeOptions: Option[] = listScopedAttributes.map((attr) => {
+      const option: Option = {
+        id: `attrib.${attr.name}`,
+        label: attr.data.title || attr.name,
+        type: attr.data.type || 'string',
+        icon: 'label',
+      }
+
+      // If the attribute has enum values, add them as filter values
+      if (attr.data.enum && attr.data.enum.length > 0) {
+        option.values = attr.data.enum.map((enumItem) => ({
+          id: String(enumItem.value),
+          label: enumItem.label || String(enumItem.value),
+          icon: enumItem.icon,
+          color: enumItem.color,
+        }))
+      }
+
+      return option
+    })
+
+    return [
       {
         id: 'entityType',
         label: 'Entity Type',
@@ -53,9 +80,9 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
         icon: 'check_circle',
         values: entityTypeOptions.map((option) => ({ ...option, id: option.value })),
       },
-    ],
-    [],
-  )
+      ...attributeOptions,
+    ]
+  }, [allAttributes])
 
   //   on keydown, close the dialog
   useEffect(() => {
