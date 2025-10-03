@@ -27,6 +27,18 @@ export const checkName = (name?: string | null): CheckNameResult => {
   return { valid: true }
 }
 
+// Validation for label field: human-readable, more permissive than name
+export const checkLabel = (label?: string | null): CheckNameResult => {
+  if (!label) return { valid: false, error: 'Label is required' }
+
+  // Check for single quote (apostrophe)
+  if (label.includes("'")) {
+    return { valid: false, error: "Label cannot contain single quotes (')" }
+  }
+
+  return { valid: true }
+}
+
 // Formatting + validation helper replacing old behavior of checkName.
 // It will sanitize and then apply capitalization + separator rules.
 export const parseAndFormatName = (
