@@ -75,17 +75,17 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
     if (rowData.children) {
       let projectBadge = null
       if (rowData.data.projectName) {
-        projectBadge = <Badge hl="project">{rowData.data.projectName}</Badge>
+        projectBadge = <Badge color="project" label={rowData.data.projectName} />
       }
       let siteBadge = null
       if (rowData.data.siteName) {
-        siteBadge = <Badge hl="site">{rowData.data.siteName}</Badge>
+        siteBadge = <Badge color="site" label={rowData.data.siteName}/>
       }
       return (
         <div style={{ display: 'inline-flex', flexDirecion: 'row' }}>
           {rowData.data.addonName} {rowData.data.addonVersion}
           <BadgeWrapper>
-            <Badge hl={rowData.data.variant}>{rowData.data.variant}</Badge>
+            <Badge label={rowData.data.variant} />
             {projectBadge}
             {siteBadge}
           </BadgeWrapper>
