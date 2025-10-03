@@ -59,33 +59,39 @@ const CopySettingsDialog = ({
     isError: bundlesError,
   } = useListBundlesQuery({})
 
+  // Helpers
 
-  useEffect(() => {
-    // find the produciton bundle
-    let defaultBundle = null
-    if (bundles && bundles.length > 0) {
-      defaultBundle = bundles.find((b) => {
-        if (variant === 'production') return b.isProduction
-        else if (variant === 'staging') return b.isStaging
-        else return b.isDev
-      }) 
-      if (defaultBundle) {
-        console.debug('Auto-selected source bundle:', defaultBundle.name, 'for variant', variant)
-        setSourceBundle(defaultBundle.name)
-        setSourceVariant(variant)
-      }
-    }
-  }, [bundles])
+  const variantIsDev = (variant) => {
+    return !['production', 'staging'].includes(variant)
+  }
 
-  const selectBundleByVariant = (variant) => {
-    if (!variant) return
-    if (!bundles || bundles.length === 0) return
+  const bundleByVariant = (variant) => {
+    // find the first bundle that matches the variant
+    if (!variant) return null
+    if (!bundles || bundles.length === 0) return null
     let bundle = null
     bundle = bundles.find((b) => {
       if (variant === 'production') return b.isProduction
       else if (variant === 'staging') return b.isStaging
       else return b.isDev
     })
+    return bundle
+  }
+
+  // Toolbar selection logic
+
+  useEffect(() => {
+    // find the default bundle for the current variant
+    const defaultBundle = bundleByVariant(variant)
+    if (defaultBundle) {
+      console.debug('Auto-selected source bundle:', defaultBundle.name, 'for variant', variant)
+      setSourceBundle(defaultBundle.name)
+      setSourceVariant(variant)
+    }
+  }, [bundles])
+
+  const selectBundleByVariant = (variant) => {
+    const bundle = bundleByVariant(variant)
     if (bundle) {
       setSourceBundle(bundle.name)
       setSourceVariant(bundle.isDev ? bundle.name : variant)
@@ -106,18 +112,18 @@ const CopySettingsDialog = ({
   }, [sourceBundle, bundles])
 
 
+  //
+  // Addon data
+  //
 
   const sourceVersions = useMemo(() => {
     if (!sourceBundle) return {}
-
     if (bundlesLoading || bundlesError) return {}
-
     if (!bundles) return {}
-
     const sb = bundles.find((i) => i.name === sourceBundle)
-    console.log('Source bundle versions:', sb?.addons)
     return sb?.addons || {}
   }, [sourceBundle, bundles, bundlesLoading, bundlesError])
+
 
   const doTheMagic = () => {
     const newLocalData = cloneDeep(localData)
@@ -225,7 +231,7 @@ const CopySettingsDialog = ({
   const dropSize = 270
   const dropStyle = { maxWidth: dropSize, minWidth: dropSize, marginRight: 8 }
 
-  const allowBundleSelect = pickByBundle || !['production', 'staging'].includes(sourceVariant || 'production')
+  const allowBundleSelect = pickByBundle || variantIsDev(sourceVariant)
 
   const toolbar = (
     <Toolbar style={{ marginBottom: 15 }}>
@@ -236,7 +242,7 @@ const CopySettingsDialog = ({
         setBundleName={setSourceBundle}
         setVariant={setSourceVariant}
         disabled={!allowBundleSelect}
-        devOnly={!['production', 'staging'].includes(sourceVariant || variant)}
+        devOnly={variantIsDev(sourceVariant || variant)}
       />
       Source variant:
       <VariantSelector
@@ -294,8 +300,9 @@ const CopySettingsDialog = ({
             }}
           >
             {selectedAddons
-              .filter((addon) => !sourceBundle || sourceVersions[addon.name])
+              .filter((addon) => ((!variantIsDev(sourceVariant)) || sourceVersions[addon.name]))
               .map((addon) => (
+                <>
                 <CopySettingsNode
                   key={`${addon.name}_${addon.version}`}
                   addonName={addon.name}
@@ -315,7 +322,9 @@ const CopySettingsDialog = ({
                   forcedSourceVariant={sourceVariant}
                   forcedSourceVersion={sourceBundle ? sourceVersions[addon.name] : null}
                   forcedSourceProjectName={sourceProjectName || null}
+                  isDev={variantIsDev(sourceVariant)}
                 />
+                </>
               ))}
           </div>
 

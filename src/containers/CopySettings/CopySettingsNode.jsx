@@ -123,6 +123,8 @@ const CopySettingsNode = ({
   forcedSourceVersion,
   forcedSourceVariant,
   forcedSourceProjectName,
+
+  isDev,
 }) => {
   const [sourceVersion, setSourceVersion] = useState(null)
   const [sourceVariant, setSourceVariant] = useState(null)
@@ -132,6 +134,7 @@ const CopySettingsNode = ({
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
+
 
   useEffect(() => {
     if (forcedSourceVersion && forcedSourceVersion !== sourceVersion) {
@@ -326,7 +329,7 @@ const CopySettingsNode = ({
 
   const expanded = !!(nodeData?.available && nodeData?.enabled)
 
-  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available) {
+  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available && !isDev) { 
     return null
   }
 
@@ -344,21 +347,21 @@ const CopySettingsNode = ({
         addonName={addonName}
         addonVersion={sourceVersion}
         setAddonVersion={setSourceVersion}
-        disabled={forcedSourceVersion}
+        disabled={forcedSourceVersion && !isDev}
       />
 
       {sourceProjectName && (
         <ProjectDropdown
           projectName={sourceProjectName}
           setProjectName={setSourceProjectName}
-          disabled={forcedSourceProjectName}
+          disabled={forcedSourceProjectName && !isDev}
         />
       )}
       {!forcedSourceVariant && (
         <VariantSelector
           variant={sourceVariant}
           setVariant={setSourceVariant}
-          disabled={forcedSourceVariant}
+          disabled={forcedSourceVariant && !isDev}
         />
       )}
 
