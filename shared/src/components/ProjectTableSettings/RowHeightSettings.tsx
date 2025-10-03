@@ -42,7 +42,7 @@ const Slider = styled.input`
   flex: 1;
   height: 4px;
   border-radius: 2px;
-  background: var(--md-sys-color-outline);
+  background: var(--md-sys-color-outline-variant);
   outline: none;
   -webkit-appearance: none;
   appearance: none;
@@ -54,9 +54,12 @@ const Slider = styled.input`
     height: 16px;
     border-radius: 50%;
     background: var(--md-sys-color-primary);
-    cursor: pointer;
-    border: 2px solid var(--md-sys-color-surface);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    cursor: grab;
+    box-shadow: var(--box-fill);
+  }
+
+  &:active::-webkit-slider-thumb {
+    cursor: grabbing;
   }
 
   &::-moz-range-thumb {
@@ -64,13 +67,13 @@ const Slider = styled.input`
     height: 16px;
     border-radius: 50%;
     background: var(--md-sys-color-primary);
-    cursor: pointer;
+    cursor: grabbing;
     border: 2px solid var(--md-sys-color-surface);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
 
   &:hover::-webkit-slider-thumb {
-    background: var(--md-sys-color-primary-container);
+    background: var(--md-sys-color-primary-hover);
   }
 
   &:hover::-moz-range-thumb {
@@ -79,14 +82,17 @@ const Slider = styled.input`
 `
 
 const ValueDisplay = styled.span`
-  font-size: 14px;
   color: var(--md-sys-color-on-surface-variant);
   min-width: 40px;
   text-align: right;
 `
 
 const RowHeightSettings: FC = () => {
-  const { rowHeight: contextRowHeight = 34, updateRowHeight, updateRowHeightWithPersistence } = useColumnSettingsContext()
+  const {
+    rowHeight: contextRowHeight = 34,
+    updateRowHeight,
+    updateRowHeightWithPersistence,
+  } = useColumnSettingsContext()
 
   // Local state for immediate UI updates during slider drag
   const [localRowHeight, setLocalRowHeight] = useState(contextRowHeight)
@@ -123,6 +129,9 @@ const RowHeightSettings: FC = () => {
     updateRowHeightWithPersistence(localRowHeight)
   }, [localRowHeight, updateRowHeightWithPersistence])
 
+  // Calculate the percentage for the gradient fill
+  const fillPercentage = ((localRowHeight - 24) / (200 - 24)) * 100
+
   return (
     <Container>
       <Label htmlFor="row-height-slider">Row height</Label>
@@ -137,6 +146,9 @@ const RowHeightSettings: FC = () => {
           onChange={handleSliderChange}
           onMouseDown={handleSliderStart}
           onMouseUp={handleSliderRelease}
+          style={{
+            background: `linear-gradient(to right, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary) ${fillPercentage}%, var(--md-sys-color-outline-variant) ${fillPercentage}%, var(--md-sys-color-outline-variant) 100%)`,
+          }}
         />
         <ValueDisplay>{localRowHeight}</ValueDisplay>
       </SliderContainer>
