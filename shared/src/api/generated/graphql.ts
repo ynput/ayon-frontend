@@ -233,6 +233,7 @@ export type EventNode = {
   description: Scalars['String']['output'];
   hash: Scalars['String']['output'];
   id: Scalars['String']['output'];
+  payload?: Maybe<Scalars['String']['output']>;
   project?: Maybe<Scalars['String']['output']>;
   retries: Scalars['Int']['output'];
   sender?: Maybe<Scalars['String']['output']>;
@@ -305,6 +306,7 @@ export type FolderNode = BaseNode & {
   hasProducts: Scalars['Boolean']['output'];
   hasReviewables: Scalars['Boolean']['output'];
   hasTasks: Scalars['Boolean']['output'];
+  hasVersions: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
   links: LinksConnection;
@@ -468,7 +470,7 @@ export type LinkEdge = {
   linkType: Scalars['String']['output'];
   name?: Maybe<Scalars['String']['output']>;
   /** Linked node */
-  node: BaseNode;
+  node?: Maybe<BaseNode>;
   projectName: Scalars['String']['output'];
 };
 
