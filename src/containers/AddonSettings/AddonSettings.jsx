@@ -33,6 +33,7 @@ import {
 } from '@queries/addonSettings'
 
 import { usePromoteBundleMutation } from '@queries/bundles/updateBundles'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 import { getValueByPath, setValueByPath, sameKeysStructure, compareObjects } from './utils'
@@ -98,6 +99,9 @@ const isChildPath = (childPath, parentPath) => {
 const AddonSettings = ({ projectName, showSites = false, bypassPermissions = false }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
   //const navigate = useNavigate()
+  const user = useSelector((state) => state.user)
+  const developerMode = user?.attrib?.developerMode
+
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
   const [originalData, setOriginalData] = useState({})
@@ -109,14 +113,30 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
+  const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
+  const userName = useSelector((state) => state.user.name)
 
-  const [selectedBundle, setSelectedBundle] = useState(/** @type {BundleIdentifier} */({ 
-    variant: 'production', 
-    bundleName: null, 
-    projectBundleName: undefined 
-  }))
+  const [selectedBundle, setSelectedBundle] = useState(() => {
+    // If in developer mode, try to find the user's dev bundle
+    if (developerMode) {
+      const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
+      if (devBundle) {
+        return {
+          variant: devBundle.name,
+          bundleName: devBundle.name,
+          projectBundleName: undefined,
+        }
+      }
+    }
+    // Default to production for non-developers or if no dev bundle found
+    return {
+      variant: 'production',
+      bundleName: null,
+      projectBundleName: undefined,
+    }
+  })
 
-  const [loadedBundleName, setLoadedBundleName] = useState("????")
+  const [loadedBundleName, setLoadedBundleName] = useState('????')
 
   const [addonSchemas, setAddonSchemas] = useState({})
 
@@ -133,7 +153,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const { requestPaste } = usePaste()
 
   const { isLoading, permissions: userPermissions } = useUserProjectPermissions(isUser)
-
 
   const projectKey = projectName || '_'
 
@@ -156,8 +175,28 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     })
   }
 
-  const user = useSelector((state) => state.user)
-  const developerMode = user?.attrib?.developerMode
+  // Update selectedBundle when developer mode changes
+  useEffect(() => {
+    if (developerMode) {
+      // Switch to dev bundle when entering developer mode
+      const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
+      if (devBundle) {
+        setSelectedBundle({
+          variant: devBundle.name,
+          bundleName: devBundle.name,
+          projectBundleName: undefined,
+        })
+      }
+      // If no dev bundle found, stay on current variant (don't switch)
+    } else {
+      // Switch back to production when leaving developer mode
+      setSelectedBundle({
+        variant: 'production',
+        bundleName: null,
+        projectBundleName: undefined,
+      })
+    }
+  }, [developerMode, bundles, userName])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -417,7 +456,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Remove selected override',
       message,
       accept: executeRemove,
-      reject: () => { },
+      reject: () => {},
     })
   }
 
@@ -454,7 +493,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Remove all overrides',
       message,
       accept: executeRemove,
-      reject: () => { },
+      reject: () => {},
     })
   }
 
@@ -492,7 +531,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       header: 'Pin override',
       message,
       accept: executePin,
-      reject: () => { },
+      reject: () => {},
     })
   }
 
@@ -500,8 +539,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     // Push a value to a given path of the settings
     // Validate that the value is compatible with the existing value
 
-    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${projectKey || '_'
-      }`
+    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${
+      projectKey || '_'
+    }`
     const allData = localData[key]
     if (!allData) {
       toast.error('No data to paste')
@@ -579,7 +619,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         toast.success('Bundle pushed to production')
         setSelectedBundle({ variant: 'production', bundleName: null })
       },
-      reject: () => { },
+      reject: () => {},
     })
   }
 
@@ -624,7 +664,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             showDev
           />
           <Spacer />
-          {projectName && <PerProjectBundleConfig projectName={projectName} variant={selectedBundle.variant} />}
+          {projectName && (
+            <PerProjectBundleConfig projectName={projectName} variant={selectedBundle.variant} />
+          )}
           <CopyBundleSettingsButton
             bundleName={loadedBundleName}
             variant={selectedBundle.variant}
@@ -641,15 +683,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             projectName={projectName}
           />
         </Toolbar>
-        { projectName ? (
-          <div>
-            { loadedBundleName }
-          </div>
+        {projectName ? (
+          <div>{loadedBundleName}</div>
         ) : (
-        <BundlesSelector
-          selected={selectedBundle}
-          onChange={setSelectedBundle}
-        />
+          <BundlesSelector selected={selectedBundle} onChange={setSelectedBundle} />
         )}
       </>
     )
@@ -727,7 +764,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           {showCopySettings && (
             <CopySettingsDialog
               selectedAddons={selectedAddons}
-              variant={variant}
+              variant={selectedBundle.variant}
               originalData={originalData}
               setOriginalData={setOriginalData}
               localData={localData}
@@ -744,7 +781,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             <RawSettingsDialog
               addonName={selectedAddons[0].name}
               addonVersion={selectedAddons[0].version}
-              variant={variant}
+              variant={selectedBundle.variant}
               reloadAddons={reloadAddons}
               projectName={projectName}
               siteId={siteId}

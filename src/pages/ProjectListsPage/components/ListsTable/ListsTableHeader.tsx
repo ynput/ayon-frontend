@@ -1,4 +1,5 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
@@ -105,6 +106,8 @@ interface MenuItemDefinition {
   className?: string
   hiddenButtonType?: ButtonType
   powerFeature?: string
+  selected?: boolean
+  active?: boolean
 }
 
 interface ListsTableHeaderProps {
@@ -133,6 +136,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     setListsFiltersOpen,
     selectAllLists,
   } = useListsContext()
+
+  const { showArchived, setShowArchived, listsFilters } = useListsDataContext()
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
   const { powerLicense } = usePowerpack()
@@ -265,6 +270,15 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       hiddenButtonType: 'add' as ButtonType,
     },
     { id: 'divider' },
+    {
+      id: 'show-archived',
+      label: 'Show archived',
+      icon: 'inventory_2',
+      onClick: () => setShowArchived(!showArchived),
+      isPinned: false,
+      selected: showArchived,
+      active: showArchived,
+    },
     ...(!isReview
       ? [
           {
@@ -273,6 +287,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             icon: 'filter_list',
             onClick: () => setListsFiltersOpen(true),
             isPinned: false,
+            selected: listsFilters.length > 0,
+            active: listsFilters.length > 0,
           },
         ]
       : []),

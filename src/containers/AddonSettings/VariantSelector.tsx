@@ -41,7 +41,7 @@ const VariantSelector = ({
 }: VariantSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const devMode = useAppSelector((state) => state.user.attrib.developerMode)
-  const userName = useAppSelector((state) => state.user.name)
+  // const userName = useAppSelector((state) => state.user.name)
 
   const buttons =
     devMode && showDev
@@ -61,14 +61,14 @@ const VariantSelector = ({
   const selectedType = useMemo(() => {
     if (selectedBundle?.isProduction) return 'production'
     if (selectedBundle?.isStaging) return 'staging'
-    if (selectedBundle?.isDev && selectedBundle.activeUser === userName) return 'dev'
+    if (selectedBundle?.isDev) return 'dev'
     return undefined
   }, [selectedBundle])
 
   const handleOnChange = (variant: (typeof buttons)[number]) => {
     if (variant === 'dev') {
       // find dev bundle that belongs to the user
-      const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
+      const devBundle = bundles.find((bundle) => bundle.isDev)
       if (devBundle) {
         setVariant(devBundle.name)
       } else {

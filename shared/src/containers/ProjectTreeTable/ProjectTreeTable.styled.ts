@@ -58,7 +58,6 @@ export const TableCellContent = styled.div`
   width: 100%;
   padding: 0px 8px;
   overflow: hidden;
-  white-space: nowrap;
   border-radius: var(--border-radius-m);
   user-select: none;
   padding-right: 0;

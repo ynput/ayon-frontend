@@ -75,24 +75,29 @@ const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
 const AddonListItem: React.FC<{
   version?: string | null
   setVersion: (v: string | null) => void
-  selection: any[]
+  selection: any[] | any
   addons?: Addon[]
   versions: string[]
   isDev?: boolean
-}> = ({ version, setVersion, selection, addons = [], versions }) => {
+  addonName: string
+}> = ({ version, setVersion, selection, addons = [], versions, addonName }) => {
   const options = useMemo(
-    () =>
-      selection.length > 1
-        ? selection.map((s) => {
+    () => {
+      // Normalize selection to always be an array
+      const selectionArray = Array.isArray(selection) ? selection : [selection]
+      const isCurrentAddonSelected = selectionArray.some((s) => s?.name === addonName)
+
+      return selectionArray.length > 1 && isCurrentAddonSelected
+        ? selectionArray.map((s) => {
             const foundAddon = addons.find((a) => a.name === s.name)
             if (!foundAddon) return ['NONE']
             const versionList = Object.keys(foundAddon.versions || {})
             versionList.sort((a, b) => -1 * compareBuild(a, b))
             return [...versionList, 'NONE']
           })
-        : [[...versions.sort((a, b) => -1 * compareBuild(a, b)), 'NONE']],
-
-    [selection, addons],
+        : [[...versions.sort((a, b) => -1 * compareBuild(a, b)), 'NONE']]
+    },
+    [selection, addons, addonName, versions],
   )
 
   return (
@@ -161,8 +166,10 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
     // every time readyState changes, refetch selected addons
 
     const onSetVersion = (addonName: string, version: string | null, isServer: boolean) => {
+      // Normalize selected to always be an array
+      const selectedArray = Array.isArray(selected) ? selected : [selected]
       const versionsToSet: string[] =
-        selected.length > 1 ? selected.map((s: any) => s.name) : [addonName]
+        selectedArray.length > 1 ? selectedArray.map((s: any) => s.name) : [addonName]
 
       setFormData((prev) => {
         const newFormData: BundleFormData = { ...prev }
@@ -307,6 +314,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
                 }
                 versions={availableVersions}
                 isDev={isDev}
+                addonName={addon.name}
               />
             )
           }}

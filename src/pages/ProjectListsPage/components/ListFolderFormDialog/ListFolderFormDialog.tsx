@@ -19,6 +19,7 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     onUpdateListFolder,
     selectedRows,
     selectedList,
+    isReview,
   } = useListsContext()
 
   const { listFolders } = useListsDataContext()
@@ -27,7 +28,10 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
 
   const editingFolder = listFolders?.find((f) => f.id === folderId)
 
-  const initFolderForm: FolderFormData = { label: '' }
+  const initFolderForm: FolderFormData = {
+    label: '',
+    scope: [isReview ? 'review-session' : 'generic'],
+  }
   const [folderForm, setFolderForm] = useState<FolderFormData>(initFolderForm)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -191,7 +195,12 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           This folder will be assigned to {listCount} selected lists.
         </p>
       )}
-      <ListFolderForm data={folderForm} onChange={handleFieldChange} autoFocus={true} />
+      <ListFolderForm
+        data={folderForm}
+        onChange={handleFieldChange}
+        autoFocus={true}
+        scopes={isReview ? ['review-session'] : ['generic']}
+      />
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}
     </Dialog>
   )

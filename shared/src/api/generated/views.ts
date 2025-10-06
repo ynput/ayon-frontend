@@ -91,20 +91,16 @@ export type CreateViewApiArg = {
     | ListsViewPostModel
     | ReviewsViewPostModel
 }
-export type GetWorkingViewApiResponse = /** status 200 Successful Response */
-  | OverviewViewModel
-  | TaskProgressViewModel
-  | ListsViewModel
-  | ReviewsViewModel
+export type GetWorkingViewApiResponse =
+  /** status 200 Successful Response */
+  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
 export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetDefaultViewApiResponse = /** status 200 Successful Response */
-  | OverviewViewModel
-  | TaskProgressViewModel
-  | ListsViewModel
-  | ReviewsViewModel
+export type GetDefaultViewApiResponse =
+  /** status 200 Successful Response */
+  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
 export type GetDefaultViewApiArg = {
   viewType: string
   projectName?: string
@@ -115,11 +111,9 @@ export type SetDefaultViewApiArg = {
   projectName?: string
   setDefaultViewRequestModel: SetDefaultViewRequestModel
 }
-export type GetViewApiResponse = /** status 200 Successful Response */
-  | OverviewViewModel
-  | TaskProgressViewModel
-  | ListsViewModel
-  | ReviewsViewModel
+export type GetViewApiResponse =
+  /** status 200 Successful Response */
+  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
 export type GetViewApiArg = {
   viewType: string
   viewId: string
@@ -212,6 +206,7 @@ export type ColumnItemModel = {
 }
 export type OverviewSettings = {
   showHierarchy?: boolean
+  rowHeight?: number
   groupBy?: string
   showEmptyGroups?: boolean
   sortBy?: string
@@ -242,6 +237,7 @@ export type TaskProgressViewPostModel = {
   settings: TaskProgressSettings
 }
 export type ListsSettings = {
+  rowHeight?: number
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter
@@ -255,21 +251,6 @@ export type ListsViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: ListsSettings
-}
-export type ReviewsSettings = {
-  sortBy?: string
-  sortDesc?: boolean
-  filter?: QueryFilter
-  columns?: ColumnItemModel[]
-}
-export type ReviewsViewPostModel = {
-  /** Unique identifier for the view within the given scope. */
-  id?: string
-  /** Human-readable name of the view. */
-  label: string
-  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
-  working?: boolean
-  settings: ReviewsSettings
 }
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */

@@ -92,12 +92,11 @@ const BundleForm: React.FC<BundleFormProps> = ({
                   />
                 </Styled.BundleNameInput>
                 {!isDev && onProjectSwitchChange && (
-                  <Styled.ProjectSwitchContainer data-tooltip="A bundle that is used for a specific project (advanced)">
+                  <Styled.ProjectSwitchContainer data-tooltip="A bundle that is used for a specific project (experimental)">
                     <span>Project bundle</span>
                     <InputSwitch
                       checked={formData?.isProject || false}
                       onChange={onProjectSwitchChange}
-                      data-tooltip="A bundle that is used for a specific project (advanced)"
                       disabled={!formData || formData.isDev}
                     />
                   </Styled.ProjectSwitchContainer>

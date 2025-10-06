@@ -25,7 +25,8 @@ const TasksProgressPage: FC = () => {
   // Get attributes so we can use priority
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task')
-  const statuses = useScopedStatuses([projectName], ['task'])
+  const taskStatuses = useScopedStatuses([projectName], ['task'])
+  const folderStatuses = useScopedStatuses([projectName], ['folder'])
 
   return (
     <main>
@@ -43,7 +44,8 @@ const TasksProgressPage: FC = () => {
           >
             <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
               <TasksProgress
-                statuses={statuses}
+                taskStatuses={taskStatuses}
+                folderStatuses={folderStatuses}
                 taskTypes={projectInfo?.taskTypes}
                 folderTypes={projectInfo?.folderTypes}
                 priorities={priorities}

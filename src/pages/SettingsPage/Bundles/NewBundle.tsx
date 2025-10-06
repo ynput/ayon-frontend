@@ -101,22 +101,30 @@ const NewBundle: React.FC<NewBundleProps> = ({
     if (formData?.name === initBundle?.name) return
 
     if (initBundle) {
-      // addons = [{name: 'addon1', versions:{'1.0.0': {}}}]
-      // reduce down addons to latest version
       const initAddons: Record<string, string> = {}
       const initAddonsDev: AddonDevelopment = {}
-      for (const addon of addons) {
-        const versionList = Object.keys(addon.versions || {})
-        if (versionList.length) {
-          const latestVersion = getLatestSemver(versionList)
-          initAddons[addon.name] = latestVersion
-        }
 
-        if (isDev) {
-          // check if there's an addon development
-          if (!initBundle.addonDevelopment?.[addon.name]) {
-            // create new addon development when there isn't one
-            initAddonsDev[addon.name] = { path: '', enabled: false }
+      if (initBundle.addons) {
+        // Only use addons from initBundle.addons
+        for (const addonName of Object.keys(initBundle.addons)) {
+          initAddons[addonName] = initBundle.addons[addonName]
+          if (isDev) {
+            if (!initBundle.addonDevelopment?.[addonName]) {
+              initAddonsDev[addonName] = { path: '', enabled: false }
+            }
+          }
+        }
+      } else {
+        // Use latest versions for all available addons
+        for (const addon of addons) {
+          const versionList = Object.keys(addon.versions || {})
+          if (versionList.length) {
+            initAddons[addon.name] = getLatestSemver(versionList)
+          }
+          if (isDev) {
+            if (!initBundle.addonDevelopment?.[addon.name]) {
+              initAddonsDev[addon.name] = { path: '', enabled: false }
+            }
           }
         }
       }
@@ -352,14 +360,14 @@ const NewBundle: React.FC<NewBundleProps> = ({
             label="Select all addons"
             icon="select_all"
             onClick={() => setSelectedAddons(addons)}
-            data-shortcut={getPlatformShortcutKey('a', [ KeyMode.Shift])}
+            data-shortcut={getPlatformShortcutKey('a', [KeyMode.Shift])}
             id="select"
           />
           <Button
             label="Deselect all addons"
             icon="deselect"
             onClick={() => setSelectedAddons([])}
-            data-shortcut={getPlatformShortcutKey('a', [ KeyMode.Shift])}
+            data-shortcut={getPlatformShortcutKey('a', [KeyMode.Shift])}
             id="deselect"
           />
           <Button

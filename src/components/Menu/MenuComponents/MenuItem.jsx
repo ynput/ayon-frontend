@@ -23,6 +23,7 @@ const MenuItem = forwardRef(
       shortcut,
       disabled,
       powerFeature,
+      active,
       ...props
     },
     ref,
@@ -60,6 +61,7 @@ const MenuItem = forwardRef(
             {shortcut}
           </ShortcutTag>
         )}
+        {active && <Icon icon="check" style={{ marginLeft: 'auto' }} />}
 
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>

@@ -6,6 +6,7 @@ import { FOLDER_ICON } from '../hooks/useListContextMenu'
 export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
 export const buildListFolderRowId = (folderId: string) => `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
 export const parseListFolderRowId = (rowId: string) => {
+  if (!rowId || typeof rowId !== 'string') return null
   if (rowId.startsWith(LIST_FOLDER_ROW_ID_PREFIX + '-')) {
     return rowId.substring((LIST_FOLDER_ROW_ID_PREFIX + '-').length)
   }
@@ -17,6 +18,7 @@ export const buildListsTableData = (
   folders: EntityListFolderModel[],
   showEmptyFolders: boolean = true,
   powerLicense: boolean = false,
+  showArchived: boolean = false,
 ): SimpleTableRow[] => {
   // Create lookup maps
   const foldersMap = new Map<string, EntityListFolderModel>()
@@ -61,10 +63,13 @@ export const buildListsTableData = (
     }
   }
 
+  // Filter out archived lists if showArchived is false
+  const filteredLists = showArchived ? listsData : listsData.filter((list) => list.active)
+
   // Assign lists to their folders and mark folders as having lists
   const rootLists: EntityList[] = []
 
-  for (const list of listsData) {
+  for (const list of filteredLists) {
     const listFolderId = list.entityListFolderId
 
     if (powerLicense && listFolderId && folderNodes.has(listFolderId)) {

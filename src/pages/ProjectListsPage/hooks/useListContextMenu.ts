@@ -355,7 +355,7 @@ const useListContextMenu = () => {
           command: () => onOpenFolderList({}),
           shortcut: 'F',
           hidden: !allSelectedRowsAreLists,
-          powerFeature: powerLicense ? 'listFolders' : undefined,
+          powerFeature: powerLicense ? undefined : 'listFolders',
         },
         // Root level Create subfolder (single folder selection)
         ...(powerLicense

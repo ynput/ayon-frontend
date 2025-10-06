@@ -42,17 +42,17 @@ interface ListFolderFormProps {
   data: ListFolderFormData
   onChange: (field: keyof ListFolderFormData, value: string | string[] | undefined) => void
   autoFocus?: boolean
+  scopes?: ListFolderFormData['scope']
 }
 
 export const ALL_SCOPE = '__all__'
 
-const SCOPE_OPTIONS = [
-  { value: 'generic', label: 'Lists' },
-  { value: 'review-session', label: 'Review Sessions' },
-  { value: ALL_SCOPE, label: 'All' },
-]
-
-export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFocus = false }) => {
+export const ListFolderForm: FC<ListFolderFormProps> = ({
+  data,
+  onChange,
+  autoFocus = false,
+  scopes,
+}) => {
   const colorInputRef = useRef<HTMLInputElement>(null)
   const iconDropdownRef = useRef<DropdownRef>(null)
 
@@ -83,6 +83,14 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({ data, onChange, autoFo
       }
     },
     [onChange],
+  )
+
+  const SCOPE_OPTIONS = [
+    { value: 'generic', label: 'Lists' },
+    { value: 'review-session', label: 'Review Sessions' },
+    { value: ALL_SCOPE, label: 'All' },
+  ].filter((scope) =>
+    scopes ? scopes.includes(scope.value as any) || scope.value === ALL_SCOPE : true,
   )
 
   return (

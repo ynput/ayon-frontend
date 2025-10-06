@@ -1,4 +1,4 @@
-import { ViewListItemModel } from '@shared/api'
+import { GetViewApiResponse } from '@shared/api'
 import { AccessLevel } from '@shared/components'
 
 export * from './Views'
@@ -29,7 +29,7 @@ export { WORKING_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuCont
 
 // types
 export type ViewFormData = Required<
-  Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner' | 'accessLevel'> & {
+  Pick<GetViewApiResponse, 'label' | 'scope' | 'visibility' | 'owner' | 'accessLevel'> & {
     access: Record<string, AccessLevel>
   }
 >

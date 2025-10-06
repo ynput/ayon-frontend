@@ -59,7 +59,8 @@ export type Operation = {
 }
 
 interface TasksProgressProps {
-  statuses?: Status[]
+  taskStatuses?: Status[]
+  folderStatuses?: Status[]
   taskTypes?: TaskType[]
   folderTypes?: FolderType[]
   priorities?: AttributeEnumItem[]
@@ -67,7 +68,8 @@ interface TasksProgressProps {
 }
 
 const TasksProgress: FC<TasksProgressProps> = ({
-  statuses = [],
+  taskStatuses = [],
+  folderStatuses = [],
   taskTypes = [],
   folderTypes = [],
   priorities = [],
@@ -248,9 +250,10 @@ const TasksProgress: FC<TasksProgressProps> = ({
     () =>
       formatTaskProgressForTable(foldersTasksData, collapsedParents, {
         folderTypes,
-        statuses,
+        taskStatuses,
+        folderStatuses,
       }),
-    [foldersTasksData, collapsedParents],
+    [foldersTasksData, collapsedParents, taskStatuses, folderStatuses],
   )
 
   const [updateEntities] = useUpdateEntitiesMutation()
@@ -434,7 +437,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
               isLoading={isFetchingTasks}
               activeTask={activeTask}
               selectedAssignees={selectedAssignees}
-              statuses={statuses} // status icons etc.
+              taskStatuses={taskStatuses} // task status icons etc.
+              folderStatuses={folderStatuses} // folder status icons etc.
               taskTypes={taskTypes} // for tasks icon etc.
               priorities={priorities} // for priority icons and colors
               users={users}

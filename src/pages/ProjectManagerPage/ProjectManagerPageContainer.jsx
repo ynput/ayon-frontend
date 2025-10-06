@@ -15,7 +15,6 @@ const ProjectManagerPageContainer = ({
   onNoProject,
   ...props
 }) => {
-
   // for each child, add the project list react node with the props
   const childrenWithProps = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
@@ -33,7 +32,6 @@ const ProjectManagerPageContainer = ({
               onNoProjectSelected={onNoProject}
               onSelect={onSelect}
               multiSelect={false}
-              showInactive={true}
             />
           </>
         ),
