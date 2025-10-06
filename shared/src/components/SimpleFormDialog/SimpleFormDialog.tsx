@@ -91,7 +91,7 @@ const DropdownItemTemplate = (option: FormSelectOption) => {
   const endContent = (
     <>
       <div style={{ flex: 1 }} />
-      {option.badges && option.badges.map((badge, index) => <Badge key={index}>{badge}</Badge>)}
+      {option.badges && option.badges.map((badge, index) => <Badge key={index} label={badge}/>)}
     </>
   )
   return (

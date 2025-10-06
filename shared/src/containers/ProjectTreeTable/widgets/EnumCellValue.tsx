@@ -1,4 +1,5 @@
 import { AttributeEnumItem } from '@shared/api'
+import { Badge } from '@shared/components'
 import { Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
@@ -52,20 +53,6 @@ const StyledValueWrapper = styled.div`
   min-width: 20px;
 `
 
-const StyledValue = styled.span`
-  overflow: hidden;
-  white-space: nowrap;
-  width: 100%;
-  text-overflow: ellipsis;
-  text-align: left;
-  border-radius: var(--border-radius-m);
-  padding: 0px 2px;
-
-  &.placeholder {
-    color: var(--md-sys-color-outline);
-  }
-`
-
 const StyledImg = styled.img`
   width: 20px;
   height: 20px;
@@ -115,6 +102,34 @@ export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement>
     close?: Partial<IconProps>
   }
 }
+
+const hexToRgb = (hex: string): [number, number, number] => {
+  const normalizedHex = hex.startsWith('#') ? hex.slice(1) : hex;
+
+  if (normalizedHex.length !== 6 || !/^[0-9A-Fa-f]{6}$/.test(normalizedHex)) {
+    throw new Error(`Invalid hex color format: ${hex}`);
+  }
+
+  const bigint = parseInt(normalizedHex, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  
+  return [r, g, b];
+};
+
+const getTextColor = (backgroundColor: string, threshold: number = 128): string => {
+  try {
+    const [r, g, b] = hexToRgb(backgroundColor);
+
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > threshold ? '#000000' : '#ffffff'; 
+
+  } catch (error) {
+    return '#ffffff'; 
+  }
+};
+
 
 export const EnumCellValue = ({
   selectedOptions,
@@ -185,20 +200,13 @@ export const EnumCellValue = ({
             ) : null}
 
             {(showLabels || !option.icon) && (
-              <StyledValue
-                style={{
-                  color: backgroundColor ? 'inherit' : option.color,
-                  backgroundColor: backgroundColor
-                    ? option.color || 'var(--md-sys-color-surface-container)'
-                    : 'transparent',
-                  ...valueStyle,
-                }}
-                className={clsx({ placeholder: isPlaceholder }, valueClassName)}
-                aria-label={option.label}
+              <Badge 
+                label={option.label} 
+                color={backgroundColor ? option.color : undefined} 
+                className={clsx({ placeholder: isPlaceholder }, valueClassName)} 
+                style={valueStyle}
                 {...valueRest}
-              >
-                {option.label}
-              </StyledValue>
+              />
             )}
           </StyledValueWrapper>
         ))}
