@@ -78,6 +78,11 @@ const TYPE_OPTIONS: TypeOptionsMap = {
     fields: [],
     exclude: ['example'],
   },
+  datetime:{
+    value: 'datetime',
+    label: 'Datetime',
+    fields: [],
+  }
 }
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
