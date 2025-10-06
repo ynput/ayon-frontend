@@ -423,7 +423,7 @@ export type EntityListItemPostModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -438,7 +438,7 @@ export type EntityListMultiPatchItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -457,7 +457,7 @@ export type EntityListItemPatchModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -487,7 +487,7 @@ export type EntityListPostModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: object
+  data?: Record<string, any>
   template?: object
   /** List tags */
   tags?: string[]
@@ -508,7 +508,7 @@ export type EntityListItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
   /** Path to the folder where the item is located */
@@ -534,7 +534,7 @@ export type EntityListModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: object
+  data?: Record<string, any>
   template?: object
   /** List tags */
   tags?: string[]
@@ -560,7 +560,7 @@ export type EntityListPatchModel = {
   /** ID of the folder containing the list */
   entityListFolderId?: string
   /** Additional data associated with the list */
-  data?: object
+  data?: Record<string, any>
   /** List tags */
   tags?: string[]
   /** Name of the user who created the list */

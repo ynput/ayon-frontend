@@ -126,6 +126,25 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.deployProjectRequestModel,
       }),
     }),
+    listGuestUsers: build.query<ListGuestUsersApiResponse, ListGuestUsersApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/guests` }),
+    }),
+    addGuestUser: build.mutation<AddGuestUserApiResponse, AddGuestUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/guests`,
+        method: 'POST',
+        body: queryArg.addGuestUserModel,
+      }),
+    }),
+    removeGuestUser: build.mutation<RemoveGuestUserApiResponse, RemoveGuestUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/guests/${queryArg.email}`,
+        method: 'DELETE',
+      }),
+    }),
+    getProductTypes: build.query<GetProductTypesApiResponse, GetProductTypesApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/productTypes` }),
+    }),
     getProject: build.query<GetProjectApiResponse, GetProjectApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}` }),
     }),
@@ -318,6 +337,24 @@ export type ListProjectsApiArg = {
 export type DeployProjectApiResponse = /** status 201 Successful Response */ any
 export type DeployProjectApiArg = {
   deployProjectRequestModel: DeployProjectRequestModel
+}
+export type ListGuestUsersApiResponse = /** status 200 Successful Response */ GuestUsersListModel
+export type ListGuestUsersApiArg = {
+  projectName: string
+}
+export type AddGuestUserApiResponse = /** status 200 Successful Response */ any
+export type AddGuestUserApiArg = {
+  projectName: string
+  addGuestUserModel: AddGuestUserModel
+}
+export type RemoveGuestUserApiResponse = /** status 200 Successful Response */ any
+export type RemoveGuestUserApiArg = {
+  email: string
+  projectName: string
+}
+export type GetProductTypesApiResponse = /** status 200 Successful Response */ ProductTypesList
+export type GetProductTypesApiArg = {
+  projectName: string
 }
 export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
 export type GetProjectApiArg = {
@@ -583,6 +620,20 @@ export type Tag = {
   original_name?: string
   color?: string
 }
+export type DefaultProductBaseType = {
+  color?: string
+  icon?: string
+}
+export type ProductBaseType = {
+  name?: string
+  color?: string
+  icon?: string
+}
+export type ProductBaseTypes = {
+  /** Default appearance for product types */
+  default?: DefaultProductBaseType
+  definitions?: ProductBaseType[]
+}
 export type Anatomy = {
   /** Settings for automatic entity name generation */
   entity_naming?: EntityNaming
@@ -602,6 +653,7 @@ export type Anatomy = {
   statuses?: Status[]
   /** Tags configuration */
   tags?: Tag[]
+  product_base_types?: ProductBaseTypes
 }
 export type ProjectBundleModel = {
   production?: string
@@ -632,6 +684,32 @@ export type DeployProjectRequestModel = {
   library?: boolean
   /** Assign default users to the project */
   assignUsers?: boolean
+}
+export type GuestUserModel = {
+  email: string
+  fullName?: string
+  status?: 'pending' | 'active'
+}
+export type GuestUsersListModel = {
+  users?: GuestUserModel[]
+}
+export type AddGuestUserModel = {
+  email: string
+  fullName?: string
+}
+export type ProductTypeListItem = {
+  name: string
+  baseType?: string
+  color?: string
+  icon?: string
+}
+export type DefaultProductType = {
+  color: string
+  icon: string
+}
+export type ProductTypesList = {
+  productTypes?: ProductTypeListItem[]
+  default: DefaultProductType
 }
 export type LinkTypeModel = {
   /** Name of the link type */

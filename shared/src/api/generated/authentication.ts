@@ -11,6 +11,9 @@ const injectedRtkApi = api.injectEndpoints({
     logout: build.mutation<LogoutApiResponse, LogoutApiArg>({
       query: () => ({ url: `/api/auth/logout`, method: 'POST' }),
     }),
+    tokenAuthCallback: build.query<TokenAuthCallbackApiResponse, TokenAuthCallbackApiArg>({
+      query: () => ({ url: `/api/auth/tokenauth` }),
+    }),
     listActiveSessions: build.query<ListActiveSessionsApiResponse, ListActiveSessionsApiArg>({
       query: () => ({ url: `/api/auth/sessions` }),
     }),
@@ -34,6 +37,8 @@ export type LoginApiArg = {
 }
 export type LogoutApiResponse = /** status 200 Successful Response */ LogoutResponseModel
 export type LogoutApiArg = void
+export type TokenAuthCallbackApiResponse = /** status 200 Successful Response */ LoginResponseModel
+export type TokenAuthCallbackApiArg = void
 export type ListActiveSessionsApiResponse = /** status 200 Successful Response */ SessionModel[]
 export type ListActiveSessionsApiArg = void
 export type CreateSessionApiResponse = /** status 200 Successful Response */ SessionModel
@@ -62,10 +67,13 @@ export type UserModel = {
   updatedAt?: string
 }
 export type LoginResponseModel = {
+  /** Text message, which may be displayed to the user */
   detail?: string
   error?: string
   token?: string
   user?: UserModel
+  /** URL to redirect the user after login */
+  redirectUrl?: string
 }
 export type ValidationError = {
   loc: (string | number)[]

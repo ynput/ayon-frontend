@@ -175,7 +175,7 @@ export type AttributeEnumItem = {
 }
 export type AttributeData = {
   /** Type of attribute value */
-  type:
+  type?:
     | 'string'
     | 'integer'
     | 'float'
@@ -220,12 +220,16 @@ export type AttributeModel = {
     | ('project' | 'user')
     | 'list'
   )[]
+  data: AttributeData
   /** Is attribute builtin. Built-in attributes cannot be removed. */
   builtin?: boolean
-  data: AttributeData
 }
 export type SsoOption = {
+  /** Unique name of the SSO provider */
   name: string
+  /** If True, the provider will not be shown in the UI */
+  hidden?: boolean
+  /** Nice human-readable title of the provider */
   title?: string
   icon?: string
   color?: string
@@ -315,6 +319,9 @@ export type ProductionBundle = {
     [key: string]: string
   }
   launcherVersion?: string
+  dependencyPackages?: {
+    [key: string]: string
+  }
 }
 export type SettingsOverrides = {
   addonName?: string
