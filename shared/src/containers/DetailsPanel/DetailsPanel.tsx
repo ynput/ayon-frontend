@@ -18,6 +18,7 @@ import FeedWrapper from './FeedWrapper'
 import FeedContextWrapper from './FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 import { DetailsPanelMoreMenu } from './DetailsPanelMoreMenu'
+import { EntityListsContextType } from '../../../../src/pages/ProjectListsPage/context'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -46,7 +47,7 @@ export type DetailsPanelProps = {
   annotations?: Record<string, unknown>
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
-  entityListsContext?: Record<string, unknown>
+  entityListsContext?: EntityListsContextType
 }
 
 export const DetailsPanel = ({

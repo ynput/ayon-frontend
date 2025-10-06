@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 // @ts-ignore
@@ -36,6 +36,15 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   const { toggleMenuOpen, setMenuOpen, menuOpen } = useMenuContext()
+  
+  const panelInstanceId = useMemo(() => {
+    const timestamp = Date.now()
+    const random = Math.random().toString(36).substring(2, 9)
+    const entityPath = firstEntityData?.path || firstEntityData?.folderPath || 'unknown-path'
+    return `${timestamp}-${random}-${entityPath.replace(/[^a-zA-Z0-9]/g, '-')}`
+  }, [firstEntityData])
+  
+  const menuId = `details-more-menu-${panelInstanceId}`
 
   const { onOpenVersionUpload } = useContextAccess()
 
@@ -64,7 +73,7 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
   })
 
   const handleToggleMenu = () => {
-    toggleMenuOpen('details-more-menu')
+    toggleMenuOpen(menuId)
   }
 
   const handleSetMenu = (menu: string | false) => {
@@ -108,10 +117,10 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
         data-tooltip="More actions"
         title="More actions"
         onClick={handleToggleMenu}
-        className={menuOpen === 'details-more-menu' ? 'active' : undefined}
+        className={menuOpen === menuId ? 'active' : undefined}
       />
 
-      <MenuContainer id="details-more-menu" target={buttonRef.current} align="right">
+      <MenuContainer id={menuId} target={buttonRef.current} align="right">
         <Menu menu={menuItems} onClose={() => handleSetMenu(false)} />
       </MenuContainer>
 
