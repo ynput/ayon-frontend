@@ -1,4 +1,4 @@
-import { ViewListItemModel } from '@shared/api'
+import { GetViewApiResponse } from '@shared/api'
 
 export * from './Views'
 export * from './context/ViewsContext'
@@ -28,7 +28,7 @@ export { WORKING_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuCont
 
 // types
 export type ViewFormData = Required<
-  Pick<ViewListItemModel, 'label' | 'scope' | 'visibility' | 'owner' | 'access' | 'accessLevel'>
+  Pick<GetViewApiResponse, 'label' | 'scope' | 'visibility' | 'owner' | 'access' | 'accessLevel'>
 >
 
 export const viewTypes = ['overview', 'taskProgress', 'lists', 'reviews', 'reports'] as const

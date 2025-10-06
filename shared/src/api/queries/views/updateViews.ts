@@ -23,8 +23,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
                 visibility: 'private',
                 position: draft.length + 1, // Add to the end of the list
                 owner: user,
-                editable: true,
-                access: {},
+                accessLevel: 30,
               }
               if (payload.working) {
                 // For working views, find and replace the existing working view
