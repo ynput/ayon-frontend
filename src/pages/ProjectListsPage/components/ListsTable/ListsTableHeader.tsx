@@ -11,7 +11,6 @@ import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
 import { usePowerpack } from '@shared/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import { useAppSelector } from '@state/store'
 import {
   canDeleteAllLists,
