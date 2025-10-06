@@ -1,5 +1,4 @@
-import { EntityListFoldersResponseModel } from '@shared/api/generated'
-import { getListsApiEnhanced as listsApi } from './getLists'
+import { entityListsApi, EntityListFoldersResponseModel } from '@shared/api/generated'
 
 const LIST_FOLDER_LIST_TAG = { type: 'entityListFolder' as const, id: 'LIST' }
 
@@ -10,8 +9,8 @@ type GetEntityListFoldersResult = NonNullable<EntityListFoldersResponseModel['fo
 // REDEFINE TYPES
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { getEntityId } from '@shared/util'
-type Definitions = DefinitionsFromApi<typeof listsApi>
-type TagTypes = TagTypesFromApi<typeof listsApi>
+type Definitions = DefinitionsFromApi<typeof entityListsApi>
+type TagTypes = TagTypesFromApi<typeof entityListsApi>
 // update the definitions to include the new types
 type UpdatedDefinitions = Omit<Definitions, 'getEntityListFolders'> & {
   getEntityListFolders: OverrideResultType<
@@ -22,7 +21,7 @@ type UpdatedDefinitions = Omit<Definitions, 'getEntityListFolders'> & {
 
 const transformErrorResponse = (error: any) => error.data?.detail || 'Unknown lists folder error'
 
-const enhancedListsFoldersApi = listsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+const enhancedListsFoldersApi = entityListsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getEntityListFolders: {
       transformResponse: (response: EntityListFoldersResponseModel) => response.folders || [],
