@@ -3,11 +3,12 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { DetailsPanel } from '../DetailsPanel'
 import { useDetailsPanelContext } from '@shared/context'
 import type { ProjectModel } from '@shared/api'
+import { EntityListsContextType } from '../../../../../src/pages/ProjectListsPage/context'
 
 export type DetailsPanelSlideOutProps = {
   projectsInfo: Record<string, ProjectModel>
   scope: string
-  entityListsContext?: Record<string, unknown>
+  entityListsContext?: EntityListsContextType
 }
 
 export const DetailsPanelSlideOut = ({
