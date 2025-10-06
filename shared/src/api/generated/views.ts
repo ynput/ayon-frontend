@@ -252,6 +252,22 @@ export type ListsViewPostModel = {
   working?: boolean
   settings: ListsSettings
 }
+export type ReviewsSettings = {
+  rowHeight?: number
+  sortBy?: string
+  sortDesc?: boolean
+  filter?: QueryFilter
+  columns?: ColumnItemModel[]
+}
+export type ReviewsViewPostModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
+  settings: ReviewsSettings
+}
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
