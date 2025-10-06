@@ -1,10 +1,10 @@
 import { EntityList, useGetListsInfiniteInfiniteQuery } from '@shared/api'
-import { clientFilterToQueryFilter, FilterForQuery } from '@shared/containers/ProjectTreeTable'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { useMemo, useState } from 'react'
 
 interface UseGetListsDataProps {
   projectName: string
-  filters: FilterForQuery[]
+  filters: QueryFilter
   skip?: boolean
   entityListTypes?: string[] // filter by entityListType
 }
@@ -23,19 +23,30 @@ const useGetListsData = ({
   skip,
   entityListTypes,
 }: UseGetListsDataProps): UseGetListsDataReturn => {
-  const entityListTypeFilter: FilterForQuery[] = entityListTypes?.length
-    ? [
-        {
-          id: 'entityListType',
-          operator: 'OR',
-          values: entityListTypes.map((type) => ({ id: type })) || [],
-        },
-      ]
-    : []
+  // Create entity list type filter condition
+  const entityListTypeCondition = entityListTypes?.length
+    ? {
+        key: 'entityListType',
+        operator: 'in' as const,
+        value: entityListTypes,
+      }
+    : null
 
-  const queryFilters = [...filters, ...entityListTypeFilter]
-  const queryFilter = clientFilterToQueryFilter(queryFilters)
-  const queryFilterString = queryFilters.length ? JSON.stringify(queryFilter) : ''
+  // Merge filters with entity list type condition
+  const queryFilter: QueryFilter =
+    filters && Object.keys(filters).length > 0
+      ? {
+          operator: 'and',
+          conditions: [
+            ...(filters.conditions || []),
+            ...(entityListTypeCondition ? [entityListTypeCondition] : []),
+          ],
+        }
+      : entityListTypeCondition
+      ? { operator: 'and', conditions: [entityListTypeCondition] }
+      : {}
+
+  const queryFilterString = Object.keys(queryFilter).length ? JSON.stringify(queryFilter) : ''
 
   const {
     data: listsInfiniteData,

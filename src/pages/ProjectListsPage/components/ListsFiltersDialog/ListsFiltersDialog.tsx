@@ -1,5 +1,5 @@
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
-import { Filter, Option, SearchFilter, SearchFilterRef } from '@ynput/ayon-react-components'
+import {Filter, Option, SearchFilter, SearchFilterRef, SEARCH_FILTER_ID,} from '@ynput/ayon-react-components'
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { entityTypeOptions } from '../NewListDialog/NewListDialog'
 import { createPortal } from 'react-dom'
@@ -8,6 +8,7 @@ import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useGetAttributeListQuery, AttributeEnumItem, AttributeData, EntityList } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { getAttributeIcon } from '@shared/util'
+import {queryFilterToClientFilter, clientFilterToQueryFilter} from '@shared/containers/ProjectTreeTable/utils'
 
 // Helper function to aggregate attribute values from lists
 const getAttributeValuesFromLists = (
@@ -129,14 +130,6 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
     }
   }, [listsFiltersOpen, filtersRef])
 
-  // keeps track of the filters whilst adding/removing filters
-  const [filters, setFilters] = useState<Filter[]>(listsFilters)
-
-  // update filters when it changes
-  useEffect(() => {
-    setFilters(listsFilters)
-  }, [listsFilters, setFilters])
-
   const options = useMemo<Option[]>(() => {
     const opts: Option[] = [
       {
@@ -198,15 +191,32 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
         values: [],
       }
 
-      // Get aggregated values from lists data
-      const aggregatedValues = getAttributeValuesFromLists(
-        listsData,
-        attr.name,
-        attr.data.enum,
-        attr.data.type,
-      )
+      // if the attribute type is boolean, add yes/no options
+      if (attr.data.type === 'boolean') {
+        option.singleSelect = true
+        option.values = [
+          {
+            id: 'true',
+            label: 'Yes',
+            icon: 'radio_button_checked',
+          },
+          {
+            id: 'false',
+            label: 'No',
+            icon: 'radio_button_unchecked',
+          },
+        ]
+      } else {
+        // Get aggregated values from lists data
+        const aggregatedValues = getAttributeValuesFromLists(
+          listsData,
+          attr.name,
+          attr.data.enum,
+          attr.data.type,
+        )
 
-      option.values = aggregatedValues
+        option.values = aggregatedValues
+      }
 
       return option
     })
@@ -215,6 +225,37 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
 
     return opts
   }, [allAttributes, listsData, projectInfo])
+
+  // Convert QueryFilter to Filter[] for the component
+  const filters = queryFilterToClientFilter(listsFilters, options)
+
+  // keeps track of the filters whilst adding/removing filters
+  const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
+
+  // update filters when queryFilters change
+  useEffect(() => {
+    setLocalFilters(filters)
+  }, [JSON.stringify(filters)])
+
+  const handleFinish = (newFilters: Filter[]) => {
+    // Merge multiple text search filters (SEARCH_FILTER_ID) into one filter
+    let validFilters = newFilters
+    const searchFilters = validFilters.filter((f) => f.id.startsWith(SEARCH_FILTER_ID))
+    if (searchFilters.length > 1) {
+      const mergedValuesRaw = searchFilters.flatMap((f) => f.values || [])
+      const mergedValues = Array.from(
+        new Map(mergedValuesRaw.map((v) => [String((v as any).id), v])).values(),
+      )
+      const mergedFilter = { ...searchFilters[0], id: SEARCH_FILTER_ID, values: mergedValues }
+      const nonSearch = validFilters.filter((f) => !f.id.startsWith(SEARCH_FILTER_ID))
+      validFilters = [...nonSearch, mergedFilter]
+    }
+
+    // Convert Filter[] back to QueryFilter and call setListsFilters
+    const queryFilter = clientFilterToQueryFilter(validFilters)
+    setListsFilters(queryFilter)
+    setListsFiltersOpen(false)
+  }
 
   //   on keydown, close the dialog
   useEffect(() => {
@@ -244,12 +285,11 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
     >
       <SearchFilter
         options={options}
-        filters={filters}
-        onChange={setFilters}
-        onFinish={(v) => {
-          setListsFilters(v) // update the filters in the context
-          setListsFiltersOpen(false) // close the dialog
-        }}
+        filters={localFilters}
+        onChange={setLocalFilters}
+        onFinish={handleFinish}
+        enableMultipleSameFilters={false}
+        enableGlobalSearch={true}
         ref={filtersRef}
       />
     </Dialog>,

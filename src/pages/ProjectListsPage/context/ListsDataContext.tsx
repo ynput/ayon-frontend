@@ -2,11 +2,12 @@ import { createContext, useContext, ReactNode, useMemo } from 'react'
 import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { Filter } from '@ynput/ayon-react-components'
-import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
+import { useQueryArgumentChangeLoading, useLocalStorage } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
 import { usePowerpack } from '@shared/context'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import { useListsViewSettings } from '@shared/containers'
 
 export type ListsMap = Map<string, EntityList>
 
@@ -20,8 +21,8 @@ interface ListsDataContextValue {
   isLoadingMore: boolean
   isError?: boolean
   // filters
-  listsFilters: Filter[]
-  setListsFilters: (filters: Filter[]) => Promise<void>
+  listsFilters: QueryFilter
+  setListsFilters: (filters: QueryFilter) => void
   // show archived
   showArchived: boolean
   setShowArchived: (show: boolean) => void
@@ -64,19 +65,10 @@ export const ListsDataProvider = ({
     [isReview, listFoldersAll],
   )
 
-  const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
-    selectors: ['lists', projectName],
-    init: {
-      columnOrder: [],
-      columnPinning: {},
-      columnVisibility: {},
-    },
-  })
-
-  const listsFilters = isReview ? [] : pageConfig?.listsFilters || ([] as Filter[])
-  const setListsFilters = async (filters: Filter[]) => {
-    await updatePageConfig({ listsFilters: filters })
-  }
+  // Get filters from view settings (stored on view, not user config)
+  const { filters: listsFilters = {}, onUpdateFilters: setListsFilters } = isReview
+    ? { filters: {}, onUpdateFilters: () => {} }
+    : useListsViewSettings()
 
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('lists-show-archived', false)
 
@@ -110,12 +102,7 @@ export const ListsDataProvider = ({
         listsTableData,
         listsMap,
         listFolders,
-        isLoadingAll:
-          isLoadingLists ||
-          !columnsConfigReady ||
-          isLoadingProject ||
-          isLoadingFolders ||
-          isLoadingLicense,
+        isLoadingAll: isLoadingLists || isLoadingProject || isLoadingFolders || isLoadingLicense,
         isLoadingMore: isFetchingNextPage,
         isError,
         fetchNextPage,
