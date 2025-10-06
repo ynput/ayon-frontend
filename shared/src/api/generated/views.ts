@@ -208,6 +208,7 @@ export type OverviewSettings = {
   sortDesc?: boolean
   filter?: QueryFilter
   columns?: ColumnItemModel[]
+  rowHeight?: number
 }
 export type OverviewViewPostModel = {
   /** Unique identifier for the view within the given scope. */
@@ -236,6 +237,7 @@ export type ListsSettings = {
   sortDesc?: boolean
   filter?: QueryFilter
   columns?: ColumnItemModel[]
+  rowHeight?: number
 }
 export type ListsViewPostModel = {
   /** Unique identifier for the view within the given scope. */

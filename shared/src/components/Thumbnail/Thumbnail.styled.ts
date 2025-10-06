@@ -6,7 +6,6 @@ export const Card = styled.div`
   height: 52px;
   aspect-ratio: 1.7;
   overflow: hidden;
-  border-radius: var(--border-radius-l);
   margin: auto;
 
   background-color: var(--md-sys-color-surface-container-lowest);
@@ -97,7 +96,6 @@ export const Image = styled.img`
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: var(--border-radius-m);
   overflow: hidden;
 
   /* ensures it always fills the parent */
