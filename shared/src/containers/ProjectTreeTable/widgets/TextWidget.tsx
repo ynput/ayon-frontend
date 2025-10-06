@@ -1,17 +1,20 @@
-import { forwardRef, useCallback } from 'react'
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
-import { WidgetBaseProps, EDIT_TRIGGER_CLASS } from './CellWidget'
+import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
 import { AttributeData } from '../types'
 import { AttributeEnumItem } from '@shared/api'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { parseHtmlToPlainTextWithLinks } from '@shared/util'
+import { TextEditingDialog } from './TextEditingDialog'
+import { TextContentWidget } from './TextContentWidget'
+import { useCellEditing as useCellEditingOriginal } from '../context/CellEditingContext'
 
-const StyledBaseTextWidget = styled.span`
+export const StyledBaseTextWidget = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -25,6 +28,12 @@ const StyledBaseTextWidget = styled.span`
   }
 `
 
+const StyledContainer = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+`
+
 const StyledLink = styled.a`
   color: var(--md-sys-color-primary, #0066cc);
   text-decoration: none;
@@ -32,7 +41,7 @@ const StyledLink = styled.a`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -51,7 +60,7 @@ const isValidUrl = (text: string): boolean => {
 // Function to parse text and extract URLs
 const parseTextWithUrls = (text: string) => {
   // Regex to match HTTP/HTTPS URLs
-  const urlRegex = /(https?:\/\/[^\s<>"]+[^\s.,!?;:<>\")\]])/gi;
+  const urlRegex = /(https?:\/\/[^\s<>"]+[^\s.,!?;:<>\")\]])/gi
   const parts = text.split(urlRegex)
 
   return parts.map((part, index) => {
@@ -67,7 +76,6 @@ const containsHtml = (text: string): boolean => {
   return /<[^>]*>/.test(text)
 }
 
-
 type AttributeType = AttributeData['type']
 export type TextWidgetType = Extract<AttributeType, 'string' | 'integer' | 'float'>
 
@@ -79,34 +87,131 @@ export interface TextWidgetProps
   isInherited?: boolean
   type?: TextWidgetType
   columnId?: string
+  cellId?: string
+  isSelected?: boolean
+}
+
+// Allow usage outside of CellEditingProvider without crashing
+const useSafeCellEditing = () => {
+  try {
+    return useCellEditingOriginal()
+  } catch {
+    return {
+      isEditing: (_id: string) => false,
+      setEditingCellId: (_id: string | null) => {},
+    }
+  }
 }
 
 export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
-  ({ value, option, isEditing, isInherited, onChange, onCancelEdit, style, type, columnId, className, ...props }, ref) => {
+  (
+    {
+      value,
+      option,
+      isEditing,
+      isInherited,
+      onChange,
+      onCancelEdit,
+      style,
+      type,
+      columnId,
+      cellId,
+      isSelected = false,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
+    const [isHovered, setIsHovered] = useState(false)
+    const [showPreview, setShowPreview] = useState(false)
+    const hoverTimerRef = useRef<number | null>(null)
+    const { setEditingCellId } = useSafeCellEditing()
+
     const handleLinkClick = useCallback((e: React.MouseEvent, url: string) => {
       e.stopPropagation()
       window.open(url, '_blank', 'noopener,noreferrer')
     }, [])
 
-    if (isEditing) {
-      return (
-        <TextWidgetInput value={value} onChange={onChange} onCancel={onCancelEdit} type={type || 'string'} />
-      )
-    }
+    const openEditor = useCallback(() => {
+      // Ensure the hover preview is closed before entering edit mode to avoid double dialogs
+      setShowPreview(false)
+      if (cellId) setEditingCellId(cellId)
+    }, [cellId, setEditingCellId])
 
+    // start 500ms timer on hover to show readonly preview
+    useEffect(() => {
+      if (isHovered && !isEditing) {
+        if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
+        hoverTimerRef.current = window.setTimeout(() => {
+          // Guard again at fire time to avoid showing during edit
+          if (!isEditing && isHovered) {
+            setShowPreview(true)
+            // Notify others to close their previews so only one is open
+            if (cellId) {
+              window.dispatchEvent(
+                new CustomEvent('projectTreeTextPreviewOpen', { detail: { cellId } }),
+              )
+            }
+          }
+        }, 500)
+      } else {
+        if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
+        hoverTimerRef.current = null
+        // Close preview only if the cell is not selected
+        if (!isSelected) {
+          setShowPreview(false)
+        }
+      }
+
+      return () => {
+        if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
+        hoverTimerRef.current = null
+      }
+    }, [isHovered, isEditing, isSelected, cellId])
+
+    // Listen for global preview open events to ensure only one preview is open at a time
+    useEffect(() => {
+      const handleOtherPreviewOpen = (e: Event) => {
+        const custom = e as CustomEvent<{ cellId: string }>
+        const otherId = custom.detail?.cellId
+        if (!cellId || !otherId) return
+        if (otherId !== cellId) {
+          setShowPreview(false)
+        }
+      }
+      window.addEventListener('projectTreeTextPreviewOpen', handleOtherPreviewOpen)
+      return () => window.removeEventListener('projectTreeTextPreviewOpen', handleOtherPreviewOpen)
+    }, [cellId])
+
+    useEffect(() => {
+      if (isEditing && showPreview) {
+        setShowPreview(false)
+      }
+    }, [isEditing, showPreview])
+
+    
+    const input = (
+      <TextWidgetInput
+      value={value}
+      onChange={onChange}
+      onCancel={onCancelEdit}
+      type={type || 'string'}
+      />
+    )
+    
     const displayText = option?.label || value
     const textValue = typeof displayText === 'string' ? displayText : String(displayText || '')
     const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
 
     const renderContent = () => {
-      // For description columns, keep markdown rendering
       if (isDescriptionColumn) {
         return (
           <Markdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
+            allowedElements={['a']}
+            unwrapDisallowed
             components={{
-              p: ({ children }) => <span>{children}</span>,
               a: ({ href, children }) => (
                 <StyledLink
                   href={href || '#'}
@@ -144,7 +249,11 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
               </StyledLink>
             )
           }
-          return <span key={part.key} style={{ whiteSpace: 'pre-line' }}>{part.content}</span>
+          return (
+            <span key={part.key} style={{ whiteSpace: 'pre-line' }}>
+              {part.content}
+            </span>
+          )
         })
       }
 
@@ -176,22 +285,66 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       return textValue
     }
 
-    const combinedClassName = clsx(className, EDIT_TRIGGER_CLASS, {
+    const combinedClassName = clsx(className, {
       markdown: isDescriptionColumn,
     })
 
     return (
-      <StyledBaseTextWidget className={combinedClassName} style={{ color: option?.color, ...style }} {...props} ref={ref}>
-        {option?.icon && (
-          <Icon
-            icon={option.icon}
-            style={{
-              color: option.color,
-            }}
+      <>
+        <StyledContainer
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onMouseDown={() => {
+            if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
+            hoverTimerRef.current = null
+            // Timer cleared; preview state managed by hover effects
+          }}
+        >
+          <StyledBaseTextWidget
+            className={combinedClassName}
+            style={{ color: option?.color, ...style }}
+            {...props}
+            ref={ref}
+          >
+            {option?.icon && (
+              <Icon
+                icon={option.icon}
+                style={{
+                  color: option.color,
+                }}
+              />
+            )}
+            {renderContent()}
+          </StyledBaseTextWidget>
+        </StyledContainer>
+
+        {isEditing &&
+          (isDescriptionColumn ? (
+            <TextContentWidget
+              value={value as string}
+              cellId={cellId || ''}
+              isEditing={isEditing}
+              onChange={onChange || (() => {})}
+              onCancelEdit={onCancelEdit}
+            />
+          ) : (
+            <TextEditingDialog isEditing={isEditing} anchorId={cellId || ''} onClose={onCancelEdit}>
+              {input}
+            </TextEditingDialog>
+          ))}
+
+        {showPreview && !isEditing && isDescriptionColumn && (
+          <TextContentWidget
+            value={value as string}
+            cellId={cellId || ''}
+            isEditing={false}
+            onChange={onChange!}
+            onCancelEdit={onCancelEdit}
+            variant="preview"
+            onPreviewClick={openEditor}
           />
         )}
-        {renderContent()}
-      </StyledBaseTextWidget>
+      </>
     )
   },
 )
