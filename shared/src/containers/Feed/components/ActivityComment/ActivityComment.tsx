@@ -62,7 +62,7 @@ const ActivityComment = ({
   readOnly,
   statuses = [],
 }: Props) => {
-  const { userName, createReaction, deleteReaction } = useFeedContext()
+  const { userName, createReaction, deleteReaction, editingId, setEditingId } = useFeedContext()
 
   let {
     body,
@@ -80,7 +80,6 @@ const ActivityComment = ({
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
 
-  const { editingId, setEditingId } = useFeedContext()
   const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()
 
   const handleEditComment = () => {

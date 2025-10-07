@@ -11,8 +11,9 @@ import {
   useGetActivityUsersQuery,
   useGetEntityMentionsQuery,
   useGetEntityTooltipQuery,
+  useGetActivityCategoriesQuery,
 } from '@shared/api'
-import type { SuggestRequest, SuggestResponse } from '@shared/api'
+import type { ActivityCategory, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 import { DetailsPanelTab, useScopedDetailsPanel } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
@@ -79,6 +80,8 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   users: ActivityUser[]
   // mentions data
   mentionSuggestionsData: SuggestResponse
+  // categories data
+  categories: ActivityCategory[]
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
@@ -138,12 +141,18 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     { skip: !props.editingId },
   )
 
+  // get comment categories for this project and user
+  const { data: categories = [] } = useGetActivityCategoriesQuery({
+    projectName: props.projectName,
+  })
+
   return (
     <FeedContext.Provider
       value={{
         ...props,
         ...activitiesDataProps,
         mentionSuggestionsData,
+        categories,
         users,
         isUpdatingActivity,
         entityTooltipData,

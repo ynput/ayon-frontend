@@ -30,11 +30,12 @@ import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
 import useMentionLink from './hooks/useMentionLink'
 import useAnnotationsSync from './hooks/useAnnotationsSync'
+import { useBlendedCategoryColor } from './hooks/useBlendedCategoryColor'
 
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
-import { SavedAnnotationMetadata } from '../../index'
+import { ActivityCategorySelect, SavedAnnotationMetadata } from '../../index'
 
 var Delta = Quill.import('delta')
 
@@ -75,8 +76,15 @@ const CommentInput: FC<CommentInputProps> = ({
   onOpen,
   onClose,
 }) => {
-  const { projectName, entities, projectInfo, scope, currentTab, mentionSuggestionsData } =
-    useFeedContext()
+  const {
+    projectName,
+    entities,
+    projectInfo,
+    scope,
+    currentTab,
+    mentionSuggestionsData,
+    categories,
+  } = useFeedContext()
 
   const {
     users: mentionUsers,
@@ -100,8 +108,15 @@ const CommentInput: FC<CommentInputProps> = ({
   // MENTION STATES
   const [mention, setMention] = useState<null | any>(null)
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
+  // CATEGORY STATE
+  const [category, setCategory] = useState<null | string>(null)
+  const categoryData = categories.find((cat) => cat.name === category)
+  // Compute blended background color for category
+  const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
   // REFS
   const editorRef = useRef<any>(null)
+  const editorContainerRef = useRef<HTMLDivElement>(null)
+
   const markdownRef = useRef<HTMLDivElement>(null)
 
   // if there is an initial value, set it so the editor is prefilled
@@ -472,7 +487,10 @@ const CommentInput: FC<CommentInputProps> = ({
 
       if ((markdownParsed || uploadedFiles.length) && onSubmit) {
         try {
-          await onSubmit(markdownParsed, uploadedFiles, { annotations: annotationMetadata })
+          await onSubmit(markdownParsed, uploadedFiles, {
+            annotations: annotationMetadata,
+            category,
+          })
           // only clear if onSubmit is successful
           setEditorValue('')
           setFiles([])
@@ -579,6 +597,8 @@ const CommentInput: FC<CommentInputProps> = ({
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
+          $categoryColor={categoryData?.color}
+          $blendedCategoryColor={blendedCategoryColor}
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
@@ -597,7 +617,14 @@ const CommentInput: FC<CommentInputProps> = ({
             />
           )}
           {isOpen && !disabled ? (
-            <QuillListStyles>
+            <QuillListStyles ref={editorContainerRef}>
+              <ActivityCategorySelect
+                value={category}
+                categories={categories}
+                onChange={(c) => setCategory(c)}
+                style={{ position: 'absolute', left: 4, top: 4 }}
+              />
+
               <ReactQuill
                 theme="snow"
                 style={{ minHeight: quillMinHeight, maxHeight: 300 }}

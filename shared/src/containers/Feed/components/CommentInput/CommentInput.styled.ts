@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -24,26 +24,48 @@ export const AutoHeight = styled.div`
   }
 `
 
-export const Comment = styled.div`
+type CommentProps = {
+  $categoryColor?: string
+  $blendedCategoryColor?: string
+}
+
+export const Comment = styled.div<CommentProps>`
+  /* VARS */
+  --background-color: var(--md-sys-color-surface-container);
+  --border-color: var(--md-sys-color-outline-variant);
+  /* CATEGORY */
+  ${({ $categoryColor, $blendedCategoryColor }) =>
+    $categoryColor &&
+    css`
+      --background-color: ${$blendedCategoryColor || 'var(--background-color)'};
+      --border-color: ${$categoryColor};
+
+      button.comment {
+        background-color: ${$categoryColor};
+        color: var(--md-sys-color-on-surface);
+      }
+    `}
+
   display: flex;
   flex-direction: column;
   position: relative;
 
-  background-color: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
   &.isDropping.isOpen {
     border-color: var(--md-sys-color-primary);
   }
 
   border-radius: var(--border-radius-l);
   overflow: hidden;
+  transition: opacity 250ms 250ms, background-color 250ms, border-color 250ms;
 
   &.isOpen {
     /* box shadow */
     box-shadow: 0 -3px 10px 0 rgba(0, 0, 0, 0.2);
 
     .quill {
-      background-color: var(--md-sys-color-surface-container);
+      background-color: var(--background-color);
     }
   }
 
@@ -81,7 +103,6 @@ export const Comment = styled.div`
       }
     }
   }
-
 
   /* container styles reset */
   .ql-container.ql-snow {
@@ -230,45 +251,41 @@ export const Comment = styled.div`
 
   &.isSubmitting {
     opacity: 0.3;
-    transition: opacity 250ms 250ms;
   }
 
   /* toolbar styles */
   .ql-toolbar.ql-snow {
     border: none;
-    background-color: var(--md-sys-color-surface-container);
+    background-color: var(--background-color);
     border-bottom: 1px solid var(--md-sys-color-surface-container-hover);
     padding: var(--padding-s);
     display: flex;
+    justify-content: flex-end;
     height: unset;
     width: unset;
 
     .ql-formats {
       height: 32px;
-      margin-right: 8px;
-      padding-right: 8px;
-      border-right: 1px solid var(--md-sys-color-surface-container-hover);
+      margin-left: 8px;
+      margin-right: 0;
+      padding-left: 8px;
+      border-left: 1px solid var(--md-sys-color-surface-container-hover);
       display: flex;
       gap: 2px;
 
-      /* remove border for last child */
-      &:last-child {
-        border-right: none;
-      }
-    }
+      button {
+        float: none;
+        padding: 6px;
+        border-radius: var(--border-radius-m);
+        height: 32px;
+        width: 32px;
 
-    button {
-      float: none;
-      padding: 6px;
-      border-radius: var(--border-radius-m);
-      height: 32px;
-      width: 32px;
-
-      /* highlight when action */
-      &.ql-active {
-        background-color: var(--md-sys-color-secondary-container);
-        .icon {
-          color: var(--md-sys-color-on-secondary-container);
+        /* highlight when action */
+        &.ql-active {
+          background-color: var(--md-sys-color-secondary-container);
+          .icon {
+            color: var(--md-sys-color-on-secondary-container);
+          }
         }
       }
     }
@@ -305,7 +322,7 @@ export const Footer = styled.footer`
   justify-content: space-between;
   padding: var(--padding-m);
   border-top: 1px solid var(--md-sys-color-surface-container-hover);
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--background-color);
   z-index: 100;
 
   /* remove save button icon */
