@@ -32,6 +32,8 @@ export interface TextContentWidgetProps extends WidgetBaseProps {
   variant?: 'edit' | 'preview'
   // When in preview, a click on the preview should enter edit mode
   onPreviewClick?: () => void
+  // Function to switch to preview mode
+  onSwitchToPreview?: () => void
 }
 
 export const TextContentWidget: FC<TextContentWidgetProps> = ({
@@ -42,16 +44,13 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   onCancelEdit,
   variant = 'edit',
   onPreviewClick,
+  onSwitchToPreview,
 }) => {
   const [editingValue, setEditingValue] = useState('')
   const [descriptionHtml, setDescriptionHtml] = useState('')
   const quillRef = useRef<any>(null)
   const markdownRef = useRef<HTMLDivElement>(null)
   const isPreview = variant === 'preview'
-
-  // Detect platform/browser to avoid reserved shortcuts (e.g., Firefox on macOS)
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/i.test(navigator.platform)
-  const isFirefox = typeof navigator !== 'undefined' && /Firefox/i.test(navigator.userAgent)
 
   // Parse markdown to HTML to initialize the editor content for edit and preview
   useEffect(() => {
@@ -76,15 +75,18 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   // Autofocus editor when dialog opens
   useEffect(() => {
     if (isPreview) return
-    if (isEditing && quillRef.current) {
-      const quill = quillRef.current.getEditor()
-      if (quill) {
-        quill.focus()
-        const len = quill.getLength()
-        quill.setSelection(len, 0) // Place cursor at end
-      }
-    }
-  }, [isEditing, isPreview])
+    if (!isEditing || !quillRef.current) return
+
+    const quill = quillRef.current.getEditor()
+    if (!quill) return
+
+    requestAnimationFrame(() => {
+      const len = quill.getLength()
+      const index = Math.max(len - 1, 0)
+      quill.focus()
+      quill.setSelection(index, 0)
+    })
+  }, [isEditing, isPreview, descriptionHtml])
 
   // Save content function
   const handleSave = useCallback(() => {
@@ -103,75 +105,47 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       if (!quillRef.current) return
 
       const quill = quillRef.current.getEditor()
-
       // Handle Ctrl/Cmd + key combinations
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase()
-
-        // Normalize desired modifiers for code/list shortcuts across browsers
-        const wantsAlt = isMac && isFirefox
-        const wantsShift = !wantsAlt
-
-        console.log('key', wantsShift, wantsAlt, e.ctrlKey)
-
-        if (key === 'd') {
-          e.preventDefault()
-          quill.format('code-block', !quill.getFormat()['code-block'])
-          return
-        }
-
-        if (key === 'o') {
-          e.preventDefault()
-          const format = quill.getFormat()
-          quill.format('list', format.list === 'ordered' ? false : 'ordered')
-          return
-        }
-
-        if (key === 'l') {
-          e.preventDefault()
-          const format = quill.getFormat()
-          quill.format('list', format.list === 'bullet' ? false : 'bullet')
-          return
-        }
+        const format = quill.getFormat()
+        e.preventDefault()
 
         switch (key) {
+          case 'd':
+            quill.format('code-block', !quill.getFormat()['code-block'])
+            return
+          case 'o':
+            quill.format('list', format.list === 'ordered' ? false : 'ordered')
+            return
+          case 'l':
+            quill.format('list', format.list === 'bullet' ? false : 'bullet')
+            return
           case 'b':
-            e.preventDefault()
             quill.format('bold', !quill.getFormat().bold)
             break
           case 'i':
-            e.preventDefault()
             quill.format('italic', !quill.getFormat().italic)
             break
           case 'u':
-            e.preventDefault()
             quill.format('underline', !quill.getFormat().underline)
             break
           case 'h':
-            // Use Shift+Cmd/Ctrl+H to avoid macOS/app-level Cmd+H (Hide)
-            e.preventDefault()
-            const format = quill.getFormat()
             const isH2 = format.header === 2
             quill.format('header', isH2 ? false : 2)
             break
           case 'enter':
-            e.preventDefault()
             handleSave()
+            onSwitchToPreview?.()
             break
           case 'escape':
-            e.preventDefault()
             onCancelEdit?.()
+            onSwitchToPreview?.()
             break
         }
-      } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        handleSave()
-      } else if (e.key === 'Escape') {
-        e.preventDefault()
-        onCancelEdit?.()
       }
     },
-    [handleSave, onCancelEdit, isPreview],
+    [handleSave, onSwitchToPreview, isPreview],
   )
 
   const dialogContent = (
@@ -206,94 +180,6 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
             value={editingValue}
             modules={{
               toolbar: false,
-              // Disable keyboard bindings entirely in preview (readOnly)
-              ...(isPreview
-                ? {}
-                : {
-                    keyboard: {
-                      bindings: {
-                        bold: {
-                          key: 'B',
-                          shortKey: true,
-                          handler: () => {
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) quill.format('bold', !quill.getFormat().bold)
-                          },
-                        },
-                        italic: {
-                          key: 'I',
-                          shortKey: true,
-                          handler: () => {
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) quill.format('italic', !quill.getFormat().italic)
-                          },
-                        },
-                        underline: {
-                          key: 'U',
-                          shortKey: true,
-                          handler: () => {
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) quill.format('underline', !quill.getFormat().underline)
-                          },
-                        },
-                        header2: {
-                          key: 'H',
-                          shortKey: true,
-                          shiftKey: true,
-                          handler: () => {
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) {
-                              const format = quill.getFormat()
-                              const isH2 = format.header === 2
-                              quill.format('header', isH2 ? false : 2)
-                            }
-                          },
-                        },
-                        blockquote: {
-                          key: 'Q',
-                          shortKey: true,
-                          handler: () => {
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) quill.format('blockquote', !quill.getFormat().blockquote)
-                          },
-                        },
-                        'code-block': {
-                          key: 'D',
-                          shortKey: true,
-                          ...(isMac && isFirefox ? { altKey: true } : { shiftKey: true }),
-                          handler: () => {
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) quill.format('code-block', !quill.getFormat()['code-block'])
-                          },
-                        },
-                        'list-ordered': {
-                          key: 'O',
-                          shortKey: true,
-                          ...(isMac && isFirefox ? { altKey: true } : { shiftKey: true }),
-                          handler: () => {
-                            console.log('list-ordered')
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) {
-                              const format = quill.getFormat()
-                              quill.format('list', format.list === 'ordered' ? false : 'ordered')
-                            }
-                          },
-                        },
-                        'list-bullet': {
-                          key: 'L',
-                          shortKey: true,
-                          ...(isMac && isFirefox ? { altKey: true } : { shiftKey: true }),
-                          handler: () => {
-                            const quill = quillRef.current?.getEditor()
-                            if (quill) {
-                              const format = quill.getFormat()
-                              quill.format('list', format.list === 'bullet' ? false : 'bullet')
-                            }
-                          },
-                        },
-                      },
-                    },
-                  }),
             }}
             readOnly={isPreview}
             onChange={setEditingValue}
