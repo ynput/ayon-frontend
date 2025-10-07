@@ -1,11 +1,7 @@
 import { FC } from 'react'
 import styled from 'styled-components'
-import {
-  EVERY_GUESTS_KEY,
-  EVERYONE_GROUP_KEY,
-  ShareOptionIcon,
-} from '@shared/components/ShareOptionIcon/ShareOptionIcon'
-import { ShareOption } from '@shared/api/generated/access'
+import { EVERY_GUESTS_KEY, EVERYONE_GROUP_KEY, ShareOptionIcon } from '@shared/components'
+import { ShareOption } from '@shared/api'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 
 const StackedButton = styled(Button)`

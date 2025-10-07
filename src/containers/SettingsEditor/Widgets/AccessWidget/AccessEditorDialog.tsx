@@ -103,7 +103,7 @@ const AccessEditorDialog = ({ initialValue, onSubmit, projectName }: AccessEdito
           owner={null}
           placeholder="Add people or access groups"
           onSelectOption={handleAddAccess}
-          pt={{ list: { style: { maxHeight: 400 } } }}
+          pt={{ list: { style: { maxHeight: 300 } } }}
         />
 
         <AccessList>

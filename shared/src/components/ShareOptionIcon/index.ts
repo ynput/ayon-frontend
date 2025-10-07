@@ -1,2 +1,1 @@
-export { ShareOptionIcon } from './ShareOptionIcon'
-export type { ShareOptionIconProps } from './ShareOptionIcon'
+export * from './ShareOptionIcon'
