@@ -150,6 +150,7 @@ export default function useBuildProjectDataTable({
         path: task.parents.join('/') || null, // todo: probably remove this and just use parents
         updatedAt: task.updatedAt,
         createdAt: task.createdAt,
+        hasReviewables: task.hasReviewables || false,
         links: links,
       }
     }
