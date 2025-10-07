@@ -195,9 +195,9 @@ const ActivityComment = ({
           children={undefined}
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
-          {!readOnly && (
+          {!readOnly && isOwner ? (
             <Styled.Tools className={'tools'}>
-              {isOwner && onDelete && (
+              {onDelete && (
                 <Styled.ToolButton
                   icon="delete"
                   onClick={deleteConfirmation}
@@ -205,10 +205,12 @@ const ActivityComment = ({
                   variant="text"
                 />
               )}
-              {isOwner && handleEditComment && (
+              {handleEditComment && (
                 <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
               )}
             </Styled.Tools>
+          ) : (
+            <div className="tools"></div>
           )}
 
           {!isEditing && categoryData && (

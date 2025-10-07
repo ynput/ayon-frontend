@@ -64,8 +64,8 @@ export const Body = styled.div`
 
   /* remove first and last margins */
   /* + * because tools is actual first */
-  & > *:first-child + * {
-    margin-top: 0;
+  & > *:nth-child(2) + * {
+    margin-top: 8px;
   }
 
   & > *:not(.tools):not(h1) {
