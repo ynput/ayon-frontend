@@ -13,11 +13,14 @@ const StyledDialog = styled.div`
   display: flex;
   flex-direction: column;
   background: var(--md-sys-color-surface-container-lowest);
-  border: 2px solid var(--md-sys-color-primary);
   border-radius: 8px;
   min-width: 500px;
   max-width: 800px;
   max-height: 400px;
+
+  &.editing {
+    border: 2px solid var(--md-sys-color-primary);
+  }
 `
 
 const StyledHiddenMarkdown = styled.div`
@@ -150,6 +153,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
 
   const dialogContent = (
     <StyledDialog
+      className={isPreview ? 'preview' : 'editing'}
       onKeyDown={handleKeyDown}
       onMouseDown={(e) => {
         e.stopPropagation()
