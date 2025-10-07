@@ -70,12 +70,8 @@ export const TableCellContent = styled.div`
     margin: 0px 5px;
     padding: 0 !important;
     width: calc(100% - 10px);
-    height: 28px;
+    height: calc(100% - 6px);
     margin-top: 3px;
-
-    &:not(.hierarchy) {
-      height: 32px;
-    }
   }
 
   &:focus-visible {
