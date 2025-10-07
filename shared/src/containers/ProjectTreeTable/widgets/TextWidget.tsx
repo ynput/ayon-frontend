@@ -11,7 +11,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
-import { WidgetBaseProps } from './CellWidget'
+import { WidgetBaseProps, CellValue } from './CellWidget'
 import styled from 'styled-components'
 import { AttributeData } from '../types'
 import { AttributeEnumItem } from '@shared/api'
@@ -183,7 +183,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       option,
       isEditing,
       isInherited,
-      onChange = () => {},
+      onChange: onChangeProp = () => {},
       onCancelEdit,
       style,
       type,
@@ -203,12 +203,14 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     const { setEditingCellId } = useSafeCellEditing()
     const normalizedType = (type ?? 'string') as TextWidgetType
     const isStringType = normalizedType === 'string'
+    const [textDraftHtml, setTextDraftHtml] = useState<string | null>(null)
+    const closingByScrollRef = useRef(false)
+    const lastValueRef = useRef(value)
 
     const textValue = useMemo(() => {
       const displayText = option?.label || value
       return typeof displayText === 'string' ? displayText : String(displayText ?? '')
     }, [option?.label, value])
-    console.log('columnId', columnId)
     const isDescriptionColumn = true
     const hasHtmlContent = useMemo(() => containsHtml(textValue), [textValue])
     const hasHtmlAnchor = useMemo(() => /<a\s/i.test(textValue), [textValue])
@@ -279,6 +281,40 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       [plainTextParts, handleLinkClick, textValue],
     )
 
+    const handleDraftChange = useCallback((nextDraft: string | null) => {
+      setTextDraftHtml((prev) => (prev === nextDraft ? prev : nextDraft))
+    }, [])
+
+    const handleDialogDismiss = useCallback(() => {
+      closingByScrollRef.current = true
+    }, [])
+
+    const handleCancelEditInternal = useCallback(() => {
+      if (!closingByScrollRef.current) {
+        handleDraftChange(null)
+      }
+      closingByScrollRef.current = false
+      onCancelEdit?.()
+    }, [handleDraftChange, onCancelEdit])
+
+    const handleTextChange = useCallback(
+      (newValue: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => {
+        closingByScrollRef.current = false
+        handleDraftChange(null)
+        onChangeProp(newValue, key)
+      },
+      [handleDraftChange, onChangeProp],
+    )
+
+    useEffect(() => {
+      if (lastValueRef.current !== value) {
+        lastValueRef.current = value
+        if (!isEditing) {
+          handleDraftChange(null)
+        }
+      }
+    }, [handleDraftChange, isEditing, value])
+
     const openEditor = useCallback(() => {
       // Ensure the hover preview is closed before entering edit mode to avoid double dialogs
       setShowPreview(false)
@@ -299,11 +335,11 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     const handleDialogClose = useCallback(() => {
       if (isEditing) {
-        onCancelEdit?.()
+        handleCancelEditInternal()
       } else {
         setShowPreview(false)
       }
-    }, [isEditing, onCancelEdit])
+    }, [handleCancelEditInternal, isEditing])
 
     const updateOverflowState = useCallback(() => {
       if (shouldWrapLinks) {
@@ -426,8 +462,8 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     const input = (
       <TextWidgetInput
         value={value}
-        onChange={onChange}
-        onCancel={onCancelEdit}
+        onChange={handleTextChange}
+        onCancel={handleCancelEditInternal}
         type={normalizedType}
       />
     )
@@ -534,10 +570,13 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             value={value as string}
             cellId={cellId}
             isEditing={isEditing}
-            onChange={onChange}
-            onCancelEdit={onCancelEdit}
+            onChange={handleTextChange}
+            onCancelEdit={handleCancelEditInternal}
+            editingDraft={textDraftHtml}
+            onEditingDraftChange={handleDraftChange}
             variant={showPreview && !isEditing ? 'preview' : 'edit'}
             onPreviewClick={openEditor}
+            onDismissWithoutSave={handleDialogDismiss}
           />
         )}
       </>
