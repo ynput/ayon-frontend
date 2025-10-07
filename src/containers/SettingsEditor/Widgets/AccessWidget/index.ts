@@ -1,2 +1,1 @@
-import AccessWidget from './AccessWidget'
-export default AccessWidget
+export { default } from './AccessWidget'

@@ -1,11 +1,9 @@
 import { useState, useMemo } from 'react'
 import { updateChangedKeys, parseContext } from '../../helpers'
-import { Button } from '@ynput/ayon-react-components'
 import AccessEditorDialog, { AccessValues } from './AccessEditorDialog'
+import { AccessPreviewButton } from './AccessPreviewButton'
 
-// ...dialog moved to AccessEditorDialog.tsx
-
-interface AccessWidgetProps {
+export interface AccessWidgetProps {
   formData?: AccessValues
   onChange: (value: AccessValues) => void
   formContext?: {
@@ -22,6 +20,14 @@ const AccessWidget = (props: AccessWidgetProps) => {
 
   const [value, setValue] = useState<AccessValues>(props.formData || {})
   const [isOpen, setIsOpen] = useState(false)
+
+  const valueMap = useMemo(() => {
+    if (!value) return []
+    return Object.entries(value).map(([key, accessLevel]) => ({
+      name: key,
+      accessLevel,
+    }))
+  }, [value])
 
   const onDialogSubmit = (commitValue: AccessValues | null) => {
     console.log('Dialog submitted with value:', commitValue)
@@ -52,14 +58,7 @@ const AccessWidget = (props: AccessWidgetProps) => {
 
   return (
     <>
-      <Button
-        onClick={() => {
-          setIsOpen(true)
-          console.log('Opening access editor')
-        }}
-        label="Edit Access"
-        icon="lock"
-      />
+      <AccessPreviewButton value={valueMap} onClick={() => setIsOpen(true)} />
       {dialogComponent}
     </>
   )
