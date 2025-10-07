@@ -53,7 +53,7 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
               { type: 'entityActivities', id: 'LIST' },
               ...(Array.isArray(activityTypes) ? activityTypes : [activityTypes])?.map((type) => ({
                 type: 'entityActivities',
-                id: type,
+                id: type as string,
               })),
               // filter is used when a comment is made, to refetch the activities of other filters
               ...(Array.isArray(entityIds) ? entityIds : [entityIds]).map((id) => ({
@@ -83,15 +83,10 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     },
     GetActivityUsers: {
       transformResponse: (res: GetActivityUsersQuery) => res.users.edges.map((edge) => edge.node),
-      // @ts-ignore
-      providesTags: (result: ActivityUserNode[]) => {
-        return result?.length
-          ? [
-              { type: 'user', id: 'LIST' },
-              ...result.map(({ name }) => ({ type: 'user', id: name })),
-            ]
-          : [{ type: 'user', id: 'LIST' }]
-      },
+      providesTags: (res) =>
+        res?.length
+          ? [{ type: 'user', id: 'LIST' }, ...res.map(({ name }) => ({ type: 'user', id: name }))]
+          : [{ type: 'user', id: 'LIST' }],
     },
   },
 })
