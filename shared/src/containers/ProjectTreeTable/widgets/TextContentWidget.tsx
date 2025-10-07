@@ -1,6 +1,6 @@
 import { FC, useRef, useEffect, useCallback, useState, Suspense } from 'react'
 import styled from 'styled-components'
-import { TextEditingDialog } from './TextEditingDialog'
+import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import type { WidgetBaseProps } from './CellWidget'
 import ReactQuill from 'react-quill-ayon'
 import InputMarkdownConvert from '@shared/containers/Feed/components/CommentInput/InputMarkdownConvert'
@@ -14,9 +14,9 @@ const StyledDialog = styled.div`
   flex-direction: column;
   background: var(--md-sys-color-surface-container-lowest);
   border-radius: 8px;
-  min-width: 500px;
-  max-width: 800px;
-  max-height: 400px;
+  width: 350px;
+  height: 88px;
+  overflow: auto;
 
   &.editing {
     border: 2px solid var(--md-sys-color-primary);
@@ -35,8 +35,6 @@ export interface TextContentWidgetProps extends WidgetBaseProps {
   variant?: 'edit' | 'preview'
   // When in preview, a click on the preview should enter edit mode
   onPreviewClick?: () => void
-  // Function to switch to preview mode
-  onSwitchToPreview?: () => void
 }
 
 export const TextContentWidget: FC<TextContentWidgetProps> = ({
@@ -47,7 +45,6 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   onCancelEdit,
   variant = 'edit',
   onPreviewClick,
-  onSwitchToPreview,
 }) => {
   const [editingValue, setEditingValue] = useState('')
   const [descriptionHtml, setDescriptionHtml] = useState('')
@@ -92,14 +89,17 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   }, [isEditing, isPreview, descriptionHtml])
 
   // Save content function
-  const handleSave = useCallback(() => {
-    if (!quillRef.current) return
+  const handleSave = useCallback(
+    (trigger: 'Click' | 'Enter' = 'Click') => {
+      if (!quillRef.current) return
 
-    const quill = quillRef.current.getEditor()
-    const html = quill.root.innerHTML
-    const [markdown] = convertToMarkdown(html)
-    onChange?.(markdown, 'Enter')
-  }, [onChange])
+      const quill = quillRef.current.getEditor()
+      const html = quill.root.innerHTML
+      const [markdown] = convertToMarkdown(html)
+      onChange?.(markdown, trigger)
+    },
+    [onChange],
+  )
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -138,17 +138,15 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
             quill.format('header', isH2 ? false : 2)
             break
           case 'enter':
-            handleSave()
-            onSwitchToPreview?.()
+            handleSave('Click')
             break
           case 'escape':
             onCancelEdit?.()
-            onSwitchToPreview?.()
             break
         }
       }
     },
-    [handleSave, onSwitchToPreview, isPreview],
+    [handleSave, isPreview],
   )
 
   const dialogContent = (
@@ -208,15 +206,16 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       </StyledHiddenMarkdown>
 
       {(isEditing || isPreview) && (
-        <TextEditingDialog
-          isEditing={isEditing ?? false}
+        <CellEditingDialog
+          isEditing={Boolean(isEditing || isPreview)}
           anchorId={cellId}
-          onClose={onCancelEdit}
-          variant={variant}
-          onSave={handleSave}
+          onClose={isPreview ? undefined : onCancelEdit}
+          onSave={isPreview ? undefined : handleSave}
+          closeOnOutsideClick={isPreview ? false : undefined}
+          className={isPreview ? 'text-editing-dialog preview' : 'text-editing-dialog editing'}
         >
           {dialogContent}
-        </TextEditingDialog>
+        </CellEditingDialog>
       )}
     </>
   )

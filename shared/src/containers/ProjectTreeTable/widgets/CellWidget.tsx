@@ -251,6 +251,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             columnId={columnId}
             cellId={cellId}
             isSelected={isCurrentCellFocused}
+            type={type as TextWidgetType}
             {...sharedProps}
             {...pt?.text}
           />

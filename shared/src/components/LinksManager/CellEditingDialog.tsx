@@ -1,4 +1,4 @@
-import { FC, useRef, useLayoutEffect, useState } from 'react'
+import { FC, useRef, useLayoutEffect, useState, type CSSProperties } from 'react'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
@@ -8,8 +8,8 @@ const StyledPopUp = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
-`
 
+`
 type Position = {
   top: number
   left?: number
@@ -17,18 +17,26 @@ type Position = {
   showAbove?: boolean
 }
 
-export interface LinksManagerDialogProps {
+export interface CellEditingDialogProps {
   isEditing: boolean
   anchorId: string
   onClose?: () => void
+  onSave?: () => void
   children?: React.ReactNode
+  className?: string
+  style?: CSSProperties
+  closeOnOutsideClick?: boolean
 }
 
-export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
+export const CellEditingDialog: FC<CellEditingDialogProps> = ({
   isEditing,
   anchorId,
   onClose,
+  onSave,
   children,
+  className,
+  style,
+  closeOnOutsideClick,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
@@ -36,12 +44,15 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined)
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
 
+  const isOpen = isEditing
+  const shouldCloseOnOutside = closeOnOutsideClick
+
   // get the cell element based on the cellId
   const anchorElement = document.getElementById(anchorId)
   const tableContainer = anchorElement?.closest('.table-container')
 
   const updatePosition = () => {
-    if (!isEditing) return
+    if (!isOpen) return
 
     if (!anchorElement || !tableContainer) {
       // if the anchor element is not found, position in the center of the screen
@@ -122,21 +133,24 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
 
   useLayoutEffect(() => {
     updatePosition()
-  }, [isEditing, anchorElement])
+  }, [isOpen, anchorElement])
 
   // watch for when the tableContainer width changes
   useLayoutEffect(() => {
-    if (tableContainer) {
-      const resizeObserver = new ResizeObserver(() => {
-        updatePosition()
-      })
-      resizeObserver.observe(tableContainer)
-      return () => resizeObserver.disconnect()
-    }
-  }, [tableContainer, anchorElement])
+    if (!tableContainer || !isOpen) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      updatePosition()
+    })
+    resizeObserver.observe(tableContainer)
+    return () => resizeObserver.disconnect()
+  }, [tableContainer, anchorElement, isOpen])
 
   // close the dialog when clicking outside of it
   useLayoutEffect(() => {
+    if (!shouldCloseOnOutside) return
+    if (!isOpen) return
+
     const handleClickOutside = (event: MouseEvent) => {
       if (
         popupRef.current &&
@@ -148,6 +162,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         // check we are not clicking on the dialog backdrop
         !(event.target as HTMLElement).querySelector('.entity-picker-dialog')
       ) {
+        onSave?.()
         onClose?.()
       }
     }
@@ -156,10 +171,13 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [onClose, anchorElement])
+  }, [onClose, onSave, anchorElement, shouldCloseOnOutside, isOpen])
 
-  if (!isEditing) return null
-  return createPortal(
+  if (!isOpen) return null
+
+  const combinedClassName = ['links-widget-popup', className].filter(Boolean).join(' ')
+
+  const popUp = (
     <StyledPopUp
       ref={popupRef}
       style={{
@@ -170,16 +188,24 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         visibility: position ? 'visible' : 'hidden',
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
+        ...style,
       }}
-      className="links-widget-popup"
+      className={combinedClassName}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           onClose?.()
         }
       }}
+      onMouseDown={(e) => {
+        e.stopPropagation()
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+      }}
     >
       {children}
-    </StyledPopUp>,
-    document.body,
+    </StyledPopUp>
   )
+
+  return createPortal(popUp, document.body)
 }

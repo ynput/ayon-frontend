@@ -18,7 +18,7 @@ import { AttributeEnumItem } from '@shared/api'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { parseHtmlToPlainTextWithLinks } from '@shared/util'
-import { TextEditingDialog } from './TextEditingDialog'
+import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { TextContentWidget } from './TextContentWidget'
 import { useCellEditing as useCellEditingOriginal } from '../context/CellEditingContext'
 
@@ -88,6 +88,31 @@ const StyledLink = styled.a<{ $wrap?: boolean }>`
   }
 `
 
+const StyledPreviewContent = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 16px;
+  max-height: inherit;
+  overflow-y: auto;
+  cursor: text;
+  color: var(--md-sys-color-on-surface, #1f1f1f);
+
+  a {
+    color: inherit;
+  }
+`
+
+const StyledPreviewText = styled.div`
+  flex: 1 1 auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  span {
+    white-space: inherit;
+  }
+`
+
 // Function to check if a string is a valid URL
 const isValidUrl = (text: string): boolean => {
   try {
@@ -99,14 +124,21 @@ const isValidUrl = (text: string): boolean => {
 }
 
 // Function to parse text and extract URLs
-const parseTextWithUrls = (text: string) => {
+type ParsedTextPart = {
+  type: 'text' | 'url'
+  content: string
+  key: number
+  href?: string
+}
+
+const parseTextWithUrls = (text: string): ParsedTextPart[] => {
   // Regex to match HTTP/HTTPS URLs
   const urlRegex = /(https?:\/\/[^\s<>"]+[^\s.,!?;:<>\")\]])/gi
   const parts = text.split(urlRegex)
 
   return parts.map((part, index) => {
     if (isValidUrl(part)) {
-      return { type: 'url', content: part, key: index }
+      return { type: 'url', content: part, key: index, href: part }
     }
     return { type: 'text', content: part, key: index }
   })
@@ -169,17 +201,30 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     const hoverTimerRef = useRef<number | null>(null)
     const localSpanRef = useRef<HTMLSpanElement | null>(null)
     const { setEditingCellId } = useSafeCellEditing()
+    const normalizedType = (type ?? 'string') as TextWidgetType
+    const isStringType = normalizedType === 'string'
 
     const textValue = useMemo(() => {
       const displayText = option?.label || value
       return typeof displayText === 'string' ? displayText : String(displayText ?? '')
     }, [option?.label, value])
-    const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
+    console.log('columnId', columnId)
+    const isDescriptionColumn = true
     const hasHtmlContent = useMemo(() => containsHtml(textValue), [textValue])
     const hasHtmlAnchor = useMemo(() => /<a\s/i.test(textValue), [textValue])
     const hasPlainUrl = useMemo(() => /(https?:\/\/\S+)/i.test(textValue), [textValue])
     const hasLink = hasHtmlAnchor || hasPlainUrl
     const shouldWrapLinks = hasLink && !isDescriptionColumn
+    const plainTextParts = useMemo<ParsedTextPart[]>(() => {
+      if (!textValue) return []
+      if (hasHtmlContent) {
+        return parseHtmlToPlainTextWithLinks(textValue) as ParsedTextPart[]
+      }
+      if (hasPlainUrl) {
+        return parseTextWithUrls(textValue)
+      }
+      return [{ type: 'text', content: textValue, key: 0 }]
+    }, [textValue, hasHtmlContent, hasPlainUrl])
 
     const setRefs = useCallback(
       (node: HTMLSpanElement | null) => {
@@ -197,6 +242,42 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       e.stopPropagation()
       window.open(url, '_blank', 'noopener,noreferrer')
     }, [])
+    const renderPlainContent = useCallback(
+      (wrapLinks: boolean, isPreview = false) => {
+        if (!plainTextParts.length) {
+          return textValue
+        }
+
+        return plainTextParts.map((part) => {
+          if (part.type === 'url') {
+            const href = part.href || part.content
+            return (
+              <StyledLink
+                $wrap={wrapLinks || isPreview}
+                key={`url-${part.key}`}
+                href={href}
+                onClick={(e) => handleLinkClick(e, href)}
+                onMouseDown={(e) => e.stopPropagation()}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {part.content}
+              </StyledLink>
+            )
+          }
+
+          return (
+            <span
+              key={`text-${part.key}`}
+              style={{ whiteSpace: wrapLinks || isPreview ? 'pre-wrap' : 'pre-line' }}
+            >
+              {part.content}
+            </span>
+          )
+        })
+      },
+      [plainTextParts, handleLinkClick, textValue],
+    )
 
     const openEditor = useCallback(() => {
       // Ensure the hover preview is closed before entering edit mode to avoid double dialogs
@@ -204,10 +285,25 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       if (cellId) setEditingCellId(cellId)
     }, [cellId, setEditingCellId])
 
-    const switchToPreview = useCallback(() => {
-      onCancelEdit?.()
-      setShowPreview(true)
-    }, [onCancelEdit])
+    // Removed switchToPreview: Escape should close edit dialog instead of opening preview
+
+    const handlePreviewClick = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        e.stopPropagation()
+        const target = e.target as HTMLElement
+        if (target.closest('a')) return
+        openEditor()
+      },
+      [openEditor],
+    )
+
+    const handleDialogClose = useCallback(() => {
+      if (isEditing) {
+        onCancelEdit?.()
+      } else {
+        setShowPreview(false)
+      }
+    }, [isEditing, onCancelEdit])
 
     const updateOverflowState = useCallback(() => {
       if (shouldWrapLinks) {
@@ -256,6 +352,13 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     // start 500ms timer on hover to show readonly preview
     useEffect(() => {
+      if (!isStringType) {
+        if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
+        hoverTimerRef.current = null
+        if (showPreview) setShowPreview(false)
+        return
+      }
+
       if (shouldWrapLinks) {
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = null
@@ -289,7 +392,16 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = null
       }
-    }, [isHovered, isEditing, isSelected, isOverflowing, cellId, shouldWrapLinks, showPreview])
+    }, [
+      isHovered,
+      isEditing,
+      isSelected,
+      isOverflowing,
+      cellId,
+      shouldWrapLinks,
+      showPreview,
+      isStringType,
+    ])
 
     // Listen for global preview open events to ensure only one preview is open at a time
     useEffect(() => {
@@ -316,7 +428,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         value={value}
         onChange={onChange}
         onCancel={onCancelEdit}
-        type={type || 'string'}
+        type={normalizedType}
       />
     )
 
@@ -349,69 +461,15 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         )
       }
 
-      // Check if content contains HTML
-      if (hasHtmlContent) {
-        // Parse HTML to plain text with preserved links
-        const parts = parseHtmlToPlainTextWithLinks(textValue)
-        return parts.map((part) => {
-          if (part.type === 'url' && part.href) {
-            return (
-              <StyledLink
-                $wrap={shouldWrapLinks}
-                key={part.key}
-                href={part.href}
-                onClick={(e) => handleLinkClick(e, part.href!)}
-                onMouseDown={(e) => e.stopPropagation()}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {part.content}
-              </StyledLink>
-            )
-          }
-          return (
-            <span
-              key={part.key}
-              style={{ whiteSpace: shouldWrapLinks ? 'pre-wrap' : 'pre-line' }}
-            >
-              {part.content}
-            </span>
-          )
-        })
-      }
-
-      // Check for URLs in plain text
-      if (hasPlainUrl) {
-        // Text with URLs (handles both single URL and mixed content)
-        const parts = parseTextWithUrls(textValue)
-        return parts.map((part) => {
-          if (part.type === 'url') {
-            return (
-              <StyledLink
-                $wrap={shouldWrapLinks}
-                key={part.key}
-                href={part.content}
-                onClick={(e) => handleLinkClick(e, part.content)}
-                onMouseDown={(e) => e.stopPropagation()}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {part.content}
-              </StyledLink>
-            )
-          }
-          return part.content
-        })
-      }
-
-      // Regular text
-      return textValue
+      return renderPlainContent(shouldWrapLinks)
     }
 
     const combinedClassName = clsx(className, {
       markdown: isDescriptionColumn,
       'wrap-links': shouldWrapLinks,
     })
+    const showPlainPreview = showPreview && !isDescriptionColumn && isStringType
+    const shouldShowPlainDialog = !isDescriptionColumn && (isEditing || showPlainPreview)
 
     return (
       <>
@@ -442,30 +500,43 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           </StyledBaseTextWidget>
         </StyledContainer>
 
-        {isEditing &&
-          (isDescriptionColumn ? (
-            <TextContentWidget
-              value={value as string}
-              cellId={cellId}
-              isEditing={isEditing}
-              onChange={onChange}
-              onCancelEdit={onCancelEdit}
-              onSwitchToPreview={switchToPreview}
-            />
-          ) : (
-            <TextEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>
-              {input}
-            </TextEditingDialog>
-          ))}
+        {shouldShowPlainDialog && (
+          <CellEditingDialog
+            isEditing={isEditing || showPlainPreview}
+            anchorId={cellId || ''}
+            onClose={handleDialogClose}
+            closeOnOutsideClick={!isEditing && showPlainPreview}
+          >
+            {isEditing ? (
+              input
+            ) : (
+              <StyledPreviewContent
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={handlePreviewClick}
+              >
+                {option?.icon && (
+                  <Icon
+                    icon={option.icon}
+                    style={{
+                      color: option.color,
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+                <StyledPreviewText>{renderPlainContent(true, true)}</StyledPreviewText>
+              </StyledPreviewContent>
+            )}
+          </CellEditingDialog>
+        )}
 
-        {showPreview && !isEditing && isDescriptionColumn && (
+        {isDescriptionColumn && (isEditing || showPreview) && (
           <TextContentWidget
             value={value as string}
             cellId={cellId}
-            isEditing={false}
+            isEditing={isEditing}
             onChange={onChange}
             onCancelEdit={onCancelEdit}
-            variant="preview"
+            variant={showPreview && !isEditing ? 'preview' : 'edit'}
             onPreviewClick={openEditor}
           />
         )}
