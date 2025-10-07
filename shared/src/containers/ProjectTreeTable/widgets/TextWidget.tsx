@@ -14,6 +14,8 @@ import { TextEditingDialog } from './TextEditingDialog'
 import { TextContentWidget } from './TextContentWidget'
 import { useCellEditing as useCellEditingOriginal } from '../context/CellEditingContext'
 
+const HOVER_PREVIEW_DELAY_MS = 900
+
 export const StyledBaseTextWidget = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
@@ -110,12 +112,12 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       option,
       isEditing,
       isInherited,
-      onChange,
+      onChange = () => {},
       onCancelEdit,
       style,
       type,
       columnId,
-      cellId,
+      cellId = '',
       isSelected = false,
       className,
       ...props
@@ -138,6 +140,11 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       if (cellId) setEditingCellId(cellId)
     }, [cellId, setEditingCellId])
 
+    const switchToPreview = useCallback(() => {
+      onCancelEdit?.()
+      setShowPreview(true)
+    }, [onCancelEdit])
+
     // start 500ms timer on hover to show readonly preview
     useEffect(() => {
       if (isHovered && !isEditing) {
@@ -153,11 +160,11 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
               )
             }
           }
-        }, 500)
+        }, HOVER_PREVIEW_DELAY_MS)
       } else {
+        console.log('clearing timeout', hoverTimerRef.current, isSelected)
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = null
-        // Close preview only if the cell is not selected
         if (!isSelected) {
           setShowPreview(false)
         }
@@ -189,16 +196,15 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       }
     }, [isEditing, showPreview])
 
-    
     const input = (
       <TextWidgetInput
-      value={value}
-      onChange={onChange}
-      onCancel={onCancelEdit}
-      type={type || 'string'}
+        value={value}
+        onChange={onChange}
+        onCancel={onCancelEdit}
+        type={type || 'string'}
       />
     )
-    
+
     const displayText = option?.label || value
     const textValue = typeof displayText === 'string' ? displayText : String(displayText || '')
     const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
@@ -322,13 +328,14 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           (isDescriptionColumn ? (
             <TextContentWidget
               value={value as string}
-              cellId={cellId || ''}
+              cellId={cellId}
               isEditing={isEditing}
-              onChange={onChange || (() => {})}
+              onChange={onChange}
               onCancelEdit={onCancelEdit}
+              onSwitchToPreview={switchToPreview}
             />
           ) : (
-            <TextEditingDialog isEditing={isEditing} anchorId={cellId || ''} onClose={onCancelEdit}>
+            <TextEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>
               {input}
             </TextEditingDialog>
           ))}
@@ -336,9 +343,9 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         {showPreview && !isEditing && isDescriptionColumn && (
           <TextContentWidget
             value={value as string}
-            cellId={cellId || ''}
+            cellId={cellId}
             isEditing={false}
-            onChange={onChange!}
+            onChange={onChange}
             onCancelEdit={onCancelEdit}
             variant="preview"
             onPreviewClick={openEditor}
