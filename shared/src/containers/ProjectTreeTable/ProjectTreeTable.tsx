@@ -940,15 +940,6 @@ const TableBody = ({
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 
-  // Force row virtualizer to recalculate when row height changes (debounced for performance)
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      rowVirtualizer.measure()
-    }, 100) // Small delay to batch multiple rapid changes
-
-    return () => clearTimeout(timeout)
-  }, [defaultRowHeight, rowVirtualizer])
-
   // Memoize the measureElement callback
   const measureRowElement = useCallback(
     (node: HTMLTableRowElement | null) => {
