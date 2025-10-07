@@ -1,11 +1,20 @@
 import { Button, theme } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
+import { categoryColorCss, CommentProps } from '../CommentInput/CommentInput.styled'
 
 export const CommentWrapper = styled.div`
   border-radius: var(--border-radius-m);
 `
 
-export const Comment = styled.li`
+export const Comment = styled.li<CommentProps>`
+  /* VARS */
+  --background-color: var(--md-sys-color-surface-container);
+  --button-color-secondary: var(--md-sys-color-surface-container-high);
+  --border-color: transparent;
+  /* CATEGORY */
+  ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
+    categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
+
   /* reset default */
   list-style: none;
   margin: 0;
@@ -47,7 +56,7 @@ export const Comment = styled.li`
 `
 
 export const Body = styled.div`
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--background-color);
   border-radius: var(--border-radius-m);
   padding: var(--padding-m);
   padding: 12px 10px;
@@ -252,13 +261,22 @@ export const Tools = styled.div`
   position: absolute;
   right: 4px;
   top: 4px;
-  background-color: var(--md-sys-color-surface-container-highest);
+  background-color: var(--button-color-secondary);
   border-radius: var(--border-radius-m);
   z-index: 50;
+  padding: 2px;
+  gap: var(--base-gap-small);
 `
 
 export const ToolButton = styled(Button)`
-  padding: 4px;
+  &.hasIcon {
+    padding: 4px;
+  }
+
+  &:hover {
+    background-color: var(--button-color-secondary);
+    filter: brightness(1.2);
+  }
 
   [icon='edit_square'] {
     position: relative;

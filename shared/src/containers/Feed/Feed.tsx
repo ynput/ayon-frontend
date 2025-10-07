@@ -236,8 +236,8 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
                   activity={activity}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
-                  onUpdate={async (value, files, _refs) =>
-                    await updateComment(activity, value, files)
+                  onUpdate={async (value, files, _refs, data) =>
+                    await updateComment(activity, value, files, data)
                   }
                   projectInfo={projectInfo}
                   projectName={projectName}

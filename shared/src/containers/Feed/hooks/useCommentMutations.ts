@@ -167,12 +167,14 @@ const useCommentMutations = ({
     activity: Activity,
     value: string,
     files: File[] = [],
+    data: any = {},
   ): Promise<void> => {
     const fileIds = files.map((file) => file.id)
 
     const updatedActivity = {
       body: value,
       files: fileIds,
+      data,
     }
 
     const patch = {

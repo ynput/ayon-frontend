@@ -24,27 +24,45 @@ export const AutoHeight = styled.div`
   }
 `
 
-type CommentProps = {
-  $categoryColor?: string
-  $blendedCategoryColor?: string
+export type CommentProps = {
+  $categoryPrimary?: string
+  $categorySecondary?: string
+  $categoryTertiary?: string
 }
+
+// Reusable function for category color CSS
+export const categoryColorCss = (
+  $categoryPrimary?: string,
+  $categorySecondary?: string,
+  $categoryTertiary?: string,
+) =>
+  $categoryPrimary &&
+  css`
+    --background-color: ${$categoryTertiary};
+    --button-color: ${$categoryPrimary};
+    --button-color-secondary: ${$categorySecondary};
+    --border-color: ${$categoryPrimary};
+  `
 
 export const Comment = styled.div<CommentProps>`
   /* VARS */
   --background-color: var(--md-sys-color-surface-container);
+  --button-color: var(--md-sys-color-primary);
+  --button-color-secondary: var(--md-sys-color-surface-container-highest);
   --border-color: var(--md-sys-color-outline-variant);
   /* CATEGORY */
-  ${({ $categoryColor, $blendedCategoryColor }) =>
-    $categoryColor &&
-    css`
-      --background-color: ${$blendedCategoryColor || 'var(--background-color)'};
-      --border-color: ${$categoryColor};
+  ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
+    categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
 
-      button.comment {
-        background-color: ${$categoryColor};
-        color: var(--md-sys-color-on-surface);
+  &.category {
+    button.comment {
+      color: var(--md-sys-color-on-surface);
+      &:hover {
+        background-color: var(--button-color);
+        filter: brightness(1.2);
       }
-    `}
+    }
+  }
 
   display: flex;
   flex-direction: column;
@@ -282,16 +300,16 @@ export const Comment = styled.div<CommentProps>`
 
         /* highlight when action */
         &.ql-active {
-          background-color: var(--md-sys-color-secondary-container);
+          background-color: var(--button-color-secondary);
           .icon {
-            color: var(--md-sys-color-on-secondary-container);
+            color: var(--button-color);
           }
         }
       }
     }
 
     button:hover {
-      background-color: var(--md-sys-color-surface-container-highest-hover);
+      background-color: var(--button-color-secondary);
     }
   }
 
@@ -331,12 +349,21 @@ export const Footer = styled.footer`
     .icon {
       display: none;
     }
+    background-color: var(--button-color);
   }
 `
 
 export const Buttons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+
+  button {
+    &.text {
+      &:hover {
+        background-color: var(--button-color-secondary);
+      }
+    }
+  }
 `
 
 export const Markdown = styled.div`

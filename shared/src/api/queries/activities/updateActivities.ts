@@ -50,6 +50,11 @@ const patchActivities = async (
   // get caches that would be affected by this activity
   const entries = getActivitiesGQLApi.util.selectInvalidatedBy(state, invalidatingTags)
 
+  // ensure that data is mapped to activityData
+  if (method !== 'delete' && patch.data) {
+    patch.activityData = { ...patch.activityData, ...patch.data }
+  }
+
   // now patch all the caches with the update
   const patches = entries.map(({ originalArgs }) =>
     dispatch(

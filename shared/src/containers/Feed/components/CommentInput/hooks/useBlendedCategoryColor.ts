@@ -6,23 +6,27 @@ import { blendCategoryColor } from '@shared/util'
  * Reads the CSS variable value at runtime and blends the category color at 10% opacity
  */
 export const useBlendedCategoryColor = (categoryColor: string | undefined) => {
-  const blendedColor = useMemo(() => {
+  return useMemo(() => {
     if (!categoryColor) {
-      return undefined
+      return { primary: undefined, secondary: undefined }
     }
-    // Get the computed value of --md-sys-color-surface-container from the root element
     const rootStyles = getComputedStyle(document.documentElement)
     const surfaceContainer = rootStyles.getPropertyValue('--md-sys-color-surface-container').trim()
+    const surfaceSecondary = rootStyles
+      .getPropertyValue('--md-sys-color-surface-container-high')
+      .trim()
 
-    if (!surfaceContainer) {
-      // Fallback to category color if we can't get the surface container
-      return categoryColor
+    // Fallbacks if CSS vars are missing
+    const basePrimary = surfaceContainer || categoryColor
+    const baseSecondary = surfaceSecondary || categoryColor
+
+    // Blend category color at 0.1 opacity over primary, 0.5 over secondary
+    const blendedPrimary = blendCategoryColor(categoryColor, basePrimary, 0.1) || categoryColor
+    const blendedSecondary = blendCategoryColor(categoryColor, baseSecondary, 0.3) || categoryColor
+
+    return {
+      primary: blendedPrimary,
+      secondary: blendedSecondary,
     }
-
-    // Blend the category color at 10% opacity over the surface container
-    const blended = blendCategoryColor(categoryColor, surfaceContainer, 0.1)
-    return blended || categoryColor
   }, [categoryColor])
-
-  return blendedColor
 }

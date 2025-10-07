@@ -30,6 +30,7 @@ export interface ActivityCategorySelectProps
   value?: string | null
   categories: ActivityCategory[]
   readonly?: boolean
+  isCompact?: boolean
   onChange: (value: string) => void
 }
 
@@ -37,6 +38,7 @@ export const ActivityCategorySelect: FC<ActivityCategorySelectProps> = ({
   value,
   categories,
   readonly,
+  isCompact,
   onChange,
   ...props
 }) => {
@@ -44,7 +46,7 @@ export const ActivityCategorySelect: FC<ActivityCategorySelectProps> = ({
   const { color } = category || {}
 
   if (readonly) {
-    return <CategoryTag value={value} color={color} />
+    return <CategoryTag value={value} color={color} isCompact={isCompact} />
   }
 
   const options: DropdownProps['options'] = [
@@ -62,7 +64,9 @@ export const ActivityCategorySelect: FC<ActivityCategorySelectProps> = ({
       options={options}
       value={value ? [value] : []}
       onChange={(val) => onChange(val[0] as string)}
-      valueTemplate={() => <CategoryTag value={value} color={color} />}
+      valueTemplate={() => (
+        <CategoryTag value={value} color={color} isCompact={isCompact} isEditing />
+      )}
       itemTemplate={(option, isActive, isSelected, index) => (
         <CategoryDropdownItem
           label={option.label}

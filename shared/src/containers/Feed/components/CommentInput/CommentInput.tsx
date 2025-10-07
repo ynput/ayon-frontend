@@ -56,6 +56,7 @@ export const mentionTypeOptions = {
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
+  initCategory?: string | null
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
   isEditing?: boolean
   disabled?: boolean
@@ -68,6 +69,7 @@ interface CommentInputProps {
 const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
+  initCategory = null,
   onSubmit,
   isEditing,
   disabled,
@@ -109,7 +111,8 @@ const CommentInput: FC<CommentInputProps> = ({
   const [mention, setMention] = useState<null | any>(null)
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
   // CATEGORY STATE
-  const [category, setCategory] = useState<null | string>(null)
+  const [category, setCategory] = useState<null | string>(initCategory)
+  const categoryOptions = categories.filter((cat) => cat.accessLevel >= 20)
   const categoryData = categories.find((cat) => cat.name === category)
   // Compute blended background color for category
   const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
@@ -575,6 +578,8 @@ const CommentInput: FC<CommentInputProps> = ({
     }
   }
 
+  console.log(blendedCategoryColor)
+
   return (
     <>
       <Styled.AutoHeight
@@ -594,11 +599,13 @@ const CommentInput: FC<CommentInputProps> = ({
             disabled,
             isLoading,
             isSubmitting,
+            category: !!category,
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
-          $categoryColor={categoryData?.color}
-          $blendedCategoryColor={blendedCategoryColor}
+          $categoryPrimary={categoryData?.color}
+          $categoryTertiary={blendedCategoryColor.primary}
+          $categorySecondary={blendedCategoryColor.secondary}
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
@@ -620,9 +627,14 @@ const CommentInput: FC<CommentInputProps> = ({
             <QuillListStyles ref={editorContainerRef}>
               <ActivityCategorySelect
                 value={category}
-                categories={categories}
+                categories={categoryOptions}
                 onChange={(c) => setCategory(c)}
-                style={{ position: 'absolute', left: 4, top: 4 }}
+                isCompact={isEditing}
+                style={{
+                  position: isEditing ? 'relative' : 'absolute',
+                  left: 4,
+                  top: isEditing ? 0 : 4,
+                }}
               />
 
               <ReactQuill
@@ -695,7 +707,6 @@ const CommentInput: FC<CommentInputProps> = ({
           options={shownMentionOptions}
           onChange={handleSelectChange}
           types={mentionTypes}
-          z
           // @ts-ignore
           config={mentionTypeOptions[mention?.type]}
           noneFound={!shownMentionOptions.length && mention?.search}

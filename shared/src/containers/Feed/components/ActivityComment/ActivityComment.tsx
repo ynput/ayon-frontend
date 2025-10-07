@@ -25,12 +25,14 @@ import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityH
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
+import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
+import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 
 type Props = {
   activity: any
   onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
-  onUpdate?: Function
+  onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
   projectInfo: any
   editProps?: {
     disabled: boolean
@@ -62,7 +64,14 @@ const ActivityComment = ({
   readOnly,
   statuses = [],
 }: Props) => {
-  const { userName, createReaction, deleteReaction, editingId, setEditingId } = useFeedContext()
+  const { userName, createReaction, deleteReaction, editingId, setEditingId, categories } =
+    useFeedContext()
+
+  const categoryData = useMemo(() => {
+    return categories.find((cat) => cat.name === activity.activityData?.category) || null
+  }, [activity?.activityData?.category, categories])
+  // Compute blended background color for category
+  const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
 
   let {
     body,
@@ -91,8 +100,8 @@ const ActivityComment = ({
     setEditingId(null)
   }
 
-  const handleSave = async (value: any, files: any) => {
-    await onUpdate?.(value, files)
+  const handleSave = async (value: any, files: any, data?: any) => {
+    await onUpdate?.(value, files, undefined, data)
     setEditingId(null)
   }
 
@@ -168,6 +177,9 @@ const ActivityComment = ({
       <Styled.Comment
         className={clsx('comment', { isOwner, isEditing, isHighlighted })}
         id={activityId}
+        $categoryPrimary={categoryData?.color}
+        $categoryTertiary={blendedCategoryColor.primary}
+        $categorySecondary={blendedCategoryColor.secondary}
       >
         <ActivityHeader
           name={authorName}
@@ -190,17 +202,32 @@ const ActivityComment = ({
                   icon="delete"
                   onClick={deleteConfirmation}
                   tooltip="Delete comment"
+                  variant="text"
                 />
               )}
               {isOwner && handleEditComment && (
-                <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
+                <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
               )}
             </Styled.Tools>
           )}
+
+          {!isEditing && categoryData && (
+            <CategoryTag
+              value={categoryData.name}
+              color={categoryData.color}
+              style={{
+                top: -4,
+                left: -4,
+              }}
+              isCompact
+            />
+          )}
+
           {isEditing ? (
             <CommentInput
               initValue={body}
               initFiles={files}
+              initCategory={categoryData?.name}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
