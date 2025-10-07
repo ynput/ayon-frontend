@@ -1,4 +1,12 @@
-import { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  MutableRefObject,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -22,11 +30,15 @@ export const StyledBaseTextWidget = styled.span`
   white-space: nowrap;
 
   display: flex;
+  align-items: center;
   gap: 4px;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
 
-  &.markdown {
-    margin-top: 18px;
-    height: 40px;
+  &.wrap-links {
+    white-space: normal;
+    flex-wrap: wrap;
   }
 `
 
@@ -36,13 +48,40 @@ const StyledContainer = styled.div`
   width: 100%;
 `
 
-const StyledLink = styled.a`
+const InlineMarkdown = styled(Markdown)`
+  display: contents;
+
+  p {
+    margin: 0;
+    display: inline;
+    white-space: pre-wrap;
+  }
+
+  &.wrap-links p {
+    white-space: pre-wrap;
+  }
+`
+
+const StyledLink = styled.a<{ $wrap?: boolean }>`
   color: var(--md-sys-color-primary, #0066cc);
   text-decoration: none;
   cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  ${({ $wrap }) =>
+    $wrap
+      ? `
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    flex-shrink: 1;
+  `
+      : `
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+  `}
 
   &:hover {
     text-decoration: underline;
@@ -126,8 +165,33 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
   ) => {
     const [isHovered, setIsHovered] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
+    const [isOverflowing, setIsOverflowing] = useState(false)
     const hoverTimerRef = useRef<number | null>(null)
+    const localSpanRef = useRef<HTMLSpanElement | null>(null)
     const { setEditingCellId } = useSafeCellEditing()
+
+    const textValue = useMemo(() => {
+      const displayText = option?.label || value
+      return typeof displayText === 'string' ? displayText : String(displayText ?? '')
+    }, [option?.label, value])
+    const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
+    const hasHtmlContent = useMemo(() => containsHtml(textValue), [textValue])
+    const hasHtmlAnchor = useMemo(() => /<a\s/i.test(textValue), [textValue])
+    const hasPlainUrl = useMemo(() => /(https?:\/\/\S+)/i.test(textValue), [textValue])
+    const hasLink = hasHtmlAnchor || hasPlainUrl
+    const shouldWrapLinks = hasLink && !isDescriptionColumn
+
+    const setRefs = useCallback(
+      (node: HTMLSpanElement | null) => {
+        localSpanRef.current = node
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (ref) {
+          ;(ref as React.MutableRefObject<HTMLSpanElement | null>).current = node
+        }
+      },
+      [ref],
+    )
 
     const handleLinkClick = useCallback((e: React.MouseEvent, url: string) => {
       e.stopPropagation()
@@ -145,13 +209,65 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       setShowPreview(true)
     }, [onCancelEdit])
 
+    const updateOverflowState = useCallback(() => {
+      if (shouldWrapLinks) {
+        setIsOverflowing(false)
+        return
+      }
+
+      const el = localSpanRef.current
+      if (!el) return
+
+      const horizontalOverflow = el.scrollWidth - el.clientWidth > 1
+      const verticalOverflow =
+        isDescriptionColumn && el.scrollHeight - el.clientHeight > 1
+      const hasOverflow = horizontalOverflow || verticalOverflow
+
+      setIsOverflowing((prev) => (prev !== hasOverflow ? hasOverflow : prev))
+    }, [isDescriptionColumn, shouldWrapLinks])
+
+    useEffect(() => {
+      updateOverflowState()
+    }, [textValue, option?.label, isDescriptionColumn, updateOverflowState, shouldWrapLinks])
+
+    useEffect(() => {
+      const el = localSpanRef.current
+      if (!el || typeof ResizeObserver === 'undefined') return
+
+      let rafId = requestAnimationFrame(updateOverflowState)
+      const observer = new ResizeObserver(() => {
+        cancelAnimationFrame(rafId)
+        rafId = requestAnimationFrame(updateOverflowState)
+      })
+
+      observer.observe(el)
+
+      return () => {
+        cancelAnimationFrame(rafId)
+        observer.disconnect()
+      }
+    }, [updateOverflowState])
+
+    useEffect(() => {
+      if (!isOverflowing && showPreview) {
+        setShowPreview(false)
+      }
+    }, [isOverflowing, showPreview])
+
     // start 500ms timer on hover to show readonly preview
     useEffect(() => {
-      if (isHovered && !isEditing) {
+      if (shouldWrapLinks) {
+        if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
+        hoverTimerRef.current = null
+        if (showPreview) setShowPreview(false)
+        return
+      }
+
+      if (isHovered && !isEditing && isOverflowing) {
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = window.setTimeout(() => {
           // Guard again at fire time to avoid showing during edit
-          if (!isEditing && isHovered) {
+          if (!isEditing && isHovered && isOverflowing) {
             setShowPreview(true)
             // Notify others to close their previews so only one is open
             if (cellId) {
@@ -162,10 +278,9 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           }
         }, HOVER_PREVIEW_DELAY_MS)
       } else {
-        console.log('clearing timeout', hoverTimerRef.current, isSelected)
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = null
-        if (!isSelected) {
+        if (!isSelected || !isOverflowing) {
           setShowPreview(false)
         }
       }
@@ -174,7 +289,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = null
       }
-    }, [isHovered, isEditing, isSelected, cellId])
+    }, [isHovered, isEditing, isSelected, isOverflowing, cellId, shouldWrapLinks, showPreview])
 
     // Listen for global preview open events to ensure only one preview is open at a time
     useEffect(() => {
@@ -205,14 +320,11 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       />
     )
 
-    const displayText = option?.label || value
-    const textValue = typeof displayText === 'string' ? displayText : String(displayText || '')
-    const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
-
     const renderContent = () => {
       if (isDescriptionColumn) {
         return (
-          <Markdown
+          <InlineMarkdown
+            className={clsx({ 'wrap-links': shouldWrapLinks })}
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
             allowedElements={['a']}
@@ -220,6 +332,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             components={{
               a: ({ href, children }) => (
                 <StyledLink
+                  $wrap={shouldWrapLinks}
                   href={href || '#'}
                   onClick={(e) => href && handleLinkClick(e as unknown as React.MouseEvent, href)}
                   onMouseDown={(e) => e.stopPropagation()}
@@ -232,18 +345,19 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             }}
           >
             {textValue}
-          </Markdown>
+          </InlineMarkdown>
         )
       }
 
       // Check if content contains HTML
-      if (containsHtml(textValue)) {
+      if (hasHtmlContent) {
         // Parse HTML to plain text with preserved links
         const parts = parseHtmlToPlainTextWithLinks(textValue)
         return parts.map((part) => {
           if (part.type === 'url' && part.href) {
             return (
               <StyledLink
+                $wrap={shouldWrapLinks}
                 key={part.key}
                 href={part.href}
                 onClick={(e) => handleLinkClick(e, part.href!)}
@@ -256,7 +370,10 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             )
           }
           return (
-            <span key={part.key} style={{ whiteSpace: 'pre-line' }}>
+            <span
+              key={part.key}
+              style={{ whiteSpace: shouldWrapLinks ? 'pre-wrap' : 'pre-line' }}
+            >
               {part.content}
             </span>
           )
@@ -264,14 +381,14 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       }
 
       // Check for URLs in plain text
-      const hasUrls = textValue.match(/(https?:\/\/\S+)/gi)
-      if (hasUrls) {
+      if (hasPlainUrl) {
         // Text with URLs (handles both single URL and mixed content)
         const parts = parseTextWithUrls(textValue)
         return parts.map((part) => {
           if (part.type === 'url') {
             return (
               <StyledLink
+                $wrap={shouldWrapLinks}
                 key={part.key}
                 href={part.content}
                 onClick={(e) => handleLinkClick(e, part.content)}
@@ -293,6 +410,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     const combinedClassName = clsx(className, {
       markdown: isDescriptionColumn,
+      'wrap-links': shouldWrapLinks,
     })
 
     return (
@@ -310,7 +428,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             className={combinedClassName}
             style={{ color: option?.color, ...style }}
             {...props}
-            ref={ref}
+            ref={setRefs}
           >
             {option?.icon && (
               <Icon
