@@ -25,7 +25,11 @@ const addonSettings = api.injectEndpoints({
       query: ({ variant, projectName, siteId, bundleName, projectBundleName }) => {
         // this should prevent passing null/undefined values to the query
         // params once and for all (until we have typescript)
-        const params = {summary: true}
+
+        // TODO: we would normally use 'summary: true' here to reduce the payload,
+        // but fulltext search in settings actually neeed the data
+        // so for now we leave it out
+        const params = {}//{summary: true}
         if (variant) params.variant = variant
         if (projectName) params.project_name = projectName
         if (siteId) params.site_id = siteId
