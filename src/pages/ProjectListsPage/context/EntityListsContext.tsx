@@ -176,13 +176,14 @@ export const EntityListsProvider = ({
             items: entitiesToAdd,
             mode: 'merge',
           },
-        })
+        }).unwrap()
 
         toast.success(`Item${entitiesToAdd.length > 1 ? 's' : ''} added to list`)
 
         return Promise.resolve()
-      } catch (error) {
-        toast.error('Error adding to list')
+      } catch (error: any) {
+        console.error('Error adding to list', error)
+        toast.error(error || 'Error adding to list')
         return Promise.reject(error)
       }
     },
@@ -340,8 +341,12 @@ export const EntityListsProvider = ({
       }
 
       const resolveShowIcon = getShowIcon || (() => false)
+
+      // Filter lists to only include those with editor access (accessLevel >= 20)
+      const editableLists = lists.filter((list) => (list.accessLevel ?? 0) >= 20)
+
       if (!powerLicense || !listFolders.length) {
-        return lists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+        return editableLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
       }
 
       // folder node structure
@@ -364,8 +369,8 @@ export const EntityListsProvider = ({
         }
       })
 
-      // assign lists
-      lists.forEach((list) => {
+      // assign lists (only editable ones)
+      editableLists.forEach((list) => {
         if (list.entityListFolderId && nodeMap.has(list.entityListFolderId)) {
           nodeMap.get(list.entityListFolderId)!.lists.push(list)
         }
@@ -408,7 +413,7 @@ export const EntityListsProvider = ({
       const folderItems = buildFolderItems(rootNodes)
 
       // lists without a folder (root lists)
-      const rootLists = lists.filter((l) => !l.entityListFolderId)
+      const rootLists = editableLists.filter((l) => !l.entityListFolderId)
       const rootListItems = rootLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
 
       const result = [...folderItems, ...rootListItems]

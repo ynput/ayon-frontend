@@ -14,6 +14,7 @@ interface ListItemsTableProps {
   isLoading?: boolean
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
+  viewOnly?: boolean
 }
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
@@ -21,6 +22,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   isLoading,
   isReview: _,
   dndActiveId, // Destructure new prop
+  viewOnly,
 }) => {
   const { selectedLists, selectedList } = useListsContext()
   const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
@@ -54,7 +56,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         isLoading={isLoading}
-        sortableRows
+        sortableRows={!viewOnly}
         dndActiveId={dndActiveId} // Pass prop
       />
       <ListItemsShortcuts />

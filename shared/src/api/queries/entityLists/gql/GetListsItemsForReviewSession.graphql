@@ -26,6 +26,7 @@ query GetListsItemsForReviewSession(
           entityType
           updatedAt
           count
+          accessLevel
         }
       }
     }

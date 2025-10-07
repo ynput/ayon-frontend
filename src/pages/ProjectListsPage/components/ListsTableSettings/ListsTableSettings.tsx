@@ -49,7 +49,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
               onSuccess={onSuccess}
               onError={onError}
               confirmDelete={confirmDelete}
-              requiredVersion={requiredVersion}
+              requiredVersion={requiredVersion.settings}
             />
           ),
         },
