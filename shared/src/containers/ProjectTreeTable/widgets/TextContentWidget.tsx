@@ -16,7 +16,9 @@ const StyledDialog = styled.div`
   background: var(--md-sys-color-surface-container-lowest);
   border-radius: 8px;
   width: 350px;
-  height: 88px;
+  height: auto;
+  min-height: 88px;
+  max-height: 100%;
   overflow: auto;
 
   &.editing {
@@ -26,8 +28,9 @@ const StyledDialog = styled.div`
 
 const PlainTextarea = styled.textarea`
   width: 100%;
-  height: 100%;
-  height: 88px;
+  height: auto;
+  min-height: 88px;
+  max-height: inherit;
   border: none;
   outline: none;
   resize: vertical;
@@ -42,7 +45,10 @@ const PlainPreview = styled.div`
   white-space: pre-wrap;
   word-break: break-word;
   padding: 12px;
-  height: 88px;
+  height: auto;
+  min-height: 88px;
+  max-height: inherit;
+  overflow: auto;
 `
 
 const StyledHiddenMarkdown = styled.div`
@@ -60,9 +66,10 @@ export interface TextContentWidgetProps extends WidgetBaseProps {
   // Enable or disable markdown editing features
   allowMarkdown?: boolean
   valueType?: 'string' | 'integer' | 'float'
-  editingDraft?: string | null
   onEditingDraftChange?: (value: string | null) => void
   onDismissWithoutSave?: () => void
+  onPreviewMouseEnter?: () => void
+  onPreviewMouseLeave?: () => void
 }
 
 export const TextContentWidget: FC<TextContentWidgetProps> = ({
@@ -75,9 +82,10 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   onPreviewClick,
   allowMarkdown = true,
   valueType = 'string',
-  editingDraft = null,
   onEditingDraftChange,
   onDismissWithoutSave,
+  onPreviewMouseEnter,
+  onPreviewMouseLeave,
 }) => {
   const [editingValue, setEditingValue] = useState('')
   const [descriptionHtml, setDescriptionHtml] = useState('')
@@ -229,6 +237,10 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase()
         const format = quill.getFormat()
+        const handledKeys = new Set(['d', 'o', 'l', 'b', 'i', 'u', 'h', 'enter', 'escape'])
+
+        if (!handledKeys.has(key)) return
+
         e.preventDefault()
 
         switch (key) {
@@ -272,6 +284,12 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       onKeyDown={handleKeyDown}
       onMouseDown={(e) => {
         e.stopPropagation()
+      }}
+      onMouseEnter={() => {
+        if (isPreview) onPreviewMouseEnter?.()
+      }}
+      onMouseLeave={() => {
+        if (isPreview) onPreviewMouseLeave?.()
       }}
     >
       <StyledEditor

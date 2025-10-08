@@ -1,4 +1,5 @@
 import { FC, useRef, useLayoutEffect, useState, useCallback, type CSSProperties } from 'react'
+import clsx from 'clsx'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
@@ -109,6 +110,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
     setMaxWidth(dialogWidth)
 
+    const anchorGap = 1
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
     const spaceAbove = cellRect.top - screenPadding
     let top: number
@@ -117,11 +119,11 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
     if (spaceBelow < minHeightThreshold && spaceAbove > spaceBelow) {
       showAbove = true
-      top = cellRect.top - 4
-      availableHeight = spaceAbove - 4
+      top = cellRect.top - anchorGap
+      availableHeight = spaceAbove - anchorGap
     } else {
-      top = cellRect.bottom + 4
-      availableHeight = spaceBelow - 4
+      top = cellRect.bottom + anchorGap
+      availableHeight = spaceBelow - anchorGap
     }
 
     // Set max height to prevent dialog from going off screen
@@ -253,8 +255,6 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
   if (!isOpen) return null
 
-  const combinedClassName = ['links-widget-popup', className].filter(Boolean).join(' ')
-
   const popUp = (
     <StyledPopUp
       ref={popupRef}
@@ -268,7 +268,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
         ...style,
       }}
-      className={combinedClassName}
+      className={clsx('links-widget-popup', { 'block-shortcuts': isEditing }, className)}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           onClose?.()
