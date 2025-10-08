@@ -179,46 +179,49 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
     // Add attribute options
     const listScopedAttributes = allAttributes.filter((attr) => attr.scope?.includes('list'))
 
-    const attributeOptions: Option[] = listScopedAttributes.map((attr) => {
-      const hasEnum = !!attr.data.enum?.length
-      const option: Option = {
-        id: `attrib.${attr.name}`,
-        label: attr.data.title || attr.name,
-        type: attr.data.type || 'string',
-        icon: getAttributeIcon(attr.name, attr.data.type, hasEnum),
-        allowsCustomValues: true,
-        values: [],
-      }
+    const unsupportedTypes: AttributeData['type'][] = ['datetime', 'dict']
+    const attributeOptions: Option[] = listScopedAttributes
+      .filter((attr) => !unsupportedTypes.includes(attr.data.type))
+      .map((attr) => {
+        const hasEnum = !!attr.data.enum?.length
+        const option: Option = {
+          id: `attrib.${attr.name}`,
+          label: attr.data.title || attr.name,
+          type: attr.data.type || 'string',
+          icon: getAttributeIcon(attr.name, attr.data.type, hasEnum),
+          allowsCustomValues: true,
+          values: [],
+        }
 
-      // if the attribute type is boolean, add yes/no options
-      if (attr.data.type === 'boolean') {
-        option.singleSelect = true
-        option.values = [
-          {
-            id: 'true',
-            label: 'Yes',
-            icon: 'radio_button_checked',
-          },
-          {
-            id: 'false',
-            label: 'No',
-            icon: 'radio_button_unchecked',
-          },
-        ]
-      } else {
-        // Get aggregated values from lists data
-        const aggregatedValues = getAttributeValuesFromLists(
-          listsData,
-          attr.name,
-          attr.data.enum,
-          attr.data.type,
-        )
+        // if the attribute type is boolean, add yes/no options
+        if (attr.data.type === 'boolean') {
+          option.singleSelect = true
+          option.values = [
+            {
+              id: 'true',
+              label: 'Yes',
+              icon: 'radio_button_checked',
+            },
+            {
+              id: 'false',
+              label: 'No',
+              icon: 'radio_button_unchecked',
+            },
+          ]
+        } else {
+          // Get aggregated values from lists data
+          const aggregatedValues = getAttributeValuesFromLists(
+            listsData,
+            attr.name,
+            attr.data.enum,
+            attr.data.type,
+          )
 
-        option.values = aggregatedValues
-      }
+          option.values = aggregatedValues
+        }
 
-      return option
-    })
+        return option
+      })
 
     opts.push(...attributeOptions)
 
