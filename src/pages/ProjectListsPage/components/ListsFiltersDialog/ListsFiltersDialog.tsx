@@ -5,8 +5,95 @@ import { entityTypeOptions } from '../NewListDialog/NewListDialog'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
+import { AttributeData, AttributeEnumItem, EntityList, useGetAttributeListQuery } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { getAttributeIcon } from '@shared/util'
+
+// Helper function to aggregate attribute values from lists
+const getAttributeValuesFromLists = (
+  lists: EntityList[],
+  attributeName: string,
+  enums?: AttributeEnumItem[],
+  type?: AttributeData['type'],
+): Option[] => {
+  const enumOptions: Option[] = []
+  const options: (Option & { count: number })[] = []
+
+  // add the enum values first
+  if (enums) {
+    enums.forEach((enumItem) => {
+      enumOptions.push({
+        id: enumItem.value.toString(),
+        type: type,
+        label: enumItem.label,
+        values: [],
+        icon: enumItem.icon,
+        color: enumItem.color,
+      })
+    })
+  }
+
+  // aggregate values from all lists
+  lists.forEach((list) => {
+    const value = list.attrib?.[attributeName]
+
+    // no value? skip
+    if (value === null || value === undefined) return
+
+    let text = ''
+
+    // convert value to text
+    switch (typeof value) {
+      case 'string':
+      case 'number':
+      case 'boolean':
+        text = value.toString()
+        break
+      case 'object':
+        if (Array.isArray(value)) {
+          text = value.join(', ')
+        } else {
+          text = JSON.stringify(value)
+        }
+        break
+      default:
+        break
+    }
+
+    // create id for text value
+    const id = text
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '-')
+
+    // check if the option already exists in enums
+    const existingOption = enumOptions?.find((enumItem) => enumItem.id === id)
+    if (existingOption) return
+
+    // check if options already has the value, if so, increment the count
+    const existingValue = options.find((option) => option.id === id)
+    if (existingValue) {
+      existingValue.count++
+      return
+    } else {
+      // add option
+      options.push({
+        id,
+        type: type,
+        label: text,
+        values: [],
+        count: 1,
+      })
+    }
+  })
+
+  // sort options based on count
+  options.sort((a, b) => b.count - a.count)
+
+  // enum options first, then the rest
+  return [...enumOptions, ...options]
+}
 
 const Dialog = styled.div`
   position: fixed;
@@ -33,19 +120,14 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
 
   const filtersRef = useRef<SearchFilterRef>(null)
 
+  // Fetch list-scoped attributes
+  const { data: allAttributes = [] } = useGetAttributeListQuery()
+
   useEffect(() => {
     if (listsFiltersOpen && filtersRef.current) {
       filtersRef.current.open()
     }
   }, [listsFiltersOpen, filtersRef])
-
-  // keeps track of the filters whilst adding/removing filters
-  const [filters, setFilters] = useState<Filter[]>(listsFilters)
-
-  // update filters when it changes
-  useEffect(() => {
-    setFilters(listsFilters)
-  }, [listsFilters, setFilters])
 
   const options = useMemo<Option[]>(() => {
     const opts: Option[] = [
@@ -94,8 +176,62 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
       })
     }
 
+    // Add attribute options
+    const listScopedAttributes = allAttributes.filter((attr) => attr.scope?.includes('list'))
+
+    const attributeOptions: Option[] = listScopedAttributes.map((attr) => {
+      const hasEnum = !!attr.data.enum?.length
+      const option: Option = {
+        id: `attrib.${attr.name}`,
+        label: attr.data.title || attr.name,
+        type: attr.data.type || 'string',
+        icon: getAttributeIcon(attr.name, attr.data.type, hasEnum),
+        allowsCustomValues: true,
+        values: [],
+      }
+
+      // if the attribute type is boolean, add yes/no options
+      if (attr.data.type === 'boolean') {
+        option.singleSelect = true
+        option.values = [
+          {
+            id: 'true',
+            label: 'Yes',
+            icon: 'radio_button_checked',
+          },
+          {
+            id: 'false',
+            label: 'No',
+            icon: 'radio_button_unchecked',
+          },
+        ]
+      } else {
+        // Get aggregated values from lists data
+        const aggregatedValues = getAttributeValuesFromLists(
+          listsData,
+          attr.name,
+          attr.data.enum,
+          attr.data.type,
+        )
+
+        option.values = aggregatedValues
+      }
+
+      return option
+    })
+
+    opts.push(...attributeOptions)
+
     return opts
-  }, [listsData, projectInfo])
+  }, [allAttributes, listsData, projectInfo])
+
+  // keeps track of the filters whilst adding/removing filters
+  const [filters, setFilters] = useState<Filter[]>(listsFilters)
+
+  // update filters when it changes
+  useEffect(() => {
+    setFilters(listsFilters)
+  }, [listsFilters, setFilters])
 
   //   on keydown, close the dialog
   useEffect(() => {
@@ -113,7 +249,7 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
     }
   }, [setListsFiltersOpen, listsFiltersOpen])
 
-  if (listsFiltersOpen === false) return null
+  if (!listsFiltersOpen) return null
 
   return createPortal(
     <Dialog
