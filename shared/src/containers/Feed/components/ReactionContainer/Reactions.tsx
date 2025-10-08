@@ -7,13 +7,41 @@ type Props = {
   reactions: Reaction[]
   changeHandler: (reaction: Reaction) => void
   readOnly?: boolean
+  categoryPrimary?: string
+  categorySecondary?: string
+  categoryTertiary?: string
 }
 
-const Reactions = ({ reactions, changeHandler, readOnly }: Props) => {
+const Reactions = ({
+  reactions,
+  changeHandler,
+  readOnly,
+  categoryPrimary,
+  categorySecondary,
+  categoryTertiary,
+}: Props) => {
   return (
-    <Styled.ReactionsWrapper>
-      {!readOnly && <ReactionPanelOpener reactions={reactions} changeHandler={changeHandler} />}
-      <ExistingReactions reactions={reactions} changeHandler={changeHandler} />
+    <Styled.ReactionsWrapper
+      $categoryPrimary={categoryPrimary}
+      $categorySecondary={categorySecondary}
+      $categoryTertiary={categoryTertiary}
+    >
+      {!readOnly && (
+        <ReactionPanelOpener
+          reactions={reactions}
+          changeHandler={changeHandler}
+          categoryPrimary={categoryPrimary}
+          categorySecondary={categorySecondary}
+          categoryTertiary={categoryTertiary}
+        />
+      )}
+      <ExistingReactions
+        reactions={reactions}
+        changeHandler={changeHandler}
+        categoryPrimary={categoryPrimary}
+        categorySecondary={categorySecondary}
+        categoryTertiary={categoryTertiary}
+      />
     </Styled.ReactionsWrapper>
   )
 }

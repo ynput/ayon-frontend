@@ -306,6 +306,9 @@ const ActivityComment = ({
                   reactions={mappedReactions}
                   changeHandler={reactionChangeHandler}
                   readOnly={readOnly}
+                  categoryPrimary={categoryData?.color}
+                  categorySecondary={blendedCategoryColor.secondary}
+                  categoryTertiary={blendedCategoryColor.primary}
                 />
               )}
             </div>
