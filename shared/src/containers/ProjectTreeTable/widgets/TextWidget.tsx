@@ -23,6 +23,55 @@ import { TextContentWidget } from './TextContentWidget'
 import { useCellEditing as useCellEditingOriginal } from '../context/CellEditingContext'
 
 const HOVER_PREVIEW_DELAY_MS = 600
+const PREVIEW_IDLE_RESET_MS = 500
+
+type PreviewDelayController = {
+  shouldDelay: () => boolean
+  activateFastMode: () => void
+  scheduleReset: () => void
+  cancelReset: () => void
+}
+
+const createPreviewDelayController = (): PreviewDelayController => {
+  let fastModeEnabled = false
+  let idleTimer: number | null = null
+
+  const clearIdleTimer = () => {
+    if (idleTimer !== null) {
+      window.clearTimeout(idleTimer)
+      idleTimer = null
+    }
+  }
+
+  return {
+    shouldDelay: () => !fastModeEnabled,
+    activateFastMode: () => {
+      fastModeEnabled = true
+      clearIdleTimer()
+    },
+    scheduleReset: () => {
+      if (!fastModeEnabled) return
+      clearIdleTimer()
+      idleTimer = window.setTimeout(() => {
+        fastModeEnabled = false
+        idleTimer = null
+      }, PREVIEW_IDLE_RESET_MS)
+    },
+    cancelReset: () => {
+      clearIdleTimer()
+    },
+  }
+}
+
+const previewDelayController: PreviewDelayController =
+  typeof window === 'undefined'
+    ? {
+        shouldDelay: () => true,
+        activateFastMode: () => {},
+        scheduleReset: () => {},
+        cancelReset: () => {},
+      }
+    : createPreviewDelayController()
 
 export const StyledBaseTextWidget = styled.span`
   overflow: hidden;
@@ -206,7 +255,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     const { setEditingCellId } = useSafeCellEditing()
     const normalizedType = (type ?? 'string') as TextWidgetType
     const isStringType = normalizedType === 'string'
-    const [textDraftHtml, setTextDraftHtml] = useState<string | null>(null)
     const closingByScrollRef = useRef(false)
     const lastValueRef = useRef(value)
 
@@ -293,10 +341,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       [plainTextParts, handleLinkClick, textValue],
     )
 
-    const handleDraftChange = useCallback((nextDraft: string | null) => {
-      setTextDraftHtml((prev) => (prev === nextDraft ? prev : nextDraft))
-    }, [])
-
     const handleDialogDismiss = useCallback(() => {
       closingByScrollRef.current = true
     }, [])
@@ -325,10 +369,12 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     const handlePreviewMouseEnter = useCallback(() => {
       previewHoverRef.current = true
       clearPreviewCloseTimer()
+      previewDelayController.cancelReset()
     }, [clearPreviewCloseTimer])
 
     const handlePreviewMouseLeave = useCallback(() => {
       previewHoverRef.current = false
+      previewDelayController.scheduleReset()
       schedulePreviewClose()
     }, [schedulePreviewClose])
 
@@ -346,38 +392,28 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     }, [clearPreviewCloseTimer])
 
     const handleCancelEditInternal = useCallback(() => {
-      if (!closingByScrollRef.current) {
-        handleDraftChange(null)
-      }
       closingByScrollRef.current = false
       onCancelEdit?.()
-    }, [handleDraftChange, onCancelEdit])
+    }, [onCancelEdit])
 
     const handleTextChange = useCallback(
       (newValue: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => {
         closingByScrollRef.current = false
-        handleDraftChange(null)
         onChangeProp(newValue, key)
       },
-      [handleDraftChange, onChangeProp],
+      [onChangeProp],
     )
 
     useEffect(() => {
       if (lastValueRef.current !== value) {
         lastValueRef.current = value
-        if (!isEditing) {
-          handleDraftChange(null)
-        }
       }
-    }, [handleDraftChange, isEditing, value])
+    }, [isEditing, value])
 
     const openEditor = useCallback(() => {
-      // Ensure the hover preview is closed before entering edit mode to avoid double dialogs
       setPreviewVisible(false)
       if (cellId) setEditingCellId(cellId)
     }, [cellId, setEditingCellId, setPreviewVisible])
-
-    // Removed switchToPreview: Escape should close edit dialog instead of opening preview
 
     const handlePreviewClick = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
@@ -397,6 +433,15 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       }
     }, [handleCancelEditInternal, isEditing, setPreviewVisible])
 
+    const openHoverPreview = useCallback(() => {
+      if (showPreviewRef.current) return
+      setPreviewVisible(true)
+      previewDelayController.activateFastMode()
+      if (cellId) {
+        window.dispatchEvent(new CustomEvent('projectTreeTextPreviewOpen', { detail: { cellId } }))
+      }
+    }, [cellId, setPreviewVisible])
+
     const updateOverflowState = useCallback(() => {
       if (shouldWrapLinks) {
         setIsOverflowing(false)
@@ -407,8 +452,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       if (!el) return
 
       const horizontalOverflow = el.scrollWidth - el.clientWidth > 1
-      const verticalOverflow =
-        isDescriptionColumn && el.scrollHeight - el.clientHeight > 1
+      const verticalOverflow = isDescriptionColumn && el.scrollHeight - el.clientHeight > 1
       const hasOverflow = horizontalOverflow || verticalOverflow
 
       setIsOverflowing((prev) => (prev !== hasOverflow ? hasOverflow : prev))
@@ -419,16 +463,24 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     }, [textValue, option?.label, isDescriptionColumn, updateOverflowState, shouldWrapLinks])
 
     useEffect(() => {
+      if (!showPreview && isHovered) {
+        previewDelayController.scheduleReset()
+      }
+    }, [showPreview, isHovered])
+
+    useEffect(() => {
       if (!hoverTarget) return
 
       const handleMouseEnter = () => {
         cellHoverRef.current = true
         clearPreviewCloseTimer()
+        previewDelayController.cancelReset()
         setIsHovered(true)
       }
       const handleMouseLeave = () => {
         cellHoverRef.current = false
         setIsHovered(false)
+        previewDelayController.scheduleReset()
         schedulePreviewClose()
       }
       const handleMouseDown = () => {
@@ -472,16 +524,9 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       }
     }, [isOverflowing, showPreview, setPreviewVisible])
 
-    // start 500ms timer on hover to show readonly preview
+    // Manage hover preview timing (delayed first hover, instant follow-ups, idle reset)
     useEffect(() => {
-      if (!isStringType) {
-        if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
-        hoverTimerRef.current = null
-        if (showPreview) setPreviewVisible(false)
-        return
-      }
-
-      if (shouldWrapLinks) {
+      if (!isStringType || shouldWrapLinks) {
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = null
         if (showPreview) setPreviewVisible(false)
@@ -490,18 +535,20 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
       if (isHovered && !isEditing && isOverflowing) {
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
-        hoverTimerRef.current = window.setTimeout(() => {
-          // Guard again at fire time to avoid showing during edit
-          if (!isEditing && isHovered && isOverflowing) {
-            setPreviewVisible(true)
-            // Notify others to close their previews so only one is open
-            if (cellId) {
-              window.dispatchEvent(
-                new CustomEvent('projectTreeTextPreviewOpen', { detail: { cellId } }),
-              )
+        const delay = previewDelayController.shouldDelay() ? HOVER_PREVIEW_DELAY_MS : 0
+
+        if (delay > 0) {
+          hoverTimerRef.current = window.setTimeout(() => {
+            if (!isEditing && cellHoverRef.current && isOverflowing) {
+              openHoverPreview()
             }
+          }, delay)
+        } else {
+          hoverTimerRef.current = null
+          if (!isEditing && cellHoverRef.current && isOverflowing) {
+            openHoverPreview()
           }
-        }, HOVER_PREVIEW_DELAY_MS)
+        }
       } else {
         if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current)
         hoverTimerRef.current = null
@@ -519,11 +566,11 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       isEditing,
       isSelected,
       isOverflowing,
-      cellId,
       shouldWrapLinks,
       showPreview,
       isStringType,
       setPreviewVisible,
+      openHoverPreview,
     ])
 
     // Listen for global preview open events to ensure only one preview is open at a time
@@ -595,8 +642,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     return (
       <>
-        <StyledContainer
-        >
+        <StyledContainer>
           <StyledBaseTextWidget
             className={combinedClassName}
             style={{ color: option?.color, ...style }}
@@ -640,7 +686,9 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
                     }}
                   />
                 )}
-                <StyledPreviewText className="wrap-links">{renderPlainContent(true, true)}</StyledPreviewText>
+                <StyledPreviewText className="wrap-links">
+                  {renderPlainContent(true, true)}
+                </StyledPreviewText>
               </StyledPreviewContent>
             )}
           </CellEditingDialog>
@@ -653,8 +701,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             isEditing={isEditing}
             onChange={handleTextChange}
             onCancelEdit={handleCancelEditInternal}
-            editingDraft={textDraftHtml}
-            onEditingDraftChange={handleDraftChange}
             variant={showPreview && !isEditing ? 'preview' : 'edit'}
             onPreviewClick={openEditor}
             onDismissWithoutSave={handleDialogDismiss}
