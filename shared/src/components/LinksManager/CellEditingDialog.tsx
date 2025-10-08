@@ -17,6 +17,8 @@ type Position = {
   showAbove?: boolean
 }
 
+const SCROLL_CLOSE_ACTIVATION_DELAY_MS = 150
+
 export interface CellEditingDialogProps {
   isEditing: boolean
   anchorId: string
@@ -201,17 +203,29 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     const tableContainer = anchorElement?.closest('.table-container') as HTMLElement | null
 
     const abortController = new AbortController()
+    let allowScrollClose = !shouldCloseOnScroll
+    let enableScrollCloseTimer: number | null = null
+
+    const closeDialog = () => {
+      if (onDismissWithoutSave) {
+        onDismissWithoutSave()
+        onClose?.()
+      } else {
+        onSave?.()
+        onClose?.()
+      }
+    }
+
+    const handleScrollToClose = () => {
+      if (!allowScrollClose) return
+      closeDialog()
+    }
 
     if (shouldCloseOnScroll) {
-      const handleScrollToClose = () => {
-        if (onDismissWithoutSave) {
-          onDismissWithoutSave()
-          onClose?.()
-        } else {
-          onSave?.()
-          onClose?.()
-        }
-      }
+      // Give virtualized tables time to auto-scroll into place before we allow the dialog to close.
+      enableScrollCloseTimer = window.setTimeout(() => {
+        allowScrollClose = true
+      }, SCROLL_CLOSE_ACTIVATION_DELAY_MS)
 
       tableContainer?.addEventListener('scroll', handleScrollToClose, {
         passive: true,
@@ -249,6 +263,9 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     window.addEventListener('resize', handleScrollOrResize, { signal: abortController.signal })
 
     return () => {
+      if (enableScrollCloseTimer !== null) {
+        window.clearTimeout(enableScrollCloseTimer)
+      }
       abortController.abort()
     }
   }, [anchorId, isOpen, onClose, onSave, onDismissWithoutSave, shouldCloseOnScroll, updatePosition])
