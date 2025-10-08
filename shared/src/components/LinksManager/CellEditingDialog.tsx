@@ -285,7 +285,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
         ...style,
       }}
-      className={clsx('links-widget-popup', { 'block-shortcuts': isEditing }, className)}
+      className={clsx('links-widget-popup', className)}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           onClose?.()
