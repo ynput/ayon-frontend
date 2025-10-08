@@ -37,6 +37,7 @@ import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, SavedAnnotationMetadata } from '../../index'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
+import { useDetailsPanelContext } from '@shared/context'
 
 var Delta = Quill.import('delta')
 
@@ -87,9 +88,9 @@ const CommentInput: FC<CommentInputProps> = ({
     currentTab,
     mentionSuggestionsData,
     categories,
-    license,
-    onPowerFeature,
   } = useFeedContext()
+
+  const { hasLicense, onPowerFeature } = useDetailsPanelContext()
 
   const {
     users: mentionUsers,
@@ -631,7 +632,7 @@ const CommentInput: FC<CommentInputProps> = ({
                 categories={categoryOptions}
                 onChange={(c) => setCategory(c)}
                 isCompact={isEditing}
-                hasPowerpack={!!license}
+                hasPowerpack={hasLicense}
                 onPowerFeature={onPowerFeature}
                 style={{
                   position: isEditing ? 'relative' : 'absolute',

@@ -16,8 +16,6 @@ interface FeedWrapperProps {
   statuses: Status[]
   scope: string
   annotations?: any
-  license?: boolean
-  onPowerFeature?: FeedContextProps['onPowerFeature']
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
 }

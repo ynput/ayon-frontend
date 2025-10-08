@@ -5,6 +5,7 @@ import type { UserModel } from '@shared/api'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
+import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
@@ -52,6 +53,7 @@ export interface DetailsPanelContextProps {
   useLocation: typeof useLocation
   useSearchParams: typeof useSearchParams
   feedAnnotationsEnabled?: boolean
+  hasLicense?: boolean
 }
 
 // Interface for our simplified context
@@ -86,6 +88,9 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // Annotations
   feedAnnotations: SavedAnnotationMetadata[]
   setFeedAnnotations: (annotations: SavedAnnotationMetadata[]) => void
+
+  // powerpack
+  onPowerFeature: (feature: PowerpackFeature) => void
 }
 
 // Create the context
@@ -100,11 +105,15 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   children,
   defaultTab = 'activity',
+  hasLicense,
   ...forwardedProps
 }) => {
   // get current user
   const { data: currentUser } = useGetCurrentUserQuery()
   const isDeveloperMode = currentUser?.attrib?.developerMode ?? false
+
+  // get license from powerpack or forwarded down from props
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
 
   // keep track of the currently open panel by scope
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
@@ -218,6 +227,8 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     feedAnnotations,
     setFeedAnnotations,
     isDeveloperMode,
+    hasLicense: !!powerLicense || hasLicense,
+    onPowerFeature: setPowerpackDialog,
     ...forwardedProps,
   }
 

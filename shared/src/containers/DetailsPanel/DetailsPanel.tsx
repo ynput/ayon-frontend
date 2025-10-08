@@ -75,7 +75,6 @@ export const DetailsPanel = ({
   removeAnnotation,
   exportAnnotationComposite,
 }: DetailsPanelProps) => {
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
@@ -264,8 +263,6 @@ export const DetailsPanel = ({
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
-            license={powerLicense}
-            onPowerFeature={setPowerpackDialog}
           />
         )}
         {currentTab === 'files' && (
@@ -289,8 +286,6 @@ export const DetailsPanel = ({
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
-            license={powerLicense}
-            onPowerFeature={setPowerpackDialog}
           >
             <DetailsPanelDetails
               entities={entityDetailsData}

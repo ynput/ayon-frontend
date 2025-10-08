@@ -52,9 +52,6 @@ export type FeedContextProps = {
   // editingId state and functions
   editingId: EditingState
   setEditingId: (id: EditingState) => void
-  // license
-  license?: boolean
-  onPowerFeature?: (feature: PowerpackFeature) => void
 }
 
 interface FeedContextType extends Omit<FeedContextProps, 'children'> {
@@ -85,9 +82,6 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   mentionSuggestionsData: SuggestResponse
   // categories data
   categories: ActivityCategory[]
-  // license
-  license?: boolean
-  onPowerFeature?: FeedContextProps['onPowerFeature']
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
