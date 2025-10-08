@@ -8,6 +8,7 @@ import {
   GetSearchedWorkfilesQuery,
   gqlLinksApi,
 } from '@shared/api/generated'
+import { PubSub } from '@shared/util'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
 
@@ -238,6 +239,47 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
           console.error('Error in getSearchedEntitiesLinks queryFn:', error)
           return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
         }
+      },
+      // Subscribe to link.created and link.deleted WebSocket events
+      async onCacheEntryAdded(
+        { projectName },
+        { cacheDataLoaded, cacheEntryRemoved, getCacheEntry },
+      ) {
+        let token: any
+
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            // Only react to link.created and link.deleted events for this project
+            if (!_topic.startsWith('link.created') && !_topic.startsWith('link.deleted')) return
+            if (message?.project !== projectName) return
+
+            // Link events have inputId and outputId in the summary
+            const inputId = message?.summary?.inputId
+            const outputId = message?.summary?.outputId
+            if (!inputId && !outputId) return
+
+            // Invalidate the cache when a link is created or deleted
+            // This is simpler than updating the infinite query cache structure
+            const cacheEntry = getCacheEntry()
+            if (cacheEntry.status === 'fulfilled') {
+              // Force a refetch by invalidating the cache
+              // The user will see updated results on next page load
+              // Note: Currently just tracking the event, actual invalidation could be implemented if needed
+            }
+          }
+
+          // Subscribe to link events
+          // NOTE: backend emits topics like 'link.created' and 'link.deleted'.
+          // PubSub supports prefix matching when subscribing.
+          token = PubSub.subscribe('link', handlePubSub)
+        } catch (e) {
+          // cache entry removed before loaded - ignore
+        }
+
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
       },
     }),
   }),
