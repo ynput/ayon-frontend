@@ -1,4 +1,5 @@
-import { FC, useRef, useLayoutEffect, useState } from 'react'
+import { FC, useRef, useLayoutEffect, useState, useCallback, type CSSProperties } from 'react'
+import clsx from 'clsx'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
@@ -9,7 +10,6 @@ const StyledPopUp = styled.div`
   display: flex;
   flex-direction: column;
 `
-
 type Position = {
   top: number
   left?: number
@@ -17,18 +17,32 @@ type Position = {
   showAbove?: boolean
 }
 
-export interface LinksManagerDialogProps {
+const SCROLL_CLOSE_ACTIVATION_DELAY_MS = 150
+
+export interface CellEditingDialogProps {
   isEditing: boolean
   anchorId: string
   onClose?: () => void
+  onSave?: () => void
   children?: React.ReactNode
+  className?: string
+  style?: CSSProperties
+  closeOnOutsideClick?: boolean
+  closeOnScroll?: boolean
+  onDismissWithoutSave?: () => void
 }
 
-export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
+export const CellEditingDialog: FC<CellEditingDialogProps> = ({
   isEditing,
   anchorId,
   onClose,
+  onSave,
   children,
+  className,
+  style,
+  closeOnOutsideClick,
+  closeOnScroll = true,
+  onDismissWithoutSave,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
@@ -36,14 +50,17 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   const [maxWidth, setMaxWidth] = useState<number | undefined>(undefined)
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
 
-  // get the cell element based on the cellId
-  const anchorElement = document.getElementById(anchorId)
-  const tableContainer = anchorElement?.closest('.table-container')
+  const isOpen = isEditing
+  const shouldCloseOnOutside = closeOnOutsideClick
+  const shouldCloseOnScroll = closeOnScroll
 
-  const updatePosition = () => {
-    if (!isEditing) return
+  const updatePosition = useCallback(() => {
+    if (!isOpen) return
 
-    if (!anchorElement || !tableContainer) {
+    const anchorElement = document.getElementById(anchorId)
+    const tableContainer = anchorElement?.closest('.table-container') as HTMLElement | null
+
+    if (!anchorElement || !anchorElement.isConnected || !tableContainer) {
       // if the anchor element is not found, position in the center of the screen
       setPosition({
         top: window.innerHeight / 2,
@@ -95,6 +112,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
 
     setMaxWidth(dialogWidth)
 
+    const anchorGap = 1
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
     const spaceAbove = cellRect.top - screenPadding
     let top: number
@@ -103,11 +121,11 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
 
     if (spaceBelow < minHeightThreshold && spaceAbove > spaceBelow) {
       showAbove = true
-      top = cellRect.top - 4
-      availableHeight = spaceAbove - 4
+      top = cellRect.top - anchorGap
+      availableHeight = spaceAbove - anchorGap
     } else {
-      top = cellRect.bottom + 4
-      availableHeight = spaceBelow - 4
+      top = cellRect.bottom + anchorGap
+      availableHeight = spaceBelow - anchorGap
     }
 
     // Set max height to prevent dialog from going off screen
@@ -118,26 +136,36 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
       ...position,
       showAbove,
     })
-  }
+  }, [anchorId, isOpen])
 
   useLayoutEffect(() => {
     updatePosition()
-  }, [isEditing, anchorElement])
+  }, [isOpen, updatePosition])
 
   // watch for when the tableContainer width changes
   useLayoutEffect(() => {
-    if (tableContainer) {
-      const resizeObserver = new ResizeObserver(() => {
-        updatePosition()
-      })
-      resizeObserver.observe(tableContainer)
-      return () => resizeObserver.disconnect()
-    }
-  }, [tableContainer, anchorElement])
+    if (!isOpen) return
+
+    const anchorElement = document.getElementById(anchorId)
+    const tableContainer = anchorElement?.closest('.table-container') as HTMLElement | null
+    if (!tableContainer) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      updatePosition()
+    })
+    resizeObserver.observe(tableContainer)
+    return () => resizeObserver.disconnect()
+  }, [anchorId, isOpen, updatePosition])
 
   // close the dialog when clicking outside of it
   useLayoutEffect(() => {
+    if (!shouldCloseOnOutside) return
+    if (!isOpen) return
+
+    const abortController = new AbortController()
+
     const handleClickOutside = (event: MouseEvent) => {
+      const anchorElement = document.getElementById(anchorId)
       if (
         popupRef.current &&
         !popupRef.current.contains(event.target as Node) &&
@@ -148,18 +176,103 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         // check we are not clicking on the dialog backdrop
         !(event.target as HTMLElement).querySelector('.entity-picker-dialog')
       ) {
+        if (onSave) {
+          onSave()
+          onClose?.()
+          return
+        }
+        if (onDismissWithoutSave) {
+          onDismissWithoutSave()
+          onClose?.()
+          return
+        }
         onClose?.()
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside, { signal: abortController.signal })
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+      abortController.abort()
     }
-  }, [onClose, anchorElement])
+  }, [anchorId, isOpen, onClose, onSave, onDismissWithoutSave, shouldCloseOnOutside])
 
-  if (!isEditing) return null
-  return createPortal(
+  // close the dialog when the user scrolls the table (or page)
+  useLayoutEffect(() => {
+    if (!isOpen) return
+    const anchorElement = document.getElementById(anchorId)
+    const tableContainer = anchorElement?.closest('.table-container') as HTMLElement | null
+
+    const abortController = new AbortController()
+    let allowScrollClose = !shouldCloseOnScroll
+    let enableScrollCloseTimer: number | null = null
+
+    const closeDialog = () => {
+      if (onDismissWithoutSave) {
+        onDismissWithoutSave()
+        onClose?.()
+      } else {
+        onSave?.()
+        onClose?.()
+      }
+    }
+
+    const handleScrollToClose = () => {
+      if (!allowScrollClose) return
+      closeDialog()
+    }
+
+    if (shouldCloseOnScroll) {
+      // Give virtualized tables time to auto-scroll into place before we allow the dialog to close.
+      enableScrollCloseTimer = window.setTimeout(() => {
+        allowScrollClose = true
+      }, SCROLL_CLOSE_ACTIVATION_DELAY_MS)
+
+      tableContainer?.addEventListener('scroll', handleScrollToClose, {
+        passive: true,
+        signal: abortController.signal,
+      })
+    }
+
+    const handleScrollOrResize = (event: Event) => {
+      if (
+        popupRef.current &&
+        (event.type === 'wheel' || event.type === 'touchmove') &&
+        popupRef.current.contains(event.target as Node)
+      ) {
+        return
+      }
+      updatePosition()
+    }
+
+    tableContainer?.addEventListener('scroll', handleScrollOrResize, {
+      passive: true,
+      signal: abortController.signal,
+    })
+    window.addEventListener('scroll', handleScrollOrResize, {
+      passive: true,
+      signal: abortController.signal,
+    })
+    window.addEventListener('wheel', handleScrollOrResize, {
+      passive: true,
+      signal: abortController.signal,
+    })
+    window.addEventListener('touchmove', handleScrollOrResize, {
+      passive: true,
+      signal: abortController.signal,
+    })
+    window.addEventListener('resize', handleScrollOrResize, { signal: abortController.signal })
+
+    return () => {
+      if (enableScrollCloseTimer !== null) {
+        window.clearTimeout(enableScrollCloseTimer)
+      }
+      abortController.abort()
+    }
+  }, [anchorId, isOpen, onClose, onSave, onDismissWithoutSave, shouldCloseOnScroll, updatePosition])
+
+  if (!isOpen) return null
+
+  const popUp = (
     <StyledPopUp
       ref={popupRef}
       style={{
@@ -170,16 +283,24 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         visibility: position ? 'visible' : 'hidden',
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
+        ...style,
       }}
-      className="links-widget-popup"
+      className={clsx('links-widget-popup', className)}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           onClose?.()
         }
       }}
+      onMouseDown={(e) => {
+        e.stopPropagation()
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+      }}
     >
       {children}
-    </StyledPopUp>,
-    document.body,
+    </StyledPopUp>
   )
+
+  return createPortal(popUp, document.body)
 }
