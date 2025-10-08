@@ -207,7 +207,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
         newState.label = typeOption.name
         // If name field is empty or matches any of the current type options,
         // update it with the new type name
-        const currentNameLower = newState.name.toLowerCase()
+        const copiedName = String(newState.name)
+        const currentNameLower = copiedName.toLowerCase()
         const shouldUpdateName =
           currentNameLower === '' ||
           typeOptions.some(
@@ -290,6 +291,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setIsSubmitting(true)
     try {
       const resOperations = await onCreateNew(selectedFolderIds)
+
+      console.log(resOperations)
 
       // callback function
       onNewEntities?.(resOperations, stayOpen)
