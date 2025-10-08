@@ -36,7 +36,6 @@ const getShareOptionsTags = (options: getShareOptionsResult) => {
 
     if (type) {
       const typeTag = { type: type, id: option.name } as const
-      console.log(typeTag)
       tags.push(typeTag)
     }
   }

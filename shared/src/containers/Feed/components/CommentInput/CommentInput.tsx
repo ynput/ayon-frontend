@@ -578,8 +578,6 @@ const CommentInput: FC<CommentInputProps> = ({
     }
   }
 
-  console.log(blendedCategoryColor)
-
   return (
     <>
       <Styled.AutoHeight

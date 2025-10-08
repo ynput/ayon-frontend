@@ -33,6 +33,7 @@ interface CommentPatch {
   authorFullName?: string
   createdAt: string
   files: File[]
+  activityData: any
   reactions: any[]
   origin: {
     id: string
@@ -58,6 +59,7 @@ interface CommentPayload {
   subTitle?: string
   value: string
   files?: File[]
+  data?: any
 }
 
 // does the body have a checklist anywhere in it
@@ -89,6 +91,7 @@ const useCommentMutations = ({
     subTitle,
     value,
     files = [],
+    data = {},
   }: CommentPayload): CommentPatch => {
     const patch: CommentPatch = {
       body: value,
@@ -101,6 +104,7 @@ const useCommentMutations = ({
       createdAt: formatISO(new Date()),
       files: files,
       reactions: [],
+      activityData: data,
       origin: {
         id: '8090c2dafcc811eeaf820242c0a80002',
         type: entityType,
@@ -144,7 +148,7 @@ const useCommentMutations = ({
       )
 
       // create a new patch for optimistic update
-      const patch = createPatch({ entityId, newId, subTitle, value, files: optimisticFiles })
+      const patch = createPatch({ entityId, newId, subTitle, value, files: optimisticFiles, data })
 
       // we only need these args to update the cache of the original query
       const argsForCachingMatching = { entityIds, activityTypes }
