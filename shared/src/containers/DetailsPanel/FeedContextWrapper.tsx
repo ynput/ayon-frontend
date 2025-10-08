@@ -1,7 +1,7 @@
 import { FC, useState, ReactNode } from 'react'
 
 import { FeedProvider } from '@shared/containers/Feed'
-import type { EditingState } from '@shared/containers/Feed'
+import type { EditingState, FeedContextProps } from '@shared/containers/Feed'
 import type { Status } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 
@@ -17,6 +17,8 @@ interface FeedContextWrapperProps {
   statuses: Status[]
   scope?: string
   annotations?: any
+  license?: boolean
+  onPowerFeature?: FeedContextProps['onPowerFeature']
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
 }

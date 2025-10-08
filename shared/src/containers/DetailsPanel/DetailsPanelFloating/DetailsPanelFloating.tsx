@@ -4,7 +4,7 @@ import getThumbnails from '../helpers/getThumbnails'
 import { StackedThumbnails } from '@shared/components'
 import { upperFirst } from 'lodash'
 import { AssigneeField, Icon } from '@ynput/ayon-react-components'
-import { PiPWrapper } from '@shared/context'
+import { PiPWrapper, usePowerpack } from '@shared/context'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
@@ -18,6 +18,7 @@ export interface DetailsPanelFloatingProps {}
 
 export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   // TODO: fix this
+  const { powerLicense } = usePowerpack()
   const { pip } = useDetailsPanelContext()
   const entityType = pip?.entityType
   const entities = pip?.entities || []
@@ -147,6 +148,7 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             readOnly
             // @ts-ignore
             statuses={statuses}
+            license={powerLicense}
           />
         </Styled.FeedContainer>
       </Styled.Container>

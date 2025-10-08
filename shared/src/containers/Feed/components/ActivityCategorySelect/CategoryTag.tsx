@@ -39,6 +39,21 @@ const StyledTag = styled.div`
       filter: brightness(1.2);
     }
   }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  &.power {
+    pointer-events: all;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--md-sys-color-tertiary);
+      color: var(--md-sys-color-tertiary);
+    }
+  }
 `
 
 interface CategoryTagProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -46,15 +61,26 @@ interface CategoryTagProps extends React.HTMLAttributes<HTMLDivElement> {
   color?: string
   isCompact?: boolean
   isEditing?: boolean
+  isPower?: boolean
+  isDisabled?: boolean
 }
 
 export const CategoryTag = forwardRef<HTMLDivElement, CategoryTagProps>(
-  ({ value, color, isCompact, isEditing, style, className, ...props }, ref) => {
+  (
+    { value, color, isCompact, isEditing, isPower, isDisabled, style, className, ...props },
+    ref,
+  ) => {
     return (
       <StyledTag
         {...props}
         ref={ref}
-        className={clsx(className, { none: !value, compact: isCompact, editing: isEditing })}
+        className={clsx(className, {
+          none: !value,
+          compact: isCompact,
+          editing: isEditing,
+          power: isPower,
+          disabled: isDisabled,
+        })}
         style={{ ...style, backgroundColor: color, borderColor: color }}
       >
         {value || NO_CATEGORY_LABEL}

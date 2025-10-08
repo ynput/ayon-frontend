@@ -4,6 +4,10 @@ import { FC } from 'react'
 import { CategoryTag } from './CategoryTag'
 import styled from 'styled-components'
 import { CategoryDropdownItem } from './CategoryDropdownItem'
+import { PowerpackFeature } from '@shared/context'
+import { toast } from 'react-toastify'
+
+const CATEGORY_PP_MIN_VERSION = '1.3.0'
 
 const StyledDropdown = styled(Dropdown)`
   button {
@@ -18,19 +22,14 @@ const StyledDropdown = styled(Dropdown)`
   }
 `
 
-const StyledItem = styled(StatusField)`
-  padding: 12px 8px;
-  .status-text {
-    margin-left: 0 !important;
-  }
-`
-
 export interface ActivityCategorySelectProps
   extends Omit<DropdownProps, 'options' | 'value' | 'onChange' | 'valueTemplate'> {
   value?: string | null
   categories: ActivityCategory[]
   readonly?: boolean
   isCompact?: boolean
+  hasPowerpack?: boolean
+  onPowerFeature?: (feature: PowerpackFeature) => void
   onChange: (value: string) => void
 }
 
@@ -39,14 +38,45 @@ export const ActivityCategorySelect: FC<ActivityCategorySelectProps> = ({
   categories,
   readonly,
   isCompact,
+  hasPowerpack,
+  onPowerFeature,
   onChange,
   ...props
 }) => {
   const category = categories.find((cat) => cat.name === value)
   const { color } = category || {}
 
+  if (!hasPowerpack) {
+    return (
+      <CategoryTag
+        value={null}
+        isPower
+        isDisabled
+        style={props.style}
+        onClick={() => onPowerFeature?.('commentCategories')}
+        data-tooltip={'Comment categories is a Powerpack feature'}
+      />
+    )
+  }
+
   if (readonly) {
-    return <CategoryTag value={value} color={color} isCompact={isCompact} />
+    return <CategoryTag value={value} color={color} isCompact={isCompact} style={props.style} />
+  }
+
+  if (!categories.length) {
+    return (
+      <CategoryTag
+        value={value}
+        color={color}
+        isCompact={isCompact}
+        style={props.style}
+        onClick={() =>
+          toast.warning(
+            `No categories found. Ensure they are set in the Powerpack settings and the version is at least ${CATEGORY_PP_MIN_VERSION}.`,
+          )
+        }
+      />
+    )
   }
 
   const options: DropdownProps['options'] = [

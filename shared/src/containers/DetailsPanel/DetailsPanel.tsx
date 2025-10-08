@@ -8,7 +8,7 @@ import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
-import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
+import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel } from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -75,6 +75,7 @@ export const DetailsPanel = ({
   removeAnnotation,
   exportAnnotationComposite,
 }: DetailsPanelProps) => {
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
@@ -263,6 +264,8 @@ export const DetailsPanel = ({
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
+            license={powerLicense}
+            onPowerFeature={setPowerpackDialog}
           />
         )}
         {currentTab === 'files' && (
@@ -286,6 +289,8 @@ export const DetailsPanel = ({
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
+            license={powerLicense}
+            onPowerFeature={setPowerpackDialog}
           >
             <DetailsPanelDetails
               entities={entityDetailsData}
