@@ -254,6 +254,8 @@ const ActivityComment = ({
                         onReferenceClick,
                         onReferenceTooltip: setRefTooltip,
                         activityId,
+                        categoryPrimary: categoryData?.color,
+                        categorySecondary: blendedCategoryColor.secondary,
                       }),
                     // checkbox inputs
                     // @ts-ignore

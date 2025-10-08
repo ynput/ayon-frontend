@@ -110,14 +110,14 @@ export const Comment = styled.div<CommentProps>`
       white-space: nowrap;
       cursor: pointer;
 
-      color: var(--md-sys-color-primary);
-      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--button-color);
+      background-color: var(--button-color-secondary);
 
       &:hover {
-        background-color: var(--md-sys-color-surface-container-high-hover);
+        background-color: color-mix(in srgb, var(--button-color-secondary) 85%, white);
       }
       &:active {
-        background-color: var(--md-sys-color-surface-container-high-active);
+        background-color: color-mix(in srgb, var(--button-color-secondary) 70%, white);
       }
     }
   }

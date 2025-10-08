@@ -22,7 +22,7 @@ export const useBlendedCategoryColor = (categoryColor: string | undefined) => {
 
     // Blend category color at 0.1 opacity over primary, 0.5 over secondary
     const blendedPrimary = blendCategoryColor(categoryColor, basePrimary, 0.1) || categoryColor
-    const blendedSecondary = blendCategoryColor(categoryColor, baseSecondary, 0.3) || categoryColor
+    const blendedSecondary = blendCategoryColor(categoryColor, baseSecondary, 0.2) || categoryColor
 
     return {
       primary: blendedPrimary,

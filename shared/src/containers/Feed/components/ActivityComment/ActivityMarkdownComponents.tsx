@@ -46,11 +46,21 @@ interface ATagOptions {
     name: string
     pos: any
   }) => void
+  categoryPrimary?: string
+  categorySecondary?: string
 }
 
 export const aTag = (
   { children, href }: ATagProps,
-  { entityId, projectName, onReferenceClick, activityId, onReferenceTooltip }: ATagOptions,
+  {
+    entityId,
+    projectName,
+    onReferenceClick,
+    activityId,
+    onReferenceTooltip,
+    categoryPrimary,
+    categorySecondary,
+  }: ATagOptions,
 ): React.ReactNode => {
   const { url, type, id } = sanitizeURL(href)
 
@@ -86,6 +96,8 @@ export const aTag = (
         onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
       }
       onMouseEnter={(e, pos) => onReferenceTooltip({ type, id, label, name: id, pos })}
+      categoryPrimary={categoryPrimary}
+      categorySecondary={categorySecondary}
     >
       {label}
     </ActivityReference>
