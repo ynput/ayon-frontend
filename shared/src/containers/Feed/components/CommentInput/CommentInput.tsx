@@ -36,7 +36,6 @@ import { useBlendedCategoryColor } from './hooks/useBlendedCategoryColor'
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, SavedAnnotationMetadata } from '../../index'
-import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 import { useDetailsPanelContext } from '@shared/context'
 
 var Delta = Quill.import('delta')
@@ -88,6 +87,7 @@ const CommentInput: FC<CommentInputProps> = ({
     currentTab,
     mentionSuggestionsData,
     categories,
+    isGuest,
   } = useFeedContext()
 
   const { hasLicense, onPowerFeature } = useDetailsPanelContext()
@@ -237,7 +237,7 @@ const CommentInput: FC<CommentInputProps> = ({
     // find the first option
     const selectedOption = mentionOptions[mentionSelectedIndex]
 
-    if (mention && tabOrEnter && selectedOption) {
+    if (mention && tabOrEnter && selectedOption && !isGuest) {
       // get option text
       const retain = (delta.ops[0] && delta.ops[0].retain) || 0
       // prevent default
@@ -496,7 +496,7 @@ const CommentInput: FC<CommentInputProps> = ({
         try {
           await onSubmit(markdownParsed, uploadedFiles, {
             annotations: annotationMetadata,
-            category,
+            category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
           })
           // only clear if onSubmit is successful
           setEditorValue('')
@@ -582,6 +582,16 @@ const CommentInput: FC<CommentInputProps> = ({
     }
   }
 
+  const getCommentPlaceholder = (isOpen?: boolean) => {
+    if (disabled) {
+      if (isGuest) return 'You do not have permission to comment.'
+      return 'Commenting is disabled across multiple projects.'
+    }
+
+    if (!isOpen && !isGuest) return 'Comment or mention with @user, @@version, @@@task...'
+    return 'Leave a comment...'
+  }
+
   return (
     <>
       <Styled.AutoHeight
@@ -601,7 +611,7 @@ const CommentInput: FC<CommentInputProps> = ({
             disabled,
             isLoading,
             isSubmitting,
-            category: !!category,
+            category: !!category && !isGuest,
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
@@ -627,19 +637,21 @@ const CommentInput: FC<CommentInputProps> = ({
           )}
           {isOpen && !disabled ? (
             <QuillListStyles ref={editorContainerRef}>
-              <ActivityCategorySelect
-                value={category}
-                categories={categoryOptions}
-                onChange={(c) => setCategory(c)}
-                isCompact={isEditing}
-                hasPowerpack={hasLicense}
-                onPowerFeature={onPowerFeature}
-                style={{
-                  position: isEditing ? 'relative' : 'absolute',
-                  left: 4,
-                  top: isEditing ? 0 : 4,
-                }}
-              />
+              {!isGuest && (
+                <ActivityCategorySelect
+                  value={category}
+                  categories={categoryOptions}
+                  onChange={(c) => setCategory(c)}
+                  isCompact={isEditing}
+                  hasPowerpack={hasLicense}
+                  onPowerFeature={onPowerFeature}
+                  style={{
+                    position: isEditing ? 'relative' : 'absolute',
+                    left: 4,
+                    top: isEditing ? 0 : 4,
+                  }}
+                />
+              )}
 
               <ReactQuill
                 theme="snow"
@@ -648,45 +660,45 @@ const CommentInput: FC<CommentInputProps> = ({
                 value={editorValue}
                 onChange={handleChange}
                 readOnly={!isOpen}
-                placeholder={'Comment or mention with @user, @@version, @@@task...'}
+                placeholder={getCommentPlaceholder(true)}
                 modules={modules}
                 formats={quillFormats}
               />
             </QuillListStyles>
           ) : (
-            <Styled.Placeholder>
-              {disabled ? 'Commenting is disabled across multiple projects.' : 'Add a comment...'}
-            </Styled.Placeholder>
+            <Styled.Placeholder>{getCommentPlaceholder()}</Styled.Placeholder>
           )}
 
           <Styled.Footer>
-            <Styled.Buttons>
-              {/* mention a user */}
-              <Button
-                icon="person"
-                variant="text"
-                onClick={() => handleMentionButton('@')}
-                data-tooltip={'Mention user'}
-                data-shortcut={'@'}
-              />
-              {/* mention a version */}
-              <Button
-                icon="layers"
-                variant="text"
-                onClick={() => handleMentionButton('@@')}
-                data-tooltip={'Mention version'}
-                data-shortcut={'@@'}
-              />
-              {/* mention a task */}
-              <Button
-                icon="check_circle"
-                variant="text"
-                onClick={() => handleMentionButton('@@@')}
-                data-tooltip={'Mention task'}
-                data-shortcut={'@@@'}
-              />
-            </Styled.Buttons>
-            <Styled.Buttons>
+            {!isGuest && (
+              <Styled.Buttons>
+                {/* mention a user */}
+                <Button
+                  icon="person"
+                  variant="text"
+                  onClick={() => handleMentionButton('@')}
+                  data-tooltip={'Mention user'}
+                  data-shortcut={'@'}
+                />
+                {/* mention a version */}
+                <Button
+                  icon="layers"
+                  variant="text"
+                  onClick={() => handleMentionButton('@@')}
+                  data-tooltip={'Mention version'}
+                  data-shortcut={'@@'}
+                />
+                {/* mention a task */}
+                <Button
+                  icon="check_circle"
+                  variant="text"
+                  onClick={() => handleMentionButton('@@@')}
+                  data-tooltip={'Mention task'}
+                  data-shortcut={'@@@'}
+                />
+              </Styled.Buttons>
+            )}
+            <Styled.Buttons style={{ marginLeft: 'auto' }}>
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -718,6 +730,7 @@ const CommentInput: FC<CommentInputProps> = ({
           selectedIndex={mentionSelectedIndex}
           // @ts-ignore
           error={mentionsError}
+          isGuest={isGuest}
         />
       </Styled.AutoHeight>
     </>

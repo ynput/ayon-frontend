@@ -64,7 +64,7 @@ const ActivityComment = ({
   readOnly,
   statuses = [],
 }: Props) => {
-  const { userName, createReaction, deleteReaction, editingId, setEditingId, categories } =
+  const { userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest } =
     useFeedContext()
 
   const categoryData = useMemo(() => {
@@ -175,7 +175,12 @@ const ActivityComment = ({
   return (
     <>
       <Styled.Comment
-        className={clsx('comment', { isOwner, isEditing, isHighlighted })}
+        className={clsx('comment', {
+          isOwner,
+          isEditing,
+          isHighlighted,
+          category: !!categoryData && !isGuest,
+        })}
         id={activityId}
         $categoryPrimary={categoryData?.color}
         $categoryTertiary={blendedCategoryColor.primary}
@@ -213,7 +218,7 @@ const ActivityComment = ({
             <div className="tools"></div>
           )}
 
-          {!isEditing && categoryData && (
+          {!isEditing && !isGuest && categoryData && (
             <CategoryTag
               value={categoryData.name}
               color={categoryData.color}
@@ -308,6 +313,7 @@ const ActivityComment = ({
                   reactions={mappedReactions}
                   changeHandler={reactionChangeHandler}
                   readOnly={readOnly}
+                  category={categoryData && !isGuest ? categoryData.name : undefined}
                   categoryPrimary={categoryData?.color}
                   categorySecondary={blendedCategoryColor.secondary}
                   categoryTertiary={blendedCategoryColor.primary}

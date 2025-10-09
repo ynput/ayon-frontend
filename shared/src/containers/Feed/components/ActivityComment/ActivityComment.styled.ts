@@ -11,9 +11,13 @@ export const Comment = styled.li<CommentProps>`
   --background-color: var(--md-sys-color-surface-container);
   --button-color-secondary: var(--md-sys-color-surface-container-high);
   --border-color: transparent;
-  /* CATEGORY */
-  ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
-    categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
+
+  /* only apply category colours if category classname is present */
+  &.category {
+    /* CATEGORY */
+    ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
+      categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
+  }
 
   /* reset default */
   list-style: none;

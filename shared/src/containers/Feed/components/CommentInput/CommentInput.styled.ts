@@ -50,11 +50,11 @@ export const Comment = styled.div<CommentProps>`
   --button-color: var(--md-sys-color-primary);
   --button-color-secondary: var(--md-sys-color-surface-container-highest);
   --border-color: var(--md-sys-color-outline-variant);
-  /* CATEGORY */
-  ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
-    categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
 
   &.category {
+    /* CATEGORY */
+    ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
+      categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
     button.comment {
       color: var(--md-sys-color-on-surface);
       &:hover {

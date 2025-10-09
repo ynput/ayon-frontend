@@ -15,7 +15,12 @@ import {
 } from '@shared/api'
 import type { ActivityCategory, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
-import { DetailsPanelTab, PowerpackFeature, useScopedDetailsPanel } from '@shared/context'
+import {
+  DetailsPanelTab,
+  PowerpackFeature,
+  useDetailsPanelContext,
+  useScopedDetailsPanel,
+} from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
 
 export const FEED_NEW_COMMENT = '__new__' as const
@@ -78,6 +83,7 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   isUpdatingActivity: boolean
   // users data
   users: ActivityUser[]
+  isGuest: boolean
   // mentions data
   mentionSuggestionsData: SuggestResponse
   // categories data
@@ -87,6 +93,8 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
 
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
+  const { user } = useDetailsPanelContext()
+  const isGuest = user?.data?.isGuest
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
   const { currentTab } = useScopedDetailsPanel(props.scope)
 
@@ -160,6 +168,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         refTooltip,
         activityTypes,
         currentTab,
+        isGuest,
         setRefTooltip,
         // Query functions
         createEntityActivity,

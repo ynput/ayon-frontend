@@ -163,7 +163,7 @@ const ReactionPanelOpener = styled.div<CategoryProps>`
     }
   }
 `
-const ReactionsWrapper = styled.div<CategoryProps>`
+const ReactionsWrapper = styled.div`
   display: flex;
   gap: 8px;
   position: relative;
