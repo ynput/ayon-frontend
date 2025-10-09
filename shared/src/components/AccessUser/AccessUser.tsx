@@ -63,7 +63,7 @@ export const AccessUser = forwardRef<HTMLDivElement, AccessUserProps>(
             <span className={'name'}>(you)</span>
           ) : (
             showUsername && (
-              <span className={clsx('name', { 'float-right': isSearchResult })}>({userName})</span>
+              <span className={clsx('name', { 'float-right': isSearchResult })}>{userName}</span>
             )
           )}
           {labelChildren}

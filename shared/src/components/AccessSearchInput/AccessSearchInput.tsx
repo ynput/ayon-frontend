@@ -40,14 +40,32 @@ export const AccessSearchInput: FC<AccessSearchInputProps> = ({
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Filter and sort options based on search value, limit to first 4 results
-  const filteredOptions = matchSorter(
-    shareOptions.filter((option) => !existingAccess.includes(option.value)),
-    searchValue,
-    {
-      keys: ['name', 'label', 'value'],
-      threshold: matchSorter.rankings.CONTAINS,
-    },
+  // sort default by special groups __everyone__, __{type}__, team:, group:, user: and alphabetically
+  const defaultSorted = shareOptions
+    .filter((option) => !existingAccess.includes(option.value))
+    .toSorted((a, b) => {
+      const getRank = (option: ShareOption) => {
+        if (option.value === '__everyone__') return 0
+        if (option.value.startsWith('__')) return 1
+        if (option.value.startsWith('team:')) return 2
+        if (option.value.startsWith('group:')) return 3
+        if (option.value.startsWith('user:')) return 4
+        return 5
+      }
+      const rankA = getRank(a)
+      const rankB = getRank(b)
+      if (rankA !== rankB) return rankA - rankB
+      return a.label.localeCompare(b.label)
+    })
+
+  // Filter and sort options based on search value
+  const filteredOptions = (
+    searchValue
+      ? matchSorter(defaultSorted, searchValue, {
+          keys: ['name', 'label', 'value'],
+          threshold: matchSorter.rankings.CONTAINS,
+        })
+      : defaultSorted
   ).slice(0, MAX_USERS_DISPLAYED)
 
   // Check if search value is a valid email and not already added
