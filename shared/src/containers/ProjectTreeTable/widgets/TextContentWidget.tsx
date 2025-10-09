@@ -16,11 +16,14 @@ const StyledDialog = styled.div`
   flex-direction: column;
   background: var(--md-sys-color-surface-container-lowest);
   border-radius: 8px;
-  width: 350px;
+  min-width: 350px;
+  width: 100%;
+  max-width: 100%;
   height: auto;
   min-height: 88px;
   max-height: 500px;
   overflow: auto;
+  border: 2px solid transparent;
 
   &.editing {
     border: 2px solid var(--md-sys-color-primary);

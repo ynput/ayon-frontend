@@ -2,11 +2,26 @@
 
 import TurndownService from 'turndown'
 
+export const EMPTY_PARAGRAPH_TOKEN = 'AYON_EMPTY_PARAGRAPH'
+
 // override the escaping of markdown characters
 // https://github.com/mixmark-io/turndown?tab=readme-ov-file#escaping-markdown-characters
 TurndownService.prototype.escape = (string) => string
 
 var turndownService = new TurndownService()
+
+turndownService.addRule('emptyParagraph', {
+  filter: function (node) {
+    if (node.nodeName !== 'P') return false
+    const childNodes = node.childNodes || []
+    if (childNodes.length !== 1) return false
+    const childNode = childNodes[0]
+    return childNode?.nodeName === 'BR'
+  },
+  replacement: function () {
+    return `\n\n${EMPTY_PARAGRAPH_TOKEN}\n\n`
+  },
+})
 
 // support lists with checkboxes
 turndownService.addRule('taskListItems', {

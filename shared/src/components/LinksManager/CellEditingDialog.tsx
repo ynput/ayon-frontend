@@ -85,29 +85,34 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
 
-    // Check if we have enough space to the right of the cell
+    const containerLeft = containerRect.left
     const spaceToRight = containerRight - cellRect.left
+    const spaceToLeft = cellRect.right - Math.max(containerLeft, screenPadding)
+    const anchorWidth = Math.max(anchorElement.offsetWidth ?? 0, cellRect.width)
+    const preferredWidth = Math.max(minWidthThreshold, anchorWidth)
+    const centeredWidth = Math.max(minWidthThreshold, screenWidth - 2 * screenPadding)
     let position: { left?: number; right?: number } = {}
     let dialogWidth = minWidthThreshold
 
-    if (spaceToRight < minWidthThreshold) {
-      // Not enough space to the right, anchor to the right side of the cell
-      const spaceToLeft = cellRect.right - screenPadding
-      if (spaceToLeft >= minWidthThreshold) {
-        // Anchor to the right side of the cell
-        position.right = Math.max(
-          screenWidth - cellRect.right,
-          screenPadding + containerToRightOfScreen,
-        )
-      } else {
-        // Not enough space on either side, center and use available width
-        position.left = screenPadding
-        dialogWidth = screenWidth - 2 * screenPadding
-      }
-    } else {
-      // Enough space to the right, position normally
+    if (spaceToRight >= preferredWidth) {
+      // Enough space to place dialog to the right side anchored to the cell
       position.left = cellRect.left
-      dialogWidth = Math.max(minWidthThreshold, spaceToRight)
+      dialogWidth = preferredWidth
+    } else if (spaceToRight >= minWidthThreshold) {
+      // Use as much width as possible to the right, anchored to the cell
+      position.left = cellRect.left
+      dialogWidth = Math.max(minWidthThreshold, Math.min(spaceToRight, preferredWidth))
+    } else if (spaceToLeft >= minWidthThreshold) {
+      // Not enough room on the right; anchor to the right edge of the cell
+      position.right = Math.max(
+        screenWidth - cellRect.right,
+        screenPadding + containerToRightOfScreen,
+      )
+      dialogWidth = Math.max(minWidthThreshold, Math.min(spaceToLeft, preferredWidth))
+    } else {
+      // Fallback to centered placement with available screen width
+      position.left = screenPadding
+      dialogWidth = Math.min(centeredWidth, Math.max(minWidthThreshold, preferredWidth))
     }
 
     setMaxWidth(dialogWidth)
@@ -154,6 +159,20 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
       updatePosition()
     })
     resizeObserver.observe(tableContainer)
+    return () => resizeObserver.disconnect()
+  }, [anchorId, isOpen, updatePosition])
+
+  // watch for when the anchor element changes size (e.g. column resize)
+  useLayoutEffect(() => {
+    if (!isOpen) return
+
+    const anchorElement = document.getElementById(anchorId)
+    if (!anchorElement) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      updatePosition()
+    })
+    resizeObserver.observe(anchorElement)
     return () => resizeObserver.disconnect()
   }, [anchorId, isOpen, updatePosition])
 
@@ -282,6 +301,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
+        width: maxWidth ? `${maxWidth}px` : 'auto',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
         ...style,
       }}
