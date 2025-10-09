@@ -120,7 +120,7 @@ const useGetListItemsData = ({
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => (i ? i : buildPrivateItem(i))) || [],
+      (page) => page.items?.map((i) => (i && i.name ? i : buildPrivateItem(i))) || [],
     )
   }, [itemsInfiniteData?.pages])
 

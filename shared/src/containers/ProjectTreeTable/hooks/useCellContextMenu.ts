@@ -22,7 +22,7 @@ export type TableCellContextData = {
   cellId: string
   columnId: string
   entityId: string
-  entityType: 'folder' | 'task' | 'product' | 'version' | undefined
+  entityType: 'folder' | 'task' | 'product' | 'version' | 'unknown' | undefined
   parentId?: string
   attribField: ProjectTableAttribute | undefined // the attribute field if any (fps, custom attribs, etc.)
   column: {
@@ -174,7 +174,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       // select the row to open the details
       selectCell(rowSelectionCellId, false, false)
     },
-    hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1 || cell.isGroup,
+    hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1 || cell.isGroup || cell.entityType === 'unknown',
   })
 
   const openViewerItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
@@ -190,7 +190,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
         }
       }
     },
-    hidden: (cell.columnId !== 'thumbnail' && cell.columnId !== 'name') || cell.isGroup,
+    hidden: (cell.columnId !== 'thumbnail' && cell.columnId !== 'name') || cell.isGroup || cell.entityType === 'unknown',
   })
 
   const expandCollapseChildrenItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [

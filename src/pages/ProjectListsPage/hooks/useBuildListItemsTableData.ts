@@ -19,6 +19,9 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
   const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
     return listItemsData.map((item) => {
+      // Check if this is a restricted access entity
+      const isRestricted = item.entityType === 'unknown'
+
       // Process links if they exist
       const links = linksToTableData(item.links, item.entityType, {
         folderTypes: projectInfo?.folderTypes || [],
@@ -28,10 +31,11 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
       return {
         id: item.id,
-        name: item.name,
-        label:
-          (item.entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
-          (item.label || item.name),
+        name: isRestricted ? 'Access Restricted - Insufficient Permissions' : item.name,
+        label: isRestricted
+          ? 'Access Restricted - Insufficient Permissions'
+          : (item.entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
+            (item.label || item.name),
         entityId: item.entityId,
         entityType: item.entityType,
         assignees: item.assignees || [],
@@ -42,7 +46,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         ownAttrib: item.ownAttrib
           ? [...item.ownAttrib, ...item.ownItemAttrib]
           : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
-        icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+        icon: isRestricted ? 'lock' : getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
           ?.icon,
         folderId: extractFolderId(item, item.entityType),
         parents: item.parents || [],

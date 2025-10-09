@@ -223,7 +223,11 @@ const buildTreeTableColumns = ({
                 id={row.id}
                 label={row.original.label}
                 name={row.original.name}
-                path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
+                path={
+                  !showHierarchy && row.original.entityType !== 'unknown'
+                    ? '/' + row.original.parents?.join('/')
+                    : undefined
+                }
                 showHierarchy={showHierarchy}
                 icon={row.original.icon}
                 type={row.original.entityType}

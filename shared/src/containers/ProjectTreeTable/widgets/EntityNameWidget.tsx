@@ -131,13 +131,19 @@ export const EntityNameWidget = ({
   toggleExpanded,
   rowHeight = 40,
 }: EntityNameWidgetProps) => {
+  // Check if this is a restricted access entity
+  const isRestricted = type === 'unknown'
+
   // Determine layout based on row height
   // < 50px = single line (compact), >= 50px = stacked
   const isCompact = rowHeight < 50
 
   // Always keep content height at 24px in compact mode or hierarchy mode to prevent jumping
   // Only allow expansion to 32px in non-hierarchy mode when not compact and path exists
-  const contentHeight = (isCompact || showHierarchy) ? 24 : (path ? 32 : 24)
+  const contentHeight = (isCompact || showHierarchy) ? 24 : (path || isRestricted ? 32 : 24)
+
+  // For restricted entities, use a fixed path message
+  const displayPath = isRestricted ? 'You do not have the required permissions' : path
 
   return (
     <StyledEntityNameWidget>
@@ -166,8 +172,8 @@ export const EntityNameWidget = ({
           <StyledContent>
             {icon && <Icon icon={icon} />}
             <StyledTextContent className={clsx({ compact: isCompact })}>
-              {path && <span className="path">{path}</span>}
-              {isCompact && path && <span className="divider">/</span>}
+              {displayPath && <span className="path">{displayPath}</span>}
+              {isCompact && displayPath && <span className="divider">/</span>}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>

@@ -1225,6 +1225,9 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
+        // check if this is a restricted entity - prevent editing
+        const isRestricted = cell.row.original.entityType === 'unknown'
+
         // if we are clicking on an edit trigger, we need to start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
           if (!isCellSelected(cellId)) {
@@ -1232,8 +1235,10 @@ const TableCell = ({
             selectCell(cellId, false, false)
             focusCell(cellId)
           }
-          // start editing the cell
-          setEditingCellId(cellId)
+          // start editing the cell only if not restricted
+          if (!isRestricted) {
+            setEditingCellId(cellId)
+          }
 
           return
         }
@@ -1263,11 +1268,15 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        // check if this is a restricted entity - prevent opening details/viewer
+        const isRestricted = cell.row.original.entityType === 'unknown'
+
         // row selection on name column double click
         if (
           cell.column.id === 'name' &&
           !(e.target as HTMLElement).closest('.expander') &&
-          !isGroup
+          !isGroup &&
+          !isRestricted
         ) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
@@ -1277,7 +1286,7 @@ const TableCell = ({
           }
         }
         // open the viewer on thumbnail double click
-        if (cell.column.id === 'thumbnail') {
+        if (cell.column.id === 'thumbnail' && !isRestricted) {
           if (onOpenPlayer) {
             const entity = getEntityById(cell.row.original.entityId || cell.row.id)
             if (entity) {
