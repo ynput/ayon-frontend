@@ -11,7 +11,7 @@ interface FeedWrapperProps {
   projectInfo: any
   projectName: string
   entityType: string
-  isMultiProjects: boolean
+  disabled: boolean
   readOnly: boolean
   statuses: Status[]
   scope: string

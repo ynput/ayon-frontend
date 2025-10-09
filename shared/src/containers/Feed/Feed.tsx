@@ -24,13 +24,13 @@ import { SavedAnnotationMetadata } from '.'
 export const activitiesLast = 30
 
 export type FeedProps = {
-  isMultiProjects: boolean
+  disabled?: boolean
   readOnly: boolean
   statuses: Status[]
   entityListId?: string | undefined
 }
 
-export const Feed = ({ isMultiProjects, readOnly, statuses = [], entityListId }: FeedProps) => {
+export const Feed = ({ disabled, readOnly, statuses = [], entityListId }: FeedProps) => {
   const {
     projectName,
     entities,
@@ -216,10 +216,6 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [], entityListId }:
 
   let warningMessage
 
-  // only viewing activities from one project
-  if (isMultiProjects)
-    warningMessage = `You are only viewing activities from one project: ${projectName}.`
-
   return (
     <>
       <Styled.FeedContainer className="feed">
@@ -282,7 +278,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [], entityListId }:
             isOpen={editingId === FEED_NEW_COMMENT}
             onClose={() => setEditingId(null)}
             onOpen={() => setEditingId(FEED_NEW_COMMENT)}
-            disabled={isMultiProjects}
+            disabled={disabled}
             isLoading={isLoadingNew || !entities.length || isSaving}
           />
         )}

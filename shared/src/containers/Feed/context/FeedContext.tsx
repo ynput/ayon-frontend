@@ -93,8 +93,7 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
 
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
-  const { user } = useDetailsPanelContext()
-  const isGuest = user?.data?.isGuest
+  const { isGuest } = useDetailsPanelContext()
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
   const { currentTab } = useScopedDetailsPanel(props.scope)
 

@@ -54,12 +54,19 @@ export interface DetailsPanelContextProps {
   useSearchParams: typeof useSearchParams
   feedAnnotationsEnabled?: boolean
   hasLicense?: boolean
+  // debugging used to simulate different values
+  debug?: {
+    isDeveloperMode?: boolean
+    isGuest?: boolean
+    hasLicense?: boolean
+  }
 }
 
 // Interface for our simplified context
 export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // user
   isDeveloperMode: boolean
+  isGuest: boolean
   // Open state for the panel by scope
   panelOpenByScope: OpenStateByScope
   getOpenForScope: (scope: string) => boolean
@@ -105,15 +112,22 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   children,
   defaultTab = 'activity',
-  hasLicense,
+  hasLicense: hasLicenseProp,
+  debug = {},
   ...forwardedProps
 }) => {
   // get current user
   const { data: currentUser } = useGetCurrentUserQuery()
-  const isDeveloperMode = currentUser?.attrib?.developerMode ?? false
+  const isDeveloperMode =
+    'isDeveloperMode' in debug
+      ? (debug.isDeveloperMode as boolean)
+      : currentUser?.attrib?.developerMode ?? false
+  const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : currentUser?.data?.isGuest
 
   // get license from powerpack or forwarded down from props
   const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const hasLicense =
+    'hasLicense' in debug ? (debug.hasLicense as boolean) : !!powerLicense || hasLicenseProp
 
   // keep track of the currently open panel by scope
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
@@ -227,7 +241,8 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     feedAnnotations,
     setFeedAnnotations,
     isDeveloperMode,
-    hasLicense: !!powerLicense || hasLicense,
+    isGuest,
+    hasLicense,
     onPowerFeature: setPowerpackDialog,
     ...forwardedProps,
   }

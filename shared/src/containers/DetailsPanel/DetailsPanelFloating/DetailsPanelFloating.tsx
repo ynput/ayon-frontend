@@ -17,8 +17,6 @@ import { useDetailsPanelContext } from '@shared/context'
 export interface DetailsPanelFloatingProps {}
 
 export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
-  // TODO: fix this
-  const { powerLicense } = usePowerpack()
   const { pip } = useDetailsPanelContext()
   const entityType = pip?.entityType
   const entities = pip?.entities || []
@@ -143,12 +141,11 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             // selectedTasksProjects={{}}
             projectInfo={projectsInfo[projectName]}
             projectName={projectName}
-            isMultiProjects={false}
+            disabled={false}
             scope={scope}
             readOnly
             // @ts-ignore
             statuses={statuses}
-            license={powerLicense}
           />
         </Styled.FeedContainer>
       </Styled.Container>

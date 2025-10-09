@@ -588,8 +588,9 @@ const CommentInput: FC<CommentInputProps> = ({
       return 'Commenting is disabled across multiple projects.'
     }
 
-    if (!isOpen && !isGuest) return 'Comment or mention with @user, @@version, @@@task...'
-    return 'Leave a comment...'
+    if (isGuest || !isOpen) return 'Leave a comment'
+
+    return 'Comment or mention with @user, @@version, @@@task...'
   }
 
   return (
