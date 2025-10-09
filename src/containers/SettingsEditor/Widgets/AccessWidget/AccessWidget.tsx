@@ -1,7 +1,18 @@
 import { useState, useMemo } from 'react'
 import { updateChangedKeys, parseContext } from '../../helpers'
-import AccessEditorDialog, { AccessValues } from './AccessEditorDialog'
+import AccessEditorDialog, { AccessOption, AccessValues } from './AccessEditorDialog'
 import { AccessPreviewButton } from './AccessPreviewButton'
+
+const CATEGORIES_ACCESS_ID = 'activity_categories'
+const categoryAccessOptions: AccessOption[] = [
+  { label: 'Viewer', value: 10, tooltip: 'Can view comments with this category.' },
+  { label: 'Creator', value: 20, tooltip: 'Can create and view comments with this category.' },
+  {
+    label: 'Admin',
+    value: 30,
+    tooltip: 'Can create, view and delete comments with this category.',
+  },
+]
 
 export interface AccessWidgetProps {
   formData?: AccessValues
@@ -12,11 +23,13 @@ export interface AccessWidgetProps {
   idSchema?: { $id?: string }
   schema?: any
   uiSchema?: any
+  id: string
 }
 
 const AccessWidget = (props: AccessWidgetProps) => {
   const { path } = parseContext(props)
   const projectName = props?.formContext?.headerProjectName || ''
+  const isCategoriesAccess = props.id.includes(CATEGORIES_ACCESS_ID)
 
   const [value, setValue] = useState<AccessValues>(props.formData || {})
   const [isOpen, setIsOpen] = useState(false)
@@ -45,21 +58,17 @@ const AccessWidget = (props: AccessWidgetProps) => {
     setIsOpen(false)
   }
 
-  const dialogComponent = useMemo(() => {
-    if (!isOpen) return null
-    return (
-      <AccessEditorDialog
-        projectName={projectName}
-        initialValue={value}
-        onSubmit={onDialogSubmit}
-      />
-    )
-  }, [value, isOpen, projectName, onDialogSubmit])
-
   return (
     <>
       <AccessPreviewButton value={valueMap} onClick={() => setIsOpen(true)} />
-      {dialogComponent}
+      {isOpen && (
+        <AccessEditorDialog
+          projectName={projectName}
+          initialValue={value}
+          onSubmit={onDialogSubmit}
+          accessOptions={isCategoriesAccess ? categoryAccessOptions : undefined}
+        />
+      )}
     </>
   )
 }

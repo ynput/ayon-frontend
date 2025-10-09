@@ -5,11 +5,12 @@ import { Button, Dialog } from '@ynput/ayon-react-components'
 import { useGetShareOptionsQuery } from '@shared/api/queries/share/share'
 import { ShareOption as ShareOptionType } from '@shared/api/generated/access'
 import { AccessSearchInput } from '@shared/components/AccessSearchInput'
-import { AccessUser } from '@shared/components/AccessUser/AccessUser'
+import { AccessLevel, AccessUser } from '@shared/components/AccessUser/AccessUser'
 import {
   EVERY_GUESTS_KEY,
   EVERYONE_GROUP_KEY,
 } from '@shared/components/ShareOptionIcon/ShareOptionIcon'
+import { AccessLevelDropdown } from './AccessLevelDropdown'
 
 const ShareOptionsContainer = styled.div`
   display: flex;
@@ -37,40 +38,76 @@ export const DEFAULT_SHARE_OPTIONS: ShareOptionType[] = [
   { label: 'All Guests', value: EVERY_GUESTS_KEY, shareType: 'global', name: EVERY_GUESTS_KEY },
 ]
 
-const DEFAULT_ACCESS_LEVEL = 10 // Default access level when adding a new user/group
+export type AccessOption = {
+  label: string
+  value: number
+  tooltip?: string
+}
 
-export type AccessValues = Record<string, number | undefined>
+const VIEWER_ACCESS_LEVEL = 10 // Default access level when adding a new user/group
+
+export const ACCESS_LEVEL_LABELS = {
+  0: 'No access',
+  10: 'Viewer',
+  20: 'Editor',
+  30: 'Admin',
+}
+// Create access options for dropdown
+const defaultAccessOptions: AccessOption[] = [
+  { label: ACCESS_LEVEL_LABELS[0], value: 0 },
+  { label: ACCESS_LEVEL_LABELS[10], value: 10 },
+  { label: ACCESS_LEVEL_LABELS[20], value: 20 },
+  { label: ACCESS_LEVEL_LABELS[30], value: 30 },
+]
+
+export type AccessValues = Record<string, AccessLevel>
 
 interface AccessEditorDialogProps {
   initialValue: AccessValues
   onSubmit: (value: AccessValues | null) => void
   projectName: string
+  accessOptions?: AccessOption[]
 }
 
-const AccessEditorDialog = ({ initialValue, onSubmit, projectName }: AccessEditorDialogProps) => {
+const AccessEditorDialog = ({
+  initialValue,
+  onSubmit,
+  projectName,
+  accessOptions: accessOptionsProp,
+}: AccessEditorDialogProps) => {
   const [values, setValues] = useState<AccessValues>(initialValue || {})
 
   const { data: apiShareOptions = [] } = useGetShareOptionsQuery({
     projectName: projectName || undefined,
   })
 
+  const accessOptions = (accessOptionsProp || defaultAccessOptions).map((o) => ({
+    ...o,
+    value: String(o.value),
+  }))
+
   const shareOptions = useMemo(() => {
     return [...DEFAULT_SHARE_OPTIONS, ...apiShareOptions]
   }, [apiShareOptions])
 
-  // Get only the users/groups that have access (access level >= DEFAULT_ACCESS_LEVEL)
+  // Only show users/groups that have at some level set
   const usersWithAccess = useMemo(() => {
-    return shareOptions.filter((option) => (values[option.value] ?? 0) >= DEFAULT_ACCESS_LEVEL)
+    return shareOptions.filter((option) => typeof values[option.value] === 'number')
   }, [shareOptions, values])
 
-  // Get existing access list (keys with values >= DEFAULT_ACCESS_LEVEL)
+  // Get existing access list (keys with values >= VIEWER_ACCESS_LEVEL)
   const existingAccess = useMemo(() => {
-    return Object.keys(values).filter((key) => (values[key] ?? 0) >= DEFAULT_ACCESS_LEVEL)
+    return Object.keys(values).filter((key) => (values[key] ?? 0) >= VIEWER_ACCESS_LEVEL)
   }, [values])
 
   // Handle adding a new user/group
   const handleAddAccess = (option: ShareOptionType) => {
-    setValues({ ...values, [option.value]: DEFAULT_ACCESS_LEVEL })
+    setValues({ ...values, [option.value]: VIEWER_ACCESS_LEVEL })
+  }
+
+  // Handle changing access level
+  const handleAccessLevelChange = (value: string, newLevel: AccessLevel) => {
+    setValues({ ...values, [value]: newLevel })
   }
 
   // Handle removing access
@@ -116,6 +153,11 @@ const AccessEditorDialog = ({ initialValue, onSubmit, projectName }: AccessEdito
               isOwner={false}
               isMe={false}
             >
+              <AccessLevelDropdown
+                accessLevel={values[option.value] || 0}
+                accessOptions={accessOptions}
+                onChange={(newLevel) => handleAccessLevelChange(option.value, newLevel)}
+              />
               <Button
                 icon="close"
                 variant="text"
