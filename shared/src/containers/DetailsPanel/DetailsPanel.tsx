@@ -46,6 +46,7 @@ export type DetailsPanelProps = {
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
+  entityListId?: string
 }
 
 export const DetailsPanel = ({
@@ -74,6 +75,7 @@ export const DetailsPanel = ({
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
+  entityListId,
 }: DetailsPanelProps) => {
   const { closeSlideOut, openPip, user } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
@@ -260,6 +262,7 @@ export const DetailsPanel = ({
             scope={scope}
             statuses={allStatuses}
             readOnly={false}
+            entityListId={entityListId}
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}

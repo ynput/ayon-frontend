@@ -27,9 +27,10 @@ export type FeedProps = {
   isMultiProjects: boolean
   readOnly: boolean
   statuses: Status[]
+  entityListId?: string | undefined
 }
 
-export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) => {
+export const Feed = ({ isMultiProjects, readOnly, statuses = [], entityListId }: FeedProps) => {
   const {
     projectName,
     entities,
@@ -125,6 +126,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     entityType: entityType,
     entities,
     filter: currentTab,
+    entityListId,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown

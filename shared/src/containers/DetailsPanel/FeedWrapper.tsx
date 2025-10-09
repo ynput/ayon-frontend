@@ -15,6 +15,7 @@ interface FeedWrapperProps {
   readOnly: boolean
   statuses: Status[]
   scope: string
+  entityListId?: string
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>

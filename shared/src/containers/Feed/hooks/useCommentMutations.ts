@@ -51,6 +51,7 @@ interface CommentMutationsProps {
   entityType: string
   entities: Entity[]
   filter: any
+  entityListId?: string
 }
 
 interface CommentPayload {
@@ -73,6 +74,7 @@ const useCommentMutations = ({
   entityType,
   entities = [],
   filter,
+  entityListId,
 }: CommentMutationsProps) => {
   const {
     createEntityActivity,
@@ -131,12 +133,14 @@ const useCommentMutations = ({
       if (!patchId) patchId = newId
       const fileIds = files.map((file) => file.id)
 
+      const commentData = entityListId ? { ...data, entityList: entityListId } : data
+
       const newComment = {
         body: value,
         activityType: 'comment',
         id: newId,
         files: fileIds,
-        data,
+        data: commentData,
       }
 
       // filter out files which are transparent versions of an annotation
