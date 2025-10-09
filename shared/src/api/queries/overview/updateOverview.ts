@@ -10,6 +10,7 @@ import { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api/quer
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import { doesEntityMatchFilter } from '@shared/containers/ProjectTreeTable/utils/filterEvaluator'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -166,13 +167,35 @@ export const patchOverviewTasks = (
   patches?: any[],
 ) => {
   const tags = getOverviewTaskTags(tasks)
+  // Get ALL cache entries for getTasksListInfinite, not just ones matching tags
+  // This ensures we update the task across all filter configurations (e.g., when applying a new filter)
+  const allTaskEntries = Object.values(state.restApi.queries)
+    .filter((entry: any) => entry?.endpointName === 'getTasksListInfinite' && entry.status === 'fulfilled')
+    .map((entry: any) => ({ endpointName: entry.endpointName, originalArgs: entry.originalArgs }))
+
   const taskEntries = getOverviewApi.util.selectInvalidatedBy(state, tags)
 
-  for (const entry of taskEntries) {
+  // Combine both: entries found by tags AND all other getTasksListInfinite entries
+  const allEntries = [...taskEntries, ...allTaskEntries.filter(e =>
+    !taskEntries.some(te => JSON.stringify(te.originalArgs) === JSON.stringify(e.originalArgs))
+  )]
+
+  for (const entry of allEntries) {
     if (entry.endpointName === 'getTasksListInfinite') {
       // patch getTasksListInfinite
       const tasksPatch = dispatch(
         getOverviewApi.util.updateQueryData('getTasksListInfinite', entry.originalArgs, (draft) => {
+          // Parse the filter from the query args
+          const filterString = entry.originalArgs?.filter
+          let filter = undefined
+          if (filterString) {
+            try {
+              filter = JSON.parse(filterString)
+            } catch {
+              // Invalid filter string, skip filtering
+            }
+          }
+
           // Apply each change to matching tasks in all pages
           for (const taskOperation of tasks) {
             if (taskOperation.type === 'create' && taskOperation.data) {
@@ -180,12 +203,57 @@ export const patchOverviewTasks = (
               // @ts-expect-error
               draft.pages[0].tasks.push(taskOperation.data)
             } else {
+              let taskFound = false
+
               // Iterate through all pages in the infinite query
               for (const page of draft.pages) {
-                // TODO: task is not found here, why?
                 const task = page.tasks.find((task) => task.id === taskOperation.entityId)
                 if (task) {
+                  taskFound = true
+                  // Update the task with new data
                   updateEntityWithOperation(task, taskOperation.data)
+
+                  // Check if updated task still matches the filter
+                  if (filter && !doesEntityMatchFilter(task, filter)) {
+                    // Remove task from this page if it no longer matches the filter
+                    page.tasks = page.tasks.filter((t) => t.id !== task.id)
+                  }
+                  break // Task found and updated, no need to check other pages
+                }
+              }
+
+              // If task was not found in this cache AND there's a filter
+              // We need to fetch the full task from the no-filter cache to add it
+              if (!taskFound && filter && taskOperation.data && draft.pages.length > 0) {
+                // Try to find the task in the no-filter cache (or another cache)
+                const noFilterCache = Object.values(state.restApi.queries).find(
+                  (q: any) =>
+                    q?.endpointName === 'getTasksListInfinite' &&
+                    q?.status === 'fulfilled' &&
+                    !q?.originalArgs?.filter
+                )
+
+                if (noFilterCache) {
+                  const noFilterData = (noFilterCache as any).data
+                  let fullTask = null
+
+                  // Find the full task in the no-filter cache
+                  for (const page of noFilterData?.pages || []) {
+                    fullTask = page.tasks?.find((t: any) => t.id === taskOperation.entityId)
+                    if (fullTask) break
+                  }
+
+                  if (fullTask) {
+                    // Create a copy with updated data
+                    const updatedTask = { ...fullTask }
+                    updateEntityWithOperation(updatedTask, taskOperation.data)
+
+                    // Check if this task now matches the filter
+                    if (doesEntityMatchFilter(updatedTask, filter)) {
+                      // Add the task to the first page since it now matches the filter
+                      draft.pages[0].tasks.unshift(updatedTask)
+                    }
+                  }
                 }
               }
             }
