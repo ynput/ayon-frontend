@@ -202,7 +202,10 @@ export const DetailsPanel = ({
       // Guest can only comment in review sessions (for now)
       if (!entityListId) return false
       // Guest must have at least one category set for list
-      const guestHasCategory = user.name.replace('guest.', '') in guestCategories
+      const guestHasCategory = Object.prototype.hasOwnProperty.call(
+        guestCategories,
+        user.attrib?.email || '',
+      )
       if (!guestHasCategory) return false
     }
     return true
