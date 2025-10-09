@@ -19,6 +19,7 @@ interface DetailsPanelMoreMenuProps {
   entityType: string
   firstEntityData: any
   firstProject: string
+  selectedEntities?: { entityId: string; entityType?: string }[]
   onOpenPip: () => void
   refetch: () => Promise<any>
   entityListsContext?: any
@@ -28,6 +29,7 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
   entityType,
   firstEntityData,
   firstProject,
+  selectedEntities,
   onOpenPip,
   refetch,
   entityListsContext,
@@ -36,14 +38,14 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   const { toggleMenuOpen, setMenuOpen, menuOpen } = useMenuContext()
-  
+
   const panelInstanceId = useMemo(() => {
     const timestamp = Date.now()
     const random = Math.random().toString(36).substring(2, 9)
     const entityPath = firstEntityData?.path || firstEntityData?.folderPath || 'unknown-path'
     return `${timestamp}-${random}-${entityPath.replace(/[^a-zA-Z0-9]/g, '-')}`
   }, [firstEntityData])
-  
+
   const menuId = `details-more-menu-${panelInstanceId}`
 
   const { onOpenVersionUpload } = useContextAccess()
@@ -60,6 +62,7 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
     entityListsContext,
     entityType,
     firstEntityData,
+    selectedEntities,
   })
   const { handleMoreMenuAction } = useMenuActions({
     entityType,
@@ -80,6 +83,26 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
     setMenuOpen(menu)
   }
 
+  const transformMenuItem = (item: any): any => {
+    const { command, items, ...rest } = item
+    const transformed: any = { ...rest }
+
+    if (Array.isArray(items) && items.length) {
+      transformed.items = items.map((child: any) => transformMenuItem(child))
+    } else {
+      transformed.onClick = (...args: any[]) => {
+        if (item.disabled) return
+        command?.()
+        if (typeof item.onClick === 'function') {
+          item.onClick(...args)
+        }
+        setMenuOpen(false)
+      }
+    }
+
+    return transformed
+  }
+
   const menuItems = moreMenuOptions.map((option: any) => {
     const menuItem: any = {
       id: option.value,
@@ -88,15 +111,7 @@ export const DetailsPanelMoreMenu: React.FC<DetailsPanelMoreMenuProps> = ({
     }
 
     if (option.items) {
-      menuItem.items = option.items.map((subItem: any) => ({
-        id: subItem.id,
-        label: subItem.label,
-        icon: subItem.icon,
-        onClick: () => {
-          subItem.command?.()
-          setMenuOpen(false)
-        },
-      }))
+      menuItem.items = option.items.map((subItem: any) => transformMenuItem(subItem))
     } else {
       menuItem.onClick = () => {
         handleMoreMenuAction(option.value)

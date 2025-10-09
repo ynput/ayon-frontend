@@ -118,6 +118,7 @@ export const Menu = styled.menu`
   margin-inline-start: 0px;
   margin-inline-end: 0px;
   padding-inline-start: 0;
+  overflow: auto !important;
 
   /* custom */
   flex-direction: column;
