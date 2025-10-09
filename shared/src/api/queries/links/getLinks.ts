@@ -243,7 +243,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
       // Subscribe to link.created and link.deleted WebSocket events
       async onCacheEntryAdded(
         { projectName },
-        { cacheDataLoaded, cacheEntryRemoved, getCacheEntry },
+        { cacheDataLoaded, cacheEntryRemoved, dispatch },
       ) {
         let token: any
 
@@ -260,14 +260,18 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
             const outputId = message?.summary?.outputId
             if (!inputId && !outputId) return
 
-            // Invalidate the cache when a link is created or deleted
-            // This is simpler than updating the infinite query cache structure
-            const cacheEntry = getCacheEntry()
-            if (cacheEntry.status === 'fulfilled') {
-              // Force a refetch by invalidating the cache
-              // The user will see updated results on next page load
-              // Note: Currently just tracking the event, actual invalidation could be implemented if needed
-            }
+            // Invalidate the search query cache when a link is created or deleted
+            // This ensures the search results are fresh and don't show stale data
+            dispatch(
+              gqlLinksApi.util.invalidateTags([
+                { type: 'GetSearchedFolders', id: 'LIST' },
+                { type: 'GetSearchedProducts', id: 'LIST' },
+                { type: 'GetSearchedTasks', id: 'LIST' },
+                { type: 'GetSearchedVersions', id: 'LIST' },
+                { type: 'GetSearchedRepresentations', id: 'LIST' },
+                { type: 'GetSearchedWorkfiles', id: 'LIST' },
+              ]),
+            )
           }
 
           // Subscribe to link events
