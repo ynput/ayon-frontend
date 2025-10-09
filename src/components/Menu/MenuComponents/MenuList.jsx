@@ -56,13 +56,16 @@ const MenuList = ({
   // check that the menu is not off the screen
   useEffect(() => {
     if (!menuRef.current) return
-    const { top, height } = menuRef.current.getBoundingClientRect()
-    const windowHeight = window.innerHeight
-    if (top + height > windowHeight) {
-      const newTop = windowHeight - height - 60
-      setTop(newTop)
-    }
-  }, [menuRef.current])
+    
+    const menuElement = menuRef.current.querySelector('menu')
+    if (!menuElement) return
+    
+    const rect = menuRef.current.getBoundingClientRect()
+    const availableHeight = window.innerHeight - rect.top - 60
+    const maxHeight = Math.min(700, availableHeight)
+    
+    menuElement.style.maxHeight = `${maxHeight}px`
+  }, [menuRef.current, items])
 
   return (
     <Styled.MenuWrapper

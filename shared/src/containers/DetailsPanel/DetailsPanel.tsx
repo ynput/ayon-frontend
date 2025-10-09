@@ -159,6 +159,25 @@ export const DetailsPanel = ({
   const firstProjectInfo = projectsInfo[firstProject] || {}
   const firstEntityData = entityDetailsData[0] || {}
 
+  const selectedEntitiesForMenu = useMemo(
+    () => {
+      if (entityDetailsData.length) {
+        return entityDetailsData
+          .filter((entity) => entity?.id)
+          .map((entity) => ({
+            entityId: entity.id,
+            entityType: entity.entityType || entityType,
+          }))
+      }
+
+      return entitiesToQuery.map((entity) => ({
+        entityId: entity.id,
+        entityType,
+      }))
+    },
+    [entityDetailsData, entitiesToQuery, entityType],
+  )
+
   // build the full entity path for the first entity
   const [entityPathSegments, entityPathVersions] = useGetEntityPath({
     entity: firstEntityData,
@@ -215,6 +234,7 @@ export const DetailsPanel = ({
               entityType={entityType}
               firstEntityData={firstEntityData}
               firstProject={firstProject}
+              selectedEntities={selectedEntitiesForMenu}
               onOpenPip={handleOpenPip}
               refetch={refetch}
               entityListsContext={entityListsContext}
