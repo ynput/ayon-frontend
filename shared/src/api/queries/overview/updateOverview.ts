@@ -207,16 +207,17 @@ export const patchOverviewTasks = (
 
               // Iterate through all pages in the infinite query
               for (const page of draft.pages) {
-                const task = page.tasks.find((task) => task.id === taskOperation.entityId)
-                if (task) {
+                const taskIndex = page.tasks.findIndex((task) => task.id === taskOperation.entityId)
+                if (taskIndex !== -1) {
                   taskFound = true
+                  const task = page.tasks[taskIndex]
                   // Update the task with new data
                   updateEntityWithOperation(task, taskOperation.data)
 
                   // Check if updated task still matches the filter
                   if (filter && !doesEntityMatchFilter(task, filter)) {
                     // Remove task from this page if it no longer matches the filter
-                    page.tasks = page.tasks.filter((t) => t.id !== task.id)
+                    page.tasks.splice(taskIndex, 1)
                   }
                   break // Task found and updated, no need to check other pages
                 }
@@ -232,16 +233,15 @@ export const patchOverviewTasks = (
                     q?.status === 'fulfilled' &&
                     !q?.originalArgs?.filter
                 )
-
+                const noFilterTaskMap = new Map()
                 if (noFilterCache) {
                   const noFilterData = (noFilterCache as any).data
                   let fullTask = null
-
-                  // Find the full task in the no-filter cache
-                  for (const page of noFilterData?.pages || []) {
-                    fullTask = page.tasks?.find((t: any) => t.id === taskOperation.entityId)
-                    if (fullTask) break
-                  }
+                  noFilterData?.pages?.forEach((page: any) => {
+                    page.tasks?.forEach((t: any) => noFilterTaskMap.set(t.id, t))
+                  })
+                  // Find the full task in the no-filter cache using Map lookup
+                  fullTask = noFilterTaskMap.get(taskOperation.entityId)
 
                   if (fullTask) {
                     // Create a copy with updated data
