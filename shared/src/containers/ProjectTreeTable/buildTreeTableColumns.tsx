@@ -295,7 +295,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
             pt={{
               enum: {
                 pt: {
@@ -404,7 +404,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
             pt={{
               enum: {
                 multiSelectClose: value?.length === 0, // close the dropdown on first assignment
@@ -448,7 +448,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
             enableCustomValues
           />
         )
