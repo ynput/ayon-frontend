@@ -70,6 +70,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
           return { cursor: pageInfo.endCursor }
         },
       },
+      providesTags: [{ type: 'linkSearchItem', id: 'LIST' }],
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
           const { projectName, entityType, search, parentIds } = queryArg
@@ -263,14 +264,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
             // Invalidate the search query cache when a link is created or deleted
             // This ensures the search results are fresh and don't show stale data
             dispatch(
-              gqlLinksApi.util.invalidateTags([
-                { type: 'GetSearchedFolders', id: 'LIST' },
-                { type: 'GetSearchedProducts', id: 'LIST' },
-                { type: 'GetSearchedTasks', id: 'LIST' },
-                { type: 'GetSearchedVersions', id: 'LIST' },
-                { type: 'GetSearchedRepresentations', id: 'LIST' },
-                { type: 'GetSearchedWorkfiles', id: 'LIST' },
-              ]),
+              gqlLinksApi.util.invalidateTags([{ type: 'linkSearchItem', id: 'LIST' }]),
             )
           }
 
