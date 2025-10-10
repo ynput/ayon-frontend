@@ -1,9 +1,11 @@
 import {
+  ActivityCategory,
   EntityListModel,
   EntityListPatchModel,
   ShareOption,
   useGetUserQuery,
   UserModel,
+  useUpdateEntityListMutation,
 } from '@shared/api'
 import { ACCESS_LEVEL_LABELS, AccessUser, PowerpackButton } from '@shared/components'
 import { EVERYONE_GROUP_KEY } from '@shared/components/ShareOptionIcon/ShareOptionIcon'
@@ -65,3 +67,23 @@ export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
     </>
   )
 }
+
+type ListData = {
+  guestActivityCategories?: {
+    [email: string]: string | null
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any
+}
+
+interface GuestAccessProps {
+  projectName: string
+  sessionId: string
+  listData?: ListData
+  categories: ActivityCategory[]
+  isLoading?: boolean
+  // mutations
+  updateList: ReturnType<typeof useUpdateEntityListMutation>[0]
+}
+
+export const GuestAccessFallback: FC<GuestAccessProps> = () => null

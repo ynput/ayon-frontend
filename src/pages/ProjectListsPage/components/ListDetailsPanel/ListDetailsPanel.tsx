@@ -25,15 +25,13 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     error,
   } = useGetEntityListQuery({ listId, projectName, metadataOnly: true }, { skip: !listId })
 
-  const { setListDetailsOpen } = useListsContext()
+  const { setListDetailsOpen, isReview } = useListsContext()
 
   // Use custom hook to track loading state only when arguments change
   const isLoadingOnArgChange = useQueryArgumentChangeLoading({ listId, projectName }, isFetching)
 
   // Combine initial loading with argument change loading
   const isLoadingList = isLoading || isLoadingOnArgChange
-
-  const isReview = list?.entityListType === 'review-session'
 
   const [selectedTab, setSelectedTab] = useQueryParam<ListDetailsTab>(
     'listTab',
@@ -90,9 +88,12 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
           </>
         )}
         {selectedTab === 'access' && list && (
-          <Styled.Section style={{ height: '100%' }}>
-            <ListAccessForm list={list} projectName={projectName} isLoading={isLoadingList} />
-          </Styled.Section>
+          <ListAccessForm
+            list={list}
+            projectName={projectName}
+            isLoading={isLoadingList}
+            isReview={isReview}
+          />
         )}
       </Styled.Scrollable>
     </Styled.Panel>

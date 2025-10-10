@@ -3,7 +3,7 @@ import { FC } from 'react'
 import { Link } from 'react-router-dom'
 import { PowerpackButton, PowerpackButtonProps } from '../Powerpack'
 import { PowerpackFeature, usePowerpack } from '@shared/context'
-import { RequiredPowerpackVersion } from '../Powerpack/RequiredPowerpackVersion'
+import { RequiredAddonVersion } from '../Powerpack/RequiredAddonVersion'
 
 export interface TableSettingsFallbackProps {
   requiredVersion: string | undefined
@@ -20,7 +20,7 @@ export const TableSettingsFallback: FC<TableSettingsFallbackProps> = ({
 }) => {
   const { setPowerpackDialog } = usePowerpack()
   if (requiredVersion) {
-    return <RequiredPowerpackVersion requiredVersion={requiredVersion} />
+    return <RequiredAddonVersion requiredVersion={requiredVersion} />
   }
 
   return (

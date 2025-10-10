@@ -3,7 +3,7 @@ import React, { createContext, useContext, ReactNode, FC } from 'react'
 import { ListsAttributesContextValue } from './ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
-import { ListAccessFallback } from '../components/ListAccessForm'
+import { GuestAccessFallback, ListAccessFallback } from '../components/ListAccessForm'
 
 interface ListsAttributeSettingsFallbackProps {
   listAttributes: ListsAttributesContextValue['listAttributes']
@@ -33,12 +33,15 @@ const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = 
 interface ListsModuleContextType {
   ListsAttributesSettings: typeof ListsAttributeSettingsFallback
   ListAccess: typeof ListAccessFallback
+  GuestAccess: typeof GuestAccessFallback
   requiredVersion: {
     settings: string | undefined
     access: string | undefined
+    guestAccess: string | undefined
   }
   isLoading: {
     access: boolean
+    guestAccess: boolean
   }
 }
 
@@ -65,15 +68,27 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     minVersion: '1.2.4',
   })
 
+  const [GuestAccess, { outdated: guestAccessOutdated, isLoading: isLoadingGuestAccess }] =
+    useLoadModule({
+      addon: 'review',
+      remote: 'review',
+      module: 'GuestAccess',
+      fallback: GuestAccessFallback,
+      minVersion: '0.0.8',
+    })
+
   const value = {
     ListsAttributesSettings,
     ListAccess,
+    GuestAccess,
     requiredVersion: {
       settings: attributeSettingsOutdated?.required,
       access: accessOutdated?.required,
+      guestAccess: guestAccessOutdated?.required,
     },
     isLoading: {
       access: isLoadingAccess,
+      guestAccess: isLoadingGuestAccess,
     },
   }
 
