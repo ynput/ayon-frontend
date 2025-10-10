@@ -11,13 +11,13 @@ const StyledItem = styled.span`
   gap: 8px;
   white-space: nowrap;
 
-  .icon {
+  [icon='crop_square'] {
     font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
     font-size: 16px;
   }
 
   &.selected {
-    .icon {
+    [icon='crop_square'] {
       font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 200, 'opsz' 20;
       color: var(--md-sys-color-on-surface) !important;
     }
@@ -28,12 +28,29 @@ export interface CategoryDropdownItemProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'color'> {
   label: string
   color: string | null
+  icon?: string // override icon if needed
+  startContent?: React.ReactNode
+  endContent?: React.ReactNode
   isClear?: boolean
   isSelected?: boolean
 }
 
 export const CategoryDropdownItem = forwardRef<HTMLSpanElement, CategoryDropdownItemProps>(
-  ({ label, color, isSelected, isClear, style, className, ...props }, ref) => {
+  (
+    {
+      label,
+      color,
+      icon,
+      isSelected,
+      startContent,
+      endContent,
+      isClear,
+      style,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <StyledItem
         {...props}
@@ -41,8 +58,15 @@ export const CategoryDropdownItem = forwardRef<HTMLSpanElement, CategoryDropdown
         style={{ backgroundColor: isSelected && color ? color : '', ...style }}
         ref={ref}
       >
-        {<Icon icon={isClear ? 'clear' : 'crop_square'} style={{ color: color || '' }} />}
+        {startContent}
+        {
+          <Icon
+            icon={icon ? icon : isClear ? 'clear' : 'crop_square'}
+            style={{ color: color || '' }}
+          />
+        }
         {label}
+        {endContent}
       </StyledItem>
     )
   },
