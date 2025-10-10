@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC } from 'react'
 import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
@@ -9,6 +9,8 @@ import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import clsx from 'clsx'
 import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
 import { useListsContext } from '@pages/ProjectListsPage/context'
+import { ListAccessForm } from '../ListAccessForm'
+import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
 interface ListDetailsPanelProps {
   listId: string
@@ -33,7 +35,10 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   const isReview = list?.entityListType === 'review-session'
 
-  const [selectedTab, setSelectedTab] = useState<ListDetailsTab>('details')
+  const [selectedTab, setSelectedTab] = useQueryParam<ListDetailsTab>(
+    'listTab',
+    withDefault(StringParam, 'details') as unknown as any,
+  )
 
   // derive error message
   let errorMessage: string | null = null
@@ -83,6 +88,11 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
               <ListMetaData list={list} isLoading={isLoadingList} />
             </Styled.Section>
           </>
+        )}
+        {selectedTab === 'access' && list && (
+          <Styled.Section style={{ height: '100%' }}>
+            <ListAccessForm list={list} projectName={projectName} isLoading={isLoadingList} />
+          </Styled.Section>
         )}
       </Styled.Scrollable>
     </Styled.Panel>

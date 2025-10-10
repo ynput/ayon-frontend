@@ -46,7 +46,7 @@ const useClearListItems = ({ projectName }: Props) => {
       console.error('Error clearing list items:', error)
       // update toast with error
       toast.update(toastId, {
-        render: `Error clearing list items: ${error.data.detail}`,
+        render: `Error clearing list items: ${error}`,
         type: 'error',
         isLoading: false,
         autoClose: 5000,

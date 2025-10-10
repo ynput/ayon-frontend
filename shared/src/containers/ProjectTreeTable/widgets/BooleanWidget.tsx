@@ -30,10 +30,11 @@ export interface BooleanWidgetProps
     WidgetBaseProps {
   value: boolean
   isReadOnly?: boolean
+  isInherited?: boolean
 }
 
 export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(
-  ({ value, onChange, isReadOnly, isEditing, onCancelEdit, ...props }, ref) => {
+  ({ value, onChange, isReadOnly, isEditing, onCancelEdit, isInherited, ...props }, ref) => {
     return (
       <StyledCheckbox
         {...props}

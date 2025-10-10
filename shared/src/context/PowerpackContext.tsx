@@ -8,6 +8,7 @@ export type PowerpackFeature =
   | 'advancedFilters'
   | 'listAttributes'
   | 'listFolders'
+  | 'listAccess'
   | 'groupAttributes'
   | 'sharedViews'
   | 'commentCategories'
@@ -23,6 +24,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'sharedViews',
   'listFolders',
   'groupAttributes',
+  'listAccess',
   'slicer',
   'releases',
   'advancedFilters',
@@ -78,6 +80,11 @@ export const powerpackFeatures: {
     label: 'List Attributes',
     description: 'Add custom attributes to your lists for better collaboration and organization.',
     bullet: 'Custom attributes for lists',
+  },
+  listAccess: {
+    label: 'List Access',
+    description: 'Manage and control access to your lists with advanced sharing options.',
+    bullet: 'Advanced list sharing options',
   },
 }
 export type PowerpackContextType = {
@@ -139,6 +146,8 @@ export const PowerpackProvider = ({
         } catch (error) {
           console.error('Error checking power license:', error)
           setPowerLicense(false)
+        } finally {
+          setIsLoading(false)
         }
         setIsLoading(false)
       }

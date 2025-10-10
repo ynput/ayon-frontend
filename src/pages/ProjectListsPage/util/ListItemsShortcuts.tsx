@@ -3,15 +3,20 @@ import { FC, useEffect } from 'react'
 import { useListItemsDataContext } from '../context/ListItemsDataContext'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { DeleteListItem } from '../hooks/useDeleteListItems'
+import { useListsContext } from '../context'
 
 interface ListTableShortcutsProps {}
 
 const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
   const { selectedCells } = useSelectionCellsContext()
   const { deleteListItems, listItemsMap } = useListItemsDataContext()
+  const { selectedList } = useListsContext()
   const { history } = useCellEditing()
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if user has editor permissions (accessLevel >= 20)
+      if ((selectedList?.accessLevel ?? 0) < 20) return
+
       if (event.key === 'Backspace' && (event.ctrlKey || event.metaKey)) {
         // convert selection to a list of ids
         const selectedListItems: DeleteListItem[] = []
@@ -32,7 +37,7 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [selectedCells, deleteListItems, history, listItemsMap])
+  }, [selectedCells, deleteListItems, history, listItemsMap, selectedList?.accessLevel])
   return null
 }
 
