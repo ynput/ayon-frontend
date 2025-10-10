@@ -9,6 +9,7 @@ const StyledItem = styled.span`
   align-items: center;
   padding: 4px 8px;
   gap: 8px;
+  white-space: nowrap;
 
   .icon {
     font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
@@ -23,11 +24,12 @@ const StyledItem = styled.span`
   }
 `
 
-interface CategoryDropdownItemProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'color'> {
+export interface CategoryDropdownItemProps
+  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'color'> {
   label: string
   color: string | null
-  isClear: boolean
-  isSelected: boolean
+  isClear?: boolean
+  isSelected?: boolean
 }
 
 export const CategoryDropdownItem = forwardRef<HTMLSpanElement, CategoryDropdownItemProps>(
