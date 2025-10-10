@@ -21,7 +21,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     isFetching,
     isLoading,
     error,
-  } = useGetEntityListQuery({ listId, projectName }, { skip: !listId })
+  } = useGetEntityListQuery({ listId, projectName, metadataOnly: true }, { skip: !listId })
 
   const { setListDetailsOpen } = useListsContext()
 

@@ -151,6 +151,9 @@ const injectedRtkApi = api.injectEndpoints({
     getEntityList: build.query<GetEntityListApiResponse, GetEntityListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}`,
+        params: {
+          metadata_only: queryArg.metadataOnly,
+        },
       }),
     }),
     deleteEntityList: build.mutation<DeleteEntityListApiResponse, DeleteEntityListApiArg>({
@@ -283,6 +286,8 @@ export type GetEntityListApiResponse = /** status 200 Successful Response */ Ent
 export type GetEntityListApiArg = {
   listId: string
   projectName: string
+  /** When true, only return metadata */
+  metadataOnly?: boolean
 }
 export type DeleteEntityListApiResponse = /** status 200 Successful Response */ any
 export type DeleteEntityListApiArg = {

@@ -33,6 +33,7 @@ interface CommentPatch {
   authorFullName?: string
   createdAt: string
   files: File[]
+  activityData: any
   reactions: any[]
   origin: {
     id: string
@@ -50,6 +51,7 @@ interface CommentMutationsProps {
   entityType: string
   entities: Entity[]
   filter: any
+  entityListId?: string
 }
 
 interface CommentPayload {
@@ -58,6 +60,7 @@ interface CommentPayload {
   subTitle?: string
   value: string
   files?: File[]
+  data?: any
 }
 
 // does the body have a checklist anywhere in it
@@ -71,6 +74,7 @@ const useCommentMutations = ({
   entityType,
   entities = [],
   filter,
+  entityListId,
 }: CommentMutationsProps) => {
   const {
     createEntityActivity,
@@ -89,6 +93,7 @@ const useCommentMutations = ({
     subTitle,
     value,
     files = [],
+    data = {},
   }: CommentPayload): CommentPatch => {
     const patch: CommentPatch = {
       body: value,
@@ -101,6 +106,7 @@ const useCommentMutations = ({
       createdAt: formatISO(new Date()),
       files: files,
       reactions: [],
+      activityData: data,
       origin: {
         id: '8090c2dafcc811eeaf820242c0a80002',
         type: entityType,
@@ -127,12 +133,14 @@ const useCommentMutations = ({
       if (!patchId) patchId = newId
       const fileIds = files.map((file) => file.id)
 
+      const commentData = entityListId ? { ...data, entityList: entityListId } : data
+
       const newComment = {
         body: value,
         activityType: 'comment',
         id: newId,
         files: fileIds,
-        data,
+        data: commentData,
       }
 
       // filter out files which are transparent versions of an annotation
@@ -144,7 +152,7 @@ const useCommentMutations = ({
       )
 
       // create a new patch for optimistic update
-      const patch = createPatch({ entityId, newId, subTitle, value, files: optimisticFiles })
+      const patch = createPatch({ entityId, newId, subTitle, value, files: optimisticFiles, data })
 
       // we only need these args to update the cache of the original query
       const argsForCachingMatching = { entityIds, activityTypes }
@@ -167,12 +175,14 @@ const useCommentMutations = ({
     activity: Activity,
     value: string,
     files: File[] = [],
+    data: any = {},
   ): Promise<void> => {
     const fileIds = files.map((file) => file.id)
 
     const updatedActivity = {
       body: value,
       files: fileIds,
+      data,
     }
 
     const patch = {

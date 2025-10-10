@@ -11,10 +11,16 @@ import {
   useGetActivityUsersQuery,
   useGetEntityMentionsQuery,
   useGetEntityTooltipQuery,
+  useGetActivityCategoriesQuery,
 } from '@shared/api'
-import type { SuggestRequest, SuggestResponse } from '@shared/api'
+import type { ActivityCategory, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
-import { DetailsPanelTab, useScopedDetailsPanel } from '@shared/context'
+import {
+  DetailsPanelTab,
+  PowerpackFeature,
+  useDetailsPanelContext,
+  useScopedDetailsPanel,
+} from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
 
 export const FEED_NEW_COMMENT = '__new__' as const
@@ -77,13 +83,17 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   isUpdatingActivity: boolean
   // users data
   users: ActivityUser[]
+  isGuest: boolean
   // mentions data
   mentionSuggestionsData: SuggestResponse
+  // categories data
+  categories: ActivityCategory[]
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
 
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
+  const { isGuest } = useDetailsPanelContext()
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
   const { currentTab } = useScopedDetailsPanel(props.scope)
 
@@ -138,12 +148,18 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     { skip: !props.editingId },
   )
 
+  // get comment categories for this project and user
+  const { data: categories = [] } = useGetActivityCategoriesQuery({
+    projectName: props.projectName,
+  })
+
   return (
     <FeedContext.Provider
       value={{
         ...props,
         ...activitiesDataProps,
         mentionSuggestionsData,
+        categories,
         users,
         isUpdatingActivity,
         entityTooltipData,
@@ -151,6 +167,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         refTooltip,
         activityTypes,
         currentTab,
+        isGuest,
         setRefTooltip,
         // Query functions
         createEntityActivity,

@@ -4,7 +4,7 @@ import getThumbnails from '../helpers/getThumbnails'
 import { StackedThumbnails } from '@shared/components'
 import { upperFirst } from 'lodash'
 import { AssigneeField, Icon } from '@ynput/ayon-react-components'
-import { PiPWrapper } from '@shared/context'
+import { PiPWrapper, usePowerpack } from '@shared/context'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
@@ -17,7 +17,6 @@ import { useDetailsPanelContext } from '@shared/context'
 export interface DetailsPanelFloatingProps {}
 
 export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
-  // TODO: fix this
   const { pip } = useDetailsPanelContext()
   const entityType = pip?.entityType
   const entities = pip?.entities || []
@@ -142,7 +141,7 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             // selectedTasksProjects={{}}
             projectInfo={projectsInfo[projectName]}
             projectName={projectName}
-            isMultiProjects={false}
+            disabled={false}
             scope={scope}
             readOnly
             // @ts-ignore

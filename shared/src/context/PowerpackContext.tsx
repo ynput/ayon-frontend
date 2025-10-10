@@ -10,6 +10,7 @@ export type PowerpackFeature =
   | 'listFolders'
   | 'groupAttributes'
   | 'sharedViews'
+  | 'commentCategories'
 export type PowerpackDialogType = {
   label: string
   description: string
@@ -26,6 +27,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'releases',
   'advancedFilters',
   'listAttributes',
+  'commentCategories',
 ]
 
 export const powerpackFeatures: {
@@ -50,6 +52,12 @@ export const powerpackFeatures: {
     label: 'Group Attributes',
     description: 'Group tasks by assignees, status, or other attributes for better organization.',
     bullet: 'Group tasks by attributes',
+  },
+  commentCategories: {
+    label: 'Comment Categories',
+    description:
+      'Organize comments with categories, assign permissions, and use colors for better distinction. Set visibility rules to control who can view specific comments.',
+    bullet: 'Enhanced comment organization, permissions, and visibility',
   },
   slicer: {
     label: 'Slicer',

@@ -143,8 +143,8 @@ export const StyledEditor = styled.div`
       overflow-x: auto;
       min-width: 0;
       padding: 0;
-      white-space: normal;   
-      word-break: keep-all;  
+      white-space: normal;
+      word-break: keep-all;
       overflow-wrap: normal;
 
       /* Consistent scrollbar styling across edit/read-only */
@@ -173,17 +173,17 @@ export const StyledEditor = styled.div`
 
       width: 100%;
       max-width: 100%;
-      
-      &[contenteditable="false"] {
+
+      &[contenteditable='false'] {
         /* Allow scrolling in read-only mode */
         pointer-events: auto;
         cursor: pointer !important;
         -webkit-overflow-scrolling: touch;
-        
+
         a {
           pointer-events: auto;
           cursor: pointer !important;
-          
+
           &:hover {
             text-decoration: underline;
           }
@@ -231,53 +231,57 @@ export const StyledEditor = styled.div`
       }
 
       /* Match activity section typography */
-      h1, h2 {
+      h1,
+      h2 {
         font-size: 24px;
         margin-top: 16px;
         margin-bottom: 8px;
       }
 
-      h2  {
-        a, em, strong {
-        font-size: 20px;
-      }
-
-      p {
-        word-break: break-word;
-        margin-bottom: 8px;
-        /* Handle very long unbreakable content like file paths */
-        overflow-x: auto;
-        min-width: 0;
-      }
-
-      ul,
-      ol {
-        margin: 16px 0 !important;
-        padding-left: 20px;
-      }
-
-      blockquote {
-        margin: 0;
-        padding-left: 16px;
-        position: relative;
-
-        &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0;
-          bottom: 0;
-          width: 4px;
-          background-color: var(--md-sys-color-outline-variant);
-          border-radius: 2px;
+      h2 {
+        a,
+        em,
+        strong {
+          font-size: 20px;
         }
-      }
 
-      /* Handle very long unbreakable content like file paths */
-      * {
-        /* Allow horizontal scroll for any element with very long content */
-        overflow-x: auto;
-        min-width: 0;
+        p {
+          word-break: break-word;
+          margin-bottom: 8px;
+          /* Handle very long unbreakable content like file paths */
+          overflow-x: auto;
+          min-width: 0;
+        }
+
+        ul,
+        ol {
+          margin: 16px 0 !important;
+          padding-left: 20px;
+        }
+
+        blockquote {
+          margin: 0;
+          padding-left: 16px;
+          position: relative;
+
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--md-sys-color-outline-variant);
+            border-radius: 2px;
+          }
+        }
+
+        /* Handle very long unbreakable content like file paths */
+        * {
+          /* Allow horizontal scroll for any element with very long content */
+          overflow-x: auto;
+          min-width: 0;
+        }
       }
     }
   }

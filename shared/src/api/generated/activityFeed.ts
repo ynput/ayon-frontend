@@ -39,6 +39,12 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getActivityCategories: build.query<
+      GetActivityCategoriesApiResponse,
+      GetActivityCategoriesApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/activityCategories` }),
+    }),
     createReactionToActivity: build.mutation<
       CreateReactionToActivityApiResponse,
       CreateReactionToActivityApiArg
@@ -122,6 +128,11 @@ export type PatchProjectActivityApiArg = {
   'x-sender-type'?: string
   activityPatchModel: ActivityPatchModel
 }
+export type GetActivityCategoriesApiResponse =
+  /** status 200 Successful Response */ ActivityCategoriesResponseModel
+export type GetActivityCategoriesApiArg = {
+  projectName: string
+}
 export type CreateReactionToActivityApiResponse = /** status 201 Successful Response */ any
 export type CreateReactionToActivityApiArg = {
   projectName: string
@@ -200,6 +211,9 @@ export type ActivityPatchModel = {
   /** When true, append files to the existing ones. replace them otherwise */
   appendFiles?: boolean
   data?: Record<string, any>
+}
+export type ActivityCategoriesResponseModel = {
+  categories: object[]
 }
 export type CreateReactionModel = {
   /** The reaction to be created */
