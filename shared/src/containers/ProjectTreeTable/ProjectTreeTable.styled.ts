@@ -225,7 +225,7 @@ type TableCellProps = {
 export const TableCell = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
-  background-color: var(--md-sys-color-surface-container-low);
+  background-color: hsl(216 15% 11.5% / 1);
 
   &.${DRAG_HANDLE_CLASS} {
     // Styles for the button inside the drag handle cell
@@ -248,9 +248,9 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
-  --task-background-color: hsl(216 15% 11.5% / 1);
-  &.task {
-    background-color: var(--task-background-color);
+  /* Lighter background for folders in hierarchy mode */
+  &.folder-in-hierarchy {
+    background-color: var(--md-sys-color-surface-container-low);
   }
 
   &.selected-row {

@@ -3,7 +3,6 @@ import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 
 // Extend EntityListItem to include links
@@ -100,16 +99,17 @@ const useGetListItemsData = ({
 
   const buildPrivateItem = (i: GetListItemsResult['items'][number]): EntityListItemWithLinks => ({
     active: true,
-    name: 'private',
-    id: 'private' + uuidv4().replace(/-/g, ''),
+    name: 'Access Restricted - Insufficient Permissions',
+    id: i.entityId,
     entityId: i.entityId,
     entityType: 'unknown',
     allAttrib: '',
     attrib: {},
     ownAttrib: [],
-    status: 'private',
+    status: '',
     tags: [],
     updatedAt: '',
+    createdAt: '',
     position: 0,
     ownItemAttrib: [],
     links: [], // Add empty links array
@@ -120,7 +120,11 @@ const useGetListItemsData = ({
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => (i && i.name ? i : buildPrivateItem(i))) || [],
+      (page) => page.items?.map((i) => {
+        // Check if this is a restricted entity (no name means no access to node data)
+        const hasAccess = i && 'name' in i && i.name
+        return hasAccess ? i : buildPrivateItem(i)
+      }) || [],
     )
   }, [itemsInfiniteData?.pages])
 

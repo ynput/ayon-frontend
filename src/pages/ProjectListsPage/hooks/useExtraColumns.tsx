@@ -57,10 +57,10 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   rowId={id}
                   className={clsx(typeColumn.value, { loading: row.original.isLoading })}
                   columnId={column.id}
-                  value={value}
-                  options={meta?.options?.[typeColumn.value]}
+                  value={type === 'unknown' ? '' : value}
+                  options={type === 'unknown' ? [] : meta?.options?.[typeColumn.value]}
                   attributeData={{ type: 'string' }}
-                  isReadOnly={typeColumn.readonly || meta?.readOnly?.includes(column.id)}
+                  isReadOnly={typeColumn.readonly || meta?.readOnly?.includes(column.id) || type === 'unknown'}
                   onChange={(value) =>
                     meta?.updateEntities?.([
                       { field: typeColumn.value, value, id, type, rowId: row.id },

@@ -223,11 +223,7 @@ const buildTreeTableColumns = ({
                 id={row.id}
                 label={row.original.label}
                 name={row.original.name}
-                path={
-                  !showHierarchy && row.original.entityType !== 'unknown'
-                    ? '/' + row.original.parents?.join('/')
-                    : undefined
-                }
+                path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
                 showHierarchy={showHierarchy}
                 icon={row.original.icon}
                 type={row.original.entityType}
@@ -299,7 +295,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
             pt={{
               enum: {
                 pt: {
@@ -408,7 +404,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
             pt={{
               enum: {
                 multiSelectClose: value?.length === 0, // close the dropdown on first assignment
@@ -452,7 +448,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
             enableCustomValues
           />
         )
