@@ -3,6 +3,7 @@
 
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import { $Any } from '@types'
 import { openViewer } from '@state/viewer'
@@ -28,24 +29,33 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   if (!entities.length) return null
 
   return (
-    <>
-      {/* @ts-ignore */}
-      <DetailsPanel
-        // entitySubTypes={subTypes}
-        entityType={selected.type}
-        entities={entities as any}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName] as any}
-        tagsOptions={projectInfo.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="progress"
-        onClose={() => setOpen(false)}
-        onOpenViewer={handleOpenViewer}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          {/* @ts-ignore */}
+          <DetailsPanel
+            // entitySubTypes={subTypes}
+            entityType={selected.type}
+            entities={entities as any}
+            projectsInfo={projectsInfo}
+            projectNames={[projectName] as any}
+            tagsOptions={projectInfo.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="progress"
+            onClose={() => setOpen(false)}
+            onOpenViewer={handleOpenViewer}
+            entityListsContext={entityListsContext}
+          />
+          <DetailsPanelSlideOut
+            projectsInfo={projectsInfo}
+            scope="progress"
+            entityListsContext={entityListsContext}
+          />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 
