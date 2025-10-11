@@ -280,6 +280,7 @@ export const useFetchOverviewData = ({
   // Use the new infinite query hook for tasks list with correct name
   const {
     data: tasksListInfiniteData,
+    isLoading: isLoadingTasksList,
     isFetching: isFetchingTasksList,
     fetchNextPage,
     hasNextPage,
@@ -485,7 +486,7 @@ export const useFetchOverviewData = ({
     isLoadingAll:
       isLoading ||
       isFetchingFolders ||
-      (isFetchingTasksList && !isFetchingNextPageTasksList) ||
+      isLoadingTasksList ||
       isFetchingTasksFolders ||
       isFetchingGroups ||
       isLoadingModules, // these all show a full loading state
