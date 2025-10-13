@@ -110,10 +110,8 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
               // First pass: update items in place and check if any position changed
               for (const page of draft.pages) {
                 entityListMultiPatchModel.items?.forEach((patchItem) => {
-                  // Update by list item ID (not entityId) to update only the specific row
-                  // This is important because the same entity can be in a list multiple times
                   const itemIndex = page.items.findIndex(
-                    (item) => item.id === patchItem.id
+                    (item) => item.id === patchItem.id || item.entityId === patchItem.entityId,
                   )
 
                   if (itemIndex !== -1) {
@@ -127,8 +125,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                         ...(patchItem.attrib || {}), // Merge attrib safely
                       },
                     }
-                    // Replace the item entirely to avoid reference issues
-                    page.items[itemIndex] = updatedItem
+                    Object.assign(page.items[itemIndex], updatedItem)
 
                     if (patchItem.position !== undefined) {
                       overallPositionChanged = true
@@ -212,8 +209,8 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                       ...entityListItemPatchModel.attrib,
                     },
                   }
-                  // Replace the item entirely to avoid reference issues
-                  page.items[listIndex] = newListItem
+                  // Update the list with the new data
+                  Object.assign(list, newListItem)
                   break
                 }
               }
