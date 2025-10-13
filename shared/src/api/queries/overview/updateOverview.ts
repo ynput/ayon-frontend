@@ -666,8 +666,19 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // Background refetch logic - runs after successful mutation
           // This ensures calculated attributes are up-to-date and entities are correctly filtered
 
-          // 1. Check if any updated fields are part of active filters
-          // Get all active getTasksListInfinite queries
+          const taskOperations = operationsByType.task || []
+          const folderOperations = operationsByType.folder || []
+
+          // Early exit if no operations
+          if (taskOperations.length === 0 && folderOperations.length === 0) {
+            return
+          }
+
+          // Extract updated entity IDs (always needed for refetch)
+          const updatedTaskIds = getUpdatedEntityIds(taskOperations)
+          const updatedFolderIds = getUpdatedEntityIds(folderOperations)
+
+          // Get all active task list cache entries once
           const tasksListInfiniteEntries = Object.values(state.restApi.queries).filter(
             (entry: any) =>
               entry?.endpointName === 'getTasksListInfinite' &&
@@ -675,143 +686,174 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
               entry?.originalArgs
           )
 
-          const taskOperations = operationsByType.task || []
-          const folderOperations = operationsByType.folder || []
+          // Pre-parse all filters once to avoid repeated JSON parsing
+          // Map from entry to parsed filter (or undefined if no filter)
+          const entriesWithFilters = tasksListInfiniteEntries.map((entry: any) => {
+            let parsedFilter = undefined
+            let filterKeys = new Set<string>()
 
-          // Check if any update affects filters and trigger background refetch if needed
-          let shouldRefetchFiltered = false
-          for (const entry of tasksListInfiniteEntries) {
-            const filterString = (entry as any).originalArgs?.filter
+            const filterString = entry.originalArgs?.filter
             if (filterString) {
               try {
-                const filter = JSON.parse(filterString)
-                const filterKeys = extractFilterKeys(filter)
-
-                // Check if task or folder updates affect this filter
-                if (
-                  doesUpdateAffectFilter(taskOperations, filterKeys) ||
-                  doesUpdateAffectFilter(folderOperations, filterKeys)
-                ) {
-                  shouldRefetchFiltered = true
-                  break
-                }
-              } catch (e) {
+                parsedFilter = JSON.parse(filterString)
+                filterKeys = extractFilterKeys(parsedFilter)
+              } catch {
                 // Invalid filter JSON, skip
               }
             }
+
+            return { entry, filter: parsedFilter, filterKeys }
+          })
+
+          // Check which cache entries are affected by the update
+          // Group entries by whether they need full refetch (filter affected) or just entity updates
+          const entriesToFullRefetch: typeof entriesWithFilters = []
+          const entriesToUpdateOnly: typeof entriesWithFilters = []
+
+          for (const entryWithFilter of entriesWithFilters) {
+            const { filterKeys } = entryWithFilter
+            const filterAffected = filterKeys.size > 0 && (
+              doesUpdateAffectFilter(taskOperations, filterKeys) ||
+              doesUpdateAffectFilter(folderOperations, filterKeys)
+            )
+
+            if (filterAffected) {
+              entriesToFullRefetch.push(entryWithFilter)
+            } else {
+              entriesToUpdateOnly.push(entryWithFilter)
+            }
           }
 
-          // 2. Always refetch updated entities to get server-calculated attributes
-          const updatedTaskIds = getUpdatedEntityIds(taskOperations)
-          const updatedFolderIds = getUpdatedEntityIds(folderOperations)
-
-          // Refetch tasks in background (no loading UI)
-          if (updatedTaskIds.length > 0 && projectName) {
-              // Use GetTasksList to refetch specific tasks
+          // Strategy 1: Full refetch for filter-affected caches
+          // The server handles filtering - we don't reproduce filter logic client-side
+          if (entriesToFullRefetch.length > 0) {
+            for (const { entry } of entriesToFullRefetch) {
+              // Refetch the entire filtered list from the server
+              // The server will apply the filter and return only matching entities
               dispatch(
-                getOverviewApi.endpoints.GetTasksList.initiate(
-                  {
-                    projectName,
-                    taskIds: updatedTaskIds,
-                  } as any,
-                  { forceRefetch: true }
-                )
-              ).then((result) => {
-                if (result.data?.tasks) {
-                  const fetchedTasks = result.data.tasks
-
-                  // Update all relevant caches with fresh data
-                  for (const entry of tasksListInfiniteEntries) {
-                    const filterString = (entry as any).originalArgs?.filter
-                    let filter = undefined
-                    if (filterString) {
-                      try {
-                        filter = JSON.parse(filterString)
-                      } catch {
-                        // Invalid filter, skip
-                      }
-                    }
-
-                    dispatch(
-                      getOverviewApi.util.updateQueryData(
-                        'getTasksListInfinite',
-                        (entry as any).originalArgs,
-                        (draft) => {
-                          for (const fetchedTask of fetchedTasks) {
-                            let taskFound = false
-
-                            // Find and update the task in pages
-                            for (const page of draft.pages) {
-                              const taskIndex = page.tasks.findIndex((t) => t.id === fetchedTask.id)
-                              if (taskIndex !== -1) {
-                                taskFound = true
-
-                                // Check if task still matches filter
-                                if (filter && !doesEntityMatchFilter(fetchedTask, filter)) {
-                                  // Remove task - it no longer matches the filter
-                                  page.tasks.splice(taskIndex, 1)
-                                } else {
-                                  // Update with fresh server data
-                                  page.tasks[taskIndex] = fetchedTask
-                                }
-                                break
-                              }
-                            }
-
-                            // If task wasn't found but matches filter, add it
-                            if (!taskFound && filter && doesEntityMatchFilter(fetchedTask, filter)) {
-                              if (draft.pages.length > 0) {
-                                draft.pages[0].tasks.unshift(fetchedTask)
-                              }
-                            }
-                          }
-                        }
-                      )
-                    )
-                  }
-
-                  // Also update getOverviewTasksByFolders cache
-                  const overviewTasksEntries = Object.values(state.restApi.queries).filter(
-                    (entry: any) =>
-                      entry?.endpointName === 'getOverviewTasksByFolders' &&
-                      entry?.status === 'fulfilled'
-                  )
-
-                  for (const entry of overviewTasksEntries) {
-                    dispatch(
-                      getOverviewApi.util.updateQueryData(
-                        'getOverviewTasksByFolders',
-                        (entry as any).originalArgs,
-                        (draft) => {
-                          for (const fetchedTask of fetchedTasks) {
-                            const taskIndex = draft.findIndex((t) => t.id === fetchedTask.id)
-                            if (taskIndex !== -1) {
-                              // Update with fresh server data
-                              draft[taskIndex] = fetchedTask
-                            }
-                          }
-                        }
-                      )
-                    )
-                  }
-                }
-              }).catch((error) => {
-                console.error('Background refetch failed:', error)
-                // Don't show error to user - this is a background operation
-              })
-          }
-
-          // Refetch folders if needed (for calculated attributes)
-          if (updatedFolderIds.length > 0 && shouldRefetchFiltered && projectName) {
-              dispatch(
-                foldersQueries.endpoints.getFolderList.initiate(
-                  { projectName, attrib: true },
+                getOverviewApi.endpoints.getTasksListInfinite.initiate(
+                  entry.originalArgs,
                   { forceRefetch: true }
                 )
               ).catch((error) => {
-                console.error('Background folder refetch failed:', error)
+                console.error('Background filter refetch failed:', error)
                 // Don't show error to user - this is a background operation
               })
+            }
+          }
+
+          // Strategy 2: Update specific entities for non-filter-affected caches
+          // Also update entities for calculated attributes (requirement: always refetch entities)
+          if (updatedTaskIds.length > 0 && projectName) {
+            // Fetch specific tasks to get calculated attributes and fresh data
+            dispatch(
+              getOverviewApi.endpoints.GetTasksList.initiate(
+                {
+                  projectName,
+                  taskIds: updatedTaskIds,
+                } as any,
+                { forceRefetch: true }
+              )
+            ).then((result) => {
+              if (!result.data?.tasks) return
+
+              const fetchedTasks = result.data.tasks
+              const fetchedTasksMap = new Map(fetchedTasks.map(t => [t.id, t]))
+
+              // Update caches that don't have filter changes (just entity updates)
+              for (const { entry, filter } of entriesToUpdateOnly) {
+                dispatch(
+                  getOverviewApi.util.updateQueryData(
+                    'getTasksListInfinite',
+                    entry.originalArgs,
+                    (draft) => {
+                      // Process each page
+                      for (const page of draft.pages) {
+                        // Iterate backwards to safely remove items
+                        for (let i = page.tasks.length - 1; i >= 0; i--) {
+                          const task = page.tasks[i]
+                          const fetchedTask = fetchedTasksMap.get(task.id)
+
+                          if (fetchedTask) {
+                            // Check if task still matches filter using client-side check
+                            // This is acceptable here because the filter didn't change -
+                            // we're just updating existing entities for calculated attributes
+                            if (filter && !doesEntityMatchFilter(fetchedTask, filter)) {
+                              // Remove task - no longer matches filter
+                              page.tasks.splice(i, 1)
+                            } else {
+                              // Update with fresh server data
+                              page.tasks[i] = fetchedTask
+                            }
+                            // Mark as processed
+                            fetchedTasksMap.delete(task.id)
+                          }
+                        }
+                      }
+
+                      // Add any remaining tasks that weren't found but match the filter
+                      if (filter && fetchedTasksMap.size > 0 && draft.pages.length > 0) {
+                        for (const [, fetchedTask] of fetchedTasksMap) {
+                          if (doesEntityMatchFilter(fetchedTask, filter)) {
+                            draft.pages[0].tasks.unshift(fetchedTask)
+                          }
+                        }
+                      }
+                    }
+                  )
+                )
+
+                // Reset map for next entry
+                fetchedTasksMap.clear()
+                fetchedTasks.forEach(t => fetchedTasksMap.set(t.id, t))
+              }
+
+              // Update getOverviewTasksByFolders cache (no filter involved)
+              const overviewTasksEntries = Object.values(state.restApi.queries).filter(
+                (entry: any) =>
+                  entry?.endpointName === 'getOverviewTasksByFolders' &&
+                  entry?.status === 'fulfilled'
+              )
+
+              for (const entry of overviewTasksEntries) {
+                dispatch(
+                  getOverviewApi.util.updateQueryData(
+                    'getOverviewTasksByFolders',
+                    (entry as any).originalArgs,
+                    (draft) => {
+                      // Create task ID set for O(1) lookup
+                      const taskIdSet = new Set(fetchedTasks.map(t => t.id))
+
+                      for (let i = 0; i < draft.length; i++) {
+                        if (taskIdSet.has(draft[i].id)) {
+                          const fetchedTask = fetchedTasks.find(t => t.id === draft[i].id)
+                          if (fetchedTask) {
+                            draft[i] = fetchedTask
+                          }
+                        }
+                      }
+                    }
+                  )
+                )
+              }
+            }).catch((error) => {
+              console.error('Background refetch failed:', error)
+              // Don't show error to user - this is a background operation
+            })
+          }
+
+          // Always refetch folders if they were updated (for calculated attributes)
+          // Not conditional on affectsFilter - requirement says "always refetch entities"
+          if (updatedFolderIds.length > 0 && projectName) {
+            dispatch(
+              foldersQueries.endpoints.getFolderList.initiate(
+                { projectName, attrib: true },
+                { forceRefetch: true }
+              )
+            ).catch((error) => {
+              console.error('Background folder refetch failed:', error)
+              // Don't show error to user - this is a background operation
+            })
           }
         } catch (error) {
           // undo all patches if there is an error
