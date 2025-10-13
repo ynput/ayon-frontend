@@ -39,12 +39,6 @@ const MenuList = ({
       })
   }
 
-  const handleMouseLeave = (e) => {
-    if (subMenu) {
-      onSubMenu && onSubMenu(e, { id: parent, items: null })
-    }
-  }
-
   //   when a subMenu open, set focus on the first item
   useEffect(() => {
     if (subMenu) {
@@ -72,7 +66,6 @@ const MenuList = ({
       style={{ paddingRight: subMenu ? 16 : 0, ...style, top }}
       className={subMenu ? 'sub-menu' : 'menu-list'}
       id={id}
-      onMouseLeave={handleMouseLeave}
       {...props}
       ref={menuRef}
     >
@@ -168,7 +161,6 @@ const MenuList = ({
                 style={{ paddingRight: items.length ? '0' : '16px', ...itemStyle }}
                 ref={(e) => (itemRefs.current[id] = e)}
                 onMouseEnter={(e) => handleSubMenu(e, id, items)}
-                onMouseLeave={(e) => handleSubMenu(e, id, [])}
                 className={`${itemClassName} ${props.className || ''}`}
                 {...props}
               >
