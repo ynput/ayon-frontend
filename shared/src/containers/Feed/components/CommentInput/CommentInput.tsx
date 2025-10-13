@@ -572,7 +572,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const allFiles = [...annotations, ...(files || []), ...filesUploading].sort(
     (a, b) => a.order - b.order,
   )
-  const compactGrid = allFiles.length > 6
+  const compactGrid = allFiles.length > 3
 
   // disable version mentions for folders
   let mentionsError = null
