@@ -89,6 +89,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
             }
             categories={categories}
             updateList={updateList}
+            toast={toast}
           />
         </Section>
       )}

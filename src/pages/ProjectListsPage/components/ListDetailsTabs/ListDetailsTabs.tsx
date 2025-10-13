@@ -4,7 +4,7 @@ import { FC } from 'react'
 export type ListDetailsTab = 'details' | 'access'
 
 const tabs: { label: string; id: ListDetailsTab; icon: string }[] = [
-  { label: 'Details', id: 'details', icon: 'info' },
+  { label: 'Details', id: 'details', icon: 'lists' },
   { label: 'Sharing', id: 'access', icon: 'share' },
 ]
 
