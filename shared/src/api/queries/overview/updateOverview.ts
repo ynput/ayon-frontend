@@ -8,8 +8,10 @@ import type { OperationsResponseModel, OperationModel, OperationsApiArg } from '
 import getOverviewApi from './getOverview'
 import { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api/queries/entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
-import { current, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import { doesEntityMatchFilter } from '@shared/containers/ProjectTreeTable/utils/filterEvaluator'
+import { extractFilterKeys, doesUpdateAffectFilter, getUpdatedEntityIds } from './filterRefetchUtils'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -538,7 +540,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         }
       },
       async onQueryStarted(
-        { operationsRequestModel, patchOperations = [] },
+        { operationsRequestModel, patchOperations = [], projectName },
         { dispatch, queryFulfilled, getState },
       ) {
         if (!operationsRequestModel.operations?.length) return
@@ -660,6 +662,157 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
         try {
           await queryFulfilled
+
+          // Background refetch logic - runs after successful mutation
+          // This ensures calculated attributes are up-to-date and entities are correctly filtered
+
+          // 1. Check if any updated fields are part of active filters
+          // Get all active getTasksListInfinite queries
+          const tasksListInfiniteEntries = Object.values(state.restApi.queries).filter(
+            (entry: any) =>
+              entry?.endpointName === 'getTasksListInfinite' &&
+              entry?.status === 'fulfilled' &&
+              entry?.originalArgs
+          )
+
+          const taskOperations = operationsByType.task || []
+          const folderOperations = operationsByType.folder || []
+
+          // Check if any update affects filters and trigger background refetch if needed
+          let shouldRefetchFiltered = false
+          for (const entry of tasksListInfiniteEntries) {
+            const filterString = (entry as any).originalArgs?.filter
+            if (filterString) {
+              try {
+                const filter = JSON.parse(filterString)
+                const filterKeys = extractFilterKeys(filter)
+
+                // Check if task or folder updates affect this filter
+                if (
+                  doesUpdateAffectFilter(taskOperations, filterKeys) ||
+                  doesUpdateAffectFilter(folderOperations, filterKeys)
+                ) {
+                  shouldRefetchFiltered = true
+                  break
+                }
+              } catch (e) {
+                // Invalid filter JSON, skip
+              }
+            }
+          }
+
+          // 2. Always refetch updated entities to get server-calculated attributes
+          const updatedTaskIds = getUpdatedEntityIds(taskOperations)
+          const updatedFolderIds = getUpdatedEntityIds(folderOperations)
+
+          // Refetch tasks in background (no loading UI)
+          if (updatedTaskIds.length > 0 && projectName) {
+              // Use GetTasksList to refetch specific tasks
+              dispatch(
+                getOverviewApi.endpoints.GetTasksList.initiate(
+                  {
+                    projectName,
+                    taskIds: updatedTaskIds,
+                  } as any,
+                  { forceRefetch: true }
+                )
+              ).then((result) => {
+                if (result.data?.tasks) {
+                  const fetchedTasks = result.data.tasks
+
+                  // Update all relevant caches with fresh data
+                  for (const entry of tasksListInfiniteEntries) {
+                    const filterString = (entry as any).originalArgs?.filter
+                    let filter = undefined
+                    if (filterString) {
+                      try {
+                        filter = JSON.parse(filterString)
+                      } catch {
+                        // Invalid filter, skip
+                      }
+                    }
+
+                    dispatch(
+                      getOverviewApi.util.updateQueryData(
+                        'getTasksListInfinite',
+                        (entry as any).originalArgs,
+                        (draft) => {
+                          for (const fetchedTask of fetchedTasks) {
+                            let taskFound = false
+
+                            // Find and update the task in pages
+                            for (const page of draft.pages) {
+                              const taskIndex = page.tasks.findIndex((t) => t.id === fetchedTask.id)
+                              if (taskIndex !== -1) {
+                                taskFound = true
+
+                                // Check if task still matches filter
+                                if (filter && !doesEntityMatchFilter(fetchedTask, filter)) {
+                                  // Remove task - it no longer matches the filter
+                                  page.tasks.splice(taskIndex, 1)
+                                } else {
+                                  // Update with fresh server data
+                                  page.tasks[taskIndex] = fetchedTask
+                                }
+                                break
+                              }
+                            }
+
+                            // If task wasn't found but matches filter, add it
+                            if (!taskFound && filter && doesEntityMatchFilter(fetchedTask, filter)) {
+                              if (draft.pages.length > 0) {
+                                draft.pages[0].tasks.unshift(fetchedTask)
+                              }
+                            }
+                          }
+                        }
+                      )
+                    )
+                  }
+
+                  // Also update getOverviewTasksByFolders cache
+                  const overviewTasksEntries = Object.values(state.restApi.queries).filter(
+                    (entry: any) =>
+                      entry?.endpointName === 'getOverviewTasksByFolders' &&
+                      entry?.status === 'fulfilled'
+                  )
+
+                  for (const entry of overviewTasksEntries) {
+                    dispatch(
+                      getOverviewApi.util.updateQueryData(
+                        'getOverviewTasksByFolders',
+                        (entry as any).originalArgs,
+                        (draft) => {
+                          for (const fetchedTask of fetchedTasks) {
+                            const taskIndex = draft.findIndex((t) => t.id === fetchedTask.id)
+                            if (taskIndex !== -1) {
+                              // Update with fresh server data
+                              draft[taskIndex] = fetchedTask
+                            }
+                          }
+                        }
+                      )
+                    )
+                  }
+                }
+              }).catch((error) => {
+                console.error('Background refetch failed:', error)
+                // Don't show error to user - this is a background operation
+              })
+          }
+
+          // Refetch folders if needed (for calculated attributes)
+          if (updatedFolderIds.length > 0 && shouldRefetchFiltered && projectName) {
+              dispatch(
+                foldersQueries.endpoints.getFolderList.initiate(
+                  { projectName, attrib: true },
+                  { forceRefetch: true }
+                )
+              ).catch((error) => {
+                console.error('Background folder refetch failed:', error)
+                // Don't show error to user - this is a background operation
+              })
+          }
         } catch (error) {
           // undo all patches if there is an error
           for (const patch of patches) {
