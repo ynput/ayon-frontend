@@ -311,6 +311,61 @@ export const Comment = styled.div<CommentProps>`
     button:hover {
       background-color: var(--button-color-secondary);
     }
+
+    /* container queries to hide buttons as the width gets smaller */
+    container-type: inline-size;
+    container-name: format-buttons;
+
+    @container format-buttons (max-width: 432px) {
+      /* hide first button */
+      .ql-formats:first-child {
+        button:first-child {
+          display: none;
+        }
+      }
+    }
+
+    @container format-buttons (max-width: 400px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(2) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 368px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(3) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 336px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(4) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 304px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        display: none;
+        button:nth-child(5) {
+          display: none;
+        }
+      }
+    }
+
+    /* it should never get this small but if it does: hide all list options */
+    @container format-buttons (max-width: 250px) {
+      /* hide first two buttons */
+      .ql-formats:nth-child(2) {
+        display: none;
+      }
+    }
   }
 
   /* EDITING */
