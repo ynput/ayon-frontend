@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext } from 'react'
+import { useEffect, useState, createContext, useCallback, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
@@ -22,7 +22,7 @@ export const SocketProvider = (props) => {
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
   const [logout] = useLogoutMutation()
-  const [getInfo] = useLazyGetSiteInfoQuery({full:false})
+  const [getInfo] = useLazyGetSiteInfoQuery({ full: false })
 
   const wsOpts = {
     shouldReconnect: () => {
@@ -94,21 +94,28 @@ export const SocketProvider = (props) => {
 
   // onMessage is a function that is called when a message comes in from the websocket
   // it is a closure that keeps track of the number of calls and the last call time
-  let onMessage = (() => {
-    let callCount = 0
-    let lastCall = Date.now()
+  // Using useRef to persist the closure state across renders
+  const messageStatsRef = useRef({ callCount: 0, lastCall: Date.now() })
 
-    return (message) => {
+  const onMessage = useCallback(
+    (message) => {
       // If the function is called more than 100 times per second, return early.
       const threshold = 1000
-      if (callCount > threshold) {
+      if (messageStatsRef.current.callCount > threshold) {
         setOverloaded(true)
         return console.log(
           `Overload: Over ${threshold} messages per second. Ignoring subsequent messages.`,
         )
       }
 
-      const data = JSON.parse(message.data)
+      let data
+      try {
+        data = JSON.parse(message.data)
+      } catch (error) {
+        console.error('Failed to parse websocket message:', error, message.data)
+        return
+      }
+
       const { topic, sender, summary } = data || {}
       if (topic === 'heartbeat') return
 
@@ -119,20 +126,21 @@ export const SocketProvider = (props) => {
       }
 
       const now = Date.now()
-      if (now - lastCall < 1000) {
-        callCount += 1
+      if (now - messageStatsRef.current.lastCall < 1000) {
+        messageStatsRef.current.callCount += 1
       } else {
-        callCount = 0
+        messageStatsRef.current.callCount = 0
       }
 
-      lastCall = now
+      messageStatsRef.current.lastCall = now
 
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
       console.log('Event RX', data)
       PubSub.publish(topic, data)
-    }
-  })()
+    },
+    [setServerRestartingVisible],
+  )
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {

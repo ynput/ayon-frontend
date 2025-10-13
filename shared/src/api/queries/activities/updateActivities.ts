@@ -1,4 +1,4 @@
-import getActivitiesGQLApi from './getActivities'
+import { getActivitiesGQLApi } from './getActivities'
 import { toast } from 'react-toastify'
 import { filterActivityTypes } from './util/activitiesHelpers'
 

@@ -22,6 +22,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import { ChecklistCount } from './types'
+import { handleActivityRealtimeUpdates } from './util/activityRealtimeHandler'
 
 type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
 
@@ -37,6 +38,7 @@ type UpdatedDefinitions = Omit<Definitions, 'GetActivitiesById'> & {
 
 const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
+    // Only used by the infinite query below
     GetActivities: {
       transformResponse: (res: GetActivitiesQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
@@ -152,6 +154,18 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
+      async onCacheEntryAdded(
+        queryArg,
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
+      ) {
+        await handleActivityRealtimeUpdates(queryArg, {
+          updateCachedData,
+          cacheDataLoaded,
+          cacheEntryRemoved,
+          dispatch,
+          getCacheEntry,
+        })
+      },
       providesTags: (result, _e, { entityIds, activityTypes, filter }) =>
         result
           ? [
@@ -203,4 +217,6 @@ export const {
   useGetActivitiesInfiniteInfiniteQuery,
   useGetActivityUsersQuery,
 } = getActivitiesGQLApi
+
 export default getActivitiesGQLApi
+export { getActivitiesGQLApi }
