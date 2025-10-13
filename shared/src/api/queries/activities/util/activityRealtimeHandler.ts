@@ -1,6 +1,7 @@
 import { PubSub } from '@shared/util'
 import { ActivitiesResult } from './activitiesHelpers'
-import { GetActivitiesQueryVariables, gqlApi } from '@shared/api'
+import type { GetActivitiesQueryVariables } from '@shared/api'
+import { getActivitiesGQLApi as gqlApi } from '../getActivities'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { FeedActivity } from '../types'
 
@@ -280,8 +281,7 @@ export const handleActivityRealtimeUpdates = async (
     }
 
     // Subscribe to activity topic
-    token = PubSub.subscribe(['activity', 'inbox.message'], handlePubSub)
-    console.log(PubSub.getSubscriptions())
+    token = PubSub.subscribe(['activity'], handlePubSub)
     console.log('[Activity RT] Subscribed to activity topic with token:', token)
   } catch (error) {
     console.error('[Activity RT] Error in activity real-time handler setup:', error)

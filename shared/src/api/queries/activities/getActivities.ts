@@ -218,5 +218,4 @@ export const {
   useGetActivityUsersQuery,
 } = getActivitiesGQLApi
 
-export default getActivitiesGQLApi
 export { getActivitiesGQLApi }
