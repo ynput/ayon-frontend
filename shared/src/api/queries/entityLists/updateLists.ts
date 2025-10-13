@@ -1,6 +1,7 @@
 import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
 import { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
+import { doesEntityMatchFilter } from '@shared/containers/ProjectTreeTable/utils/filterEvaluator'
 
 const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {
@@ -106,6 +107,17 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
 
           const patchResult = dispatch(
             gqlApi.util.updateQueryData('getListItemsInfinite', entry.originalArgs, (draft) => {
+              // Parse the filter from the query args
+              const filterString = entry.originalArgs?.filter
+              let filter = undefined
+              if (filterString) {
+                try {
+                  filter = JSON.parse(filterString)
+                } catch {
+                  // Invalid filter string, skip filtering
+                }
+              }
+
               let overallPositionChanged = false
               // First pass: update items in place and check if any position changed
               for (const page of draft.pages) {
@@ -126,6 +138,12 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                       },
                     }
                     Object.assign(page.items[itemIndex], updatedItem)
+
+                    // Check if updated item still matches the filter
+                    if (filter && !doesEntityMatchFilter(updatedItem, filter)) {
+                      // Remove item from this page if it no longer matches the filter
+                      page.items.splice(itemIndex, 1)
+                    }
 
                     if (patchItem.position !== undefined) {
                       overallPositionChanged = true
@@ -198,6 +216,17 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         for (const entry of infiniteEntries) {
           const patchResult = dispatch(
             gqlApi.util.updateQueryData('getListItemsInfinite', entry.originalArgs, (draft) => {
+              // Parse the filter from the query args
+              const filterString = entry.originalArgs?.filter
+              let filter = undefined
+              if (filterString) {
+                try {
+                  filter = JSON.parse(filterString)
+                } catch {
+                  // Invalid filter string, skip filtering
+                }
+              }
+
               for (const page of draft.pages) {
                 const listIndex = page.items.findIndex((list) => list.id === listItemId)
                 if (listIndex !== -1) {
@@ -211,6 +240,12 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                   }
                   // Update the list with the new data
                   Object.assign(list, newListItem)
+
+                  // Check if updated item still matches the filter
+                  if (filter && !doesEntityMatchFilter(newListItem, filter)) {
+                    // Remove item from this page if it no longer matches the filter
+                    page.items.splice(listIndex, 1)
+                  }
                   break
                 }
               }
