@@ -7,6 +7,7 @@ import { confirmDelete, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { ConfirmDialogReturn } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import { ListItemsDataContextValue } from '../context/ListItemsDataContext'
+import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 type UseDeleteListItemsProps = {
   projectName: string
@@ -120,19 +121,25 @@ const useDeleteListItems = ({
     selectedCells,
     _meta,
     context,
-  ) => ({
-    label: deleteItemLabel.label,
-    icon: deleteItemLabel.icon,
-    shortcut: deleteItemLabel.shortcut,
-    danger: true,
-    command: async () => {
-      const selectedListItems = selectedCells
-        .filter((cell) => parseCellId(cell.cellId)?.rowId)
-        .map((cell) => ({ id: parseCellId(cell.cellId)?.rowId as string, entityId: cell.entityId }))
+  ) => {
+    // Hide menu item if any selected cell is a restricted entity
+    const hasRestrictedEntity = selectedCells.some((cell) => isEntityRestricted(cell.entityType))
+    if (hasRestrictedEntity) return undefined
 
-      await deleteListItemsWithConfirmation(selectedListItems, context.history)
-    },
-  })
+    return {
+      label: deleteItemLabel.label,
+      icon: deleteItemLabel.icon,
+      shortcut: deleteItemLabel.shortcut,
+      danger: true,
+      command: async () => {
+        const selectedListItems = selectedCells
+          .filter((cell) => parseCellId(cell.cellId)?.rowId)
+          .map((cell) => ({ id: parseCellId(cell.cellId)?.rowId as string, entityId: cell.entityId }))
+
+        await deleteListItemsWithConfirmation(selectedListItems, context.history)
+      },
+    }
+  }
 
   // ACTIONS BUTTON DELETE
   const deleteListItemAction: TableActionConstructor = (selection, editing) => ({

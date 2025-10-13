@@ -7,6 +7,12 @@ import {
 import { useMemo } from 'react'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
 import { productTypes } from '@shared/util'
+import {
+  isEntityRestricted,
+  RESTRICTED_ENTITY_NAME,
+  RESTRICTED_ENTITY_LABEL,
+  RESTRICTED_ENTITY_ICON,
+} from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 type Props = {
   listItemsData: EntityListItemWithLinks[]
@@ -20,7 +26,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
   const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
     return listItemsData.map((item) => {
       // Check if this is a restricted access entity
-      const isRestricted = item.entityType === 'unknown'
+      const isRestricted = isEntityRestricted(item.entityType)
 
       // Process links if they exist
       const links = linksToTableData(item.links, item.entityType, {
@@ -31,9 +37,9 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
       return {
         id: item.id,
-        name: isRestricted ? 'Access Restricted - Insufficient Permissions' : item.name,
+        name: isRestricted ? RESTRICTED_ENTITY_NAME : item.name,
         label: isRestricted
-          ? 'Access Restricted - Insufficient Permissions'
+          ? RESTRICTED_ENTITY_LABEL
           : (item.entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
             (item.label || item.name),
         entityId: item.entityId,
@@ -46,7 +52,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         ownAttrib: item.ownAttrib
           ? [...item.ownAttrib, ...item.ownItemAttrib]
           : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
-        icon: isRestricted ? 'lock' : getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+        icon: isRestricted ? RESTRICTED_ENTITY_ICON : getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
           ?.icon,
         folderId: extractFolderId(item, item.entityType),
         parents: item.parents || [],

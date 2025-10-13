@@ -1,6 +1,7 @@
 import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
+import { isEntityRestricted } from '../utils/restrictedEntity'
 
 const Expander = styled(Button)`
   &.expander {
@@ -132,7 +133,7 @@ export const EntityNameWidget = ({
   rowHeight = 40,
 }: EntityNameWidgetProps) => {
   // Check if this is a restricted access entity
-  const isRestricted = type === 'unknown'
+  const isRestricted = isEntityRestricted(type)
 
   // Determine layout based on row height
   // < 50px = single line (compact), >= 50px = stacked
@@ -140,10 +141,10 @@ export const EntityNameWidget = ({
 
   // Always keep content height at 24px in compact mode or hierarchy mode to prevent jumping
   // Only allow expansion to 32px in non-hierarchy mode when not compact and path exists
-  const contentHeight = (isCompact || showHierarchy) ? 24 : (path || isRestricted ? 32 : 24)
+  const contentHeight = (isCompact || showHierarchy) ? 24 : (path && !isRestricted ? 32 : 24)
 
-  // For restricted entities, use a fixed path message
-  const displayPath = isRestricted ? 'You do not have the required permissions' : path
+  // For restricted entities, don't show path
+  const displayPath = isRestricted ? null : path
 
   return (
     <StyledEntityNameWidget>

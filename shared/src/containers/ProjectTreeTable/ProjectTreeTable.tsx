@@ -60,6 +60,7 @@ import { useProjectDataContext } from '@shared/containers'
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import { isEntityRestricted } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
@@ -1226,7 +1227,7 @@ const TableCell = ({
         if (target.closest('.expander')) return
 
         // check if this is a restricted entity - prevent editing
-        const isRestricted = cell.row.original.entityType === 'unknown'
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
         // if we are clicking on an edit trigger, we need to start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
@@ -1235,10 +1236,9 @@ const TableCell = ({
             selectCell(cellId, false, false)
             focusCell(cellId)
           }
-          // start editing the cell only if not restricted
-          if (!isRestricted) {
-            setEditingCellId(cellId)
-          }
+          // skip if restricted
+          if (isRestricted) return
+          setEditingCellId(cellId)
 
           return
         }
@@ -1269,7 +1269,7 @@ const TableCell = ({
       }}
       onDoubleClick={(e) => {
         // check if this is a restricted entity - prevent opening details/viewer
-        const isRestricted = cell.row.original.entityType === 'unknown'
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
         // row selection on name column double click
         if (

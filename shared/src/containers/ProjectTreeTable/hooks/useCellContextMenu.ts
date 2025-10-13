@@ -13,6 +13,7 @@ import { UseHistoryReturn } from './useHistory'
 import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { getEntityViewierIds } from '../utils'
+import { isEntityRestricted } from '../utils/restrictedEntity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -174,7 +175,7 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
       // select the row to open the details
       selectCell(rowSelectionCellId, false, false)
     },
-    hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1 || cell.isGroup || cell.entityType === 'unknown',
+    hidden: cell.columnId !== 'name' || meta.selectedRows.length > 1 || cell.isGroup || isEntityRestricted(cell.entityType),
   })
 
   const openViewerItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({

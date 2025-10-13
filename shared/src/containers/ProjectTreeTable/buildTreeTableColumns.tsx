@@ -16,6 +16,7 @@ import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
+import { isEntityRestricted } from './utils/restrictedEntity'
 
 const MIN_SIZE = 50
 
@@ -295,7 +296,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
+            isReadOnly={meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
             pt={{
               enum: {
                 pt: {
@@ -404,7 +405,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
+            isReadOnly={meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
             pt={{
               enum: {
                 multiSelectClose: value?.length === 0, // close the dropdown on first assignment
@@ -448,7 +449,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id) || type === 'unknown'}
+            isReadOnly={meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
             enableCustomValues
           />
         )
