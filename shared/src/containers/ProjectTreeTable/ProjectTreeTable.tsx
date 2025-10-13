@@ -1246,6 +1246,9 @@ const TableCell = ({
         // check we are not clicking in a dropdown
         if (target.closest('.options')) return
 
+        // skip if restricted entity - prevent selection
+        if (isRestricted) return
+
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
@@ -1260,6 +1263,10 @@ const TableCell = ({
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
+          // check if this is a restricted entity - prevent drag selection
+          const isRestricted = isEntityRestricted(cell.row.original.entityType)
+          if (isRestricted) return
+
           // Left button is pressed during mouse move - drag selection
           extendSelection(cellId, isRowSelectionColumn)
         }
