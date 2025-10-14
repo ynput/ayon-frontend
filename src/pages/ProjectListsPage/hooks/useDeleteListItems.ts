@@ -142,25 +142,38 @@ const useDeleteListItems = ({
   }
 
   // ACTIONS BUTTON DELETE
-  const deleteListItemAction: TableActionConstructor = (selection, editing) => ({
-    icon: deleteItemLabel.icon,
-    ['data-tooltip']: deleteItemLabel.label,
-    ['data-shortcut']: deleteItemLabel.shortcut,
-    disabled: !selection.selectedCells.size,
-    onClick: () => {
-      // convert selection to a list of ids
-      const selectedListItems: DeleteListItem[] = []
+  const deleteListItemAction: TableActionConstructor = (selection, editing) => {
+    // Check if any selected items are restricted entities
+    const selectedListItems: DeleteListItem[] = []
+    let hasRestrictedEntity = false
 
-      Array.from(selection.selectedCells).forEach((cell) => {
-        const itemId = parseCellId(cell)?.rowId
-        if (!itemId) return
-        const entityId = listItemsMap.get(itemId)?.entityId
-        if (!entityId) return
-        selectedListItems.push({ id: itemId, entityId })
-      })
-      deleteListItemsWithConfirmation(selectedListItems, editing.history)
-    },
-  })
+    Array.from(selection.selectedCells).forEach((cell) => {
+      const itemId = parseCellId(cell)?.rowId
+      if (!itemId) return
+      const item = listItemsMap.get(itemId)
+      if (!item) return
+
+      // Check if this is a restricted entity
+      if (isEntityRestricted(item.entityType)) {
+        hasRestrictedEntity = true
+        return
+      }
+
+      selectedListItems.push({ id: itemId, entityId: item.entityId })
+    })
+
+    return {
+      icon: deleteItemLabel.icon,
+      ['data-tooltip']: hasRestrictedEntity
+        ? 'Cannot delete restricted entities'
+        : deleteItemLabel.label,
+      ['data-shortcut']: deleteItemLabel.shortcut,
+      disabled: !selection.selectedCells.size || selectedListItems.length === 0,
+      onClick: () => {
+        deleteListItemsWithConfirmation(selectedListItems, editing.history)
+      },
+    }
+  }
 
   return {
     deleteListItems,

@@ -1,8 +1,9 @@
 import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@shared/api'
-import type { EntityListItem, GetListItemsResult } from '@shared/api'
+import type { EntityListItem } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 import {
   RESTRICTED_ENTITY_TYPE,
@@ -101,25 +102,6 @@ const useGetListItemsData = ({
     }
   }
 
-  const buildRestrictedItem = (i: GetListItemsResult['items'][number]): EntityListItemWithLinks => ({
-    active: true,
-    name: RESTRICTED_ENTITY_LABEL,
-    id: i.entityId,
-    entityId: i.entityId,
-    entityType: RESTRICTED_ENTITY_TYPE,
-    allAttrib: '',
-    attrib: {},
-    ownAttrib: [],
-    status: '',
-    tags: [],
-    updatedAt: '',
-    createdAt: '',
-    position: 0,
-    ownItemAttrib: [],
-    links: [], // Add empty links array
-    parents: [],
-  })
-
   // Extract tasks from infinite query data correctly
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
@@ -127,7 +109,31 @@ const useGetListItemsData = ({
       (page) => page.items?.map((i) => {
         // Check if this is a restricted entity (no name means no access to node data)
         const hasAccess = i && 'name' in i && i.name
-        return hasAccess ? i : buildRestrictedItem(i)
+        if (hasAccess) {
+          return i
+        } else {
+          // Generate a unique ID for restricted entities using uuid to prevent selection conflicts
+          const uniqueId = 'restricted' + uuidv4().replace(/-/g, '')
+
+          return {
+            active: true,
+            name: RESTRICTED_ENTITY_LABEL,
+            id: uniqueId,
+            entityId: i.entityId,
+            entityType: RESTRICTED_ENTITY_TYPE,
+            allAttrib: '',
+            attrib: {},
+            ownAttrib: [],
+            status: '',
+            tags: [],
+            updatedAt: '',
+            createdAt: '',
+            position: 0,
+            ownItemAttrib: [],
+            links: [], // Add empty links array
+            parents: [],
+          } as EntityListItemWithLinks
+        }
       }) || [],
     )
   }, [itemsInfiniteData?.pages])

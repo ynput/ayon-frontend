@@ -1092,6 +1092,9 @@ const TableBodyRow = ({
         const cellId = getCellId(row.id, cell.column.id)
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
+          // Check if this is a restricted entity - disable dragging
+          const isRestricted = isEntityRestricted(row.original.entityType)
+
           return (
             <Styled.TableCell
               key={cell.id + i.toString()}
@@ -1103,7 +1106,7 @@ const TableBodyRow = ({
                 justifyContent: 'center',
                 height: rowHeight,
                 pointerEvents: 'all',
-                cursor: 'grab',
+                cursor: isRestricted ? 'not-allowed' : 'grab',
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':
@@ -1119,8 +1122,9 @@ const TableBodyRow = ({
               }}
             >
               <RowDragHandleCellContent
-                attributes={sortable?.attributes}
-                listeners={sortable?.listeners}
+                attributes={isRestricted ? undefined : sortable?.attributes}
+                listeners={isRestricted ? undefined : sortable?.listeners}
+                disabled={isRestricted}
               />
             </Styled.TableCell>
           )
@@ -1245,9 +1249,6 @@ const TableCell = ({
 
         // check we are not clicking in a dropdown
         if (target.closest('.options')) return
-
-        // skip if restricted entity - prevent selection
-        if (isRestricted) return
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
