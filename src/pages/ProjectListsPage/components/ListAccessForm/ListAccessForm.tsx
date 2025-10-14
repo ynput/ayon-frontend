@@ -76,7 +76,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
           onError={(error) => toast.error(error)}
         />
       </Section>
-      {isReview && list.accessLevel >= 30 && (
+      {isReview && (list.accessLevel || 0) >= 30 && (
         <Section>
           <GuestAccess
             sessionId={list.id as string}
