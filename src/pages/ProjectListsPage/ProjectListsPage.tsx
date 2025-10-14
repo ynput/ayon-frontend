@@ -2,6 +2,8 @@ import {
   ProjectDataProvider,
   useDetailsPanelEntityContext,
   useProjectDataContext,
+  useProjectTableContext,
+  isEntityRestricted,
 } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
@@ -241,13 +243,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
+  const { getEntityById } = useProjectTableContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
 
   // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
+  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
   try {
     const entityContext = useDetailsPanelEntityContext()
     selectedEntity = entityContext.selectedEntity
@@ -256,8 +259,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
     selectedEntity = null
   }
 
+  // Check if any selected rows are restricted entities
+  const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
+    const entity = getEntityById(rowId)
+    return entity && !isEntityRestricted(entity.entityType)
+  })
+
   // Check if we should show the details panel
-  const shouldShowEntityDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  // Don't show entity details panel if only selected entity is restricted
+  const shouldShowEntityDetailsPanel =
+    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
   const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || shouldShowListDetailsPanel
 

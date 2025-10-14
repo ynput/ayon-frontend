@@ -60,6 +60,7 @@ import { useProjectDataContext } from '@shared/containers'
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import { isEntityRestricted } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
@@ -1091,6 +1092,9 @@ const TableBodyRow = ({
         const cellId = getCellId(row.id, cell.column.id)
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
+          // Check if this is a restricted entity - disable dragging
+          const isRestricted = isEntityRestricted(row.original.entityType)
+
           return (
             <Styled.TableCell
               key={cell.id + i.toString()}
@@ -1205,7 +1209,7 @@ const TableCell = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
-          task: cell.row.original.entityType === 'task',
+          'folder-in-hierarchy': showHierarchy && cell.row.original.entityType === 'folder',
           'multiple-selected': isMultipleSelected,
         },
         className,
@@ -1225,6 +1229,9 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
+        // check if this is a restricted entity - prevent editing
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
         // if we are clicking on an edit trigger, we need to start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
           if (!isCellSelected(cellId)) {
@@ -1232,7 +1239,8 @@ const TableCell = ({
             selectCell(cellId, false, false)
             focusCell(cellId)
           }
-          // start editing the cell
+          // skip if restricted
+          if (isRestricted) return
           setEditingCellId(cellId)
 
           return
@@ -1256,6 +1264,8 @@ const TableCell = ({
       onMouseOver={(e) => {
         if (e.buttons === 1) {
           // Left button is pressed during mouse move - drag selection
+          // Note: extendSelection is always called to allow drag to continue through cells
+          // Restricted cells will be filtered out later
           extendSelection(cellId, isRowSelectionColumn)
         }
       }}
@@ -1263,11 +1273,15 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        // check if this is a restricted entity - prevent opening details/viewer
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
         // row selection on name column double click
         if (
           cell.column.id === 'name' &&
           !(e.target as HTMLElement).closest('.expander') &&
-          !isGroup
+          !isGroup &&
+          !isRestricted
         ) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
@@ -1277,7 +1291,7 @@ const TableCell = ({
           }
         }
         // open the viewer on thumbnail double click
-        if (cell.column.id === 'thumbnail') {
+        if (cell.column.id === 'thumbnail' && !isRestricted) {
           if (onOpenPlayer) {
             const entity = getEntityById(cell.row.original.entityId || cell.row.id)
             if (entity) {

@@ -138,7 +138,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                 // Collect all items from all pages for this specific cache entry
                 let allItems = draft.pages.flatMap((page) => page.items)
 
-                // Sort all items based on position
+                // Sort all items based on position, using updated positions from the map
                 allItems.sort((a, b) => {
                   const posA = typeof a.position === 'number' ? a.position : Infinity
                   const posB = typeof b.position === 'number' ? b.position : Infinity
@@ -170,6 +170,18 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         }
       },
       invalidatesTags: (_s, _e, { listId, entityListMultiPatchModel: { items } }) => {
+        // Check if this is a position-only update (reordering)
+        const isReorderingOnly = items?.every((item) =>
+          Object.keys(item).every((key) => key === 'id' || key === 'position'),
+        )
+
+        // Don't invalidate cache for reordering - the optimistic update is sufficient
+        // This prevents the cache refetch from overwriting client-side positions of restricted entities
+        if (isReorderingOnly) {
+          return []
+        }
+
+        // For other updates, invalidate as normal
         const tags = [
           { type: 'entityList', id: listId },
           { type: 'entityListItem', id: listId },

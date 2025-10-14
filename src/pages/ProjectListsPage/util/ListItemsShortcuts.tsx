@@ -3,6 +3,7 @@ import { FC, useEffect } from 'react'
 import { useListItemsDataContext } from '../context/ListItemsDataContext'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { DeleteListItem } from '../hooks/useDeleteListItems'
+import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 interface ListTableShortcutsProps {}
 
@@ -19,11 +20,17 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
         Array.from(selectedCells).forEach((cell) => {
           const itemId = parseCellId(cell)?.rowId
           if (!itemId) return
-          const entityId = listItemsMap.get(itemId)?.entityId
-          if (!entityId) return
-          selectedListItems.push({ id: itemId, entityId })
+          const item = listItemsMap.get(itemId)
+          if (!item) return
+          // Skip restricted entities
+          if (isEntityRestricted(item.entityType)) return
+          selectedListItems.push({ id: itemId, entityId: item.entityId })
         })
-        deleteListItems(selectedListItems, history, true)
+
+        // Only delete if there are non-restricted items
+        if (selectedListItems.length > 0) {
+          deleteListItems(selectedListItems, history, true)
+        }
       }
     }
 
