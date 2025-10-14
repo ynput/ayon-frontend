@@ -2,23 +2,20 @@ import { Icon } from '@ynput/ayon-react-components'
 
 // Row Drag Handle Cell Content Component
 const RowDragHandleCellContent = ({
-  attributes,
-  listeners,
-  disabled = false,
-}: {
-  attributes?: any
-  listeners?: any
-  disabled?: boolean
+                                    attributes,
+                                    listeners,
+                                  }: {
+  attributes: any
+  listeners: any
 }) => {
   return (
     <button
-      {...(disabled ? {} : attributes)}
-      {...(disabled ? {} : listeners)}
+      {...attributes}
+      {...listeners}
       type="button" // Explicitly set type for button
-      title={disabled ? 'Cannot reorder restricted entities' : 'Drag to reorder'}
-      disabled={disabled}
+      title="Drag to reorder"
       style={{
-        cursor: disabled ? 'not-allowed' : 'grab',
+        cursor: 'grab',
         border: 'none',
         background: 'transparent',
         padding: 0,
@@ -27,7 +24,6 @@ const RowDragHandleCellContent = ({
         justifyContent: 'center',
         width: '100%', // Ensure button fills the cell space if needed
         height: '100%',
-        opacity: disabled ? 0.5 : 1,
       }}
     >
       <Icon icon="drag_handle" />

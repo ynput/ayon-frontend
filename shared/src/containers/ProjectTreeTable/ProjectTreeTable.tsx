@@ -1106,7 +1106,7 @@ const TableBodyRow = ({
                 justifyContent: 'center',
                 height: rowHeight,
                 pointerEvents: 'all',
-                cursor: isRestricted ? 'not-allowed' : 'grab',
+                cursor: 'grab',
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':
@@ -1122,9 +1122,8 @@ const TableBodyRow = ({
               }}
             >
               <RowDragHandleCellContent
-                attributes={isRestricted ? undefined : sortable?.attributes}
-                listeners={isRestricted ? undefined : sortable?.listeners}
-                disabled={isRestricted}
+                attributes={sortable?.attributes}
+                listeners={sortable?.listeners}
               />
             </Styled.TableCell>
           )
