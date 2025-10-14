@@ -1,4 +1,8 @@
-import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@shared/api'
+import {
+  useGetListItemsInfiniteInfiniteQuery,
+  useGetEntityLinksQuery,
+  GetListItemsResult,
+} from '@shared/api'
 import type { EntityListItem } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
@@ -7,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 import {
   RESTRICTED_ENTITY_TYPE,
-  RESTRICTED_ENTITY_LABEL,
+  RESTRICTED_ENTITY_NAME,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 // Extend EntityListItem to include links
@@ -101,40 +105,32 @@ const useGetListItemsData = ({
       fetchNextPage()
     }
   }
+  const buildRestrictedItem = (
+    i: GetListItemsResult['items'][number]
+  ): EntityListItemWithLinks => ({
+    active: true,
+    name: RESTRICTED_ENTITY_NAME,
+    id: 'restricted' + uuidv4().replace(/-/g, ''),
+    entityId: i.entityId,
+    entityType: RESTRICTED_ENTITY_TYPE,
+    allAttrib: '',
+    attrib: {},
+    ownAttrib: [],
+    status: '',
+    tags: [],
+    updatedAt: '',
+    createdAt: '',  // <-- required to match EntityListItemWithLinks type
+    position: 0,
+    ownItemAttrib: [],
+    links: [],
+    parents: [],
+  });
 
   // Extract tasks from infinite query data correctly
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => {
-        // Check if this is a restricted entity (no name means no access to node data)
-        const hasAccess = i && 'name' in i && i.name
-        if (hasAccess) {
-          return i
-        } else {
-          // Generate a unique ID for restricted entities using uuid to prevent selection conflicts
-          const uniqueId = 'restricted' + uuidv4().replace(/-/g, '')
-
-          return {
-            active: true,
-            name: RESTRICTED_ENTITY_LABEL,
-            id: uniqueId,
-            entityId: i.entityId,
-            entityType: RESTRICTED_ENTITY_TYPE,
-            allAttrib: '',
-            attrib: {},
-            ownAttrib: [],
-            status: '',
-            tags: [],
-            updatedAt: '',
-            createdAt: '',
-            position: 0,
-            ownItemAttrib: [],
-            links: [], // Add empty links array
-            parents: [],
-          } as EntityListItemWithLinks
-        }
-      }) || [],
+      (page) => page.items?.map((i) => (i ? i : buildRestrictedItem(i))) || [],
     )
   }, [itemsInfiniteData?.pages])
 

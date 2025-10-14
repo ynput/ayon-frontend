@@ -138,36 +138,12 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                 // Collect all items from all pages for this specific cache entry
                 let allItems = draft.pages.flatMap((page) => page.items)
 
-                // Create a map of updated positions for quick lookup
-                const positionMap = new Map<string, number>()
 
-                // Check if we have client-side positions (includes restricted entities)
-                // @ts-ignore - custom property for handling restricted entities
-                const clientSidePositions = entityListMultiPatchModel.__clientSidePositions
-
-                if (clientSidePositions && Array.isArray(clientSidePositions)) {
-                  // Use client-side positions which include ALL entities (even restricted ones)
-                  clientSidePositions.forEach((posItem: any) => {
-                    if (posItem.id && posItem.position !== undefined) {
-                      positionMap.set(posItem.id, posItem.position)
-                    }
-                  })
-                } else {
-                  // Fallback to regular position updates from items
-                  entityListMultiPatchModel.items?.forEach((patchItem) => {
-                    if (patchItem.position !== undefined) {
-                      const key = patchItem.id || patchItem.entityId
-                      if (key) {
-                        positionMap.set(key, patchItem.position)
-                      }
-                    }
-                  })
-                }
 
                 // Sort all items based on position, using updated positions from the map
                 allItems.sort((a, b) => {
-                  const posA = positionMap.get(a.id) ?? (typeof a.position === 'number' ? a.position : Infinity)
-                  const posB = positionMap.get(b.id) ?? (typeof b.position === 'number' ? b.position : Infinity)
+                  const posA = typeof a.position === 'number' ? a.position : Infinity
+                  const posB = typeof b.position === 'number' ? b.position : Infinity
                   return posA - posB
                 })
 
