@@ -630,11 +630,22 @@ const CommentInput: FC<CommentInputProps> = ({
           {isOpen && (
             <FilesGrid
               files={allFiles}
-              isCompact={compactGrid}
+              isCompact={compactGrid || isEditing}
               onRemove={handleFileRemove}
-              style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
               projectName={projectName}
               onAnnotationClick={goToAnnotation}
+              style={{
+                borderBottom: '1px solid var(--md-sys-color-outline-variant)',
+                height: '100%',
+              }}
+              isEditing
+              pt={{
+                file: {
+                  style: {
+                    height: isEditing ? 70 : undefined,
+                  },
+                },
+              }}
             />
           )}
           {isOpen && !disabled ? (
