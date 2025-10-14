@@ -1264,11 +1264,9 @@ const TableCell = ({
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
-          // check if this is a restricted entity - prevent drag selection
-          const isRestricted = isEntityRestricted(cell.row.original.entityType)
-          if (isRestricted) return
-
           // Left button is pressed during mouse move - drag selection
+          // Note: extendSelection is always called to allow drag to continue through cells
+          // Restricted cells will be filtered out later
           extendSelection(cellId, isRowSelectionColumn)
         }
       }}
