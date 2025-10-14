@@ -11,6 +11,7 @@ import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import { getUpdatedEntityIds } from './filterRefetchUtils'
+import { refetchTasksForCacheEntry, updateOverviewTasksWithData } from './refetchFilteredEntities'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -688,134 +689,46 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // Requirement: "refetch the full data for the specific entity/entities"
           // For each cache with its own filter, fetch entities and update that cache
           if (updatedTaskIds.length > 0 && projectName) {
-            const updatedTaskIdsSet = new Set(updatedTaskIds)
+            // Collect all fetched tasks from different filtered queries to reuse them
+            const allFetchedTasks: any[] = []
 
             // Process each cache entry independently to avoid race conditions
             for (const entry of tasksListInfiniteEntries) {
-              const hasFilter = Boolean(entry.originalArgs?.filter)
-              const hasFolderIds = Boolean(entry.originalArgs?.folderIds?.length)
-
-              // Build query params for this specific cache's filters
-              const queryParams: any = {
+              const fetchedTasks = await refetchTasksForCacheEntry({
+                dispatch,
                 projectName,
-                taskIds: updatedTaskIds,
+                updatedTaskIds,
+                cacheEntry: entry,
+              })
+
+              if (fetchedTasks) {
+                allFetchedTasks.push(...fetchedTasks)
               }
+            }
 
-              if (entry.originalArgs?.filter) {
-                queryParams.filter = entry.originalArgs.filter
-              }
+            // Also update getOverviewTasksByFolders cache using the already fetched data
+            // This avoids a duplicate API call since we already have the task data
+            // Use selectInvalidatedBy to get only caches that contain the updated tasks
+            const overviewTaskTags = updatedTaskIds.map((id) => ({ type: 'overviewTask', id }))
+            const overviewTasksEntries = getOverviewApi.util
+              .selectInvalidatedBy(state, overviewTaskTags)
+              .filter((entry) => entry.endpointName === 'getOverviewTasksByFolders')
 
-              if (entry.originalArgs?.folderIds) {
-                queryParams.folderIds = entry.originalArgs.folderIds
-              }
-
-              // Fetch entities with this cache's filter - server will only return matching tasks
-              dispatch(
-                getOverviewApi.endpoints.GetTasksList.initiate(
-                  queryParams as any,
-                  { forceRefetch: true }
-                )
-              ).then((result) => {
-                if (!result.data?.tasks) return
-
-                const fetchedTasksMap = new Map(result.data.tasks.map(t => [t.id, t]))
-
-                // Update this specific cache entry with filtered results
-                dispatch(
-                  getOverviewApi.util.updateQueryData(
-                    'getTasksListInfinite',
-                    entry.originalArgs,
-                    (draft) => {
-                      // For each updated task, find it across all pages and update it
-                      for (const taskId of updatedTaskIds) {
-                        const fetchedTask = fetchedTasksMap.get(taskId)
-
-                        // Search for this task in all pages
-                        let found = false
-                        for (const page of draft.pages) {
-                          const taskIndex = page.tasks.findIndex(t => t.id === taskId)
-
-                          if (taskIndex !== -1) {
-                            found = true
-                            if (fetchedTask) {
-                              // Server returned this task - it matches the filter
-                              // Update with fresh data by replacing the object
-                              page.tasks[taskIndex] = fetchedTask
-                            } else {
-                              // Server didn't return this task - it no longer matches the filter
-                              // Remove it from cache
-                              page.tasks.splice(taskIndex, 1)
-                            }
-                            break // Found the task, move to next taskId
-                          }
-                        }
-                      }
-                    }
-                  )
-                )
-              }).catch((error) => {
-                console.error('Background entity refetch failed:', error)
+            if (overviewTasksEntries.length > 0 && allFetchedTasks.length > 0) {
+              updateOverviewTasksWithData({
+                dispatch,
+                overviewTasksEntries,
+                allFetchedTasks,
               })
             }
           }
 
-            // Also update getOverviewTasksByFolders cache (no filter involved)
-            const overviewTasksEntries = Object.values(state.restApi.queries).filter(
-              (entry: any) =>
-                entry?.endpointName === 'getOverviewTasksByFolders' &&
-                entry?.status === 'fulfilled'
-            )
-
-            if (overviewTasksEntries.length > 0) {
-              dispatch(
-                getOverviewApi.endpoints.GetTasksList.initiate(
-                  {
-                    projectName,
-                    taskIds: updatedTaskIds,
-                  } as any,
-                  { forceRefetch: true }
-                )
-              ).then((result) => {
-                if (!result.data?.tasks) return
-
-                const fetchedTasks = result.data.tasks
-                const taskIdSet = new Set(fetchedTasks.map(t => t.id))
-
-                for (const entry of overviewTasksEntries) {
-                  dispatch(
-                    getOverviewApi.util.updateQueryData(
-                      'getOverviewTasksByFolders',
-                      (entry as any).originalArgs,
-                      (draft) => {
-                        for (let i = 0; i < draft.length; i++) {
-                          if (taskIdSet.has(draft[i].id)) {
-                            const fetchedTask = fetchedTasks.find(t => t.id === draft[i].id)
-                            if (fetchedTask) {
-                              draft[i] = fetchedTask
-                            }
-                          }
-                        }
-                      }
-                    )
-                  )
-                }
-              }).catch((error) => {
-                console.error('Background refetch failed:', error)
-              })
-            }
-
           // Always refetch folders if they were updated (for calculated attributes)
           // Not conditional on affectsFilter - requirement says "always refetch entities"
-          if (updatedFolderIds.length > 0 && projectName) {
-            dispatch(
-              foldersQueries.endpoints.getFolderList.initiate(
-                { projectName, attrib: true },
-                { forceRefetch: true }
-              )
-            ).catch((error) => {
-              console.error('Background folder refetch failed:', error)
-              // Don't show error to user - this is a background operation
-            })
+          // Only invalidate if we haven't already done so for delete operations
+          const hasDeleteOps = (operationsByType.folder || []).some((op: OperationModel) => op.type === 'delete')
+          if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
+            dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
           }
         } catch (error) {
           // undo all patches if there is an error
@@ -852,4 +765,3 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 })
 
 export const { useUpdateOverviewEntitiesMutation } = operationsApiEnhancedInjected
-export { operationsApiEnhancedInjected as overviewQueries }
