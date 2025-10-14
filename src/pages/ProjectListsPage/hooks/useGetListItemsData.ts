@@ -7,7 +7,6 @@ import type { EntityListItem } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 import {
   RESTRICTED_ENTITY_TYPE,
@@ -110,7 +109,7 @@ const useGetListItemsData = ({
   ): EntityListItemWithLinks => ({
     active: true,
     name: RESTRICTED_ENTITY_NAME,
-    id: 'restricted' + uuidv4().replace(/-/g, ''),
+    id: i.id, // Use the actual list item ID from the backend
     entityId: i.entityId,
     entityType: RESTRICTED_ENTITY_TYPE,
     allAttrib: '',
@@ -130,7 +129,13 @@ const useGetListItemsData = ({
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => (i ? i : buildRestrictedItem(i))) || [],
+      (page) => page.items?.map((i) => {
+        // Check if item is restricted (has entityType 'unknown' or missing name)
+        if (!i || i.entityType === RESTRICTED_ENTITY_TYPE || !i.name) {
+          return buildRestrictedItem(i)
+        }
+        return i
+      }) || [],
     )
   }, [itemsInfiniteData?.pages])
 
