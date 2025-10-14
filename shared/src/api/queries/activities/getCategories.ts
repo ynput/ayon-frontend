@@ -2,6 +2,9 @@ import { ActivityCategoriesResponseModel, activityFeedApi } from '@shared/api/ge
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { AccessLevel } from '@shared/components'
 
+const listTag = { type: 'category', id: 'LIST' } as const
+const settingsTag = { type: 'addonSettings', id: 'powerpack' } as const
+
 export type ActivityCategory = {
   name: string
   color: string // hex color code
@@ -26,6 +29,14 @@ const categoriesApi = activityFeedApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
       transformResponse: (res: ActivityCategoriesResponseModel) =>
         res.categories as ActivityCategory[],
       transformErrorResponse: (error: any) => error.data?.detail || 'An error occurred.',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ name }) => ({ type: 'category' as const, id: name })),
+              listTag,
+              settingsTag,
+            ]
+          : [listTag, settingsTag],
     },
   },
 })
