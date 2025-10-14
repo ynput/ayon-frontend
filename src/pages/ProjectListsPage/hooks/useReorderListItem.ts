@@ -33,18 +33,11 @@ const useReorderListItem = ({
       const newIndex = listItems.findIndex((row) => row.id === over.id)
       if (oldIndex !== -1 && newIndex !== -1) {
         const shuffledArray = arrayMove(listItems, oldIndex, newIndex)
-
-        // Include all entities in the reorder
-        // Send the list item ID (not the entity ID) to the backend
-        const newItemPositions = shuffledArray.map((item) => {
-          // Find the actual position in the full shuffled array
-          const actualPosition = shuffledArray.findIndex((si) => si.id === item.id)
-
-          return {
-            id: item.id,
-            position: actualPosition,
-          }
-        })
+        // update the position for each item to match new index
+        const newItemPositions = shuffledArray.map((item, index) => ({
+          id: item.id,
+          position: index,
+        }))
 
         try {
           if (!listId) {

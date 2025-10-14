@@ -1,9 +1,5 @@
-import {
-  useGetListItemsInfiniteInfiniteQuery,
-  useGetEntityLinksQuery,
-  GetListItemsResult,
-} from '@shared/api'
-import type { EntityListItem } from '@shared/api'
+import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@shared/api'
+import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
@@ -123,7 +119,7 @@ const useGetListItemsData = ({
     ownItemAttrib: [],
     links: [],
     parents: [],
-  });
+  })
 
   // Extract tasks from infinite query data correctly
   const data = useMemo(() => {
