@@ -138,8 +138,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                 // Collect all items from all pages for this specific cache entry
                 let allItems = draft.pages.flatMap((page) => page.items)
 
-
-
                 // Sort all items based on position, using updated positions from the map
                 allItems.sort((a, b) => {
                   const posA = typeof a.position === 'number' ? a.position : Infinity

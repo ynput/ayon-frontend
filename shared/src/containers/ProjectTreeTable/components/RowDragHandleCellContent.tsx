@@ -2,9 +2,9 @@ import { Icon } from '@ynput/ayon-react-components'
 
 // Row Drag Handle Cell Content Component
 const RowDragHandleCellContent = ({
-                                    attributes,
-                                    listeners,
-                                  }: {
+  attributes,
+  listeners,
+}: {
   attributes: any
   listeners: any
 }) => {

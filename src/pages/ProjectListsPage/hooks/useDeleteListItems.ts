@@ -122,20 +122,23 @@ const useDeleteListItems = ({
     _meta,
     context,
   ) => {
-    // Hide menu item if any selected cell is a restricted entity
+    // Filter out restricted entities from the selection
+    const selectedListItems = selectedCells
+      .filter((cell) => parseCellId(cell.cellId)?.rowId && !isEntityRestricted(cell.entityType))
+      .map((cell) => ({ id: parseCellId(cell.cellId)?.rowId as string, entityId: cell.entityId }))
+
+    // Hide menu item if there are no valid items to delete
+    if (selectedListItems.length === 0) return undefined
+
     const hasRestrictedEntity = selectedCells.some((cell) => isEntityRestricted(cell.entityType))
-    if (hasRestrictedEntity) return undefined
 
     return {
       label: deleteItemLabel.label,
       icon: deleteItemLabel.icon,
       shortcut: deleteItemLabel.shortcut,
       danger: true,
+      tooltip: hasRestrictedEntity ? 'Restricted entities will be skipped' : undefined,
       command: async () => {
-        const selectedListItems = selectedCells
-          .filter((cell) => parseCellId(cell.cellId)?.rowId)
-          .map((cell) => ({ id: parseCellId(cell.cellId)?.rowId as string, entityId: cell.entityId }))
-
         await deleteListItemsWithConfirmation(selectedListItems, context.history)
       },
     }
