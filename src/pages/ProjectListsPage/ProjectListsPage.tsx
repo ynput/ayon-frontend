@@ -259,17 +259,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
     selectedEntity = null
   }
 
-  // Check if we should show the details panel
-  // Don't show entity details panel if selected entity is restricted
-  const isSelectedEntityRestricted = selectedEntity && isEntityRestricted(selectedEntity.entityType)
-
   // Check if any selected rows are restricted entities
-  const hasRestrictedSelectedRows = selectedRows.some(rowId => {
+  const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
     const entity = getEntityById(rowId)
-    return entity && isEntityRestricted(entity.entityType)
+    return entity && !isEntityRestricted(entity.entityType)
   })
 
-  const shouldShowEntityDetailsPanel = (selectedRows.length > 0 || selectedEntity !== null) && !isSelectedEntityRestricted && !hasRestrictedSelectedRows
+  // Check if we should show the details panel
+  // Don't show entity details panel if only selected entity is restricted
+  const shouldShowEntityDetailsPanel =
+    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
   const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || shouldShowListDetailsPanel
 
