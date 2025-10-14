@@ -7,6 +7,18 @@ import { CategoryDropdownItem } from './CategoryDropdownItem'
 import { PowerpackFeature } from '@shared/context'
 import { toast } from 'react-toastify'
 
+export const isCategoryHidden = (
+  categories: ActivityCategory[],
+  { isGuest, isUser }: { isGuest?: boolean; isUser: boolean },
+) => {
+  // guest can never see categories. They create comments with categories but cannot see them
+  if (isGuest) return true
+  // if there are no categories a regular user has access to, hide the category select
+  if (!categories.length && isUser) return true
+  // admins always see the category select, even if there are no categories
+  return false
+}
+
 const CATEGORY_PP_MIN_VERSION = '1.3.0'
 
 const StyledDropdown = styled(Dropdown)`
@@ -27,6 +39,7 @@ export interface ActivityCategorySelectProps
   value?: string | null
   categories: ActivityCategory[]
   readonly?: boolean
+  isHidden?: boolean
   isCompact?: boolean
   hasPowerpack?: boolean
   onPowerFeature?: (feature: PowerpackFeature) => void
@@ -37,12 +50,15 @@ export const ActivityCategorySelect: FC<ActivityCategorySelectProps> = ({
   value,
   categories,
   readonly,
+  isHidden,
   isCompact,
   hasPowerpack,
   onPowerFeature,
   onChange,
   ...props
 }) => {
+  if (isHidden) return null
+
   const category = categories.find((cat) => cat.name === value)
   const { color } = category || {}
 

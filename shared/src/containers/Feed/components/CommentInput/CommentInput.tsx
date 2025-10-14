@@ -35,7 +35,7 @@ import { useBlendedCategoryColor } from './hooks/useBlendedCategoryColor'
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
-import { ActivityCategorySelect, SavedAnnotationMetadata } from '../../index'
+import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
 
 var Delta = Quill.import('delta')
@@ -90,7 +90,8 @@ const CommentInput: FC<CommentInputProps> = ({
     isGuest,
   } = useFeedContext()
 
-  const { hasLicense, onPowerFeature } = useDetailsPanelContext()
+  const { hasLicense, onPowerFeature, user } = useDetailsPanelContext()
+  const isUser = !user?.data?.isAdmin && !user?.data?.isManager
 
   const {
     users: mentionUsers,
@@ -646,6 +647,7 @@ const CommentInput: FC<CommentInputProps> = ({
                   isCompact={isEditing}
                   hasPowerpack={hasLicense}
                   onPowerFeature={onPowerFeature}
+                  isHidden={isCategoryHidden(categoryOptions, { isGuest, isUser })}
                   style={{
                     position: isEditing ? 'relative' : 'absolute',
                     left: 4,
