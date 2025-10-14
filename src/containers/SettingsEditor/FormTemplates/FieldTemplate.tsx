@@ -3,7 +3,7 @@ import { Divider } from '@ynput/ayon-react-components'
 import SettingsPanel from '../SettingsPanel'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
-import { isEqual } from 'lodash'
+import { isEqual, kebabCase } from 'lodash'
 import { copyToClipboard } from '@shared/util'
 import { $Any } from '@types'
 import { FieldTemplateProps } from '@rjsf/utils'
@@ -11,6 +11,7 @@ import { CSS } from 'styled-components/dist/types'
 import { matchesFilterKeys } from './searchMatcher'
 import { toast } from 'react-toastify'
 import AccessWidget from '../Widgets/AccessWidget'
+import clsx from 'clsx'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -55,7 +56,6 @@ function FieldTemplate(props: FieldTemplateProps) {
   }, [section, filterKeys])
 
   // Object fields
-  
 
   if (props.schema.type === 'object' && props.schema?.widget !== 'access') {
     return (
@@ -89,8 +89,9 @@ function FieldTemplate(props: FieldTemplateProps) {
 
     if (props.formContext.onPinOverride)
       model.push({
-        label: `Add current ${rmPath[rmPath.length - 1]} value as ${props.formContext.level
-          } override`,
+        label: `Add current ${rmPath[rmPath.length - 1]} value as ${
+          props.formContext.level
+        } override`,
         command: () => props.formContext.onPinOverride(rmPath),
         disabled: overrideLevel === props.formContext.level,
       })
@@ -195,7 +196,8 @@ function FieldTemplate(props: FieldTemplateProps) {
   // contains arrays. The error is not relevant for the user)
   //
   // TODO: ignoring errors for now. Too many false positives
-  let className = `form-inline-field`
+  const className = `form-inline-field`
+  const classNameWrapper = `${className}-wrapper`
   // let className = `form-inline-field ${
   //   props.errors.props.errors && props.schema.widget !== 'color' ? 'error' : ''
   // }`
@@ -206,18 +208,14 @@ function FieldTemplate(props: FieldTemplateProps) {
     props.id,
   )
 
-
   let mainWidget = null
   if (props.schema.widget === 'access') {
-    mainWidget = (
-      <AccessWidget {...props} />
-    )
+    mainWidget = <AccessWidget {...props} />
   } else {
     mainWidget = props.children
   }
 
-
-
+  const kebabLabel = kebabCase(props.label || '')
 
   return (
     <div
@@ -228,10 +226,11 @@ function FieldTemplate(props: FieldTemplateProps) {
         position: matches ? 'relative' : 'absolute',
         height: matches ? 'auto' : 0,
       }}
+      className={clsx(classNameWrapper, `${kebabLabel}-wrapper`)}
     >
       {divider}
       <div
-        className={className}
+        className={clsx(className, kebabLabel)}
         data-fieldid={props.id}
         onContextMenu={onContextMenu}
         data-tooltip={props.rawDescription}

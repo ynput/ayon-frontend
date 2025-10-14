@@ -38,8 +38,35 @@ const FormWrapper = styled.div<{ $currentSelection: string }>`
       }
     }
   }
-`
 
+  /* specific styles for activity categories */
+  [data-schema-id='root_activity_categories'] {
+    .form-object-field.layout-compact {
+      gap: clamp(8px, 5%, 200px);
+    }
+
+    /* input type text */
+    .form-inline-field {
+      min-width: unset !important;
+      .form-inline-field-label {
+        flex-basis: unset;
+      }
+    }
+
+    .form-inline-field-wrapper {
+      width: unset !important;
+      max-width: 500px;
+    }
+
+    .name-wrapper {
+      flex: 1;
+    }
+
+    .access-control-wrapper {
+      flex: 1;
+    }
+  }
+`
 
 const CodeEditorWrapper = styled.div`
   position: relative;
@@ -76,8 +103,6 @@ const CodeEditorWrapper = styled.div`
   &.changed {
     border: 1px solid var(--md-sys-color-primary);
   }
-  
 `
-
 
 export { FormWrapper, CodeEditorWrapper }

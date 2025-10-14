@@ -11,7 +11,7 @@ import { ACCESS_LEVEL_LABELS, AccessUser, PowerpackButton } from '@shared/compon
 import { EVERYONE_GROUP_KEY } from '@shared/components/ShareOptionIcon/ShareOptionIcon'
 import { FC } from 'react'
 import clsx from 'clsx'
-import { toast } from 'react-toastify'
+import { RemoteAddonProjectProps } from '@shared/context'
 
 interface ListAccessFallbackProps extends EntityListModel {
   currentUser: UserModel // username of the current user
@@ -78,15 +78,14 @@ type ListData = {
 }
 
 interface GuestAccessProps {
-  projectName: string
   sessionId: string
   listData?: ListData
   categories: ActivityCategory[]
   isLoading?: boolean
-  // utils
-  toast: typeof toast
   // mutations
   updateList: ReturnType<typeof useUpdateEntityListMutation>[0]
+  // provider props
+  provider: RemoteAddonProjectProps
 }
 
 export const GuestAccessFallback: FC<GuestAccessProps> = () => null

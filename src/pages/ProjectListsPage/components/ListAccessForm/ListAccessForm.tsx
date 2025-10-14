@@ -1,3 +1,4 @@
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
 import {
   EntityListModel,
@@ -75,10 +76,9 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
           onError={(error) => toast.error(error)}
         />
       </Section>
-      {isReview && (
+      {isReview && list.accessLevel >= 30 && (
         <Section>
           <GuestAccess
-            projectName={projectName}
             sessionId={list.id as string}
             listData={list?.data || {}}
             isLoading={
@@ -89,7 +89,16 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
             }
             categories={categories}
             updateList={updateList}
-            toast={toast}
+            provider={{
+              projectName,
+              router: {
+                useParams,
+                useNavigate,
+                useLocation,
+                useSearchParams,
+              },
+              toast,
+            }}
           />
         </Section>
       )}
