@@ -34,18 +34,21 @@ const StyledWidget = styled.div`
   }
 `
 
-const StyledValuesContainer = styled.div`
+const StyledValuesContainer = styled.div<{ $maxHeight: number| undefined} >`
   flex: 1;
   display: flex;
   gap: var(--base-gap-small);
   align-items: center;
+  align-content: flex-start;
   overflow: hidden;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
   flex-wrap: nowrap;
-
+  
   &.wrap {
     flex-wrap: wrap;
+    align-items: flex-start;
+    max-height: ${({ $maxHeight }) => ($maxHeight ? `${$maxHeight- 10}px` : 'unset')};
   }
 `
 
@@ -173,12 +176,13 @@ export const EnumCellValue = ({
     ]
   }
 
-  // Allow wrapping when row height is above 100px
-  const allowWrap = rowHeight !== undefined && rowHeight > 100
+  // Allow wrapping when row height is above 40px (allowing multi-row display)
+  const allowWrap = rowHeight !== undefined && rowHeight > 60
+
 
   return (
     <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
-      <StyledValuesContainer className={clsx({ wrap: allowWrap })}>
+      <StyledValuesContainer className={clsx({ wrap: allowWrap })} $maxHeight={rowHeight}>
         {selectedOptions.map((option, i) => (
           <StyledValueWrapper key={option.value.toString() + i}>
             {option.icon && checkForImgSrc(option.icon) ? (

@@ -237,6 +237,7 @@ export const CellWidget: FC<EditorCellProps> = ({
             type={type}
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
+            rowHeight={rowHeight}
             {...sharedProps}
             {...pt?.enum}
           />

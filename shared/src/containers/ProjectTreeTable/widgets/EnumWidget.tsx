@@ -20,6 +20,7 @@ export interface EnumWidgetProps
   autoOpen?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  rowHeight?: number
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -37,6 +38,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       autoOpen = true,
       isReadOnly,
       enableCustomValues,
+      rowHeight,
       onOpen,
       onChange,
       onCancelEdit,
@@ -128,6 +130,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               isOpen={isOpen}
               isReadOnly={isReadOnly}
               isMultiSelect={isMultiSelect}
+              rowHeight={rowHeight}
               {...pt?.template}
               placeholder={dropdownProps.placeholder}
               className={clsx('enum-dropdown-value', pt?.template?.className)}
@@ -165,6 +168,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         hasMultipleValues={hasMultipleValues}
         isMultiSelect={isMultiSelect}
         isReadOnly={isReadOnly}
+        rowHeight={rowHeight}
         {...pt?.template}
         placeholder={dropdownProps.placeholder}
         className={clsx('enum-value', pt?.template?.className, dropdownProps.className)}
