@@ -1,0 +1,16 @@
+fragment Version on VersionNode {
+  name
+  id
+  hasReviewables
+  parents
+  path
+  productId
+  active
+  allAttrib
+  author
+  createdAt
+  status
+  tags
+  updatedAt
+  version
+}

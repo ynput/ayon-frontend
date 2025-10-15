@@ -1718,6 +1718,24 @@ export type GetLatestProductVersionQueryVariables = Exact<{
 
 export type GetLatestProductVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, name: string, version: number, productId: string, createdAt: any, updatedAt: any, status: string, active: boolean } }> } } };
 
+export type GetVersionsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  productIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  versionIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortBy?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, productId: string, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number } }> } } };
+
+export type VersionFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, productId: string, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number };
+
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1974,6 +1992,24 @@ export const KanbanFragmentFragmentDoc = `
   folderPath
   hasReviewables
   priority
+}
+    `;
+export const VersionFragmentDoc = `
+    fragment Version on VersionNode {
+  name
+  id
+  hasReviewables
+  parents
+  path
+  productId
+  active
+  allAttrib
+  author
+  createdAt
+  status
+  tags
+  updatedAt
+  version
 }
     `;
 export const MessageFragmentFragmentDoc = `
@@ -2527,6 +2563,36 @@ export const GetLatestProductVersionDocument = `
   }
 }
     `;
+export const GetVersionsDocument = `
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $filter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+  project(name: $projectName) {
+    versions(
+      filter: $filter
+      search: $search
+      productIds: $productIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: $sortBy
+      ids: $versionIds
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...Version
+        }
+      }
+    }
+  }
+}
+    ${VersionFragmentDoc}`;
 export const GetInboxHasUnreadDocument = `
     query GetInboxHasUnread {
   inbox(
@@ -2713,6 +2779,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetLatestProductVersion: build.query<GetLatestProductVersionQuery, GetLatestProductVersionQueryVariables>({
       query: (variables) => ({ document: GetLatestProductVersionDocument, variables })
+    }),
+    GetVersions: build.query<GetVersionsQuery, GetVersionsQueryVariables>({
+      query: (variables) => ({ document: GetVersionsDocument, variables })
     }),
     GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
       query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })

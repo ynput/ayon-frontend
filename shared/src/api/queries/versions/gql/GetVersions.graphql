@@ -1,0 +1,39 @@
+query GetVersions(
+  $projectName: String!
+  $productIds: [String!]
+  $versionIds: [String!]
+  $filter: String
+  $search: String
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+  $sortBy: String
+) {
+  project(name: $projectName) {
+    versions(
+      filter: $filter
+      search: $search
+      productIds: $productIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: $sortBy
+      ids: $versionIds
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...Version
+        }
+      }
+    }
+  }
+}
