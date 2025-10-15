@@ -334,6 +334,10 @@ export const EntityListsProvider = ({
         // Recreate command closures with current selection (list items carry command depending on selected)
         const rebindCommands = (items: ListSubMenuItem[]): ListSubMenuItem[] => {
           return items.map((item) => {
+            // Skip special items like '__new-list__' which should not be in the cache
+            if (item.id.startsWith('__')) {
+              return item
+            }
             // If this is a list item (has command), rebind it with current selection
             if (item.command) {
               const list = lists.find((l) => l.id === item.id)
@@ -351,7 +355,9 @@ export const EntityListsProvider = ({
             return item
           })
         }
-        return rebindCommands(cached.items)
+        // Filter out any special items that shouldn't be in cache (like __new-list__)
+        const filteredItems = cached.items.filter(item => !item.id.startsWith('__'))
+        return rebindCommands(filteredItems)
       }
 
       const resolveShowIcon = getShowIcon || (() => false)
