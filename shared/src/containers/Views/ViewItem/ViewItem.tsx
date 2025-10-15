@@ -49,7 +49,14 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
         confirmDialog({
           message: 'Save current view settings and overwrite this view?',
           header: 'Confirm save',
-          accept: () => onSave && onSave(e),
+          accept: () =>
+            onSave &&
+            // temporary fix for broken PP. This will be removed once we upgrade to a newer version of PP
+            onSave({
+              ...e,
+              currentTarget: e.target as HTMLButtonElement,
+              stopPropagation: () => {},
+            }),
         })
       } else {
         onSave && onSave(e)
