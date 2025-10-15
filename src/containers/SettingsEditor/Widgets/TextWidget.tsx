@@ -192,6 +192,13 @@ export const TextWidget = (props: $Any) => {
     opts.onChange = (e: $Any) => {
       props.onChange(e[0])
     }
+  } else if (props.schema.widget === 'label') {
+    Input = InputText
+    opts.value = value || ''
+    opts.disabled = true
+    opts.onChange = (e: $Any) => {
+      onChange(e.target.value)
+    }
   } else if (props.schema.widget === 'textarea' && props.schema.syntax) {
     
     Input = SettingsCodeEditor
