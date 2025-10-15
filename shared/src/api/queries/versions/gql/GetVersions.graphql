@@ -9,6 +9,7 @@ query GetVersions(
   $before: String
   $last: Int
   $sortBy: String
+  $latest: Boolean = false
 ) {
   project(name: $projectName) {
     versions(
@@ -21,6 +22,7 @@ query GetVersions(
       last: $last
       sortBy: $sortBy
       ids: $versionIds
+      latestOnly: $latest
     ) {
       pageInfo {
         startCursor

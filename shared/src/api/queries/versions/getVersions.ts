@@ -20,7 +20,7 @@ import {
   OverrideResultType,
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
-import { GetVersionsQuery, gqlApi } from '@shared/api/generated'
+import { GetVersionsQuery, GetVersionsQueryVariables, gqlApi } from '@shared/api/generated'
 import {
   provideTagsForVersionsInfinite,
   provideTagsForVersionsResult,
@@ -38,13 +38,8 @@ export type GetVersionsResult = {
 }
 
 // for infinite query args
-export type GetVersionsArgs = {
-  projectName: string
-  filter?: string
-  search?: string
-  productIds?: string[]
-  desc?: boolean
-  sortBy?: string
+export type GetVersionsArgs = Omit<GetVersionsQueryVariables, 'cursor'> & {
+  desc?: boolean // sort direction
 }
 
 // for paginated queries in infinite query
@@ -97,7 +92,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         },
         queryFn: async ({ queryArg, pageParam }, api) => {
           try {
-            const { projectName, filter, search, productIds, sortBy, desc } = queryArg
+            const { projectName, filter, search, productIds, sortBy, desc, latest } = queryArg
             const { cursor } = pageParam
 
             // Build the query parameters for GetVersions query
@@ -106,6 +101,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               filter,
               search,
               productIds,
+              latest,
             }
 
             // Add cursor-based pagination

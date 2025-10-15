@@ -1729,6 +1729,7 @@ export type GetVersionsQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
+  latest?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 
@@ -2564,7 +2565,7 @@ export const GetLatestProductVersionDocument = `
 }
     `;
 export const GetVersionsDocument = `
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $filter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $filter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String, $latest: Boolean = false) {
   project(name: $projectName) {
     versions(
       filter: $filter
@@ -2576,6 +2577,7 @@ export const GetVersionsDocument = `
       last: $last
       sortBy: $sortBy
       ids: $versionIds
+      latestOnly: $latest
     ) {
       pageInfo {
         startCursor
