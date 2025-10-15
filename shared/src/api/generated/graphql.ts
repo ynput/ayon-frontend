@@ -1735,7 +1735,22 @@ export type GetVersionsQueryVariables = Exact<{
 
 export type GetVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, productId: string, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number } }> } } };
 
+export type GetVersionsByProductIdQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  productIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+  sortBy?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetVersionsByProductIdQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, productId: string, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number } }> } } };
+
 export type VersionFragment = { __typename?: 'VersionNode', name: string, id: string, hasReviewables: boolean, parents: Array<string>, path?: string | null, productId: string, active: boolean, allAttrib: string, author?: string | null, createdAt: any, status: string, tags: Array<string>, updatedAt: any, version: number };
+
+export type VersionsPageInfoFragment = { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean };
 
 export type GetInboxHasUnreadQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2011,6 +2026,14 @@ export const VersionFragmentDoc = `
   tags
   updatedAt
   version
+}
+    `;
+export const VersionsPageInfoFragmentDoc = `
+    fragment VersionsPageInfo on PageInfo {
+  startCursor
+  endCursor
+  hasNextPage
+  hasPreviousPage
 }
     `;
 export const MessageFragmentFragmentDoc = `
@@ -2580,10 +2603,7 @@ export const GetVersionsDocument = `
       latestOnly: $latest
     ) {
       pageInfo {
-        startCursor
-        endCursor
-        hasNextPage
-        hasPreviousPage
+        ...VersionsPageInfo
       }
       edges {
         cursor
@@ -2594,7 +2614,33 @@ export const GetVersionsDocument = `
     }
   }
 }
-    ${VersionFragmentDoc}`;
+    ${VersionsPageInfoFragmentDoc}
+${VersionFragmentDoc}`;
+export const GetVersionsByProductIdDocument = `
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
+  project(name: $projectName) {
+    versions(
+      productIds: $productIds
+      sortBy: $sortBy
+      last: $last
+      first: $first
+      after: $after
+      before: $before
+    ) {
+      pageInfo {
+        ...VersionsPageInfo
+      }
+      edges {
+        cursor
+        node {
+          ...Version
+        }
+      }
+    }
+  }
+}
+    ${VersionsPageInfoFragmentDoc}
+${VersionFragmentDoc}`;
 export const GetInboxHasUnreadDocument = `
     query GetInboxHasUnread {
   inbox(
@@ -2784,6 +2830,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetVersions: build.query<GetVersionsQuery, GetVersionsQueryVariables>({
       query: (variables) => ({ document: GetVersionsDocument, variables })
+    }),
+    GetVersionsByProductId: build.query<GetVersionsByProductIdQuery, GetVersionsByProductIdQueryVariables>({
+      query: (variables) => ({ document: GetVersionsByProductIdDocument, variables })
     }),
     GetInboxHasUnread: build.query<GetInboxHasUnreadQuery, GetInboxHasUnreadQueryVariables | void>({
       query: (variables) => ({ document: GetInboxHasUnreadDocument, variables })

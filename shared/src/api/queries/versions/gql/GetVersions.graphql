@@ -25,10 +25,7 @@ query GetVersions(
       latestOnly: $latest
     ) {
       pageInfo {
-        startCursor
-        endCursor
-        hasNextPage
-        hasPreviousPage
+        ...VersionsPageInfo
       }
       edges {
         cursor
