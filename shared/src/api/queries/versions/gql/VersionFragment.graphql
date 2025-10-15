@@ -13,4 +13,19 @@ fragment Version on VersionNode {
   tags
   updatedAt
   version
+  product {
+    id
+    name
+    productType
+    folderId
+    folder {
+      id
+      path
+      folderType
+    }
+  }
+  task {
+    name
+    taskType
+  }
 }
