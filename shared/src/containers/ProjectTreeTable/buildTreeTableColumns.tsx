@@ -102,6 +102,7 @@ export type BuildTreeTableColumnsProps = {
   excluded?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   groupBy?: TableGroupBy
+  nameLabel?: string
 }
 
 const buildTreeTableColumns = ({
@@ -112,6 +113,7 @@ const buildTreeTableColumns = ({
   excluded,
   extraColumns,
   groupBy,
+  nameLabel = 'Entity',
 }: BuildTreeTableColumnsProps) => {
   const staticColumns: ColumnDef<TableRow>[] = []
 
@@ -170,7 +172,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'name',
       accessorKey: 'name',
-      header: 'Folder / Task',
+      header: nameLabel,
       minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
       enableSorting: groupBy ? false : true,

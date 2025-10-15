@@ -80,7 +80,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
-import { useSelector } from 'react-redux'
+import { upperFirst } from 'lodash'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -189,7 +189,7 @@ export const ProjectTreeTable = ({
     toggleExpandAll,
     showHierarchy,
     fetchNextPage,
-    scopes,
+    scopes, // or entityTypes
     getEntityById,
   } = useProjectTableContext()
 
@@ -299,6 +299,9 @@ export const ProjectTreeTable = ({
     () => (isInitialized ? attribFields : loadingAttrib),
     [attribFields, loadingAttrib, isInitialized],
   )
+
+  const getNameLabelHeader = () => scopes.map((s) => upperFirst(s)).join(' / ')
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
       attribs: columnAttribs,
@@ -308,6 +311,7 @@ export const ProjectTreeTable = ({
       extraColumns,
       excluded: excludedColumns,
       groupBy,
+      nameLabel: getNameLabelHeader(),
     })
 
     if (sortableRows) {
