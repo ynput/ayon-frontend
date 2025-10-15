@@ -11,6 +11,7 @@ import { MoveEntityProvider, SettingsPanelProvider } from '@shared/context'
 import { FC } from 'react'
 import { VersionsProjectTableProvider } from './VersionsProjectTableProvider'
 import { VersionsColumnSettingsProvider } from './VersionsColumnSettingsProvider'
+import { VersionsDataProvider } from '../context/VersionsDataContext'
 
 interface VersionsProvidersProps {
   projectName: string
@@ -23,25 +24,27 @@ const VersionsProviders: FC<VersionsProvidersProps> = ({ projectName, children }
   })
 
   return (
-    <ProjectDataProvider projectName={projectName}>
-      <MoveEntityProvider>
-        <SettingsPanelProvider>
-          <VersionsColumnSettingsProvider>
-            <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-              <VersionsProjectTableProvider projectName={projectName}>
-                <DetailsPanelEntityProvider>
-                  <SelectionCellsProvider>
-                    <SelectedRowsProvider>
-                      <CellEditingProvider>{children}</CellEditingProvider>
-                    </SelectedRowsProvider>
-                  </SelectionCellsProvider>
-                </DetailsPanelEntityProvider>
-              </VersionsProjectTableProvider>
-            </ProjectTableQueriesProvider>
-          </VersionsColumnSettingsProvider>
-        </SettingsPanelProvider>
-      </MoveEntityProvider>
-    </ProjectDataProvider>
+    <VersionsDataProvider projectName={projectName}>
+      <ProjectDataProvider projectName={projectName}>
+        <MoveEntityProvider>
+          <SettingsPanelProvider>
+            <VersionsColumnSettingsProvider>
+              <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+                <VersionsProjectTableProvider projectName={projectName}>
+                  <DetailsPanelEntityProvider>
+                    <SelectionCellsProvider>
+                      <SelectedRowsProvider>
+                        <CellEditingProvider>{children}</CellEditingProvider>
+                      </SelectedRowsProvider>
+                    </SelectionCellsProvider>
+                  </DetailsPanelEntityProvider>
+                </VersionsProjectTableProvider>
+              </ProjectTableQueriesProvider>
+            </VersionsColumnSettingsProvider>
+          </SettingsPanelProvider>
+        </MoveEntityProvider>
+      </ProjectDataProvider>
+    </VersionsDataProvider>
   )
 }
 

@@ -98,6 +98,7 @@ export type BuildTreeTableColumnsProps = {
   attribs: ProjectTableAttribute[]
   links: LinkTypeModel[]
   showHierarchy: boolean
+  isExpandable?: boolean
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
@@ -109,6 +110,7 @@ const buildTreeTableColumns = ({
   attribs,
   links = [],
   showHierarchy,
+  isExpandable,
   options,
   excluded,
   extraColumns,
@@ -196,6 +198,11 @@ const buildTreeTableColumns = ({
           )
         }
 
+        const isExpandable =
+          row.getCanExpand() &&
+          !!row.originalSubRows &&
+          ['folder', 'version'].includes(row.original.entityType)
+
         return (
           <TableCellContent
             id={cellId}
@@ -204,7 +211,9 @@ const buildTreeTableColumns = ({
               hierarchy: showHierarchy,
             })}
             style={{
-              paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
+              paddingLeft: `calc(${row.depth * 1}rem + ${
+                isExpandable || !row.getCanExpand() ? 0 : 32
+              }px + 8px)`,
             }}
             tabIndex={0}
           >
@@ -227,9 +236,9 @@ const buildTreeTableColumns = ({
                 label={row.original.label}
                 name={row.original.name}
                 path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
-                showHierarchy={showHierarchy}
                 icon={row.original.icon}
                 type={row.original.entityType}
+                isExpandable={isExpandable}
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
                 toggleExpanded={row.getToggleExpandedHandler()}

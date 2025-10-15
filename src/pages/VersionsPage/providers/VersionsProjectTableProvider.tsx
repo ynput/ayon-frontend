@@ -6,7 +6,7 @@ import {
   useProjectTableModules,
 } from '@shared/containers'
 import { useAppSelector } from '@state/store'
-import { FC, useState } from 'react'
+import { FC } from 'react'
 import { useVersionsDataContext } from '../context/VersionsDataContext'
 
 interface VersionsProjectTableProviderProps {
@@ -18,13 +18,10 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
   projectName,
   children,
 }) => {
-  const { versionsTableData, versionsMap } = useVersionsDataContext()
+  const { versionsTableData, versionsMap, expanded, updateExpanded } = useVersionsDataContext()
   const modules = useProjectTableModules()
 
   const { attribFields, projectInfo, users } = useProjectDataContext()
-
-  // expanded state of versions
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   // loading states
   const isInitialized = true // replace with actual state
@@ -54,7 +51,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
       tasksMap={tasksMap}
       tableRows={versionsTableData}
       expanded={expanded}
-      setExpanded={(e) => setExpanded(e as any)}
+      updateExpanded={updateExpanded}
       isInitialized={isInitialized}
       showHierarchy={false}
       isLoading={isLoadingAll}

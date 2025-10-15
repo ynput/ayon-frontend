@@ -117,11 +117,11 @@ export const HeaderCell = styled.th`
     .resize-handle {
       opacity: 1;
     }
-    
+
     .actions {
       display: flex !important;
     }
-    
+
     .actions .header-menu {
       display: flex !important;
     }
@@ -188,7 +188,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   .sort-button.visible {
     display: flex !important;
   }
-  
+
   .sort-button.selected {
     display: flex !important;
   }
@@ -196,7 +196,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   .header-menu {
     display: none;
   }
-  
+
   ${({ $isOpen }) =>
     $isOpen &&
     `
@@ -204,13 +204,13 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
       display: flex !important;
     }
   `}
-  
+
   .header-menu.open,
   .header-menu.active {
     display: flex !important;
   }
 
-   .resizing & {
+  .resizing & {
     .sort-button,
     .header-menu {
       display: none !important;
@@ -225,7 +225,7 @@ type TableCellProps = {
 export const TableCell = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
-  background-color: var(--color-table-task);
+  background-color: var(--color-table-row);
 
   &.${DRAG_HANDLE_CLASS} {
     // Styles for the button inside the drag handle cell
@@ -248,9 +248,9 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
-  /* Lighter background for folders in hierarchy mode */
-  &.folder-in-hierarchy {
-    background-color: var(--color-table-folder);
+  /* Lighter background for expandable rows */
+  &.expandable {
+    background-color: var(--color-table-row-high);
   }
 
   &.selected-row {

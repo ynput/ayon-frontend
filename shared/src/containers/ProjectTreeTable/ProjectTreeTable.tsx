@@ -131,6 +131,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   excludedColumns?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   isLoading?: boolean
+  isExpandable?: boolean // if true, show the expand/collapse icons
   clientSorting?: boolean
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
@@ -151,6 +152,7 @@ export const ProjectTreeTable = ({
   excludedColumns,
   extraColumns,
   isLoading: isLoadingProp,
+  isExpandable,
   clientSorting = false,
   sortableRows = false,
   onRowReorder,
@@ -307,6 +309,7 @@ export const ProjectTreeTable = ({
       attribs: columnAttribs,
       links: linkTypes,
       showHierarchy,
+      isExpandable,
       options,
       extraColumns,
       excluded: excludedColumns,
@@ -332,7 +335,15 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
+  }, [
+    columnAttribs,
+    showHierarchy,
+    isExpandable,
+    options,
+    extraColumns,
+    excludedColumns,
+    sortableRows,
+  ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date
   useEffect(() => {
@@ -351,7 +362,7 @@ export const ProjectTreeTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: () => true,
+    getRowCanExpand: () => !!isExpandable || showHierarchy,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -1213,7 +1224,9 @@ const TableCell = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
-          'folder-in-hierarchy': showHierarchy && cell.row.original.entityType === 'folder',
+          expandable:
+            !!cell.row.originalSubRows &&
+            ['folder', 'version'].includes(cell.row.original.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,

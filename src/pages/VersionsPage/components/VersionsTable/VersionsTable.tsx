@@ -7,7 +7,7 @@ interface VersionsTableProps {
 }
 
 const VersionsTable: FC<VersionsTableProps> = ({ readOnly = [] }) => {
-  const { fetchNextPage } = useVersionsDataContext()
+  const { fetchNextPage, isStacked } = useVersionsDataContext()
 
   return (
     <ProjectTreeTable
@@ -16,6 +16,8 @@ const VersionsTable: FC<VersionsTableProps> = ({ readOnly = [] }) => {
       // pagination
       onScrollBottom={fetchNextPage}
       readOnly={readOnly}
+      excludedColumns={['assignees']}
+      isExpandable={isStacked}
     />
   )
 }
