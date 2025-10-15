@@ -23,6 +23,7 @@ import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from './useProjectTableModules'
 import { useGetEntityLinksQuery } from '@shared/api'
+import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -69,12 +70,17 @@ export const useFetchOverviewData = ({
   const {
     data: { folders = [] } = {},
     isLoading,
-    isFetching: isFetchingFolders,
+    isFetching: isFetchingFoldersRaw,
     isUninitialized: isUninitializedFolders,
     refetch: refetchFolders,
   } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
+  )
+
+  const isFetchingFolders = useQueryArgumentChangeLoading(
+    { projectName: projectName || '' },
+    isFetchingFoldersRaw,
   )
 
   // console.log('Folder count:', folders.length)
@@ -131,10 +137,10 @@ export const useFetchOverviewData = ({
       }
 
       // Check if parent is expanded
-  const parentId = folder.parentId as string
-  const isSelectedInSlicer = selectedFolders.includes(folder.id as string)
-  const expandedMap = expanded as Record<string, boolean>
-  if (expandedMap[parentId] === true || isSelectedInSlicer) {
+      const parentId = folder.parentId as string
+      const isSelectedInSlicer = selectedFolders.includes(folder.id as string)
+      const expandedMap = expanded as Record<string, boolean>
+      if (expandedMap[parentId] === true || isSelectedInSlicer) {
         visibleSet.add(folder.id)
       }
     })
