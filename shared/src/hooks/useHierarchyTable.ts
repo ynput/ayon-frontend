@@ -3,6 +3,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useGetFolderListQuery } from '@shared/api'
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
+import { useQueryArgumentChangeLoading } from './useQueryArgumentChangeLoading'
 
 type Props = {
   projectName: string | null
@@ -10,9 +11,14 @@ type Props = {
 }
 
 export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
-  const { data: { folders = [] } = {}, isFetching } = useGetFolderListQuery(
+  const { data: { folders = [] } = {}, isFetching: isFetchingRaw } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
+  )
+
+  const isFetching = useQueryArgumentChangeLoading(
+    { projectName: projectName || '' },
+    isFetchingRaw,
   )
 
   const getFolderIcon = (type: string) => {
