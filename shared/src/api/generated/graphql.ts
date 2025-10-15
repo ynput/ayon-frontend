@@ -35,6 +35,12 @@ export type ActivitiesConnection = {
   pageInfo: PageInfo;
 };
 
+export type ActivityCategory = {
+  __typename?: 'ActivityCategory';
+  color: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type ActivityEdge = {
   __typename?: 'ActivityEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -62,7 +68,7 @@ export type ActivityNode = {
   assignee?: Maybe<UserNode>;
   author?: Maybe<UserNode>;
   body: Scalars['String']['output'];
-  category?: Maybe<Scalars['String']['output']>;
+  category?: Maybe<ActivityCategory>;
   createdAt: Scalars['DateTime']['output'];
   creationOrder: Scalars['Int']['output'];
   entityId?: Maybe<Scalars['String']['output']>;
