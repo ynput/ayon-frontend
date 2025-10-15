@@ -3,8 +3,11 @@ import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
+import {
+  RESTRICTED_ENTITY_TYPE,
+  RESTRICTED_ENTITY_NAME,
+} from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 // Extend EntityListItem to include links
 export type EntityListItemWithLinks = EntityListItem & {
@@ -97,22 +100,24 @@ const useGetListItemsData = ({
       fetchNextPage()
     }
   }
-
-  const buildPrivateItem = (i: GetListItemsResult['items'][number]): EntityListItemWithLinks => ({
+  const buildRestrictedItem = (
+    i: GetListItemsResult['items'][number]
+  ): EntityListItemWithLinks => ({
     active: true,
-    name: 'private',
-    id: 'private' + uuidv4().replace(/-/g, ''),
+    name: RESTRICTED_ENTITY_NAME,
+    id: i.id, // Use the actual list item ID from the backend
     entityId: i.entityId,
-    entityType: 'unknown',
+    entityType: RESTRICTED_ENTITY_TYPE,
     allAttrib: '',
     attrib: {},
     ownAttrib: [],
-    status: 'private',
+    status: '',
     tags: [],
     updatedAt: '',
+    createdAt: '',  // <-- required to match EntityListItemWithLinks type
     position: 0,
     ownItemAttrib: [],
-    links: [], // Add empty links array
+    links: [],
     parents: [],
   })
 
@@ -120,7 +125,13 @@ const useGetListItemsData = ({
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => (i ? i : buildPrivateItem(i))) || [],
+      (page) => page.items?.map((i) => {
+        // Check if item is restricted (has entityType 'unknown' or missing name)
+        if (!i || i.entityType === RESTRICTED_ENTITY_TYPE || !i.name) {
+          return buildRestrictedItem(i)
+        }
+        return i
+      }) || [],
     )
   }, [itemsInfiniteData?.pages])
 

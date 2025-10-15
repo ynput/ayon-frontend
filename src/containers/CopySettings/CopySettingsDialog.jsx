@@ -300,9 +300,8 @@ const CopySettingsDialog = ({
             }}
           >
             {selectedAddons
-              .filter((addon) => ((!variantIsDev(sourceVariant)) || sourceVersions[addon.name]))
+              .filter((addon) => ((!variantIsDev(sourceVariant)) || sourceVersions[addon.name] || !allowBundleSelect) ) 
               .map((addon) => (
-                <>
                 <CopySettingsNode
                   key={`${addon.name}_${addon.version}`}
                   addonName={addon.name}
@@ -320,11 +319,11 @@ const CopySettingsDialog = ({
                     setNodeState((o) => ({ ...o, [addon.name]: state }))
                   }}
                   forcedSourceVariant={sourceVariant}
-                  forcedSourceVersion={sourceBundle ? sourceVersions[addon.name] : null}
-                  forcedSourceProjectName={sourceProjectName || null}
+                  forcedSourceVersion={allowBundleSelect && (sourceBundle ? sourceVersions[addon.name] : null)}
+                  forcedSourceProjectName={sourceProjectName}
+                  preferredSourceVersion={sourceVersions[addon.name]}
                   isDev={variantIsDev(sourceVariant)}
                 />
-                </>
               ))}
           </div>
 

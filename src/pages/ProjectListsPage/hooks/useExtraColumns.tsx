@@ -3,6 +3,7 @@ import { CellWidget } from '@shared/containers/ProjectTreeTable'
 import clsx from 'clsx'
 import { useMemo } from 'react'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
+import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 const typeColumns: Record<
   TreeTableSubType,
@@ -57,10 +58,10 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   rowId={id}
                   className={clsx(typeColumn.value, { loading: row.original.isLoading })}
                   columnId={column.id}
-                  value={value}
-                  options={meta?.options?.[typeColumn.value]}
+                  value={isEntityRestricted(type) ? '' : value}
+                  options={isEntityRestricted(type) ? [] : meta?.options?.[typeColumn.value]}
                   attributeData={{ type: 'string' }}
-                  isReadOnly={typeColumn.readonly || meta?.readOnly?.includes(column.id)}
+                  isReadOnly={typeColumn.readonly || meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
                   onChange={(value) =>
                     meta?.updateEntities?.([
                       { field: typeColumn.value, value, id, type, rowId: row.id },

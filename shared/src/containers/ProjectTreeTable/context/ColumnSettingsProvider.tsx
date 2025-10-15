@@ -30,12 +30,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
   const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
 
-  // Local row height state that persists and doesn't get overridden by API
-  const [localRowHeight, setLocalRowHeight] = useState<number>(34)
-
-  // Flag to prevent API updates during active row height adjustments
-  const isAdjustingRowHeightRef = React.useRef(false)
-
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
@@ -50,20 +44,11 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
-    rowHeight: configRowHeight,
+    rowHeight: configRowHeight = 34,
   } = columnsConfig || {}
 
-  // Initialize local row height from API only once on mount
-  const hasInitializedRef = React.useRef(false)
-  React.useEffect(() => {
-    if (!hasInitializedRef.current && configRowHeight !== undefined && configRowHeight !== null) {
-      setLocalRowHeight(configRowHeight)
-      hasInitializedRef.current = true
-    }
-  }, [configRowHeight])
-
-  // Use internal row height during slider adjustments, otherwise use local persistent state
-  const rowHeight = internalRowHeight ?? localRowHeight
+  // Use internal row height during adjustments, otherwise use config value
+  const rowHeight = internalRowHeight ?? configRowHeight
 
   const sorting = [...sortingInit]
   const columnOrder = [...columnOrderInit]
@@ -258,17 +243,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   // Update row height for immediate UI feedback (no API call)
-  const updateRowHeightUI = (newRowHeight: number) => {
-    setLocalRowHeight(newRowHeight)
-  }
+  const updateRowHeight = React.useCallback((newRowHeight: number) => {
+    setInternalRowHeight(newRowHeight)
+  }, [])
 
   // Update row height and persist to API
-  const updateRowHeightWithPersistence = (newRowHeight: number) => {
+  const updateRowHeightWithPersistence = React.useCallback((newRowHeight: number) => {
     // Update UI immediately
-    setLocalRowHeight(newRowHeight)
-
-    // Block external API updates during adjustment period
-    isAdjustingRowHeightRef.current = true
     setInternalRowHeight(newRowHeight)
 
     // Clear any existing timeout to debounce API calls
@@ -284,14 +265,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         rowHeight: newRowHeight,
       })
 
-      // Clean up internal state
+      // Clean up internal state after API call completes
       setInternalRowHeight(null)
-      isAdjustingRowHeightRef.current = false
-    }, 200)
-  }
-
-  // Public API for immediate UI updates (used during slider drag)
-  const updateRowHeight = updateRowHeightUI
+    }, 300)
+  }, [columnsConfig, onChangeWithColumns])
 
   // Remove redundant local updater functions in favor of unified updaters with all columns
 

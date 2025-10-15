@@ -10,8 +10,9 @@ import { useSlicerContext } from '@context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { getAttributeIcon } from '@shared/util'
 
-interface Props {
+interface TableDataBySliceProps {
   sliceFields: SliceType[]
+  entityTypes?: string[] // entity types
 }
 
 const getNoValue = (field: string): SimpleTableRow => ({
@@ -36,7 +37,10 @@ const getSomeValue = (field: string): SimpleTableRow => ({
   },
 })
 
-const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
+const useTableDataBySlice = ({
+  sliceFields,
+  entityTypes = [],
+}: TableDataBySliceProps): TableData => {
   const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
   const { formatAttribute } = useExtraSlices()
@@ -71,6 +75,7 @@ const useTableDataBySlice = ({ sliceFields }: Props): TableData => {
   const showAttributes = sliceFields.includes('attributes')
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
     skip: !showAttributes,
+    entityTypes,
   })
 
   if (showAttributes && typeof formatAttribute === 'function') {

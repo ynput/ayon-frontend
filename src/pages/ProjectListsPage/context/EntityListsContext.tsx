@@ -333,11 +333,32 @@ export const EntityListsProvider = ({
       const cached = cache.get(key)
       if (cached) {
         // Recreate command closures with current selection (list items carry command depending on selected)
-        return cached.items.map((item) => ({
-          ...item,
-          // For nested items we keep structure; leaf list items already have bound commands referencing addToList with id
-          items: item.items,
-        }))
+        const rebindCommands = (items: ListSubMenuItem[]): ListSubMenuItem[] => {
+          return items.map((item) => {
+            // Skip special items like '__new-list__' which should not be in the cache
+            if (item.id.startsWith('__')) {
+              return item
+            }
+            // If this is a list item (has command), rebind it with current selection
+            if (item.command) {
+              const list = lists.find((l) => l.id === item.id)
+              if (list) {
+                return buildListMenuItem(list, selected, item.icon !== undefined)
+              }
+            }
+            // If this is a folder (has nested items), recursively rebind children
+            if (item.items) {
+              return {
+                ...item,
+                items: rebindCommands(item.items),
+              }
+            }
+            return item
+          })
+        }
+        // Filter out any special items that shouldn't be in cache (like __new-list__)
+        const filteredItems = cached.items.filter(item => !item.id.startsWith('__'))
+        return rebindCommands(filteredItems)
       }
 
       const resolveShowIcon = getShowIcon || (() => false)

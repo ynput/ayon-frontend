@@ -116,6 +116,7 @@ const tagTypes = [
   'watchers',
   'workfile',
   'link',
+  'linkSearchItem',
   'guest',
   'category',
 ]

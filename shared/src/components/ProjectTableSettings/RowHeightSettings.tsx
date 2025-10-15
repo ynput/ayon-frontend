@@ -1,23 +1,7 @@
 import { FC, useState, useCallback, useEffect } from 'react'
 import styled from 'styled-components'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
-
-// Debounce hook for smooth slider performance
-const useDebounce = (value: number, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value)
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
-
-  return debouncedValue
-}
+import { useDebounce } from 'primereact/hooks'
 
 const Container = styled.div`
   padding: 16px;
@@ -94,37 +78,30 @@ const RowHeightSettings: FC = () => {
     updateRowHeightWithPersistence,
   } = useColumnSettingsContext()
 
-  // Local state for immediate UI updates during slider drag
-  const [localRowHeight, setLocalRowHeight] = useState(contextRowHeight)
   const [isDragging, setIsDragging] = useState(false)
+  const [localValue, setLocalValue] = useState(contextRowHeight)
 
-  // Debounced value for smooth table updates during drag
-  const debouncedRowHeight = useDebounce(localRowHeight, 25)
-
-  // Sync with context row height when it changes externally (but not while dragging)
+  // Sync local value when context changes and we're not dragging
   useEffect(() => {
     if (!isDragging) {
-      setLocalRowHeight(contextRowHeight)
+      setLocalValue(contextRowHeight)
     }
   }, [contextRowHeight, isDragging])
 
-  // Update table rows during slider drag (no API persistence)
-  useEffect(() => {
-    if (isDragging) {
-      updateRowHeight(debouncedRowHeight)
-    }
-  }, [debouncedRowHeight, updateRowHeight, isDragging])
-
   const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value, 10)
-    setLocalRowHeight(newValue)
 
-    // If not dragging (e.g., arrow keys), update immediately
-    if (!isDragging) {
-      updateRowHeight(newValue)
-      updateRowHeightWithPersistence(newValue)
-    }
-  }, [isDragging, updateRowHeight, updateRowHeightWithPersistence])
+    // Update local state immediately for responsive slider
+    setLocalValue(newValue)
+  }, [])
+
+  // Debounce the local value to avoid too many updates
+  const debouncedValue = useDebounce(localValue, 25)
+
+  // Update context when debounced value changes
+  useEffect(() => {
+    updateRowHeight(localValue)
+  }, [debouncedValue, updateRowHeight])
 
   const handleSliderStart = useCallback(() => {
     setIsDragging(true)
@@ -132,12 +109,12 @@ const RowHeightSettings: FC = () => {
 
   const handleSliderRelease = useCallback(() => {
     setIsDragging(false)
-    // Persist to API only when user finishes adjusting
-    updateRowHeightWithPersistence(localRowHeight)
-  }, [localRowHeight, updateRowHeightWithPersistence])
+    // Persist to API when user finishes adjusting
+    updateRowHeightWithPersistence(localValue)
+  }, [localValue, updateRowHeightWithPersistence])
 
   // Calculate the percentage for the gradient fill
-  const fillPercentage = ((localRowHeight - 24) / (200 - 24)) * 100
+  const fillPercentage = ((localValue - 24) / (200 - 24)) * 100
 
   return (
     <Container>
@@ -149,7 +126,7 @@ const RowHeightSettings: FC = () => {
           min={24}
           max={200}
           step={2}
-          value={localRowHeight}
+          value={localValue}
           onChange={handleSliderChange}
           onMouseDown={handleSliderStart}
           onMouseUp={handleSliderRelease}
@@ -157,7 +134,7 @@ const RowHeightSettings: FC = () => {
             background: `linear-gradient(to right, var(--md-sys-color-primary) 0%, var(--md-sys-color-primary) ${fillPercentage}%, var(--md-sys-color-outline-variant) ${fillPercentage}%, var(--md-sys-color-outline-variant) 100%)`,
           }}
         />
-        <ValueDisplay>{localRowHeight}</ValueDisplay>
+        <ValueDisplay>{localValue}</ValueDisplay>
       </SliderContainer>
     </Container>
   )
