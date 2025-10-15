@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
-import BrowserPage from '../BrowserPage'
+import VersionsPage from '../VersionsPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
 import ProjectAddon from '../ProjectAddon'
@@ -12,7 +12,6 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
-
 
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
@@ -31,7 +30,7 @@ import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
-import HelpButton from "@components/HelpButton/HelpButton.tsx"
+import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 
@@ -141,9 +140,9 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
-        name: 'Browser',
-        path: `/projects/${projectName}/browser`,
-        module: 'browser',
+        name: 'Versions',
+        path: `/projects/${projectName}/versions`,
+        module: 'versions',
         uriSync: true,
       },
       {
@@ -177,12 +176,11 @@ const ProjectPage = () => {
         module: 'workfiles',
         uriSync: true,
       },
-      ...remotePages
-        .map((remote) => ({
-          name: remote.name,
-          module: remote.module,
-          path: `/projects/${projectName}/${remote.module}`,
-        })),
+      ...remotePages.map((remote) => ({
+        name: remote.name,
+        module: remote.module,
+        path: `/projects/${projectName}/${remote.module}`,
+      })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -242,8 +240,8 @@ const ProjectPage = () => {
     if (module === 'tasks') {
       return <TasksProgressPage />
     }
-    if (module === 'browser') {
-      return <BrowserPage projectName={projectName} />
+    if (module === 'versions') {
+      return <VersionsPage projectName={projectName} />
     }
     if (module === 'lists') {
       return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
@@ -292,19 +290,19 @@ const ProjectPage = () => {
       )
     }
 
-    // Fallback to browser page if no addon matches addonName
+    // Fallback to versions page if no addon matches addonName
     return <Navigate to={`/projects/${projectName}/overview`} />
   }
 
   const child = getPageByModuleAndAddonData(module, addonName)
 
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
-    // focus the new version in the browser
+    // focus the new version in the versions
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isGuest){
-    return <GuestUserPageLocked/>
+  if (isGuest) {
+    return <GuestUserPageLocked />
   }
 
   return (
