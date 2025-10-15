@@ -11,7 +11,10 @@ import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import { getUpdatedEntityIds } from './filterRefetchUtils'
-import { refetchTasksForCacheEntry, updateOverviewTasksWithData } from './refetchFilteredEntities'
+import {
+  refetchTasksForCacheEntry,
+  refetchOverviewTasksForCacheEntry,
+} from './refetchFilteredEntities'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -679,46 +682,36 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const updatedFolderIds = getUpdatedEntityIds(folderOperations)
 
           // Get all active task list cache entries
-          const tasksListInfiniteEntries = Object.values(state.restApi.queries).filter(
-            (entry: any) =>
-              entry?.endpointName === 'getTasksListInfinite' &&
-              entry?.status === 'fulfilled' &&
-              entry?.originalArgs
-          )
+          const overviewTaskTags = updatedTaskIds.map((id) => ({ type: 'overviewTask', id }))
+          const tasksListInfiniteEntries = getOverviewApi.util
+            .selectInvalidatedBy(state, overviewTaskTags)
+            .filter((entry) => entry.endpointName === 'getTasksListInfinite')
 
           // Requirement: "refetch the full data for the specific entity/entities"
           // For each cache with its own filter, fetch entities and update that cache
           if (updatedTaskIds.length > 0 && projectName) {
-            // Collect all fetched tasks from different filtered queries to reuse them
-            const allFetchedTasks: any[] = []
-
-            // Process each cache entry independently to avoid race conditions
+            // Process getTasksListInfinite caches
             for (const entry of tasksListInfiniteEntries) {
-              const fetchedTasks = await refetchTasksForCacheEntry({
+              await refetchTasksForCacheEntry({
                 dispatch,
                 projectName,
                 updatedTaskIds,
                 cacheEntry: entry,
               })
-
-              if (fetchedTasks) {
-                allFetchedTasks.push(...fetchedTasks)
-              }
             }
 
-            // Also update getOverviewTasksByFolders cache using the already fetched data
-            // This avoids a duplicate API call since we already have the task data
+            // Process getOverviewTasksByFolders caches
             // Use selectInvalidatedBy to get only caches that contain the updated tasks
-            const overviewTaskTags = updatedTaskIds.map((id) => ({ type: 'overviewTask', id }))
             const overviewTasksEntries = getOverviewApi.util
               .selectInvalidatedBy(state, overviewTaskTags)
               .filter((entry) => entry.endpointName === 'getOverviewTasksByFolders')
 
-            if (overviewTasksEntries.length > 0 && allFetchedTasks.length > 0) {
-              updateOverviewTasksWithData({
+            for (const entry of overviewTasksEntries) {
+              await refetchOverviewTasksForCacheEntry({
                 dispatch,
-                overviewTasksEntries,
-                allFetchedTasks,
+                projectName,
+                updatedTaskIds,
+                cacheEntry: entry,
               })
             }
           }

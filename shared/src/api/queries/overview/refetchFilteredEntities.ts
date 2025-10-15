@@ -83,52 +83,79 @@ export const refetchTasksForCacheEntry = async ({
   }
 }
 
-interface UpdateOverviewTasksWithDataArgs {
+interface RefetchOverviewTasksForCacheEntryArgs {
   dispatch: ThunkDispatch<any, any, UnknownAction>
-  overviewTasksEntries: any[]
-  allFetchedTasks: any[]
+  projectName: string
+  updatedTaskIds: string[]
+  cacheEntry: any
 }
 
 /**
- * Updates the overview tasks cache with pre-fetched task data.
- * This avoids redundant API calls by reusing data fetched from filtered queries.
+ * Refetches overview tasks with the cache entry's specific filter and updates the cache.
+ * This ensures that tasks are correctly filtered and removed if they no longer match.
+ * Returns the fetched tasks for potential reuse.
  */
-export const updateOverviewTasksWithData = ({
+export const refetchOverviewTasksForCacheEntry = async ({
   dispatch,
-  overviewTasksEntries,
-  allFetchedTasks,
-}: UpdateOverviewTasksWithDataArgs): void => {
-  if (!allFetchedTasks.length) return
-
-  // Build a map of all unique tasks (deduplicate by id, keeping the most complete version)
-  const tasksMap = new Map<string, any>()
-  for (const task of allFetchedTasks) {
-    const existingTask = tasksMap.get(task.id)
-    // Keep the task with more properties, or the first one if they're similar
-    if (!existingTask || Object.keys(task).length >= Object.keys(existingTask).length) {
-      tasksMap.set(task.id, task)
+  projectName,
+  updatedTaskIds,
+  cacheEntry,
+}: RefetchOverviewTasksForCacheEntryArgs): Promise<any[] | null> => {
+  try {
+    // Build query params for this specific cache's filters
+    const queryParams: any = {
+      projectName,
+      taskIds: updatedTaskIds,
     }
-  }
 
-  const uniqueTasks = Array.from(tasksMap.values())
-  const taskIdSet = new Set(uniqueTasks.map((t) => t.id))
+    if (cacheEntry.originalArgs?.filter) {
+      queryParams.filter = cacheEntry.originalArgs.filter
+    }
 
-  for (const entry of overviewTasksEntries) {
+    if (cacheEntry.originalArgs?.parentIds) {
+      queryParams.parentIds = cacheEntry.originalArgs.parentIds
+    }
+
+    // Fetch entities with this cache's filter - server will only return matching tasks
+    const result = await dispatch(
+      getOverviewApi.endpoints.GetTasksList.initiate(queryParams as any, { forceRefetch: true })
+    )
+
+    if (!result.data?.tasks) return null
+
+    const fetchedTasks = result.data.tasks
+    const fetchedTasksMap = new Map(fetchedTasks.map((t) => [t.id, t]))
+
+    // Update this specific cache entry with filtered results
     dispatch(
       getOverviewApi.util.updateQueryData(
         'getOverviewTasksByFolders',
-        (entry as any).originalArgs,
+        cacheEntry.originalArgs,
         (draft) => {
-          for (let i = 0; i < draft.length; i++) {
-            if (taskIdSet.has(draft[i].id)) {
-              const fetchedTask = uniqueTasks.find((t) => t.id === draft[i].id)
+          // For each updated task, find it in the array and update/remove it
+          for (const taskId of updatedTaskIds) {
+            const fetchedTask = fetchedTasksMap.get(taskId)
+            const taskIndex = draft.findIndex((t) => t.id === taskId)
+
+            if (taskIndex !== -1) {
               if (fetchedTask) {
-                draft[i] = fetchedTask
+                // Server returned this task - it matches the filter
+                // Update with fresh data by replacing the object
+                draft[taskIndex] = fetchedTask
+              } else {
+                // Server didn't return this task - it no longer matches the filter
+                // Remove it from cache
+                draft.splice(taskIndex, 1)
               }
             }
           }
         }
       )
     )
+
+    return fetchedTasks
+  } catch (error) {
+    console.error('Background overview tasks refetch failed:', error)
+    return null
   }
 }
