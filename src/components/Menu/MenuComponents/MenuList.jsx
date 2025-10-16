@@ -39,12 +39,6 @@ const MenuList = ({
       })
   }
 
-  const handleMouseLeave = (e) => {
-    if (subMenu) {
-      onSubMenu && onSubMenu(e, { id: parent, items: null })
-    }
-  }
-
   //   when a subMenu open, set focus on the first item
   useEffect(() => {
     if (subMenu) {
@@ -56,20 +50,22 @@ const MenuList = ({
   // check that the menu is not off the screen
   useEffect(() => {
     if (!menuRef.current) return
-    const { top, height } = menuRef.current.getBoundingClientRect()
-    const windowHeight = window.innerHeight
-    if (top + height > windowHeight) {
-      const newTop = windowHeight - height - 60
-      setTop(newTop)
-    }
-  }, [menuRef.current])
+    
+    const menuElement = menuRef.current.querySelector('menu')
+    if (!menuElement) return
+    
+    const rect = menuRef.current.getBoundingClientRect()
+    const availableHeight = window.innerHeight - rect.top - 60
+    const maxHeight = Math.min(700, availableHeight)
+    
+    menuElement.style.maxHeight = `${maxHeight}px`
+  }, [menuRef.current, items])
 
   return (
     <Styled.MenuWrapper
       style={{ paddingRight: subMenu ? 16 : 0, ...style, top }}
       className={subMenu ? 'sub-menu' : 'menu-list'}
       id={id}
-      onMouseLeave={handleMouseLeave}
       {...props}
       ref={menuRef}
     >
@@ -165,7 +161,6 @@ const MenuList = ({
                 style={{ paddingRight: items.length ? '0' : '16px', ...itemStyle }}
                 ref={(e) => (itemRefs.current[id] = e)}
                 onMouseEnter={(e) => handleSubMenu(e, id, items)}
-                onMouseLeave={(e) => handleSubMenu(e, id, [])}
                 className={`${itemClassName} ${props.className || ''}`}
                 {...props}
               >

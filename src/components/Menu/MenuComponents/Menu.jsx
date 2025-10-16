@@ -38,22 +38,8 @@ const Menu = ({ menu = [], onClose, header, footer = '' }) => {
     }
   }
 
-  const onMenuLeave = (e, menu = {}) => {
-    // target where we are going
-    const relatedTargetId = e.relatedTarget?.id
-    const relatedTargetSubMenu = subMenus.find((m) => m.id === relatedTargetId)
-
-    if (e.relatedTarget?.tagName === 'DIALOG') return setSubMenus([])
-
-    if (!relatedTargetSubMenu) {
-      setSubMenus(subMenus.filter((m) => m.level <= (menu.level || 0) + 1))
-    }
-    //   if (menu.items.length) {
-  }
-
   const handleSubMenu = (e, menu = {}) => {
     if (e.type === 'mouseenter' || e.type === 'keydown') onMenuEnter(e, menu)
-    else if (e.type === 'mouseleave') onMenuLeave(e, menu)
   }
 
   return (
