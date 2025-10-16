@@ -6,6 +6,11 @@ import styled from 'styled-components'
  */
 export const QuillListStyles = styled.div`
   height: 100%;
+  .ql-editor a {
+    display: inline !important;
+    vertical-align: baseline !important;
+  }
+
   /* Fix for unordered list showing as ordered list */
   .ql-editor ol,
   .ql-editor ul {

@@ -118,7 +118,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const handleDoubleClick = useCallback(() => {
     if (isPlaceholder || isReadOnly) return
     setEditingCellId(cellId)
-  }, [cellId, setEditingCellId, isPlaceholder])
+  }, [cellId, setEditingCellId, isPlaceholder, isReadOnly])
 
   const handleSingleClick = () => {
     // clicking a cell that is not editing will close the editor on this cell
@@ -141,12 +141,23 @@ export const CellWidget: FC<EditorCellProps> = ({
   }
 
   const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
-    setEditingCellId(null)
     if (isReadOnly) return
-    // move to the next cell row
-    key === 'Enter' && moveToNextRow()
-    // make change if the value is different or if the key is 'Enter'
-    if (newValue !== value || key === 'Enter') {
+    
+    // For Enter key, move to next row first to prevent dialog blinking
+    if (key === 'Enter') {
+      // make change if the value is different
+      if (newValue !== value) {
+        onChange?.(newValue, key)
+      }
+      // move to the next cell row (this will set the new editing cell ID)
+      moveToNextRow()
+      return
+    }
+    
+    // For other keys, close current dialog and make change
+    setEditingCellId(null)
+    // make change if the value is different
+    if (newValue !== value) {
       onChange?.(newValue, key)
     }
   }
@@ -248,6 +259,9 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={value as string}
             isInherited={isInherited}
             columnId={columnId}
+            cellId={cellId}
+            isSelected={isCurrentCellFocused}
+            type={type as TextWidgetType}
             {...sharedProps}
             {...pt?.text}
           />

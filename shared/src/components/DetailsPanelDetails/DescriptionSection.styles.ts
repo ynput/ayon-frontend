@@ -238,8 +238,8 @@ export const StyledEditor = styled.div`
       }
 
       h2  {
-        a, em, strong {
-        font-size: 20px;
+        a, em, strong, u {
+        font-size: 24px;
       }
 
       p {
@@ -386,10 +386,9 @@ export const StyledMarkdown = styled.div`
     h2 {
       a,
       em,
-      strong {
-        font-size: 20px;
-        margin-top: 16px;
-        margin-bottom: 8px;
+      strong,
+      u {
+        font-size: 24px;
       }
     }
   }
