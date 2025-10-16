@@ -309,7 +309,6 @@ export const ProjectTreeTable = ({
       attribs: columnAttribs,
       links: linkTypes,
       showHierarchy,
-      isExpandable,
       options,
       extraColumns,
       excluded: excludedColumns,

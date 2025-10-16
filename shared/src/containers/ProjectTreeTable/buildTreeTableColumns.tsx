@@ -98,7 +98,6 @@ export type BuildTreeTableColumnsProps = {
   attribs: ProjectTableAttribute[]
   links: LinkTypeModel[]
   showHierarchy: boolean
-  isExpandable?: boolean
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
@@ -110,7 +109,6 @@ const buildTreeTableColumns = ({
   attribs,
   links = [],
   showHierarchy,
-  isExpandable,
   options,
   excluded,
   extraColumns,
