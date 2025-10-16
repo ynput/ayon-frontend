@@ -165,16 +165,18 @@ export const useBuildFilterOptions = ({
     if (statusOption) {
       Object.values(projectsInfo).forEach((project) => {
         const statuses = project?.statuses || []
-        statuses.forEach((status: Status) => {
-          if (!statusOption.values?.some((value) => value.id === status.name)) {
-            statusOption.values?.push({
-              id: status.name,
-              label: status.name,
-              icon: status.icon,
-              color: status.color,
-            })
-          }
-        })
+        statuses
+          .filter((status) => status.scope?.includes(scope))
+          .forEach((status: Status) => {
+            if (!statusOption.values?.some((value) => value.id === status.name)) {
+              statusOption.values?.push({
+                id: status.name,
+                label: status.name,
+                icon: status.icon,
+                color: status.color,
+              })
+            }
+          })
       })
 
       options.push(statusOption)
@@ -286,7 +288,7 @@ export const useBuildFilterOptions = ({
         'list_of_integers',
         'list_of_any',
         'list_of_submodels',
-      ].includes(type)
+      ].includes(type || '')
       const isDate = type === 'datetime'
       const enableOperatorChange = isListOf ? config?.enableOperatorChange : false
       const enableRelativeValues = isListOf || isDate ? config?.enableRelativeValues : false
@@ -553,7 +555,7 @@ const getAttributeFieldOptionRoot = (
   allowExcludes: config?.enableExcludes,
   operatorChangeable: config?.enableOperatorChange,
   icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
-  singleSelect: ['boolean', 'datetime'].includes(attribute.data.type),
+  singleSelect: ['boolean', 'datetime'].includes(attribute.data.type || ''),
 })
 
 const getAttributeOptions = (

@@ -1,8 +1,5 @@
-import {
-  QueryFilter,
-  useGetVersionsByProductsQuery,
-  useGetVersionsInfiniteQuery,
-} from '@shared/api'
+import { useGetVersionsByProductsQuery, useGetVersionsInfiniteQuery } from '@shared/api'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { VersionNode } from '@shared/api/queries'
 import { flattenInfiniteVersionsData } from '@shared/api/queries/versions/versionsUtils'
 import { createContext, FC, ReactNode, useContext, useMemo, useState } from 'react'
@@ -14,11 +11,16 @@ import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 export type VersionMap = Map<string, VersionNodeExtended>
 
 interface VersionsDataContextValue {
+  // STACKED
   isStacked: boolean
   setIsStacked: (stacked: boolean) => void
+  //   EXPANDED
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
   updateExpanded: OnChangeFn<ExpandedState>
+  //   FILTERS
+  filter: QueryFilter
+  setFilter: (filter: QueryFilter) => void
   // data
   versions: VersionNode[]
   childVersions: VersionNode[]
@@ -47,17 +49,13 @@ interface VersionsDataProviderProps {
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
   const [isStacked, setIsStacked] = useState(false)
   const [expanded, setExpanded] = useState<ExpandedState>({})
+  const [filter, setFilter] = useState<QueryFilter>({})
+  const filterString = JSON.stringify(filter)
 
   const { updateExpanded, expandedIds } = useExpandedState({
     expanded,
     setExpanded,
   })
-
-  const filter: QueryFilter = {
-    // conditions: [{ key: 'status', operator: 'eq', value: 'Not ready' }],
-    // operator: 'and',
-  }
-  const filterString = JSON.stringify(filter)
 
   const {
     currentData: versionsData,
@@ -96,6 +94,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const value: VersionsDataContextValue = {
     isStacked,
     setIsStacked,
+    // filters
+    filter,
+    setFilter,
+    // expanded
     expanded,
     setExpanded,
     updateExpanded,

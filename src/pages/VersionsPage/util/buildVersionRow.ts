@@ -20,6 +20,7 @@ export const buildVersionRow = (
   ownAttrib: Object.keys(version.attrib || {}),
   subType: version.product.productType,
   hasReviewables: version.hasReviewables,
+  // @ts-expect-error - it actually can be undefined
   subRows,
   links: {}, // TODO add links
 })

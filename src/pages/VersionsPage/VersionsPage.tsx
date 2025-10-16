@@ -4,11 +4,11 @@ import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import Slicer from '@containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
-import { VersionsStackedSwitch } from './components/VersionsToolbar/VersionsStackedSwitch'
 import { useSettingsPanel } from '@shared/context'
 import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers'
 import VersionsTable from './components/VersionsTable/VersionsTable'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
+import VersionsToolbar from './components/VersionsToolbar/VersionsToolbar'
 
 interface VersionsPageProps {
   projectName: string
@@ -42,7 +42,7 @@ const VersionsPage: FC<VersionsPageProps> = ({ projectName }) => {
         </SplitterPanel>
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
-            <VersionsStackedSwitch />
+            <VersionsToolbar />
             <Splitter
               layout="horizontal"
               stateKey="overview-splitter-settings"
