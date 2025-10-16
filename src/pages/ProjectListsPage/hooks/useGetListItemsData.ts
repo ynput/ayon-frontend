@@ -2,12 +2,13 @@ import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@s
 import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 import {
   RESTRICTED_ENTITY_TYPE,
   RESTRICTED_ENTITY_NAME,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
+import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 // Extend EntityListItem to include links
 export type EntityListItemWithLinks = EntityListItem & {
@@ -64,8 +65,8 @@ const useGetListItemsData = ({
 
   const {
     data: itemsInfiniteData,
-    isLoading,
-    isFetching,
+    isLoading: isLoadingRaw,
+    isFetching: isFetchingRaw,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
@@ -83,16 +84,20 @@ const useGetListItemsData = ({
       skip: !projectName || !listId || skip,
     },
   )
-  const [previousListId, setPreviousListId] = useState(listId)
 
-  // Detect when listId changes to track fetching due to project change
-  const isFetchingNewList = useMemo(() => {
-    const isProjectChanged = previousListId !== listId
-    if (isProjectChanged && !isFetching) {
-      setPreviousListId(listId)
-    }
-    return isFetching && isProjectChanged
-  }, [isFetching, isFetching, previousListId, listId])
+  // Only show loading when query arguments change, not on background refetches
+  const isFetching = useQueryArgumentChangeLoading(
+    {
+      projectName: projectName || '',
+      listId: listId || '',
+      sortBy: parseSorting(singleSort?.id) || '',
+      desc: singleSort?.desc || false,
+      filter: queryFilterString || '',
+    },
+    isFetchingRaw,
+  )
+
+  const isLoading = isLoadingRaw || isFetching
 
   const handleFetchNextPage = () => {
     if (hasNextPage) {
@@ -173,7 +178,7 @@ const useGetListItemsData = ({
 
   return {
     data: dataWithLinks,
-    isLoading: isLoading || isFetchingNewList,
+    isLoading,
     isFetchingNextPage,
     isError,
     fetchNextPage: handleFetchNextPage,

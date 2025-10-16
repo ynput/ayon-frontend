@@ -15,6 +15,7 @@ import {
   refetchTasksForCacheEntry,
   refetchOverviewTasksForCacheEntry,
 } from './refetchFilteredEntities'
+import { refetchFilteredListItems } from '../entityLists/refetchFilteredListItems'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -722,6 +723,30 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const hasDeleteOps = (operationsByType.folder || []).some((op: OperationModel) => op.type === 'delete')
           if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
             dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
+          }
+
+          // Refetch list items for updated entities (folders, tasks, etc.)
+          // This ensures calculated attributes in Lists tab are updated
+          const allUpdatedIds = [...updatedTaskIds, ...updatedFolderIds]
+          if (allUpdatedIds.length > 0 && projectName) {
+            const listItemTags = allUpdatedIds.map((id) => ({ type: 'entityListItem', id }))
+            const listItemsEntries = entityListsQueriesGql.util
+              .selectInvalidatedBy(state, listItemTags)
+              .filter((entry) => entry.endpointName === 'getListItemsInfinite')
+
+            // Process each list cache separately
+            for (const entry of listItemsEntries) {
+              const listId = entry.originalArgs?.listId
+              if (listId) {
+                await refetchFilteredListItems({
+                  dispatch,
+                  projectName,
+                  listId,
+                  updatedItemIds: allUpdatedIds,
+                  cacheEntry: entry,
+                })
+              }
+            }
           }
         } catch (error) {
           // undo all patches if there is an error
