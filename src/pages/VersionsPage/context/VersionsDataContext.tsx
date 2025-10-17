@@ -137,7 +137,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     isFetchingNextPage: versionsIsFetchingNextPage,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(
-    { projectName, versionFilter: combinedVersionFilter.filterString, folderIds: slicerFolderIds },
+    {
+      projectName,
+      versionFilter: combinedVersionFilter.filterString,
+      productFilter: combinedProductFilter.filterString,
+      folderIds: slicerFolderIds,
+    },
     {
       skip: showProducts,
     },
