@@ -1,34 +1,53 @@
 import { useGetVersionsByProductsQuery, useGetVersionsInfiniteQuery } from '@shared/api'
-import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
-import { VersionNode } from '@shared/api/queries'
-import { flattenInfiniteVersionsData } from '@shared/api/queries/versions/versionsUtils'
+import { useGetProductsInfiniteQuery } from '@shared/api/queries'
+import {
+  flattenInfiniteVersionsData,
+  flattenInfiniteProductsData,
+} from '@shared/api/queries/versions/versionsUtils'
 import { createContext, FC, ReactNode, useContext, useMemo, useState } from 'react'
-import { buildAllVersionsMaps, VersionNodeExtended } from '../util'
+import { buildVersionsAndProductsMaps, VersionNodeExtended, ProductNodeExtended } from '../util'
 import { useBuildVersionsTableData } from '../hooks'
-import { TableRow, useExpandedState } from '@shared/containers'
+import {
+  createFilterFromSlicer,
+  TableRow,
+  useExpandedState,
+  useProjectDataContext,
+  useQueryFilters,
+  useSelectedFolders,
+} from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
+import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import { useSlicerContext } from '@context/SlicerContext'
 
 export type VersionMap = Map<string, VersionNodeExtended>
+export type ProductMap = Map<string, ProductNodeExtended>
 
 interface VersionsDataContextValue {
   // STACKED
-  isStacked: boolean
-  setIsStacked: (stacked: boolean) => void
+  showProducts: boolean
+  setShowProducts: (stacked: boolean) => void
   //   EXPANDED
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
   updateExpanded: OnChangeFn<ExpandedState>
-  //   FILTERS
-  filter: QueryFilter
-  setFilter: (filter: QueryFilter) => void
+  //   VERSION FILTERS
+  versionFilter: QueryFilter
+  setVersionFilter: (versionFilter: QueryFilter) => void
+  //  PRODUCT FILTERS
+  productFilter: QueryFilter
+  setProductFilter: (productFilter: QueryFilter) => void
   // data
-  versions: VersionNode[]
-  childVersions: VersionNode[]
   versionsTableData: TableRow[]
-  versionsMap: VersionMap // all versions, including children
+  versionsMap: VersionMap // root versions only
+  childVersionsMap: VersionMap // child versions only
+  allVersionsMap: VersionMap // all versions combined
+  productsMap: ProductMap // all products
+  entitiesMap: Map<string, VersionNodeExtended | ProductNodeExtended> // all versions and products
   hasNextPage: boolean | undefined
   fetchNextPage: () => void
   isFetchingNextPage: boolean
+  // meta
+  error: string | undefined
 }
 
 const VersionsDataContext = createContext<VersionsDataContextValue | null>(null)
@@ -47,68 +66,135 @@ interface VersionsDataProviderProps {
 }
 
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
-  const [isStacked, setIsStacked] = useState(false)
+  const { attribFields } = useProjectDataContext()
+
+  const [showProducts, setShowProducts] = useState(true)
   const [expanded, setExpanded] = useState<ExpandedState>({})
-  const [filter, setFilter] = useState<QueryFilter>({})
-  const filterString = JSON.stringify(filter)
+  const [versionFilter, setVersionFilter] = useState<QueryFilter>({})
+  const [productFilter, setProductFilter] = useState<QueryFilter>({})
 
   const { updateExpanded, expandedIds } = useExpandedState({
     expanded,
     setExpanded,
   })
 
-  const {
-    currentData: versionsData,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useGetVersionsInfiniteQuery({ projectName, latest: isStacked, filter: filterString })
-
-  const versions = useMemo(() => flattenInfiniteVersionsData(versionsData), [versionsData])
-
-  const expandedVersionsProductIds = useMemo(
-    () =>
-      Array.from(
-        new Set(versions.filter((v) => expandedIds.includes(v.id)).map((v) => v.productId)),
-      ),
-    [versions, expanded],
-  )
-
-  const { data: { versions: childVersions = [] } = {} } = useGetVersionsByProductsQuery({
-    projectName,
-    productIds: expandedVersionsProductIds,
+  // SLICER
+  const { rowSelection, sliceType, rowSelectionData, persistentRowSelectionData } =
+    useSlicerContext()
+  const sliceFilter = createFilterFromSlicer({
+    type: sliceType,
+    selection: rowSelectionData,
+    attribFields: attribFields,
+  })
+  // get selected folders from slicer
+  const slicerFolderIds = useSelectedFolders({
+    rowSelection,
+    sliceType,
+    persistentRowSelectionData,
+  })
+  // combine slicer filter with version/product filters
+  const combinedVersionFilter = useQueryFilters({
+    queryFilters: versionFilter,
+    sliceFilter,
+  })
+  const combinedProductFilter = useQueryFilters({
+    queryFilters: productFilter,
+    sliceFilter,
   })
 
-  // Efficiently build all three maps in a single pass using util
-  const { rootVersionsMap, childVersionsMap, versionsMap } = useMemo(
-    () => buildAllVersionsMaps(versions, childVersions),
-    [versions, childVersions],
+  // Get all products when showing products
+  const {
+    data: productsData,
+    hasNextPage: productsHasNextPage,
+    fetchNextPage: productsFetchNextPage,
+    isFetchingNextPage: productsIsFetchingNextPage,
+    error: productsError,
+  } = useGetProductsInfiniteQuery(
+    {
+      projectName,
+      productFilter: combinedProductFilter.filterString,
+      versionFilter: combinedVersionFilter.filterString,
+      folderIds: slicerFolderIds,
+    },
+    {
+      skip: !showProducts,
+    },
+  )
+
+  // Get all versions when not showing products
+  const {
+    data: versionsData,
+    hasNextPage: versionsHasNextPage,
+    fetchNextPage: versionsFetchNextPage,
+    isFetchingNextPage: versionsIsFetchingNextPage,
+    error: versionsError,
+  } = useGetVersionsInfiniteQuery(
+    { projectName, versionFilter: combinedVersionFilter.filterString, folderIds: slicerFolderIds },
+    {
+      skip: showProducts,
+    },
+  )
+
+  // Dynamic pagination based on showProducts
+  const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage
+  const fetchNextPage = showProducts ? productsFetchNextPage : versionsFetchNextPage
+  const isFetchingNextPage = showProducts ? productsIsFetchingNextPage : versionsIsFetchingNextPage
+
+  const versions = useMemo(() => flattenInfiniteVersionsData(versionsData), [versionsData])
+  const products = useMemo(() => flattenInfiniteProductsData(productsData), [productsData])
+
+  // EXPANDED CHILD VERSIONS QUERY
+  // get child versions for expanded products
+  const { data: { versions: childVersions = [] } = {} } = useGetVersionsByProductsQuery({
+    projectName,
+    productIds: expandedIds,
+    versionFilter: combinedVersionFilter.filterString,
+  })
+
+  // Efficiently build all maps in a single pass using util
+  const { versionsMap, childVersionsMap, allVersionsMap, productsMap, entitiesMap } = useMemo(
+    () => buildVersionsAndProductsMaps(versions, childVersions, products),
+    [versions, childVersions, products],
   )
 
   const versionsTableData = useBuildVersionsTableData({
-    rootVersionsMap,
+    rootVersionsMap: versionsMap,
     childVersionsMap,
-    isStacked,
+    productsMap,
+    showProducts,
   })
 
+  const error = showProducts
+    ? // @ts-ignore
+      productsError && String(productsError.error)
+    : // @ts-ignore
+      versionsError && String(versionsError.error)
+
   const value: VersionsDataContextValue = {
-    isStacked,
-    setIsStacked,
-    // filters
-    filter,
-    setFilter,
+    showProducts,
+    setShowProducts,
+    // versionFilters
+    versionFilter,
+    setVersionFilter,
+    // productFilters
+    productFilter,
+    setProductFilter,
     // expanded
     expanded,
     setExpanded,
     updateExpanded,
     // data
-    versions,
-    childVersions,
     versionsTableData,
     versionsMap,
+    childVersionsMap,
+    allVersionsMap,
+    productsMap,
+    entitiesMap,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    // meta
+    error,
   }
 
   return <VersionsDataContext.Provider value={value}>{children}</VersionsDataContext.Provider>

@@ -376,6 +376,7 @@ export type FolderNodeProductsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  versionFilter?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -528,6 +529,7 @@ export type ProductNode = BaseNode & {
   attrib: ProductAttribType;
   createdAt: Scalars['DateTime']['output'];
   data?: Maybe<Scalars['String']['output']>;
+  featuredVersion?: Maybe<VersionNode>;
   /** Parent folder of the product */
   folder: FolderNode;
   folderId: Scalars['String']['output'];
@@ -561,6 +563,11 @@ export type ProductNodeActivitiesArgs = {
 };
 
 
+export type ProductNodeFeaturedVersionArgs = {
+  order?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
 export type ProductNodeLinksArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   direction?: InputMaybe<Scalars['String']['input']>;
@@ -577,10 +584,12 @@ export type ProductNodeVersionsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   heroOnly?: Scalars['Boolean']['input'];
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -803,6 +812,7 @@ export type ProjectNodeProductsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  versionFilter?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -871,10 +881,12 @@ export type ProjectNodeVersionsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   heroOnly?: Scalars['Boolean']['input'];
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1204,10 +1216,12 @@ export type TaskNodeVersionsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   heroOnly?: Scalars['Boolean']['input'];
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;

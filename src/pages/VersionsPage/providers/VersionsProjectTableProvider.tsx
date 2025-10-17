@@ -18,7 +18,8 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
   projectName,
   children,
 }) => {
-  const { versionsTableData, versionsMap, expanded, updateExpanded } = useVersionsDataContext()
+  const { versionsTableData, entitiesMap, expanded, updateExpanded, error } =
+    useVersionsDataContext()
   const modules = useProjectTableModules()
 
   const { attribFields, projectInfo, users } = useProjectDataContext()
@@ -46,7 +47,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
       attribFields={attribFields}
       projectInfo={projectInfo}
       users={users}
-      entitiesMap={versionsMap}
+      entitiesMap={entitiesMap}
       foldersMap={foldersMap}
       tasksMap={tasksMap}
       tableRows={versionsTableData}
@@ -59,6 +60,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
       scopes={['version']}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
+      error={error}
     >
       {children}
     </ProjectTableProvider>

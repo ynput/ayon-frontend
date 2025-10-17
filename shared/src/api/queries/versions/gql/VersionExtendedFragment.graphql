@@ -1,0 +1,8 @@
+fragment VersionExtended on VersionNode {
+  ...VersionBase
+  product {
+    id
+    name
+    productType
+  }
+}

@@ -18,6 +18,8 @@ import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { isEntityRestricted } from './utils/restrictedEntity'
 
+export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
+
 const MIN_SIZE = 50
 
 // Wrapper function for sorting that pushes isLoading rows to the bottom
@@ -150,12 +152,21 @@ const buildTreeTableColumns = ({
         const meta = table.options.meta
         if (!meta) return null
         const cellId = getCellId(row.id, column.id)
+        let thumbnail = {
+          entityId: row.original.entityId || row.id,
+          entityType: row.original.entityType,
+          updatedAt: row.original.updatedAt,
+        }
+        // check for thumbnail override
+        if (row.original.thumbnail) {
+          thumbnail = row.original.thumbnail
+        }
         return (
           <ThumbnailWidget
             id={cellId}
-            entityId={row.original.entityId || row.id}
-            entityType={row.original.entityType}
-            updatedAt={row.original.updatedAt}
+            entityId={thumbnail.entityId}
+            entityType={thumbnail.entityType}
+            updatedAt={thumbnail.updatedAt}
             icon={row.original.icon}
             projectName={meta?.projectName as string}
             className={clsx('thumbnail', {
@@ -197,9 +208,7 @@ const buildTreeTableColumns = ({
         }
 
         const isExpandable =
-          row.getCanExpand() &&
-          !!row.originalSubRows &&
-          ['folder', 'version'].includes(row.original.entityType)
+          row.getCanExpand() && !!row.originalSubRows && isEntityExpandable(row.original.entityType)
 
         return (
           <TableCellContent

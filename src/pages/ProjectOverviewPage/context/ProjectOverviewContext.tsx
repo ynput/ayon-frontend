@@ -94,15 +94,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     sliceFilter,
   })
 
-  // filter out by slice
-  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
-    ? null
-    : persistentRowSelectionData
-
   const selectedFolders = useSelectedFolders({
     rowSelection,
     sliceType,
-    persistentRowSelectionData: persistedHierarchySelection,
+    persistentRowSelectionData,
   })
 
   // DATA FETCHING

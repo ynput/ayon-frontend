@@ -1,6 +1,7 @@
 query GetVersionsByProductId(
   $projectName: String!
   $productIds: [String!]!
+  $versionFilter: String
   $sortBy: String
   $first: Int
   $last: Int
@@ -10,6 +11,7 @@ query GetVersionsByProductId(
   project(name: $projectName) {
     versions(
       productIds: $productIds
+      filter: $versionFilter
       sortBy: $sortBy
       last: $last
       first: $first
@@ -17,12 +19,12 @@ query GetVersionsByProductId(
       before: $before
     ) {
       pageInfo {
-        ...VersionsPageInfo
+        ...PageInfo
       }
       edges {
         cursor
         node {
-          ...Version
+          ...VersionExtended
         }
       }
     }

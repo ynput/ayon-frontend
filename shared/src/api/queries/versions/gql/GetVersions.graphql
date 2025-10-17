@@ -2,35 +2,35 @@ query GetVersions(
   $projectName: String!
   $productIds: [String!]
   $versionIds: [String!]
-  $filter: String
+  $versionFilter: String
+  $folderIds: [String!]
   $search: String
   $after: String
   $first: Int
   $before: String
   $last: Int
   $sortBy: String
-  $latest: Boolean = false
 ) {
   project(name: $projectName) {
     versions(
-      filter: $filter
-      search: $search
+      ids: $versionIds
       productIds: $productIds
+      filter: $versionFilter
+      folderIds: $folderIds
+      search: $search
       after: $after
       first: $first
       before: $before
       last: $last
       sortBy: $sortBy
-      ids: $versionIds
-      latestOnly: $latest
     ) {
       pageInfo {
-        ...VersionsPageInfo
+        ...PageInfo
       }
       edges {
         cursor
         node {
-          ...Version
+          ...VersionExtended
         }
       }
     }

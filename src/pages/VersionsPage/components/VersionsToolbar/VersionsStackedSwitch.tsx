@@ -7,7 +7,7 @@ interface VersionsStackedSwitchProps
 
 export const VersionsStackedSwitch = forwardRef<HTMLButtonElement, VersionsStackedSwitchProps>(
   ({ ...props }, ref) => {
-    const { isStacked, setIsStacked } = useVersionsDataContext()
+    const { showProducts, setShowProducts } = useVersionsDataContext()
 
     return useMemo(
       () => (
@@ -15,12 +15,12 @@ export const VersionsStackedSwitch = forwardRef<HTMLButtonElement, VersionsStack
           {...props}
           label={'Stacked'}
           ref={ref}
-          value={isStacked}
-          onClick={() => setIsStacked(!isStacked)}
+          value={showProducts}
+          onClick={() => setShowProducts(!showProducts)}
           style={{ width: 'fit-content' }}
         />
       ),
-      [isStacked],
+      [showProducts],
     )
   },
 )

@@ -28,6 +28,7 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
@@ -1224,8 +1225,7 @@ const TableCell = ({
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
           expandable:
-            !!cell.row.originalSubRows &&
-            ['folder', 'version'].includes(cell.row.original.entityType),
+            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,

@@ -1,21 +1,23 @@
 import { TableRow } from '@shared/containers'
-import { buildVersionRow, VersionsMap } from '../util'
+import { buildVersionRow, buildProductRow, VersionsMap, ProductsMap } from '../util'
 import { useMemo } from 'react'
 
 type Props = {
   rootVersionsMap: VersionsMap
   childVersionsMap: VersionsMap
-  isStacked: boolean
+  productsMap: ProductsMap
+  showProducts: boolean
 }
 
 export const useBuildVersionsTableData = ({
   rootVersionsMap,
   childVersionsMap,
-  isStacked,
+  productsMap,
+  showProducts,
 }: Props): TableRow[] => {
   return useMemo(() => {
-    if (isStacked) {
-      // Build hierarchical data efficiently
+    if (showProducts) {
+      // Build hierarchical data efficiently using products as root
       const result: TableRow[] = []
 
       // Group child versions by their product ID (parent) for O(1) lookup
@@ -34,11 +36,10 @@ export const useBuildVersionsTableData = ({
         }
       }
 
-      // Build root rows with their children attached
-      for (const rootVersion of rootVersionsMap.values()) {
-        const productId = rootVersion.product?.id
-        const subRows = productId ? childrenByProductId.get(productId) || [] : []
-        result.push(buildVersionRow(rootVersion, subRows))
+      // Build product rows with their version children attached
+      for (const product of productsMap.values()) {
+        const subRows = childrenByProductId.get(product.id) || []
+        result.push(buildProductRow(product, subRows))
       }
 
       return result
@@ -46,5 +47,5 @@ export const useBuildVersionsTableData = ({
       // build flat data using only versionsMap
       return Array.from(rootVersionsMap.values()).map((version) => buildVersionRow(version))
     }
-  }, [rootVersionsMap, childVersionsMap, isStacked])
+  }, [rootVersionsMap, childVersionsMap, productsMap, showProducts])
 }

@@ -3,15 +3,15 @@
 
 // There are 4 main fetch requests:
 
-// Non-stacked:
+// Versions Only:
 // 1. GetVersions - fetches all versions in the project for given filtering and with pagination
 
-// Stacked:
-// 2. GetTopVersions - fetches 1 version per product, by default the latest version (top meaning the top of the stack that represents then whole version stack (product))
-// 3. GetVersionsByProducts - when a stack is expanded, fetches all versions for the products that are expanded. Uses getVersionsByProductId for each parent id. (uses queryFn)
+// Products and Versions (stacked):
+// 2. GetProducts - fetches all products in the project based on product and version filtering
+// 3. GetVersionsByProducts - when a product is expanded, fetches all versions for the products that are expanded. Uses getVersionsByProductId for each parent id. (uses queryFn)
 // 4. GetVersionsByProductId - get all versions for a specific product. Used by getVersionsByProducts only.
 
-// VersionFragment is used in all queries to ensure consistent data structure
+// VersionFragment is used in all version queries to ensure consistent data structure
 
 import {
   DefinitionsFromApi,
@@ -21,16 +21,24 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import {
+  GetProductsQuery,
+  GetProductsQueryVariables,
   GetVersionsByProductIdQueryVariables,
   GetVersionsQuery,
   GetVersionsQueryVariables,
   gqlApi,
+  PageInfo,
 } from '@shared/api/generated'
 import {
+  parseErrorMessage,
+  provideTagsForProductsInfinite,
+  provideTagsForProductsResult,
   provideTagsForVersionsInfinite,
   provideTagsForVersionsResult,
+  transformProductsResponse,
   transformVersionsResponse,
 } from './versionsUtils'
+import { toast } from 'react-toastify'
 
 // Query result types
 export type VersionNodeRAW = GetVersionsQuery['project']['versions']['edges'][0]['node']
@@ -38,7 +46,7 @@ export type VersionNode = VersionNodeRAW & {
   attrib: Record<string, any> // parsed from allAttrib JSON string
 }
 export type GetVersionsResult = {
-  pageInfo?: GetVersionsQuery['project']['versions']['pageInfo']
+  pageInfo?: PageInfo
   versions: VersionNode[]
 }
 
@@ -53,14 +61,34 @@ type VersionsPageParam = {
   desc?: boolean
 }
 
-type GetVersionsByProductsArgs = {
-  projectName: string
-  productIds: string[] // array of parent ids (product ids)
-  sortBy?: string
+export type GetProductsArgs = Omit<GetProductsQueryVariables, 'cursor' | 'versionIds'> & {
+  desc?: boolean // sort direction
+}
+
+type ProductsPageParam = {
+  cursor: string
+  desc?: boolean
+}
+
+type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
+  productIds: string[]
   desc?: boolean
 }
 
 export type VersionInfiniteResult = InfiniteData<GetVersionsResult, VersionsPageParam> | undefined
+
+export type ProductInfiniteResult = InfiniteData<GetProductsResult, ProductsPageParam> | undefined
+
+export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
+export type ProductNode = ProductNodeRAW & {
+  attrib: Record<string, any> // parsed from allAttrib JSON string
+  latestVersion?: VersionNode | null // added separately
+}
+
+export type GetProductsResult = {
+  pageInfo: PageInfo
+  products: ProductNode[]
+}
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
@@ -68,6 +96,7 @@ type TagTypes = TagTypesFromApi<typeof gqlApi>
 type UpdatedDefinitions = Omit<Definitions, 'GetVersions'> & {
   GetVersions: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
   GetVersionsByProductId: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
+  GetProducts: OverrideResultType<Definitions['GetProducts'], GetProductsResult>
 }
 
 const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -82,16 +111,21 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
       transformResponse: transformVersionsResponse,
       providesTags: provideTagsForVersionsResult,
     },
+    // used by getProductsInfinite only
+    GetProducts: {
+      transformResponse: transformProductsResponse,
+      providesTags: provideTagsForProductsResult,
+    },
   },
 })
 
-const VERSIONS_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
+const INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
 const VERSIONS_BY_PRODUCT_ID_QUERY_COUNT = 1000 // max number of versions to fetch per product id
 const MAX_PAGES_PER_PRODUCT = 10 // Hard cutoff to prevent infinite loops
 
 const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
   endpoints: (build) => ({
-    // enhance GetVersions with an infinite query (main query used)
+    // enhance GetVersions with an infinite query
     getVersionsInfinite: build.infiniteQuery<GetVersionsResult, GetVersionsArgs, VersionsPageParam>(
       {
         infiniteQueryOptions: {
@@ -113,16 +147,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         },
         queryFn: async ({ queryArg, pageParam }, api) => {
           try {
-            const { projectName, filter, search, productIds, sortBy, desc, latest } = queryArg
+            const { sortBy, desc, folderIds, ...rest } = queryArg
             const { cursor } = pageParam
 
             // Build the query parameters for GetVersions query
             const queryParams: any = {
-              projectName,
-              filter,
-              search,
-              productIds,
-              latest,
+              ...rest,
             }
 
             // Add cursor-based pagination
@@ -130,14 +160,19 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               queryParams.sortBy = sortBy
               if (desc) {
                 queryParams.before = cursor || undefined
-                queryParams.last = VERSIONS_INFINITE_QUERY_COUNT
+                queryParams.last = INFINITE_QUERY_COUNT
               } else {
                 queryParams.after = cursor || undefined
-                queryParams.first = VERSIONS_INFINITE_QUERY_COUNT
+                queryParams.first = INFINITE_QUERY_COUNT
               }
             } else {
               queryParams.after = cursor || undefined
-              queryParams.first = VERSIONS_INFINITE_QUERY_COUNT
+              queryParams.first = INFINITE_QUERY_COUNT
+            }
+
+            // if folderIds have a length, add them to the query params
+            if (folderIds && folderIds.length) {
+              queryParams.folderIds = folderIds
             }
 
             // Call the existing GetVersions gql query
@@ -164,7 +199,13 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
           } catch (e: any) {
             console.error('Error in getVersionsInfiniteQuery queryFn:', e)
-            return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+            toast.error('Error fetching versions.')
+            return {
+              error: {
+                status: 'FETCH_ERROR',
+                error: parseErrorMessage(e.message),
+              } as FetchBaseQueryError,
+            }
           }
         },
         providesTags: provideTagsForVersionsInfinite,
@@ -174,12 +215,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
     // custom query function that fetches versions by multiple parent ids -not infinite and gets 1000 versions max
     getVersionsByProducts: build.query<GetVersionsResult, GetVersionsByProductsArgs>({
       queryFn: async (args, { dispatch }) => {
-        const { productIds = [], desc, ...argsRest } = args
+        const { productIds = [], desc, ...rest } = args
 
         // Helper function to fetch a page of versions
         const fetchVersionsPage = async (productId: string, cursor?: string) => {
           const queryParams: GetVersionsByProductIdQueryVariables = {
-            ...argsRest,
+            ...rest,
             productIds: [productId],
           }
 
@@ -200,7 +241,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
         try {
           // for each product id, call getVersionsByProductId
-          const promises = productIds?.map((productId) => fetchVersionsPage(productId))
+          const promises = productIds.map((productId) => fetchVersionsPage(productId))
 
           const results = await Promise.all(promises)
 
@@ -249,13 +290,106 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               pageInfo: undefined, // pageInfo is undefined as we've flattened multiple queries
             },
           }
-        } catch (error: any) {
-          console.error('Error in getVersionsByProducts queryFn:', error)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+        } catch (e: any) {
+          console.error('Error in getVersionsByProducts queryFn:', e)
+          toast.error('Error fetching versions for products.')
+          return {
+            error: {
+              status: 'FETCH_ERROR',
+              error: parseErrorMessage(e.message),
+            } as FetchBaseQueryError,
+          }
         }
       },
       providesTags: provideTagsForVersionsResult,
     }),
+
+    // enhance GetProducts with an infinite query
+    getProductsInfinite: build.infiniteQuery<GetProductsResult, GetProductsArgs, ProductsPageParam>(
+      {
+        infiniteQueryOptions: {
+          initialPageParam: { cursor: '', desc: false },
+          // Calculate the next page param based on current page response and params
+          getNextPageParam: (lastPage, _allPages, lastPageParam, _allPageParams) => {
+            // Use the endCursor from the query as the next page param
+            const pageInfo = lastPage.pageInfo
+            const desc = lastPageParam.desc
+            const hasNextPage = desc ? pageInfo?.hasPreviousPage : pageInfo?.hasNextPage
+
+            if (!hasNextPage || !pageInfo?.endCursor) return undefined
+
+            return {
+              cursor: pageInfo?.endCursor,
+              desc: lastPageParam.desc,
+            }
+          },
+        },
+        queryFn: async ({ queryArg, pageParam }, api) => {
+          try {
+            const { sortBy, desc, folderIds, ...rest } = queryArg
+            const { cursor } = pageParam
+
+            // Build the query parameters for GetProducts query
+            const queryParams: any = {
+              ...rest,
+            }
+
+            // Add cursor-based pagination
+            if (sortBy) {
+              queryParams.sortBy = sortBy
+              if (desc) {
+                queryParams.before = cursor || undefined
+                queryParams.last = INFINITE_QUERY_COUNT
+              } else {
+                queryParams.after = cursor || undefined
+                queryParams.first = INFINITE_QUERY_COUNT
+              }
+            } else {
+              queryParams.after = cursor || undefined
+              queryParams.first = INFINITE_QUERY_COUNT
+            }
+
+            // if folderIds have a length, add them to the query params
+            if (folderIds && folderIds.length) {
+              queryParams.folderIds = folderIds
+            }
+
+            // Call the existing GetProducts gql query
+            const result = await api.dispatch(
+              enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+
+            if (result.error) throw result.error
+            const fallback = {
+              products: [],
+              pageInfo: {
+                hasNextPage: false,
+                endCursor: null,
+                startCursor: null,
+                hasPreviousPage: false,
+              },
+            }
+
+            // Return the products directly as required by the infinite query format
+            return {
+              data: result.data || fallback,
+            }
+          } catch (e: any) {
+            console.error('Error in getProductsInfiniteQuery queryFn:', e)
+            toast.error('Error fetching products.')
+            return {
+              error: {
+                status: 'FETCH_ERROR',
+                error: parseErrorMessage(e.message),
+              } as FetchBaseQueryError,
+            }
+          }
+        },
+        providesTags: provideTagsForProductsInfinite,
+      },
+    ),
   }),
 })
 
@@ -265,4 +399,5 @@ export const { useGetVersionsQuery } = enhancedVersionsPageApi
 export const {
   useGetVersionsInfiniteInfiniteQuery: useGetVersionsInfiniteQuery,
   useGetVersionsByProductsQuery,
+  useGetProductsInfiniteInfiniteQuery: useGetProductsInfiniteQuery,
 } = injectedVersionsPageApi

@@ -24,8 +24,8 @@ const VersionsProviders: FC<VersionsProvidersProps> = ({ projectName, children }
   })
 
   return (
-    <VersionsDataProvider projectName={projectName}>
-      <ProjectDataProvider projectName={projectName}>
+    <ProjectDataProvider projectName={projectName}>
+      <VersionsDataProvider projectName={projectName}>
         <MoveEntityProvider>
           <SettingsPanelProvider>
             <VersionsColumnSettingsProvider>
@@ -43,8 +43,8 @@ const VersionsProviders: FC<VersionsProvidersProps> = ({ projectName, children }
             </VersionsColumnSettingsProvider>
           </SettingsPanelProvider>
         </MoveEntityProvider>
-      </ProjectDataProvider>
-    </VersionsDataProvider>
+      </VersionsDataProvider>
+    </ProjectDataProvider>
   )
 }
 

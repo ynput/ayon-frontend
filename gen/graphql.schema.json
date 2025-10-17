@@ -3412,7 +3412,7 @@
               },
               {
                 "name": "filter",
-                "description": "Filter tasks using QueryFilter",
+                "description": "Filter products using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -3641,6 +3641,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "versionFilter",
+                "description": "Filter products by its versions using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -5409,6 +5421,39 @@
             "deprecationReason": null
           },
           {
+            "name": "featuredVersion",
+            "description": null,
+            "args": [
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "VersionNode",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "folder",
             "description": "Parent folder of the product",
             "args": [],
@@ -5830,6 +5875,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderIds",
+                "description": "List of folder IDs to filter by",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "hasLinks",
                 "description": "Filter by links presence",
                 "type": {
@@ -5890,6 +5955,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -7538,7 +7619,7 @@
               },
               {
                 "name": "filter",
-                "description": "Filter tasks using QueryFilter",
+                "description": "Filter products using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7767,6 +7848,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "versionFilter",
+                "description": "Filter products by its versions using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -8632,6 +8725,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderIds",
+                "description": "List of folder IDs to filter by",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "hasLinks",
                 "description": "Filter by links presence",
                 "type": {
@@ -8692,6 +8805,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -11843,6 +11972,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderIds",
+                "description": "List of folder IDs to filter by",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "hasLinks",
                 "description": "Filter by links presence",
                 "type": {
@@ -11903,6 +12052,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },

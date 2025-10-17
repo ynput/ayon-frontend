@@ -1,0 +1,54 @@
+query GetProducts(
+  $projectName: String!
+  $productIds: [String!]
+  $productFilter: String
+  $versionFilter: String
+  $featuredVersionOrder: [String!]
+  $search: String
+  $folderIds: [String!]
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+  $sortBy: String
+) {
+  project(name: $projectName) {
+    products(
+      ids: $productIds
+      filter: $productFilter
+      versionFilter: $versionFilter
+      search: $search
+      folderIds: $folderIds
+
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: $sortBy
+    ) {
+      pageInfo {
+        ...PageInfo
+      }
+      edges {
+        node {
+          id
+          name
+          folderId
+          active
+          status
+          tags
+          type
+          productType
+          allAttrib
+          parents
+          createdAt
+          updatedAt
+          featuredVersion(order: $featuredVersionOrder) {
+            ...VersionBase
+          }
+        }
+        cursor
+      }
+    }
+  }
+}

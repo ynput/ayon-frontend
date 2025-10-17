@@ -1,2 +1,2 @@
-export * from './buildAllVersionsMaps'
-export * from './buildVersionRow'
+export * from './buildVersionsAndProductsMap'
+export * from './buildVersionAndProductRows'

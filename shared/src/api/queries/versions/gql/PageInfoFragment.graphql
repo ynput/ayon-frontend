@@ -1,4 +1,4 @@
-fragment VersionsPageInfo on PageInfo {
+fragment PageInfo on PageInfo {
   startCursor
   endCursor
   hasNextPage
