@@ -97,6 +97,7 @@ export type DefaultColumns =
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
 export type BuildTreeTableColumnsProps = {
+  scopes: string[]
   attribs: ProjectTableAttribute[]
   links: LinkTypeModel[]
   showHierarchy: boolean
@@ -108,6 +109,7 @@ export type BuildTreeTableColumnsProps = {
 }
 
 const buildTreeTableColumns = ({
+  scopes,
   attribs,
   links = [],
   showHierarchy,
@@ -432,6 +434,39 @@ const buildTreeTableColumns = ({
                 multipleOverride: false,
               },
             }}
+          />
+        )
+      },
+    })
+  }
+
+  // only show authors column for products
+  if (isIncluded('author') && ['version', 'product'].some((s) => scopes.includes(s))) {
+    staticColumns.push({
+      id: 'author',
+      accessorKey: 'author',
+      header: 'Author',
+      minSize: MIN_SIZE,
+      enableSorting: true,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(pathSort),
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('author', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={[value]}
+            attributeData={{ type: 'list_of_strings' }}
+            options={meta?.options?.assignee}
+            isReadOnly={true}
+            isInherited={type === 'product'} // products do not have authors, we just show the featured version's author
           />
         )
       },

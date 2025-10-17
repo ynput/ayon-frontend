@@ -16,6 +16,7 @@ export const buildProductRow = (product: ProductNode, subRows: TableRow[]): Tabl
   attrib: { ...product.featuredVersion?.attrib, ...product.attrib },
   ownAttrib: Object.keys(product.attrib || {}),
   subType: product.productType,
+  author: product.featuredVersion?.author || '',
   thumbnail: {
     entityId: product.featuredVersion?.id || product.id,
     entityType: product.featuredVersion ? 'version' : 'product',
@@ -43,6 +44,7 @@ export const buildVersionRow = (
   ownAttrib: Object.keys(version.attrib || {}),
   subType: version.product.productType,
   hasReviewables: version.hasReviewables,
+  author: version.author || '',
   // @ts-expect-error - it actually can be undefined
   subRows,
   links: {}, // TODO add links

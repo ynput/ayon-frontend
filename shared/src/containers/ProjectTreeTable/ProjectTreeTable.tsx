@@ -307,6 +307,7 @@ export const ProjectTreeTable = ({
 
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
+      scopes,
       attribs: columnAttribs,
       links: linkTypes,
       showHierarchy,
@@ -336,6 +337,7 @@ export const ProjectTreeTable = ({
     }
     return baseColumns
   }, [
+    scopes,
     columnAttribs,
     showHierarchy,
     isExpandable,

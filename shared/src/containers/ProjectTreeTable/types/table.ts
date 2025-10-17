@@ -48,6 +48,7 @@ export type TableRow = {
   hasVersions?: boolean
   startContent?: JSX.Element
   assignees?: string[]
+  author?: string
   attrib?: Record<string, any>
   links: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
