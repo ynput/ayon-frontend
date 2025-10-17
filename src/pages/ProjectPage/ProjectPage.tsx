@@ -143,7 +143,7 @@ const ProjectPage = () => {
         name: 'Versions',
         path: `/projects/${projectName}/versions`,
         module: 'versions',
-        viewType: 'lists', // TODO: change to versions when available
+        viewType: 'versions',
         uriSync: true,
       },
       {

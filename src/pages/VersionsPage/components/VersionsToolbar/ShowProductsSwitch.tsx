@@ -6,7 +6,7 @@ interface ShowProductsSwitchProps extends Omit<SwitchButtonProps, 'label' | 'val
 
 export const ShowProductsSwitch = forwardRef<HTMLButtonElement, ShowProductsSwitchProps>(
   ({ ...props }, ref) => {
-    const { showProducts, setShowProducts } = useVersionsDataContext()
+    const { showProducts, onUpdatedShowProducts } = useVersionsDataContext()
 
     return useMemo(
       () => (
@@ -15,7 +15,7 @@ export const ShowProductsSwitch = forwardRef<HTMLButtonElement, ShowProductsSwit
           label={'Show products'}
           ref={ref}
           value={showProducts}
-          onClick={() => setShowProducts(!showProducts)}
+          onClick={() => onUpdatedShowProducts(!showProducts)}
           style={{ width: 'fit-content' }}
         />
       ),

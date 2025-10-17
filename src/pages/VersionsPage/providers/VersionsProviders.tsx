@@ -6,6 +6,7 @@ import {
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionCellsProvider,
+  useVersionsViewSettings,
 } from '@shared/containers'
 import { MoveEntityProvider, SettingsPanelProvider } from '@shared/context'
 import { FC } from 'react'
@@ -23,12 +24,14 @@ const VersionsProviders: FC<VersionsProvidersProps> = ({ projectName, children }
     projectName: projectName,
   })
 
+  const { columns, onUpdateColumns, ...config } = useVersionsViewSettings()
+
   return (
     <ProjectDataProvider projectName={projectName}>
-      <VersionsDataProvider projectName={projectName}>
+      <VersionsDataProvider projectName={projectName} config={config}>
         <MoveEntityProvider>
           <SettingsPanelProvider>
-            <VersionsColumnSettingsProvider>
+            <VersionsColumnSettingsProvider columns={columns} onUpdateColumns={onUpdateColumns}>
               <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
                 <VersionsProjectTableProvider projectName={projectName}>
                   <DetailsPanelEntityProvider>

@@ -14,6 +14,7 @@ import {
   useProjectDataContext,
   useQueryFilters,
   useSelectedFolders,
+  VersionsViewSettingsReturn,
 } from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -26,14 +27,14 @@ export type ProductMap = Map<string, ProductNodeExtended>
 interface VersionsDataContextValue {
   // STACKED
   showProducts: boolean
-  setShowProducts: (stacked: boolean) => void
+  onUpdatedShowProducts: (stacked: boolean) => void
   //   EXPANDED
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
   updateExpanded: OnChangeFn<ExpandedState>
   //   ALL FILTERS (versions + products)
-  filter: QueryFilter
-  setFilter: (filter: QueryFilter) => void
+  filters: QueryFilter
+  onUpdateFilters: (filters: QueryFilter) => void
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
@@ -64,22 +65,28 @@ export const useVersionsDataContext = () => {
 interface VersionsDataProviderProps {
   projectName: string
   children: ReactNode
+  config: Omit<VersionsViewSettingsReturn, 'columns' | 'onUpdateColumns'>
 }
 
-export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
+export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
+  projectName,
+  config,
+  children,
+}) => {
   const { attribFields } = useProjectDataContext()
+  const { filters, onUpdateFilters, showStacked, onUpdateShowStacked, sortBy, sortDesc } = config
 
-  const [showProducts, setShowProducts] = useState(true)
+  const showProducts = showStacked
+  const onUpdatedShowProducts = onUpdateShowStacked
   const [expanded, setExpanded] = useState<ExpandedState>({})
-  const [filter, setFilter] = useState<QueryFilter>({})
 
-  // Separate the combined filter into version and product filters
+  // Separate the combined filters into version and product filters
   const {
     version: versionFilter = { conditions: [] },
     product: productFilter = { conditions: [] },
   } = useMemo(() => {
-    return splitFiltersByScope(filter, ['version', 'product'])
-  }, [filter])
+    return splitFiltersByScope(filters, ['version', 'product'])
+  }, [filters])
 
   const { updateExpanded, expandedIds } = useExpandedState({
     expanded,
@@ -100,7 +107,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     sliceType,
     persistentRowSelectionData,
   })
-  // combine slicer filter with version/product filters
+  // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
     queryFilters: versionFilter,
     sliceFilter,
@@ -123,9 +130,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
       productFilter: combinedProductFilter.filterString,
       versionFilter: combinedVersionFilter.filterString,
       folderIds: slicerFolderIds,
+      sortBy,
+      desc: sortDesc,
     },
     {
       skip: !showProducts,
+      initialPageParam: {
+        cursor: '',
+        desc: sortDesc,
+      },
     },
   )
 
@@ -142,9 +155,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
       versionFilter: combinedVersionFilter.filterString,
       productFilter: combinedProductFilter.filterString,
       folderIds: slicerFolderIds,
+      sortBy,
+      desc: sortDesc,
     },
     {
       skip: showProducts,
+      initialPageParam: {
+        cursor: '',
+        desc: sortDesc,
+      },
     },
   )
 
@@ -185,10 +204,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   const value: VersionsDataContextValue = {
     showProducts,
-    setShowProducts,
+    onUpdatedShowProducts,
     // filters
-    filter,
-    setFilter,
+    filters,
+    onUpdateFilters,
     versionFilter,
     productFilter,
     // expanded

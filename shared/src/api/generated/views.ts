@@ -90,17 +90,24 @@ export type CreateViewApiArg = {
     | TaskProgressViewPostModel
     | ListsViewPostModel
     | ReviewsViewPostModel
+    | VersionsViewPostModel
 }
-export type GetWorkingViewApiResponse =
-  /** status 200 Successful Response */
-  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
+export type GetWorkingViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
 export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetDefaultViewApiResponse =
-  /** status 200 Successful Response */
-  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
+export type GetDefaultViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
 export type GetDefaultViewApiArg = {
   viewType: string
   projectName?: string
@@ -111,9 +118,12 @@ export type SetDefaultViewApiArg = {
   projectName?: string
   setDefaultViewRequestModel: SetDefaultViewRequestModel
 }
-export type GetViewApiResponse =
-  /** status 200 Successful Response */
-  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
+export type GetViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
 export type GetViewApiArg = {
   viewType: string
   viewId: string
@@ -135,6 +145,7 @@ export type UpdateViewApiArg = {
     | TaskProgressViewPatchModel
     | ListsViewPatchModel
     | ReviewsViewPatchModel
+    | VersionsViewPatchModel
 }
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
@@ -268,6 +279,28 @@ export type ReviewsViewPostModel = {
   working?: boolean
   settings: ReviewsSettings
 }
+export type VersionsSettings = {
+  rowHeight?: number
+  sortBy?: string
+  sortDesc?: boolean
+  filter?: QueryFilter
+  columns?: ColumnItemModel[]
+  showStacked?: boolean
+  showGrid?: boolean
+  gridHeight?: number
+  mainVersion?: 'latest' | 'hero'
+  groupBy?: string
+  showEmptyGroups?: boolean
+}
+export type VersionsViewPostModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
+  settings: VersionsSettings
+}
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
@@ -344,6 +377,25 @@ export type ReviewsViewModel = {
   access: object
   viewType?: 'reviews'
 }
+export type VersionsViewModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Determines whether the view is only available for the given project or for all projects (studio). */
+  scope: 'project' | 'studio'
+  /** Name of the user who created the view. Owners have full control over the view,  */
+  owner: string
+  /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
+  visibility: 'public' | 'private'
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  accessLevel: number
+  settings: VersionsSettings
+  access: object
+  viewType?: 'versions'
+}
 export type SetDefaultViewRequestModel = {
   viewId: string
 }
@@ -366,4 +418,9 @@ export type ReviewsViewPatchModel = {
   label?: string
   owner?: string
   settings?: ReviewsSettings
+}
+export type VersionsViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: VersionsSettings
 }

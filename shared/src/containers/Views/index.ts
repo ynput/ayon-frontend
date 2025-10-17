@@ -20,6 +20,7 @@ export * from './hooks/pages/useTaskProgressViewSettings'
 export * from './hooks/pages/useOverviewViewSettings'
 export * from './hooks/pages/useListsViewSettings'
 export * from './hooks/pages/useReportsViewSettings'
+export * from './hooks/pages/useVersionsViewSettings'
 
 // Re-export the ViewsComponents for convenience
 export { Views } from './Views'
@@ -34,5 +35,12 @@ export type ViewFormData = Required<
   }
 >
 
-export const viewTypes = ['overview', 'taskProgress', 'lists', 'reviews', 'reports'] as const
+export const viewTypes = [
+  'overview',
+  'taskProgress',
+  'versions',
+  'lists',
+  'reviews',
+  'reports',
+] as const
 export type ViewType = (typeof viewTypes)[number]

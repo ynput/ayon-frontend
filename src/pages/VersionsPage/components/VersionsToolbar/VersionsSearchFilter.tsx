@@ -8,7 +8,7 @@ interface VersionsSearchFilterProps {}
 
 const VersionsSearchFilter: FC<VersionsSearchFilterProps> = ({}) => {
   const { projectInfo, projectName } = useProjectDataContext()
-  const { filter, setFilter } = useVersionsDataContext()
+  const { filters, onUpdateFilters } = useVersionsDataContext()
 
   const scopesConfig: ScopeWithFilterTypes[] = [
     {
@@ -23,8 +23,8 @@ const VersionsSearchFilter: FC<VersionsSearchFilterProps> = ({}) => {
 
   return (
     <SearchFilterWrapper
-      queryFilters={filter}
-      onChange={setFilter}
+      queryFilters={filters}
+      onChange={onUpdateFilters}
       scopes={scopesConfig}
       projectNames={[projectName]}
       projectInfo={projectInfo}
