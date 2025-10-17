@@ -25,6 +25,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
+  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const prevRowHeightRef = React.useRef<number | undefined>(undefined)
 
   // Internal state for immediate updates (similar to column sizing)
   const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
@@ -46,6 +49,21 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     groupByConfig = {},
     rowHeight: configRowHeight = 34,
   } = columnsConfig || {}
+
+  // Clear internal row height when config changes (e.g., when switching views)
+  // This happens during render, before the component uses the value
+  if (prevRowHeightRef.current !== configRowHeight && prevRowHeightRef.current !== undefined) {
+    // Config changed, clear internal state
+    if (internalRowHeight !== null) {
+      setInternalRowHeight(null)
+    }
+    // Clear any pending timeout
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
+      rowHeightTimeoutRef.current = null
+    }
+  }
+  prevRowHeightRef.current = configRowHeight
 
   // Use internal row height during adjustments, otherwise use config value
   const rowHeight = internalRowHeight ?? configRowHeight
@@ -131,9 +149,6 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   // use internalColumnSizing if it exists, otherwise use the external column sizing
   const columnSizing = internalColumnSizing || columnsSizingExternal
-
-  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
-  const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   const setColumnSizing = (sizing: ColumnSizingState) => {
     setInternalColumnSizing(sizing)

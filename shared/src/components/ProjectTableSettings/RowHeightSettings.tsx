@@ -80,17 +80,20 @@ const RowHeightSettings: FC = () => {
 
   const [isDragging, setIsDragging] = useState(false)
   const [localValue, setLocalValue] = useState(contextRowHeight)
+  const [isUserAdjusting, setIsUserAdjusting] = useState(false)
 
-  // Sync local value when context changes and we're not dragging
+  // Sync local value when context changes and we're not dragging or adjusting
   useEffect(() => {
-    if (!isDragging) {
+    if (!isDragging && !isUserAdjusting) {
       setLocalValue(contextRowHeight)
     }
-  }, [contextRowHeight, isDragging])
+  }, [contextRowHeight, isDragging, isUserAdjusting])
 
   const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value, 10)
 
+    // Mark that user is actively adjusting
+    setIsUserAdjusting(true)
     // Update local state immediately for responsive slider
     setLocalValue(newValue)
   }, [])
@@ -98,10 +101,12 @@ const RowHeightSettings: FC = () => {
   // Debounce the local value to avoid too many updates
   const debouncedValue = useDebounce(localValue, 25)
 
-  // Update context when debounced value changes
+  // Update context when debounced value changes, but only if user is adjusting
   useEffect(() => {
-    updateRowHeight(localValue)
-  }, [debouncedValue, updateRowHeight])
+    if (isUserAdjusting) {
+      updateRowHeight(localValue)
+    }
+  }, [debouncedValue, updateRowHeight, isUserAdjusting, localValue])
 
   const handleSliderStart = useCallback(() => {
     setIsDragging(true)
@@ -109,6 +114,7 @@ const RowHeightSettings: FC = () => {
 
   const handleSliderRelease = useCallback(() => {
     setIsDragging(false)
+    setIsUserAdjusting(false)
     // Persist to API when user finishes adjusting
     updateRowHeightWithPersistence(localValue)
   }, [localValue, updateRowHeightWithPersistence])
