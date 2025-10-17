@@ -15,6 +15,7 @@ import {
   refetchTasksForCacheEntry,
   refetchOverviewTasksForCacheEntry,
 } from './refetchFilteredEntities'
+import { patchVersions } from './patchVersions'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -616,6 +617,16 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         // patch the list items
         patchListItems([...operations, ...patchOperations], { state, dispatch }, patches)
 
+        // patch versions
+        if (operationsByType.version?.length) {
+          const { delete: deleteOps, update } = splitByOpType(operationsByType.version)
+          const updatesToPatch = update.filter(
+            (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
+          )
+          await patchVersions(updatesToPatch, { state, dispatch }, patches)
+          // Handle delete operations as needed
+        }
+
         // try to patch any details panels
         // first we patch the individual entities
         // then we patch the details panel cache
@@ -719,7 +730,9 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // Always refetch folders if they were updated (for calculated attributes)
           // Not conditional on affectsFilter - requirement says "always refetch entities"
           // Only invalidate if we haven't already done so for delete operations
-          const hasDeleteOps = (operationsByType.folder || []).some((op: OperationModel) => op.type === 'delete')
+          const hasDeleteOps = (operationsByType.folder || []).some(
+            (op: OperationModel) => op.type === 'delete',
+          )
           if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
             dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
           }

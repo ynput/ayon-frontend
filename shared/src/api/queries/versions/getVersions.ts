@@ -223,7 +223,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
     // custom query function that fetches versions by multiple parent ids -not infinite and gets 1000 versions max
     getVersionsByProducts: build.query<GetVersionsResult, GetVersionsByProductsArgs>({
-      queryFn: async (args, { dispatch }) => {
+      queryFn: async (args, { dispatch, forced }) => {
         const { productIds = [], desc, ...rest } = args
 
         // Helper function to fetch a page of versions
@@ -243,7 +243,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
           return dispatch(
             enhancedVersionsPageApi.endpoints.GetVersionsByProductId.initiate(queryParams, {
-              forceRefetch: true,
+              forceRefetch: forced,
             }),
           )
         }
@@ -411,3 +411,6 @@ export const {
   useGetVersionsByProductsQuery,
   useGetProductsInfiniteInfiniteQuery: useGetProductsInfiniteQuery,
 } = injectedVersionsPageApi
+
+// export API instances for cache manipulation
+export { enhancedVersionsPageApi, injectedVersionsPageApi }

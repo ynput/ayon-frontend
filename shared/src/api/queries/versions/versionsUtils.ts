@@ -36,14 +36,23 @@ export const provideTagsForEntity = (
     : [ENTITY_TAGS[entityType].list]
 }
 
+const getVersionsTagsFromResult = (versions: VersionNode[]) => {
+  const versionTags = provideTagsForEntity(versions, 'version')
+  const productTags = provideTagsForEntity(
+    versions.map((v) => v.product).filter((p): p is ProductNode => !!p),
+    'product',
+  )
+  return [...versionTags, ...productTags]
+}
+
 export const provideTagsForVersionsResult = (result: GetVersionsResult | undefined) => {
   if (!result) return provideTagsForEntity(undefined, 'version')
-  return provideTagsForEntity(result.versions, 'version')
+  return getVersionsTagsFromResult(result.versions)
 }
 
 export const provideTagsForVersionsInfinite = (result: VersionInfiniteResult) => {
   if (!result) return provideTagsForEntity(undefined, 'version')
-  return provideTagsForEntity(flattenInfiniteVersionsData(result), 'version')
+  return getVersionsTagsFromResult(flattenInfiniteVersionsData(result))
 }
 
 export const provideTagsForProductsInfinite = (result: ProductInfiniteResult) => {
