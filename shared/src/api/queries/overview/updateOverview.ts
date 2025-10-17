@@ -16,6 +16,7 @@ import {
   refetchOverviewTasksForCacheEntry,
 } from './refetchFilteredEntities'
 import { patchVersions } from './patchVersions'
+import { patchProducts } from './patchProducts'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
@@ -619,12 +620,12 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
         // patch versions
         if (operationsByType.version?.length) {
-          const { delete: deleteOps, update } = splitByOpType(operationsByType.version)
-          const updatesToPatch = update.filter(
-            (op) => !patchOperations.some((dep) => dep.entityId === op.entityId),
-          )
-          await patchVersions(updatesToPatch, { state, dispatch }, patches)
-          // Handle delete operations as needed
+          patchVersions(operationsByType.version, { state, dispatch }, patches)
+        }
+
+        // patch products
+        if (operationsByType.product?.length) {
+          patchProducts(operationsByType.product, { state, dispatch }, patches)
         }
 
         // try to patch any details panels

@@ -50,6 +50,7 @@ const updateVersionWithOperation = (version: VersionNode, operationData: any): V
  * Patches version updates into all relevant caches and invalidates them for refetching:
  * 1. Optimistically update getVersionsInfinite and getVersionsByProducts caches
  * 2. Invalidate all affected caches to trigger automatic refetching
+ * 3. For delete operations, invalidate tags immediately
  */
 export const patchVersions = (
   versions: PatchOperation[],
@@ -64,8 +65,9 @@ export const patchVersions = (
 ) => {
   if (!versions.length) return
 
-  // Step 1: Get caches that need updating using selectInvalidatedBy for version tags
   const tags = getVersionTags(versions)
+
+  // Step 1: Get caches that need updating using selectInvalidatedBy for version tags
   const versionEntries = injectedVersionsPageApi.util.selectInvalidatedBy(state, tags)
 
   // Step 2: Optimistically patch getVersionsInfinite and getVersionsByProducts caches
