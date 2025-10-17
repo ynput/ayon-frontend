@@ -17,6 +17,7 @@ import {
 } from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import { splitFiltersByScope } from '@shared/components/SearchFilter/useBuildFilterOptions'
 import { useSlicerContext } from '@context/SlicerContext'
 
 export type VersionMap = Map<string, VersionNodeExtended>
@@ -30,12 +31,12 @@ interface VersionsDataContextValue {
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
   updateExpanded: OnChangeFn<ExpandedState>
-  //   VERSION FILTERS
+  //   ALL FILTERS (versions + products)
+  filter: QueryFilter
+  setFilter: (filter: QueryFilter) => void
+  // separate filters
   versionFilter: QueryFilter
-  setVersionFilter: (versionFilter: QueryFilter) => void
-  //  PRODUCT FILTERS
   productFilter: QueryFilter
-  setProductFilter: (productFilter: QueryFilter) => void
   // data
   versionsTableData: TableRow[]
   versionsMap: VersionMap // root versions only
@@ -70,8 +71,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   const [showProducts, setShowProducts] = useState(true)
   const [expanded, setExpanded] = useState<ExpandedState>({})
-  const [versionFilter, setVersionFilter] = useState<QueryFilter>({})
-  const [productFilter, setProductFilter] = useState<QueryFilter>({})
+  const [filter, setFilter] = useState<QueryFilter>({})
+
+  // Separate the combined filter into version and product filters
+  const {
+    version: versionFilter = { conditions: [] },
+    product: productFilter = { conditions: [] },
+  } = useMemo(() => {
+    return splitFiltersByScope(filter, ['version', 'product'])
+  }, [filter])
 
   const { updateExpanded, expandedIds } = useExpandedState({
     expanded,
@@ -173,12 +181,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const value: VersionsDataContextValue = {
     showProducts,
     setShowProducts,
-    // versionFilters
+    // filters
+    filter,
+    setFilter,
     versionFilter,
-    setVersionFilter,
-    // productFilters
     productFilter,
-    setProductFilter,
     // expanded
     expanded,
     setExpanded,

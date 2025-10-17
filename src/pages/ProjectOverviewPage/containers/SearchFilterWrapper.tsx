@@ -1,4 +1,4 @@
-import { BuildFilterOptions, useBuildFilterOptions } from '@shared/components'
+import { BuildFilterOptions, useBuildFilterOptions, ScopeWithFilterTypes } from '@shared/components'
 import { FC, useMemo, useState, useEffect } from 'react'
 import {
   Filter,
@@ -19,11 +19,12 @@ import {
 } from '@shared/containers/ProjectTreeTable/utils'
 
 interface SearchFilterWrapperProps
-  extends Omit<BuildFilterOptions, 'scope' | 'data' | 'power'>,
+  extends Omit<BuildFilterOptions, 'scope' | 'scopes' | 'data' | 'power'>,
     Omit<SearchFilterProps, 'options' | 'onFinish' | 'filters' | 'onChange'> {
   projectInfo?: ProjectModel
   tasksMap?: TaskNodeMap
-  scope: BuildFilterOptions['scope']
+  scope?: BuildFilterOptions['scope']
+  scopes?: ScopeWithFilterTypes[]
   queryFilters?: QueryFilter
   onChange?: (queryFilters: QueryFilter) => void
 }
@@ -36,7 +37,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
-  scope = 'task',
+  scope,
+  scopes,
   config,
   pt,
   ...props
@@ -70,6 +72,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     filterTypes,
     projectNames,
     scope,
+    scopes,
     data,
     columnOrder,
     config: {

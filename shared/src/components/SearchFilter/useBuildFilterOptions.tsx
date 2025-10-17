@@ -22,6 +22,12 @@ import { isEmpty } from 'lodash'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]
+
+export type ScopeWithFilterTypes = {
+  scope: ScopeType
+  filterTypes: FilterFieldType[]
+}
+
 export type FilterFieldType =
   | 'folderType'
   | 'taskType'
@@ -51,9 +57,10 @@ type FilterConfig = {
 }
 
 export type BuildFilterOptions = {
-  filterTypes: FilterFieldType[]
+  filterTypes?: FilterFieldType[]
   projectNames: string[]
-  scope: Scope
+  scope?: Scope
+  scopes?: ScopeWithFilterTypes[]
   data: {
     tags?: string[]
     attributes?: Record<string, AttributeDataValue[]>
@@ -65,9 +72,10 @@ export type BuildFilterOptions = {
 }
 
 export const useBuildFilterOptions = ({
-  filterTypes,
+  filterTypes: globalFilterTypes = [],
   projectNames,
   scope,
+  scopes: customScopes,
   data,
   config,
   columnOrder = [],
@@ -75,39 +83,52 @@ export const useBuildFilterOptions = ({
 }: BuildFilterOptions): Option[] => {
   let options: Option[] = []
 
-  // Normalize scope to array
-  const scopes = Array.isArray(scope) ? scope : [scope]
-  const isMultiScope = scopes.length > 1
+  // Determine which scopes to use
+  // If customScopes is provided, use it; otherwise, fall back to the old method
+  const scopesWithTypes: Array<{ scope: ScopeType; filterTypes: FilterFieldType[] }> = customScopes
+    ? customScopes
+    : (() => {
+        // Fallback to old method: normalize scope to array and use globalFilterTypes for all
+        const normalizedScopes = scope ? (Array.isArray(scope) ? scope : [scope]) : []
+        return normalizedScopes.map((s) => ({
+          scope: s,
+          filterTypes: globalFilterTypes,
+        }))
+      })()
+
+  const isMultiScope = scopesWithTypes.length > 1
 
   // QUERIES
   //
   //
+  // Check if any scope needs these filter types
+  const anyNeedsEntitySubType = scopesWithTypes.some((s) =>
+    ['entitySubType', 'status'].some((type) => s.filterTypes.includes(type as FilterFieldType)),
+  )
+  const anyNeedsUsers = scopesWithTypes.some((s) =>
+    ['assignees', 'users', 'author'].some((type) =>
+      s.filterTypes.includes(type as FilterFieldType),
+    ),
+  )
+  const anyNeedsAttributes = scopesWithTypes.some((s) => s.filterTypes.includes('attributes'))
+
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     {
       projects: projectNames,
     },
     {
-      skip:
-        !projectNames?.length ||
-        !['entitySubType', 'status'].some((type) => filterTypes.includes(type as FilterFieldType)),
+      skip: !projectNames?.length || !anyNeedsEntitySubType,
     },
   )
 
   const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
     { projects: projectNames },
     {
-      skip:
-        !projectNames?.length ||
-        !['assignees', 'users', 'author'].some((type) =>
-          filterTypes.includes(type as FilterFieldType),
-        ),
+      skip: !projectNames?.length || !anyNeedsUsers,
     },
   )
 
-  const { data: info } = useGetSiteInfoQuery(
-    { full: true },
-    { skip: !filterTypes.includes('attributes') },
-  )
+  const { data: info } = useGetSiteInfoQuery({ full: true }, { skip: !anyNeedsAttributes })
   const { attributes = [] } = info || {}
   //
   //
@@ -119,13 +140,13 @@ export const useBuildFilterOptions = ({
   const getScopeLabel = (scope: ScopeType) => scope.charAt(0).toUpperCase() + scope.slice(1)
 
   // Loop through each scope to build options
-  scopes.forEach((currentScope) => {
+  scopesWithTypes.forEach(({ scope: currentScope, filterTypes: scopeFilterTypes }) => {
     const scopePrefix = isMultiScope ? currentScope : undefined
     const scopeLabel = isMultiScope ? getScopeLabel(currentScope) : undefined
 
     // TASK TYPE
     // add taskType option
-    if (filterTypes.includes('taskType') && currentScope !== 'user') {
+    if (scopeFilterTypes.includes('taskType') && currentScope !== 'user') {
       const entitySubTypeOption = getOptionRoot(
         'taskType',
         {
@@ -147,7 +168,7 @@ export const useBuildFilterOptions = ({
 
     // FOLDER TYPE
     // add folderType option
-    if (filterTypes.includes('folderType') && currentScope !== 'user') {
+    if (scopeFilterTypes.includes('folderType') && currentScope !== 'user') {
       const entitySubTypeOption = getOptionRoot(
         'folderType',
         {
@@ -169,7 +190,7 @@ export const useBuildFilterOptions = ({
 
     // PRODUCT TYPE
     // add productType option
-    if (filterTypes.includes('productType') && currentScope !== 'user') {
+    if (scopeFilterTypes.includes('productType') && currentScope !== 'user') {
       const entitySubTypeOption = getOptionRoot(
         'productType',
         {
@@ -189,7 +210,7 @@ export const useBuildFilterOptions = ({
 
     // STATUS
     // add status option
-    if (filterTypes.includes('status')) {
+    if (scopeFilterTypes.includes('status')) {
       const statusOption = getOptionRoot(
         'status',
         { ...config, enableOperatorChange: false },
@@ -220,7 +241,7 @@ export const useBuildFilterOptions = ({
 
     // ASSIGNEES
     // add users/assignees option
-    if (filterTypes.includes('assignees')) {
+    if (scopeFilterTypes.includes('assignees')) {
       const assigneesOption = getOptionRoot('assignees', config, scopePrefix, scopeLabel)
 
       if (assigneesOption) {
@@ -247,7 +268,7 @@ export const useBuildFilterOptions = ({
       }
     }
 
-    if (filterTypes.includes('author')) {
+    if (scopeFilterTypes.includes('author')) {
       const authorOption = getOptionRoot('author', config, scopePrefix, scopeLabel)
       if (authorOption) {
         // add every user for the projects (skip duplicates)
@@ -267,7 +288,7 @@ export const useBuildFilterOptions = ({
 
     // TAGS
     // add tags options
-    if (filterTypes.includes('tags')) {
+    if (scopeFilterTypes.includes('tags')) {
       const tagsOption = getOptionRoot('tags', config, scopePrefix, scopeLabel)
 
       if (tagsOption) {
@@ -320,7 +341,7 @@ export const useBuildFilterOptions = ({
 
     // ATTRIBUTES
     // dynamically add attributes options
-    if (filterTypes.includes('attributes')) {
+    if (scopeFilterTypes.includes('attributes')) {
       const attributesByScope = attributes.filter((attribute) =>
         attribute.scope?.includes(currentScope),
       )
@@ -506,6 +527,9 @@ const getFormattedId = (
   return result
 }
 
+const formatLabel = (baseLabel: string, scopeLabel?: string) =>
+  scopeLabel ? `${baseLabel} - ${scopeLabel}` : baseLabel
+
 const getOptionRoot = (
   fieldType: FilterFieldType,
   config?: FilterConfig,
@@ -513,8 +537,7 @@ const getOptionRoot = (
   scopeLabel?: string,
 ) => {
   const getRootIdWithPrefix = (base: string) => getFormattedId(base, fieldType, config, scopePrefix)
-  const formatLabel = (baseLabel: string) =>
-    scopeLabel ? `${baseLabel} - ${scopeLabel}` : baseLabel
+  const formatLabelWithScope = (baseLabel: string) => formatLabel(baseLabel, scopeLabel)
 
   let rootOption: Option | null = null
   switch (fieldType) {
@@ -522,7 +545,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`taskType`),
         type: 'string',
-        label: formatLabel(`Task Type`),
+        label: formatLabelWithScope(`Task Type`),
         icon: getAttributeIcon('task'),
         inverted: false,
         operator: 'OR',
@@ -538,7 +561,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`folderType`),
         type: 'string',
-        label: formatLabel(`Folder Type`),
+        label: formatLabelWithScope(`Folder Type`),
         icon: getAttributeIcon('folder'),
         inverted: false,
         operator: 'OR',
@@ -554,7 +577,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix(`productType`),
         type: 'string',
-        label: formatLabel(`Product Type`),
+        label: formatLabelWithScope(`Product Type`),
         icon: getAttributeIcon('product'),
         inverted: false,
         operator: 'OR',
@@ -570,7 +593,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('status'),
         type: 'string',
-        label: formatLabel('Status'),
+        label: formatLabelWithScope('Status'),
         icon: getAttributeIcon('status'),
         inverted: false,
         operator: 'OR',
@@ -586,7 +609,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('assignees'),
         type: 'list_of_strings',
-        label: formatLabel('Assignee'),
+        label: formatLabelWithScope('Assignee'),
         icon: getAttributeIcon('assignees'),
         inverted: false,
         operator: 'OR',
@@ -602,7 +625,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('author'),
         type: 'list_of_strings',
-        label: formatLabel('Author'),
+        label: formatLabelWithScope('Author'),
         icon: getAttributeIcon('author'),
         inverted: false,
         operator: 'OR',
@@ -618,7 +641,7 @@ const getOptionRoot = (
       rootOption = {
         id: getRootIdWithPrefix('tags'),
         type: 'list_of_strings',
-        label: formatLabel('Tags'),
+        label: formatLabelWithScope('Tags'),
         icon: getAttributeIcon('tags'),
         inverted: false,
         operator: 'OR',
@@ -648,7 +671,7 @@ const getAttributeFieldOptionRoot = (
   id: getFormattedId(attribute.name, 'attributes', config, scopePrefix),
   type: attribute.data.type,
   label: scopeLabel
-    ? `${scopeLabel} ${attribute.data.title || attribute.name}`
+    ? formatLabel(attribute.data.title || attribute.name, scopeLabel)
     : attribute.data.title || attribute.name,
   operator: 'OR',
   inverted: false,
@@ -770,4 +793,86 @@ const sortOptionsBasedOnColumns = (options: Option[], columnOrder: ColumnOrderSt
     // If neither option is in columnOrder, keep their original order
     return 0
   })
+}
+
+/**
+ * Splits combined filters by their scope and removes the scope prefix from filter IDs.
+ * Used to separate multi-scope filters back into individual scope filters.
+ *
+ * @param combinedFilter - The filter with potentially scope-prefixed IDs
+ * @param scopes - Array of scopes to split by
+ * @param config - Filter config containing prefixes for field types
+ * @returns Object with scope-keyed filters, with prefixes removed from IDs
+ *
+ * @example
+ * // Input: combinedFilter with IDs like "version_status", "folder_status"
+ * // Output: { version: { conditions: [...] }, folder: { conditions: [...] } }
+ */
+export const splitFiltersByScope = (
+  combinedFilter: Record<string, any>,
+  scopes: ScopeType[],
+  config?: FilterConfig,
+): Record<ScopeType, Record<string, any>> => {
+  // Initialize with all scopes having empty conditions
+  const result: Record<ScopeType, Record<string, any>> = {
+    folder: { conditions: [] },
+    product: { conditions: [] },
+    task: { conditions: [] },
+    user: { conditions: [] },
+    version: { conditions: [] },
+  }
+
+  // Helper to extract scope prefix from an ID
+  const extractScopeAndRemovePrefix = (
+    id: string,
+    currentConfig?: FilterConfig,
+  ): { scope: ScopeType | null; cleanId: string } => {
+    // Check if ID starts with any scope prefix
+    const scopeMatch = scopes.find((scope) => id.startsWith(`${scope}_`))
+
+    if (scopeMatch) {
+      // Remove scope prefix
+      const cleanId = id.substring(`${scopeMatch}_`.length)
+      return { scope: scopeMatch, cleanId }
+    }
+
+    // If no scope prefix, return null scope (shouldn't happen in multi-scope scenario)
+    return { scope: null, cleanId: id }
+  }
+
+  // Helper to process a filter recursively
+  const processConditions = (
+    conditions: any[] | undefined,
+    targetFilters: Record<ScopeType, Record<string, any>>,
+  ) => {
+    if (!conditions || conditions.length === 0) return
+
+    conditions.forEach((condition) => {
+      // If this is a nested filter
+      if ('conditions' in condition && !('key' in condition)) {
+        processConditions(condition.conditions, targetFilters)
+      } else if ('key' in condition) {
+        // This is a QueryCondition
+        const { scope, cleanId } = extractScopeAndRemovePrefix(condition.key, config)
+
+        if (scope && targetFilters[scope]) {
+          // Add the condition with cleaned ID to the appropriate scope
+          targetFilters[scope].conditions?.push({
+            ...condition,
+            key: cleanId,
+          })
+        } else if (!scope) {
+          // If no scope prefix found, add to all scopes (for backward compatibility)
+          scopes.forEach((s) => {
+            targetFilters[s].conditions?.push(condition)
+          })
+        }
+      }
+    })
+  }
+
+  // Process the combined filter
+  processConditions(combinedFilter.conditions, result)
+
+  return result
 }
