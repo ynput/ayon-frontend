@@ -571,6 +571,8 @@ const buildTreeTableColumns = ({
 
   const attributeColumns: ColumnDef<TableRow>[] = attribs
     .filter((attrib) => {
+      // filter out attributes that are out of scope
+      if (attrib.scope && !attrib.scope.some((s) => scopes.includes(s))) return false
       const columnId = 'attrib_' + attrib.name
       // Check if the specific attribute column is excluded
       // or if all built-in attributes are excluded and this is a built-in attribute

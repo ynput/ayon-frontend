@@ -18,7 +18,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
   projectName,
   children,
 }) => {
-  const { versionsTableData, entitiesMap, expanded, updateExpanded, error, showProducts } =
+  const { versionsTableData, entitiesMap, expanded, updateExpanded, error } =
     useVersionsDataContext()
   const modules = useProjectTableModules()
 
@@ -57,7 +57,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
       showHierarchy={false}
       isLoading={isLoadingAll}
       contextMenuItems={contextMenuItems}
-      scopes={showProducts ? ['product', 'version'] : ['version']}
+      scopes={['product', 'version']}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
       error={error}
