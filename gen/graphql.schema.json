@@ -3487,6 +3487,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -3648,7 +3664,7 @@
               },
               {
                 "name": "versionFilter",
-                "description": "Filter products by its versions using QueryFilter",
+                "description": "Filter products by their versions using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6003,6 +6019,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "productFilter",
+                "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "productIds",
                 "description": "List of parent products IDs",
                 "type": {
@@ -7694,6 +7722,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -7855,7 +7899,7 @@
               },
               {
                 "name": "versionFilter",
-                "description": "Filter products by its versions using QueryFilter",
+                "description": "Filter products by their versions using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8849,6 +8893,18 @@
                   }
                 },
                 "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "productFilter",
+                "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -12096,6 +12152,18 @@
                   }
                 },
                 "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "productFilter",
+                "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
               },

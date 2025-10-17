@@ -3,6 +3,7 @@ query GetVersions(
   $productIds: [String!]
   $versionIds: [String!]
   $versionFilter: String
+  $productFilter: String
   $folderIds: [String!]
   $search: String
   $after: String
@@ -16,7 +17,9 @@ query GetVersions(
       ids: $versionIds
       productIds: $productIds
       filter: $versionFilter
+      productFilter: $productFilter
       folderIds: $folderIds
+      includeFolderChildren: true
       search: $search
       after: $after
       first: $first

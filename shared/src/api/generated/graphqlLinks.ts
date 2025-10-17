@@ -366,6 +366,7 @@ export type FolderNodeProductsArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   nameEx?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -592,6 +593,7 @@ export type ProductNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -802,6 +804,7 @@ export type ProjectNodeProductsArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   nameEx?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -889,6 +892,7 @@ export type ProjectNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1224,6 +1228,7 @@ export type TaskNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;

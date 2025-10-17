@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { RowSelectionState } from '@tanstack/react-table'
-import { isEmpty } from 'lodash'
 
 interface UseSelectedFoldersProps {
   rowSelection: RowSelectionState
@@ -13,8 +12,6 @@ export const useSelectedFolders = ({
   sliceType,
   persistentRowSelectionData,
 }: UseSelectedFoldersProps): string[] => {
-  if (isEmpty(persistentRowSelectionData)) return []
-
   return useMemo(() => {
     let selection: RowSelectionState = {}
 

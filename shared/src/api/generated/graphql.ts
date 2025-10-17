@@ -366,6 +366,7 @@ export type FolderNodeProductsArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   nameEx?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -592,6 +593,7 @@ export type ProductNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -802,6 +804,7 @@ export type ProjectNodeProductsArgs = {
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   nameEx?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -889,6 +892,7 @@ export type ProjectNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1224,6 +1228,7 @@ export type TaskNodeVersionsArgs = {
   includeFolderChildren?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   latestOnly?: Scalars['Boolean']['input'];
+  productFilter?: InputMaybe<Scalars['String']['input']>;
   productIds?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1755,6 +1760,7 @@ export type GetVersionsQueryVariables = Exact<{
   productIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   versionIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   versionFilter?: InputMaybe<Scalars['String']['input']>;
+  productFilter?: InputMaybe<Scalars['String']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2640,6 +2646,7 @@ export const GetProductsDocument = `
       versionFilter: $versionFilter
       search: $search
       folderIds: $folderIds
+      includeFolderChildren: true
       after: $after
       first: $first
       before: $before
@@ -2675,13 +2682,15 @@ export const GetProductsDocument = `
     ${PageInfoFragmentDoc}
 ${VersionBaseFragmentDoc}`;
 export const GetVersionsDocument = `
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
       productIds: $productIds
       filter: $versionFilter
+      productFilter: $productFilter
       folderIds: $folderIds
+      includeFolderChildren: true
       search: $search
       after: $after
       first: $first

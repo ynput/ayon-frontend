@@ -22,7 +22,7 @@ const VersionsPage: FC<VersionsPageProps> = ({ projectName }) => {
   const { config } = useSlicerContext()
   const { projectInfo } = useProjectTableContext()
   // load slicer remote config
-  const overviewSliceFields = config?.overview?.fields
+  const overviewSliceFields = config?.versions?.fields
 
   // Check if we should show the details panel
   const shouldShowDetailsPanel = selectedRows.length > 0

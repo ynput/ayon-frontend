@@ -19,6 +19,7 @@ query GetProducts(
       versionFilter: $versionFilter
       search: $search
       folderIds: $folderIds
+      includeFolderChildren: true
       after: $after
       first: $first
       before: $before

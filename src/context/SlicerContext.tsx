@@ -79,6 +79,9 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     overview: {
       fields: ['hierarchy', 'assignees', 'status', 'type', 'taskType', 'attributes'],
     },
+    versions: {
+      fields: ['hierarchy', 'status'],
+    },
   }
 
   const { useExtraSlices, SlicerDropdown } = useSlicerRemotes()
@@ -188,6 +191,8 @@ const useSlicerRemotes = () => {
       formatTypes: () => [],
       formatAssignees: () => [],
       formatAttribute: () => [],
+      formatProductTypes: () => [],
+      formatAuthors: () => [],
     }
   }
 
