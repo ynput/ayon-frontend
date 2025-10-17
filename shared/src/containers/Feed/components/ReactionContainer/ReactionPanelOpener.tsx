@@ -1,18 +1,24 @@
-import { Icon } from "@ynput/ayon-react-components"
+import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Reactions.styled'
-import { reactionMapping } from "./helpers"
-import { Reaction as ReactionType } from "./types"
-import Reaction from "./Reaction"
-import { useState } from "react"
+import { reactionMapping } from './helpers'
+import { Reaction as ReactionType } from './types'
+import Reaction from './Reaction'
+import { useState } from 'react'
 
 type Props = {
   reactions: ReactionType[]
   changeHandler: (reaction: ReactionType) => void
+  categoryPrimary?: string
+  categorySecondary?: string
+  categoryTertiary?: string
 }
 
 const ReactionPanelOpener = ({
   reactions,
   changeHandler,
+  categoryPrimary,
+  categorySecondary,
+  categoryTertiary,
 }: Props) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const activeReactions = reactions
@@ -20,7 +26,11 @@ const ReactionPanelOpener = ({
     .map((reaction) => reaction.type)
 
   return (
-    <Styled.ReactionPanelOpener>
+    <Styled.ReactionPanelOpener
+      $categoryPrimary={categoryPrimary}
+      $categorySecondary={categorySecondary}
+      $categoryTertiary={categoryTertiary}
+    >
       <Icon
         icon="add_reaction"
         className="add-reaction"
@@ -30,7 +40,11 @@ const ReactionPanelOpener = ({
         <>
           <Styled.Overlay onClick={() => setIsPopupOpen(false)} />
 
-          <Styled.ReactionsPanel>
+          <Styled.ReactionsPanel
+            $categoryPrimary={categoryPrimary}
+            $categorySecondary={categorySecondary}
+            $categoryTertiary={categoryTertiary}
+          >
             {reactionMapping.map((reaction) => {
               const reactionObj = {
                 type: reaction.key,
@@ -45,6 +59,9 @@ const ReactionPanelOpener = ({
                     changeHandler({ ...reactionObj, isActive: !reactionObj.isActive })
                     setIsPopupOpen(false)
                   }}
+                  categoryPrimary={categoryPrimary}
+                  categorySecondary={categorySecondary}
+                  categoryTertiary={categoryTertiary}
                 />
               )
             })}

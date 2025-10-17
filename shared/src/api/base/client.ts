@@ -117,6 +117,8 @@ const tagTypes = [
   'workfile',
   'link',
   'linkSearchItem',
+  'guest',
+  'category',
 ]
 
 const prepareHeaders = (headers: any) => {

@@ -70,10 +70,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         }
       },
       transformErrorResponse: (error: any) => error.data.detail,
-      // invalidatesTags: (_s, _e, { listId }) => {
-      //   const tags = [{ type: 'entityList', id: listId }]
-      //   return tags
-      // },
+      invalidatesTags: (_s, _e, { listId }) => {
+        const tags = [{ type: 'entityList', id: listId }]
+        return tags
+      },
     },
     deleteEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
@@ -193,6 +193,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         ]
         return tags
       },
+      transformErrorResponse: (error: any) => error.data.detail,
     },
     updateEntityListItem: {
       async onQueryStarted(

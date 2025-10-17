@@ -13,6 +13,7 @@ type UseDeleteListItemsProps = {
   projectName: string
   listId?: string
   listItemsMap: ListItemsDataContextValue['listItemsMap']
+  accessLevel?: number | null
 }
 
 export type DeleteListItem = { id: string; entityId: string }
@@ -44,6 +45,7 @@ const useDeleteListItems = ({
   projectName,
   listId,
   listItemsMap,
+  accessLevel,
 }: UseDeleteListItemsProps): UseDeleteListItemsReturn => {
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
@@ -61,7 +63,7 @@ const useDeleteListItems = ({
         },
       }).unwrap()
     } catch (error: any) {
-      toast.error(`Error adding items to list: ${error.data.detail}`)
+      toast.error(`Error adding items to list: ${error}`)
       // remove from redo stack as well
       if (history) {
         history.removeHistoryEntries(1)
@@ -91,7 +93,7 @@ const useDeleteListItems = ({
     } catch (error: any) {
       console.error('Error deleting list items:', error)
       // Handle the error (e.g., show a toast notification)
-      toast.error(`Error deleting list items: ${error.data.detail}`)
+      toast.error(`Error deleting list items: ${error}`)
     }
   }
 
@@ -138,6 +140,7 @@ const useDeleteListItems = ({
       shortcut: deleteItemLabel.shortcut,
       danger: true,
       tooltip: hasRestrictedEntity ? 'Restricted entities will be skipped' : undefined,
+      hidden: (accessLevel ?? 0) < 20,
       command: async () => {
         await deleteListItemsWithConfirmation(selectedListItems, context.history)
       },
@@ -171,7 +174,8 @@ const useDeleteListItems = ({
         ? 'Cannot delete restricted entities'
         : deleteItemLabel.label,
       ['data-shortcut']: deleteItemLabel.shortcut,
-      disabled: !selection.selectedCells.size || selectedListItems.length === 0,
+      disabled:
+        !selection.selectedCells.size || selectedListItems.length === 0 || (accessLevel ?? 0) < 20,
       onClick: () => {
         deleteListItemsWithConfirmation(selectedListItems, editing.history)
       },
