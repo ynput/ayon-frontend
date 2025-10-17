@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useListAddonsQuery } from '@shared/api'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { SocketContext } from '@context/WebsocketContext'
+import { useSocketContext } from '@shared/context'
 import { compareBuild, coerce } from 'semver'
 import { Icon, InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
@@ -81,24 +81,21 @@ const AddonListItem: React.FC<{
   isDev?: boolean
   addonName: string
 }> = ({ version, setVersion, selection, addons = [], versions, addonName }) => {
-  const options = useMemo(
-    () => {
-      // Normalize selection to always be an array
-      const selectionArray = Array.isArray(selection) ? selection : [selection]
-      const isCurrentAddonSelected = selectionArray.some((s) => s?.name === addonName)
+  const options = useMemo(() => {
+    // Normalize selection to always be an array
+    const selectionArray = Array.isArray(selection) ? selection : [selection]
+    const isCurrentAddonSelected = selectionArray.some((s) => s?.name === addonName)
 
-      return selectionArray.length > 1 && isCurrentAddonSelected
-        ? selectionArray.map((s) => {
-            const foundAddon = addons.find((a) => a.name === s.name)
-            if (!foundAddon) return ['NONE']
-            const versionList = Object.keys(foundAddon.versions || {})
-            versionList.sort((a, b) => -1 * compareBuild(a, b))
-            return [...versionList, 'NONE']
-          })
-        : [[...versions.sort((a, b) => -1 * compareBuild(a, b)), 'NONE']]
-    },
-    [selection, addons, addonName, versions],
-  )
+    return selectionArray.length > 1 && isCurrentAddonSelected
+      ? selectionArray.map((s) => {
+          const foundAddon = addons.find((a) => a.name === s.name)
+          if (!foundAddon) return ['NONE']
+          const versionList = Object.keys(foundAddon.versions || {})
+          versionList.sort((a, b) => -1 * compareBuild(a, b))
+          return [...versionList, 'NONE']
+        })
+      : [[...versions.sort((a, b) => -1 * compareBuild(a, b)), 'NONE']]
+  }, [selection, addons, addonName, versions])
 
   return (
     <VersionSelect
@@ -151,7 +148,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
 
     const { data: { addons = [] } = {}, refetch } = useListAddonsQuery({}) as any
 
-    const readyState = useContext(SocketContext).readyState
+    const readyState = useSocketContext().readyState
     useEffect(() => {
       refetch()
     }, [readyState])

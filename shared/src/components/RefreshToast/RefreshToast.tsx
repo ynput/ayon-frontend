@@ -1,6 +1,6 @@
 import { Button } from '@ynput/ayon-react-components'
 
-const RefreshToast = () => {
+export const RefreshToast = () => {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       Refresh to see latest changes.
@@ -10,5 +10,3 @@ const RefreshToast = () => {
     </div>
   )
 }
-
-export default RefreshToast

@@ -27,7 +27,7 @@ interface ActivityItemProps {
   isHighlighted?: boolean
   onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
-  onUpdate?: (value: any, files: any, refs?: any) => Promise<void>
+  onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
 }
 
 const ActivityItem: React.FC<ActivityItemProps> = ({

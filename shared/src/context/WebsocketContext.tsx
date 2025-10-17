@@ -1,53 +1,65 @@
-import { useEffect, useState, createContext } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useEffect, useState, createContext, useCallback, useRef, useContext } from 'react'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
-import arrayEquals from '@helpers/arrayEquals'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
-import { debounce } from 'lodash'
+import { debounce, isEqual } from 'lodash'
 import api from '@shared/api'
-import RefreshToast from '@components/RefreshToast'
-import { useLogoutMutation } from '@queries/auth/logout'
+import { RefreshToast } from '@shared/components'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
+import { WebSocketLike } from 'react-use-websocket/dist/lib/types'
 
-export const SocketContext = createContext()
+export type WebsocketContextType = {
+  getWebSocket: () => WebSocketLike | null
+  readyState: ReadyState
+  serverRestartingVisible: boolean
+}
+
+export const SocketContext = createContext<WebsocketContextType | undefined>(undefined)
 
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`
 
-export const SocketProvider = (props) => {
-  const user = useSelector((state) => state.user)
-  const dispatch = useDispatch()
+// define global window senderId type
+declare global {
+  interface Window {
+    senderId: string
+  }
+}
+
+export type SocketProviderProps = {
+  children: React.ReactNode
+  userName?: string
+  projectName?: string
+  dispatch: any
+}
+
+export const SocketProvider = ({
+  children,
+  userName,
+  projectName,
+  dispatch,
+}: SocketProviderProps) => {
   // get user logged in
   const [serverRestartingVisible, setServerRestartingVisible] = useState(false)
   const [topics, setTopics] = useState([])
-  const [logout] = useLogoutMutation()
-  const [getInfo] = useLazyGetSiteInfoQuery({full:false})
+  const [getInfo] = useLazyGetSiteInfoQuery()
 
   const wsOpts = {
     shouldReconnect: () => {
-      if (!user.name) return false
+      if (!userName) return false
       // check if there is a token
       const accessToken = localStorage.getItem('accessToken')
-      // if not, log out user
-      if (!accessToken) {
-        try {
-          logout().unwrap()
-        } catch (error) {
-          console.error('Logout error', error)
-        }
-      } else {
-        // test if the token is valid
-        // if it's not then this will automatically log out the user
-        getInfo()
-      }
+      if (!accessToken) return false
+
+      // test if the token is valid
+      // if it's not then this will automatically log out the user
+      getInfo({ full: false }).unwrap()
+
       return true
     },
   }
 
   const { sendMessage, readyState, getWebSocket } = useWebSocket(wsAddress, wsOpts)
-  const project = useSelector((state) => state.project)
-  const projectName = project.name
 
   const subscribe = () => {
     sendMessage(
@@ -66,12 +78,12 @@ export const SocketProvider = (props) => {
   }, [topics, projectName])
 
   const updateTopicsDebounce = debounce((newTopics) => {
-    if (arrayEquals(topics, newTopics)) return
+    if (isEqual(topics, newTopics)) return
     console.log('WS: Subscriptions changed')
     setTopics(newTopics)
   }, 200)
 
-  PubSub.setOnSubscriptionsChange((newTopics) => updateTopicsDebounce(newTopics))
+  PubSub.setOnSubscriptionsChange((newTopics: string[]) => updateTopicsDebounce(newTopics))
 
   const [overloaded, setOverloaded] = useState(false)
   const [toastShown, setToastShown] = useState(false)
@@ -94,21 +106,28 @@ export const SocketProvider = (props) => {
 
   // onMessage is a function that is called when a message comes in from the websocket
   // it is a closure that keeps track of the number of calls and the last call time
-  let onMessage = (() => {
-    let callCount = 0
-    let lastCall = Date.now()
+  // Using useRef to persist the closure state across renders
+  const messageStatsRef = useRef({ callCount: 0, lastCall: Date.now() })
 
-    return (message) => {
+  const onMessage = useCallback(
+    (message: any) => {
       // If the function is called more than 100 times per second, return early.
       const threshold = 1000
-      if (callCount > threshold) {
+      if (messageStatsRef.current.callCount > threshold) {
         setOverloaded(true)
         return console.log(
           `Overload: Over ${threshold} messages per second. Ignoring subsequent messages.`,
         )
       }
 
-      const data = JSON.parse(message.data)
+      let data
+      try {
+        data = JSON.parse(message.data)
+      } catch (error) {
+        console.error('Failed to parse websocket message:', error, message.data)
+        return
+      }
+
       const { topic, sender, summary } = data || {}
       if (topic === 'heartbeat') return
 
@@ -119,20 +138,21 @@ export const SocketProvider = (props) => {
       }
 
       const now = Date.now()
-      if (now - lastCall < 1000) {
-        callCount += 1
+      if (now - messageStatsRef.current.lastCall < 1000) {
+        messageStatsRef.current.callCount += 1
       } else {
-        callCount = 0
+        messageStatsRef.current.callCount = 0
       }
 
-      lastCall = now
+      messageStatsRef.current.lastCall = now
 
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
       console.log('Event RX', data)
       PubSub.publish(topic, data)
-    }
-  })()
+    },
+    [setServerRestartingVisible],
+  )
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
@@ -141,6 +161,7 @@ export const SocketProvider = (props) => {
         // clear ayonApi
         dispatch(api.util.resetApiState())
       }
+      // @ts-ignore
       getWebSocket().onmessage = onMessage
       subscribe()
       // Dispatch a fake event to the frontend components
@@ -161,7 +182,15 @@ export const SocketProvider = (props) => {
         serverRestartingVisible,
       }}
     >
-      {props.children}
+      {children}
     </SocketContext.Provider>
   )
+}
+
+export const useSocketContext = () => {
+  const context = useContext(SocketContext)
+  if (context === undefined) {
+    throw new Error('useSocketContext must be used within a SocketProvider')
+  }
+  return context
 }

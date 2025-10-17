@@ -27,6 +27,11 @@ export default ({ mode }) => {
           changeOrigin: true,
           ws: true,
         },
+        '^.*/ws$': {
+          target: SERVER_URL,
+          changeOrigin: true,
+          ws: true,
+        },
         '/addons': {
           target: SERVER_URL,
           changeOrigin: true,

@@ -339,6 +339,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       extraColumns={extraColumns}
                       isReview={isReview}
                       dndActiveId={dndActiveId} // Pass prop
+                      viewOnly={(selectedList?.accessLevel || 0) < 20}
                     />
                   </SplitterPanel>
                   {shouldShowDetailsPanel ? (

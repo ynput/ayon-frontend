@@ -20,6 +20,7 @@ interface CommentMentionSelectProps {
   noneFound?: boolean
   noneFoundAtAll?: boolean
   error?: string
+  isGuest?: boolean
 }
 
 const CommentMentionSelect = ({
@@ -32,8 +33,16 @@ const CommentMentionSelect = ({
   noneFound,
   noneFoundAtAll,
   error,
+  isGuest,
 }: CommentMentionSelectProps) => {
   if (!mention || noneFound) return null
+
+  if (isGuest)
+    return (
+      <Styled.MentionSelect tabIndex={0}>
+        <Styled.MentionItem>Mentions not supported for guest users</Styled.MentionItem>
+      </Styled.MentionSelect>
+    )
 
   // const hasSameLabel = new Set(labels).size < labels.length
   let formattedOptions = [...options]
