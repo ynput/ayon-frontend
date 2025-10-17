@@ -27,7 +27,7 @@ const StyledEntityNameWidget = styled.div`
 
 const StyledContentWrapper = styled.div`
   width: 100%;
-  height: 24px;
+  height: 32px;
   overflow: hidden;
   position: relative;
 `
@@ -110,7 +110,7 @@ type EntityNameWidgetProps = {
   label: string
   name: string
   path?: string | null
-  showHierarchy?: boolean
+  isExpandable?: boolean
   icon?: string | null
   type: string
   isExpanded: boolean
@@ -124,7 +124,7 @@ export const EntityNameWidget = ({
   label,
   name,
   path,
-  showHierarchy,
+  isExpandable,
   icon,
   type,
   isExpanded,
@@ -139,36 +139,28 @@ export const EntityNameWidget = ({
   // < 50px = single line (compact), >= 50px = stacked
   const isCompact = rowHeight < 50
 
-  // Always keep content height at 24px in compact mode or hierarchy mode to prevent jumping
-  // Only allow expansion to 32px in non-hierarchy mode when not compact and path exists
-  const contentHeight = (isCompact || showHierarchy) ? 24 : (path && !isRestricted ? 32 : 24)
-
   // For restricted entities, don't show path
   const displayPath = isRestricted ? null : path
 
   return (
     <StyledEntityNameWidget>
-      {showHierarchy ? (
-        type === 'folder' ? (
-          <Expander
-            onClick={(e) => {
-              e.stopPropagation()
-              if (e.altKey) {
-                // expand/collapse all children
-                toggleExpandAll(id)
-              } else {
-                // use built-in toggleExpanded function
-                toggleExpanded()
-              }
-            }}
-            className="expander"
-            icon={isExpanded ? 'expand_more' : 'chevron_right'}
-          />
-        ) : (
-          <div style={{ display: 'inline-block', minWidth: 24 }} />
-        )
+      {isExpandable ? (
+        <Expander
+          onClick={(e) => {
+            e.stopPropagation()
+            if (e.altKey) {
+              // expand/collapse all children
+              toggleExpandAll(id)
+            } else {
+              // use built-in toggleExpanded function
+              toggleExpanded()
+            }
+          }}
+          className="expander"
+          icon={isExpanded ? 'expand_more' : 'chevron_right'}
+        />
       ) : null}
-      <StyledContentWrapper style={{ height: contentHeight }}>
+      <StyledContentWrapper>
         <StyledContentAbsolute>
           <StyledContent>
             {icon && <Icon icon={icon} />}

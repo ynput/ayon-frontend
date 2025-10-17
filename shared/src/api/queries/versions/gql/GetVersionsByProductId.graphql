@@ -1,0 +1,32 @@
+query GetVersionsByProductId(
+  $projectName: String!
+  $productIds: [String!]!
+  $versionFilter: String
+  $sortBy: String
+  $first: Int
+  $last: Int
+  $after: String
+  $before: String
+) {
+  project(name: $projectName) {
+    versions(
+      productIds: $productIds
+      filter: $versionFilter
+      sortBy: $sortBy
+      last: $last
+      first: $first
+      after: $after
+      before: $before
+    ) {
+      pageInfo {
+        ...PageInfo
+      }
+      edges {
+        cursor
+        node {
+          ...VersionExtended
+        }
+      }
+    }
+  }
+}

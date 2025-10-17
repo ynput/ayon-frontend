@@ -48,12 +48,19 @@ export type TableRow = {
   hasVersions?: boolean
   startContent?: JSX.Element
   assignees?: string[]
+  author?: string
   attrib?: Record<string, any>
   links: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
   group?: GroupData // signals it is a group row and has some extra data like label, color, icon
+  thumbnail?: {
+    // if you want to use a thumbnail from a different entity, e.g. latest version of a product
+    entityId: string
+    entityType: string
+    updatedAt: string | undefined
+  }
 }
 
 export type MatchingFolder = FolderListItem & {

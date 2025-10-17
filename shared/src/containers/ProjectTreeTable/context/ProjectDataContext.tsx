@@ -8,6 +8,7 @@ import {
 import type { ProjectModel } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { Anatomy } from '@shared/api/generated/projects'
+import { VersionsViewSettingsReturn } from '@shared/containers/Views'
 
 type User = {
   name: string

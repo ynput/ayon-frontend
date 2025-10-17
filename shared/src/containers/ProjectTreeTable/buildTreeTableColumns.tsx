@@ -18,6 +18,8 @@ import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { isEntityRestricted } from './utils/restrictedEntity'
 
+export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
+
 const MIN_SIZE = 50
 
 // Wrapper function for sorting that pushes isLoading rows to the bottom
@@ -95,6 +97,7 @@ export type DefaultColumns =
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
 export type BuildTreeTableColumnsProps = {
+  scopes: string[]
   attribs: ProjectTableAttribute[]
   links: LinkTypeModel[]
   showHierarchy: boolean
@@ -102,9 +105,11 @@ export type BuildTreeTableColumnsProps = {
   excluded?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   groupBy?: TableGroupBy
+  nameLabel?: string
 }
 
 const buildTreeTableColumns = ({
+  scopes,
   attribs,
   links = [],
   showHierarchy,
@@ -112,6 +117,7 @@ const buildTreeTableColumns = ({
   excluded,
   extraColumns,
   groupBy,
+  nameLabel = 'Entity',
 }: BuildTreeTableColumnsProps) => {
   const staticColumns: ColumnDef<TableRow>[] = []
 
@@ -148,12 +154,21 @@ const buildTreeTableColumns = ({
         const meta = table.options.meta
         if (!meta) return null
         const cellId = getCellId(row.id, column.id)
+        let thumbnail = {
+          entityId: row.original.entityId || row.id,
+          entityType: row.original.entityType,
+          updatedAt: row.original.updatedAt,
+        }
+        // check for thumbnail override
+        if (row.original.thumbnail) {
+          thumbnail = row.original.thumbnail
+        }
         return (
           <ThumbnailWidget
             id={cellId}
-            entityId={row.original.entityId || row.id}
-            entityType={row.original.entityType}
-            updatedAt={row.original.updatedAt}
+            entityId={thumbnail.entityId}
+            entityType={thumbnail.entityType}
+            updatedAt={thumbnail.updatedAt}
             icon={row.original.icon}
             projectName={meta?.projectName as string}
             className={clsx('thumbnail', {
@@ -170,7 +185,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'name',
       accessorKey: 'name',
-      header: 'Folder / Task',
+      header: nameLabel,
       minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
       enableSorting: groupBy ? false : true,
@@ -194,6 +209,9 @@ const buildTreeTableColumns = ({
           )
         }
 
+        const isExpandable =
+          row.getCanExpand() && !!row.originalSubRows && isEntityExpandable(row.original.entityType)
+
         return (
           <TableCellContent
             id={cellId}
@@ -202,7 +220,9 @@ const buildTreeTableColumns = ({
               hierarchy: showHierarchy,
             })}
             style={{
-              paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
+              paddingLeft: `calc(${row.depth * 1}rem + ${
+                isExpandable || !row.getCanExpand() ? 0 : 32
+              }px + 8px)`,
             }}
             tabIndex={0}
           >
@@ -225,9 +245,9 @@ const buildTreeTableColumns = ({
                 label={row.original.label}
                 name={row.original.name}
                 path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
-                showHierarchy={showHierarchy}
                 icon={row.original.icon}
                 type={row.original.entityType}
+                isExpandable={isExpandable}
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
                 toggleExpanded={row.getToggleExpandedHandler()}
@@ -343,6 +363,7 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'string' }}
+            isInherited={type === 'version'} // versions do not have types, we just show the product's type
             options={
               type === 'folder'
                 ? meta?.options?.folderType
@@ -413,6 +434,39 @@ const buildTreeTableColumns = ({
                 multipleOverride: false,
               },
             }}
+          />
+        )
+      },
+    })
+  }
+
+  // only show authors column for products
+  if (isIncluded('author') && ['version', 'product'].some((s) => scopes.includes(s))) {
+    staticColumns.push({
+      id: 'author',
+      accessorKey: 'author',
+      header: 'Author',
+      minSize: MIN_SIZE,
+      enableSorting: true,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(pathSort),
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('author', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={[value]}
+            attributeData={{ type: 'list_of_strings' }}
+            options={meta?.options?.assignee}
+            isReadOnly={true}
+            isInherited={type === 'product'} // products do not have authors, we just show the featured version's author
           />
         )
       },
@@ -517,6 +571,8 @@ const buildTreeTableColumns = ({
 
   const attributeColumns: ColumnDef<TableRow>[] = attribs
     .filter((attrib) => {
+      // filter out attributes that are out of scope
+      if (attrib.scope && !attrib.scope.some((s) => scopes.includes(s))) return false
       const columnId = 'attrib_' + attrib.name
       // Check if the specific attribute column is excluded
       // or if all built-in attributes are excluded and this is a built-in attribute
@@ -542,10 +598,12 @@ const buildTreeTableColumns = ({
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
           const isInherited = !row.original.ownAttrib?.includes(columnIdParsed)
           if (['group', NEXT_PAGE_ID].includes(type)) return null
-          const isTypeInScope = attrib.scope?.includes(type as (typeof attrib.scope)[number])
+          const outOfScopeAndNoValue =
+            !attrib.scope?.includes(type as (typeof attrib.scope)[number]) &&
+            (value === null || value === undefined)
 
           // if the attribute is not in scope, we should nothing
-          if (!isTypeInScope) return null
+          if (outOfScopeAndNoValue) return null
 
           return (
             <CellWidget
@@ -556,7 +614,7 @@ const buildTreeTableColumns = ({
               attributeData={{ type: attrib.data.type || 'string' }}
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
-              isInherited={isInherited && ['folder', 'task'].includes(type)}
+              isInherited={isInherited}
               isReadOnly={
                 // check attrib is not read only
                 attrib.readOnly ||

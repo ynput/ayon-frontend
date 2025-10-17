@@ -28,6 +28,7 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
@@ -80,7 +81,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
-import { useSelector } from 'react-redux'
+import { upperFirst } from 'lodash'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -131,6 +132,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   excludedColumns?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   isLoading?: boolean
+  isExpandable?: boolean // if true, show the expand/collapse icons
   clientSorting?: boolean
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
@@ -151,6 +153,7 @@ export const ProjectTreeTable = ({
   excludedColumns,
   extraColumns,
   isLoading: isLoadingProp,
+  isExpandable,
   clientSorting = false,
   sortableRows = false,
   onRowReorder,
@@ -189,7 +192,7 @@ export const ProjectTreeTable = ({
     toggleExpandAll,
     showHierarchy,
     fetchNextPage,
-    scopes,
+    scopes, // or entityTypes
     getEntityById,
   } = useProjectTableContext()
 
@@ -299,8 +302,12 @@ export const ProjectTreeTable = ({
     () => (isInitialized ? attribFields : loadingAttrib),
     [attribFields, loadingAttrib, isInitialized],
   )
+
+  const getNameLabelHeader = () => scopes.map((s) => upperFirst(s)).join(' / ')
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
+      scopes,
       attribs: columnAttribs,
       links: linkTypes,
       showHierarchy,
@@ -308,6 +315,7 @@ export const ProjectTreeTable = ({
       extraColumns,
       excluded: excludedColumns,
       groupBy,
+      nameLabel: getNameLabelHeader(),
     })
 
     if (sortableRows) {
@@ -328,7 +336,16 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
+  }, [
+    scopes,
+    columnAttribs,
+    showHierarchy,
+    isExpandable,
+    options,
+    extraColumns,
+    excludedColumns,
+    sortableRows,
+  ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date
   useEffect(() => {
@@ -347,7 +364,7 @@ export const ProjectTreeTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: () => true,
+    getRowCanExpand: () => !!isExpandable || showHierarchy,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -1209,7 +1226,8 @@ const TableCell = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
-          'folder-in-hierarchy': showHierarchy && cell.row.original.entityType === 'folder',
+          expandable:
+            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,

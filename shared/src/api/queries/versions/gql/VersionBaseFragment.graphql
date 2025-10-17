@@ -1,0 +1,15 @@
+fragment VersionBase on VersionNode {
+  name
+  id
+  hasReviewables
+  parents
+  path
+  active
+  allAttrib
+  author
+  createdAt
+  status
+  tags
+  updatedAt
+  version
+}

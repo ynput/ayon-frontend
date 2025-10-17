@@ -23,35 +23,13 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({
   type,
   attribFields,
 }) => {
-  const sliceTypeToFilterMap: Record<string, FilterMapping | undefined> = {
-    assignees: {
-      id: 'assignees',
-      type: 'list_of_strings',
-      mapValue: (items) =>
-        items.map((item) => ({ id: item.name || item.id, label: item.name || '' })),
-    },
-    status: {
-      id: 'status',
-      type: 'string',
-
-      mapValue: (items) =>
-        items.map((item) => ({ id: item.name || item.id, label: item.name || '' })),
-    },
-    taskType: {
-      id: 'taskType',
-      type: 'string',
-      mapValue: (items) =>
-        items.map((item) => ({ id: item.name || item.id, label: item.name || '' })),
-    },
-    hierarchy: undefined,
-  }
-
   const sliceFilterTypes = {
     assignees: 'list_of_strings',
     status: 'string',
     taskType: 'string',
     hierarchy: undefined,
     ...attribFields.reduce((acc, field) => {
+      // @ts-ignore
       acc['attrib.' + field.name] = field.data.type
       return acc
     }, {} as Record<string, AttributeModel['data']['type']>),
