@@ -82,7 +82,7 @@ export type ProductInfiniteResult = InfiniteData<GetProductsResult, ProductsPage
 export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
 export type ProductNode = ProductNodeRAW & {
   attrib: Record<string, any> // parsed from allAttrib JSON string
-  latestVersion?: VersionNode | null // added separately
+  featuredVersion?: VersionNode | null // added separately
 }
 
 export type GetProductsResult = {
@@ -325,6 +325,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           },
         },
         queryFn: async ({ queryArg, pageParam }, api) => {
+          let result
           try {
             const { sortBy, desc, folderIds, ...rest } = queryArg
             const { cursor } = pageParam
@@ -355,7 +356,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
 
             // Call the existing GetProducts gql query
-            const result = await api.dispatch(
+            result = await api.dispatch(
               enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
                 forceRefetch: true,
               }),

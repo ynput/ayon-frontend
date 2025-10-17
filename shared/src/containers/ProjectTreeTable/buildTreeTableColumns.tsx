@@ -361,6 +361,7 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'string' }}
+            isInherited={type === 'version'} // versions do not have types, we just show the product's type
             options={
               type === 'folder'
                 ? meta?.options?.folderType
@@ -560,10 +561,12 @@ const buildTreeTableColumns = ({
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
           const isInherited = !row.original.ownAttrib?.includes(columnIdParsed)
           if (['group', NEXT_PAGE_ID].includes(type)) return null
-          const isTypeInScope = attrib.scope?.includes(type as (typeof attrib.scope)[number])
+          const outOfScopeAndNoValue =
+            !attrib.scope?.includes(type as (typeof attrib.scope)[number]) &&
+            (value === null || value === undefined)
 
           // if the attribute is not in scope, we should nothing
-          if (!isTypeInScope) return null
+          if (outOfScopeAndNoValue) return null
 
           return (
             <CellWidget
@@ -574,7 +577,7 @@ const buildTreeTableColumns = ({
               attributeData={{ type: attrib.data.type || 'string' }}
               options={attrib.data.enum || []}
               isCollapsed={!!row.original.childOnlyMatch}
-              isInherited={isInherited && ['folder', 'task'].includes(type)}
+              isInherited={isInherited}
               isReadOnly={
                 // check attrib is not read only
                 attrib.readOnly ||

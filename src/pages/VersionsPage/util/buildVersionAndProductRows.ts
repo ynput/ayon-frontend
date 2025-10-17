@@ -13,7 +13,7 @@ export const buildProductRow = (product: ProductNode, subRows: TableRow[]): Tabl
   tags: product.tags,
   folderId: product.folderId,
   parents: product.parents?.slice(0, -1),
-  attrib: { ...product.featuredVersion, ...product.attrib },
+  attrib: { ...product.featuredVersion?.attrib, ...product.attrib },
   ownAttrib: Object.keys(product.attrib || {}),
   subType: product.productType,
   thumbnail: {

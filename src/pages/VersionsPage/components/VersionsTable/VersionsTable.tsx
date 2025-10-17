@@ -11,7 +11,7 @@ const VersionsTable: FC<VersionsTableProps> = ({ readOnly = [] }) => {
 
   return (
     <ProjectTreeTable
-      scope={'version'}
+      scope={'versions-and-products'}
       sliceId={''}
       // pagination
       onScrollBottom={fetchNextPage}
