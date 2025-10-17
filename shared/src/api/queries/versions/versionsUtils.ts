@@ -81,7 +81,20 @@ export const flattenInfiniteProductsData = (data: ProductInfiniteResult): Produc
 
 export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
   const attrib = parseAllAttribs(node.allAttrib)
-  return { ...node, attrib }
+
+  // Parse product attributes if product exists
+  const product = node.product
+    ? {
+        ...node.product,
+        attrib: parseAllAttribs(node.product.allAttrib),
+        folder: {
+          ...node.product.folder,
+          attrib: parseAllAttribs(node.product.folder.allAttrib),
+        },
+      }
+    : node.product
+
+  return { ...node, attrib, product } as VersionNode
 }
 
 export const transformVersionsResponse = (response: GetVersionsQuery): GetVersionsResult => {
@@ -98,8 +111,12 @@ const transformProductVersionToExtendedVersion = (product: ProductNodeRAW): Vers
       id: product.id,
       name: product.name,
       productType: product.productType,
+      allAttrib: product.allAttrib,
+      folder: {
+        allAttrib: product.folder.allAttrib,
+      },
     },
-  })
+  } as VersionNodeRAW)
 }
 
 export const transformProductsResponse = (response: GetProductsQuery): GetProductsResult => {
@@ -107,9 +124,14 @@ export const transformProductsResponse = (response: GetProductsQuery): GetProduc
   const products = response.project.products.edges.map((edge) => {
     const product = edge.node
     const attrib = parseAllAttribs(product.allAttrib)
+    const folder = {
+      ...product.folder,
+      attrib: parseAllAttribs(product.folder.allAttrib),
+    }
     return {
       ...product,
       attrib,
+      folder,
       featuredVersion: transformProductVersionToExtendedVersion(product),
     }
   })

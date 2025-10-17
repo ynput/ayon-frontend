@@ -1,0 +1,3 @@
+fragment FolderAttrib on FolderNode {
+  allAttrib
+}

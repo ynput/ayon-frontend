@@ -25,7 +25,7 @@ export type FilterFieldType =
   | 'folderType'
   | 'taskType'
   | 'productType'
-  | ('users' | 'assignees')
+  | ('users' | 'assignees' | 'author')
   | 'attributes'
   | 'status'
   | 'tags'
@@ -93,7 +93,9 @@ export const useBuildFilterOptions = ({
     {
       skip:
         !projectNames?.length ||
-        (!filterTypes.includes('users') && !filterTypes.includes('assignees')),
+        !['assignees', 'users', 'author'].some((type) =>
+          filterTypes.includes(type as FilterFieldType),
+        ),
     },
   )
 
@@ -209,6 +211,24 @@ export const useBuildFilterOptions = ({
       })
 
       options.push(assigneesOption)
+    }
+  }
+
+  if (filterTypes.includes('author')) {
+    const authorOption = getOptionRoot('author', config)
+    if (authorOption) {
+      // add every user for the projects (skip duplicates)
+      projectUsers.forEach((user) => {
+        if (!authorOption.values?.some((value) => value.id === user.name)) {
+          authorOption.values?.push({
+            id: user.name,
+            label: user.attrib.fullName || user.name,
+            img: `/api/users/${user.name}/avatar`,
+            icon: null,
+          })
+        }
+      })
+      options.push(authorOption)
     }
   }
 
@@ -504,6 +524,22 @@ const getOptionRoot = (fieldType: FilterFieldType, config?: FilterConfig) => {
         type: 'list_of_strings',
         label: 'Assignee',
         icon: getAttributeIcon('assignees'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: config?.enableRelativeValues,
+        allowNoValue: config?.enableRelativeValues,
+        allowExcludes: config?.enableExcludes,
+        operatorChangeable: config?.enableOperatorChange,
+      }
+      break
+    case 'author':
+      rootOption = {
+        id: getRootIdWithPrefix('author'),
+        type: 'list_of_strings',
+        label: 'Author',
+        icon: getAttributeIcon('author'),
         inverted: false,
         operator: 'OR',
         values: [],

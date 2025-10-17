@@ -4,5 +4,9 @@ fragment VersionExtended on VersionNode {
     id
     name
     productType
+    allAttrib
+    folder {
+      ...FolderAttrib
+    }
   }
 }

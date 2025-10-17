@@ -21,6 +21,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import {
+  FolderAttribFragment,
   GetProductsQuery,
   GetProductsQueryVariables,
   GetVersionsByProductIdQueryVariables,
@@ -41,10 +42,24 @@ import {
 import { toast } from 'react-toastify'
 
 // Query result types
+export type FolderAttribNode = FolderAttribFragment & {
+  attrib: Record<string, any> // parsed from allAttrib JSON string
+}
 export type VersionNodeRAW = GetVersionsQuery['project']['versions']['edges'][0]['node']
 export type VersionNode = VersionNodeRAW & {
   attrib: Record<string, any> // parsed from allAttrib JSON string
+  product: VersionNodeRAW['product'] & {
+    attrib: Record<string, any> // parsed from allAttrib JSON string
+    folder: FolderAttribNode // folder with parsed attribs
+  }
 }
+export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
+export type ProductNode = ProductNodeRAW & {
+  attrib: Record<string, any> // parsed from allAttrib JSON string
+  featuredVersion?: VersionNode | null // added separately
+  folder: FolderAttribNode // folder with parsed attribs
+}
+
 export type GetVersionsResult = {
   pageInfo?: PageInfo
   versions: VersionNode[]
@@ -78,12 +93,6 @@ type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
 export type VersionInfiniteResult = InfiniteData<GetVersionsResult, VersionsPageParam> | undefined
 
 export type ProductInfiniteResult = InfiniteData<GetProductsResult, ProductsPageParam> | undefined
-
-export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
-export type ProductNode = ProductNodeRAW & {
-  attrib: Record<string, any> // parsed from allAttrib JSON string
-  featuredVersion?: VersionNode | null // added separately
-}
 
 export type GetProductsResult = {
   pageInfo: PageInfo

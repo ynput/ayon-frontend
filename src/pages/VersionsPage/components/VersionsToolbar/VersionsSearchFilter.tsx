@@ -16,7 +16,7 @@ const VersionsSearchFilter: FC<VersionsSearchFilterProps> = ({}) => {
       scope={'version'}
       projectNames={[projectName]}
       projectInfo={projectInfo}
-      filterTypes={['status', 'tags', 'attributes']}
+      filterTypes={['status', 'author', 'tags', 'productType', 'attributes']}
       enableGlobalSearch={false}
     />
   )

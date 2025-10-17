@@ -46,6 +46,9 @@ query GetProducts(
           featuredVersion(order: $featuredVersionOrder) {
             ...VersionBase
           }
+          folder {
+            ...FolderAttrib
+          }
         }
         cursor
       }
