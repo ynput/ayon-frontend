@@ -1,6 +1,7 @@
 import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
 import { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
+import { refetchFilteredListItems } from './refetchFilteredListItems'
 
 const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {
@@ -162,6 +163,32 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
 
         try {
           await queryFulfilled
+
+          // Background refetch logic - runs after successful mutation
+          // This ensures calculated attributes are up-to-date and items are correctly filtered
+          const updatedEntityIds = (entityListMultiPatchModel.items || [])
+            .map((item) => item.entityId)
+            .filter(Boolean) as string[]
+
+          if (updatedEntityIds.length > 0 && listId) {
+            // Get project name from the first entry's original args
+            const projectName = infiniteEntries[0]?.originalArgs?.projectName
+
+            if (projectName) {
+              // Refetch each cache entry with its specific filters
+              for (const entry of infiniteEntries) {
+                if (entry.originalArgs.listId === listId) {
+                  await refetchFilteredListItems({
+                    dispatch,
+                    projectName,
+                    listId,
+                    updatedItemIds: updatedEntityIds,
+                    cacheEntry: entry,
+                  })
+                }
+              }
+            }
+          }
         } catch {
           patchResults.forEach((patchResult) => {
             // Undo the optimistic update if the mutation fails
