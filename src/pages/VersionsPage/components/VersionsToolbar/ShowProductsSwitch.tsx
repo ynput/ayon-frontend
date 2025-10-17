@@ -2,10 +2,9 @@ import { useVersionsDataContext } from '@pages/VersionsPage/context/VersionsData
 import { SwitchButton, SwitchButtonProps } from '@ynput/ayon-react-components'
 import { forwardRef, useMemo } from 'react'
 
-interface VersionsStackedSwitchProps
-  extends Omit<SwitchButtonProps, 'label' | 'value' | 'onClick'> {}
+interface ShowProductsSwitchProps extends Omit<SwitchButtonProps, 'label' | 'value' | 'onClick'> {}
 
-export const VersionsStackedSwitch = forwardRef<HTMLButtonElement, VersionsStackedSwitchProps>(
+export const ShowProductsSwitch = forwardRef<HTMLButtonElement, ShowProductsSwitchProps>(
   ({ ...props }, ref) => {
     const { showProducts, setShowProducts } = useVersionsDataContext()
 
@@ -13,7 +12,7 @@ export const VersionsStackedSwitch = forwardRef<HTMLButtonElement, VersionsStack
       () => (
         <SwitchButton
           {...props}
-          label={'Stacked'}
+          label={'Show products'}
           ref={ref}
           value={showProducts}
           onClick={() => setShowProducts(!showProducts)}
