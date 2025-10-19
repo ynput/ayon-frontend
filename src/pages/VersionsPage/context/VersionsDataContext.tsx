@@ -14,7 +14,7 @@ import {
   useProjectDataContext,
   useQueryFilters,
   useSelectedFolders,
-  VersionsViewSettingsReturn,
+  useVersionsViewSettings,
 } from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -65,16 +65,12 @@ export const useVersionsDataContext = () => {
 interface VersionsDataProviderProps {
   projectName: string
   children: ReactNode
-  config: Omit<VersionsViewSettingsReturn, 'columns' | 'onUpdateColumns'>
 }
 
-export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
-  projectName,
-  config,
-  children,
-}) => {
+export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, onUpdateFilters, showStacked, onUpdateShowStacked, sortBy, sortDesc } = config
+  const { filters, onUpdateFilters, showStacked, onUpdateShowStacked, sortBy, sortDesc } =
+    useVersionsViewSettings()
 
   const showProducts = showStacked
   const onUpdatedShowProducts = onUpdateShowStacked

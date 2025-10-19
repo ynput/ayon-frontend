@@ -6,13 +6,13 @@ import {
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionCellsProvider,
-  useVersionsViewSettings,
 } from '@shared/containers'
 import { MoveEntityProvider, SettingsPanelProvider } from '@shared/context'
 import { FC } from 'react'
 import { VersionsProjectTableProvider } from './VersionsProjectTableProvider'
 import { VersionsColumnSettingsProvider } from './VersionsColumnSettingsProvider'
 import { VersionsDataProvider } from '../context/VersionsDataContext'
+import { VersionsViewsProvider } from '../context/VersionsViewsContext'
 
 interface VersionsProvidersProps {
   projectName: string
@@ -24,30 +24,30 @@ const VersionsProviders: FC<VersionsProvidersProps> = ({ projectName, children }
     projectName: projectName,
   })
 
-  const { columns, onUpdateColumns, ...config } = useVersionsViewSettings()
-
   return (
-    <ProjectDataProvider projectName={projectName}>
-      <VersionsDataProvider projectName={projectName} config={config}>
-        <MoveEntityProvider>
-          <SettingsPanelProvider>
-            <VersionsColumnSettingsProvider columns={columns} onUpdateColumns={onUpdateColumns}>
-              <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-                <VersionsProjectTableProvider projectName={projectName}>
-                  <DetailsPanelEntityProvider>
-                    <SelectionCellsProvider>
-                      <SelectedRowsProvider>
-                        <CellEditingProvider>{children}</CellEditingProvider>
-                      </SelectedRowsProvider>
-                    </SelectionCellsProvider>
-                  </DetailsPanelEntityProvider>
-                </VersionsProjectTableProvider>
-              </ProjectTableQueriesProvider>
-            </VersionsColumnSettingsProvider>
-          </SettingsPanelProvider>
-        </MoveEntityProvider>
-      </VersionsDataProvider>
-    </ProjectDataProvider>
+    <VersionsViewsProvider>
+      <ProjectDataProvider projectName={projectName}>
+        <VersionsDataProvider projectName={projectName}>
+          <MoveEntityProvider>
+            <SettingsPanelProvider>
+              <VersionsColumnSettingsProvider>
+                <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
+                  <VersionsProjectTableProvider projectName={projectName}>
+                    <DetailsPanelEntityProvider>
+                      <SelectionCellsProvider>
+                        <SelectedRowsProvider>
+                          <CellEditingProvider>{children}</CellEditingProvider>
+                        </SelectedRowsProvider>
+                      </SelectionCellsProvider>
+                    </DetailsPanelEntityProvider>
+                  </VersionsProjectTableProvider>
+                </ProjectTableQueriesProvider>
+              </VersionsColumnSettingsProvider>
+            </SettingsPanelProvider>
+          </MoveEntityProvider>
+        </VersionsDataProvider>
+      </ProjectDataProvider>
+    </VersionsViewsProvider>
   )
 }
 
