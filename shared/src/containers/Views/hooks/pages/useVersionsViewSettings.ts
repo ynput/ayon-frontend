@@ -37,9 +37,13 @@ export type VersionsViewSettingsReturn = {
   columns: ColumnsConfig
   onUpdateColumns: (columns: ColumnsConfig, allColumnIds?: string[]) => void
 
+  // slicerType
+  slicerType: string
+  onUpdateSlicerType: (slicerType: string) => void
+
   // View mode management
-  showStacked: boolean
-  onUpdateShowStacked: (showStacked: boolean) => void
+  showProducts: boolean
+  onUpdateShowProducts: (showProducts: boolean) => void
 
   showGrid: boolean
   onUpdateShowGrid: (showGrid: boolean) => void
@@ -47,9 +51,12 @@ export type VersionsViewSettingsReturn = {
   gridHeight: number
   onUpdateGridHeight: (gridHeight: number) => void
 
+  rowHeight: number
+  onUpdateRowHeight: (rowHeight: number) => void
+
   // Main version preference
-  mainVersion: 'latest' | 'hero'
-  onUpdateMainVersion: (mainVersion: 'latest' | 'hero') => void
+  featuredVersionOrder: string[]
+  onUpdateFeaturedVersionOrder: (featuredVersionOrder: string[]) => void
 
   // Grouping management
   groupBy: string | undefined
@@ -73,10 +80,12 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
-  const [localShowStacked, setLocalShowStacked] = useState<boolean | null>(null)
+  const [localSlicerType, setLocalSlicerType] = useState<string | null>(null)
+  const [localShowProducts, setLocalShowProducts] = useState<boolean | null>(null)
   const [localShowGrid, setLocalShowGrid] = useState<boolean | null>(null)
   const [localGridHeight, setLocalGridHeight] = useState<number | null>(null)
-  const [localMainVersion, setLocalMainVersion] = useState<'latest' | 'hero' | null>(null)
+  const [localRowHeight, setLocalRowHeight] = useState<number | null>(null)
+  const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[]>([])
   const [localGroupBy, setLocalGroupBy] = useState<string | undefined | null>(null)
   const [localShowEmptyGroups, setLocalShowEmptyGroups] = useState<boolean | null>(null)
   const [localSortBy, setLocalSortBy] = useState<string | undefined | null>(null)
@@ -88,10 +97,12 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   // Get server settings
   const versionsSettings = viewSettings as VersionsSettings
   const serverFilters = (versionsSettings?.filter as any) ?? {}
-  const serverShowStacked = versionsSettings?.showStacked ?? true
+  const serverSlicerType = versionsSettings?.slicerType ?? ''
+  const serverShowProducts = versionsSettings?.showProducts ?? true
   const serverShowGrid = versionsSettings?.showGrid ?? false
   const serverGridHeight = versionsSettings?.gridHeight ?? 200
-  const serverMainVersion = versionsSettings?.mainVersion ?? 'latest'
+  const serverRowHeight = versionsSettings?.rowHeight ?? 50
+  const serverFeaturedVersionOrder = versionsSettings?.featuredVersionOrder ?? []
   const serverGroupBy = versionsSettings?.groupBy
   const serverShowEmptyGroups = versionsSettings?.showEmptyGroups ?? false
   const serverSortBy = versionsSettings?.sortBy
@@ -103,25 +114,29 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   )
 
   // Sync local state with server when viewSettings change
-  // useEffect(() => {
-  //   setLocalFilters(null)
-  //   setLocalColumns(null)
-  //   setLocalShowStacked(null)
-  //   setLocalShowGrid(null)
-  //   setLocalGridHeight(null)
-  //   setLocalMainVersion(null)
-  //   setLocalGroupBy(null)
-  //   setLocalShowEmptyGroups(null)
-  //   setLocalSortBy(null)
-  //   setLocalSortDesc(null)
-  // }, [JSON.stringify(viewSettings)])
+  useEffect(() => {
+    setLocalFilters(null)
+    setLocalColumns(null)
+    setLocalSlicerType(null)
+    setLocalShowProducts(null)
+    setLocalShowGrid(null)
+    setLocalGridHeight(null)
+    setLocalFeaturedVersionOrder([])
+    setLocalGroupBy(null)
+    setLocalShowEmptyGroups(null)
+    setLocalSortBy(null)
+    setLocalSortDesc(null)
+  }, [JSON.stringify(viewSettings)])
 
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
-  const showStacked = localShowStacked
-  const showGrid = localShowGrid
+  const slicerType = localSlicerType !== null ? localSlicerType : serverSlicerType
+  const showProducts = localShowProducts !== null ? localShowProducts : serverShowProducts
+  const showGrid = localShowGrid !== null ? localShowGrid : serverShowGrid
   const gridHeight = localGridHeight !== null ? localGridHeight : serverGridHeight
-  const mainVersion = localMainVersion !== null ? localMainVersion : serverMainVersion
+  const rowHeight = localRowHeight !== null ? localRowHeight : serverRowHeight
+  const featuredVersionOrder =
+    localFeaturedVersionOrder !== null ? localFeaturedVersionOrder : serverFeaturedVersionOrder
   const groupBy = localGroupBy !== null ? localGroupBy : serverGroupBy
   const showEmptyGroups =
     localShowEmptyGroups !== null ? localShowEmptyGroups : serverShowEmptyGroups
@@ -150,16 +165,25 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     [updateViewSettings],
   )
 
-  // Show stacked update handler
-  const onUpdateShowStacked = useCallback(
-    async (newShowStacked: boolean) => {
-      setLocalShowStacked(newShowStacked)
-      // await updateViewSettings(
-      //   { showStacked: newShowStacked },
-      //   setLocalShowStacked,
-      //   newShowStacked,
-      //   { errorMessage: 'Failed to update stacked view setting' },
-      // )
+  // Slicer type update handler
+  const onUpdateSlicerType = useCallback(
+    async (newSlicerType: string) => {
+      await updateViewSettings({ slicerType: newSlicerType }, setLocalSlicerType, newSlicerType, {
+        errorMessage: 'Failed to update slicer type',
+      })
+    },
+    [updateViewSettings],
+  )
+
+  // Show products update handler
+  const onUpdateShowProducts = useCallback(
+    async (newShowProducts: boolean) => {
+      await updateViewSettings(
+        { showProducts: newShowProducts },
+        setLocalShowProducts,
+        newShowProducts,
+        { errorMessage: 'Failed to update stacked view setting' },
+      )
     },
     [updateViewSettings],
   )
@@ -167,10 +191,9 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   // Show grid update handler
   const onUpdateShowGrid = useCallback(
     async (newShowGrid: boolean) => {
-      setLocalShowGrid(newShowGrid)
-      // await updateViewSettings({ showGrid: newShowGrid }, setLocalShowGrid, newShowGrid, {
-      //   errorMessage: 'Failed to update grid view setting',
-      // })
+      await updateViewSettings({ showGrid: newShowGrid }, setLocalShowGrid, newShowGrid, {
+        errorMessage: 'Failed to update grid view setting',
+      })
     },
     [updateViewSettings],
   )
@@ -185,13 +208,23 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     [updateViewSettings],
   )
 
+  // Row height update handler
+  const onUpdateRowHeight = useCallback(
+    async (newRowHeight: number) => {
+      await updateViewSettings({ rowHeight: newRowHeight }, setLocalRowHeight, newRowHeight, {
+        errorMessage: 'Failed to update row height',
+      })
+    },
+    [updateViewSettings],
+  )
+
   // Main version update handler
-  const onUpdateMainVersion = useCallback(
-    async (newMainVersion: 'latest' | 'hero') => {
+  const onUpdateFeaturedVersionOrder = useCallback(
+    async (newFeaturedVersionOrder: string[]) => {
       await updateViewSettings(
-        { mainVersion: newMainVersion },
-        setLocalMainVersion,
-        newMainVersion,
+        { featuredVersionOrder: newFeaturedVersionOrder },
+        setLocalFeaturedVersionOrder,
+        newFeaturedVersionOrder,
         { errorMessage: 'Failed to update main version preference' },
       )
     },
@@ -246,14 +279,18 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     onUpdateFilters,
     columns,
     onUpdateColumns,
-    showStacked,
-    onUpdateShowStacked,
+    slicerType,
+    onUpdateSlicerType,
+    showProducts,
+    onUpdateShowProducts,
     showGrid,
     onUpdateShowGrid,
     gridHeight,
     onUpdateGridHeight,
-    mainVersion,
-    onUpdateMainVersion,
+    rowHeight,
+    onUpdateRowHeight,
+    featuredVersionOrder,
+    onUpdateFeaturedVersionOrder,
     groupBy,
     onUpdateGroupBy,
     showEmptyGroups,

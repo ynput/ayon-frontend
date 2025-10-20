@@ -27,7 +27,7 @@ export type ProductMap = Map<string, ProductNodeExtended>
 interface VersionsDataContextValue {
   // STACKED
   showProducts: boolean
-  onUpdatedShowProducts: (stacked: boolean) => void
+  onUpdateShowProducts: (stacked: boolean) => void
   //   EXPANDED
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
@@ -69,11 +69,9 @@ interface VersionsDataProviderProps {
 
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, onUpdateFilters, showStacked, onUpdateShowStacked, sortBy, sortDesc } =
+  const { filters, onUpdateFilters, showProducts, onUpdateShowProducts, sortBy, sortDesc } =
     useVersionsViewsContext()
 
-  const showProducts = showStacked
-  const onUpdatedShowProducts = onUpdateShowStacked
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
   // Separate the combined filters into version and product filters
@@ -200,7 +198,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   const value: VersionsDataContextValue = {
     showProducts,
-    onUpdatedShowProducts,
+    onUpdateShowProducts,
     // filters
     filters,
     onUpdateFilters,

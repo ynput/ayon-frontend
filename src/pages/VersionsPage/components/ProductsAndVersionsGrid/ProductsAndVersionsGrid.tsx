@@ -18,7 +18,7 @@ interface ProductsAndVersionsGridProps {}
 const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
   const { projectName, projectInfo } = useProjectDataContext()
   const { productsMap, versionsMap } = useVersionsDataContext()
-  const { showStacked } = useVersionsViewsContext()
+  const { showProducts } = useVersionsViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
 
   // Track the last clicked item for shift-click range selection
@@ -29,10 +29,10 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
       buildVersionAndProductGrid({
         productsMap,
         versionsMap,
-        showProducts: showStacked,
+        showProducts: showProducts,
         projectName,
       }),
-    [productsMap, versionsMap, showStacked, projectName],
+    [productsMap, versionsMap, showProducts, projectName],
   )
 
   // Handle card click with support for single, shift, and cmd/ctrl selection

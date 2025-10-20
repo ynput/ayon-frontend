@@ -280,17 +280,18 @@ export type ReviewsViewPostModel = {
   settings: ReviewsSettings
 }
 export type VersionsSettings = {
+  showProducts?: boolean
   rowHeight?: number
+  showGrid?: boolean
+  gridHeight?: number
+  featuredVersionOrder?: string[]
+  slicerType?: string
+  groupBy?: string
+  showEmptyGroups?: boolean
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter
   columns?: ColumnItemModel[]
-  showStacked?: boolean
-  showGrid?: boolean
-  gridHeight?: number
-  mainVersion?: 'latest' | 'hero'
-  groupBy?: string
-  showEmptyGroups?: boolean
 }
 export type VersionsViewPostModel = {
   /** Unique identifier for the view within the given scope. */
