@@ -17,7 +17,7 @@ interface ProductsAndVersionsGridProps {}
 
 const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
   const { projectName, projectInfo } = useProjectDataContext()
-  const { productsMap, versionsMap, isLoading } = useVersionsDataContext()
+  const { productsMap, versionsMap, isLoading, fetchNextPage } = useVersionsDataContext()
   const { showProducts } = useVersionsViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
 
@@ -149,12 +149,28 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
     [selectedCells, productsMap],
   )
 
+  // Handle scroll to load more items when near bottom
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const containerRefElement = e.currentTarget
+      if (containerRefElement && !isLoading) {
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+        // Once the user has scrolled within 500px of the bottom, fetch more data
+        if (scrollHeight - scrollTop - clientHeight < 500) {
+          fetchNextPage()
+        }
+      }
+    },
+    [isLoading, fetchNextPage],
+  )
+
   // return a pages worth of loading skeletons
   if (isLoading) {
     return (
       <GridLayout
         ratio={1.777777}
         minWidth={190}
+        onScroll={handleScroll}
         style={{ maxHeight: '100%', height: 'auto', overflow: 'hidden' }}
       >
         {Array.from({ length: 20 }).map((_, index) => (
@@ -174,6 +190,7 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
     <GridLayout
       ratio={1.777777}
       minWidth={190}
+      onScroll={handleScroll}
       style={{ maxHeight: '100%', height: 'auto', overflow: 'auto' }}
     >
       {gridData.map((entity, index) => {
