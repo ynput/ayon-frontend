@@ -5,15 +5,12 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import Slicer from '@containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useSettingsPanel } from '@shared/context'
-import {
-  useProjectTableContext,
-  useSelectedRowsContext,
-  useVersionsViewSettings,
-} from '@shared/containers'
+import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers'
 import VersionsTable from './components/VersionsTable/VersionsTable'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import VersionsToolbar from './components/VersionsToolbar/VersionsToolbar'
 import VersionsGrid from './components/VersionsGrid/VersionsGrid'
+import { useVersionsViewsContext } from './context/VersionsViewsContext'
 
 interface VersionsPageProps {
   projectName: string
@@ -26,7 +23,8 @@ const VersionsPage: FC<VersionsPageProps> = ({ projectName }) => {
   const { selectedRows } = useSelectedRowsContext()
   const { config } = useSlicerContext()
   const { projectInfo } = useProjectTableContext()
-  const { showGrid } = useVersionsViewSettings()
+  const { showGrid } = useVersionsViewsContext()
+
   // load slicer remote config
   const overviewSliceFields = config?.versions?.fields
 
@@ -65,7 +63,7 @@ const VersionsPage: FC<VersionsPageProps> = ({ projectName }) => {
                   gutterSize={!shouldShowDetailsPanel ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
-                    {showGrid || true ? <VersionsGrid /> : <VersionsTable />}
+                    {showGrid ? <VersionsGrid /> : <VersionsTable />}
                   </SplitterPanel>
                   {shouldShowDetailsPanel ? (
                     <SplitterPanel

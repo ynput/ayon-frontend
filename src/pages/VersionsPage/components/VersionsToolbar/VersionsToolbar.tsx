@@ -3,12 +3,12 @@ import { FC } from 'react'
 import { ShowProductsSwitch } from './ShowProductsSwitch'
 import VersionsSearchFilter from './VersionsSearchFilter'
 import { TableGridSwitch } from '@shared/components'
-import { useVersionsViewSettings } from '@shared/containers'
+import { useVersionsViewsContext } from '@pages/VersionsPage/context/VersionsViewsContext'
 
 interface VersionsToolbarProps {}
 
 const VersionsToolbar: FC<VersionsToolbarProps> = ({}) => {
-  const { showGrid, onUpdateShowGrid } = useVersionsViewSettings()
+  const { showGrid, onUpdateShowGrid } = useVersionsViewsContext()
 
   return (
     <Toolbar>

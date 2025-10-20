@@ -1,5 +1,6 @@
 import { FC } from 'react'
-import { ColumnSettingsProvider, useVersionsViewSettings } from '@shared/containers'
+import { ColumnSettingsProvider } from '@shared/containers'
+import { useVersionsViewsContext } from '../context/VersionsViewsContext'
 
 interface VersionsColumnSettingsProviderProps {
   children: React.ReactNode
@@ -8,7 +9,7 @@ interface VersionsColumnSettingsProviderProps {
 export const VersionsColumnSettingsProvider: FC<VersionsColumnSettingsProviderProps> = ({
   children,
 }) => {
-  const { columns, onUpdateColumns } = useVersionsViewSettings()
+  const { columns, onUpdateColumns } = useVersionsViewsContext()
 
   return (
     <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>

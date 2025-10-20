@@ -14,7 +14,7 @@ const StyledGridLayout = styled.div<{ $minWidth: number }>`
   }
 `
 
-interface GridLayoutProps extends Omit<HTMLDivElement, 'children'> {
+interface GridLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
   minWidth: number
   ratio: number
   children: ReactNode[]
@@ -30,7 +30,7 @@ const GridLayout = React.forwardRef<HTMLDivElement, GridLayoutProps>(
               aspectRatio: `${ratio} / 1`,
             }}
             key={index}
-            className={clsx('grid-item', child.props.className)}
+            className={clsx('grid-item')}
           >
             {child}
           </div>

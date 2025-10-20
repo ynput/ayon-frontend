@@ -13,6 +13,8 @@
  * Must be used within a ViewsProvider context.
  */
 
+// TODOOOOO!!! fix some states to use server not just local
+
 import { useViewsContext } from '../../context/ViewsContext'
 import { VersionsSettings } from '@shared/api'
 import { ColumnsConfig } from '@shared/containers/ProjectTreeTable'
@@ -101,23 +103,23 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   )
 
   // Sync local state with server when viewSettings change
-  useEffect(() => {
-    setLocalFilters(null)
-    setLocalColumns(null)
-    setLocalShowStacked(null)
-    setLocalShowGrid(null)
-    setLocalGridHeight(null)
-    setLocalMainVersion(null)
-    setLocalGroupBy(null)
-    setLocalShowEmptyGroups(null)
-    setLocalSortBy(null)
-    setLocalSortDesc(null)
-  }, [JSON.stringify(viewSettings)])
+  // useEffect(() => {
+  //   setLocalFilters(null)
+  //   setLocalColumns(null)
+  //   setLocalShowStacked(null)
+  //   setLocalShowGrid(null)
+  //   setLocalGridHeight(null)
+  //   setLocalMainVersion(null)
+  //   setLocalGroupBy(null)
+  //   setLocalShowEmptyGroups(null)
+  //   setLocalSortBy(null)
+  //   setLocalSortDesc(null)
+  // }, [JSON.stringify(viewSettings)])
 
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
-  const showStacked = localShowStacked !== null ? localShowStacked : serverShowStacked
-  const showGrid = localShowGrid !== null ? localShowGrid : serverShowGrid
+  const showStacked = localShowStacked
+  const showGrid = localShowGrid
   const gridHeight = localGridHeight !== null ? localGridHeight : serverGridHeight
   const mainVersion = localMainVersion !== null ? localMainVersion : serverMainVersion
   const groupBy = localGroupBy !== null ? localGroupBy : serverGroupBy
@@ -151,12 +153,13 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   // Show stacked update handler
   const onUpdateShowStacked = useCallback(
     async (newShowStacked: boolean) => {
-      await updateViewSettings(
-        { showStacked: newShowStacked },
-        setLocalShowStacked,
-        newShowStacked,
-        { errorMessage: 'Failed to update stacked view setting' },
-      )
+      setLocalShowStacked(newShowStacked)
+      // await updateViewSettings(
+      //   { showStacked: newShowStacked },
+      //   setLocalShowStacked,
+      //   newShowStacked,
+      //   { errorMessage: 'Failed to update stacked view setting' },
+      // )
     },
     [updateViewSettings],
   )
@@ -164,9 +167,10 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   // Show grid update handler
   const onUpdateShowGrid = useCallback(
     async (newShowGrid: boolean) => {
-      await updateViewSettings({ showGrid: newShowGrid }, setLocalShowGrid, newShowGrid, {
-        errorMessage: 'Failed to update grid view setting',
-      })
+      setLocalShowGrid(newShowGrid)
+      // await updateViewSettings({ showGrid: newShowGrid }, setLocalShowGrid, newShowGrid, {
+      //   errorMessage: 'Failed to update grid view setting',
+      // })
     },
     [updateViewSettings],
   )

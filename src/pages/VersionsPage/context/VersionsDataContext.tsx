@@ -14,12 +14,12 @@ import {
   useProjectDataContext,
   useQueryFilters,
   useSelectedFolders,
-  useVersionsViewSettings,
 } from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { splitFiltersByScope } from '@shared/components/SearchFilter/useBuildFilterOptions'
 import { useSlicerContext } from '@context/SlicerContext'
+import { useVersionsViewsContext } from './VersionsViewsContext'
 
 export type VersionMap = Map<string, VersionNodeExtended>
 export type ProductMap = Map<string, ProductNodeExtended>
@@ -70,7 +70,7 @@ interface VersionsDataProviderProps {
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
   const { attribFields } = useProjectDataContext()
   const { filters, onUpdateFilters, showStacked, onUpdateShowStacked, sortBy, sortDesc } =
-    useVersionsViewSettings()
+    useVersionsViewsContext()
 
   const showProducts = showStacked
   const onUpdatedShowProducts = onUpdateShowStacked
