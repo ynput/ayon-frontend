@@ -484,6 +484,14 @@ a {
   }
 }
 
+// if the panel after the splitter gutter is hidden then hide the gutter too
+.p-splitter-gutter:has(+ .p-splitter-panel.hidden) {
+  display: none;
+}
+.p-splitter-panel.hidden {
+  display: none !important;
+}
+
 // confirm dialog buttons
 .p-dialog.p-confirm-dialog {
   .p-dialog-footer {

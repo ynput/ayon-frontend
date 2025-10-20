@@ -28,6 +28,8 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
   const { showGrid } = useVersionsViewsContext()
   const { showVersionDetails, showVersionsTable } = useVersionsSelectionContext()
 
+  console.log(showVersionsTable)
+
   // load slicer remote config
   const overviewSliceFields = config?.versions?.fields
 
@@ -52,7 +54,6 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
               stateKey="overview-splitter-settings"
               stateStorage="local"
               style={{ width: '100%', height: '100%', overflow: 'hidden' }}
-              gutterSize={!isPanelOpen ? 0 : 4}
             >
               <SplitterPanel size={82}>
                 <Splitter
@@ -70,7 +71,7 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
                       <VersionsTable />
                     </SplitterPanel>
                   ) : (
-                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+                    <SplitterPanel className="hidden"></SplitterPanel>
                   )}
                   {showVersionDetails ? (
                     <SplitterPanel
@@ -83,7 +84,7 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
                       <VersionsDetailsPanel />
                     </SplitterPanel>
                   ) : (
-                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+                    <SplitterPanel className="hidden"></SplitterPanel>
                   )}
                 </Splitter>
               </SplitterPanel>
@@ -97,7 +98,7 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
                   <ProductsAndVersionsSettings />
                 </SplitterPanel>
               ) : (
-                <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+                <SplitterPanel className="hidden"></SplitterPanel>
               )}
             </Splitter>
           </Section>
