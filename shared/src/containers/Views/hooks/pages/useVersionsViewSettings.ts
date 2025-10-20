@@ -50,6 +50,7 @@ export type VersionsViewSettingsReturn = {
 
   gridHeight: number
   onUpdateGridHeight: (gridHeight: number) => void
+  onUpdateGridHeightWithPersistence: (gridHeight: number) => void
 
   rowHeight: number
   onUpdateRowHeight: (rowHeight: number) => void
@@ -84,6 +85,7 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   const [localShowProducts, setLocalShowProducts] = useState<boolean | null>(null)
   const [localShowGrid, setLocalShowGrid] = useState<boolean | null>(null)
   const [localGridHeight, setLocalGridHeight] = useState<number | null>(null)
+  const [localGridHeightImmediate, setLocalGridHeightImmediate] = useState<number | null>(null)
   const [localRowHeight, setLocalRowHeight] = useState<number | null>(null)
   const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[]>([])
   const [localGroupBy, setLocalGroupBy] = useState<string | undefined | null>(null)
@@ -121,6 +123,7 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     setLocalShowProducts(null)
     setLocalShowGrid(null)
     setLocalGridHeight(null)
+    setLocalGridHeightImmediate(null)
     setLocalFeaturedVersionOrder([])
     setLocalGroupBy(null)
     setLocalShowEmptyGroups(null)
@@ -133,7 +136,12 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   const slicerType = localSlicerType !== null ? localSlicerType : serverSlicerType
   const showProducts = localShowProducts !== null ? localShowProducts : serverShowProducts
   const showGrid = localShowGrid !== null ? localShowGrid : serverShowGrid
-  const gridHeight = localGridHeight !== null ? localGridHeight : serverGridHeight
+  const gridHeight =
+    localGridHeightImmediate !== null
+      ? localGridHeightImmediate
+      : localGridHeight !== null
+      ? localGridHeight
+      : serverGridHeight
   const rowHeight = localRowHeight !== null ? localRowHeight : serverRowHeight
   const featuredVersionOrder =
     localFeaturedVersionOrder !== null ? localFeaturedVersionOrder : serverFeaturedVersionOrder
@@ -198,12 +206,19 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     [updateViewSettings],
   )
 
-  // Grid height update handler
-  const onUpdateGridHeight = useCallback(
+  // Grid height update handler (immediate, no API call)
+  const onUpdateGridHeight = useCallback((newGridHeight: number) => {
+    setLocalGridHeightImmediate(newGridHeight)
+  }, [])
+
+  // Grid height update handler with persistence (API call)
+  const onUpdateGridHeightWithPersistence = useCallback(
     async (newGridHeight: number) => {
       await updateViewSettings({ gridHeight: newGridHeight }, setLocalGridHeight, newGridHeight, {
         errorMessage: 'Failed to update grid height',
       })
+      // Clear immediate state after persistence
+      setLocalGridHeightImmediate(null)
     },
     [updateViewSettings],
   )
@@ -287,6 +302,7 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     onUpdateShowGrid,
     gridHeight,
     onUpdateGridHeight,
+    onUpdateGridHeightWithPersistence,
     rowHeight,
     onUpdateRowHeight,
     featuredVersionOrder,

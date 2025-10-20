@@ -7,7 +7,7 @@ const StyledGridLayout = styled.div<{ $minWidth: number }>`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(${({ $minWidth }) => $minWidth}px, 1fr));
   grid-auto-rows: 1fr;
-  gap: 12px;
+  gap: var(--base-gap-large);
 
   @media (max-width: 425px) {
     grid-template-columns: 1fr 1fr;

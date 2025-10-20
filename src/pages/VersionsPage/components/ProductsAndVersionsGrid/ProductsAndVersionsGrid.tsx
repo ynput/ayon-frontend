@@ -19,7 +19,7 @@ interface ProductsAndVersionsGridProps {}
 const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
   const { projectName, projectInfo } = useProjectDataContext()
   const { productsMap, versionsMap, isLoading, fetchNextPage } = useVersionsDataContext()
-  const { showProducts } = useVersionsViewsContext()
+  const { showProducts, gridHeight } = useVersionsViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
 
   // Track the last clicked item for shift-click range selection
@@ -190,7 +190,7 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
   return (
     <GridLayout
       ratio={1.777777}
-      minWidth={190}
+      minWidth={gridHeight}
       onScroll={handleScroll}
       style={{ maxHeight: '100%', height: 'auto', overflow: 'auto' }}
     >
@@ -205,6 +205,9 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
                   <EntityCard
                     style={{
                       minWidth: 'unset',
+                      maxHeight: 'unset',
+                      minHeight: 90,
+                      maxWidth: 'unset',
                     }}
                     // data built in util transform function
                     header={entity.header}

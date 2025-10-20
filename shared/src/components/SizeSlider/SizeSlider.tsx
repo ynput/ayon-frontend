@@ -1,6 +1,5 @@
 import { FC, useState, useCallback, useEffect } from 'react'
 import styled from 'styled-components'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { useDebounce } from 'primereact/hooks'
 
 const Container = styled.div`
@@ -71,23 +70,39 @@ const ValueDisplay = styled.span`
   text-align: right;
 `
 
-const RowHeightSettings: FC = () => {
-  const {
-    rowHeight: contextRowHeight = 34,
-    updateRowHeight,
-    updateRowHeightWithPersistence,
-  } = useColumnSettingsContext()
+export interface HeightSliderProps {
+  value: number
+  onChange: (value: number) => void
+  onChangeComplete?: (value: number) => void
+  title: string
+  id?: string
+  min?: number
+  max?: number
+  step?: number
+  debounceMs?: number
+}
 
+export const SizeSlider: FC<HeightSliderProps> = ({
+  value: externalValue,
+  onChange,
+  onChangeComplete,
+  title,
+  id = 'height-slider',
+  min = 24,
+  max = 200,
+  step = 2,
+  debounceMs = 25,
+}) => {
   const [isDragging, setIsDragging] = useState(false)
-  const [localValue, setLocalValue] = useState(contextRowHeight)
+  const [localValue, setLocalValue] = useState(externalValue)
   const [isUserAdjusting, setIsUserAdjusting] = useState(false)
 
-  // Sync local value when context changes and we're not dragging or adjusting
+  // Sync local value when external value changes and we're not dragging or adjusting
   useEffect(() => {
     if (!isDragging && !isUserAdjusting) {
-      setLocalValue(contextRowHeight)
+      setLocalValue(externalValue)
     }
-  }, [contextRowHeight, isDragging, isUserAdjusting])
+  }, [externalValue, isDragging, isUserAdjusting])
 
   const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value, 10)
@@ -99,14 +114,14 @@ const RowHeightSettings: FC = () => {
   }, [])
 
   // Debounce the local value to avoid too many updates
-  const debouncedValue = useDebounce(localValue, 25)
+  const debouncedValue = useDebounce(localValue, debounceMs)
 
-  // Update context when debounced value changes, but only if user is adjusting
+  // Update via onChange when debounced value changes, but only if user is adjusting
   useEffect(() => {
     if (isUserAdjusting) {
-      updateRowHeight(localValue)
+      onChange(localValue)
     }
-  }, [debouncedValue, updateRowHeight, isUserAdjusting, localValue])
+  }, [debouncedValue, onChange, isUserAdjusting, localValue])
 
   const handleSliderStart = useCallback(() => {
     setIsDragging(true)
@@ -115,23 +130,25 @@ const RowHeightSettings: FC = () => {
   const handleSliderRelease = useCallback(() => {
     setIsDragging(false)
     setIsUserAdjusting(false)
-    // Persist to API when user finishes adjusting
-    updateRowHeightWithPersistence(localValue)
-  }, [localValue, updateRowHeightWithPersistence])
+    // Call onChangeComplete when user finishes adjusting (if provided)
+    if (onChangeComplete) {
+      onChangeComplete(localValue)
+    }
+  }, [localValue, onChangeComplete])
 
   // Calculate the percentage for the gradient fill
-  const fillPercentage = ((localValue - 24) / (200 - 24)) * 100
+  const fillPercentage = ((localValue - min) / (max - min)) * 100
 
   return (
     <Container>
-      <Label htmlFor="row-height-slider">Row height</Label>
+      <Label htmlFor={id}>{title}</Label>
       <SliderContainer>
         <Slider
-          id="row-height-slider"
+          id={id}
           type="range"
-          min={24}
-          max={200}
-          step={2}
+          min={min}
+          max={max}
+          step={step}
           value={localValue}
           onChange={handleSliderChange}
           onMouseDown={handleSliderStart}
@@ -145,5 +162,3 @@ const RowHeightSettings: FC = () => {
     </Container>
   )
 }
-
-export default RowHeightSettings

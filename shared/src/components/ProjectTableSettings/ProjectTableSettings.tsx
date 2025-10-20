@@ -4,13 +4,13 @@ import {
   useColumnSettingsContext,
   useProjectTableContext,
 } from '@shared/containers/ProjectTreeTable'
-import { Button, ButtonProps, theme } from '@ynput/ayon-react-components'
+import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
-import RowHeightSettings from './RowHeightSettings'
+import { SizeSlider } from '@shared/components'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
@@ -51,7 +51,12 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   includeLinks = true,
 }) => {
   const { attribFields, projectInfo, scopes } = useProjectTableContext()
-  const { columnVisibility } = useColumnSettingsContext()
+  const {
+    columnVisibility,
+    rowHeight = 34,
+    updateRowHeight,
+    updateRowHeightWithPersistence,
+  } = useColumnSettingsContext()
 
   const columns = [
     {
@@ -127,7 +132,15 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       component: <ColumnsSettings columns={columns} highlighted={highlighted} />,
     },
     {
-      component: <RowHeightSettings />,
+      component: (
+        <SizeSlider
+          value={rowHeight}
+          onChange={updateRowHeight}
+          onChangeComplete={updateRowHeightWithPersistence}
+          title="Row height"
+          id="row-height-slider"
+        />
+      ),
     },
   ]
 
