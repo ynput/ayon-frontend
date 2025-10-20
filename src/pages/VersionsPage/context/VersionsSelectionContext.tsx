@@ -44,8 +44,8 @@ interface VersionsSelectionProviderProps {
 
 export const VersionsSelectionProvider: FC<VersionsSelectionProviderProps> = ({ children }) => {
   const { selectedRows } = useSelectedRowsContext()
-  const { entitiesMap, showProducts } = useVersionsDataContext()
-  const { showGrid } = useVersionsViewsContext()
+  const { entitiesMap } = useVersionsDataContext()
+  const { showGrid, showProducts } = useVersionsViewsContext()
 
   const selectedRowEntities = useMemo(() => {
     const versions: string[] = []
