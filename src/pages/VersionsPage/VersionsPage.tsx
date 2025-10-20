@@ -5,13 +5,15 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import Slicer from '@containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useSettingsPanel } from '@shared/context'
-import VersionsTable from './components/VersionsTable/VersionsTable'
 import VersionsToolbar from './components/VersionsToolbar/VersionsToolbar'
-import VersionsGrid from './components/VersionsGrid/VersionsGrid'
+// TABLES
+import ProductsAndVersionsTable from './components/ProductsAndVersionsTable/ProductsAndVersionsTable'
+import ProductsAndVersionsGrid from './components/ProductsAndVersionsGrid/ProductsAndVersionsGrid'
+import VersionsTable from './components/VersionsTable/VersionsTable'
+
 import { useVersionsViewsContext } from './context/VersionsViewsContext'
 import VersionsDetailsPanel from './components/VersionsDetailsPanel/VersionsDetailsPanel'
 import { useVersionsSelectionContext } from './context/VersionsSelectionContext'
-import ProductVersionsTable from './components/ProductVersionsTable/ProductVersionsTable'
 
 interface VersionsPageProps {
   projectName: string
@@ -60,11 +62,11 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
                   gutterSize={!showVersionDetails && !showVersionsTable ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
-                    {showGrid ? <VersionsGrid /> : <VersionsTable />}
+                    {showGrid ? <ProductsAndVersionsGrid /> : <ProductsAndVersionsTable />}
                   </SplitterPanel>
                   {showVersionsTable ? (
                     <SplitterPanel size={15} style={{ minWidth: 100 }}>
-                      <ProductVersionsTable />
+                      <VersionsTable />
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

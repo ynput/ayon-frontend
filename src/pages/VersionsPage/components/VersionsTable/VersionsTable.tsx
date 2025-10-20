@@ -1,24 +1,54 @@
-import { ProjectTreeTable } from '@shared/containers'
-import { FC } from 'react'
-import { useVersionsDataContext } from '../../context/VersionsDataContext'
+import { useVersionsDataContext } from '@pages/VersionsPage/context/VersionsDataContext'
+import { useVersionsSelectionContext } from '@pages/VersionsPage/context/VersionsSelectionContext'
+import { buildVersionsTableRows } from '@pages/VersionsPage/util'
+import SimpleTable, { SimpleTableProvider } from '@shared/containers/SimpleTable'
+import { RowSelectionState } from '@tanstack/react-table'
+import { FC, useMemo } from 'react'
+import * as Styled from './VersionsTable.styled'
+import { useProjectDataContext } from '@shared/containers'
+import { useVersionsViewsContext } from '@pages/VersionsPage/context/VersionsViewsContext'
+import { guessImgRatio } from '@pages/VersionsPage/util/guessImgRatio'
 
-interface VersionsTableProps {
-  readOnly?: string[]
-}
+interface VersionsTableProps {}
 
-const VersionsTable: FC<VersionsTableProps> = ({ readOnly = [] }) => {
-  const { fetchNextPage, showProducts } = useVersionsDataContext()
+const VersionsTable: FC<VersionsTableProps> = ({}) => {
+  const { projectName } = useProjectDataContext()
+  const { selectedProducts, selectedVersions, setSelectedVersions } = useVersionsSelectionContext()
+  const { productsMap } = useVersionsDataContext()
+  const { columns, rowHeight } = useVersionsViewsContext()
+  const ratio = useMemo(() => guessImgRatio(rowHeight, columns), [rowHeight, columns])
+
+  const versionsTableData = useMemo(
+    () => buildVersionsTableRows({ projectName, productsMap, productIds: selectedProducts }),
+    [selectedProducts, productsMap, projectName],
+  )
+
+  const rowSelection = useMemo<RowSelectionState>(() => {
+    const selection: RowSelectionState = {}
+    selectedVersions.forEach((versionId) => {
+      selection[versionId] = true
+    })
+    return selection
+  }, [selectedVersions])
+
+  const handleRowSelectionChange = (selection: RowSelectionState) => {
+    // convert back to array of version IDs
+    const selectedIds = Object.keys(selection).filter((id) => selection[id])
+    setSelectedVersions(selectedIds)
+  }
 
   return (
-    <ProjectTreeTable
-      scope={'versions-and-products'}
-      sliceId={''}
-      // pagination
-      onScrollBottom={fetchNextPage}
-      readOnly={readOnly}
-      excludedColumns={['assignees']}
-      isExpandable={showProducts}
-    />
+    <Styled.TablePanel style={{ height: '100%', padding: 0 }}>
+      <Styled.Header>
+        <h3>Versions</h3>
+      </Styled.Header>
+      <SimpleTableProvider
+        rowSelection={rowSelection}
+        onRowSelectionChange={handleRowSelectionChange}
+      >
+        <SimpleTable data={versionsTableData} isLoading={false} imgRatio={ratio} />
+      </SimpleTableProvider>
+    </Styled.TablePanel>
   )
 }
 

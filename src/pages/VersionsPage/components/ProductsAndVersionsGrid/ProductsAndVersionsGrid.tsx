@@ -13,9 +13,9 @@ import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 
 const GRID_COLUMN_ID = 'name'
 
-interface VersionsGridProps {}
+interface ProductsAndVersionsGridProps {}
 
-const VersionsGrid: FC<VersionsGridProps> = ({}) => {
+const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
   const { projectName, projectInfo } = useProjectDataContext()
   const { productsMap, versionsMap } = useVersionsDataContext()
   const { showStacked } = useVersionsViewsContext()
@@ -191,4 +191,4 @@ const VersionsGrid: FC<VersionsGridProps> = ({}) => {
   )
 }
 
-export default VersionsGrid
+export default ProductsAndVersionsGrid
