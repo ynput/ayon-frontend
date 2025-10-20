@@ -21,6 +21,7 @@ const ProductsAndVersionsTable: FC<ProductsAndVersionsTableProps> = ({ readOnly 
       excludedColumns={['assignees']}
       isExpandable={showProducts}
       isLoading={isLoading}
+      includeLinks={false}
     />
   )
 }

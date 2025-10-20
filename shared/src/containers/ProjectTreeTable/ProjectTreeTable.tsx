@@ -131,6 +131,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
+  includeLinks?: boolean
   isLoading?: boolean
   isExpandable?: boolean // if true, show the expand/collapse icons
   clientSorting?: boolean
@@ -152,6 +153,7 @@ export const ProjectTreeTable = ({
   readOnly,
   excludedColumns,
   extraColumns,
+  includeLinks,
   isLoading: isLoadingProp,
   isExpandable,
   clientSorting = false,
@@ -310,6 +312,7 @@ export const ProjectTreeTable = ({
       scopes,
       attribs: columnAttribs,
       links: linkTypes,
+      includeLinks,
       showHierarchy,
       options,
       extraColumns,
@@ -342,6 +345,8 @@ export const ProjectTreeTable = ({
     showHierarchy,
     isExpandable,
     options,
+    linkTypes,
+    includeLinks,
     extraColumns,
     excludedColumns,
     sortableRows,

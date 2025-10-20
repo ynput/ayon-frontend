@@ -14,6 +14,7 @@ import VersionsTable from './components/VersionsTable/VersionsTable'
 import { useVersionsViewsContext } from './context/VersionsViewsContext'
 import VersionsDetailsPanel from './components/VersionsDetailsPanel/VersionsDetailsPanel'
 import { useVersionsSelectionContext } from './context/VersionsSelectionContext'
+import { ProductsAndVersionsSettings } from './components/ProductsAndVersionsSettings/ProductsAndVersionsSettings'
 
 interface VersionsPageProps {
   projectName: string
@@ -93,8 +94,7 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
                     zIndex: 500,
                   }}
                 >
-                  <div>Versions table settings</div>
-                  {/* <ProjectOverviewSettings /> */}
+                  <ProductsAndVersionsSettings />
                 </SplitterPanel>
               ) : (
                 <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

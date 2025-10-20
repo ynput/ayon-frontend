@@ -100,6 +100,7 @@ export type BuildTreeTableColumnsProps = {
   scopes: string[]
   attribs: ProjectTableAttribute[]
   links: LinkTypeModel[]
+  includeLinks?: boolean
   showHierarchy: boolean
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
@@ -112,6 +113,7 @@ const buildTreeTableColumns = ({
   scopes,
   attribs,
   links = [],
+  includeLinks = true,
   showHierarchy,
   options,
   excluded,
@@ -636,64 +638,68 @@ const buildTreeTableColumns = ({
       return attribColumn
     })
 
-  const linkColumns: ColumnDef<TableRow>[] = links
-    .filter((link) => {
-      // Check if the link type is excluded
-      if (!isIncluded(link.linkType) || !isIncluded('link')) return false
-      return true
-    })
-    .flatMap((link) => {
-      const createLinkColumn = (direction: 'in' | 'out'): ColumnDef<TableRow> => {
-        return {
-          id: getLinkColumnId(link, direction),
-          accessorKey: `links.${getLinkKey(link, direction)}`,
-          header: () => (
-            <LinkColumnHeader>
-              {getLinkLabel(link, direction)}{' '}
-              <Icon
-                icon={getEntityTypeIcon(direction === 'in' ? link.inputType : link.outputType)}
-              />
-            </LinkColumnHeader>
-          ),
-          minSize: MIN_SIZE,
-          enableSorting: false,
-          enableResizing: true,
-          enablePinning: true,
-          enableHiding: true,
-          cell: ({ row, column }) => {
-            const columnIdParsed = column.id.replace('link_', '')
+  const linkColumns: ColumnDef<TableRow>[] = !includeLinks
+    ? []
+    : links
+        .filter((link) => {
+          // Check if the link type is excluded
+          if (!isIncluded(link.linkType) || !isIncluded('link')) return false
+          // Check if inputType and outputType are in scopes
+          if (!scopes.includes(link.inputType) || !scopes.includes(link.outputType)) return false
+          return true
+        })
+        .flatMap((link) => {
+          const createLinkColumn = (direction: 'in' | 'out'): ColumnDef<TableRow> => {
+            return {
+              id: getLinkColumnId(link, direction),
+              accessorKey: `links.${getLinkKey(link, direction)}`,
+              header: () => (
+                <LinkColumnHeader>
+                  {getLinkLabel(link, direction)}{' '}
+                  <Icon
+                    icon={getEntityTypeIcon(direction === 'in' ? link.inputType : link.outputType)}
+                  />
+                </LinkColumnHeader>
+              ),
+              minSize: MIN_SIZE,
+              enableSorting: false,
+              enableResizing: true,
+              enablePinning: true,
+              enableHiding: true,
+              cell: ({ row, column }) => {
+                const columnIdParsed = column.id.replace('link_', '')
 
-            const { id, value } = getValueIdType(row, columnIdParsed, 'links')
-            const cellValue = value?.map((v: any) => v.label)
-            const valueData: LinkWidgetData = {
-              links: value,
-              direction: direction,
-              entityId: row.original.entityId || row.original.id,
-              entityType: row.original.entityType,
-              link: {
-                label: link.linkType,
-                linkType: link.name,
-                targetEntityType: direction === 'in' ? link.inputType : link.outputType,
+                const { id, value } = getValueIdType(row, columnIdParsed, 'links')
+                const cellValue = value?.map((v: any) => v.label)
+                const valueData: LinkWidgetData = {
+                  links: value,
+                  direction: direction,
+                  entityId: row.original.entityId || row.original.id,
+                  entityType: row.original.entityType,
+                  link: {
+                    label: link.linkType,
+                    linkType: link.name,
+                    targetEntityType: direction === 'in' ? link.inputType : link.outputType,
+                  },
+                }
+
+                return (
+                  <CellWidget
+                    rowId={id}
+                    className={clsx('links', { loading: row.original.isLoading })}
+                    columnId={column.id}
+                    value={cellValue}
+                    valueData={valueData}
+                    folderId={row.original.folderId}
+                    attributeData={{ type: 'links' }}
+                  />
+                )
               },
             }
+          }
 
-            return (
-              <CellWidget
-                rowId={id}
-                className={clsx('links', { loading: row.original.isLoading })}
-                columnId={column.id}
-                value={cellValue}
-                valueData={valueData}
-                folderId={row.original.folderId}
-                attributeData={{ type: 'links' }}
-              />
-            )
-          },
-        }
-      }
-
-      return [createLinkColumn('in'), createLinkColumn('out')]
-    })
+          return [createLinkColumn('in'), createLinkColumn('out')]
+        })
 
   const allColumns = [...staticColumns, ...attributeColumns, ...linkColumns]
 

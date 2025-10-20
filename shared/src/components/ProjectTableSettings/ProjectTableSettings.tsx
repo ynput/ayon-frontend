@@ -40,14 +40,16 @@ export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
   highlighted?: SettingHighlightedId
+  includeLinks?: boolean
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   settings = [],
   extraColumns = [],
   highlighted,
+  includeLinks = true,
 }) => {
-  const { attribFields, projectInfo } = useProjectTableContext()
+  const { attribFields, projectInfo, scopes } = useProjectTableContext()
   const { columnVisibility } = useColumnSettingsContext()
 
   const columns = [
@@ -57,7 +59,8 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
     {
       value: 'name',
-      label: 'Folder / Task',
+      label:
+        scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
     },
     {
       value: 'status',
@@ -66,10 +69,6 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     {
       value: 'subType',
       label: 'Type',
-    },
-    {
-      value: 'assignees',
-      label: 'Assignees',
     },
     {
       value: 'tags',
@@ -83,24 +82,36 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       value: 'updatedAt',
       label: 'Updated At',
     },
-    ...attribFields.map((field) => ({
-      value: `attrib_${field.name}`,
-      label: field.data.title || field.name,
-    })),
-    ...(projectInfo?.linkTypes
-      ? projectInfo.linkTypes.flatMap((link) => [
-          {
-            value: getLinkColumnId(link, 'in'),
-            label: getLinkLabel(link, 'in'),
-          },
-          {
-            value: getLinkColumnId(link, 'out'),
-            label: getLinkLabel(link, 'out'),
-          },
-        ])
+    ...attribFields
+      .filter((field) => field.scope?.some((scope) => scopes.includes(scope)))
+      .map((field) => ({
+        value: `attrib_${field.name}`,
+        label: field.data.title || field.name,
+      })),
+    ...(projectInfo?.linkTypes && includeLinks
+      ? projectInfo.linkTypes
+          .filter((link) => [link.inputType, link.outputType].some((type) => scopes.includes(type)))
+          .flatMap((link) => [
+            {
+              value: getLinkColumnId(link, 'in'),
+              label: getLinkLabel(link, 'in'),
+            },
+            {
+              value: getLinkColumnId(link, 'out'),
+              label: getLinkLabel(link, 'out'),
+            },
+          ])
       : []),
     ...extraColumns,
   ]
+
+  // add assignees column for task scope
+  if (scopes.includes('task')) {
+    columns.splice(4, 0, {
+      value: 'assignees',
+      label: 'Assignees',
+    })
+  }
 
   const visibleCount = columns.filter(
     (column) => !(column.value in columnVisibility) || columnVisibility[column.value],
