@@ -1,42 +1,51 @@
 // transforms data for the grid tiles
 
-import {
-  ProductNodeExtended,
-  ProductsMap,
-  VersionNodeExtended,
-  VersionsMap,
-} from './buildVersionsAndProductsMap'
+import { VersionBaseFragment } from '@shared/api'
+import { ProductsMap, VersionsMap } from './buildVersionsAndProductsMap'
 import { getEntityTypeIcon, productTypes } from '@shared/util'
 
 type EntityGridNode = {
   id: string
+  entityType: 'product' | 'version'
   header: string
   path: string // shows on hover
   title: string // top left
   icon: string // product type icon
   status: string
-  author: string | null
+  author?: string | null
   isPlayable: boolean
-  thumbnailUrl: string
+  thumbnailUrl: string | undefined
+  versions?: string[]
 }
 
-const getThumbnailUrl = (projectName: string, entity: ProductNodeExtended | VersionNodeExtended) =>
-  `/api/projects/${projectName}/${entity.entityType}s/${entity.id}/thumbnail?updatedAt=${entity.updatedAt}`
+const getThumbnailUrl = (projectName: string, entity: VersionBaseFragment) =>
+  `/api/projects/${projectName}/versions/${entity.id}/thumbnail?updatedAt=${entity.updatedAt}`
 
 const buildProductsGrid = (productsMap: ProductsMap, projectName: string): EntityGridNode[] => {
   return Array.from(productsMap.values()).map((product) => {
     const productType = productTypes[product.productType]
+    const featuredVersion = product.featuredVersion?.name
 
     return {
       id: product.id,
-      header: product.name,
-      path: product.parents.join(' / '),
-      title: product.featuredVersion?.name || 'No versions',
+      entityType: 'product',
+      header: product.parents[product.parents.length - 1],
+      path: product.parents.slice(0, -1).join(' / '),
+      title: product.name,
       icon: productType?.icon || getEntityTypeIcon('product'),
       status: product.status,
-      author: product.featuredVersion?.author || null,
+      versions: product.versions
+        .map((v) => v.name)
+        .sort((a, b) => {
+          // does it match featured version?
+          if (a === featuredVersion) return 1
+          if (b === featuredVersion) return -1
+          return 0
+        }),
       isPlayable: false,
-      thumbnailUrl: getThumbnailUrl(projectName, product),
+      thumbnailUrl: product.featuredVersion
+        ? getThumbnailUrl(projectName, product.featuredVersion)
+        : undefined,
     }
   })
 }
@@ -45,6 +54,7 @@ const buildVersionsGrid = (versionsMap: VersionsMap, projectName: string): Entit
   return Array.from(versionsMap.values()).map((version) => {
     return {
       id: version.id,
+      entityType: 'version',
       header: version.product.name,
       path: version.parents.slice(0, -1).join('/'),
       title: version.name,

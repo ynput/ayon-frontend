@@ -46,6 +46,11 @@ query GetProducts(
           featuredVersion(order: $featuredVersionOrder) {
             ...VersionBase
           }
+          versions: versionList {
+            id
+            name
+            version
+          }
           folder {
             ...FolderAttrib
           }

@@ -1,7 +1,7 @@
 import GridLayout from '@components/GridLayout'
-import { useVersionsDataContext } from '@pages/VersionsPage/context/VersionsDataContext'
-import { useVersionsViewsContext } from '@pages/VersionsPage/context/VersionsViewsContext'
-import { buildVersionAndProductGrid } from '@pages/VersionsPage/util'
+import { useVersionsDataContext } from '../../context/VersionsDataContext'
+import { useVersionsViewsContext } from '../../context/VersionsViewsContext'
+import { buildVersionAndProductGrid } from '../../util'
 import {
   ROW_SELECTION_COLUMN_ID,
   useProjectDataContext,
@@ -130,8 +130,21 @@ const VersionsGrid: FC<VersionsGridProps> = ({}) => {
 
   // Check if an entity is selected
   const isEntitySelected = useCallback(
-    (entityId: string) => {
-      return Array.from(selectedCells).some((cellId) => cellId.includes(entityId))
+    (entityId: string, entityType: string): boolean => {
+      if (entityType === 'version') {
+        return Array.from(selectedCells).some((cellId) => cellId.includes(entityId))
+      } else if (entityType === 'product') {
+        // For products, check if any of its versions are selected
+        const product = productsMap.get(entityId)
+        if (product) {
+          for (const version of product.versions) {
+            return Array.from(selectedCells).some((cellId) => cellId.includes(version.id))
+          }
+        }
+        return false
+      } else {
+        return false
+      }
     },
     [selectedCells],
   )
@@ -156,18 +169,20 @@ const VersionsGrid: FC<VersionsGridProps> = ({}) => {
             path={entity.path}
             title={entity.title}
             titleIcon={entity.icon}
-            users={entity.author ? [{ name: entity.author }] : undefined}
             imageIcon={entity.icon}
             status={status}
             imageUrl={entity.thumbnailUrl}
             isPlayable={entity.isPlayable}
+            users={entity.author ? [{ name: entity.author }] : undefined} // versions only
+            versions={entity.versions} // products only
             // for all types
             hidePriority
             // selection
-            isActive={isEntitySelected(entity.id)}
+            isActive={isEntitySelected(entity.id, entity.entityType)}
             // events
             onClick={(e) => handleCardClick(e, entity.id, index, GRID_COLUMN_ID)}
             onTitleClick={(e) => handleCardClick(e, entity.id, index, ROW_SELECTION_COLUMN_ID)}
+            onVersionsClick={(e) => handleCardClick(e, entity.id, index, ROW_SELECTION_COLUMN_ID)}
             onDoubleClick={(e) => handleDoubleClick(e, entity.id)}
           />
         )

@@ -115,6 +115,7 @@ export type AttributeFilterInput = {
 export type BaseNode = {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
+  allAttrib: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
   links: LinksConnection;
