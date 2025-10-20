@@ -17,7 +17,7 @@ interface ProductsAndVersionsGridProps {}
 
 const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
   const { projectName, projectInfo } = useProjectDataContext()
-  const { productsMap, versionsMap } = useVersionsDataContext()
+  const { productsMap, versionsMap, isLoading } = useVersionsDataContext()
   const { showProducts } = useVersionsViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
 
@@ -148,6 +148,27 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
     },
     [selectedCells, productsMap],
   )
+
+  // return a pages worth of loading skeletons
+  if (isLoading) {
+    return (
+      <GridLayout
+        ratio={1.777777}
+        minWidth={190}
+        style={{ maxHeight: '100%', height: 'auto', overflow: 'hidden' }}
+      >
+        {Array.from({ length: 20 }).map((_, index) => (
+          <EntityCard
+            key={index}
+            style={{
+              minWidth: 'unset',
+            }}
+            isLoading
+          />
+        ))}
+      </GridLayout>
+    )
+  }
 
   return (
     <GridLayout

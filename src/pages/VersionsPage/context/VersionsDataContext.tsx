@@ -20,21 +20,16 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import { splitFiltersByScope } from '@shared/components/SearchFilter/useBuildFilterOptions'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useVersionsViewsContext } from './VersionsViewsContext'
+import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 export type VersionMap = Map<string, VersionNodeExtended>
 export type ProductMap = Map<string, ProductNodeExtended>
 
 interface VersionsDataContextValue {
-  // STACKED
-  showProducts: boolean
-  onUpdateShowProducts: (stacked: boolean) => void
   //   EXPANDED
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
   updateExpanded: OnChangeFn<ExpandedState>
-  //   ALL FILTERS (versions + products)
-  filters: QueryFilter
-  onUpdateFilters: (filters: QueryFilter) => void
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
@@ -47,6 +42,8 @@ interface VersionsDataContextValue {
   entitiesMap: Map<string, VersionNodeExtended | ProductNodeExtended> // all versions and products
   hasNextPage: boolean | undefined
   fetchNextPage: () => void
+  // loading
+  isLoading: boolean
   isFetchingNextPage: boolean
   // meta
   error: string | undefined
@@ -69,8 +66,7 @@ interface VersionsDataProviderProps {
 
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, onUpdateFilters, showProducts, onUpdateShowProducts, sortBy, sortDesc } =
-    useVersionsViewsContext()
+  const { filters, showProducts, sortBy, sortDesc } = useVersionsViewsContext()
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -111,54 +107,50 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     sliceFilter,
   })
 
-  // Get all products when showing products
+  const queryArgs = {
+    projectName,
+    versionFilter: combinedVersionFilter.filterString,
+    productFilter: combinedProductFilter.filterString,
+    folderIds: slicerFolderIds,
+    sortBy,
+    desc: sortDesc,
+  }
+
+  // QUERY: Get all products when showing products
   const {
     data: productsData,
     hasNextPage: productsHasNextPage,
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
+    isFetching: isFetchingProducts,
     error: productsError,
-  } = useGetProductsInfiniteQuery(
-    {
-      projectName,
-      productFilter: combinedProductFilter.filterString,
-      versionFilter: combinedVersionFilter.filterString,
-      folderIds: slicerFolderIds,
-      sortBy,
+  } = useGetProductsInfiniteQuery(queryArgs, {
+    skip: !showProducts,
+    initialPageParam: {
+      cursor: '',
       desc: sortDesc,
     },
-    {
-      skip: !showProducts,
-      initialPageParam: {
-        cursor: '',
-        desc: sortDesc,
-      },
-    },
-  )
+  })
 
-  // Get all versions when not showing products
+  // QUERY: Get all versions when not showing products
   const {
     data: versionsData,
     hasNextPage: versionsHasNextPage,
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
+    isFetching: isFetchingVersions,
     error: versionsError,
-  } = useGetVersionsInfiniteQuery(
-    {
-      projectName,
-      versionFilter: combinedVersionFilter.filterString,
-      productFilter: combinedProductFilter.filterString,
-      folderIds: slicerFolderIds,
-      sortBy,
+  } = useGetVersionsInfiniteQuery(queryArgs, {
+    skip: showProducts,
+    initialPageParam: {
+      cursor: '',
       desc: sortDesc,
     },
-    {
-      skip: showProducts,
-      initialPageParam: {
-        cursor: '',
-        desc: sortDesc,
-      },
-    },
+  })
+
+  const isLoadingTable = useQueryArgumentChangeLoading(
+    queryArgs,
+    isFetchingProducts || isFetchingVersions,
   )
 
   // Dynamic pagination based on showProducts
@@ -169,8 +161,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const versions = useMemo(() => flattenInfiniteVersionsData(versionsData), [versionsData])
   const products = useMemo(() => flattenInfiniteProductsData(productsData), [productsData])
 
-  // EXPANDED CHILD VERSIONS QUERY
-  // get child versions for expanded products
+  // QUERY: get child versions for expanded products
   const { data: { versions: childVersions = [] } = {} } = useGetVersionsByProductsQuery({
     projectName,
     productIds: expandedIds,
@@ -197,11 +188,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
       versionsError && String(versionsError.error)
 
   const value: VersionsDataContextValue = {
-    showProducts,
-    onUpdateShowProducts,
-    // filters
-    filters,
-    onUpdateFilters,
     versionFilter,
     productFilter,
     // expanded
@@ -217,6 +203,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     entitiesMap,
     hasNextPage,
     fetchNextPage,
+    // loading
+    isLoading: isLoadingTable,
     isFetchingNextPage,
     // meta
     error,

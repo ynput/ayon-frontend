@@ -1,14 +1,14 @@
 import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
-import { useVersionsDataContext } from '@pages/VersionsPage/context/VersionsDataContext'
 import { useProjectDataContext } from '@shared/containers'
 import { ScopeWithFilterTypes } from '@shared/components/SearchFilter/useBuildFilterOptions'
+import { useVersionsViewsContext } from '@pages/VersionsPage/context/VersionsViewsContext'
 
 interface VersionsSearchFilterProps {}
 
 const VersionsSearchFilter: FC<VersionsSearchFilterProps> = ({}) => {
   const { projectInfo, projectName } = useProjectDataContext()
-  const { filters, onUpdateFilters } = useVersionsDataContext()
+  const { filters, onUpdateFilters } = useVersionsViewsContext()
 
   const scopesConfig: ScopeWithFilterTypes[] = [
     {

@@ -98,7 +98,7 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   const versionsSettings = viewSettings as VersionsSettings
   const serverFilters = (versionsSettings?.filter as any) ?? {}
   const serverSlicerType = versionsSettings?.slicerType ?? ''
-  const serverShowProducts = versionsSettings?.showProducts ?? true
+  const serverShowProducts = versionsSettings?.showProducts ?? false
   const serverShowGrid = versionsSettings?.showGrid ?? false
   const serverGridHeight = versionsSettings?.gridHeight ?? 200
   const serverRowHeight = versionsSettings?.rowHeight ?? 50
