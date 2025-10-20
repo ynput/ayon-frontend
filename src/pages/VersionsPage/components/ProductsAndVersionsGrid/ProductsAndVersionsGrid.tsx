@@ -10,6 +10,7 @@ import {
 import { EntityCard } from '@ynput/ayon-react-components'
 import { FC, useMemo, useCallback, useRef } from 'react'
 import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
+import { InView } from 'react-intersection-observer'
 
 const GRID_COLUMN_ID = 'name'
 
@@ -197,32 +198,52 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
         const status = projectInfo?.statuses?.find((s) => s.name === entity.status)
 
         return (
-          <EntityCard
-            key={entity.id}
-            style={{
-              minWidth: 'unset',
-            }}
-            // data built in util transform function
-            header={entity.header}
-            path={entity.path}
-            title={entity.title}
-            titleIcon={entity.icon}
-            imageIcon={entity.icon}
-            status={status}
-            imageUrl={entity.thumbnailUrl}
-            isPlayable={entity.isPlayable}
-            users={entity.author ? [{ name: entity.author }] : undefined} // versions only
-            versions={entity.versions} // products only
-            // for all types
-            hidePriority
-            // selection
-            isActive={isEntitySelected(entity.id, entity.entityType)}
-            // events
-            onClick={(e) => handleCardClick(e, entity.id, index, GRID_COLUMN_ID)}
-            onTitleClick={(e) => handleCardClick(e, entity.id, index, ROW_SELECTION_COLUMN_ID)}
-            onVersionsClick={(e) => handleCardClick(e, entity.id, index, ROW_SELECTION_COLUMN_ID)}
-            onDoubleClick={(e) => handleDoubleClick(e, entity.id)}
-          />
+          <InView key={entity.id} rootMargin="200px 0px 200px 0px">
+            {({ inView, ref }) =>
+              inView ? (
+                <div ref={ref}>
+                  <EntityCard
+                    style={{
+                      minWidth: 'unset',
+                    }}
+                    // data built in util transform function
+                    header={entity.header}
+                    path={entity.path}
+                    title={entity.title}
+                    titleIcon={entity.icon}
+                    imageIcon={entity.icon}
+                    status={status}
+                    imageUrl={entity.thumbnailUrl}
+                    isPlayable={entity.isPlayable}
+                    users={entity.author ? [{ name: entity.author }] : undefined} // versions only
+                    versions={entity.versions} // products only
+                    // for all types
+                    hidePriority
+                    // selection
+                    isActive={isEntitySelected(entity.id, entity.entityType)}
+                    // events
+                    onClick={(e) => handleCardClick(e, entity.id, index, GRID_COLUMN_ID)}
+                    onTitleClick={(e) =>
+                      handleCardClick(e, entity.id, index, ROW_SELECTION_COLUMN_ID)
+                    }
+                    onVersionsClick={(e) =>
+                      handleCardClick(e, entity.id, index, ROW_SELECTION_COLUMN_ID)
+                    }
+                    onDoubleClick={(e) => handleDoubleClick(e, entity.id)}
+                  />
+                </div>
+              ) : (
+                <div
+                  ref={ref}
+                  style={{
+                    minWidth: 'unset',
+                    aspectRatio: '1.777777',
+                    backgroundColor: 'transparent',
+                  }}
+                />
+              )
+            }
+          </InView>
         )
       })}
     </GridLayout>
