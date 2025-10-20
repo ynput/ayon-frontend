@@ -113,6 +113,7 @@ export type SimpleTableRow = {
   iconColor?: string
   iconFilled?: boolean
   img?: string | null
+  imgShape?: 'square' | 'circle'
   startContent?: JSX.Element
   endContent?: JSX.Element
   subRows: SimpleTableRow[]
@@ -134,6 +135,7 @@ export interface SimpleTableProps {
   globalFilter?: string
   meta?: Record<string, any>
   rowHeight?: number // height of each row, used for virtual scrolling
+  imgRatio?: number
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
   children?: (
     props: SimpleTableCellTemplateProps,
@@ -192,6 +194,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   globalFilter,
   meta,
   rowHeight,
+  imgRatio,
   onScrollBottom,
   children,
   pt,
@@ -360,6 +363,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
             icon: row.original.icon || undefined,
             iconColor: row.original.iconColor,
             iconFilled: row.original.iconFilled,
+            img: row.original.img,
+            imgShape: row.original.imgShape,
+            imgRatio: imgRatio,
             isRowExpandable: row.getCanExpand(),
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
@@ -386,6 +392,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       handleRowKeyDown,
       enableClickToDeselect,
       enableNonFolderIndent,
+      imgRatio,
     ], // include enableClickToDeselect for completeness
   )
 

@@ -128,25 +128,25 @@ const VersionsGrid: FC<VersionsGridProps> = ({}) => {
     [setFocusedCellId],
   )
 
-  // Check if an entity is selected
   const isEntitySelected = useCallback(
     (entityId: string, entityType: string): boolean => {
+      const cellExists = (id: string) =>
+        Array.from(selectedCells).some((cellId) => cellId.includes(id))
+
       if (entityType === 'version') {
-        return Array.from(selectedCells).some((cellId) => cellId.includes(entityId))
-      } else if (entityType === 'product') {
-        // For products, check if any of its versions are selected
-        const product = productsMap.get(entityId)
-        if (product) {
-          for (const version of product.versions) {
-            return Array.from(selectedCells).some((cellId) => cellId.includes(version.id))
-          }
-        }
-        return false
-      } else {
-        return false
+        return cellExists(entityId)
       }
+
+      if (entityType === 'product') {
+        const product = productsMap.get(entityId)
+        if (!product) return false
+
+        return cellExists(product.id) || product.versions.some((version) => cellExists(version.id))
+      }
+
+      return false
     },
-    [selectedCells],
+    [selectedCells, productsMap],
   )
 
   return (

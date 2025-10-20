@@ -13,6 +13,7 @@ import { VersionsProjectTableProvider } from './VersionsProjectTableProvider'
 import { VersionsColumnSettingsProvider } from './VersionsColumnSettingsProvider'
 import { VersionsDataProvider } from '../context/VersionsDataContext'
 import { VersionsViewsProvider } from '../context/VersionsViewsContext'
+import { VersionsSelectionProvider } from '../context/VersionsSelectionContext'
 
 interface VersionsProvidersProps {
   projectName: string
@@ -36,7 +37,9 @@ const VersionsProviders: FC<VersionsProvidersProps> = ({ projectName, children }
                     <DetailsPanelEntityProvider>
                       <SelectionCellsProvider>
                         <SelectedRowsProvider>
-                          <CellEditingProvider>{children}</CellEditingProvider>
+                          <VersionsSelectionProvider>
+                            <CellEditingProvider>{children}</CellEditingProvider>
+                          </VersionsSelectionProvider>
                         </SelectedRowsProvider>
                       </SelectionCellsProvider>
                     </DetailsPanelEntityProvider>

@@ -1,6 +1,4 @@
 // transforms data for the grid tiles
-
-import { VersionBaseFragment } from '@shared/api'
 import { ProductsMap, VersionsMap } from './buildVersionsAndProductsMap'
 import { getEntityTypeIcon, productTypes } from '@shared/util'
 
@@ -18,8 +16,8 @@ type EntityGridNode = {
   versions?: string[]
 }
 
-const getThumbnailUrl = (projectName: string, entity: VersionBaseFragment) =>
-  `/api/projects/${projectName}/versions/${entity.id}/thumbnail?updatedAt=${entity.updatedAt}`
+export const getThumbnailUrl = (projectName: string, entity: { id: string; updatedAt: string }) =>
+  `/api/projects/${projectName}/versions/${entity.id}/thumbnail?updatedAt=${entity?.updatedAt}`
 
 const buildProductsGrid = (productsMap: ProductsMap, projectName: string): EntityGridNode[] => {
   return Array.from(productsMap.values()).map((product) => {

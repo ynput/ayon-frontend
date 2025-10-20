@@ -39,6 +39,9 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   parents?: string[]
   iconColor?: string
   iconFilled?: boolean
+  img?: string | null
+  imgShape?: 'square' | 'circle'
+  imgRatio?: number
   isRowExpandable?: boolean
   isRowExpanded?: boolean
   isTableExpandable?: boolean
@@ -61,6 +64,9 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       parents,
       iconColor,
       iconFilled,
+      img,
+      imgShape = 'square',
+      imgRatio = 1,
       isRowExpandable,
       isRowExpanded,
       isTableExpandable,
@@ -95,6 +101,16 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           enableNonFolderIndent={enableNonFolderIndent}
         />
         {startContent && startContent}
+        {img && (
+          <img
+            src={img}
+            alt=""
+            className={imgShape}
+            style={{
+              aspectRatio: imgRatio.toString(),
+            }}
+          />
+        )}
         {icon && (
           <Icon
             icon={icon}
@@ -104,17 +120,10 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
             }}
           />
         )}
-        {parents && (
-          <span className="path">
-            {parents.map((part, index) => (
-              <Fragment key={index}>
-                <span key={index + '-path'}>{part}</span>
-                <span key={index + '-separator'}>/</span>
-              </Fragment>
-            ))}
-          </span>
-        )}
-        <span className="value">{value}</span>
+        <div className="text">
+          {parents && <span className="path">{parents.join(' / ')} / </span>}
+          <span className="value">{value}</span>
+        </div>
         {endContent && endContent}
       </Styled.Cell>
     )

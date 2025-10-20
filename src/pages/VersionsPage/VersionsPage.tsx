@@ -5,31 +5,28 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import Slicer from '@containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useSettingsPanel } from '@shared/context'
-import { useProjectTableContext, useSelectedRowsContext } from '@shared/containers'
 import VersionsTable from './components/VersionsTable/VersionsTable'
-import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import VersionsToolbar from './components/VersionsToolbar/VersionsToolbar'
 import VersionsGrid from './components/VersionsGrid/VersionsGrid'
 import { useVersionsViewsContext } from './context/VersionsViewsContext'
+import VersionsDetailsPanel from './components/VersionsDetailsPanel/VersionsDetailsPanel'
+import { useVersionsSelectionContext } from './context/VersionsSelectionContext'
+import ProductVersionsTable from './components/ProductVersionsTable/ProductVersionsTable'
 
 interface VersionsPageProps {
   projectName: string
   children?: React.ReactNode
 }
 
-const VersionsPage: FC<VersionsPageProps> = ({ projectName }) => {
+const VersionsPage: FC<VersionsPageProps> = ({}) => {
   // contexts
   const { isPanelOpen } = useSettingsPanel()
-  const { selectedRows } = useSelectedRowsContext()
   const { config } = useSlicerContext()
-  const { projectInfo } = useProjectTableContext()
   const { showGrid } = useVersionsViewsContext()
+  const { showVersionDetails, showVersionsTable } = useVersionsSelectionContext()
 
   // load slicer remote config
   const overviewSliceFields = config?.versions?.fields
-
-  // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0
 
   return (
     <main style={{ gap: 4 }}>
@@ -60,12 +57,19 @@ const VersionsPage: FC<VersionsPageProps> = ({ projectName }) => {
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!shouldShowDetailsPanel ? 0 : 4}
+                  gutterSize={!showVersionDetails && !showVersionsTable ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     {showGrid ? <VersionsGrid /> : <VersionsTable />}
                   </SplitterPanel>
-                  {shouldShowDetailsPanel ? (
+                  {showVersionsTable ? (
+                    <SplitterPanel size={15} style={{ minWidth: 100 }}>
+                      <ProductVersionsTable />
+                    </SplitterPanel>
+                  ) : (
+                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
+                  )}
+                  {showVersionDetails ? (
                     <SplitterPanel
                       size={30}
                       style={{
@@ -73,10 +77,7 @@ const VersionsPage: FC<VersionsPageProps> = ({ projectName }) => {
                         minWidth: 300,
                       }}
                     >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
+                      <VersionsDetailsPanel />
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
