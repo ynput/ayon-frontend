@@ -64,8 +64,8 @@ export const SettingOption = styled(Button)`
 `
 
 export interface SettingConfig {
-  id: SettingField
-  title: string
+  id?: SettingField
+  title?: string
   component: ReactNode
   icon?: string
   preview?: string | number
@@ -90,18 +90,30 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
       // Render main menu
       return (
         <>
-          {settings.map((setting) => (
-            <SettingOption
-              key={setting.id}
-              onClick={() => selectSetting(setting.id)}
-              variant="text"
-            >
-              {setting.icon && <Icon icon={setting.icon} />}
-              <span className="title">{setting.title}</span>
-              {!!setting.preview?.toString() && <span className="preview">{setting.preview}</span>}
-              <Icon icon="chevron_right" className="arrow" />
-            </SettingOption>
-          ))}
+          {settings
+            .toSorted((a, b) => {
+              if (a.id && !b.id) return -1
+              if (!a.id && b.id) return 1
+              return 0
+            })
+            .map((setting) =>
+              setting.id && setting.title ? (
+                <SettingOption
+                  key={setting.id}
+                  onClick={() => selectSetting(setting.id as string)}
+                  variant="text"
+                >
+                  {setting.icon && <Icon icon={setting.icon} />}
+                  <span className="title">{setting.title}</span>
+                  {!!setting.preview?.toString() && (
+                    <span className="preview">{setting.preview}</span>
+                  )}
+                  <Icon icon="chevron_right" className="arrow" />
+                </SettingOption>
+              ) : (
+                setting.component
+              ),
+            )}
         </>
       )
     }
@@ -113,16 +125,13 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
   return (
     <SidePanel open={isPanelOpen}>
       <PanelHeader>
-        {selectedSetting && settings.length > 1 && (
+        {selectedSetting && (
           <ToolButton variant="text" icon="arrow_back" onClick={backToMainMenu} />
         )}
         <PanelTitle>{getPanelTitle()}</PanelTitle>
         <ToolButton variant="text" icon="close" onClick={closePanel} />
       </PanelHeader>
-      <PanelContent>
-        {renderSettingContent()}
-        <RowHeightSettings />
-      </PanelContent>
+      <PanelContent>{renderSettingContent()}</PanelContent>
     </SidePanel>
   )
 }
