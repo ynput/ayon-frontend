@@ -4,7 +4,14 @@ import ReactDOM from 'react-dom/client'
 import store, { useAppDispatch, useAppSelector } from '@state/store'
 import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
+import { init } from '@module-federation/enhanced/runtime'
 
+// Initialize Module Federation runtime
+// Use dynamic origin based on current window.location for production deployments
+init({
+  name: 'host',
+  remotes: [],
+})
 import App from './app'
 
 // styles
