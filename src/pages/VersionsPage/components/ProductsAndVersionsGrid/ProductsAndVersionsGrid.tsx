@@ -11,6 +11,7 @@ import { EntityCard } from '@ynput/ayon-react-components'
 import { FC, useMemo, useCallback, useRef } from 'react'
 import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { InView } from 'react-intersection-observer'
+import { useGridKeyboardNavigation } from '../../hooks/useGridKeyboardNavigation'
 
 const GRID_COLUMN_ID = 'name'
 
@@ -24,6 +25,7 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
+  const gridContainerRef = useRef<HTMLDivElement>(null)
 
   const gridData = useMemo(
     () =>
@@ -35,6 +37,31 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
       }),
     [productsMap, versionsMap, showProducts, projectName],
   )
+
+  // Handle Enter key press - same behavior as clicking the title
+  const handleEnterPress = useCallback(
+    (entityId: string) => {
+      const nameCellId = getCellId(entityId, GRID_COLUMN_ID)
+      const rowCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
+
+      const newSelection = new Set<string>([nameCellId, rowCellId])
+      setSelectedCells(newSelection)
+      setFocusedCellId(nameCellId)
+    },
+    [setSelectedCells, setFocusedCellId],
+  )
+
+  // Initialize keyboard navigation early to get reset function
+  const { resetPositionTracking } = useGridKeyboardNavigation({
+    gridData,
+    selectedCells,
+    setSelectedCells,
+    setFocusedCellId,
+    gridContainerRef,
+    onEnterPress: handleEnterPress,
+    gridColumnId: GRID_COLUMN_ID,
+    rowSelectionColumnId: ROW_SELECTION_COLUMN_ID,
+  })
 
   // Handle card click with support for single, shift, and cmd/ctrl selection
   const handleCardClick = useCallback(
@@ -109,8 +136,21 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
         setFocusedCellId(cellId)
         lastClickedIndexRef.current = index
       }
+
+      // Focus the grid container to enable keyboard navigation
+      gridContainerRef.current?.focus()
+
+      // Reset keyboard navigation tracking since we're using mouse
+      resetPositionTracking()
     },
-    [gridData, setSelectedCells, setFocusedCellId, selectedCells],
+    [
+      gridData,
+      setSelectedCells,
+      setFocusedCellId,
+      selectedCells,
+      gridContainerRef,
+      resetPositionTracking,
+    ],
   )
 
   // handle double click which selected the name and row selection cell
@@ -125,8 +165,14 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
       const newSelection = new Set<string>([nameCellId, rowCellId])
       setSelectedCells(newSelection)
       setFocusedCellId(nameCellId)
+
+      // Focus the grid container to enable keyboard navigation
+      gridContainerRef.current?.focus()
+
+      // Reset keyboard navigation tracking since we're using mouse
+      resetPositionTracking()
     },
-    [setFocusedCellId],
+    [setFocusedCellId, setSelectedCells, gridContainerRef, resetPositionTracking],
   )
 
   const isEntitySelected = useCallback(
@@ -169,10 +215,12 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
   if (isLoading) {
     return (
       <GridLayout
+        ref={gridContainerRef}
         ratio={1.777777}
         minWidth={190}
         onScroll={handleScroll}
-        style={{ maxHeight: '100%', height: 'auto', overflow: 'hidden' }}
+        style={{ maxHeight: '100%', height: 'auto', overflow: 'hidden', outline: 'none' }}
+        tabIndex={0}
       >
         {Array.from({ length: 20 }).map((_, index) => (
           <EntityCard
@@ -189,10 +237,12 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
 
   return (
     <GridLayout
+      ref={gridContainerRef}
       ratio={1.777777}
       minWidth={gridHeight}
       onScroll={handleScroll}
-      style={{ maxHeight: '100%', height: 'auto', overflow: 'auto' }}
+      style={{ maxHeight: '100%', height: 'auto', overflow: 'auto', outline: 'none' }}
+      tabIndex={0}
     >
       {gridData.map((entity, index) => {
         const status = projectInfo?.statuses?.find((s) => s.name === entity.status)
