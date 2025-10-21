@@ -38,6 +38,8 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
       name: folder.name,
       label: folder.label || folder.name,
       subType: folder.folderType,
+      path: folder.path,
+      parents: folder.parents,
     },
   })
 
