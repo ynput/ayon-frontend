@@ -3628,7 +3628,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, productType, createdAt, updatedAt",
+                "description": "Sort by one of name, path, productType, createdAt, updatedAt, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -3673,6 +3673,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -6080,7 +6092,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of version, status, createdAt, updatedAt",
+                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6125,6 +6137,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -7444,7 +7468,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt, folderType",
+                "description": "Sort by one of name, createdAt, updatedAt, folderType",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7863,7 +7887,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, productType, createdAt, updatedAt",
+                "description": "Sort by one of name, path, productType, createdAt, updatedAt, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7908,6 +7932,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -8958,7 +8994,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of version, status, createdAt, updatedAt",
+                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -9003,6 +9039,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -12217,7 +12265,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of version, status, createdAt, updatedAt",
+                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -12262,6 +12310,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,

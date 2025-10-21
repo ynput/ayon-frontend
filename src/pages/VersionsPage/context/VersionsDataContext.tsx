@@ -31,7 +31,10 @@ import {
 } from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
-import { splitFiltersByScope } from '@shared/components/SearchFilter/useBuildFilterOptions'
+import {
+  splitClientFiltersByScope,
+  splitFiltersByScope,
+} from '@shared/components/SearchFilter/useBuildFilterOptions'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useVersionsViewsContext } from './VersionsViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
@@ -90,8 +93,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const {
     version: versionFilter = { conditions: [] },
     product: productFilter = { conditions: [] },
+    task: taskFilter = { conditions: [] },
   } = useMemo(() => {
-    return splitFiltersByScope(filters, ['version', 'product'])
+    return splitFiltersByScope(filters, ['version', 'product', 'task'])
   }, [filters])
 
   const { updateExpanded, expandedIds } = useExpandedState({
@@ -107,6 +111,21 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     selection: rowSelectionData,
     attribFields: attribFields,
   })
+
+  // Separate slicer filters into different types
+  const {
+    version: [slicerVersionFilter],
+    product: [slicerProductFilter],
+    task: [slicerTaskFilter],
+  } = useMemo(() => {
+    return splitClientFiltersByScope(
+      sliceFilter ? [sliceFilter] : null,
+      ['version', 'product', 'task'],
+      {
+        taskType: 'task',
+      },
+    )
+  }, [sliceFilter])
   // get selected folders from slicer
   const slicerFolderIds = useSelectedFolders({
     rowSelection,
@@ -116,17 +135,22 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
     queryFilters: versionFilter,
-    sliceFilter,
+    sliceFilter: slicerVersionFilter,
   })
   const combinedProductFilter = useQueryFilters({
     queryFilters: productFilter,
-    sliceFilter,
+    sliceFilter: slicerProductFilter,
+  })
+  const combinedTaskFilter = useQueryFilters({
+    queryFilters: taskFilter,
+    sliceFilter: slicerTaskFilter,
   })
 
   const queryArgs = {
     projectName,
     versionFilter: combinedVersionFilter.filterString,
     productFilter: combinedProductFilter.filterString,
+    taskFilter: combinedTaskFilter.filterString,
     folderIds: slicerFolderIds,
     sortBy,
     desc: sortDesc,

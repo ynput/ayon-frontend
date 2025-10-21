@@ -16,9 +16,10 @@ import type {
 } from '@shared/api'
 import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
-import { Icon, Option } from '@ynput/ayon-react-components'
+import { Icon, Option, Filter } from '@ynput/ayon-react-components'
 import { dateOptions } from './filterDates'
 import { isEmpty } from 'lodash'
+import { SliceFilter } from '@shared/containers'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]
@@ -802,24 +803,32 @@ const sortOptionsBasedOnColumns = (options: Option[], columnOrder: ColumnOrderSt
  * @param combinedFilter - The filter with potentially scope-prefixed IDs
  * @param scopes - Array of scopes to split by
  * @param config - Filter config containing prefixes for field types
- * @returns Object with scope-keyed filters, with prefixes removed from IDs
+ * @param filterIdToScopeMap - Optional mapping of filter IDs (without scope prefix) to their scopes (e.g., { taskType: 'task', folderType: 'folder' })
+ * @returns Object with scope-keyed filters (including 'unscoped' for filters that don't match any scope), with prefixes removed from IDs
  *
  * @example
- * // Input: combinedFilter with IDs like "version_status", "folder_status"
- * // Output: { version: { conditions: [...] }, folder: { conditions: [...] } }
+ * // Input: combinedFilter with IDs like "version_status", "folder_status", "taskType"
+ * // With filterIdToScopeMap: { taskType: 'task' }
+ * // Output: { version: { conditions: [...] }, folder: { conditions: [...] }, task: { conditions: [...] }, unscoped: { conditions: [] } }
  */
 export const splitFiltersByScope = (
-  combinedFilter: Record<string, any>,
+  combinedFilter: Record<string, any> | null,
   scopes: ScopeType[],
   config?: FilterConfig,
-): Record<ScopeType, Record<string, any>> => {
-  // Initialize with all scopes having empty conditions
-  const result: Record<ScopeType, Record<string, any>> = {
+  filterIdToScopeMap?: Record<string, ScopeType>,
+): Record<ScopeType | 'unscoped', Record<string, any>> => {
+  // Initialize with all scopes having empty conditions, plus unscoped
+  const result: Record<ScopeType | 'unscoped', Record<string, any>> = {
     folder: { conditions: [] },
     product: { conditions: [] },
     task: { conditions: [] },
     user: { conditions: [] },
     version: { conditions: [] },
+    unscoped: { conditions: [] },
+  }
+
+  if (!combinedFilter?.conditions || combinedFilter?.conditions.length === 0) {
+    return result
   }
 
   // Helper to extract scope prefix from an ID
@@ -843,7 +852,7 @@ export const splitFiltersByScope = (
   // Helper to process a filter recursively
   const processConditions = (
     conditions: any[] | undefined,
-    targetFilters: Record<ScopeType, Record<string, any>>,
+    targetFilters: Record<ScopeType | 'unscoped', Record<string, any>>,
   ) => {
     if (!conditions || conditions.length === 0) return
 
@@ -862,10 +871,16 @@ export const splitFiltersByScope = (
             key: cleanId,
           })
         } else if (!scope) {
-          // If no scope prefix found, add to all scopes (for backward compatibility)
-          scopes.forEach((s) => {
-            targetFilters[s].conditions?.push(condition)
-          })
+          // No explicit scope prefix found, check filterIdToScopeMap
+          const mappedScope = filterIdToScopeMap?.[condition.key]
+
+          if (mappedScope && targetFilters[mappedScope]) {
+            // Found in the map, add to mapped scope
+            targetFilters[mappedScope].conditions?.push(condition)
+          } else {
+            // Not in map, add to unscoped
+            targetFilters['unscoped']?.conditions?.push(condition)
+          }
         }
       }
     })
@@ -873,6 +888,83 @@ export const splitFiltersByScope = (
 
   // Process the combined filter
   processConditions(combinedFilter.conditions, result)
+
+  return result
+}
+
+/**
+ * Splits combined Filter objects by their scope and removes the scope prefix from filter IDs.
+ * Used to separate multi-scope Filter arrays back into individual scope Filter arrays.
+ * This function works with Filter objects from @ynput/ayon-react-components, not QueryFilter objects.
+ *
+ * @param filters - Array of Filter objects with potentially scope-prefixed IDs
+ * @param scopes - Array of scopes to split by
+ * @param filterIdToScopeMap - Optional mapping of filter IDs (without scope prefix) to their scopes (e.g., { taskType: 'task', folderType: 'folder' })
+ * @returns Object with scope-keyed Filter arrays (including 'unscoped' for filters that don't match any scope)
+ *
+ * @example
+ * // Input: filters with IDs like "version_status", "folder_status", "taskType"
+ * // With filterIdToScopeMap: { taskType: 'task' }
+ * // Output: { version: [...], folder: [...], task: [...], product: [...], user: [...], unscoped: [...] }
+ */
+export const splitClientFiltersByScope = (
+  filters: (Filter | SliceFilter)[] | null | undefined,
+  scopes: ScopeType[],
+  filterIdToScopeMap?: Record<string, ScopeType>,
+): Record<ScopeType | 'unscoped', Filter[]> => {
+  // Initialize with all scopes having empty arrays, plus unscoped
+  const result: Record<ScopeType | 'unscoped', Filter[]> = {
+    folder: [],
+    product: [],
+    task: [],
+    user: [],
+    version: [],
+    unscoped: [],
+  }
+
+  if (!filters || filters.length === 0) {
+    return result
+  }
+
+  // Helper to extract scope prefix from a filter ID
+  const extractScopeFromId = (id: string): ScopeType | null => {
+    // Check if ID starts with any scope prefix
+    const scopeMatch = scopes.find((scope) => id.startsWith(`${scope}_`))
+    return scopeMatch || null
+  }
+
+  // Helper to remove scope prefix from ID
+  const removeScopePrefix = (id: string, scope: ScopeType): string => {
+    const prefix = `${scope}_`
+    return id.startsWith(prefix) ? id.substring(prefix.length) : id
+  }
+
+  // Process each filter
+  filters.forEach((filter) => {
+    if (!filter.id) return
+
+    const scope = extractScopeFromId(filter.id)
+
+    // If a scope was found, create a new filter without the scope prefix
+    if (scope) {
+      const cleanedFilter: Filter = {
+        ...filter,
+        id: removeScopePrefix(filter.id, scope),
+      }
+      result[scope].push(cleanedFilter)
+    } else {
+      // No explicit scope prefix found, check filterIdToScopeMap
+      const mappedScope = filterIdToScopeMap?.[filter.id]
+
+      if (mappedScope) {
+        // Found in the map, add to mapped scope
+        result[mappedScope].push(filter)
+      } else {
+        // Not in map, add to unscoped
+        result['unscoped'].push(filter)
+      }
+    }
+  })
 
   return result
 }

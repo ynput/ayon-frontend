@@ -19,6 +19,10 @@ const VersionsSearchFilter: FC<VersionsSearchFilterProps> = ({}) => {
       scope: 'product',
       filterTypes: ['status', 'tags', 'productType', 'attributes'],
     },
+    {
+      scope: 'task',
+      filterTypes: ['taskType'],
+    },
   ]
 
   return (

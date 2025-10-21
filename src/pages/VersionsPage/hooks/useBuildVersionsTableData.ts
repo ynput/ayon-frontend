@@ -52,8 +52,6 @@ export const useBuildVersionsTableData = ({
         }
       }
 
-      console.log(childVersionsErrors)
-
       // Build product rows with their version children attached
       for (const product of productsMap.values()) {
         let subRows = childrenByProductId.get(product.id) || []

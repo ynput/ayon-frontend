@@ -1,5 +1,9 @@
 fragment VersionExtended on VersionNode {
   ...VersionBase
+  task {
+    id
+    taskType
+  }
   product {
     id
     name

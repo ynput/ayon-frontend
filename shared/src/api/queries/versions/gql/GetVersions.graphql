@@ -4,6 +4,7 @@ query GetVersions(
   $versionIds: [String!]
   $versionFilter: String
   $productFilter: String
+  $taskFilter: String
   $folderIds: [String!]
   $search: String
   $after: String
@@ -18,6 +19,7 @@ query GetVersions(
       productIds: $productIds
       filter: $versionFilter
       productFilter: $productFilter
+      taskFilter: $taskFilter
       folderIds: $folderIds
       includeFolderChildren: true
       search: $search

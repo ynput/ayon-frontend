@@ -273,9 +273,9 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           const result = settledResult.value
           if (result.error) {
             console.error(`Error fetching versions for product ${productId}:`, result.error)
-            // @ts-expect-error - message
             errors.push({
               productId,
+              // @ts-expect-error - message
               error: parseErrorMessage(result.error?.message || 'Unknown error'),
             })
             continue

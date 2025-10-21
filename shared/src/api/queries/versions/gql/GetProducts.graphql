@@ -3,6 +3,7 @@ query GetProducts(
   $productIds: [String!]
   $productFilter: String
   $versionFilter: String
+  $taskFilter: String
   $featuredVersionOrder: [String!]
   $search: String
   $folderIds: [String!]
@@ -17,6 +18,7 @@ query GetProducts(
       ids: $productIds
       filter: $productFilter
       versionFilter: $versionFilter
+      taskFilter: $taskFilter
       search: $search
       folderIds: $folderIds
       includeFolderChildren: true

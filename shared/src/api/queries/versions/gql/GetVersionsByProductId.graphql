@@ -2,6 +2,7 @@ query GetVersionsByProductId(
   $projectName: String!
   $productIds: [String!]!
   $versionFilter: String
+  $taskFilter: String
   $sortBy: String
   $first: Int
   $last: Int
@@ -12,6 +13,7 @@ query GetVersionsByProductId(
     versions(
       productIds: $productIds
       filter: $versionFilter
+      taskFilter: $taskFilter
       sortBy: $sortBy
       last: $last
       first: $first

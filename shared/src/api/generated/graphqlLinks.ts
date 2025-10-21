@@ -378,6 +378,7 @@ export type FolderNodeProductsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  taskFilter?: InputMaybe<Scalars['String']['input']>;
   versionFilter?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -600,6 +601,7 @@ export type ProductNodeVersionsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  taskFilter?: InputMaybe<Scalars['String']['input']>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
   version?: InputMaybe<Scalars['Int']['input']>;
   versions?: InputMaybe<Array<Scalars['Int']['input']>>;
@@ -816,6 +818,7 @@ export type ProjectNodeProductsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  taskFilter?: InputMaybe<Scalars['String']['input']>;
   versionFilter?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -899,6 +902,7 @@ export type ProjectNodeVersionsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  taskFilter?: InputMaybe<Scalars['String']['input']>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
   version?: InputMaybe<Scalars['Int']['input']>;
   versions?: InputMaybe<Array<Scalars['Int']['input']>>;
@@ -1235,6 +1239,7 @@ export type TaskNodeVersionsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   statuses?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  taskFilter?: InputMaybe<Scalars['String']['input']>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']>>;
   version?: InputMaybe<Scalars['Int']['input']>;
   versions?: InputMaybe<Array<Scalars['Int']['input']>>;
