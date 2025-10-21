@@ -5,7 +5,12 @@ import {
   flattenInfiniteProductsData,
 } from '@shared/api/queries/versions/versionsUtils'
 import { createContext, FC, ReactNode, useContext, useMemo, useState } from 'react'
-import { buildVersionsAndProductsMaps, VersionNodeExtended, ProductNodeExtended } from '../util'
+import {
+  buildVersionsAndProductsMaps,
+  VersionNodeExtended,
+  ProductNodeExtended,
+  determineLoadingProductVersions,
+} from '../util'
 import { useBuildVersionsTableData } from '../hooks'
 import {
   createFilterFromSlicer,
@@ -45,6 +50,7 @@ interface VersionsDataContextValue {
   // loading
   isLoading: boolean
   isFetchingNextPage: boolean
+  loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
   // meta
   error: string | undefined
 }
@@ -166,6 +172,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     projectName,
     productIds: expandedIds,
     versionFilter: combinedVersionFilter.filterString,
+    sortBy,
+    desc: sortDesc,
   })
 
   // Efficiently build all maps in a single pass using util
@@ -174,11 +182,24 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     [versions, childVersions, products],
   )
 
+  // Determine which products are currently loading versions
+  const loadingProductVersions = useMemo(() => {
+    return determineLoadingProductVersions({
+      childVersions,
+      expandedProductIds: expandedIds,
+      productsMap,
+      hasFiltersApplied: (filters.conditions?.length || 0) > 0,
+    })
+  }, [childVersions, expandedIds, productsMap])
+
   const versionsTableData = useBuildVersionsTableData({
     rootVersionsMap: versionsMap,
     childVersionsMap,
     productsMap,
     showProducts,
+    isFetchingNextPage,
+    hasNextPage,
+    loadingProductVersions,
   })
 
   const error = showProducts
@@ -206,6 +227,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     // loading
     isLoading: isLoadingTable,
     isFetchingNextPage,
+    loadingProductVersions,
     // meta
     error,
   }

@@ -39,7 +39,6 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './versionsUtils'
-import { toast } from 'react-toastify'
 
 // Query result types
 export type FolderAttribNode = FolderAttribFragment & {
@@ -63,6 +62,7 @@ export type ProductNode = ProductNodeRAW & {
 export type GetVersionsResult = {
   pageInfo?: PageInfo
   versions: VersionNode[]
+  errors?: Array<{ productId: string; error: any }>
 }
 
 // for infinite query args
@@ -128,7 +128,7 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
   },
 })
 
-const INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
+export const VP_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
 const VERSIONS_BY_PRODUCT_ID_QUERY_COUNT = 1000 // max number of versions to fetch per product id
 const MAX_PAGES_PER_PRODUCT = 10 // Hard cutoff to prevent infinite loops
 
@@ -169,14 +169,14 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               queryParams.sortBy = sortBy
               if (desc) {
                 queryParams.before = cursor || undefined
-                queryParams.last = INFINITE_QUERY_COUNT
+                queryParams.last = VP_INFINITE_QUERY_COUNT
               } else {
                 queryParams.after = cursor || undefined
-                queryParams.first = INFINITE_QUERY_COUNT
+                queryParams.first = VP_INFINITE_QUERY_COUNT
               }
             } else {
               queryParams.after = cursor || undefined
-              queryParams.first = INFINITE_QUERY_COUNT
+              queryParams.first = VP_INFINITE_QUERY_COUNT
             }
 
             // if folderIds have a length, add them to the query params
@@ -208,7 +208,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
           } catch (e: any) {
             console.error('Error in getVersionsInfiniteQuery queryFn:', e)
-            toast.error('Error fetching versions.')
             return {
               error: {
                 status: 'FETCH_ERROR',
@@ -248,66 +247,101 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           )
         }
 
-        try {
-          // for each product id, call getVersionsByProductId
-          const promises = productIds.map((productId) => fetchVersionsPage(productId))
+        // for each product id, call getVersionsByProductId
+        const promises = productIds.map((productId) => fetchVersionsPage(productId))
 
-          const results = await Promise.all(promises)
+        // wait for all requests to settle (either fulfilled or rejected)
+        const settledResults = await Promise.allSettled(promises)
 
-          // Collect all versions from initial queries
-          const allVersions: VersionNode[] = []
+        // Collect all versions from initial queries
+        const allVersions: VersionNode[] = []
+        const errors: Array<{ productId: string; error: any }> = []
 
-          // Check each result for additional pages and fetch them if needed
-          for (let i = 0; i < results.length; i++) {
-            const result = results[i]
-            const productId = productIds[i]
+        // Check each result for additional pages and fetch them if needed
+        for (let i = 0; i < settledResults.length; i++) {
+          const settledResult = settledResults[i]
+          const productId = productIds[i]
 
-            if (result.error) {
-              console.error('Error fetching versions by product:', result.error)
-              continue
-            }
-
-            if (!result.data) continue
-
-            // Add initial page versions
-            allVersions.push(...result.data.versions)
-
-            // Check if there are more pages to fetch
-            let pageInfo = result.data.pageInfo
-            let pageCount = 1
-
-            while (pageInfo && pageCount < MAX_PAGES_PER_PRODUCT) {
-              const hasNextPage = desc ? pageInfo.hasPreviousPage : pageInfo.hasNextPage
-              const cursor = pageInfo.endCursor
-
-              if (!hasNextPage || !cursor) break
-
-              // Fetch next page
-              const nextPageResult = await fetchVersionsPage(productId, cursor)
-
-              if (nextPageResult.error || !nextPageResult.data) break
-
-              allVersions.push(...nextPageResult.data.versions)
-              pageInfo = nextPageResult.data.pageInfo
-              pageCount++
-            }
+          // Handle rejected promises
+          if (settledResult.status === 'rejected') {
+            console.error(`Error fetching versions for product ${productId}:`, settledResult.reason)
+            errors.push({ productId, error: settledResult.reason })
+            continue
           }
 
-          return {
-            data: {
-              versions: allVersions,
-              pageInfo: undefined, // pageInfo is undefined as we've flattened multiple queries
-            },
+          // Handle errors in fulfilled promises
+          const result = settledResult.value
+          if (result.error) {
+            console.error(`Error fetching versions for product ${productId}:`, result.error)
+            errors.push({ productId, error: result.error })
+            continue
           }
-        } catch (e: any) {
-          console.error('Error in getVersionsByProducts queryFn:', e)
-          toast.error('Error fetching versions for products.')
+
+          if (!result.data) continue
+
+          // Add initial page versions
+          allVersions.push(...result.data.versions)
+
+          // Check if there are more pages to fetch
+          let pageInfo = result.data.pageInfo
+          let pageCount = 1
+
+          while (pageInfo && pageCount < MAX_PAGES_PER_PRODUCT) {
+            const hasNextPage = desc ? pageInfo.hasPreviousPage : pageInfo.hasNextPage
+            const cursor = pageInfo.endCursor
+
+            if (!hasNextPage || !cursor) break
+
+            // Fetch next page
+            const nextPageResult = await fetchVersionsPage(productId, cursor)
+
+            if (nextPageResult.error) {
+              console.error(
+                `Error fetching versions page ${pageCount + 1} for product ${productId}:`,
+                nextPageResult.error,
+              )
+              errors.push({ productId, error: nextPageResult.error })
+              break
+            }
+
+            if (!nextPageResult.data) break
+
+            allVersions.push(...nextPageResult.data.versions)
+            pageInfo = nextPageResult.data.pageInfo
+            pageCount++
+          }
+        }
+
+        // If all requests failed, return an error
+        if (errors.length === productIds.length && productIds.length > 0) {
+          const errorMessage =
+            errors.length === 1
+              ? parseErrorMessage(errors[0].error.error || errors[0].error.message)
+              : `Failed to fetch versions for all ${errors.length} products`
+
+          console.error('Error in getVersionsByProducts queryFn: all requests failed', errors)
           return {
             error: {
               status: 'FETCH_ERROR',
-              error: parseErrorMessage(e.message),
+              error: errorMessage,
             } as FetchBaseQueryError,
           }
+        }
+
+        // If some requests failed but we have data, log warning but return successful data
+        if (errors.length > 0) {
+          console.warn(
+            `Partial success: ${errors.length} of ${productIds.length} products failed to fetch versions`,
+            errors,
+          )
+        }
+
+        return {
+          data: {
+            versions: allVersions,
+            pageInfo: undefined, // pageInfo is undefined as we've flattened multiple queries
+            errors: errors.length > 0 ? errors : undefined,
+          },
         }
       },
       providesTags: provideTagsForVersionsResult,
@@ -349,14 +383,14 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               queryParams.sortBy = sortBy
               if (desc) {
                 queryParams.before = cursor || undefined
-                queryParams.last = INFINITE_QUERY_COUNT
+                queryParams.last = VP_INFINITE_QUERY_COUNT
               } else {
                 queryParams.after = cursor || undefined
-                queryParams.first = INFINITE_QUERY_COUNT
+                queryParams.first = VP_INFINITE_QUERY_COUNT
               }
             } else {
               queryParams.after = cursor || undefined
-              queryParams.first = INFINITE_QUERY_COUNT
+              queryParams.first = VP_INFINITE_QUERY_COUNT
             }
 
             // if folderIds have a length, add them to the query params
@@ -388,7 +422,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             }
           } catch (e: any) {
             console.error('Error in getProductsInfiniteQuery queryFn:', e)
-            toast.error('Error fetching products.')
             return {
               error: {
                 status: 'FETCH_ERROR',

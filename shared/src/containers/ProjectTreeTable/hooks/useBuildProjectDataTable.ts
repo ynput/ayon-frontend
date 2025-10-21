@@ -172,14 +172,10 @@ export default function useBuildProjectDataTable({
 
       // if we are loading more tasks, add loading rows
       if (isLoadingMore) {
-        const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
-        const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
-          name: key,
-        }))
         // number of tasks we loading with the infinite query
         const count = TASKS_INFINITE_QUERY_COUNT
         if (count > 0) {
-          const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
+          const loadingTaskRows = generateLoadingRows(count, {
             type: 'task',
           })
 
@@ -256,16 +252,9 @@ export default function useBuildProjectDataTable({
 
           // Add loading rows if applicable
           if (loadingTasks[folderId]) {
-            const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
-            const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
-              name: key,
-            }))
             const count = loadingTasks[folderId]
             if (count > 0) {
-              const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
-                type: 'task',
-                parentId: folderId,
-              })
+              const loadingTaskRows = generateLoadingRows(count, { parentId: folderId })
 
               taskRows.push(...loadingTaskRows)
             }

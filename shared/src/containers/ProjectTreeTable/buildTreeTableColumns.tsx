@@ -1,7 +1,13 @@
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import { TableRow } from './types/table'
 import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
-import { CellWidget, EntityNameWidget, GroupHeaderWidget, ThumbnailWidget } from './widgets'
+import {
+  CellWidget,
+  EmptyWidget,
+  EntityNameWidget,
+  GroupHeaderWidget,
+  ThumbnailWidget,
+} from './widgets'
 import { getCellId, getCellValue } from './utils/cellUtils'
 import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
@@ -137,7 +143,7 @@ const buildTreeTableColumns = ({
 
       header: () => <RowSelectionHeader />,
       cell: ({ row }) => {
-        if (row.original.entityType === 'group') return null
+        if (row.original.entityType === 'group' || row.original.isEmpty) return null
         return <SelectionCell />
       },
       size: 20,
@@ -153,6 +159,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enableSorting: false,
       cell: ({ row, column, table }) => {
+        if (row.original.entityType === 'group' || row.original.isEmpty) return null
         const meta = table.options.meta
         if (!meta) return null
         const cellId = getCellId(row.id, column.id)
@@ -200,6 +207,22 @@ const buildTreeTableColumns = ({
         const { isEditing } = useCellEditing()
         const { rowHeight = 40 } = useColumnSettingsContext()
         const cellId = getCellId(row.id, column.id)
+
+        if (row.original.isEmpty) {
+          return (
+            <TableCellContent
+              id={cellId}
+              className={clsx('large', 'readonly', row.original.entityType)}
+              style={{
+                paddingLeft: `calc(${row.depth * 1}rem + 8px)`,
+                pointerEvents: 'none',
+              }}
+              tabIndex={0}
+            >
+              <EmptyWidget label={row.original.label} />
+            </TableCellContent>
+          )
+        }
 
         if (row.original.entityType === NEXT_PAGE_ID && row.original.group) {
           return (
@@ -301,7 +324,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
 
         return (
           <CellWidget
@@ -355,7 +378,7 @@ const buildTreeTableColumns = ({
       ),
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
         const fieldId = type === 'folder' ? 'folderType' : 'taskType'
         const meta = table.options.meta
         return (
@@ -401,7 +424,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
 
         if (type === 'folder')
           return (
@@ -457,7 +480,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
 
         return (
           <CellWidget
@@ -489,7 +512,7 @@ const buildTreeTableColumns = ({
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
         return (
           <CellWidget
             rowId={id}
@@ -526,7 +549,7 @@ const buildTreeTableColumns = ({
       sortingFn: withLoadingStateSort(sortingFns.datetime),
       cell: ({ row, column }) => {
         const { value, id, type } = getValueIdType(row, column.id)
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
         return (
           <CellWidget
             rowId={id}
@@ -555,7 +578,7 @@ const buildTreeTableColumns = ({
       sortingFn: withLoadingStateSort(sortingFns.datetime),
       cell: ({ row, column }) => {
         const { value, id, type } = getValueIdType(row, column.id)
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
         return (
           <CellWidget
             rowId={id}
@@ -599,7 +622,7 @@ const buildTreeTableColumns = ({
           const columnIdParsed = column.id.replace('attrib_', '')
           const { value, id, type } = getValueIdType(row, columnIdParsed, 'attrib')
           const isInherited = !row.original.ownAttrib?.includes(columnIdParsed)
-          if (['group', NEXT_PAGE_ID].includes(type)) return null
+          if (['group', NEXT_PAGE_ID].includes(type) || row.original.isEmpty) return null
           const outOfScopeAndNoValue =
             !attrib.scope?.includes(type as (typeof attrib.scope)[number]) &&
             (value === null || value === undefined)

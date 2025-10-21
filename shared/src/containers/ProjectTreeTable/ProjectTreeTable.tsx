@@ -236,7 +236,6 @@ export const ProjectTreeTable = ({
     const tableRowsCount = tableContainerRef.current?.querySelectorAll('tbody tr').length || 0
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
-      attribFields,
       showHierarchy && tableData.length > 0
         ? Math.min(tableRowsCount, 50)
         : groupBy

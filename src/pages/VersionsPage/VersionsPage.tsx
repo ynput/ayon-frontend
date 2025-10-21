@@ -28,8 +28,6 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
   const { showGrid } = useVersionsViewsContext()
   const { showVersionDetails, showVersionsTable } = useVersionsSelectionContext()
 
-  console.log(showVersionsTable)
-
   // load slicer remote config
   const overviewSliceFields = config?.versions?.fields
 

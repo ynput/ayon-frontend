@@ -1,5 +1,5 @@
 import { ProductNode, VersionNode } from '@shared/api/queries'
-import { TableRow } from '@shared/containers'
+import { createEmptyRowId, TableRow } from '@shared/containers'
 
 export const buildProductRow = (product: ProductNode, subRows: TableRow[]): TableRow => ({
   id: product.id,
@@ -45,7 +45,15 @@ export const buildVersionRow = (
   subType: version.product.productType,
   hasReviewables: version.hasReviewables,
   author: version.author || '',
-  // @ts-expect-error - it actually can be undefined
   subRows,
   links: {}, // TODO add links
+})
+
+export const buildEmptyRow = (productId: string): TableRow => ({
+  id: createEmptyRowId(productId),
+  name: 'No versions',
+  label: 'No versions',
+  entityId: productId,
+  entityType: 'product',
+  isEmpty: true,
 })
