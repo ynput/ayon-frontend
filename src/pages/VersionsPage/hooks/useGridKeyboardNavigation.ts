@@ -1,5 +1,6 @@
 import { useCallback, useEffect, RefObject, useRef } from 'react'
 import { getCellId, parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
+import { getEntityViewierIds, useProjectTableContext } from '@shared/containers'
 
 interface UseGridKeyboardNavigationProps {
   gridData: Array<{ id: string; entityType: string }>
@@ -22,10 +23,19 @@ export const useGridKeyboardNavigation = ({
   gridColumnId = 'name',
   rowSelectionColumnId = 'rowSelection',
 }: UseGridKeyboardNavigationProps) => {
+  const { getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
   // Track the anchor point for shift selections
   const shiftAnchorIndexRef = useRef<number | null>(null)
   // Track the current position (where the user navigated to last)
   const currentPositionRef = useRef<number | null>(null)
+
+  const openPlayerWithId = (id: string) => {
+    const entity = getEntityById(id)
+    if (entity && onOpenPlayer) {
+      const targetIds = getEntityViewierIds(entity)
+      onOpenPlayer(targetIds, { quickView: true })
+    }
+  }
 
   const calculateColumnsCount = useCallback(() => {
     if (!gridContainerRef.current) return 1
@@ -127,6 +137,11 @@ export const useGridKeyboardNavigation = ({
 
       setFocusedCellId(cellId)
 
+      // Update player when arrow key navigation happens while player is open
+      if (playerOpen) {
+        openPlayerWithId(entityId)
+      }
+
       // Scroll the item into view
       const gridItems = gridContainerRef.current?.querySelectorAll('.grid-item')
       if (gridItems && gridItems[index]) {
@@ -142,6 +157,9 @@ export const useGridKeyboardNavigation = ({
       gridContainerRef,
       gridColumnId,
       rowSelectionColumnId,
+      playerOpen,
+      onOpenPlayer,
+      getEntityById,
     ],
   )
 
@@ -166,6 +184,11 @@ export const useGridKeyboardNavigation = ({
       if (currentIndex === -1 && !['ArrowDown', 'ArrowRight', 'Home'].includes(e.key)) return
 
       const columnsCount = calculateColumnsCount()
+
+      // If player is open, only allow arrow keys with cmd/ctrl modifier
+      const isArrowKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
+      const hasModifier = e.metaKey || e.ctrlKey
+      if (playerOpen && isArrowKey && !hasModifier) return
 
       switch (e.key) {
         case 'ArrowUp':
@@ -210,6 +233,14 @@ export const useGridKeyboardNavigation = ({
           }
           break
 
+        case ' ':
+          e.preventDefault()
+
+          const entityId = gridData[currentIndex].id
+          openPlayerWithId(entityId)
+
+          break
+
         case 'Home':
           e.preventDefault()
           selectItem(0, e.shiftKey)
@@ -229,6 +260,7 @@ export const useGridKeyboardNavigation = ({
       gridContainerRef,
       onEnterPress,
       rowSelectionColumnId,
+      playerOpen,
     ],
   )
 

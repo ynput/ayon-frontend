@@ -21,7 +21,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import {
-  FolderAttribFragment,
+  VpFolderFragment,
   GetProductsQuery,
   GetProductsQueryVariables,
   GetVersionsByProductIdQueryVariables,
@@ -38,10 +38,10 @@ import {
   provideTagsForVersionsResult,
   transformProductsResponse,
   transformVersionsResponse,
-} from './versionsUtils'
+} from './getVersionsUtils'
 
 // Query result types
-export type FolderAttribNode = FolderAttribFragment & {
+export type FolderAttribNode = VpFolderFragment & {
   attrib: Record<string, any> // parsed from allAttrib JSON string
 }
 export type VersionNodeRAW = GetVersionsQuery['project']['versions']['edges'][0]['node']

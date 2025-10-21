@@ -34,6 +34,7 @@ export const buildVersionRow = (
   name: version.name,
   label: `${version.product.name} - ${version.name}`,
   entityId: version.id,
+  folderId: version.product.folderId,
   entityType: 'version',
   createdAt: version.createdAt,
   updatedAt: version.updatedAt,

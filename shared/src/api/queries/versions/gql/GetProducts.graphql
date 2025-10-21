@@ -54,7 +54,7 @@ query GetProducts(
             version
           }
           folder {
-            ...FolderAttrib
+            ...VPFolder
           }
         }
         cursor

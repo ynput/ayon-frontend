@@ -3,7 +3,7 @@ import { useGetProductsInfiniteQuery } from '@shared/api/queries'
 import {
   flattenInfiniteVersionsData,
   flattenInfiniteProductsData,
-} from '@shared/api/queries/versions/versionsUtils'
+} from '@shared/api/queries/versions/getVersionsUtils'
 import {
   createContext,
   FC,

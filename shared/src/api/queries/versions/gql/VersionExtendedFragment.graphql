@@ -10,7 +10,8 @@ fragment VersionExtended on VersionNode {
     productType
     allAttrib
     folder {
-      ...FolderAttrib
+      id
+      ...VPFolder
     }
   }
 }

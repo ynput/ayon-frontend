@@ -13,7 +13,7 @@ export const buildVersionsTableRows = ({
   productsMap,
   productIds,
 }: Props): SimpleTableRow[] => {
-  return productIds.flatMap((productId, index, array) => {
+  return productIds.flatMap((productId, _index, array) => {
     const product = productsMap.get(productId)
     if (!product) return []
 
