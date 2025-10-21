@@ -1,5 +1,5 @@
 import { ProductNode, VersionNode } from '@shared/api/queries'
-import { createEmptyRowId, TableRow } from '@shared/containers'
+import { createMetaRowId, TableRow } from '@shared/containers'
 
 export const buildProductRow = (product: ProductNode, subRows: TableRow[]): TableRow => ({
   id: product.id,
@@ -50,10 +50,19 @@ export const buildVersionRow = (
 })
 
 export const buildEmptyRow = (productId: string): TableRow => ({
-  id: createEmptyRowId(productId),
+  id: createMetaRowId(productId, 'empty'),
   name: 'No versions',
   label: 'No versions',
   entityId: productId,
   entityType: 'product',
-  isEmpty: true,
+  metaType: 'empty',
+})
+
+export const buildErrorRow = (productId: string, errorMessage: string): TableRow => ({
+  id: createMetaRowId(productId, 'error'),
+  name: 'Error loading versions',
+  label: `Error: ${errorMessage}`,
+  entityId: productId,
+  entityType: 'product',
+  metaType: 'error',
 })

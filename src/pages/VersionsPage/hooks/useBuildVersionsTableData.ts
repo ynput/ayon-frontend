@@ -1,5 +1,12 @@
 import { generateLoadingRows, TableRow } from '@shared/containers'
-import { buildVersionRow, buildProductRow, buildEmptyRow, VersionsMap, ProductsMap } from '../util'
+import {
+  buildVersionRow,
+  buildProductRow,
+  buildEmptyRow,
+  buildErrorRow,
+  VersionsMap,
+  ProductsMap,
+} from '../util'
 import { useMemo } from 'react'
 import { VP_INFINITE_QUERY_COUNT } from '@shared/api'
 
@@ -11,6 +18,7 @@ type Props = {
   isFetchingNextPage?: boolean
   hasNextPage?: boolean
   loadingProductVersions?: Record<string, number>
+  childVersionsErrors?: Array<{ productId: string; error: string }>
 }
 
 export const useBuildVersionsTableData = ({
@@ -21,6 +29,7 @@ export const useBuildVersionsTableData = ({
   isFetchingNextPage = false,
   hasNextPage = false,
   loadingProductVersions = {},
+  childVersionsErrors = [],
 }: Props): TableRow[] => {
   return useMemo(() => {
     if (showProducts) {
@@ -43,19 +52,28 @@ export const useBuildVersionsTableData = ({
         }
       }
 
+      console.log(childVersionsErrors)
+
       // Build product rows with their version children attached
       for (const product of productsMap.values()) {
         let subRows = childrenByProductId.get(product.id) || []
 
+        // Check if there was an error fetching child versions for this product
+        const productError = childVersionsErrors.find((err) => err.productId === product.id)
+
+        // Add error row if there was an error fetching child versions for this product
+        if (productError) {
+          const errorMessage = productError.error
+          subRows = [buildErrorRow(product.id, errorMessage)]
+        }
         // Add loading rows for products that are currently loading versions
-        if (loadingProductVersions[product.id]) {
+        else if (loadingProductVersions[product.id]) {
           const loadingCount = loadingProductVersions[product.id]
           const loadingRows = generateLoadingRows(loadingCount)
           subRows = [...subRows, ...loadingRows]
         }
-
         // Add empty row if product has no versions and no loading versions
-        if (subRows.length === 0) {
+        else if (subRows.length === 0) {
           subRows = [buildEmptyRow(product.id)]
         }
 
@@ -87,5 +105,6 @@ export const useBuildVersionsTableData = ({
     isFetchingNextPage,
     hasNextPage,
     loadingProductVersions,
+    childVersionsErrors,
   ])
 }

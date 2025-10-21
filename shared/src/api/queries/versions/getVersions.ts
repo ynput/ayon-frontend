@@ -62,7 +62,7 @@ export type ProductNode = ProductNodeRAW & {
 export type GetVersionsResult = {
   pageInfo?: PageInfo
   versions: VersionNode[]
-  errors?: Array<{ productId: string; error: any }>
+  errors?: Array<{ productId: string; error: string }>
 }
 
 // for infinite query args
@@ -265,7 +265,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           // Handle rejected promises
           if (settledResult.status === 'rejected') {
             console.error(`Error fetching versions for product ${productId}:`, settledResult.reason)
-            errors.push({ productId, error: settledResult.reason })
+            errors.push({ productId, error: parseErrorMessage(settledResult.reason) })
             continue
           }
 
@@ -273,7 +273,11 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           const result = settledResult.value
           if (result.error) {
             console.error(`Error fetching versions for product ${productId}:`, result.error)
-            errors.push({ productId, error: result.error })
+            // @ts-expect-error - message
+            errors.push({
+              productId,
+              error: parseErrorMessage(result.error?.message || 'Unknown error'),
+            })
             continue
           }
 
@@ -309,22 +313,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             allVersions.push(...nextPageResult.data.versions)
             pageInfo = nextPageResult.data.pageInfo
             pageCount++
-          }
-        }
-
-        // If all requests failed, return an error
-        if (errors.length === productIds.length && productIds.length > 0) {
-          const errorMessage =
-            errors.length === 1
-              ? parseErrorMessage(errors[0].error.error || errors[0].error.message)
-              : `Failed to fetch versions for all ${errors.length} products`
-
-          console.error('Error in getVersionsByProducts queryFn: all requests failed', errors)
-          return {
-            error: {
-              status: 'FETCH_ERROR',
-              error: errorMessage,
-            } as FetchBaseQueryError,
           }
         }
 

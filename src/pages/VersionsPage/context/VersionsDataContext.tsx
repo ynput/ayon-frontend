@@ -4,7 +4,16 @@ import {
   flattenInfiniteVersionsData,
   flattenInfiniteProductsData,
 } from '@shared/api/queries/versions/versionsUtils'
-import { createContext, FC, ReactNode, useContext, useMemo, useState } from 'react'
+import {
+  createContext,
+  FC,
+  ReactNode,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+} from 'react'
 import {
   buildVersionsAndProductsMaps,
   VersionNodeExtended,
@@ -26,6 +35,7 @@ import { splitFiltersByScope } from '@shared/components/SearchFilter/useBuildFil
 import { useSlicerContext } from '@context/SlicerContext'
 import { useVersionsViewsContext } from './VersionsViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { toast } from 'react-toastify'
 
 export type VersionMap = Map<string, VersionNodeExtended>
 export type ProductMap = Map<string, ProductNodeExtended>
@@ -168,7 +178,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const products = useMemo(() => flattenInfiniteProductsData(productsData), [productsData])
 
   // QUERY: get child versions for expanded products
-  const { data: { versions: childVersions = [] } = {} } = useGetVersionsByProductsQuery({
+  const {
+    data: { versions: childVersions = [], errors: childVersionsErrors } = {},
+    error: childVersionsError,
+  } = useGetVersionsByProductsQuery({
     projectName,
     productIds: expandedIds,
     versionFilter: combinedVersionFilter.filterString,
@@ -200,6 +213,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     isFetchingNextPage,
     hasNextPage,
     loadingProductVersions,
+    childVersionsErrors,
   })
 
   const error = showProducts
@@ -207,6 +221,27 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
       productsError && String(productsError.error)
     : // @ts-ignore
       versionsError && String(versionsError.error)
+
+  // Track shown errors to avoid duplicate toasts
+  const shownErrorsRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    const errors = [
+      // @ts-ignore
+      productsError && String(productsError.error),
+      // @ts-ignore
+      versionsError && String(versionsError.error),
+      // @ts-ignore
+      childVersionsError && String(childVersionsError.error),
+    ].filter(Boolean) as string[]
+
+    errors.forEach((errorMsg) => {
+      if (errorMsg && !shownErrorsRef.current.has(errorMsg)) {
+        toast.error(errorMsg)
+        shownErrorsRef.current.add(errorMsg)
+      }
+    })
+  }, [productsError, versionsError, childVersionsError])
 
   const value: VersionsDataContextValue = {
     versionFilter,

@@ -54,7 +54,7 @@ export type TableRow = {
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
-  isEmpty?: boolean
+  metaType?: 'empty' | 'error' // signals the row is a meta row (empty or error state)
   group?: GroupData // signals it is a group row and has some extra data like label, color, icon
   thumbnail?: {
     // if you want to use a thumbnail from a different entity, e.g. latest version of a product
