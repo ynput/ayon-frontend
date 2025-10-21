@@ -459,7 +459,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   // This ensures handleRowSelectForKeydown uses the current table instance.
   useEffect(() => {
     tableRef.current = table
-  }, [table])
+  }, [])
 
   const { rows } = table.getRowModel()
 
