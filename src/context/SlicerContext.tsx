@@ -80,7 +80,7 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
       fields: ['hierarchy', 'assignees', 'status', 'type', 'taskType', 'attributes'],
     },
     versions: {
-      fields: ['hierarchy', 'author', 'status', 'productType', 'taskType'],
+      fields: ['hierarchy', 'author', 'status', 'productType', 'taskType', 'assignees'],
     },
   }
 

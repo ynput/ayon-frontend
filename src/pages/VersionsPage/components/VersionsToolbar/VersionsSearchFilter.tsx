@@ -21,7 +21,7 @@ const VersionsSearchFilter: FC<VersionsSearchFilterProps> = ({}) => {
     },
     {
       scope: 'task',
-      filterTypes: ['taskType'],
+      filterTypes: ['taskType', 'assignees'],
     },
   ]
 
