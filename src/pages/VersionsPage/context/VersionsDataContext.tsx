@@ -123,6 +123,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
       ['version', 'product', 'task'],
       {
         taskType: 'task',
+        status: showProducts ? 'product' : 'version',
       },
     )
   }, [sliceFilter])
