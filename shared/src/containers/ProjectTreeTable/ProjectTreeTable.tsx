@@ -63,7 +63,7 @@ import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
@@ -196,6 +196,7 @@ export const ProjectTreeTable = ({
     fetchNextPage,
     scopes, // or entityTypes
     getEntityById,
+    onResetView,
   } = useProjectTableContext()
 
   const { projectName: contextProjectName, writableFields } = useProjectDataContext()
@@ -592,6 +593,7 @@ export const ProjectTreeTable = ({
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
+              onResetView={onResetView}
             />
           </table>
         </Styled.TableContainer>
@@ -902,6 +904,7 @@ interface TableBodyProps {
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
+  onResetView?: () => void
 }
 
 const TableBody = ({
@@ -919,6 +922,7 @@ const TableBody = ({
   isGrouping,
   getRowHeight,
   defaultRowHeight,
+  onResetView,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -1018,7 +1022,16 @@ const TableBody = ({
     return (
       tableContainerRef.current &&
       createPortal(
-        <EmptyPlaceholder message="No items found" error={error} />,
+        <EmptyPlaceholder message="No items found" error={error}>
+          {onResetView && (
+            <Button
+              variant="filled"
+              label="Reset working view"
+              icon="restart_alt"
+              onClick={onResetView}
+            />
+          )}
+        </EmptyPlaceholder>,
         tableContainerRef.current,
       )
     )

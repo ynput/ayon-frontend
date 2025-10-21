@@ -4,6 +4,7 @@ import {
   ProjectTableProvider,
   useProjectDataContext,
   useProjectTableModules,
+  useViewsContext,
 } from '@shared/containers'
 import { useAppSelector } from '@state/store'
 import { FC } from 'react'
@@ -21,6 +22,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
   const { versionsTableData, entitiesMap, expanded, updateExpanded, error } =
     useVersionsDataContext()
   const modules = useProjectTableModules()
+  const { resetWorkingView } = useViewsContext()
 
   const { attribFields, projectInfo, users } = useProjectDataContext()
 
@@ -61,6 +63,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
       error={error}
+      onResetView={resetWorkingView}
     >
       {children}
     </ProjectTableProvider>

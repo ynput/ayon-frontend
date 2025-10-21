@@ -127,6 +127,8 @@ export interface ProjectTableProviderProps {
     },
     config?: { quickView?: boolean },
   ) => void
+  // views
+  onResetView?: () => void
 }
 
 export const ProjectTableProvider = ({
@@ -165,6 +167,8 @@ export const ProjectTableProvider = ({
   // player
   playerOpen,
   onOpenPlayer,
+  // views
+  onResetView,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
@@ -346,6 +350,8 @@ export const ProjectTableProvider = ({
         // player
         playerOpen,
         onOpenPlayer,
+        // views
+        onResetView,
       }}
     >
       {children}

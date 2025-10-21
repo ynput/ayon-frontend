@@ -148,15 +148,43 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     sliceFilter: slicerTaskFilter,
   })
 
+  // Map UI sort values to API field names
+  const sortByFieldMap: Record<string, string> = {
+    name: 'path',
+    subType: 'productType',
+  }
+  const resolvedSortBy = (sortBy && sortByFieldMap[sortBy]) || sortBy
+
+  const excludedSortedFields: Record<'version' | 'product', string[]> = {
+    version: [],
+    product: ['author'],
+  }
+
   const queryArgs = {
     projectName,
     versionFilter: combinedVersionFilter.filterString,
     productFilter: combinedProductFilter.filterString,
     taskFilter: combinedTaskFilter.filterString,
     folderIds: slicerFolderIds,
-    sortBy,
+    sortBy: resolvedSortBy,
     desc: sortDesc,
   }
+
+  // returns queryArgs with some entity-specific modifications
+  const resolveEntityArguments = (entityType: 'version' | 'product') => {
+    // remove sortBy based on excluded
+    const excludedFields = excludedSortedFields[entityType]
+    const modifiedSortBy =
+      resolvedSortBy && excludedFields.includes(resolvedSortBy) ? undefined : resolvedSortBy
+
+    return {
+      ...queryArgs,
+      sortBy: modifiedSortBy,
+    }
+  }
+
+  const productArguments = resolveEntityArguments('product')
+  const versionArguments = resolveEntityArguments('version')
 
   // QUERY: Get all products when showing products
   const {
@@ -166,7 +194,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
     error: productsError,
-  } = useGetProductsInfiniteQuery(queryArgs, {
+  } = useGetProductsInfiniteQuery(productArguments, {
     skip: !showProducts,
     initialPageParam: {
       cursor: '',
@@ -182,7 +210,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
     error: versionsError,
-  } = useGetVersionsInfiniteQuery(queryArgs, {
+  } = useGetVersionsInfiniteQuery(versionArguments, {
     skip: showProducts,
     initialPageParam: {
       cursor: '',
@@ -208,11 +236,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     data: { versions: childVersions = [], errors: childVersionsErrors } = {},
     error: childVersionsError,
   } = useGetVersionsByProductsQuery({
-    projectName,
+    projectName: versionArguments.projectName,
     productIds: expandedIds,
     versionFilter: combinedVersionFilter.filterString,
-    sortBy,
-    desc: sortDesc,
+    sortBy: versionArguments.sortBy,
+    desc: versionArguments.desc,
   })
 
   // Efficiently build all maps in a single pass using util
@@ -269,6 +297,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     })
   }, [productsError, versionsError, childVersionsError])
 
+  const handleFetchNextPage = () => {
+    // check there is a next page
+    if (!hasNextPage) return
+    // check there aren't any errors
+    if (error) return
+
+    fetchNextPage()
+  }
+
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
@@ -284,7 +321,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     productsMap,
     entitiesMap,
     hasNextPage,
-    fetchNextPage,
+    fetchNextPage: handleFetchNextPage,
     // loading
     isLoading: isLoadingTable,
     isFetchingNextPage,

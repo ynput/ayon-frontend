@@ -72,6 +72,9 @@ export interface ProjectTableContextType {
   // player
   playerOpen?: ProjectTableProviderProps['playerOpen']
   onOpenPlayer?: ProjectTableProviderProps['onOpenPlayer']
+
+  // views
+  onResetView?: () => void
 }
 
 export const ProjectTableContext = createContext<ProjectTableContextType | undefined>(undefined)

@@ -62,6 +62,7 @@ import { useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
+import { useViewsContext } from '@shared/containers/index.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -201,6 +202,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               scopes={[selectedList?.entityType]}
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
+              onResetView={resetWorkingView}
             >
               <DetailsPanelEntityProvider>
                 <SelectionCellsProvider>
@@ -248,6 +250,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
+  const { resetWorkingView } = useViewsContext()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null

@@ -15,6 +15,7 @@ import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import useTableOpenViewer from '../hooks/useTableOpenViewer'
 import { useAppSelector } from '@state/store'
+import { useViewsContext } from '@shared/containers'
 
 const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
   const props = useProjectOverviewContext()
@@ -22,6 +23,8 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: props.projectName,
   })
+
+  const { resetWorkingView } = useViewsContext()
 
   const powerpack = usePowerpack()
 
@@ -38,6 +41,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         scopes={['folder', 'task']}
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}
+        onResetView={resetWorkingView}
       >
         <NewEntityProvider>
           <DetailsPanelEntityProvider>
