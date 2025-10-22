@@ -1,5 +1,5 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { FC, ReactNode } from 'react'
+import { FC, Fragment, ReactNode } from 'react'
 import styled from 'styled-components'
 import { SettingField, useSettingsPanel } from '@shared/context'
 
@@ -63,7 +63,7 @@ export const SettingOption = styled(Button)`
 `
 
 export interface SettingConfig {
-  id?: SettingField
+  id: SettingField
   title?: string
   component: ReactNode
   icon?: string
@@ -72,9 +72,10 @@ export interface SettingConfig {
 
 export interface SettingsPanelProps {
   settings: SettingConfig[]
+  order?: string[]
 }
 
-export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
+export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
   const { isPanelOpen, selectedSetting, closePanel, backToMainMenu, selectSetting } =
     useSettingsPanel()
 
@@ -84,35 +85,40 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
     return setting?.title || 'Settings'
   }
 
+  const sortedSettings = order
+    ? settings.toSorted((a, b) => {
+        const aIndex = a.id ? order.indexOf(a.id) : -1
+        const bIndex = b.id ? order.indexOf(b.id) : -1
+        if (aIndex === -1 && bIndex === -1) return 0
+        if (aIndex === -1) return 1
+        if (bIndex === -1) return -1
+        return aIndex - bIndex
+      })
+    : settings
+
   const renderSettingContent = () => {
     if (!selectedSetting) {
       // Render main menu
       return (
         <>
-          {settings
-            .toSorted((a, b) => {
-              if (a.id && !b.id) return -1
-              if (!a.id && b.id) return 1
-              return 0
-            })
-            .map((setting) =>
-              setting.id && setting.title ? (
-                <SettingOption
-                  key={setting.id}
-                  onClick={() => selectSetting(setting.id as string)}
-                  variant="text"
-                >
-                  {setting.icon && <Icon icon={setting.icon} />}
-                  <span className="title">{setting.title}</span>
-                  {!!setting.preview?.toString() && (
-                    <span className="preview">{setting.preview}</span>
-                  )}
-                  <Icon icon="chevron_right" className="arrow" />
-                </SettingOption>
-              ) : (
-                setting.component
-              ),
-            )}
+          {sortedSettings.map((setting, i) =>
+            setting.title ? (
+              <SettingOption
+                key={setting.id}
+                onClick={() => selectSetting(setting.id as string)}
+                variant="text"
+              >
+                {setting.icon && <Icon icon={setting.icon} />}
+                <span className="title">{setting.title}</span>
+                {!!setting.preview?.toString() && (
+                  <span className="preview">{setting.preview}</span>
+                )}
+                <Icon icon="chevron_right" className="arrow" />
+              </SettingOption>
+            ) : (
+              <Fragment key={setting.id}>{setting.component}</Fragment>
+            ),
+          )}
         </>
       )
     }

@@ -72,6 +72,7 @@ export type VersionsViewSettingsReturn = {
 
   sortDesc: boolean
   onUpdateSortDesc: (sortDesc: boolean) => void
+  onUpdateSorting: (sortBy: string | undefined, sortDesc: boolean) => void
 }
 
 export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
@@ -289,6 +290,24 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     [updateViewSettings],
   )
 
+  // updating sortBy and sortDesc together
+  const onUpdateSorting = useCallback(
+    async (newSortBy: string | undefined, newSortDesc: boolean) => {
+      await updateViewSettings(
+        { sortBy: newSortBy, sortDesc: newSortDesc },
+        () => {
+          setLocalSortBy(newSortBy)
+          setLocalSortDesc(newSortDesc)
+        },
+        { sortBy: newSortBy, sortDesc: newSortDesc },
+        {
+          errorMessage: 'Failed to update sorting',
+        },
+      )
+    },
+    [updateViewSettings],
+  )
+
   return {
     filters,
     onUpdateFilters,
@@ -315,5 +334,6 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     onUpdateSortBy,
     sortDesc,
     onUpdateSortDesc,
+    onUpdateSorting,
   }
 }

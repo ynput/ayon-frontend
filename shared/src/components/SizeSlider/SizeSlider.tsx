@@ -3,16 +3,10 @@ import styled from 'styled-components'
 import { useDebounce } from 'primereact/hooks'
 
 const Container = styled.div`
-  padding: 16px;
+  padding: var(--padding-m);
   display: flex;
   flex-direction: column;
   gap: 12px;
-`
-
-const Label = styled.label`
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface);
-  font-size: 14px;
 `
 
 const SliderContainer = styled.div`
@@ -141,7 +135,7 @@ export const SizeSlider: FC<HeightSliderProps> = ({
 
   return (
     <Container>
-      <Label htmlFor={id}>{title}</Label>
+      <label htmlFor={id}>{title}</label>
       <SliderContainer>
         <Slider
           id={id}

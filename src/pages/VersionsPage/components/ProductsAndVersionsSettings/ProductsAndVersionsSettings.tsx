@@ -2,12 +2,19 @@ import { FC } from 'react'
 import { ProjectTableSettings, SettingConfig } from '@shared/components'
 import { SizeSlider } from '@shared/components'
 import { useVersionsViewsContext } from '../../context/VersionsViewsContext'
+import ProductsAndVersionsSorting from './ProductsAndVersionsSorting'
 
 export interface ProductsAndVersionsSettingsProps {}
 
 export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> = ({}) => {
-  const { gridHeight, onUpdateGridHeight, onUpdateGridHeightWithPersistence } =
-    useVersionsViewsContext()
+  const {
+    gridHeight,
+    onUpdateGridHeight,
+    onUpdateGridHeightWithPersistence,
+    sortBy,
+    sortDesc,
+    onUpdateSorting,
+  } = useVersionsViewsContext()
 
   const extraColumns = [
     {
@@ -18,6 +25,7 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
 
   const extraSettings: SettingConfig[] = [
     {
+      id: 'grid-size',
       component: (
         <SizeSlider
           value={gridHeight}
@@ -31,6 +39,16 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
         />
       ),
     },
+    {
+      id: 'sort-by',
+      component: (
+        <ProductsAndVersionsSorting
+          sortBy={sortBy}
+          sortDesc={sortDesc}
+          onUpdateSorting={onUpdateSorting}
+        />
+      ),
+    },
   ]
 
   return (
@@ -38,6 +56,7 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
       extraColumns={extraColumns}
       settings={extraSettings}
       includeLinks={false}
+      order={['columns', 'sort-by', 'row-height', 'grid-size']}
     />
   )
 }

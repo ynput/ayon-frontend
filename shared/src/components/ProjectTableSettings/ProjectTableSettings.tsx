@@ -42,6 +42,7 @@ export type ProjectTableSettingsProps = {
   extraColumns?: { value: string; label: string }[]
   highlighted?: SettingHighlightedId
   includeLinks?: boolean
+  order?: string[]
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
@@ -49,6 +50,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   extraColumns = [],
   highlighted,
   includeLinks = true,
+  order,
 }) => {
   const { attribFields, projectInfo, scopes } = useProjectTableContext()
   const {
@@ -132,6 +134,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       component: <ColumnsSettings columns={columns} highlighted={highlighted} />,
     },
     {
+      id: 'row-height',
       component: (
         <SizeSlider
           value={rowHeight}
@@ -145,5 +148,5 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   ]
 
   settings.forEach((setting) => defaultSettings.push(setting))
-  return <SettingsPanel settings={defaultSettings} />
+  return <SettingsPanel settings={defaultSettings} order={order} />
 }
