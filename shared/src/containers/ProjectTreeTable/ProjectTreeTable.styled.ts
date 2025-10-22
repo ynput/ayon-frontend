@@ -506,3 +506,18 @@ export const LinkColumnHeader = styled.div`
     color: var(--md-sys-color-outline);
   }
 `
+
+export const AnimatedEmptyPlaceholder = styled.div`
+  animation: fadeIn 20ms ease-in forwards;
+  animation-delay: 300ms;
+  opacity: 0;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`

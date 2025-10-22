@@ -326,7 +326,6 @@ export const ProjectTreeTable = ({
       excludedSorting,
       groupBy,
       nameLabel: getNameLabelHeader(),
-      columnsConfig,
     })
 
     if (sortableRows) {
@@ -359,7 +358,6 @@ export const ProjectTreeTable = ({
     excludedColumns,
     excludedSorting,
     sortableRows,
-    columnsConfig,
   ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date
@@ -601,6 +599,7 @@ export const ProjectTreeTable = ({
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
               error={error}
+              isLoading={isLoading}
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
@@ -912,6 +911,7 @@ interface TableBodyProps {
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string
+  isLoading: boolean
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
@@ -930,6 +930,7 @@ const TableBody = ({
   rowOrderIds,
   sortableRows,
   error,
+  isLoading,
   isGrouping,
   getRowHeight,
   defaultRowHeight,
@@ -1033,16 +1034,39 @@ const TableBody = ({
     return (
       tableContainerRef.current &&
       createPortal(
-        <EmptyPlaceholder message="No items found" error={error}>
-          {onResetView && (
-            <Button
-              variant="filled"
-              label="Reset working view"
-              icon="restart_alt"
-              onClick={onResetView}
-            />
-          )}
-        </EmptyPlaceholder>,
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found" error={error}>
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
+        tableContainerRef.current,
+      )
+    )
+  }
+
+  if (!rows.length && !isLoading) {
+    return (
+      tableContainerRef.current &&
+      createPortal(
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found">
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
         tableContainerRef.current,
       )
     )
