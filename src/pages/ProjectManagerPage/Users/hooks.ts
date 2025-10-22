@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { SelectionStatus } from './types'
 import { Filter } from '@components/SearchFilter/types'
 import { useAppSelector } from '@state/store'
-import { useSetFrontendPreferencesMutation } from '@shared/api'
+import { useSetFrontendPreferencesMutation, useGetCurrentUserQuery } from '@shared/api'
 import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
 import { useGetProjectsAccessQuery } from '@queries/accessGroups/getAccessGroups'
 
@@ -103,8 +103,9 @@ const useProjectAccessGroupData = (selectedProject: string) => {
 const useUserPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) => void] => {
   const pageId = 'project.settings.user.access_groups'
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
-  const userName = useAppSelector((state) => state.user.name)
-  const frontendPreferences = useAppSelector((state) => state.user.data.frontendPreferences)
+  const { data: user } = useGetCurrentUserQuery()
+  const userName = user?.name as string
+  const { data: { frontendPreferences = {} } = {} } = user || {}
   const frontendPreferencesFilters: {
     [pageId: string]: []
   } = frontendPreferences?.filters
