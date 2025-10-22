@@ -19,6 +19,7 @@ const ProductsAndVersionsTable: FC<ProductsAndVersionsTableProps> = ({ readOnly 
       onScrollBottom={fetchNextPage}
       readOnly={readOnly}
       excludedColumns={['assignees']}
+      excludedSorting={['attrib']} // attrib sorting breaks for versions and products
       isExpandable={showProducts}
       isLoading={isLoading}
       includeLinks={false}

@@ -110,6 +110,7 @@ export type BuildTreeTableColumnsProps = {
   showHierarchy: boolean
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
+  excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
   groupBy?: TableGroupBy
   nameLabel?: string
@@ -123,6 +124,7 @@ const buildTreeTableColumns = ({
   showHierarchy,
   options,
   excluded,
+  excludedSorting,
   extraColumns,
   groupBy,
   nameLabel = 'Entity',
@@ -131,6 +133,7 @@ const buildTreeTableColumns = ({
 
   // Helper to check if a column should be included
   const isIncluded = (id: DefaultColumns | string) => !excluded?.includes(id)
+  const canSort = (id: DefaultColumns | string) => !excludedSorting?.includes(id)
 
   // Conditionally add static columns
   if (isIncluded(ROW_SELECTION_COLUMN_ID)) {
@@ -197,7 +200,7 @@ const buildTreeTableColumns = ({
       header: nameLabel,
       minSize: MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
-      enableSorting: groupBy ? false : true,
+      enableSorting: groupBy ? false : canSort('name'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: groupBy ? false : true,
@@ -317,7 +320,7 @@ const buildTreeTableColumns = ({
         attribSort(a, b, c, { enum: options.status, type: 'string' }),
       ),
       sortDescFirst: true,
-      enableSorting: true,
+      enableSorting: canSort('status'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -369,7 +372,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'subType',
       header: 'Type',
       minSize: MIN_SIZE,
-      enableSorting: true,
+      enableSorting: canSort('subType'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -416,7 +419,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'assignees',
       header: 'Assignees',
       minSize: MIN_SIZE,
-      enableSorting: true,
+      enableSorting: canSort('assignees'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -472,7 +475,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'author',
       header: 'Author',
       minSize: MIN_SIZE,
-      enableSorting: true,
+      enableSorting: canSort('author'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -504,7 +507,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'tags',
       header: 'Tags',
       minSize: MIN_SIZE,
-      enableSorting: true,
+      enableSorting: canSort('tags'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -542,7 +545,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'createdAt',
       header: 'Created at',
       minSize: MIN_SIZE,
-      enableSorting: true,
+      enableSorting: canSort('createdAt'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -571,7 +574,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'updatedAt',
       header: 'Updated at',
       minSize: MIN_SIZE,
-      enableSorting: true,
+      enableSorting: canSort('updatedAt'),
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -598,6 +601,7 @@ const buildTreeTableColumns = ({
     .filter((attrib) => {
       // filter out attributes that are out of scope
       if (attrib.scope && !attrib.scope.some((s) => scopes.includes(s))) return false
+
       const columnId = 'attrib_' + attrib.name
       // Check if the specific attribute column is excluded
       // or if all built-in attributes are excluded and this is a built-in attribute
@@ -613,7 +617,7 @@ const buildTreeTableColumns = ({
         minSize: MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
         sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
-        enableSorting: true,
+        enableSorting: canSort(attrib.name) && canSort('attrib'),
         enableResizing: true,
         enablePinning: true,
         enableHiding: true,
