@@ -140,9 +140,9 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
-        name: 'Versions',
-        path: `/projects/${projectName}/versions`,
-        module: 'versions',
+        name: 'Products',
+        path: `/projects/${projectName}/products`,
+        module: 'products',
         viewType: 'versions',
         uriSync: true,
       },
@@ -241,7 +241,7 @@ const ProjectPage = () => {
     if (module === 'tasks') {
       return <TasksProgressPage />
     }
-    if (module === 'versions') {
+    if (module === 'products') {
       return <VersionsPage projectName={projectName} />
     }
     if (module === 'lists') {
