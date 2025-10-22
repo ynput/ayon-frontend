@@ -82,6 +82,7 @@ import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
 import { upperFirst } from 'lodash'
+import { ColumnsConfig } from './types/columnConfig'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -96,6 +97,7 @@ declare module '@tanstack/react-table' {
     updateEntities?: CellUpdate
     toggleExpandAll?: ToggleExpandAll
     selection?: string[]
+    columnsConfig?: ColumnsConfig
   }
 }
 
@@ -139,6 +141,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
+  columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -162,6 +165,7 @@ export const ProjectTreeTable = ({
   sortableRows = false,
   onRowReorder,
   dndActiveId, // Destructure new prop
+  columnsConfig,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -322,6 +326,7 @@ export const ProjectTreeTable = ({
       excludedSorting,
       groupBy,
       nameLabel: getNameLabelHeader(),
+      columnsConfig,
     })
 
     if (sortableRows) {
@@ -354,6 +359,7 @@ export const ProjectTreeTable = ({
     excludedColumns,
     excludedSorting,
     sortableRows,
+    columnsConfig,
   ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date
@@ -428,6 +434,7 @@ export const ProjectTreeTable = ({
       toggleExpandAll,
       loadMoreTasks: fetchNextPage,
       selection: Array.from(selectedCells),
+      columnsConfig,
     },
   })
 

@@ -152,6 +152,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const sortByFieldMap: Record<string, string> = {
     name: 'path',
     subType: 'productType',
+    parent: 'folder_name',
   }
   const resolvedSortBy = (sortBy && sortByFieldMap[sortBy]) || sortBy
 

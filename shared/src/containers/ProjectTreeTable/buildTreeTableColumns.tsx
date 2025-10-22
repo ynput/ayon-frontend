@@ -23,6 +23,8 @@ import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { isEntityRestricted } from './utils/restrictedEntity'
+import { ColumnsConfig, getColumnDisplayConfig } from './types/columnConfig'
+import { upperFirst } from 'lodash'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
 
@@ -93,6 +95,8 @@ export type DefaultColumns =
   | typeof ROW_SELECTION_COLUMN_ID
   | 'thumbnail'
   | 'name'
+  | 'entityType'
+  | 'folder'
   | 'status'
   | 'subType'
   | 'assignees'
@@ -280,6 +284,7 @@ const buildTreeTableColumns = ({
                 toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
                 toggleExpanded={row.getToggleExpandedHandler()}
                 rowHeight={rowHeight}
+                columnDisplayConfig={getColumnDisplayConfig(meta?.columnsConfig, 'name')}
               />
             )}
             {isEditing(cellId) && (
@@ -361,6 +366,35 @@ const buildTreeTableColumns = ({
               },
             }}
           />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('entityType')) {
+    staticColumns.push({
+      id: 'entityType',
+      accessorKey: 'entityType',
+      header: 'Entity Type',
+      minSize: 20,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(sortingFns.alphanumeric),
+      cell: ({ row, column, table }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+        const cellId = getCellId(row.id, column.id)
+
+        return (
+          <TableCellContent
+            id={cellId}
+            className={clsx('entityType', type, { loading: row.original.isLoading })}
+            tabIndex={0}
+          >
+            <Icon icon={getEntityTypeIcon(type)} /> {upperFirst(value)}
+          </TableCellContent>
         )
       },
     })
@@ -468,6 +502,32 @@ const buildTreeTableColumns = ({
     })
   }
 
+  if (isIncluded('folder')) {
+    staticColumns.push({
+      id: 'folder',
+      accessorKey: 'folder',
+      header: 'Folder', // TODO: dynamically set based on entity type
+      minSize: MIN_SIZE,
+      enableSorting: canSort('folder'),
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column, table }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        return (
+          <TableCellContent
+            className={clsx('folder', { loading: row.original.isLoading })}
+            tabIndex={0}
+          >
+            {value}
+          </TableCellContent>
+        )
+      },
+    })
+  }
+
   // only show authors column for products
   if (isIncluded('author') && ['version', 'product'].some((s) => scopes.includes(s))) {
     staticColumns.push({
@@ -495,6 +555,42 @@ const buildTreeTableColumns = ({
             options={meta?.options?.assignee}
             isReadOnly={true}
             isInherited={type === 'product'} // products do not have authors, we just show the featured version's author
+          />
+        )
+      },
+    })
+  }
+
+  // version column for versions
+  if (isIncluded('version') && ['version', 'product'].some((s) => scopes.includes(s))) {
+    staticColumns.push({
+      id: 'version',
+      accessorKey: 'version',
+      header: 'Version',
+      minSize: MIN_SIZE,
+      enableSorting: canSort('version'),
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(pathSort),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        let versionValue = value
+        if (row.original.entityType === 'product') {
+          // show summary of versions for products
+          versionValue = `${row.original.versionsCount || 0} versions`
+        }
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('version', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={versionValue}
+            attributeData={{ type: 'string' }}
+            isReadOnly={true}
           />
         )
       },

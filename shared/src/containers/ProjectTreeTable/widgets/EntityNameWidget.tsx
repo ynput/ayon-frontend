@@ -2,6 +2,7 @@ import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
 
 const Expander = styled(Button)`
   &.expander {
@@ -117,6 +118,7 @@ type EntityNameWidgetProps = {
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
   rowHeight?: number
+  columnDisplayConfig?: DisplayConfig
 }
 
 export const EntityNameWidget = ({
@@ -131,6 +133,7 @@ export const EntityNameWidget = ({
   toggleExpandAll,
   toggleExpanded,
   rowHeight = 40,
+  columnDisplayConfig,
 }: EntityNameWidgetProps) => {
   // Check if this is a restricted access entity
   const isRestricted = isEntityRestricted(type)
@@ -139,8 +142,11 @@ export const EntityNameWidget = ({
   // < 50px = single line (compact), >= 50px = stacked
   const isCompact = rowHeight < 50
 
-  // For restricted entities, don't show path
-  const displayPath = isRestricted ? null : path
+  // Determine if path should be shown based on display configuration
+  // Check layout-specific setting first, then general setting
+  const showPathCompact = getDisplayValue(columnDisplayConfig, 'path', 'compact') ?? true
+  const showPathFull = getDisplayValue(columnDisplayConfig, 'path', 'full') ?? true
+  const shouldShowPath = isCompact ? showPathCompact : showPathFull
 
   return (
     <StyledEntityNameWidget>
@@ -165,8 +171,12 @@ export const EntityNameWidget = ({
           <StyledContent>
             {icon && <Icon icon={icon} />}
             <StyledTextContent className={clsx({ compact: isCompact })}>
-              {displayPath && <span className="path">{displayPath}</span>}
-              {isCompact && displayPath && <span className="divider">/</span>}
+              {shouldShowPath && !isRestricted && (
+                <span className="path">
+                  {path}
+                  {isCompact ? '/' : ''}
+                </span>
+              )}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>

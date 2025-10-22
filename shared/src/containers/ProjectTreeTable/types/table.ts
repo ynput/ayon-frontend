@@ -40,12 +40,15 @@ export type TableRow = {
   parentId?: string
   folderId?: string | null // all entities have a folder except root folders which will be null
   parents?: string[]
+  folder?: string // parent folder name
   subRows?: TableRow[]
   icon?: string | null
   color?: string | null
   img?: string | null
   hasReviewables?: boolean
   hasVersions?: boolean
+  version?: number | null // for versions
+  versionsCount?: number // for products
   startContent?: JSX.Element
   assignees?: string[]
   author?: string

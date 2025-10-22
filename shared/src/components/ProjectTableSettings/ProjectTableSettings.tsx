@@ -71,6 +71,14 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
     },
     {
+      value: 'folder',
+      label: 'Folder',
+    },
+    {
+      value: 'entityType',
+      label: 'Entity type',
+    },
+    {
       value: 'status',
       label: 'Status',
     },

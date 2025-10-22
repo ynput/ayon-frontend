@@ -1,4 +1,6 @@
 fragment VPFolder on FolderNode {
   id
+  name
+  label
   allAttrib
 }

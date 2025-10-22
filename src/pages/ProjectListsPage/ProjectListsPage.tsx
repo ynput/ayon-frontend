@@ -110,6 +110,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   } = useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
+  const { resetWorkingView } = useViewsContext()
 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
@@ -250,7 +251,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
-  const { resetWorkingView } = useViewsContext()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null

@@ -23,6 +23,11 @@ const ProductsAndVersionsTable: FC<ProductsAndVersionsTableProps> = ({ readOnly 
       isExpandable={showProducts}
       isLoading={isLoading}
       includeLinks={false}
+      columnsConfig={{
+        name: {
+          display: { path_compact: false, path_full: true },
+        },
+      }}
     />
   )
 }

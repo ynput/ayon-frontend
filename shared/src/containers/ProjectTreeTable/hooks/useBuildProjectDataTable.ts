@@ -148,6 +148,7 @@ export default function useBuildProjectDataTable({
         ownAttrib: task.ownAttrib,
         parents: task.parents || [],
         path: task.parents.join('/') || null, // todo: probably remove this and just use parents
+        folder: task.parents[task.parents.length - 1] || undefined,
         updatedAt: task.updatedAt,
         createdAt: task.createdAt,
         hasReviewables: task.hasReviewables || false,
@@ -218,6 +219,7 @@ export default function useBuildProjectDataTable({
         subType: folder.folderType || null,
         ownAttrib: folder.ownAttrib || [],
         path: folder.path,
+        folder: folder.parents[folder.parents.length - 1] || undefined,
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
@@ -276,7 +278,7 @@ export default function useBuildProjectDataTable({
       if (!childRow || !parentRow) continue
 
       // Add folder to its parent's subRows
-      parentRow.subRows.push(childRow)
+      parentRow.subRows?.push(childRow)
     }
 
     // Add any extra rows to the root rows

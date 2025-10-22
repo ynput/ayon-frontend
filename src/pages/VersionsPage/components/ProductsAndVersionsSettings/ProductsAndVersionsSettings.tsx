@@ -21,6 +21,10 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
       value: 'author',
       label: 'Author',
     },
+    {
+      value: 'version',
+      label: 'Version',
+    },
   ]
 
   const extraSettings: SettingConfig[] = [
