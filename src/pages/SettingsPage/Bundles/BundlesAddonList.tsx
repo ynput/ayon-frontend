@@ -193,6 +193,11 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           dev: formData?.addonDevelopment?.[addon.name] as { enabled?: boolean; path?: string },
         }))
         .sort((a, b) => {
+          // In comparison mode (readOnly), always sort by title only to ensure alignment
+          if (readOnly) {
+            return a.title.localeCompare(b.title)
+          }
+          // In edit mode for project bundles, sort by override permission first
           if (
             formData.isProject &&
             a.projectCanOverrideAddonVersion !== b.projectCanOverrideAddonVersion
@@ -201,7 +206,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           }
           return a.title.localeCompare(b.title)
         })
-    }, [addons, formData])
+    }, [addons, formData, readOnly])
 
     const createContextItems = (selected: any) => {
       let items = [
