@@ -140,7 +140,7 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
-        name: 'Products',
+        name: 'Products (preview)',
         path: `/projects/${projectName}/products`,
         module: 'products',
         viewType: 'versions',
