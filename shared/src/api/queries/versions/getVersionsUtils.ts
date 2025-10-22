@@ -78,6 +78,23 @@ export const provideTagsForProductsResult = (result: GetProductsResult | undefin
 }
 
 // TRANSFORMERS
+export const extractVersionsAndHeroVersion = (
+  edges: Array<{ node: VersionNodeRAW }>,
+): { versionNodes: VersionNodeRAW[]; heroVersion?: number } => {
+  const versionNodes: VersionNodeRAW[] = []
+  let heroVersion: number | undefined
+
+  for (const { node } of edges) {
+    if (Math.sign(node.version) === -1) {
+      heroVersion = Math.abs(node.version)
+    } else {
+      versionNodes.push(node)
+    }
+  }
+
+  return { versionNodes, heroVersion }
+}
+
 export const flattenInfiniteVersionsData = (data: VersionInfiniteResult): VersionNode[] => {
   if (!data) return []
   return data.pages.flatMap((page) => page.versions)
@@ -88,7 +105,7 @@ export const flattenInfiniteProductsData = (data: ProductInfiniteResult): Produc
   return data.pages.flatMap((page) => page.products)
 }
 
-export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
+export const transformVersionNode = (node: VersionNodeRAW, heroVersion?: number): VersionNode => {
   const attrib = parseAllAttribs(node.allAttrib)
 
   // Parse product attributes if product exists
@@ -103,12 +120,22 @@ export const transformVersionNode = (node: VersionNodeRAW): VersionNode => {
       }
     : node.product
 
-  return { ...node, attrib, product } as VersionNode
+  const version = {
+    ...node,
+    attrib,
+    product,
+    isHero: node.version === heroVersion,
+  } as VersionNode
+
+  return version
 }
 
 export const transformVersionsResponse = (response: GetVersionsQuery): GetVersionsResult => {
   const pageInfo = response.project.versions.pageInfo
-  const versions = response.project.versions.edges.map((edge) => transformVersionNode(edge.node))
+  const { versionNodes, heroVersion } = extractVersionsAndHeroVersion(
+    response.project.versions.edges,
+  )
+  const versions = versionNodes.map((node) => transformVersionNode(node, heroVersion))
   return { pageInfo, versions }
 }
 
@@ -137,10 +164,19 @@ export const transformProductsResponse = (response: GetProductsQuery): GetProduc
       ...product.folder,
       attrib: parseAllAttribs(product.folder.allAttrib),
     }
+    // detect hero version (negative version indicates hero) and mark it when transforming
+    const heroRaw = product.versions.find((v) => Math.sign(v.version) === -1)?.version
+    const heroVersion = heroRaw !== undefined ? Math.abs(heroRaw) : undefined
+
+    const versions = product.versions
+      .filter((v) => Math.sign(v.version) !== -1)
+      .map((v) => ({ ...v, isHero: v.version === heroVersion }))
+
     return {
       ...product,
       attrib,
       folder,
+      versions: versions,
       featuredVersion: transformProductVersionToExtendedVersion(product),
     }
   })

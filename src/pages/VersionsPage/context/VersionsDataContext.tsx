@@ -184,7 +184,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     }
   }
 
-  const productArguments = resolveEntityArguments('product')
+  const productArguments = {
+    ...resolveEntityArguments('product'),
+    featuredVersionOrder: ['latestApproved', 'latest', 'hero'], // we cannot support hero first as HERO featureVersion is not the version we need
+  }
   const versionArguments = resolveEntityArguments('version')
 
   // QUERY: Get all products when showing products

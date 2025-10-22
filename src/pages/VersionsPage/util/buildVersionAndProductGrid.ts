@@ -55,7 +55,7 @@ const buildVersionsGrid = (versionsMap: VersionsMap, projectName: string): Entit
       entityType: 'version',
       header: version.product.name,
       path: version.parents.slice(0, -1).join('/'),
-      title: version.name,
+      title: `${version.name} ${version.isHero ? '★' : ''}`,
       icon: getEntityTypeIcon('version'),
       status: version.status,
       author: version.author || null,

@@ -1,6 +1,7 @@
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { ProductsMap } from './buildVersionsAndProductsMap'
 import { getThumbnailUrl } from './buildVersionAndProductGrid'
+import { HERO_SYMBOL } from './buildVersionAndProductRows'
 
 type Props = {
   projectName: string
@@ -20,7 +21,7 @@ export const buildVersionsTableRows = ({
     return product.versions.map((version) => ({
       id: version.id,
       name: version.name,
-      label: version.name,
+      label: `${version.name} ${version.isHero ? HERO_SYMBOL : ''}`,
       img: getThumbnailUrl(projectName, { id: version.id, updatedAt: product.updatedAt }),
       parents:
         array.length > 1

@@ -1621,7 +1621,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?: { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } | null } | { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } } | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> } | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string } } | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> } | null }> } } }> } } };
+export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?: { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string } | { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> } | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> } | null }> } } }> } } };
 
 export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1643,15 +1643,15 @@ export type GetListsItemsForReviewSessionQueryVariables = Exact<{
 
 export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, entityType: string, updatedAt: any, count: number, accessLevel: number } }> } } };
 
-type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string, parent?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } | null };
+type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string };
 
-type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } };
+type ListItemFragment_ProductNode_Fragment = { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
 
 type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
 
-type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', name: string, label?: string | null, path?: string | null, folderType: string } };
+type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } };
 
-type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null };
+type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null };
 
 type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
 
@@ -1973,8 +1973,6 @@ export const ListItemFragmentFragmentDoc = `
     hasReviewables
     folderId
     folder {
-      name
-      label
       path
       folderType
     }
@@ -1988,13 +1986,6 @@ export const ListItemFragmentFragmentDoc = `
     ownAttrib
     hasReviewables
     folderId: id
-    parent {
-      id
-      name
-      label
-      path
-      folderType
-    }
   }
   ... on ProductNode {
     status
@@ -2002,9 +1993,6 @@ export const ListItemFragmentFragmentDoc = `
     productType
     folderId
     folder {
-      id
-      name
-      label
       path
       folderType
     }
@@ -2020,8 +2008,6 @@ export const ListItemFragmentFragmentDoc = `
       folderId
       folder {
         id
-        name
-        label
         path
         folderType
       }
@@ -2770,10 +2756,11 @@ export const GetVersionsDocument = `
     ${PageInfoFragmentDoc}
 ${VersionExtendedFragmentDoc}`;
 export const GetVersionsByProductIdDocument = `
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versions: [Int!], $versionFilter: String, $taskFilter: String, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
+      versions: $versions
       filter: $versionFilter
       taskFilter: $taskFilter
       sortBy: $sortBy

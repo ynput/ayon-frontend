@@ -1,6 +1,8 @@
 import { ProductNode, VersionNode } from '@shared/api/queries'
 import { createMetaRowId, TableRow } from '@shared/containers'
 
+export const HERO_SYMBOL = '★'
+
 export const buildProductRow = (product: ProductNode, subRows: TableRow[]): TableRow => ({
   id: product.id,
   name: product.name,
@@ -36,7 +38,7 @@ export const buildVersionRow = (
 ): TableRow => ({
   id: version.id,
   name: version.name,
-  label: `${version.product.name} - ${version.name}`,
+  label: `${version.product.name} - ${version.name} ${version.isHero ? HERO_SYMBOL : ''}`,
   entityId: version.id,
   folderId: version.product.folder.id,
   entityType: 'version',

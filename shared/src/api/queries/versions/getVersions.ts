@@ -47,16 +47,23 @@ export type FolderAttribNode = VpFolderFragment & {
 export type VersionNodeRAW = GetVersionsQuery['project']['versions']['edges'][0]['node']
 export type VersionNode = VersionNodeRAW & {
   attrib: Record<string, any> // parsed from allAttrib JSON string
+  isHero: boolean // is this version marked as hero
   product: VersionNodeRAW['product'] & {
     attrib: Record<string, any> // parsed from allAttrib JSON string
     folder: FolderAttribNode // folder with parsed attribs
   }
 }
 export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
-export type ProductNode = ProductNodeRAW & {
+export type ProductNode = Omit<ProductNodeRAW, 'versions'> & {
   attrib: Record<string, any> // parsed from allAttrib JSON string
   featuredVersion?: VersionNode | null // added separately
   folder: FolderAttribNode // folder with parsed attribs
+  versions: {
+    id: string
+    name: string
+    version: number
+    isHero: boolean
+  }[] // versions with isHero flag
 }
 
 export type GetVersionsResult = {
