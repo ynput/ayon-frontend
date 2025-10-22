@@ -404,7 +404,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'subType',
       accessorKey: 'subType',
-      header: 'Type',
+      header: scopes.includes('product') || scopes.includes('version') ? 'Product type' : 'Type',
       minSize: MIN_SIZE,
       enableSorting: canSort('subType'),
       enableResizing: true,
@@ -425,7 +425,6 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'string' }}
-            isInherited={type === 'version'} // versions do not have types, we just show the product's type
             options={
               type === 'folder'
                 ? meta?.options?.folderType
@@ -506,9 +505,9 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'folder',
       accessorKey: 'folder',
-      header: 'Folder', // TODO: dynamically set based on entity type
+      header: 'Folder name',
       minSize: MIN_SIZE,
-      enableSorting: canSort('folder'),
+      enableSorting: false,
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
@@ -517,12 +516,14 @@ const buildTreeTableColumns = ({
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
         return (
-          <TableCellContent
+          <CellWidget
+            rowId={id}
             className={clsx('folder', { loading: row.original.isLoading })}
-            tabIndex={0}
-          >
-            {value}
-          </TableCellContent>
+            columnId={column.id}
+            value={value}
+            attributeData={{ type: 'string' }}
+            isReadOnly={true}
+          />
         )
       },
     })
@@ -589,6 +590,36 @@ const buildTreeTableColumns = ({
             className={clsx('version', { loading: row.original.isLoading })}
             columnId={column.id}
             value={versionValue}
+            attributeData={{ type: 'string' }}
+            isReadOnly={true}
+          />
+        )
+      },
+    })
+  }
+
+  // product name column for versions and products
+  if (isIncluded('product') && ['version', 'product'].some((s) => scopes.includes(s))) {
+    staticColumns.push({
+      id: 'product',
+      accessorKey: 'product',
+      header: 'Product name',
+      minSize: MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(pathSort),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('product', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={value}
             attributeData={{ type: 'string' }}
             isReadOnly={true}
           />

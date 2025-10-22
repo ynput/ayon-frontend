@@ -31,7 +31,7 @@ const buildProductsGrid = (productsMap: ProductsMap, projectName: string): Entit
       path: product.parents.slice(0, -1).join(' / '),
       title: product.name,
       icon: productType?.icon || getEntityTypeIcon('product'),
-      status: product.status,
+      status: product.featuredVersion?.status || 'unknown',
       versions: product.versions
         .map((v) => v.name)
         .sort((a, b) => {
@@ -40,7 +40,7 @@ const buildProductsGrid = (productsMap: ProductsMap, projectName: string): Entit
           if (b === featuredVersion) return -1
           return 0
         }),
-      isPlayable: false,
+      isPlayable: product.featuredVersion?.hasReviewables || false,
       thumbnailUrl: product.featuredVersion
         ? getThumbnailUrl(projectName, product.featuredVersion)
         : undefined,

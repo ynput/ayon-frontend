@@ -4,6 +4,7 @@ import {
   ProjectTableProvider,
   useProjectDataContext,
   useProjectTableModules,
+  useVersionsViewSettings,
   useViewsContext,
 } from '@shared/containers'
 import { useAppSelector } from '@state/store'
@@ -23,6 +24,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
     useVersionsDataContext()
   const modules = useProjectTableModules()
   const { resetWorkingView } = useViewsContext()
+  const { showProducts } = useVersionsViewSettings()
 
   const { attribFields, projectInfo, users } = useProjectDataContext()
 
@@ -59,7 +61,7 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
       showHierarchy={false}
       isLoading={isLoadingAll}
       contextMenuItems={contextMenuItems}
-      scopes={['product', 'version']}
+      scopes={showProducts ? ['version', 'product'] : ['version']}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
       error={error}

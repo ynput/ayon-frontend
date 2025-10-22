@@ -40,6 +40,7 @@ export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: an
 export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
+  hiddenColumns?: string[]
   highlighted?: SettingHighlightedId
   includeLinks?: boolean
   order?: string[]
@@ -48,6 +49,7 @@ export type ProjectTableSettingsProps = {
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   settings = [],
   extraColumns = [],
+  hiddenColumns = [],
   highlighted,
   includeLinks = true,
   order,
@@ -60,7 +62,11 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     updateRowHeightWithPersistence,
   } = useColumnSettingsContext()
 
-  const columns = [
+  const columns: {
+    value: string
+    label: string
+    hidden?: boolean
+  }[] = [
     {
       value: 'thumbnail',
       label: 'Thumbnail',
@@ -73,6 +79,16 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     {
       value: 'folder',
       label: 'Folder',
+    },
+    {
+      value: 'assignees',
+      label: 'Assignees',
+      hidden: !scopes.includes('task'),
+    },
+    {
+      value: 'product',
+      label: 'Product',
+      hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
     },
     {
       value: 'entityType',
@@ -121,15 +137,11 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     ...extraColumns,
   ]
 
-  // add assignees column for task scope
-  if (scopes.includes('task')) {
-    columns.splice(4, 0, {
-      value: 'assignees',
-      label: 'Assignees',
-    })
-  }
+  const visibleColumns = columns.filter(
+    (column) => !column.hidden && !hiddenColumns.includes(column.value),
+  )
 
-  const visibleCount = columns.filter(
+  const visibleCount = visibleColumns.filter(
     (column) => !(column.value in columnVisibility) || columnVisibility[column.value],
   ).length
 
@@ -138,8 +150,8 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       id: 'columns',
       title: 'Columns',
       icon: 'view_column',
-      preview: `${visibleCount}/${columns.length}`,
-      component: <ColumnsSettings columns={columns} highlighted={highlighted} />,
+      preview: `${visibleCount}/${visibleColumns.length}`,
+      component: <ColumnsSettings columns={visibleColumns} highlighted={highlighted} />,
     },
     {
       id: 'row-height',

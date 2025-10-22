@@ -112,6 +112,7 @@ export const HeaderCell = styled.th`
   display: flex;
   align-items: center;
   min-height: fit-content;
+  white-space: nowrap;
 
   &:hover {
     .resize-handle {
