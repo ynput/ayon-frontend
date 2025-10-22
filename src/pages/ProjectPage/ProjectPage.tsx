@@ -33,6 +33,7 @@ import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import BrowserPage from '@pages/BrowserPage'
 
 type NavLink = {
   name?: string
@@ -140,6 +141,12 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
+        name: 'Browser (legacy)',
+        path: `/projects/${projectName}/browser`,
+        module: 'browser',
+        uriSync: true,
+      },
+      {
         name: 'Products (preview)',
         path: `/projects/${projectName}/products`,
         module: 'products',
@@ -240,6 +247,9 @@ const ProjectPage = () => {
     }
     if (module === 'tasks') {
       return <TasksProgressPage />
+    }
+    if (module === 'browser') {
+      return <BrowserPage projectName={projectName} />
     }
     if (module === 'products') {
       return <VersionsPage projectName={projectName} />
