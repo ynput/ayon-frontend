@@ -11,7 +11,7 @@ import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
 import FeedWrapper from '../FeedWrapper'
 import mergeProjectInfo from '../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
-import { productTypes } from '@shared/util'
+import { productTypes, getTextColor } from '@shared/util'
 import { useDetailsPanelContext } from '@shared/context'
 
 export interface DetailsPanelFloatingProps {}
@@ -126,8 +126,8 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
           </Styled.Content>
         </Styled.Header>
         <Styled.Row>
-          <Styled.Status style={{ backgroundColor: statusAnatomy?.color }}>
-            {<Icon icon={statusAnatomy.icon || 'question_mark'} />}
+          <Styled.Status style={{ backgroundColor: statusAnatomy?.color, color: getTextColor(statusAnatomy?.color || '#000') }}>
+            <Icon icon={statusAnatomy.icon || 'question_mark'} style={{ color: 'inherit' }} />
             <span className="label">{statusAnatomy?.name}</span>
           </Styled.Status>
           <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
