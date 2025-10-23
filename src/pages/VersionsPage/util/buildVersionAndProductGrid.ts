@@ -1,4 +1,5 @@
 // transforms data for the grid tiles
+import { HERO_SYMBOL } from './buildVersionAndProductRows'
 import { ProductsMap, VersionsMap } from './buildVersionsAndProductsMap'
 import { getEntityTypeIcon, productTypes } from '@shared/util'
 
@@ -33,13 +34,13 @@ const buildProductsGrid = (productsMap: ProductsMap, projectName: string): Entit
       icon: productType?.icon || getEntityTypeIcon('product'),
       status: product.featuredVersion?.status || 'unknown',
       versions: product.versions
-        .map((v) => v.name)
-        .sort((a, b) => {
+        .toSorted((a, b) => {
           // does it match featured version?
-          if (a === featuredVersion) return 1
-          if (b === featuredVersion) return -1
+          if (a.name === featuredVersion) return 1
+          if (b.name === featuredVersion) return -1
           return 0
-        }),
+        })
+        .map((v) => `${v.name} ${v.heroVersionId ? HERO_SYMBOL : ''}`),
       isPlayable: product.featuredVersion?.hasReviewables || false,
       thumbnailUrl: product.featuredVersion
         ? getThumbnailUrl(projectName, product.featuredVersion)
@@ -55,7 +56,7 @@ const buildVersionsGrid = (versionsMap: VersionsMap, projectName: string): Entit
       entityType: 'version',
       header: version.product.name,
       path: version.parents.slice(0, -1).join('/'),
-      title: `${version.name} ${version.isHero ? '★' : ''}`,
+      title: `${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
       icon: getEntityTypeIcon('version'),
       status: version.status,
       author: version.author || null,

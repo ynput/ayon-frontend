@@ -21,7 +21,7 @@ export const buildVersionsTableRows = ({
     return product.versions.map((version) => ({
       id: version.id,
       name: version.name,
-      label: `${version.name} ${version.isHero ? HERO_SYMBOL : ''}`,
+      label: `${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
       img: getThumbnailUrl(projectName, { id: version.id, updatedAt: product.updatedAt }),
       parents:
         array.length > 1

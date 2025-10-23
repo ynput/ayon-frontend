@@ -12,4 +12,6 @@ fragment VersionBase on VersionNode {
   tags
   updatedAt
   version
+  featuredVersionType
+  heroVersionId
 }

@@ -186,7 +186,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   const productArguments = {
     ...resolveEntityArguments('product'),
-    featuredVersionOrder: ['latestApproved', 'latest', 'hero'], // we cannot support hero first as HERO featureVersion is not the version we need
+    featuredVersionOrder: ['hero', 'latestDone', 'latest'],
   }
   const versionArguments = resolveEntityArguments('version')
 

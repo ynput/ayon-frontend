@@ -38,7 +38,7 @@ export const buildVersionRow = (
 ): TableRow => ({
   id: version.id,
   name: version.name,
-  label: `${version.product.name} - ${version.name} ${version.isHero ? HERO_SYMBOL : ''}`,
+  label: `${version.product.name} - ${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
   entityId: version.id,
   folderId: version.product.folder.id,
   entityType: 'version',

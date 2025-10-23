@@ -585,6 +585,7 @@ export type ProductNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -886,6 +887,7 @@ export type ProjectNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1223,6 +1225,7 @@ export type TaskNodeVersionsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1385,8 +1388,12 @@ export type VersionNode = BaseNode & {
   author?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   data?: Maybe<Scalars['String']['output']>;
+  featuredVersionType?: Maybe<Scalars['String']['output']>;
   hasReviewables: Scalars['Boolean']['output'];
+  heroVersionId?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  isLatest: Scalars['Boolean']['output'];
+  isLatestDone: Scalars['Boolean']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
   parents: Array<Scalars['String']['output']>;
