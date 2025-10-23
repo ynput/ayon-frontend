@@ -243,6 +243,7 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
       onScroll={handleScroll}
       style={{ maxHeight: '100%', height: 'auto', overflow: 'auto', outline: 'none' }}
       tabIndex={0}
+      data-grid-container="true"
     >
       {gridData.map((entity, index) => {
         const status = projectInfo?.statuses?.find((s) => s.name === entity.status)
@@ -251,7 +252,7 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
           <InView key={entity.id} rootMargin="200px 0px 200px 0px">
             {({ inView, ref }) =>
               inView ? (
-                <div ref={ref}>
+                <div ref={ref} data-entity-id={entity.id}>
                   <EntityCard
                     style={{
                       minWidth: 'unset',

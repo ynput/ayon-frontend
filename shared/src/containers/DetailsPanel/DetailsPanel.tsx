@@ -1,5 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import * as Styled from './DetailsPanel.styled'
 
 // shared
@@ -42,6 +42,7 @@ export type DetailsPanelProps = {
   onWatchersUpdate?: (added: any[], removed: any[]) => void
   onOpenViewer?: (entity: any) => void
   onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
+  onOpen?: () => void
   // annotations
   annotations?: any
   removeAnnotation?: (id: string) => void
@@ -72,6 +73,7 @@ export const DetailsPanel = ({
   onWatchersUpdate,
   onOpenViewer,
   onEntityFocus,
+  onOpen,
   // annotations
   annotations,
   removeAnnotation,
@@ -81,6 +83,15 @@ export const DetailsPanel = ({
 }: DetailsPanelProps) => {
   const { closeSlideOut, openPip, user, isGuest } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
+  const hasCalledOnOpen = useRef(false)
+
+  // Fire onOpen callback once when component mounts and renders
+  useEffect(() => {
+    if (onOpen && !hasCalledOnOpen.current) {
+      hasCalledOnOpen.current = true
+      onOpen()
+    }
+  }, [])
 
   // Force details tab for specific entity types
   useEffect(() => {

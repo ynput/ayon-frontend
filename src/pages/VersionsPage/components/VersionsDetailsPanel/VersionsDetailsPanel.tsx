@@ -13,6 +13,7 @@ import {
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { useVersionsSelectionContext } from '@pages/VersionsPage/context/VersionsSelectionContext'
+import { useCallback } from 'react'
 
 type ProjectOverviewDetailsPanelProps = {}
 
@@ -22,7 +23,7 @@ const ProjectOverviewDetailsPanel = ({}: ProjectOverviewDetailsPanelProps) => {
 
   const { projectName, projectInfo } = useProjectDataContext()
   const { selectedVersions, setSelectedVersions } = useVersionsSelectionContext()
-  const { setSelectedCells } = useSelectionCellsContext()
+  const { setSelectedCells, selectedRows } = useSelectionCellsContext()
 
   const { data: users = [] } = useGetUsersAssigneeQuery(
     { names: undefined, projectName },
@@ -50,6 +51,27 @@ const ProjectOverviewDetailsPanel = ({}: ProjectOverviewDetailsPanelProps) => {
     )
   }
 
+  const handleDetailsOpen = useCallback(() => {
+    // Scroll to the selected grid item at the top when details panel opens
+    const gridContainer = document.querySelector('[data-grid-container="true"]') as HTMLDivElement
+    if (!gridContainer || !selectedRows.length) return
+
+    // Find the first selected version's card element
+    const selectedVersionId = selectedRows[0]
+    const selectedElement = gridContainer.querySelector(
+      `[data-entity-id="${selectedVersionId}"]`,
+    ) as HTMLElement
+
+    if (selectedElement) {
+      // Scroll to the element at the top with some padding
+      const scrollTop = selectedElement.offsetTop - gridContainer.offsetTop
+      gridContainer.scrollTo({
+        top: scrollTop,
+        behavior: 'instant',
+      })
+    }
+  }, [selectedRows])
+
   return (
     <>
       <DetailsPanel
@@ -64,6 +86,7 @@ const ProjectOverviewDetailsPanel = ({}: ProjectOverviewDetailsPanelProps) => {
         scope="overview"
         onClose={handleClose}
         onOpenViewer={handleOpenViewer}
+        onOpen={handleDetailsOpen}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
     </>
