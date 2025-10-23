@@ -51,15 +51,17 @@ const buildProductsGrid = (productsMap: ProductsMap, projectName: string): Entit
 
 const buildVersionsGrid = (versionsMap: VersionsMap, projectName: string): EntityGridNode[] => {
   return Array.from(versionsMap.values()).map((version) => {
+    const productType = productTypes[version.product.productType]
+
     return {
       id: version.id,
       entityType: 'version',
-      header: version.product.name,
-      path: version.parents.slice(0, -1).join('/'),
-      title: `${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
-      icon: getEntityTypeIcon('version'),
+      header: version.parents[version.parents.length - 2],
+      path: version.parents.slice(0, -2).join('/'),
+      title: version.product.name,
+      icon: productType?.icon || getEntityTypeIcon('product'),
       status: version.status,
-      author: version.author || null,
+      versions: [`${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`],
       isPlayable: version.hasReviewables,
       thumbnailUrl: getThumbnailUrl(projectName, version),
     }
