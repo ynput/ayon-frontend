@@ -1,32 +1,7 @@
 import styled from 'styled-components'
-import { ReactNode, CSSProperties } from 'react'
+import { CSSProperties } from 'react'
+import { getTextColor } from '@shared/util/getTextColor'
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const normalizedHex = hex.startsWith('#') ? hex.slice(1) : hex;
-
-  if (normalizedHex.length !== 6 || !/^[0-9A-Fa-f]{6}$/.test(normalizedHex)) {
-    throw new Error(`Invalid hex color format: ${hex}`);
-  }
-
-  const bigint = parseInt(normalizedHex, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  
-  return [r, g, b];
-};
-
-const getTextColor = (backgroundColor: string, threshold: number = 160): string => {
-  try {
-    const [r, g, b] = hexToRgb(backgroundColor);
-
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > threshold ? '#161616' : '#e0e0e0'; 
-
-  } catch (error) { // variables for example
-    return '#161616'; 
-  }
-};
 
 
 export const BadgeWrapper = styled.div`
@@ -64,7 +39,7 @@ interface BadgeProps {
 }
 
 export const Badge = (props: BadgeProps) => {
-  const { label, color, style, className, ...additionalProps } = props 
+  const { label, color, style, className, ...additionalProps } = props
   const nstyle: CSSProperties = { ...style }
   let backgroundColor = undefined
 
@@ -76,7 +51,7 @@ export const Badge = (props: BadgeProps) => {
     }
   } else if (label && WELL_KNOWN_BADGES.includes(label.toLowerCase())) {
     backgroundColor = `var(--color-hl-${label.toLowerCase()})`
-  } 
+  }
   const foregroundColor = backgroundColor ? getTextColor(backgroundColor) : '#e0e0e0'
 
   nstyle.backgroundColor = backgroundColor
@@ -87,7 +62,7 @@ export const Badge = (props: BadgeProps) => {
   }
 
   return (
-    <BaseBadge 
+    <BaseBadge
       style={nstyle}
       className={className}
       aria-label={label}

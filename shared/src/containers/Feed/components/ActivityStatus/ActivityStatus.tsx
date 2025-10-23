@@ -2,6 +2,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { Status } from '../../../ProjectTreeTable/types/project'
+import { getTextColor } from '@shared/util/getTextColor'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -9,7 +10,7 @@ const StyledContainer = styled.div`
   gap: var(--base-gap-small);
 `
 
-const StyledStatus = styled.span`
+const StyledStatus = styled.span<{ $color: string }>`
   border-radius: var(--border-radius-m);
   padding: 2px 6px;
   margin: 0 2px;
@@ -19,7 +20,7 @@ const StyledStatus = styled.span`
 
   &,
   .icon {
-    color: black;
+    color: $color;
   }
 
   .icon {
@@ -41,9 +42,9 @@ const ActivityStatus: FC<ActivityStatusProps> = ({ name, statuses, children }) =
   return (
     <StyledContainer>
       {children}
-      <StyledStatus style={{ backgroundColor: foundStatus.color }}>
+      <StyledStatus $color={`${getTextColor(foundStatus.color)}`} style={{ backgroundColor: foundStatus.color }}>
         {foundStatus.icon && <Icon icon={foundStatus.icon} />}
-        {name}
+        {name + "Hello there"}
       </StyledStatus>
     </StyledContainer>
   )
