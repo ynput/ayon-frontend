@@ -8,8 +8,10 @@ export type PowerpackFeature =
   | 'advancedFilters'
   | 'listAttributes'
   | 'listFolders'
+  | 'listAccess'
   | 'groupAttributes'
   | 'sharedViews'
+  | 'commentCategories'
 export type PowerpackDialogType = {
   label: string
   description: string
@@ -22,10 +24,12 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'sharedViews',
   'listFolders',
   'groupAttributes',
+  'listAccess',
   'slicer',
   'releases',
   'advancedFilters',
   'listAttributes',
+  'commentCategories',
 ]
 
 export const powerpackFeatures: {
@@ -51,6 +55,12 @@ export const powerpackFeatures: {
     description: 'Group tasks by assignees, status, or other attributes for better organization.',
     bullet: 'Group tasks by attributes',
   },
+  commentCategories: {
+    label: 'Comment Categories',
+    description:
+      'Organize comments with categories, assign permissions, and use colors for better distinction. Set visibility rules to control who can view specific comments.',
+    bullet: 'Enhanced comment organization, permissions, and visibility',
+  },
   slicer: {
     label: 'Slicer',
     description: 'Advanced filtering system for project organization.',
@@ -70,6 +80,11 @@ export const powerpackFeatures: {
     label: 'List Attributes',
     description: 'Add custom attributes to your lists for better collaboration and organization.',
     bullet: 'Custom attributes for lists',
+  },
+  listAccess: {
+    label: 'List Access',
+    description: 'Manage and control access to your lists with advanced sharing options.',
+    bullet: 'Advanced list sharing options',
   },
 }
 export type PowerpackContextType = {
@@ -131,6 +146,8 @@ export const PowerpackProvider = ({
         } catch (error) {
           console.error('Error checking power license:', error)
           setPowerLicense(false)
+        } finally {
+          setIsLoading(false)
         }
         setIsLoading(false)
       }

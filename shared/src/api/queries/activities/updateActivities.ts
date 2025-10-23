@@ -1,4 +1,4 @@
-import getActivitiesGQLApi from './getActivities'
+import { getActivitiesGQLApi } from './getActivities'
 import { toast } from 'react-toastify'
 import { filterActivityTypes } from './util/activitiesHelpers'
 
@@ -49,6 +49,11 @@ const patchActivities = async (
   const state = getState()
   // get caches that would be affected by this activity
   const entries = getActivitiesGQLApi.util.selectInvalidatedBy(state, invalidatingTags)
+
+  // ensure that data is mapped to activityData
+  if (method !== 'delete' && patch.data) {
+    patch.activityData = { ...patch.activityData, ...patch.data }
+  }
 
   // now patch all the caches with the update
   const patches = entries.map(({ originalArgs }) =>

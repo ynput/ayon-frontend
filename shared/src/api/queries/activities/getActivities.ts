@@ -22,6 +22,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import { ChecklistCount } from './types'
+import { handleActivityRealtimeUpdates } from './util/activityRealtimeHandler'
 
 type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
 
@@ -37,6 +38,7 @@ type UpdatedDefinitions = Omit<Definitions, 'GetActivitiesById'> & {
 
 const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
+    // Only used by the infinite query below
     GetActivities: {
       transformResponse: (res: GetActivitiesQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
@@ -53,7 +55,7 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
               { type: 'entityActivities', id: 'LIST' },
               ...(Array.isArray(activityTypes) ? activityTypes : [activityTypes])?.map((type) => ({
                 type: 'entityActivities',
-                id: type,
+                id: type as string,
               })),
               // filter is used when a comment is made, to refetch the activities of other filters
               ...(Array.isArray(entityIds) ? entityIds : [entityIds]).map((id) => ({
@@ -83,15 +85,10 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     },
     GetActivityUsers: {
       transformResponse: (res: GetActivityUsersQuery) => res.users.edges.map((edge) => edge.node),
-      // @ts-ignore
-      providesTags: (result: ActivityUserNode[]) => {
-        return result?.length
-          ? [
-              { type: 'user', id: 'LIST' },
-              ...result.map(({ name }) => ({ type: 'user', id: name })),
-            ]
-          : [{ type: 'user', id: 'LIST' }]
-      },
+      providesTags: (res) =>
+        res?.length
+          ? [{ type: 'user', id: 'LIST' }, ...res.map(({ name }) => ({ type: 'user', id: name }))]
+          : [{ type: 'user', id: 'LIST' }],
     },
   },
 })
@@ -157,6 +154,18 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
+      async onCacheEntryAdded(
+        queryArg,
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
+      ) {
+        await handleActivityRealtimeUpdates(queryArg, {
+          updateCachedData,
+          cacheDataLoaded,
+          cacheEntryRemoved,
+          dispatch,
+          getCacheEntry,
+        })
+      },
       providesTags: (result, _e, { entityIds, activityTypes, filter }) =>
         result
           ? [
@@ -208,4 +217,5 @@ export const {
   useGetActivitiesInfiniteInfiniteQuery,
   useGetActivityUsersQuery,
 } = getActivitiesGQLApi
-export default getActivitiesGQLApi
+
+export { getActivitiesGQLApi }

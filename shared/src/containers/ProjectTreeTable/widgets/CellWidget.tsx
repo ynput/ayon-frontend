@@ -11,6 +11,7 @@ import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
+import { useColumnSettingsContext } from '../context/ColumnSettingsContext'
 
 // Utils
 import { getCellId } from '../utils/cellUtils'
@@ -108,6 +109,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const { projectName } = useProjectTableContext()
   const { isEditing, setEditingCellId } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
+  const { rowHeight } = useColumnSettingsContext()
   const cellId = getCellId(rowId, columnId)
 
   const isCurrentCellEditing = isEditing(cellId)

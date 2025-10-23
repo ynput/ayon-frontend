@@ -726,7 +726,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     setCurrentSelection(null)
   }
 
+
   const onUpdateAddonSchema = (addonName, schema) => {
+    // TODO: Rewrite this to not rely on `settings` in addon settings list
+    // as it requires addon list to load the entire payload, which is not optimal
     const settings = selectedAddons.find((el) => el.name == addonName).settings
     const hydratedObject = attachLabels(settings, schema, schema)
     setSearchTree((prev) => {
@@ -764,7 +767,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           {showCopySettings && (
             <CopySettingsDialog
               selectedAddons={selectedAddons}
-              variant={variant}
+              variant={selectedBundle.variant}
               originalData={originalData}
               setOriginalData={setOriginalData}
               localData={localData}
@@ -781,7 +784,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             <RawSettingsDialog
               addonName={selectedAddons[0].name}
               addonVersion={selectedAddons[0].version}
-              variant={variant}
+              variant={selectedBundle.variant}
               reloadAddons={reloadAddons}
               projectName={projectName}
               siteId={siteId}

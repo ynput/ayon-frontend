@@ -13,8 +13,8 @@ export interface ViewItem {
   isEditable?: boolean
   isSaveable?: boolean // can this be saved from working view (shows little save button)
   highlighted?: 'save' | 'edit' // highlights a button
-  onEdit?: (e: React.MouseEvent<HTMLButtonElement>) => void
-  onSave?: (e: React.MouseEvent<HTMLButtonElement>) => void // saves the view settings from selected view
+  onEdit?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void
+  onSave?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void // saves the view settings from selected view
   onResetView?: (e: React.MouseEvent<HTMLButtonElement>) => void // resets working view
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void
 }
@@ -26,6 +26,7 @@ export interface ViewMenuItemProps
 export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
   (
     {
+      id,
       label,
       startContent,
       endContent,
@@ -49,15 +50,20 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
         confirmDialog({
           message: 'Save current view settings and overwrite this view?',
           header: 'Confirm save',
-          accept: () => onSave && onSave(e),
+          accept: () => onSave && onSave(e, id),
         })
       } else {
-        onSave && onSave(e)
+        onSave && onSave(e, id)
       }
     }
 
     return (
-      <Styled.ViewItem {...props} className={clsx(className, { selected: isSelected })} ref={ref}>
+      <Styled.ViewItem
+        {...props}
+        id={id}
+        className={clsx(className, { selected: isSelected })}
+        ref={ref}
+      >
         {startContent && startContent}
         <span className="label">{label}</span>
         {/* Reset button (e.g., for working view) - shows if handler is provided */}
@@ -85,7 +91,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             variant="text"
             icon="more_horiz"
             className={clsx('more', { active: highlighted === 'edit' })}
-            onClick={onEdit}
+            onClick={(e) => onEdit(e, id)}
             data-tooltip="Edit view"
           />
         )}

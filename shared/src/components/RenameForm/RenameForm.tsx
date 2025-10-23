@@ -4,7 +4,7 @@ import { TableRow, useCellEditing, useProjectDataContext } from '@shared/contain
 import { theme } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { TableMeta } from '@tanstack/react-table'
-import { checkName, parseAndFormatName } from '@shared/util'
+import { checkName, checkLabel, parseAndFormatName } from '@shared/util'
 import { toast } from 'react-toastify'
 import { EntityNaming } from '@shared/api'
 
@@ -107,6 +107,16 @@ export const RenameForm: React.FC<InlineEditingWidgetProps> = ({
   const handleSave = useCallback(async () => {
     const hasChanges = name !== initialName || label !== initialLabel
     if (hasChanges) {
+      // Validate label if it changed
+      if (label !== initialLabel && !labelDisabled) {
+        const labelCheck = checkLabel(label)
+        if (!labelCheck.valid) {
+          console.error('Invalid label:', labelCheck.error)
+          toast.error(`Invalid label: ${labelCheck.error}`)
+          return
+        }
+      }
+
       const nameCheck = checkName(name)
 
       if (!nameCheck.valid || !name) {

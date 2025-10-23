@@ -10,6 +10,15 @@ import { parseListFolderRowId } from '../util'
 import { EntityListFolderModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { usePowerpack } from '@shared/context'
+import {
+  canEditList,
+  canEditAllLists,
+  canDeleteAllLists,
+  canEditFolder,
+  canEditAllFolders,
+  canDeleteAllFolders,
+  UserPermissions,
+} from '../utils/listAccessControl'
 
 export const FOLDER_ICON = 'snippet_folder'
 export const FOLDER_ICON_ADD = 'create_new_folder'
@@ -85,6 +94,13 @@ const useListContextMenu = () => {
   } = useListsContext()
   const { powerLicense } = usePowerpack()
 
+  // Create user permissions object for access control checks
+  const userPermissions: UserPermissions = {
+    isAdmin: !!user.data?.isAdmin,
+    isManager: !!user.data?.isManager,
+    userName: (user as any)?.data?.name || (user as any)?.data?.username || (user as any)?.name,
+  }
+
   const { clearListItems } = useClearListItems({ projectName })
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
@@ -138,18 +154,22 @@ const useListContextMenu = () => {
         parseListFolderRowId(selected),
       )
 
-      // ownership / permissions
-      const currentUserName =
-        (user as any)?.data?.name || (user as any)?.data?.username || (user as any)?.name
-      const userOwnsAllSelectedLists =
-        newSelectedLists.length > 0 &&
-        newSelectedLists.every((l) => !!currentUserName && l.owner === currentUserName)
+      // Get selected folders as full objects
       const selectedFoldersAll: EntityListFolderModel[] = selectedFolderIds
         .map((id) => listFolders.find((f) => f.id === id))
         .filter((f): f is EntityListFolderModel => !!f)
-      const userOwnsAllSelectedFolders =
-        selectedFoldersAll.length > 0 &&
-        selectedFoldersAll.every((f) => !!currentUserName && f.owner === currentUserName)
+
+      // Access control checks using helper functions
+      const userCanEditAllLists = canEditAllLists(newSelectedLists, userPermissions)
+      const userCanDeleteAllLists = canDeleteAllLists(newSelectedLists, userPermissions)
+      const userCanEditAllFolders = canEditAllFolders(selectedFoldersAll, userPermissions)
+      const userCanDeleteAllFolders = canDeleteAllFolders(selectedFoldersAll, userPermissions)
+
+      // Single item access checks
+      const userCanEditList = selectedList ? canEditList(selectedList, userPermissions) : false
+      const userCanEditFolder = selectedFolder
+        ? canEditFolder(selectedFolder, userPermissions)
+        : false
 
       // Create recursive folder submenu
       const createFolderHierarchy = (
@@ -278,9 +298,9 @@ const useListContextMenu = () => {
             (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
             (allSelectedRowsAreLists && listFolderSubmenu.length === 0) ||
             (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0) ||
-            (isUser &&
-              ((allSelectedRowsAreLists && !userOwnsAllSelectedLists) ||
-                (allSelectedRowsAreFolders && !userOwnsAllSelectedFolders))),
+            // Hide if user doesn't have edit permission on all selected items
+            (allSelectedRowsAreLists && !userCanEditAllLists) ||
+            (allSelectedRowsAreFolders && !userCanEditAllFolders),
         })
       }
 
@@ -289,13 +309,13 @@ const useListContextMenu = () => {
           label: 'Rename',
           icon: 'edit',
           command: () => openRenameList(firstSelectedRow),
-          // Hide for users without ownership; still disable for multi-select
+          // Disable for multi-select
           disabled: multipleSelected,
+          // Hide if not a list/folder OR user doesn't have edit permission
           hidden:
             (!allSelectedRowsAreLists && !isSelectedRowFolder) ||
-            (isUser &&
-              ((isSelectedRowFolder && selectedFolder?.owner !== currentUserName) ||
-                (!isSelectedRowFolder && selectedList?.owner !== currentUserName))),
+            (isSelectedRowFolder && !userCanEditFolder) ||
+            (!isSelectedRowFolder && !userCanEditList),
         },
         {
           label: 'Create review',
@@ -311,10 +331,7 @@ const useListContextMenu = () => {
             const folderId = firstSelectedRow.replace('folder-', '')
             onOpenFolderList({ folderId })
           },
-          hidden:
-            !isSelectedRowFolder ||
-            multipleSelected ||
-            (isSelectedRowFolder && isUser && selectedFolder?.owner !== currentUserName),
+          hidden: !isSelectedRowFolder || multipleSelected || !userCanEditFolder,
         },
         {
           label: 'Create list',
@@ -338,7 +355,7 @@ const useListContextMenu = () => {
           command: () => onOpenFolderList({}),
           shortcut: 'F',
           hidden: !allSelectedRowsAreLists,
-          powerFeature: powerLicense ? 'listFolders' : undefined,
+          powerFeature: powerLicense ? undefined : 'listFolders',
         },
         // Root level Create subfolder (single folder selection)
         ...(powerLicense
@@ -393,11 +410,11 @@ const useListContextMenu = () => {
               deleteLists(Object.keys(newSelection), { force: forceDelete })
             }
           },
+          // Hide if not lists/folders OR user doesn't have delete permission
           hidden:
             (!allSelectedRowsAreLists && !allSelectedRowsAreFolders) ||
-            (isUser &&
-              ((allSelectedRowsAreLists && !userOwnsAllSelectedLists) ||
-                (allSelectedRowsAreFolders && !userOwnsAllSelectedFolders))),
+            (allSelectedRowsAreLists && !userCanDeleteAllLists) ||
+            (allSelectedRowsAreFolders && !userCanDeleteAllFolders),
         },
       ]
 

@@ -5,12 +5,14 @@ import styled from 'styled-components'
  * This component provides consistent list styling across different Quill editors
  */
 export const QuillListStyles = styled.div`
+  position: relative;
+  height: 100%;
   /* Fix for unordered list showing as ordered list */
   .ql-editor ol,
   .ql-editor ul {
     margin: 16px 0 !important;
     padding-left: 20px;
-    
+
     li {
       padding-left: 0;
 

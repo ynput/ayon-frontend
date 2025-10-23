@@ -12,7 +12,13 @@ import {
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
-import { checkName, parseAndFormatName, getPlatformShortcutKey, KeyMode } from '@shared/util'
+import {
+  checkName,
+  checkLabel,
+  parseAndFormatName,
+  getPlatformShortcutKey,
+  KeyMode,
+} from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
   EditorTaskNode,
@@ -201,7 +207,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
         newState.label = typeOption.name
         // If name field is empty or matches any of the current type options,
         // update it with the new type name
-        const currentNameLower = newState.name.toLowerCase()
+        const copiedName = String(newState.name)
+        const currentNameLower = copiedName.toLowerCase()
         const shouldUpdateName =
           currentNameLower === '' ||
           typeOptions.some(
@@ -267,6 +274,13 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (stayOpen: boolean) => {
+    // validate the label
+    const labelCheck = checkLabel(entityForm.label)
+    if (!labelCheck.valid) {
+      toast.error(labelCheck.error || 'Invalid label')
+      return
+    }
+
     // validate the name
     const { valid, error } = checkName(entityForm.name)
     if (!valid) {
@@ -277,6 +291,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setIsSubmitting(true)
     try {
       const resOperations = await onCreateNew(selectedFolderIds)
+
+      console.log(resOperations)
 
       // callback function
       onNewEntities?.(resOperations, stayOpen)

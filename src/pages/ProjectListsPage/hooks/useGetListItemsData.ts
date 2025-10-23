@@ -2,9 +2,13 @@ import { useGetListItemsInfiniteInfiniteQuery, useGetEntityLinksQuery } from '@s
 import type { EntityListItem, GetListItemsResult } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
-import { useMemo, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
+import { useMemo } from 'react'
 import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
+import {
+  RESTRICTED_ENTITY_TYPE,
+  RESTRICTED_ENTITY_NAME,
+} from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
+import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 // Extend EntityListItem to include links
 export type EntityListItemWithLinks = EntityListItem & {
@@ -61,8 +65,8 @@ const useGetListItemsData = ({
 
   const {
     data: itemsInfiniteData,
-    isLoading,
-    isFetching,
+    isLoading: isLoadingRaw,
+    isFetching: isFetchingRaw,
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
@@ -80,16 +84,20 @@ const useGetListItemsData = ({
       skip: !projectName || !listId || skip,
     },
   )
-  const [previousListId, setPreviousListId] = useState(listId)
 
-  // Detect when listId changes to track fetching due to project change
-  const isFetchingNewList = useMemo(() => {
-    const isProjectChanged = previousListId !== listId
-    if (isProjectChanged && !isFetching) {
-      setPreviousListId(listId)
-    }
-    return isFetching && isProjectChanged
-  }, [isFetching, isFetching, previousListId, listId])
+  // Only show loading when query arguments change, not on background refetches
+  const isFetching = useQueryArgumentChangeLoading(
+    {
+      projectName: projectName || '',
+      listId: listId || '',
+      sortBy: parseSorting(singleSort?.id) || '',
+      desc: singleSort?.desc || false,
+      filter: queryFilterString || '',
+    },
+    isFetchingRaw,
+  )
+
+  const isLoading = isLoadingRaw || isFetching
 
   const handleFetchNextPage = () => {
     if (hasNextPage) {
@@ -97,22 +105,24 @@ const useGetListItemsData = ({
       fetchNextPage()
     }
   }
-
-  const buildPrivateItem = (i: GetListItemsResult['items'][number]): EntityListItemWithLinks => ({
+  const buildRestrictedItem = (
+    i: GetListItemsResult['items'][number]
+  ): EntityListItemWithLinks => ({
     active: true,
-    name: 'private',
-    id: 'private' + uuidv4().replace(/-/g, ''),
+    name: RESTRICTED_ENTITY_NAME,
+    id: i.id, // Use the actual list item ID from the backend
     entityId: i.entityId,
-    entityType: 'unknown',
+    entityType: RESTRICTED_ENTITY_TYPE,
     allAttrib: '',
     attrib: {},
     ownAttrib: [],
-    status: 'private',
+    status: '',
     tags: [],
     updatedAt: '',
+    createdAt: '',  // <-- required to match EntityListItemWithLinks type
     position: 0,
     ownItemAttrib: [],
-    links: [], // Add empty links array
+    links: [],
     parents: [],
   })
 
@@ -120,7 +130,13 @@ const useGetListItemsData = ({
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => (i ? i : buildPrivateItem(i))) || [],
+      (page) => page.items?.map((i) => {
+        // Check if item is restricted (has entityType 'unknown' or missing name)
+        if (!i || i.entityType === RESTRICTED_ENTITY_TYPE || !i.name) {
+          return buildRestrictedItem(i)
+        }
+        return i
+      }) || [],
     )
   }, [itemsInfiniteData?.pages])
 
@@ -162,7 +178,7 @@ const useGetListItemsData = ({
 
   return {
     data: dataWithLinks,
-    isLoading: isLoading || isFetchingNewList,
+    isLoading,
     isFetchingNextPage,
     isError,
     fetchNextPage: handleFetchNextPage,

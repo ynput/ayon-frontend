@@ -11,6 +11,8 @@ interface ActivityReferenceProps extends Omit<React.HTMLAttributes<HTMLElement>,
   isEntity?: boolean
   disabled?: boolean
   onMouseEnter?: (e: React.MouseEvent<HTMLElement>, pos: { left: number; top: number }) => void
+  categoryPrimary?: string
+  categorySecondary?: string
 }
 
 const ActivityReference: React.FC<ActivityReferenceProps> = ({
@@ -20,6 +22,8 @@ const ActivityReference: React.FC<ActivityReferenceProps> = ({
   isEntity,
   disabled,
   onMouseEnter,
+  categoryPrimary,
+  categorySecondary,
   children,
   ...props
 }) => {
@@ -37,6 +41,8 @@ const ActivityReference: React.FC<ActivityReferenceProps> = ({
     <Styled.Reference
       {...props}
       $variant={variant}
+      $categoryPrimary={categoryPrimary}
+      $categorySecondary={categorySecondary}
       ref={ref}
       onMouseEnter={handleMouseEnter}
       className={clsx({ disabled, isEntity }, 'reference')}

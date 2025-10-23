@@ -115,7 +115,7 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
         [`${entityType}Type`]: subType,
         id: getEntityId(),
         label: entity.label || entity.name,
-        name: parseAndFormatName(entity.name, config),
+        name: entity.name,
         ...(parentId && { [entityType === 'folder' ? 'parentId' : 'folderId']: parentId }),
         ...slicerData,
       },

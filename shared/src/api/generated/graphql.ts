@@ -35,6 +35,12 @@ export type ActivitiesConnection = {
   pageInfo: PageInfo;
 };
 
+export type ActivityCategory = {
+  __typename?: 'ActivityCategory';
+  color: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type ActivityEdge = {
   __typename?: 'ActivityEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -62,7 +68,7 @@ export type ActivityNode = {
   assignee?: Maybe<UserNode>;
   author?: Maybe<UserNode>;
   body: Scalars['String']['output'];
-  category?: Maybe<Scalars['String']['output']>;
+  category?: Maybe<ActivityCategory>;
   createdAt: Scalars['DateTime']['output'];
   creationOrder: Scalars['Int']['output'];
   entityId?: Maybe<Scalars['String']['output']>;
@@ -233,6 +239,7 @@ export type EventNode = {
   description: Scalars['String']['output'];
   hash: Scalars['String']['output'];
   id: Scalars['String']['output'];
+  payload?: Maybe<Scalars['String']['output']>;
   project?: Maybe<Scalars['String']['output']>;
   retries: Scalars['Int']['output'];
   sender?: Maybe<Scalars['String']['output']>;
@@ -305,6 +312,7 @@ export type FolderNode = BaseNode & {
   hasProducts: Scalars['Boolean']['output'];
   hasReviewables: Scalars['Boolean']['output'];
   hasTasks: Scalars['Boolean']['output'];
+  hasVersions: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   label?: Maybe<Scalars['String']['output']>;
   links: LinksConnection;
@@ -468,7 +476,7 @@ export type LinkEdge = {
   linkType: Scalars['String']['output'];
   name?: Maybe<Scalars['String']['output']>;
   /** Linked node */
-  node: BaseNode;
+  node?: Maybe<BaseNode>;
   projectName: Scalars['String']['output'];
 };
 
@@ -1598,7 +1606,7 @@ export type GetListsQueryVariables = Exact<{
 }>;
 
 
-export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityListFolderId?: string | null, tags: Array<string>, data: string, allAttrib: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, updatedBy?: string | null, projectName: string, owner?: string | null, count: number } }> } } };
+export type GetListsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, entityListType: string, entityListFolderId?: string | null, tags: Array<string>, data: string, allAttrib: string, entityType: string, active: boolean, createdAt: any, updatedAt: any, updatedBy?: string | null, projectName: string, owner?: string | null, accessLevel: number, access: string, count: number } }> } } };
 
 export type GetListsItemsForReviewSessionQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1608,7 +1616,7 @@ export type GetListsItemsForReviewSessionQueryVariables = Exact<{
 }>;
 
 
-export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, entityType: string, updatedAt: any, count: number } }> } } };
+export type GetListsItemsForReviewSessionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, label: string, active: boolean, entityType: string, updatedAt: any, count: number, accessLevel: number } }> } } };
 
 type ListItemFragment_FolderNode_Fragment = { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string };
 
@@ -2331,6 +2339,8 @@ export const GetListsDocument = `
           active
           projectName
           owner
+          accessLevel
+          access
           count
         }
       }
@@ -2360,6 +2370,7 @@ export const GetListsItemsForReviewSessionDocument = `
           entityType
           updatedAt
           count
+          accessLevel
         }
       }
     }

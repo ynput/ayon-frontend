@@ -15,6 +15,7 @@ export * from './columnConfigConverter'
 export * from './checkName'
 export * from './humanizeFieldName'
 export * from './parseHtmlToPlainTextWithLinks'
+export * from './colorUtils'
 export * from './getTextColor'
 
 export { productTypes }

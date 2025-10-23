@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom'
 import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
+import { isEntityRestricted } from '../utils/restrictedEntity'
 
 export const sortEntityLinksByPath = (links: LinkEntity[]) => {
   return [...links].sort((a, b) => {
@@ -85,6 +86,12 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   }
 
   const handleEntityClick = (entityId: string, entityType: string) => {
+    // Check if entity is restricted - prevent opening details panel
+    const isRestricted = isEntityRestricted(entityType)
+    if (isRestricted) {
+      return
+    }
+
     // Clear any row selection first if context is available
     if (clearRowsSelection) {
       clearRowsSelection()

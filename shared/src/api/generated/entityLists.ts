@@ -151,6 +151,9 @@ const injectedRtkApi = api.injectEndpoints({
     getEntityList: build.query<GetEntityListApiResponse, GetEntityListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}`,
+        params: {
+          metadata_only: queryArg.metadataOnly,
+        },
       }),
     }),
     deleteEntityList: build.mutation<DeleteEntityListApiResponse, DeleteEntityListApiArg>({
@@ -283,6 +286,8 @@ export type GetEntityListApiResponse = /** status 200 Successful Response */ Ent
 export type GetEntityListApiArg = {
   listId: string
   projectName: string
+  /** When true, only return metadata */
+  metadataOnly?: boolean
 }
 export type DeleteEntityListApiResponse = /** status 200 Successful Response */ any
 export type DeleteEntityListApiArg = {
@@ -423,7 +428,7 @@ export type EntityListItemPostModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -438,7 +443,7 @@ export type EntityListMultiPatchItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -457,7 +462,7 @@ export type EntityListItemPatchModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
 }
@@ -487,7 +492,7 @@ export type EntityListPostModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: object
+  data?: Record<string, any>
   template?: object
   /** List tags */
   tags?: string[]
@@ -508,7 +513,7 @@ export type EntityListItemModel = {
   /** Overrides of the listed entity attributes */
   attrib?: object
   /** Additional data associated with the item */
-  data?: object
+  data?: Record<string, any>
   /** Tags associated with the item */
   tags?: string[]
   /** Path to the folder where the item is located */
@@ -534,7 +539,7 @@ export type EntityListModel = {
   /** List attributes */
   attrib?: object
   /** Additional data associated with the list */
-  data?: object
+  data?: Record<string, any>
   template?: object
   /** List tags */
   tags?: string[]
@@ -560,7 +565,7 @@ export type EntityListPatchModel = {
   /** ID of the folder containing the list */
   entityListFolderId?: string
   /** Additional data associated with the list */
-  data?: object
+  data?: Record<string, any>
   /** List tags */
   tags?: string[]
   /** Name of the user who created the list */

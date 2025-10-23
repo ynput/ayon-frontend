@@ -1,7 +1,7 @@
 import React from 'react'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import ReactDOM from 'react-dom/client'
-import store from '@state/store'
+import store, { useAppDispatch, useAppSelector } from '@state/store'
 import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
 
@@ -16,7 +16,7 @@ import './styles/loadingShimmer.scss'
 import './styles/index.scss'
 
 import short from 'short-uuid'
-import { SocketProvider } from '@context/WebsocketContext'
+import { SocketProvider } from '@shared/context'
 
 // generate unique session id
 declare global {
@@ -44,6 +44,18 @@ axios.interceptors.response.use(
   },
 )
 
+// wrap socket provider so we can pass the correct props
+const SocketProviderWrapper = (props: { children: React.ReactNode }) => {
+  const dispatch = useAppDispatch()
+  const projectName = useAppSelector((state) => state.project.name) as unknown as string
+  const userName = useAppSelector((state) => state.user.name)
+  return (
+    <SocketProvider userName={userName} projectName={projectName} dispatch={dispatch}>
+      {props.children}
+    </SocketProvider>
+  )
+}
+
 /**
  * Render Application
  *
@@ -54,7 +66,7 @@ axios.interceptors.response.use(
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ReduxProvider store={store}>
-      <SocketProvider>
+      <SocketProviderWrapper>
         <div id="root-header" />
         <App />
         <ToastContainer
@@ -68,7 +80,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           autoClose={5000}
           limit={5}
         />
-      </SocketProvider>
+      </SocketProviderWrapper>
     </ReduxProvider>
   </React.StrictMode>,
 )

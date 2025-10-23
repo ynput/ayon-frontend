@@ -1,10 +1,10 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
 import {
-  attributesApi,
   EntityListModel,
   useGetProjectQuery,
   useUpdateEntityListMutation,
+  useGetAttributeListQuery,
 } from '@shared/api'
 import { toast } from 'react-toastify'
 
@@ -38,7 +38,23 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
     active: false,
   })
 
+  // You must be an admin to edit the list itself
+  const canEdit = (list?.accessLevel || 0) >= 30
+
   const { data: project } = useGetProjectQuery({ projectName })
+
+  // Fetch list-scoped attributes
+  const { data: allAttributes = [] } = useGetAttributeListQuery()
+  const listScopedAttributes = useMemo(
+    () =>
+      allAttributes
+        .filter((attr) => attr.scope?.includes('list'))
+        .map((attr) => ({
+          name: attr.name,
+          data: attr.data,
+        })),
+    [allAttributes],
+  )
 
   const fields: AttributeField[] = useMemo(
     () => [
@@ -53,18 +69,20 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
           enableSearch: true,
         },
       },
+      ...listScopedAttributes,
       { name: 'active', data: { type: 'boolean', title: 'Active' } },
       ...attributes,
     ],
-    [project?.tags, attributes],
+    [project?.tags, listScopedAttributes, attributes],
   )
 
   useEffect(() => {
     if (list) {
       const parsedAttrib = list.attrib || {}
 
-      // get the data for the attrib fields only
-      const attribFieldValues = attributes.reduce((acc, { name }) => {
+      // get the data for all attrib fields (list-scoped and passed attributes)
+      const allAttribFields = [...listScopedAttributes, ...attributes]
+      const attribFieldValues = allAttribFields.reduce((acc, { name }) => {
         const fieldValue = (parsedAttrib as Record<string, any>)[name]
         // Default to empty string for all attrib fields
         acc[name] = fieldValue || ''
@@ -78,12 +96,15 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         ...attribFieldValues,
       })
     }
-  }, [list, JSON.stringify(attributes)])
+  }, [list, JSON.stringify(attributes), JSON.stringify(listScopedAttributes)])
 
   const [updateList] = useUpdateEntityListMutation()
 
   const isAttribField = (fieldName: string): boolean => {
-    return attributes.some((attr) => attr.name === fieldName)
+    return (
+      attributes.some((attr) => attr.name === fieldName) ||
+      listScopedAttributes.some((attr) => attr.name === fieldName)
+    )
   }
 
   const handleChange = useCallback(
@@ -134,12 +155,12 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         toast.error('Failed to update list attribute: ', error.attrib.detail)
       }
     },
-    [list?.id, list?.attrib, projectName, updateList],
+    [list?.id, list?.attrib, projectName, updateList, listScopedAttributes, attributes],
   )
 
   return (
     <DetailsPanelAttributesEditor
-      enableEditing
+      enableEditing={canEdit}
       fields={fields}
       form={form}
       isLoading={isLoading}

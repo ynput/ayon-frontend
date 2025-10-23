@@ -5,9 +5,18 @@ import { Reaction } from './types'
 type Props = {
   reactions: Reaction[]
   changeHandler: (reaction: Reaction) => void
+  categoryPrimary?: string
+  categorySecondary?: string
+  categoryTertiary?: string
 }
 
-const ExistingReactions = ({ reactions, changeHandler }: Props) => {
+const ExistingReactions = ({
+  reactions,
+  changeHandler,
+  categoryPrimary,
+  categorySecondary,
+  categoryTertiary,
+}: Props) => {
   return (
     <Styled.ActiveReactionsList>
       {reactions.map((reaction) => (
@@ -18,6 +27,9 @@ const ExistingReactions = ({ reactions, changeHandler }: Props) => {
           onClick={() => {
             changeHandler({ ...reaction, isActive: !reaction.isActive })
           }}
+          categoryPrimary={categoryPrimary}
+          categorySecondary={categorySecondary}
+          categoryTertiary={categoryTertiary}
         />
       ))}
     </Styled.ActiveReactionsList>

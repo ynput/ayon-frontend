@@ -24,12 +24,13 @@ import { SavedAnnotationMetadata } from '.'
 export const activitiesLast = 30
 
 export type FeedProps = {
-  isMultiProjects: boolean
+  disabled?: boolean
   readOnly: boolean
   statuses: Status[]
+  entityListId?: string | undefined
 }
 
-export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) => {
+export const Feed = ({ disabled, readOnly, statuses = [], entityListId }: FeedProps) => {
   const {
     projectName,
     entities,
@@ -125,6 +126,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     entityType: entityType,
     entities,
     filter: currentTab,
+    entityListId,
   })
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
@@ -214,10 +216,6 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
 
   let warningMessage
 
-  // only viewing activities from one project
-  if (isMultiProjects)
-    warningMessage = `You are only viewing activities from one project: ${projectName}.`
-
   return (
     <>
       <Styled.FeedContainer className="feed">
@@ -236,8 +234,8 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
                   activity={activity}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
-                  onUpdate={async (value, files, _refs) =>
-                    await updateComment(activity, value, files)
+                  onUpdate={async (value, files, _refs, data) =>
+                    await updateComment(activity, value, files, data)
                   }
                   projectInfo={projectInfo}
                   projectName={projectName}
@@ -280,7 +278,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
             isOpen={editingId === FEED_NEW_COMMENT}
             onClose={() => setEditingId(null)}
             onOpen={() => setEditingId(FEED_NEW_COMMENT)}
-            disabled={isMultiProjects}
+            disabled={disabled}
             isLoading={isLoadingNew || !entities.length || isSaving}
           />
         )}

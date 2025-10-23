@@ -1,5 +1,4 @@
 import { AttributeEnumItem } from '@shared/api'
-import { Badge } from '@shared/components'
 import { Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
@@ -12,12 +11,14 @@ const StyledWidget = styled.div`
   align-items: center;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   border-radius: var(--border-radius-m);
+  padding: 0 1px;
 
   &.item {
     padding: 4px 2px;
     border-radius: 0;
+    overflow: hidden;
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-hover);
@@ -31,6 +32,19 @@ const StyledWidget = styled.div`
       background-color: var(--md-sys-color-primary-container-hover);
     }
   }
+
+  /* when value container is higher than 55px, wrap the contents */
+  &:not(.item) {
+    container-type: size;
+
+    @container (min-height: 55px) {
+      .values {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        max-height: 100%;
+      }
+    }
+  }
 `
 
 const StyledValuesContainer = styled.div`
@@ -38,9 +52,11 @@ const StyledValuesContainer = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   align-items: center;
+  align-content: flex-start;
   overflow: hidden;
   border-radius: var(--border-radius-m);
   padding: 0px 2px;
+  flex-wrap: nowrap;
 `
 
 const StyledValueWrapper = styled.div`
@@ -48,9 +64,21 @@ const StyledValueWrapper = styled.div`
   gap: var(--base-gap-small);
   align-items: center;
 
-  overflow: hidden;
   max-width: 100%;
   min-width: 20px;
+`
+
+const StyledValue = styled.span`
+  text-align: left;
+  border-radius: var(--border-radius-m);
+  padding: 0px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+
+  &.placeholder {
+    color: var(--md-sys-color-outline);
+  }
 `
 
 const StyledImg = styled.img`
@@ -65,12 +93,15 @@ const StyledImg = styled.img`
 
 const StyledExpandButton = styled.div`
   width: 32px;
-  height: 32px;
+  height: fit-content;
+  min-height: 32px;
+  aspect-ratio: 1;
   border-radius: var(--border-radius-m);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest-hover);
@@ -102,7 +133,6 @@ export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement>
     close?: Partial<IconProps>
   }
 }
-
 
 export const EnumCellValue = ({
   selectedOptions,
@@ -152,7 +182,7 @@ export const EnumCellValue = ({
 
   return (
     <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
-      <StyledValuesContainer>
+      <StyledValuesContainer className="values">
         {selectedOptions.map((option, i) => (
           <StyledValueWrapper key={option.value.toString() + i}>
             {option.icon && checkForImgSrc(option.icon) ? (
@@ -173,13 +203,20 @@ export const EnumCellValue = ({
             ) : null}
 
             {(showLabels || !option.icon) && (
-              <Badge
-                label={option.label}
-                color={backgroundColor ? option.color : undefined}
+              <StyledValue
+                style={{
+                  color: backgroundColor ? 'inherit' : option.color,
+                  backgroundColor: backgroundColor
+                    ? option.color || 'var(--md-sys-color-surface-container)'
+                    : 'transparent',
+                  ...valueStyle,
+                }}
                 className={clsx({ placeholder: isPlaceholder }, valueClassName)}
-                style={valueStyle}
+                aria-label={option.label}
                 {...valueRest}
-              />
+              >
+                {option.label}
+              </StyledValue>
             )}
           </StyledValueWrapper>
         ))}
