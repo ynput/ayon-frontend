@@ -46,7 +46,23 @@ const VersionsTable: FC<VersionsTableProps> = ({}) => {
         rowSelection={rowSelection}
         onRowSelectionChange={handleRowSelectionChange}
       >
-        <SimpleTable data={versionsTableData} isLoading={false} imgRatio={ratio} />
+        <SimpleTable
+          data={versionsTableData}
+          isLoading={false}
+          imgRatio={ratio}
+          pt={{
+            cell: {
+              pt: {
+                img: {
+                  style: {
+                    height: 40,
+                    maxHeight: 40,
+                  },
+                },
+              },
+            },
+          }}
+        />
       </SimpleTableProvider>
     </Styled.TablePanel>
   )

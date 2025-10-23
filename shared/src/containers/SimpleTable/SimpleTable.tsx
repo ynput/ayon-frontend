@@ -143,8 +143,8 @@ export interface SimpleTableProps {
     table: Table<SimpleTableRow>,
   ) => JSX.Element
   pt?: {
-    cell?: SimpleTableCellTemplateProps
-    row?: React.HTMLAttributes<HTMLTableRowElement>
+    cell?: Partial<SimpleTableCellTemplateProps>
+    row?: Partial<React.HTMLAttributes<HTMLTableRowElement>>
   }
 }
 

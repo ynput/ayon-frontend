@@ -54,6 +54,12 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   isDisabled?: boolean
   disabledMessage?: string
   active?: boolean
+  pt?: {
+    img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
+    expander?: Partial<React.ComponentProps<typeof RowExpander>>
+    icon?: Partial<React.ComponentProps<typeof Icon>>
+    text?: React.HTMLAttributes<HTMLDivElement>
+  }
 }
 
 export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
@@ -79,6 +85,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       disabledMessage,
       active,
       style,
+      pt,
       ...props
     },
     ref,
@@ -99,28 +106,33 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
           enableNonFolderIndent={enableNonFolderIndent}
+          {...pt?.expander}
         />
         {startContent && startContent}
         {img && (
           <img
             src={img}
+            {...pt?.img}
             alt=""
-            className={imgShape}
+            className={clsx(imgShape, pt?.img?.className)}
             style={{
               aspectRatio: imgRatio.toString(),
+              ...pt?.img?.style,
             }}
           />
         )}
         {icon && (
           <Icon
             icon={icon}
-            className={clsx({ filled: iconFilled })}
+            className={clsx({ filled: iconFilled }, pt?.icon?.className)}
             style={{
               color: iconColor,
+              ...pt?.icon?.style,
             }}
+            {...pt?.icon}
           />
         )}
-        <div className="text">
+        <div className="text" {...pt?.text}>
           {parents && <span className="path">{parents.join(' / ')} / </span>}
           <span className="value">{value}</span>
         </div>
