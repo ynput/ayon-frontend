@@ -77,6 +77,10 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   // this views context is per page/project
   const { viewSettings } = useViewsContext()
 
+  // Memoize versionsSettings to prevent unnecessary re-renders when viewSettings
+  // reference changes but values are the same
+  const versionsSettings = useMemo(() => viewSettings as VersionsSettings, [viewSettings])
+
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
@@ -96,22 +100,54 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   const { updateViewSettings } = useViewUpdateHelper()
 
   // Get server settings
-  const versionsSettings = viewSettings as VersionsSettings
-  const serverFilters = (versionsSettings?.filter as any) ?? {}
-  const serverSlicerType = versionsSettings?.slicerType ?? ''
-  const serverShowProducts = versionsSettings?.showProducts ?? false
-  const serverShowGrid = versionsSettings?.showGrid ?? false
-  const serverGridHeight = versionsSettings?.gridHeight ?? 200
-  const serverRowHeight = versionsSettings?.rowHeight ?? 50
-  const serverFeaturedVersionOrder = versionsSettings?.featuredVersionOrder ?? []
-  const serverGroupBy = versionsSettings?.groupBy
-  const serverShowEmptyGroups = versionsSettings?.showEmptyGroups ?? false
-  const serverSortBy = versionsSettings?.sortBy
-  const serverSortDesc = versionsSettings?.sortDesc ?? false
+  const serverFilters = useMemo(
+    () => (versionsSettings?.filter as any) ?? { conditions: [] },
+    [versionsSettings?.filter],
+  )
+  const serverSlicerType = useMemo(
+    () => versionsSettings?.slicerType ?? '',
+    [versionsSettings?.slicerType],
+  )
+  const serverShowProducts = useMemo(
+    () => versionsSettings?.showProducts ?? false,
+    [versionsSettings?.showProducts],
+  )
+  const serverShowGrid = useMemo(
+    () => versionsSettings?.showGrid ?? false,
+    [versionsSettings?.showGrid],
+  )
+  const serverGridHeight = useMemo(
+    () => versionsSettings?.gridHeight ?? 200,
+    [versionsSettings?.gridHeight],
+  )
+  const serverRowHeight = useMemo(
+    () => versionsSettings?.rowHeight ?? 50,
+    [versionsSettings?.rowHeight],
+  )
+  const serverFeaturedVersionOrder = useMemo(
+    () => versionsSettings?.featuredVersionOrder ?? [],
+    [versionsSettings?.featuredVersionOrder],
+  )
+  const serverGroupBy = useMemo(
+    () => versionsSettings?.groupBy ?? undefined,
+    [versionsSettings?.groupBy],
+  )
+  const serverShowEmptyGroups = useMemo(
+    () => versionsSettings?.showEmptyGroups ?? false,
+    [versionsSettings?.showEmptyGroups],
+  )
+  const serverSortBy = useMemo(
+    () => versionsSettings?.sortBy ?? undefined,
+    [versionsSettings?.sortBy],
+  )
+  const serverSortDesc = useMemo(
+    () => versionsSettings?.sortDesc ?? false,
+    [versionsSettings?.sortDesc],
+  )
 
   const serverColumns = useMemo(
     () => convertColumnConfigToTanstackStates(versionsSettings),
-    [JSON.stringify(viewSettings)],
+    [versionsSettings],
   )
 
   // Sync local state with server when viewSettings change
@@ -131,26 +167,57 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   }, [JSON.stringify(viewSettings)])
 
   // Use local state if available, otherwise use server state
-  const filters = localFilters !== null ? localFilters : serverFilters
-  const slicerType = localSlicerType !== null ? localSlicerType : serverSlicerType
-  const showProducts = localShowProducts !== null ? localShowProducts : serverShowProducts
-  const showGrid = localShowGrid !== null ? localShowGrid : serverShowGrid
-  const gridHeight =
-    localGridHeightImmediate !== null
-      ? localGridHeightImmediate
-      : localGridHeight !== null
-      ? localGridHeight
-      : serverGridHeight
-  const rowHeight = localRowHeight !== null ? localRowHeight : serverRowHeight
-  const featuredVersionOrder = localFeaturedVersionOrder?.length
-    ? localFeaturedVersionOrder
-    : serverFeaturedVersionOrder
-  const groupBy = localGroupBy !== null ? localGroupBy : serverGroupBy
-  const showEmptyGroups =
-    localShowEmptyGroups !== null ? localShowEmptyGroups : serverShowEmptyGroups
-  const sortBy = localSortBy !== null ? localSortBy : serverSortBy
-  const sortDesc = localSortDesc !== null ? localSortDesc : serverSortDesc
-  const columns = localColumns || serverColumns
+  const filters = useMemo(
+    () => (localFilters !== null ? localFilters : serverFilters),
+    [localFilters, serverFilters],
+  )
+  const slicerType = useMemo(
+    () => (localSlicerType !== null ? localSlicerType : serverSlicerType),
+    [localSlicerType, serverSlicerType],
+  )
+  const showProducts = useMemo(
+    () => (localShowProducts !== null ? localShowProducts : serverShowProducts),
+    [localShowProducts, serverShowProducts],
+  )
+  const showGrid = useMemo(
+    () => (localShowGrid !== null ? localShowGrid : serverShowGrid),
+    [localShowGrid, serverShowGrid],
+  )
+  const gridHeight = useMemo(
+    () =>
+      localGridHeightImmediate !== null
+        ? localGridHeightImmediate
+        : localGridHeight !== null
+        ? localGridHeight
+        : serverGridHeight,
+    [localGridHeightImmediate, localGridHeight, serverGridHeight],
+  )
+  const rowHeight = useMemo(
+    () => (localRowHeight !== null ? localRowHeight : serverRowHeight),
+    [localRowHeight, serverRowHeight],
+  )
+  const featuredVersionOrder = useMemo(
+    () =>
+      localFeaturedVersionOrder?.length ? localFeaturedVersionOrder : serverFeaturedVersionOrder,
+    [localFeaturedVersionOrder, serverFeaturedVersionOrder],
+  )
+  const groupBy = useMemo(
+    () => (localGroupBy !== null ? localGroupBy : serverGroupBy),
+    [localGroupBy, serverGroupBy],
+  )
+  const showEmptyGroups = useMemo(
+    () => (localShowEmptyGroups !== null ? localShowEmptyGroups : serverShowEmptyGroups),
+    [localShowEmptyGroups, serverShowEmptyGroups],
+  )
+  const sortBy = useMemo(
+    () => (localSortBy !== null ? localSortBy : serverSortBy),
+    [localSortBy, JSON.stringify(serverSortBy)],
+  )
+  const sortDesc = useMemo(
+    () => (localSortDesc !== null ? localSortDesc : serverSortDesc),
+    [localSortDesc, serverSortDesc],
+  )
+  const columns = useMemo(() => localColumns || serverColumns, [localColumns, serverColumns])
 
   // Filter update handler
   const onUpdateFilters = useCallback(

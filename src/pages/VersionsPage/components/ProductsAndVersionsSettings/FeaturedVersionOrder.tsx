@@ -24,6 +24,7 @@ export const TYPE_OPTIONS = [
   { value: 'latestDone', label: 'Latest Done', short: 'Done ' },
   { value: 'latest', label: 'Latest', short: 'Latest' },
 ]
+export const DEFAULT_FEATURED_ORDER = TYPE_OPTIONS.map((option) => option.value)
 
 interface FeaturedVersionOrderProps {
   value: string[]

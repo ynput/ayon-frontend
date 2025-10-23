@@ -13,6 +13,7 @@ import {
   useState,
   useEffect,
   useRef,
+  useCallback,
 } from 'react'
 import {
   buildVersionsAndProductsMaps,
@@ -39,6 +40,23 @@ import { useSlicerContext } from '@context/SlicerContext'
 import { useVersionsViewsContext } from './VersionsViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
+import { DEFAULT_FEATURED_ORDER } from '../components/ProductsAndVersionsSettings/FeaturedVersionOrder'
+
+// Stable default filter to prevent unnecessary re-renders
+const EMPTY_FILTER: QueryFilter = { conditions: [] }
+
+// Map UI sort values to API field names
+const SORT_BY_FIELD_MAP: Record<string, string> = {
+  name: 'path',
+  subType: 'productType',
+  parent: 'folder_name',
+}
+
+// Define which sort fields are excluded for each entity type
+const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
+  version: [],
+  product: ['author'],
+}
 
 export type VersionMap = Map<string, VersionNodeExtended>
 export type ProductMap = Map<string, ProductNodeExtended>
@@ -92,9 +110,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   // Separate the combined filters into version and product filters
   const {
-    version: versionFilter = { conditions: [] },
-    product: productFilter = { conditions: [] },
-    task: taskFilter = { conditions: [] },
+    version: versionFilter = EMPTY_FILTER,
+    product: productFilter = EMPTY_FILTER,
+    task: taskFilter = EMPTY_FILTER,
   } = useMemo(() => {
     return splitFiltersByScope(filters, ['version', 'product', 'task'])
   }, [filters])
@@ -128,7 +146,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
         assignees: 'task',
       },
     )
-  }, [sliceFilter])
+  }, [sliceFilter, showProducts])
   // get selected folders from slicer
   const slicerFolderIds = useSelectedFolders({
     rowSelection,
@@ -149,47 +167,58 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     sliceFilter: slicerTaskFilter,
   })
 
-  // Map UI sort values to API field names
-  const sortByFieldMap: Record<string, string> = {
-    name: 'path',
-    subType: 'productType',
-    parent: 'folder_name',
-  }
-  const resolvedSortBy = (sortBy && sortByFieldMap[sortBy]) || sortBy
+  const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [])
 
-  const excludedSortedFields: Record<'version' | 'product', string[]> = {
-    version: [],
-    product: ['author'],
-  }
+  const queryArgs = useMemo(
+    () => ({
+      projectName,
+      versionFilter: combinedVersionFilter.filterString,
+      productFilter: combinedProductFilter.filterString,
+      taskFilter: combinedTaskFilter.filterString,
+      folderIds: slicerFolderIds,
+      sortBy: resolvedSortBy,
+      desc: sortDesc,
+    }),
+    [
+      projectName,
+      combinedVersionFilter.filterString,
+      combinedProductFilter.filterString,
+      combinedTaskFilter.filterString,
+      slicerFolderIds,
+      resolvedSortBy,
+      sortDesc,
+    ],
+  )
 
-  const queryArgs = {
-    projectName,
-    versionFilter: combinedVersionFilter.filterString,
-    productFilter: combinedProductFilter.filterString,
-    taskFilter: combinedTaskFilter.filterString,
-    folderIds: slicerFolderIds,
-    sortBy: resolvedSortBy,
-    desc: sortDesc,
-  }
+  const resolveEntityArguments = useCallback(
+    (entityType: 'version' | 'product') => {
+      // remove sortBy based on excluded
+      const excludedFields = EXCLUDED_SORT_FIELDS[entityType]
+      const modifiedSortBy =
+        resolvedSortBy && excludedFields.includes(resolvedSortBy) ? undefined : resolvedSortBy
 
-  // returns queryArgs with some entity-specific modifications
-  const resolveEntityArguments = (entityType: 'version' | 'product') => {
-    // remove sortBy based on excluded
-    const excludedFields = excludedSortedFields[entityType]
-    const modifiedSortBy =
-      resolvedSortBy && excludedFields.includes(resolvedSortBy) ? undefined : resolvedSortBy
+      return {
+        ...queryArgs,
+        sortBy: modifiedSortBy,
+      }
+    },
+    [queryArgs, resolvedSortBy],
+  )
 
-    return {
-      ...queryArgs,
-      sortBy: modifiedSortBy,
-    }
-  }
+  const productArguments = useMemo(
+    () => ({
+      ...resolveEntityArguments('product'),
+      featuredVersionOrder: featuredVersionOrder?.length
+        ? featuredVersionOrder
+        : DEFAULT_FEATURED_ORDER,
+    }),
+    [resolveEntityArguments, featuredVersionOrder],
+  )
 
-  const productArguments = {
-    ...resolveEntityArguments('product'),
-    featuredVersionOrder,
-  }
-  const versionArguments = resolveEntityArguments('version')
+  const versionArguments = useMemo(
+    () => resolveEntityArguments('version'),
+    [resolveEntityArguments],
+  )
 
   // QUERY: Get all products when showing products
   const {
@@ -224,7 +253,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   })
 
   const isLoadingTable = useQueryArgumentChangeLoading(
-    queryArgs,
+    { ...queryArgs, featuredVersionOrder },
     isFetchingProducts || isFetchingVersions,
   )
 
