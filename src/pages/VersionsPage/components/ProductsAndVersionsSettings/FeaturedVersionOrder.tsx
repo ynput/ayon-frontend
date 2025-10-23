@@ -126,7 +126,7 @@ const FeaturedVersionOrder: FC<FeaturedVersionOrderProps> = ({ value, onChange }
         <Icon
           icon="info"
           data-tooltip={
-            'Select which version should be displayed in the product. If the chosen version type is not available, the next type in the list will be used.'
+            'Choose which version will be displayed on the product card. The first available from the list will be used.'
           }
           data-tooltip-delay={0}
         />

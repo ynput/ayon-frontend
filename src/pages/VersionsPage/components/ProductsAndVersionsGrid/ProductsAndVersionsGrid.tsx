@@ -249,7 +249,7 @@ const ProductsAndVersionsGrid: FC<ProductsAndVersionsGridProps> = ({}) => {
         const status = projectInfo?.statuses?.find((s) => s.name === entity.status)
 
         return (
-          <InView key={entity.id} rootMargin="200px 0px 200px 0px">
+          <InView key={entity.id} rootMargin="300px 0px 300px 0px" root={gridContainerRef.current}>
             {({ inView, ref }) =>
               inView ? (
                 <div ref={ref} data-entity-id={entity.id}>
