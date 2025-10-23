@@ -739,19 +739,22 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
       invalidatesTags: (_r, _e, { operationsRequestModel, projectName }) => {
         type Tags = { id: string; type: string }[]
         const userDashboardTags: Tags = [{ type: 'kanban', id: 'project-' + projectName }],
-          taskProgressTags: Tags = []
+          taskProgressTags: Tags = [],
+          entityListItemTags: Tags = []
 
         operationsRequestModel.operations?.forEach((op) => {
           const { entityId } = op
           if (entityId) {
             taskProgressTags.push({ type: 'progress', id: entityId })
+            // Invalidate list item cache for this entity to trigger background refetch
+            entityListItemTags.push({ type: 'entityListItem', id: entityId })
           } else {
             // new entity created, so we should invalidate everything
             taskProgressTags.push({ type: 'progress', id: 'LIST' })
           }
         })
 
-        return [...userDashboardTags, ...taskProgressTags]
+        return [...userDashboardTags, ...taskProgressTags, ...entityListItemTags]
       },
     }),
   }),

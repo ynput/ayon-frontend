@@ -241,6 +241,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
+      invalidatesTags: (_s, _e, { listId, listItemId }) => [
+        { type: 'entityListItem', id: listId },
+        { type: 'entityListItem', id: listItemId },
+      ],
     },
     createEntityListItem: {
       invalidatesTags: (_s, _e, { listId }) => [
