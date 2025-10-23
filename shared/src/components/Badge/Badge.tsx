@@ -2,8 +2,6 @@ import styled from 'styled-components'
 import { CSSProperties } from 'react'
 import { getTextColor } from '@shared/util/getTextColor'
 
-
-
 export const BadgeWrapper = styled.div`
   display: flex;
   align-items: center;
