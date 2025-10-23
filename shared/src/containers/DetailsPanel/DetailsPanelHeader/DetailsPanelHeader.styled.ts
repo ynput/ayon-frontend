@@ -177,7 +177,6 @@ export const TagsSelect = styled(TagsSelectComponent)`
   }
   .tag {
     padding: 0 4px;
-    color: var(--color-tag-text) !important;
   }
   .placeholder {
     padding: 0 2px;

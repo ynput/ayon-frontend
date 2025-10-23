@@ -1,6 +1,7 @@
 import { useEffect, RefObject } from 'react'
 import { union } from 'lodash'
 import type { DropdownRef } from '@ynput/ayon-react-components'
+import { getTextColor } from '@shared/util'
 
 interface UseTagStylingProps {
   tagsValues: string[][]
@@ -34,7 +35,7 @@ export const useTagStyling = ({
               if (tagColor) {
                 const htmlElement = tagElement as HTMLElement
                 htmlElement.style.backgroundColor = tagColor
-                htmlElement.style.color = 'var(--color-tag-text)'
+                htmlElement.style.color = getTextColor(tagColor)
               }
             })
           }

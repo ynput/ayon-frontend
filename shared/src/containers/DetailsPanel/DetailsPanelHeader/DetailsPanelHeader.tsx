@@ -17,6 +17,7 @@ import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../helpers/getThumbnails'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
+import { useStatusStyling } from '@shared/hooks/useStatusStyling'
 
 export type EntityTypeIcons = {
   folder: Record<string, string>
@@ -61,6 +62,7 @@ const DetailsPanelHeader = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tagsSelectRef = useRef<DropdownRef>(null)
+  const statusSelectRef = useRef<DropdownRef>(null)
 
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
@@ -133,6 +135,7 @@ const DetailsPanelHeader = ({
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected entities
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
+  const statusesValues: string[][] = useMemo(() => entities.map((t) => [t.status]), [entities])
   const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
   const tagsValues: string[][] = useMemo(() => entities.map((t) => t.tags), [entities])
   const tagsOptionsObject = useMemo(
@@ -143,11 +146,25 @@ const DetailsPanelHeader = ({
       }, {}),
     [tagsOptions],
   )
+  const statusOptionsObject = useMemo(
+    () =>
+      (statuses || []).reduce((acc, status) => {
+        acc[status.name] = status
+        return acc
+      }, {} as Record<string, { color?: string }>),
+    [statuses],
+  )
 
   useTagStyling({
     tagsValues,
     tagsOptionsObject,
     tagsSelectRef,
+  })
+
+  useStatusStyling({
+    StatusValues: statusesValues,
+    StatusOptionsObject: statusOptionsObject,
+    StatusSelectRef: statusSelectRef,
   })
 
   const isMultiple = entities.length > 1
@@ -251,6 +268,7 @@ const DetailsPanelHeader = ({
             </Styled.Content>
           </Styled.Header>
           <Styled.StatusSelect
+            ref={statusSelectRef}
             value={statusesValue}
             options={statuses || []}
             disabledValues={disabledStatuses}

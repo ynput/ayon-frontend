@@ -42,7 +42,7 @@ const ActivityStatus: FC<ActivityStatusProps> = ({ name, statuses, children }) =
   return (
     <StyledContainer>
       {children}
-      <StyledStatus $color={`${getTextColor(foundStatus.color)}`} style={{ backgroundColor: foundStatus.color }}>
+      <StyledStatus $color={getTextColor(foundStatus.color)} style={{ backgroundColor: foundStatus.color }}>
         {foundStatus.icon && <Icon icon={foundStatus.icon} />}
         {name + "Hello there"}
       </StyledStatus>

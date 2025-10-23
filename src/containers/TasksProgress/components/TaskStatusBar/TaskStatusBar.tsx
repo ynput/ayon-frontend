@@ -3,6 +3,7 @@ import { TaskTypeStatusBar } from '@containers/TasksProgress/helpers/formatTaskP
 import { FC } from 'react'
 import * as Styled from './TaskStatusBar.styled'
 import { isEmpty } from 'lodash'
+import { getTextColor } from '@shared/util'
 
 interface TaskStatusBarProps {
   statuses: Status[]
@@ -39,7 +40,7 @@ export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCou
           return (
             <Styled.Status
               key={status.name}
-              style={{ flex: count, backgroundColor: status.color }}
+              style={{ flex: count, backgroundColor: status.color, color:getTextColor(status.color) }}
             />
           )
         })}
