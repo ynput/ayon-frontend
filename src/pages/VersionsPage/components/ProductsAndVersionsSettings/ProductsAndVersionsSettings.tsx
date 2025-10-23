@@ -3,6 +3,7 @@ import { ProjectTableSettings, SettingConfig } from '@shared/components'
 import { SizeSlider } from '@shared/components'
 import { useVersionsViewsContext } from '../../context/VersionsViewsContext'
 import ProductsAndVersionsSorting from './ProductsAndVersionsSorting'
+import FeaturedVersionOrder, { TYPE_OPTIONS } from './FeaturedVersionOrder'
 
 export interface ProductsAndVersionsSettingsProps {}
 
@@ -14,6 +15,8 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
     sortBy,
     sortDesc,
     onUpdateSorting,
+    featuredVersionOrder,
+    onUpdateFeaturedVersionOrder,
   } = useVersionsViewsContext()
 
   const extraColumns = [
@@ -53,6 +56,18 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
         />
       ),
     },
+    {
+      id: 'featured-version-order',
+      title: 'Featured version',
+      icon: 'layers',
+      preview: TYPE_OPTIONS.find((option) => option.value === featuredVersionOrder[0])?.short || '',
+      component: (
+        <FeaturedVersionOrder
+          value={featuredVersionOrder}
+          onChange={onUpdateFeaturedVersionOrder}
+        />
+      ),
+    },
   ]
 
   return (
@@ -60,7 +75,7 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
       extraColumns={extraColumns}
       settings={extraSettings}
       includeLinks={false}
-      order={['columns', 'sort-by', 'row-height', 'grid-size']}
+      order={['columns', 'featured-version-order', 'sort-by', 'row-height', 'grid-size']}
     />
   )
 }

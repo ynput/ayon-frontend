@@ -25,6 +25,7 @@ const PanelHeader = styled.div`
   h3 {
     margin-left: 4px;
     padding: 0;
+    white-space: nowrap;
   }
 `
 

@@ -13,8 +13,6 @@
  * Must be used within a ViewsProvider context.
  */
 
-// TODOOOOO!!! fix some states to use server not just local
-
 import { useViewsContext } from '../../context/ViewsContext'
 import { VersionsSettings } from '@shared/api'
 import { ColumnsConfig } from '@shared/containers/ProjectTreeTable'
@@ -88,7 +86,7 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
   const [localGridHeight, setLocalGridHeight] = useState<number | null>(null)
   const [localGridHeightImmediate, setLocalGridHeightImmediate] = useState<number | null>(null)
   const [localRowHeight, setLocalRowHeight] = useState<number | null>(null)
-  const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[]>([])
+  const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[] | null>([])
   const [localGroupBy, setLocalGroupBy] = useState<string | undefined | null>(null)
   const [localShowEmptyGroups, setLocalShowEmptyGroups] = useState<boolean | null>(null)
   const [localSortBy, setLocalSortBy] = useState<string | undefined | null>(null)
@@ -125,7 +123,7 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     setLocalShowGrid(null)
     setLocalGridHeight(null)
     setLocalGridHeightImmediate(null)
-    setLocalFeaturedVersionOrder([])
+    setLocalFeaturedVersionOrder(null)
     setLocalGroupBy(null)
     setLocalShowEmptyGroups(null)
     setLocalSortBy(null)
@@ -144,8 +142,9 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
       ? localGridHeight
       : serverGridHeight
   const rowHeight = localRowHeight !== null ? localRowHeight : serverRowHeight
-  const featuredVersionOrder =
-    localFeaturedVersionOrder !== null ? localFeaturedVersionOrder : serverFeaturedVersionOrder
+  const featuredVersionOrder = localFeaturedVersionOrder?.length
+    ? localFeaturedVersionOrder
+    : serverFeaturedVersionOrder
   const groupBy = localGroupBy !== null ? localGroupBy : serverGroupBy
   const showEmptyGroups =
     localShowEmptyGroups !== null ? localShowEmptyGroups : serverShowEmptyGroups

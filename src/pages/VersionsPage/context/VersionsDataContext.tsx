@@ -85,7 +85,8 @@ interface VersionsDataProviderProps {
 
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc } = useVersionsViewsContext()
+  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder } =
+    useVersionsViewsContext()
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -186,7 +187,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   const productArguments = {
     ...resolveEntityArguments('product'),
-    featuredVersionOrder: ['hero', 'latestDone', 'latest'],
+    featuredVersionOrder,
   }
   const versionArguments = resolveEntityArguments('version')
 
