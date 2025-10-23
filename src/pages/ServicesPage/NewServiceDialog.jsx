@@ -75,6 +75,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
   const [settingsVariant, setSettingsVariant] = useState('production')
   const [storages, setStorages] = useState('')
   const [ports, setPorts] = useState('')
+  const [envVars, setEnvVars] = useState('')
 
   const { data: addonData = [] } = useGetServiceAddonsQuery({})
   const { data: hostsData } = useListHostsQuery()
@@ -109,8 +110,12 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       if (ports && ports.length) {
         setPorts(ports.join('\n'))
       }
-        
 
+      // Set envVars if available
+      const envVars = editService.data?.env
+      if (envVars && Object.keys(envVars).length) {
+        setEnvVars(Object.entries(envVars).map(([key, value]) => `${key}=${value}`).join('\n'))
+      }
     }
   }, [isEditMode, editService, addonData])
 
@@ -181,6 +186,16 @@ const ServiceDialog = ({ onHide, editService = null }) => {
 
     if (ports) {
       serviceConfig.ports = ports.split('\n').map((s) => s.trim())
+    }
+
+    if (envVars) {
+      serviceConfig.env = envVars.split('\n').reduce((acc, line) => {
+        const [key, value] = line.split('=')
+        if (key && value) {
+          acc[key.trim()] = value.trim()
+        }
+        return acc
+      }, {})
     }
 
     const serviceData = {
@@ -363,6 +378,15 @@ const ServiceDialog = ({ onHide, editService = null }) => {
             placeholder="8080:8080"
           />
           Add multiple ports by adding them on a new line.
+        </FormRow>
+        <FormRow label="Environment">
+          <InputTextarea
+            value={envVars}
+            style={{ minHeight: 40 }}
+            onChange={(e) => setEnvVars(e.target.value)}
+            placeholder="LOGLEVEL=INFO"
+          />
+          Add multiple environment variables by adding them on a new line.
         </FormRow>
       </FormLayout>
     </Dialog>
