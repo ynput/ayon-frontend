@@ -355,7 +355,6 @@ const SimpleTable: FC<SimpleTableProps> = ({
               // Corrected typo: handleRowKeydown -> handleRowKeyDown
               handleRowKeyDown(e, row)
             },
-            onClick: handleCellClick, // Added onClick handler
             depth: row.depth,
             tabIndex: 0,
             value: getValue<string>(),
@@ -375,6 +374,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
+            ...pt?.cell,
+            onClick: handleCellClick, // Added onClick handler
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate

@@ -30,6 +30,7 @@ import {
   useProjectDataContext,
   useQueryFilters,
   useSelectedFolders,
+  useViewsContext,
 } from '@shared/containers'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -107,6 +108,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const { attribFields } = useProjectDataContext()
   const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder } =
     useVersionsViewsContext()
+  const { isLoadingViews } = useViewsContext()
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -259,7 +261,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     isFetching: isFetchingProducts,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
-    skip: !showProducts,
+    skip: !showProducts || isLoadingViews,
     initialPageParam: {
       cursor: '',
       desc: sortDesc,
@@ -275,7 +277,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     isFetching: isFetchingVersions,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
-    skip: showProducts,
+    skip: showProducts || isLoadingViews,
     initialPageParam: {
       cursor: '',
       desc: sortDesc,
@@ -284,7 +286,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   const isLoadingTable = useQueryArgumentChangeLoading(
     { ...queryArgs, featuredVersionOrder },
-    isFetchingProducts || isFetchingVersions,
+    isFetchingProducts || isFetchingVersions || isLoadingViews,
   )
 
   // Dynamic pagination based on showProducts
@@ -309,7 +311,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     data: { versions: childVersions = [], errors: childVersionsErrors } = {},
     error: childVersionsError,
     isFetching: isFetchingChildren,
-  } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts })
+  } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts || isLoadingViews })
 
   const isLoadingChildVersions = useQueryArgumentChangeLoading(
     childVersionsArgs,

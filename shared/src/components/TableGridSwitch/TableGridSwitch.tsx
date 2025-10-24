@@ -10,6 +10,17 @@ export const TableGridSwitch = forwardRef<HTMLDivElement, TableGridSwitchProps>(
   ({ showGrid, onChange, ...props }, ref) => {
     useEffect(() => {
       const handleKeyPress = (event: KeyboardEvent) => {
+        // check we are not in an input or textarea
+        const target = event.target as HTMLElement
+        if (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.getAttribute('role') === 'textbox' ||
+          target.tagName === 'LI'
+        ) {
+          return
+        }
         if (event.key.toLowerCase() === 't') {
           onChange(false)
         } else if (event.key.toLowerCase() === 'g') {

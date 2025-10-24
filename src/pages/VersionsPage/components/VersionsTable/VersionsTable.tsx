@@ -52,6 +52,9 @@ const VersionsTable: FC<VersionsTableProps> = ({}) => {
           imgRatio={ratio}
           pt={{
             cell: {
+              style: {
+                padding: 4,
+              },
               pt: {
                 img: {
                   style: {

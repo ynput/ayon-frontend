@@ -29,7 +29,7 @@ const buildProductsGrid = (productsMap: ProductsMap, projectName: string): Entit
       id: product.id,
       entityType: 'product',
       header: product.parents[product.parents.length - 1],
-      path: product.parents.slice(0, -1).join(' / '),
+      path: product.parents.slice(0, -1).join('/'),
       title: product.name,
       icon: productType?.icon || getEntityTypeIcon('product'),
       status: product.featuredVersion?.status || 'unknown',
