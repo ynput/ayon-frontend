@@ -1,8 +1,7 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { getTextColor, Icon } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { Status } from '../../../ProjectTreeTable/types/project'
-import { getTextColor } from '@shared/util/getTextColor'
 
 const StyledContainer = styled.div`
   display: flex;

@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components'
+import { getTextColor } from '@ynput/ayon-react-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -41,6 +42,7 @@ export const categoryColorCss = (
     --background-color: ${$categoryTertiary};
     --button-color: ${$categoryPrimary};
     --button-color-secondary: ${$categorySecondary};
+    --button-text-color: ${getTextColor($categoryPrimary)};
     --border-color: ${$categoryPrimary};
   `
 
@@ -49,6 +51,7 @@ export const Comment = styled.div<CommentProps>`
   --background-color: var(--md-sys-color-surface-container);
   --button-color: var(--md-sys-color-primary);
   --button-color-secondary: var(--md-sys-color-surface-container-highest);
+  --button-text-color: var(--md-sys-color-on-primary);
   --border-color: var(--md-sys-color-outline-variant);
 
   &.category {
@@ -56,7 +59,6 @@ export const Comment = styled.div<CommentProps>`
     ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
       categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
     button.comment {
-      color: var(--md-sys-color-on-surface);
       &:hover {
         background-color: var(--button-color);
         filter: brightness(1.2);
@@ -401,11 +403,11 @@ export const Footer = styled.footer`
   /* remove save button icon */
   .comment {
     min-width: 75px;
-    color:var(--md-sys-color-on-primary);
     .icon {
       display: none;
     }
     background-color: var(--button-color);
+    color: var(--button-text-color);
   }
 `
 

@@ -1,8 +1,7 @@
-import { theme } from '@ynput/ayon-react-components'
+import { getTextColor, theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef } from 'react'
 import styled from 'styled-components'
-import { getTextColor } from '@shared/util'
 
 const NO_CATEGORY_LABEL = 'Category'
 

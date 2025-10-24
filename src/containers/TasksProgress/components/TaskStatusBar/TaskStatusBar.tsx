@@ -3,7 +3,7 @@ import { TaskTypeStatusBar } from '@containers/TasksProgress/helpers/formatTaskP
 import { FC } from 'react'
 import * as Styled from './TaskStatusBar.styled'
 import { isEmpty } from 'lodash'
-import { getTextColor } from '@shared/util'
+import { getTextColor } from '@ynput/ayon-react-components'
 
 interface TaskStatusBarProps {
   statuses: Status[]

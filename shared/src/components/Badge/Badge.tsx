@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { CSSProperties } from 'react'
-import { getTextColor } from '@shared/util/getTextColor'
+import { getTextColor } from '@ynput/ayon-react-components'
 
 export const BadgeWrapper = styled.div`
   display: flex;

@@ -1,8 +1,7 @@
 import { AttributeEnumItem } from '@shared/api'
-import { Icon, IconProps } from '@ynput/ayon-react-components'
+import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
-import { getTextColor } from '@shared/util'
 // Inline the edit trigger class to avoid runtime import and circular dependency with CellWidget
 const EDIT_TRIGGER_CLASS = 'edit-trigger'
 

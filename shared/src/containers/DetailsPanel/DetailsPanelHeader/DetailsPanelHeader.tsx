@@ -1,14 +1,14 @@
 import { useMemo, useRef } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
-import { DropdownRef } from '@ynput/ayon-react-components'
+import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
 
 import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
 import { Actions, DetailsPanelProps } from '@shared/containers'
 // shared
 import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery, Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
-import { getPriorityOptions, getTextColor } from '@shared/util'
+import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses, useEntityUpdate, useTagStyling } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
@@ -61,7 +61,6 @@ const DetailsPanelHeader = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tagsSelectRef = useRef<DropdownRef>(null)
-  const statusSelectRef = useRef<DropdownRef>(null)
 
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
@@ -144,7 +143,6 @@ const DetailsPanelHeader = ({
       }, {}),
     [tagsOptions],
   )
-  console.log("Tags", tagsOptionsObject)
 
   useTagStyling({
     tagsValues,
@@ -206,7 +204,6 @@ const DetailsPanelHeader = ({
 
   // Get title and subtitle from the imported function
   const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
-  console.log("Statuses", statusesValue)
   const status = statuses?.length!==0 && statuses?.find((status)=>  status.name=== statusesValue[0])
   return (
     <Styled.HeaderContainer>
@@ -254,7 +251,6 @@ const DetailsPanelHeader = ({
             </Styled.Content>
           </Styled.Header>
           <Styled.StatusSelect
-            ref={statusSelectRef}
             value={statusesValue}
             options={statuses || []}
             disabledValues={disabledStatuses}
