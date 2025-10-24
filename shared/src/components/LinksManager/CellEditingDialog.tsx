@@ -74,45 +74,19 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
     const cellRect = anchorElement.getBoundingClientRect()
 
-    const containerRect = tableContainer.getBoundingClientRect()
-    const containerRight = containerRect.right
-    const containerToRightOfScreen = window.innerWidth - containerRect.right
-
     const screenPadding = 24
     const minHeightThreshold = 250
     const minWidthThreshold = 400
     const maxMaxHeight = 600
-    const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
 
-    const containerLeft = containerRect.left
-    const spaceToRight = containerRight - cellRect.left
-    const spaceToLeft = cellRect.right - Math.max(containerLeft, screenPadding)
+    // Dialog width should match anchor width, but respect minimum width
     const anchorWidth = Math.max(anchorElement.offsetWidth ?? 0, cellRect.width)
-    const preferredWidth = Math.max(minWidthThreshold, anchorWidth)
-    const centeredWidth = Math.max(minWidthThreshold, screenWidth - 2 * screenPadding)
-    let position: { left?: number; right?: number } = {}
-    let dialogWidth = minWidthThreshold
+    const dialogWidth = Math.max(minWidthThreshold, anchorWidth)
 
-    if (spaceToRight >= preferredWidth) {
-      // Enough space to place dialog to the right side anchored to the cell
-      position.left = cellRect.left
-      dialogWidth = preferredWidth
-    } else if (spaceToRight >= minWidthThreshold) {
-      // Use as much width as possible to the right, anchored to the cell
-      position.left = cellRect.left
-      dialogWidth = Math.max(minWidthThreshold, Math.min(spaceToRight, preferredWidth))
-    } else if (spaceToLeft >= minWidthThreshold) {
-      // Not enough room on the right; anchor to the right edge of the cell
-      position.right = Math.max(
-        screenWidth - cellRect.right,
-        screenPadding + containerToRightOfScreen,
-      )
-      dialogWidth = Math.max(minWidthThreshold, Math.min(spaceToLeft, preferredWidth))
-    } else {
-      // Fallback to centered placement with available screen width
-      position.left = screenPadding
-      dialogWidth = Math.min(centeredWidth, Math.max(minWidthThreshold, preferredWidth))
+    // Always align dialog to the left edge of the anchor
+    const position: { left?: number; right?: number } = {
+      left: cellRect.left,
     }
 
     setMaxWidth(dialogWidth)
@@ -224,6 +198,8 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     const abortController = new AbortController()
     let allowScrollClose = !shouldCloseOnScroll
     let enableScrollCloseTimer: number | null = null
+    let previousScrollLeft: number | null = null
+    let previousScrollTop: number | null = null
 
     const closeDialog = () => {
       if (onDismissWithoutSave) {
@@ -236,11 +212,26 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     }
 
     const handleScrollToClose = () => {
-      if (!allowScrollClose) return
+      if (!allowScrollClose || !tableContainer) return
+
+      // Only close if vertical scroll changed, ignore horizontal scroll (column resize)
+      const currentScrollTop = tableContainer.scrollTop
+      if (previousScrollTop !== null && currentScrollTop === previousScrollTop) {
+        // Only horizontal scroll changed, don't close
+        previousScrollLeft = tableContainer.scrollLeft
+        return
+      }
+
+      previousScrollTop = currentScrollTop
+      previousScrollLeft = tableContainer.scrollLeft
       closeDialog()
     }
 
-    if (shouldCloseOnScroll) {
+    if (shouldCloseOnScroll && tableContainer) {
+      // Initialize scroll positions
+      previousScrollLeft = tableContainer.scrollLeft
+      previousScrollTop = tableContainer.scrollTop
+
       // Give virtualized tables time to auto-scroll into place before we allow the dialog to close.
       enableScrollCloseTimer = window.setTimeout(() => {
         allowScrollClose = true
