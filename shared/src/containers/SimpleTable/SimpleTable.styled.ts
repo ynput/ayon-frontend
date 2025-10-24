@@ -59,7 +59,7 @@ export const Cell = styled.div`
   width: 100%;
   min-height: 32px;
   user-select: none;
-  padding: 4px;
+  padding: 0px 4px;
 
   display: flex;
   gap: var(--base-gap-small);
