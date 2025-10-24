@@ -8,7 +8,7 @@ export const SortingSetting: FC<SortingSettingProps> = ({ title, ...props }) => 
   return (
     <Styled.Container>
       <label>{title}</label>
-      <Styled.Dropdown title={'Set sorting'} {...props} />
+      <Styled.Dropdown title={'No sorting'} {...props} />
     </Styled.Container>
   )
 }
