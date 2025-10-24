@@ -1,171 +1,107 @@
 import React, { useEffect, useRef, useState } from 'react'
-import MenuItem from './MenuItem'
-import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
-import { usePowerpack } from '@shared/context'
+import MenuItem from './MenuItem'
 
 const MenuList = ({
   items,
   handleClick,
-  onSubMenu,
-  subMenu,
-  level,
+  level = 0,
   id = 'root-menu',
   parentRef,
-  style,
+  style = {},
   onClose,
   onMenuClose,
   itemClassName,
   itemStyle,
   setPowerpackDialog,
+  menuRef: parentMenuRef,
   ...props
 }) => {
-  const itemRefs = useRef([])
   const menuRef = useRef(null)
+  const [adjustedTop, setAdjustedTop] = useState(0)
 
-  const [top, setTop] = useState(style?.top || 0)
+  const isSubMenu = level > 0
 
-  const handleSubMenu = (e, id, items) => {
-    if (!itemRefs.current[id] || !menuRef.current) return
-    onSubMenu &&
-      onSubMenu(e, {
-        id,
-        style: {
-          top: itemRefs.current[id].offsetTop + (style?.top || 0) - 4,
-          right: menuRef.current.getBoundingClientRect().width + (style?.right || 0) - 12,
-        },
-        items,
-        level: level,
-      })
-  }
-
-  //   when a subMenu open, set focus on the first item
-  useEffect(() => {
-    if (subMenu) {
-      const first = menuRef.current.querySelectorAll('li, button')[0]
-      first && first.focus()
-    }
-  }, [subMenu])
-
-  // check that the menu is not off the screen
+  // Viewport adjustments
   useEffect(() => {
     if (!menuRef.current) return
-    
     const menuElement = menuRef.current.querySelector('menu')
     if (!menuElement) return
-    
+
     const rect = menuRef.current.getBoundingClientRect()
-    const availableHeight = window.innerHeight - rect.top - 60
+    const viewportHeight = window.innerHeight
+
+    // Set max height
+    const availableHeight = viewportHeight - rect.top - 60
     const maxHeight = Math.min(700, availableHeight)
-    
     menuElement.style.maxHeight = `${maxHeight}px`
-  }, [menuRef.current, items])
+
+    // Viewport collision adjustments
+    let adjustment = 0
+    if (rect.bottom > viewportHeight - 60) {
+      adjustment = -(rect.bottom - (viewportHeight - 60) + 10)
+    } else if (rect.top < 50) {
+      adjustment = 50 - rect.top
+    }
+
+    if (adjustment !== 0) setAdjustedTop(adjustment)
+  }, [items])
+
+  const finalTop = (style?.top || 0) + adjustedTop
+  const finalLeft = style?.left
 
   return (
     <Styled.MenuWrapper
-      style={{ paddingRight: subMenu ? 16 : 0, ...style, top }}
-      className={subMenu ? 'sub-menu' : 'menu-list'}
+      style={{
+        paddingRight: isSubMenu ? 16 : 0,
+        ...style,
+        top: finalTop,
+        left: finalLeft,
+      }}
+      className={isSubMenu ? 'sub-menu' : 'menu-list'}
       id={id}
-      {...props}
       ref={menuRef}
+      {...props}
     >
       <Styled.Menu>
         {items
           .filter((item) => !item.hidden)
           .map((item, i) => {
-            // if item is a node, return it
-            if (item.node) {
-              return item.node
-            }
+            // Handle custom nodes
+            if (item.node) return item.node
 
+            // Handle dividers
             if (item?.id === 'divider') return <hr key={i} />
 
-            const {
-              label,
-              icon,
-              img,
-              highlighted,
-              onClick,
-              link,
-              items = [],
-              id,
-              disableClose,
-              selected,
-              disabled,
-              powerFeature,
-              active,
-              ...props
-            } = item
-
-            const { powerLicense } = usePowerpack()
-            const isPowerFeature = !powerLicense && powerFeature
-
-            const handleClickPowerFeature = (e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setPowerpackDialog(powerFeature)
-
-              // close the menu
-              onMenuClose && onMenuClose()
-            }
+            const itemId = item.id || `item-${i}`
 
             return (
               <MenuItem
-                tabIndex={0}
-                key={`${id}-${i}`}
-                {...{
-                  label,
-                  icon,
-                  img,
-                  highlighted,
-                  items,
-                  selected,
-                  disabled,
-                  powerFeature,
-                  active,
-                }}
-                isLink={link}
-                onClick={(e) =>
-                  isPowerFeature
-                    ? handleClickPowerFeature(e)
-                    : items.length
-                    ? handleSubMenu(e, id, items)
-                    : handleClick(e, onClick, link, disableClose)
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    if (isPowerFeature) {
-                      handleClickPowerFeature(e)
-                    } else if (items.length) {
-                      handleSubMenu(e, id, items)
-                    } else {
-                      handleClick(e, onClick, link)
-                    }
-                  }
-                  const isLastChild = !e.target.nextSibling
-                  if (e.key === 'Tab' && isLastChild && !e.shiftKey) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    //   when at bottom of list, tab goes to top
-                    const first = menuRef.current.querySelectorAll('li, button')[0]
-                    first && first.focus()
-                  }
-                  //   when a submenu is open, esc closes it and sets focus on the parent
-                  if (e.key === 'Escape' && subMenu && parentRef) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    parentRef.focus()
-                    onClose(id)
-                  }
-                }}
-                style={{ paddingRight: items.length ? '0' : '16px', ...itemStyle }}
-                ref={(e) => (itemRefs.current[id] = e)}
-                onMouseEnter={(e) => handleSubMenu(e, id, items)}
-                className={`${itemClassName} ${props.className || ''}`}
-                {...props}
-              >
-                {!!items.length && <Icon icon="arrow_right" style={{ marginLeft: 'auto' }} />}
-              </MenuItem>
+                key={itemId}
+                label={item.label}
+                icon={item.icon}
+                img={item.img}
+                highlighted={item.highlighted}
+                selected={item.selected}
+                disabled={item.disabled}
+                powerFeature={item.powerFeature}
+                active={item.active}
+                items={item.items || []}
+                isLink={item.link}
+                shortcut={item.shortcut}
+                itemId={itemId}
+                level={level}
+                menuRef={parentMenuRef || menuRef}
+                handleClick={handleClick}
+                onMenuClose={onMenuClose}
+                itemClassName={itemClassName}
+                itemStyle={itemStyle}
+                setPowerpackDialog={setPowerpackDialog}
+                parentRef={parentRef}
+                onClose={onClose}
+                onClick={item.onClick}
+                disableClose={item.disableClose}
+              />
             )
           })}
       </Styled.Menu>
