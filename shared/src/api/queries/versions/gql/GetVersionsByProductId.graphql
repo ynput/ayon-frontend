@@ -3,6 +3,7 @@ query GetVersionsByProductId(
   $productIds: [String!]!
   $versionFilter: String
   $taskFilter: String
+  $featuredOnly: [String!]
   $sortBy: String
   $first: Int
   $last: Int
@@ -14,6 +15,7 @@ query GetVersionsByProductId(
       productIds: $productIds
       filter: $versionFilter
       taskFilter: $taskFilter
+      featuredOnly: $featuredOnly
       sortBy: $sortBy
       last: $last
       first: $first

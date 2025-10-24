@@ -3,7 +3,7 @@ import { ProjectTableSettings, SettingConfig } from '@shared/components'
 import { SizeSlider } from '@shared/components'
 import { useVersionsViewsContext } from '../../context/VersionsViewsContext'
 import ProductsAndVersionsSorting from './ProductsAndVersionsSorting'
-import FeaturedVersionOrder, { TYPE_OPTIONS } from './FeaturedVersionOrder'
+import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
 
 export interface ProductsAndVersionsSettingsProps {}
 
@@ -60,7 +60,9 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
       id: 'featured-version-order',
       title: 'Featured version',
       icon: 'layers',
-      preview: TYPE_OPTIONS.find((option) => option.value === featuredVersionOrder[0])?.short || '',
+      preview:
+        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.short ||
+        '',
       component: (
         <FeaturedVersionOrder
           value={featuredVersionOrder}

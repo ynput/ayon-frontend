@@ -1,4 +1,4 @@
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { getAttributeIcon } from '@shared/util'
 import {
   useGetSiteInfoQuery,
   useGetKanbanProjectUsersQuery,
@@ -20,6 +20,7 @@ import { Icon, Option, Filter } from '@ynput/ayon-react-components'
 import { dateOptions } from './filterDates'
 import { isEmpty } from 'lodash'
 import { SliceFilter } from '@shared/containers'
+import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]
@@ -37,6 +38,7 @@ export type FilterFieldType =
   | 'attributes'
   | 'status'
   | 'tags'
+  | 'version'
 type AttributeType =
   | string
   | number
@@ -337,6 +339,25 @@ export const useBuildFilterOptions = ({
         tagsOption.values?.push(...tagOptionValues)
 
         options.push(tagsOption)
+      }
+    }
+
+    // VERSION
+    // add version options
+    if (scopeFilterTypes.includes('version')) {
+      const versionOption = getOptionRoot('version', config, scopePrefix, scopeLabel)
+
+      if (versionOption) {
+        // add featured version types as options
+        FEATURED_VERSION_TYPES.forEach((versionType) => {
+          versionOption.values?.push({
+            id: versionType.value,
+            label: versionType.label,
+            icon: versionType.icon,
+          })
+        })
+
+        options.push(versionOption)
       }
     }
 
@@ -652,6 +673,22 @@ const getOptionRoot = (
         allowNoValue: config?.enableRelativeValues,
         allowExcludes: config?.enableExcludes,
         operatorChangeable: config?.enableOperatorChange,
+      }
+      break
+    case 'version':
+      rootOption = {
+        id: getRootIdWithPrefix('version'),
+        type: 'string',
+        label: formatLabelWithScope('Version'),
+        icon: getAttributeIcon('version'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: true,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: false,
+        operatorChangeable: false,
       }
       break
     default:

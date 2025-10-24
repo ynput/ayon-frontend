@@ -20,6 +20,7 @@ import {
   VersionNodeExtended,
   ProductNodeExtended,
   determineLoadingProductVersions,
+  getFeaturedVersionFilter,
 } from '../util'
 import { useBuildVersionsTableData } from '../hooks'
 import {
@@ -40,7 +41,7 @@ import { useSlicerContext } from '@context/SlicerContext'
 import { useVersionsViewsContext } from './VersionsViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { DEFAULT_FEATURED_ORDER } from '../components/ProductsAndVersionsSettings/FeaturedVersionOrder'
+import { DEFAULT_FEATURED_ORDER } from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
 
 // Stable default filter to prevent unnecessary re-renders
 const EMPTY_FILTER: QueryFilter = { conditions: [] }
@@ -109,14 +110,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
+  const { filters: filtersWithoutFeatured, featuredVersionFilter } = useMemo(
+    () => getFeaturedVersionFilter(filters),
+    [filters],
+  )
+
   // Separate the combined filters into version and product filters
   const {
     version: versionFilter = EMPTY_FILTER,
     product: productFilter = EMPTY_FILTER,
     task: taskFilter = EMPTY_FILTER,
   } = useMemo(() => {
-    return splitFiltersByScope(filters, ['version', 'product', 'task'])
-  }, [filters])
+    return splitFiltersByScope(filtersWithoutFeatured, ['version', 'product', 'task'])
+  }, [filtersWithoutFeatured])
 
   const { updateExpanded, expandedIds } = useExpandedState({
     expanded,
@@ -215,17 +221,28 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
       }
 
       if (entityType === 'product') {
-        args.featuredVersionOrder = modifiedFeaturedVersionOrder
+        if (featuredVersionFilter?.at) {
+          // is there a version type filter, us that instead
+          args.featuredVersionOrder = featuredVersionFilter
+        } else {
+          args.featuredVersionOrder = modifiedFeaturedVersionOrder
+        }
+      }
+
+      if (entityType === 'version') {
+        if (featuredVersionFilter?.length) {
+          args.featuredOnly = featuredVersionFilter
+        }
       }
 
       return args
     },
-    [queryArgs, resolvedSortBy],
+    [queryArgs, resolvedSortBy, featuredVersionOrder, featuredVersionFilter],
   )
 
   const productArguments = useMemo(
     () => resolveEntityArguments('product'),
-    [resolveEntityArguments, featuredVersionOrder],
+    [resolveEntityArguments],
   )
 
   const versionArguments = useMemo(
@@ -278,17 +295,26 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   const versions = useMemo(() => flattenInfiniteVersionsData(versionsData), [versionsData])
   const products = useMemo(() => flattenInfiniteProductsData(productsData), [productsData])
 
-  // QUERY: get child versions for expanded products
-  const {
-    data: { versions: childVersions = [], errors: childVersionsErrors } = {},
-    error: childVersionsError,
-  } = useGetVersionsByProductsQuery({
+  const childVersionsArgs = {
     projectName: versionArguments.projectName,
     productIds: expandedIds,
     versionFilter: combinedVersionFilter.filterString,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
-  })
+    featuredOnly: versionArguments.featuredOnly,
+  }
+
+  // QUERY: get child versions for expanded products
+  const {
+    data: { versions: childVersions = [], errors: childVersionsErrors } = {},
+    error: childVersionsError,
+    isFetching: isFetchingChildren,
+  } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts })
+
+  const isLoadingChildVersions = useQueryArgumentChangeLoading(
+    childVersionsArgs,
+    isFetchingChildren,
+  )
 
   // Efficiently build all maps in a single pass using util
   const { versionsMap, childVersionsMap, allVersionsMap, productsMap, entitiesMap } = useMemo(
@@ -303,6 +329,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
       expandedProductIds: expandedIds,
       productsMap,
       hasFiltersApplied: (filters.conditions?.length || 0) > 0,
+      isLoading: isLoadingChildVersions,
     })
   }, [childVersions, expandedIds, productsMap])
 

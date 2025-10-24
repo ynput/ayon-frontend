@@ -9,6 +9,7 @@ export type DetermineLoadingProductVersionsParams = {
   expandedProductIds: string[]
   productsMap: ProductMap
   hasFiltersApplied?: boolean
+  isLoading?: boolean
 }
 
 /**
@@ -21,7 +22,12 @@ export const determineLoadingProductVersions = ({
   expandedProductIds,
   productsMap,
   hasFiltersApplied,
+  isLoading,
 }: DetermineLoadingProductVersionsParams): Record<string, number> => {
+  if (!isLoading) {
+    return {}
+  }
+
   // Get product IDs that have already loaded versions
   const loadedProductIds = new Set(
     childVersions.map((version) => version.product?.id).filter(Boolean),

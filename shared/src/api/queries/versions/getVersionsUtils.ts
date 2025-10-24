@@ -178,7 +178,12 @@ export const transformProductsResponse = (response: GetProductsQuery): GetProduc
     }
   })
 
-  return { pageInfo, products }
+  // filter out products with no featured version
+  const productsWithFeaturedVersion = products.filter(
+    (p) => p.featuredVersion !== null,
+  ) as ProductNode[]
+
+  return { pageInfo, products: productsWithFeaturedVersion }
 }
 
 export const parseErrorMessage = (error: string): string => {

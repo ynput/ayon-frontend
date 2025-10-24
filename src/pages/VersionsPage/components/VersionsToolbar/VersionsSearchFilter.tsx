@@ -13,7 +13,7 @@ const VersionsSearchFilter: FC<VersionsSearchFilterProps> = ({}) => {
   const scopesConfig: ScopeWithFilterTypes[] = [
     {
       scope: 'version',
-      filterTypes: ['status', 'tags', 'author', 'attributes'],
+      filterTypes: ['status', 'tags', 'author', 'attributes', 'version'],
     },
     {
       scope: 'product',

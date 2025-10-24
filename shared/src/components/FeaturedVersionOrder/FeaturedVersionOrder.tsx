@@ -19,12 +19,12 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 
 // options and default order
-export const TYPE_OPTIONS = [
-  { value: 'hero', label: 'Hero', short: 'Hero' },
-  { value: 'latestDone', label: 'Latest Done', short: 'Done ' },
-  { value: 'latest', label: 'Latest', short: 'Latest' },
+export const FEATURED_VERSION_TYPES = [
+  { value: 'hero', label: 'Hero', short: 'Hero', icon: 'star' },
+  { value: 'latestDone', label: 'Latest Done', short: 'Done', icon: 'check_circle' },
+  { value: 'latest', label: 'Latest', short: 'Latest', icon: 'fiber_new' },
 ]
-export const DEFAULT_FEATURED_ORDER = TYPE_OPTIONS.map((option) => option.value)
+export const DEFAULT_FEATURED_ORDER = FEATURED_VERSION_TYPES.map((option) => option.value)
 
 interface FeaturedVersionOrderProps {
   value: string[]
@@ -64,7 +64,7 @@ const SortableItem: FC<SortableItemProps> = ({ id, label }) => {
   )
 }
 
-const FeaturedVersionOrder: FC<FeaturedVersionOrderProps> = ({ value, onChange }) => {
+export const FeaturedVersionOrder: FC<FeaturedVersionOrderProps> = ({ value, onChange }) => {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   // Setup sensors for dnd-kit
@@ -78,7 +78,7 @@ const FeaturedVersionOrder: FC<FeaturedVersionOrderProps> = ({ value, onChange }
 
   // Sort TYPE_OPTIONS based on the value array order
   const orderedOptions = useMemo(() => {
-    const optionsCopy = [...TYPE_OPTIONS]
+    const optionsCopy = [...FEATURED_VERSION_TYPES]
 
     if (value.length > 0) {
       optionsCopy.sort((a, b) => {
@@ -118,7 +118,9 @@ const FeaturedVersionOrder: FC<FeaturedVersionOrderProps> = ({ value, onChange }
   }
 
   // Find the active option for the drag overlay
-  const activeOption = activeId ? TYPE_OPTIONS.find((option) => option.value === activeId) : null
+  const activeOption = activeId
+    ? FEATURED_VERSION_TYPES.find((option) => option.value === activeId)
+    : null
 
   return (
     <Container>

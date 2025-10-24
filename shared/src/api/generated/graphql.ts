@@ -1778,6 +1778,7 @@ export type GetVersionsQueryVariables = Exact<{
   versionFilter?: InputMaybe<Scalars['String']['input']>;
   productFilter?: InputMaybe<Scalars['String']['input']>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -1795,6 +1796,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
   productIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
   versionFilter?: InputMaybe<Scalars['String']['input']>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -2733,7 +2735,7 @@ export const GetProductsDocument = `
 ${VersionBaseFragmentDoc}
 ${VpFolderFragmentDoc}`;
 export const GetVersionsDocument = `
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -2741,6 +2743,7 @@ export const GetVersionsDocument = `
       filter: $versionFilter
       productFilter: $productFilter
       taskFilter: $taskFilter
+      featuredOnly: $featuredOnly
       folderIds: $folderIds
       includeFolderChildren: true
       search: $search
@@ -2765,12 +2768,13 @@ export const GetVersionsDocument = `
     ${PageInfoFragmentDoc}
 ${VersionExtendedFragmentDoc}`;
 export const GetVersionsByProductIdDocument = `
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
       filter: $versionFilter
       taskFilter: $taskFilter
+      featuredOnly: $featuredOnly
       sortBy: $sortBy
       last: $last
       first: $first
