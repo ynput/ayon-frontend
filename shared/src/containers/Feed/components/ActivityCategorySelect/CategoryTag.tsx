@@ -85,9 +85,11 @@ export const CategoryTag = forwardRef<HTMLDivElement, CategoryTagProps>(
         })}
         style={{
           ...style,
-          backgroundColor: color,
-          borderColor: color,
-          color: getTextColor(color)
+          ...(color && {
+            backgroundColor: color,
+            borderColor: color,
+            color: getTextColor(color)
+          })
         }}
       >
         {value || NO_CATEGORY_LABEL}
