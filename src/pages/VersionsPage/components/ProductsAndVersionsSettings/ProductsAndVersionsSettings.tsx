@@ -4,6 +4,7 @@ import { SizeSlider } from '@shared/components'
 import { useVersionsViewsContext } from '../../context/VersionsViewsContext'
 import ProductsAndVersionsSorting from './ProductsAndVersionsSorting'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
+import { useProjectDataContext, useProjectTableContext } from '@shared/containers'
 
 export interface ProductsAndVersionsSettingsProps {}
 
@@ -18,6 +19,9 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
     featuredVersionOrder,
     onUpdateFeaturedVersionOrder,
   } = useVersionsViewsContext()
+
+  // const { attribFields } = useProjectDataContext()
+  const { attribFieldsScoped } = useProjectTableContext()
 
   const extraColumns = [
     {
@@ -52,6 +56,7 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
         <ProductsAndVersionsSorting
           sortBy={sortBy}
           sortDesc={sortDesc}
+          attributes={attribFieldsScoped}
           onUpdateSorting={onUpdateSorting}
         />
       ),

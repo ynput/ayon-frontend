@@ -195,6 +195,11 @@ export const ProjectTableProvider = ({
     showEmpty: showEmptyGroups,
   })
 
+  const attribFieldsScoped = useMemo(
+    () => attribFields.filter((attrib) => attrib.scope?.some((scope) => scopes.includes(scope))),
+    [attribFields, scopes],
+  )
+
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
     () => !!groupBy && buildGroupByTableData(groupBy),
@@ -313,6 +318,7 @@ export const ProjectTableProvider = ({
         error,
         projectInfo,
         attribFields,
+        attribFieldsScoped,
         scopes,
         users,
         projectName,
