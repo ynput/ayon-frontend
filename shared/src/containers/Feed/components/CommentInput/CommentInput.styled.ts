@@ -401,7 +401,7 @@ export const Footer = styled.footer`
   /* remove save button icon */
   .comment {
     min-width: 75px;
-    color:var(--md-sys-color-on-primary);
+    color:var(--md-sys-color-on-primary) !important;
     .icon {
       display: none;
     }
