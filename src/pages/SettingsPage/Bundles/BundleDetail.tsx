@@ -11,6 +11,7 @@ import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
+import { useAddonSearch } from './useAddonSearch'
 
 type Installer = { version: string; platforms?: string[] }
 type Bundle = {
@@ -47,6 +48,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
   const [formData, setFormData] = useState<Bundle | any>({} as Bundle)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const [updateBundle] = useUpdateBundleMutation()
+  const { search, onSearchChange } = useAddonSearch(addons, setSelectedAddons)
 
   // list of all bundles because we need production versions of addons
   let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
@@ -160,6 +162,14 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           onAddonAutoUpdate={handleAddonAutoSave}
         >
+          <Styled.AddonTools>
+            <Styled.StyledInput
+              value={search}
+              onChange={onSearchChange}
+              placeholder="Search addons..."
+              aria-label="Search addons"
+            />
+          </Styled.AddonTools>
           <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}

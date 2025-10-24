@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Toolbar, Spacer, SaveButton, Button } from '@ynput/ayon-react-components'
+import { Button, SaveButton, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { useCreateBundleMutation, useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import type { Addon } from './types'
 
@@ -16,6 +16,7 @@ import { useCheckBundleCompatibilityQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { useAddonSearch } from './useAddonSearch'
 
 type AddonDevelopment = Record<string, { enabled?: boolean; path?: string }>
 
@@ -65,6 +66,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   const [skipBundleCheck, setSkipBundleCheck] = useState<boolean>(false)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const previousFormData = usePrevious(formData)
+  const { search, onSearchChange } = useAddonSearch(addons, setSelectedAddons)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation() as any
@@ -356,6 +358,12 @@ const NewBundle: React.FC<NewBundleProps> = ({
         }
       >
         <Styled.AddonTools>
+          <Styled.StyledInput
+            value={search}
+            onChange={onSearchChange}
+            placeholder="Search addons..."
+            aria-label="Search addons"
+          />
           <Button
             label="Select all addons"
             icon="select_all"
