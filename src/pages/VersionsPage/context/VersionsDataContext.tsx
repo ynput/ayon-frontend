@@ -49,7 +49,8 @@ const EMPTY_FILTER: QueryFilter = { conditions: [] }
 const SORT_BY_FIELD_MAP: Record<string, string> = {
   name: 'path',
   subType: 'productType',
-  parent: 'folder_name',
+  folder: 'folderName',
+  product: 'productName',
 }
 
 // Define which sort fields are excluded for each entity type
@@ -167,7 +168,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     sliceFilter: slicerTaskFilter,
   })
 
-  const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [])
+  const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
 
   const queryArgs = useMemo(
     () => ({
@@ -194,24 +195,36 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     (entityType: 'version' | 'product') => {
       // remove sortBy based on excluded
       const excludedFields = EXCLUDED_SORT_FIELDS[entityType]
-      const modifiedSortBy =
-        resolvedSortBy && excludedFields.includes(resolvedSortBy) ? undefined : resolvedSortBy
+      let modifiedSortBy =
+        resolvedSortBy && excludedFields.some((field) => resolvedSortBy.includes(field))
+          ? undefined
+          : resolvedSortBy
 
-      return {
+      if (modifiedSortBy?.startsWith('attrib_')) {
+        // replace _ with .
+        modifiedSortBy = modifiedSortBy.replace('attrib_', 'attrib.')
+      }
+
+      const modifiedFeaturedVersionOrder = featuredVersionOrder?.length
+        ? featuredVersionOrder
+        : DEFAULT_FEATURED_ORDER
+
+      const args: any = {
         ...queryArgs,
         sortBy: modifiedSortBy,
       }
+
+      if (entityType === 'product') {
+        args.featuredVersionOrder = modifiedFeaturedVersionOrder
+      }
+
+      return args
     },
     [queryArgs, resolvedSortBy],
   )
 
   const productArguments = useMemo(
-    () => ({
-      ...resolveEntityArguments('product'),
-      featuredVersionOrder: featuredVersionOrder?.length
-        ? featuredVersionOrder
-        : DEFAULT_FEATURED_ORDER,
-    }),
+    () => resolveEntityArguments('product'),
     [resolveEntityArguments, featuredVersionOrder],
   )
 
