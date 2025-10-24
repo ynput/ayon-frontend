@@ -203,7 +203,9 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   // close the slide out
   const closeSlideOut = useCallback(() => {
     setSlideOut(null)
-    setHighlightedActivities([])
+    if (slideOut) {
+      setHighlightedActivities([])
+    }
   }, [])
 
   const [pip, setPip] = useState<DetailsPanelPip | null>(null)

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react'
 import { useListAddonsQuery } from '@shared/api'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { DataTable } from 'primereact/datatable'
+import { DataTable, DataTableSortEvent } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useSocketContext } from '@shared/context'
 import { compareBuild, coerce } from 'semver'
@@ -42,6 +42,9 @@ type BundlesAddonListProps = {
   isDev?: boolean
   onDevChange?: (addonNames: string[], payload: { value: any; key: 'enabled' | 'path' }) => void
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
+  handleSort?:(e: DataTableSortEvent) => void
+  sortField?: string | null
+  sortOrder?: 0 | 1 | -1 | null | undefined
 }
 
 const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
@@ -141,11 +144,13 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       isDev,
       onDevChange,
       onAddonAutoUpdate,
+      sortOrder,
+      sortField,
+      handleSort,
     },
     ref,
   ) => {
     const navigate = useNavigate()
-
     const { data: { addons = [] } = {}, refetch } = useListAddonsQuery({}) as any
 
     const readyState = useSocketContext().readyState
@@ -193,6 +198,11 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           dev: formData?.addonDevelopment?.[addon.name] as { enabled?: boolean; path?: string },
         }))
         .sort((a, b) => {
+          // In comparison mode (readOnly), always sort by title only to ensure alignment
+          if (readOnly) {
+            return a.title.localeCompare(b.title)
+          }
+          // In edit mode for project bundles, sort by override permission first
           if (
             formData.isProject &&
             a.projectCanOverrideAddonVersion !== b.projectCanOverrideAddonVersion
@@ -201,7 +211,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           }
           return a.title.localeCompare(b.title)
         })
-    }, [addons, formData])
+    }, [addons, formData, readOnly])
 
     const createContextItems = (selected: any) => {
       let items = [
@@ -231,6 +241,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       ctxMenuShow(e.originalEvent, createContextItems(contextSelection))
     }
 
+
     return (
       <StyledDataTable
         value={addonsTable}
@@ -246,6 +257,11 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
         className="addons-table"
         rowClassName={(rowData: any) => diffAddonVersions?.includes(rowData.name) && 'diff-version'}
         ref={ref}
+        {...(handleSort && {
+          onSort: (e: DataTableSortEvent) => handleSort(e),
+          sortField: sortField,
+          sortOrder: sortOrder,
+        })}
       >
         <Column
           header="Title"

@@ -176,7 +176,7 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
-        enabled: matchedAddons?.get('reports'), // hide the report tab until the addon is out of development
+        enabled: !!matchedAddons?.get('reports'), // hide the report tab until the addon is out of development
       },
       {
         name: 'Workfiles',
@@ -218,6 +218,8 @@ const ProjectPage = () => {
     ],
     [addonsData, projectName, remotePages, matchedAddons, module],
   )
+
+  console.log(links)
 
   const activeLink = useMemo(() => {
     return links.find((link) => link.module === module) || null

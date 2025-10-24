@@ -2,6 +2,7 @@ import { Panel, Section } from '@ynput/ayon-react-components'
 import React, { useRef, useState } from 'react'
 import BundlesAddonList from './BundlesAddonList'
 import useScrollSync from '@hooks/useScrollSync'
+import { DataTableSortEvent } from 'primereact/datatable'
 
 type Bundle = {
   name: string
@@ -20,7 +21,8 @@ const BundleCompare: React.FC<BundleCompareProps> = ({ bundles = [], addons }) =
   // for each bundle, in addons check if the same addon has a different version in another bundle
   // if so, set a flag on the addon to show it's different
   const diffAddonVersions: string[] = []
-
+  const [sortField, setSortField] = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<0 | 1 | -1 | null | undefined>(null)
   const bundlesAddons: Array<Record<string, string | null>> = bundles.map((b) => b.addons)
 
   addons.forEach(({ name }) => {
@@ -42,7 +44,11 @@ const BundleCompare: React.FC<BundleCompareProps> = ({ bundles = [], addons }) =
   }
 
   useScrollSync(addonListRefs as any, [bundles])
+  const handleSort = (e: DataTableSortEvent) => {
+    setSortOrder(e.sortOrder)
+    setSortField(e.sortField)
 
+  }
   return (
     <Section direction="row" style={{ alignItems: 'flex-start', overflow: 'auto' }}>
       {bundles.map((bundle, index) => (
@@ -57,6 +63,9 @@ const BundleCompare: React.FC<BundleCompareProps> = ({ bundles = [], addons }) =
             selected={selectedAddons}
             ref={handleRef(index)}
             diffAddonVersions={diffAddonVersions}
+            handleSort={handleSort}
+            sortOrder={sortOrder}
+            sortField={sortField}
           />
         </Panel>
       ))}
