@@ -176,13 +176,14 @@ export const EntityListsProvider = ({
             items: entitiesToAdd,
             mode: 'merge',
           },
-        })
+        }).unwrap()
 
         toast.success(`Item${entitiesToAdd.length > 1 ? 's' : ''} added to list`)
 
         return Promise.resolve()
-      } catch (error) {
-        toast.error('Error adding to list')
+      } catch (error: any) {
+        console.error('Error adding to list', error)
+        toast.error(error || 'Error adding to list')
         return Promise.reject(error)
       }
     },
@@ -332,16 +333,41 @@ export const EntityListsProvider = ({
       const cached = cache.get(key)
       if (cached) {
         // Recreate command closures with current selection (list items carry command depending on selected)
-        return cached.items.map((item) => ({
-          ...item,
-          // For nested items we keep structure; leaf list items already have bound commands referencing addToList with id
-          items: item.items,
-        }))
+        const rebindCommands = (items: ListSubMenuItem[]): ListSubMenuItem[] => {
+          return items.map((item) => {
+            // Skip special items like '__new-list__' which should not be in the cache
+            if (item.id.startsWith('__')) {
+              return item
+            }
+            // If this is a list item (has command), rebind it with current selection
+            if (item.command) {
+              const list = lists.find((l) => l.id === item.id)
+              if (list) {
+                return buildListMenuItem(list, selected, item.icon !== undefined)
+              }
+            }
+            // If this is a folder (has nested items), recursively rebind children
+            if (item.items) {
+              return {
+                ...item,
+                items: rebindCommands(item.items),
+              }
+            }
+            return item
+          })
+        }
+        // Filter out any special items that shouldn't be in cache (like __new-list__)
+        const filteredItems = cached.items.filter(item => !item.id.startsWith('__'))
+        return rebindCommands(filteredItems)
       }
 
       const resolveShowIcon = getShowIcon || (() => false)
+
+      // Filter lists to only include those with editor access (accessLevel >= 20)
+      const editableLists = lists.filter((list) => (list.accessLevel ?? 0) >= 20)
+
       if (!powerLicense || !listFolders.length) {
-        return lists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+        return editableLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
       }
 
       // folder node structure
@@ -364,8 +390,8 @@ export const EntityListsProvider = ({
         }
       })
 
-      // assign lists
-      lists.forEach((list) => {
+      // assign lists (only editable ones)
+      editableLists.forEach((list) => {
         if (list.entityListFolderId && nodeMap.has(list.entityListFolderId)) {
           nodeMap.get(list.entityListFolderId)!.lists.push(list)
         }
@@ -408,7 +434,7 @@ export const EntityListsProvider = ({
       const folderItems = buildFolderItems(rootNodes)
 
       // lists without a folder (root lists)
-      const rootLists = lists.filter((l) => !l.entityListFolderId)
+      const rootLists = editableLists.filter((l) => !l.entityListFolderId)
       const rootListItems = rootLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
 
       const result = [...folderItems, ...rootListItems]

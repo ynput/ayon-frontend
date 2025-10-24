@@ -7,11 +7,13 @@ import { confirmDelete, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { ConfirmDialogReturn } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import { ListItemsDataContextValue } from '../context/ListItemsDataContext'
+import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 type UseDeleteListItemsProps = {
   projectName: string
   listId?: string
   listItemsMap: ListItemsDataContextValue['listItemsMap']
+  accessLevel?: number | null
 }
 
 export type DeleteListItem = { id: string; entityId: string }
@@ -43,6 +45,7 @@ const useDeleteListItems = ({
   projectName,
   listId,
   listItemsMap,
+  accessLevel,
 }: UseDeleteListItemsProps): UseDeleteListItemsReturn => {
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
@@ -60,7 +63,7 @@ const useDeleteListItems = ({
         },
       }).unwrap()
     } catch (error: any) {
-      toast.error(`Error adding items to list: ${error.data.detail}`)
+      toast.error(`Error adding items to list: ${error}`)
       // remove from redo stack as well
       if (history) {
         history.removeHistoryEntries(1)
@@ -90,7 +93,7 @@ const useDeleteListItems = ({
     } catch (error: any) {
       console.error('Error deleting list items:', error)
       // Handle the error (e.g., show a toast notification)
-      toast.error(`Error deleting list items: ${error.data.detail}`)
+      toast.error(`Error deleting list items: ${error}`)
     }
   }
 
@@ -120,40 +123,64 @@ const useDeleteListItems = ({
     selectedCells,
     _meta,
     context,
-  ) => ({
-    label: deleteItemLabel.label,
-    icon: deleteItemLabel.icon,
-    shortcut: deleteItemLabel.shortcut,
-    danger: true,
-    command: async () => {
-      const selectedListItems = selectedCells
-        .filter((cell) => parseCellId(cell.cellId)?.rowId)
-        .map((cell) => ({ id: parseCellId(cell.cellId)?.rowId as string, entityId: cell.entityId }))
+  ) => {
+    // Filter out restricted entities from the selection
+    const selectedListItems = selectedCells
+      .filter((cell) => parseCellId(cell.cellId)?.rowId && !isEntityRestricted(cell.entityType))
+      .map((cell) => ({ id: parseCellId(cell.cellId)?.rowId as string, entityId: cell.entityId }))
 
-      await deleteListItemsWithConfirmation(selectedListItems, context.history)
-    },
-  })
+    // Hide menu item if there are no valid items to delete
+    if (selectedListItems.length === 0) return undefined
+
+    const hasRestrictedEntity = selectedCells.some((cell) => isEntityRestricted(cell.entityType))
+
+    return {
+      label: deleteItemLabel.label,
+      icon: deleteItemLabel.icon,
+      shortcut: deleteItemLabel.shortcut,
+      danger: true,
+      tooltip: hasRestrictedEntity ? 'Restricted entities will be skipped' : undefined,
+      hidden: (accessLevel ?? 0) < 20,
+      command: async () => {
+        await deleteListItemsWithConfirmation(selectedListItems, context.history)
+      },
+    }
+  }
 
   // ACTIONS BUTTON DELETE
-  const deleteListItemAction: TableActionConstructor = (selection, editing) => ({
-    icon: deleteItemLabel.icon,
-    ['data-tooltip']: deleteItemLabel.label,
-    ['data-shortcut']: deleteItemLabel.shortcut,
-    disabled: !selection.selectedCells.size,
-    onClick: () => {
-      // convert selection to a list of ids
-      const selectedListItems: DeleteListItem[] = []
+  const deleteListItemAction: TableActionConstructor = (selection, editing) => {
+    // Check if any selected items are restricted entities
+    const selectedListItems: DeleteListItem[] = []
+    let hasRestrictedEntity = false
 
-      Array.from(selection.selectedCells).forEach((cell) => {
-        const itemId = parseCellId(cell)?.rowId
-        if (!itemId) return
-        const entityId = listItemsMap.get(itemId)?.entityId
-        if (!entityId) return
-        selectedListItems.push({ id: itemId, entityId })
-      })
-      deleteListItemsWithConfirmation(selectedListItems, editing.history)
-    },
-  })
+    Array.from(selection.selectedCells).forEach((cell) => {
+      const itemId = parseCellId(cell)?.rowId
+      if (!itemId) return
+      const item = listItemsMap.get(itemId)
+      if (!item) return
+
+      // Check if this is a restricted entity
+      if (isEntityRestricted(item.entityType)) {
+        hasRestrictedEntity = true
+        return
+      }
+
+      selectedListItems.push({ id: itemId, entityId: item.entityId })
+    })
+
+    return {
+      icon: deleteItemLabel.icon,
+      ['data-tooltip']: hasRestrictedEntity
+        ? 'Cannot delete restricted entities'
+        : deleteItemLabel.label,
+      ['data-shortcut']: deleteItemLabel.shortcut,
+      disabled:
+        !selection.selectedCells.size || selectedListItems.length === 0 || (accessLevel ?? 0) < 20,
+      onClick: () => {
+        deleteListItemsWithConfirmation(selectedListItems, editing.history)
+      },
+    }
+  }
 
   return {
     deleteListItems,

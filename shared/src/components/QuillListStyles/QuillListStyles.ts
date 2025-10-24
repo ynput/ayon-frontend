@@ -5,6 +5,7 @@ import styled from 'styled-components'
  * This component provides consistent list styling across different Quill editors
  */
 export const QuillListStyles = styled.div`
+  position: relative;
   height: 100%;
   .ql-editor a {
     display: inline !important;

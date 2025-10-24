@@ -721,7 +721,7 @@ export type LinkTypeModel = {
   /** Output entity type */
   outputType: string
   /** Additional link type data */
-  data?: Record<string, any>
+  data?: object
 }
 export type ProjectAttribModel2 = {
   priority?: 'urgent' | 'high' | 'normal' | 'low'
@@ -757,7 +757,7 @@ export type ProjectModel = {
   tags?: Tag[]
   config?: object
   attrib?: ProjectAttribModel2
-  data?: Record<string, any>
+  data?: object
   /** Whether the project is active */
   active?: boolean
   ownAttrib?: string[]
@@ -776,7 +776,7 @@ export type ProjectPostModel = {
   tags?: Tag[]
   config?: object
   attrib?: ProjectAttribModel2
-  data?: Record<string, any>
+  data?: object
   /** Whether the project is active */
   active?: boolean
 }
@@ -790,7 +790,7 @@ export type ProjectPatchModel = {
   tags?: Tag[]
   config?: object
   attrib?: ProjectAttribModel2
-  data?: Record<string, any>
+  data?: object
   /** Whether the project is active */
   active?: boolean
 }

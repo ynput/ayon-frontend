@@ -124,9 +124,11 @@ const CopySettingsNode = ({
   forcedSourceVariant,
   forcedSourceProjectName,
 
+  preferredSourceVersion,
+
   isDev,
 }) => {
-  const [sourceVersion, setSourceVersion] = useState(null)
+  const [sourceVersion, setSourceVersion] = useState(preferredSourceVersion || null)
   const [sourceVariant, setSourceVariant] = useState(null)
   const [sourceProjectName, setSourceProjectName] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -134,6 +136,13 @@ const CopySettingsNode = ({
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
+
+
+  useEffect(() => {
+    if (preferredSourceVersion && preferredSourceVersion !== sourceVersion) {
+      setSourceVersion(preferredSourceVersion)
+    }
+  }, [preferredSourceVersion])
 
 
   useEffect(() => {

@@ -18,6 +18,7 @@ export const Scrollable = styled.div`
 export const Section = styled.div`
   &:has(> *) {
     padding: var(--padding-m);
+    padding-bottom: 0;
 
     &.border {
       border-bottom: 1px solid var(--md-sys-color-outline-variant);

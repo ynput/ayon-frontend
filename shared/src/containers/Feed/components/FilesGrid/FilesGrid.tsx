@@ -1,30 +1,35 @@
 import * as Styled from './FilesGrid.styled'
 import clsx from 'clsx'
-import FileUploadCard from '../FileUploadCard'
+import FileUploadCard, { FileUploadCardProps } from '../FileUploadCard'
 import { isFilePreviewable } from '../FileUploadPreview'
 import { useCallback } from 'react'
 
-export interface FilesGridProps {
+export interface FilesGridProps extends React.HTMLAttributes<HTMLDivElement> {
   files?: any[]
   activityId?: string
   isCompact?: boolean
+  isEditing?: boolean
   onRemove?: (id: string, name: string, isUnsavedAnnotation: boolean) => void
   projectName: string
   isDownloadable?: boolean
   onExpand?: (data: { files: any[]; index: number; activityId: string }) => void
   onAnnotationClick?: (file: any) => void
-  [key: string]: any
+  pt?: {
+    file?: Partial<FileUploadCardProps>
+  }
 }
 
 const FilesGrid: React.FC<FilesGridProps> = ({
   files = [],
   activityId,
   isCompact,
+  isEditing,
   onRemove,
   projectName,
   isDownloadable,
   onExpand,
   onAnnotationClick,
+  pt,
   ...props
 }) => {
   if (!files.length) return null
@@ -62,6 +67,8 @@ const FilesGrid: React.FC<FilesGridProps> = ({
           isDownloadable={isDownloadable}
           onExpand={() => handleExpand(index)}
           onJumpTo={() => onAnnotationClick?.(file)}
+          disableExpand={isEditing}
+          {...pt?.file}
         />
       ))}
     </Styled.Grid>

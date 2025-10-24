@@ -30,11 +30,13 @@ import useInitialValue from './hooks/useInitialValue'
 import useSetCursorEnd from './hooks/useSetCursorEnd'
 import useMentionLink from './hooks/useMentionLink'
 import useAnnotationsSync from './hooks/useAnnotationsSync'
+import { useBlendedCategoryColor } from './hooks/useBlendedCategoryColor'
 
 // State management
 import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
-import { SavedAnnotationMetadata } from '../../index'
+import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
+import { useDetailsPanelContext } from '@shared/context'
 
 var Delta = Quill.import('delta')
 
@@ -55,6 +57,7 @@ export const mentionTypeOptions = {
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
+  initCategory?: string | null
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
   isEditing?: boolean
   disabled?: boolean
@@ -67,6 +70,7 @@ interface CommentInputProps {
 const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
+  initCategory = null,
   onSubmit,
   isEditing,
   disabled,
@@ -75,8 +79,19 @@ const CommentInput: FC<CommentInputProps> = ({
   onOpen,
   onClose,
 }) => {
-  const { projectName, entities, projectInfo, scope, currentTab, mentionSuggestionsData } =
-    useFeedContext()
+  const {
+    projectName,
+    entities,
+    projectInfo,
+    scope,
+    currentTab,
+    mentionSuggestionsData,
+    categories,
+    isGuest,
+  } = useFeedContext()
+
+  const { hasLicense, onPowerFeature, user } = useDetailsPanelContext()
+  const isUser = !user?.data?.isAdmin && !user?.data?.isManager
 
   const {
     users: mentionUsers,
@@ -100,8 +115,16 @@ const CommentInput: FC<CommentInputProps> = ({
   // MENTION STATES
   const [mention, setMention] = useState<null | any>(null)
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
+  // CATEGORY STATE
+  const [category, setCategory] = useState<null | string>(initCategory)
+  const categoryOptions = categories.filter((cat) => cat.accessLevel >= 20)
+  const categoryData = categories.find((cat) => cat.name === category)
+  // Compute blended background color for category
+  const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
   // REFS
   const editorRef = useRef<any>(null)
+  const editorContainerRef = useRef<HTMLDivElement>(null)
+
   const markdownRef = useRef<HTMLDivElement>(null)
 
   // if there is an initial value, set it so the editor is prefilled
@@ -215,7 +238,7 @@ const CommentInput: FC<CommentInputProps> = ({
     // find the first option
     const selectedOption = mentionOptions[mentionSelectedIndex]
 
-    if (mention && tabOrEnter && selectedOption) {
+    if (mention && tabOrEnter && selectedOption && !isGuest) {
       // get option text
       const retain = (delta.ops[0] && delta.ops[0].retain) || 0
       // prevent default
@@ -472,7 +495,10 @@ const CommentInput: FC<CommentInputProps> = ({
 
       if ((markdownParsed || uploadedFiles.length) && onSubmit) {
         try {
-          await onSubmit(markdownParsed, uploadedFiles, { annotations: annotationMetadata })
+          await onSubmit(markdownParsed, uploadedFiles, {
+            annotations: annotationMetadata,
+            category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
+          })
           // only clear if onSubmit is successful
           setEditorValue('')
           setFiles([])
@@ -547,7 +573,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const allFiles = [...annotations, ...(files || []), ...filesUploading].sort(
     (a, b) => a.order - b.order,
   )
-  const compactGrid = allFiles.length > 6
+  const compactGrid = allFiles.length > 3
 
   // disable version mentions for folders
   let mentionsError = null
@@ -555,6 +581,17 @@ const CommentInput: FC<CommentInputProps> = ({
     if (mention?.type === '@@') {
       mentionsError = 'Version mentions are disabled for folders'
     }
+  }
+
+  const getCommentPlaceholder = (isOpen?: boolean) => {
+    if (disabled) {
+      if (isGuest) return 'You do not have permission to comment.'
+      return 'Commenting is disabled across multiple projects.'
+    }
+
+    if (isGuest || !isOpen) return 'Leave a comment'
+
+    return 'Comment or mention with @user, @@version, @@@task...'
   }
 
   return (
@@ -576,9 +613,13 @@ const CommentInput: FC<CommentInputProps> = ({
             disabled,
             isLoading,
             isSubmitting,
+            category: !!category && !isGuest,
           })}
           onKeyDown={handleKeyDown}
           onClick={handleOpenClick}
+          $categoryPrimary={categoryData?.color}
+          $categoryTertiary={blendedCategoryColor.primary}
+          $categorySecondary={blendedCategoryColor.secondary}
         >
           <Styled.Markdown ref={markdownRef}>
             {/* this is purely used to translate the markdown into html for Editor */}
@@ -589,15 +630,43 @@ const CommentInput: FC<CommentInputProps> = ({
           {isOpen && (
             <FilesGrid
               files={allFiles}
-              isCompact={compactGrid}
+              isCompact={compactGrid || isEditing}
               onRemove={handleFileRemove}
-              style={{ borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}
               projectName={projectName}
               onAnnotationClick={goToAnnotation}
+              style={{
+                borderBottom: '1px solid var(--md-sys-color-outline-variant)',
+                height: '100%',
+              }}
+              isEditing
+              pt={{
+                file: {
+                  style: {
+                    height: isEditing ? 70 : undefined,
+                  },
+                },
+              }}
             />
           )}
           {isOpen && !disabled ? (
-            <QuillListStyles>
+            <QuillListStyles ref={editorContainerRef}>
+              {!isGuest && (
+                <ActivityCategorySelect
+                  value={category}
+                  categories={categoryOptions}
+                  onChange={(c) => setCategory(c)}
+                  isCompact={isEditing}
+                  hasPowerpack={hasLicense}
+                  onPowerFeature={onPowerFeature}
+                  isHidden={isCategoryHidden(categoryOptions, { isGuest, isUser })}
+                  style={{
+                    position: isEditing ? 'relative' : 'absolute',
+                    left: 4,
+                    top: isEditing ? 0 : 4,
+                  }}
+                />
+              )}
+
               <ReactQuill
                 theme="snow"
                 style={{ minHeight: quillMinHeight, maxHeight: 300 }}
@@ -605,45 +674,45 @@ const CommentInput: FC<CommentInputProps> = ({
                 value={editorValue}
                 onChange={handleChange}
                 readOnly={!isOpen}
-                placeholder={'Comment or mention with @user, @@version, @@@task...'}
+                placeholder={getCommentPlaceholder(true)}
                 modules={modules}
                 formats={quillFormats}
               />
             </QuillListStyles>
           ) : (
-            <Styled.Placeholder>
-              {disabled ? 'Commenting is disabled across multiple projects.' : 'Add a comment...'}
-            </Styled.Placeholder>
+            <Styled.Placeholder>{getCommentPlaceholder()}</Styled.Placeholder>
           )}
 
           <Styled.Footer>
-            <Styled.Buttons>
-              {/* mention a user */}
-              <Button
-                icon="person"
-                variant="text"
-                onClick={() => handleMentionButton('@')}
-                data-tooltip={'Mention user'}
-                data-shortcut={'@'}
-              />
-              {/* mention a version */}
-              <Button
-                icon="layers"
-                variant="text"
-                onClick={() => handleMentionButton('@@')}
-                data-tooltip={'Mention version'}
-                data-shortcut={'@@'}
-              />
-              {/* mention a task */}
-              <Button
-                icon="check_circle"
-                variant="text"
-                onClick={() => handleMentionButton('@@@')}
-                data-tooltip={'Mention task'}
-                data-shortcut={'@@@'}
-              />
-            </Styled.Buttons>
-            <Styled.Buttons>
+            {!isGuest && (
+              <Styled.Buttons>
+                {/* mention a user */}
+                <Button
+                  icon="person"
+                  variant="text"
+                  onClick={() => handleMentionButton('@')}
+                  data-tooltip={'Mention user'}
+                  data-shortcut={'@'}
+                />
+                {/* mention a version */}
+                <Button
+                  icon="layers"
+                  variant="text"
+                  onClick={() => handleMentionButton('@@')}
+                  data-tooltip={'Mention version'}
+                  data-shortcut={'@@'}
+                />
+                {/* mention a task */}
+                <Button
+                  icon="check_circle"
+                  variant="text"
+                  onClick={() => handleMentionButton('@@@')}
+                  data-tooltip={'Mention task'}
+                  data-shortcut={'@@@'}
+                />
+              </Styled.Buttons>
+            )}
+            <Styled.Buttons style={{ marginLeft: 'auto' }}>
               {isEditing && (
                 <Button variant="text" onClick={handleClose}>
                   Cancel
@@ -668,7 +737,6 @@ const CommentInput: FC<CommentInputProps> = ({
           options={shownMentionOptions}
           onChange={handleSelectChange}
           types={mentionTypes}
-          z
           // @ts-ignore
           config={mentionTypeOptions[mention?.type]}
           noneFound={!shownMentionOptions.length && mention?.search}
@@ -676,6 +744,7 @@ const CommentInput: FC<CommentInputProps> = ({
           selectedIndex={mentionSelectedIndex}
           // @ts-ignore
           error={mentionsError}
+          isGuest={isGuest}
         />
       </Styled.AutoHeight>
     </>

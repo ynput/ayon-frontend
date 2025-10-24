@@ -1,6 +1,7 @@
 import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
+import { isEntityRestricted } from '../utils/restrictedEntity'
 
 const Expander = styled(Button)`
   &.expander {
@@ -131,13 +132,19 @@ export const EntityNameWidget = ({
   toggleExpanded,
   rowHeight = 40,
 }: EntityNameWidgetProps) => {
+  // Check if this is a restricted access entity
+  const isRestricted = isEntityRestricted(type)
+
   // Determine layout based on row height
   // < 50px = single line (compact), >= 50px = stacked
   const isCompact = rowHeight < 50
 
   // Always keep content height at 24px in compact mode or hierarchy mode to prevent jumping
   // Only allow expansion to 32px in non-hierarchy mode when not compact and path exists
-  const contentHeight = (isCompact || showHierarchy) ? 24 : (path ? 32 : 24)
+  const contentHeight = (isCompact || showHierarchy) ? 24 : (path && !isRestricted ? 32 : 24)
+
+  // For restricted entities, don't show path
+  const displayPath = isRestricted ? null : path
 
   return (
     <StyledEntityNameWidget>
@@ -166,8 +173,8 @@ export const EntityNameWidget = ({
           <StyledContent>
             {icon && <Icon icon={icon} />}
             <StyledTextContent className={clsx({ compact: isCompact })}>
-              {path && <span className="path">{path}</span>}
-              {isCompact && path && <span className="divider">/</span>}
+              {displayPath && <span className="path">{displayPath}</span>}
+              {isCompact && displayPath && <span className="divider">/</span>}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>

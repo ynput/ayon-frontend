@@ -11,10 +11,11 @@ import { RowSelectionState } from '@tanstack/react-table'
 
 interface SlicerProps {
   sliceFields: SliceType[]
+  entityTypes?: string[] // entity types
   persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
 }
 
-const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
+const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], persistFieldId }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
     SlicerDropdown,
@@ -33,7 +34,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], persistFieldId }) => {
     table: { data: sliceTableData, isExpandable },
     sliceMap,
     isLoading: isLoadingSliceTableData,
-  } = useTableDataBySlice({ sliceFields })
+  } = useTableDataBySlice({ sliceFields, entityTypes })
 
   const handleSelectionChange = (s: RowSelectionState) => {
     setRowSelection(s)

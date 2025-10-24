@@ -237,7 +237,6 @@ export const CellWidget: FC<EditorCellProps> = ({
               isReadOnly
               hasMultipleValues={enumValue.length > 1}
               isMultiSelect={type?.includes('list')}
-              rowHeight={rowHeight}
             />
           )
         }
