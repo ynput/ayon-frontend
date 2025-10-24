@@ -262,15 +262,6 @@ const MenuItem = forwardRef(
       return ItemWrapper
     }
 
-    console.log('MenuItem render:', {
-      label,
-      hasChildren,
-      subMenuOpen,
-      subMenuWidth,
-      itemsCount: items.length,
-      subMenuStyle
-    })
-
     return (
       <>
         {ItemWrapper}

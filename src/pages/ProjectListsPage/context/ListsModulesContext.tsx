@@ -3,7 +3,7 @@ import React, { createContext, useContext, ReactNode, FC } from 'react'
 import { ListsAttributesContextValue } from './ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
-import { usePowerpack } from '@shared/context'
+import { GuestAccessFallback, ListAccessFallback } from '../components/ListAccessForm'
 
 interface ListsAttributeSettingsFallbackProps {
   listAttributes: ListsAttributesContextValue['listAttributes']
@@ -32,7 +32,17 @@ const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = 
 
 interface ListsModuleContextType {
   ListsAttributesSettings: typeof ListsAttributeSettingsFallback
-  requiredVersion?: string
+  ListAccess: typeof ListAccessFallback
+  GuestAccess: typeof GuestAccessFallback
+  requiredVersion: {
+    settings: string | undefined
+    access: string | undefined
+    guestAccess: string | undefined
+  }
+  isLoading: {
+    access: boolean
+    guestAccess: boolean
+  }
 }
 
 const ListsModuleContext = createContext<ListsModuleContextType | undefined>(undefined)
@@ -42,19 +52,44 @@ interface ListsModuleProviderProps {
 }
 
 export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ children }) => {
-  const { powerLicense } = usePowerpack()
-  const [ListsAttributesSettings, { outdated }] = useLoadModule({
+  const [ListsAttributesSettings, { outdated: attributeSettingsOutdated }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
     fallback: ListsAttributeSettingsFallback,
     minVersion: '1.0.5',
-    skip: !powerLicense, // skip loading if powerpack license is not available
   })
+
+  const [ListAccess, { outdated: accessOutdated, isLoading: isLoadingAccess }] = useLoadModule({
+    addon: 'powerpack',
+    remote: 'slicer',
+    module: 'ListAccess',
+    fallback: ListAccessFallback,
+    minVersion: '1.2.4',
+  })
+
+  const [GuestAccess, { outdated: guestAccessOutdated, isLoading: isLoadingGuestAccess }] =
+    useLoadModule({
+      addon: 'review',
+      remote: 'review',
+      module: 'GuestAccess',
+      fallback: GuestAccessFallback,
+      minVersion: '0.0.8',
+    })
 
   const value = {
     ListsAttributesSettings,
-    requiredVersion: outdated?.required,
+    ListAccess,
+    GuestAccess,
+    requiredVersion: {
+      settings: attributeSettingsOutdated?.required,
+      access: accessOutdated?.required,
+      guestAccess: guestAccessOutdated?.required,
+    },
+    isLoading: {
+      access: isLoadingAccess,
+      guestAccess: isLoadingGuestAccess,
+    },
   }
 
   return <ListsModuleContext.Provider value={value}>{children}</ListsModuleContext.Provider>

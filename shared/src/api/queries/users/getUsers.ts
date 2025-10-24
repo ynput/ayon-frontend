@@ -87,6 +87,10 @@ const enhancedApi = usersApi.enhanceEndpoints({
     getCurrentUser: {
       providesTags: [{ type: 'user', id: 'LIST' }],
     },
+    getUser: {
+      providesTags: (res) =>
+        res ? [{ type: 'user', id: res.name }] : [{ type: 'user', id: 'LIST' }],
+    },
     getUserSessions: {
       transformResponse: (res: any) => res?.sessions,
       providesTags: (_res, _g, { userName }) => [{ type: 'session', id: userName }],
@@ -241,5 +245,5 @@ export const {
   useGetUsersAssigneeQuery,
 } = gqlUsers
 
-export const { useGetUserSessionsQuery, useGetCurrentUserQuery } = enhancedApi
+export const { useGetUserSessionsQuery, useGetCurrentUserQuery, useGetUserQuery } = enhancedApi
 export default injectedApi

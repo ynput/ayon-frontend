@@ -15,7 +15,7 @@ const StyledCheckbox = styled.input`
   border-radius: 2px;
 
   &:hover {
-    border-color: hsl(212.31deg 16.83% 74.65%);
+    border-color: var(--color-table-boolean-border);
   }
 
   &:checked {
@@ -30,10 +30,11 @@ export interface BooleanWidgetProps
     WidgetBaseProps {
   value: boolean
   isReadOnly?: boolean
+  isInherited?: boolean
 }
 
 export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(
-  ({ value, onChange, isReadOnly, isEditing, onCancelEdit, ...props }, ref) => {
+  ({ value, onChange, isReadOnly, isEditing, onCancelEdit, isInherited, ...props }, ref) => {
     return (
       <StyledCheckbox
         {...props}

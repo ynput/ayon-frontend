@@ -20,6 +20,7 @@ import { useLoadRemotePages } from '../remote/useLoadRemotePages'
 
 import LoadingPage from '@pages/LoadingPage'
 import { RemoteAddon } from '@shared/context'
+import { toast } from 'react-toastify'
 
 interface AppRoutesProps {
   isUser: boolean
@@ -46,6 +47,7 @@ const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
               router={{
                 ...{ useParams, useNavigate, useLocation, useSearchParams },
               }}
+              toast={toast}
             />
           }
         />

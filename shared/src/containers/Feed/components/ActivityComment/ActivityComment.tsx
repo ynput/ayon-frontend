@@ -25,12 +25,14 @@ import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityH
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
+import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
+import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
 
 type Props = {
   activity: any
   onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
-  onUpdate?: Function
+  onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
   projectInfo: any
   editProps?: {
     disabled: boolean
@@ -62,7 +64,14 @@ const ActivityComment = ({
   readOnly,
   statuses = [],
 }: Props) => {
-  const { userName, createReaction, deleteReaction } = useFeedContext()
+  const { userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest } =
+    useFeedContext()
+
+  const categoryData = useMemo(() => {
+    return categories.find((cat) => cat.name === activity.activityData?.category) || null
+  }, [activity?.activityData?.category, categories])
+  // Compute blended background color for category
+  const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
 
   let {
     body,
@@ -80,7 +89,6 @@ const ActivityComment = ({
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
 
-  const { editingId, setEditingId } = useFeedContext()
   const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()
 
   const handleEditComment = () => {
@@ -92,8 +100,8 @@ const ActivityComment = ({
     setEditingId(null)
   }
 
-  const handleSave = async (value: any, files: any) => {
-    await onUpdate?.(value, files)
+  const handleSave = async (value: any, files: any, data?: any) => {
+    await onUpdate?.(value, files, undefined, data)
     setEditingId(null)
   }
 
@@ -167,8 +175,16 @@ const ActivityComment = ({
   return (
     <>
       <Styled.Comment
-        className={clsx('comment', { isOwner, isEditing, isHighlighted })}
+        className={clsx('comment', {
+          isOwner,
+          isEditing,
+          isHighlighted,
+          category: !!categoryData && !isGuest,
+        })}
         id={activityId}
+        $categoryPrimary={categoryData?.color}
+        $categoryTertiary={blendedCategoryColor.primary}
+        $categorySecondary={blendedCategoryColor.secondary}
       >
         <ActivityHeader
           name={authorName}
@@ -184,24 +200,41 @@ const ActivityComment = ({
           children={undefined}
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
-          {!readOnly && (
+          {!readOnly && isOwner ? (
             <Styled.Tools className={'tools'}>
-              {isOwner && onDelete && (
+              {onDelete && (
                 <Styled.ToolButton
                   icon="delete"
                   onClick={deleteConfirmation}
                   tooltip="Delete comment"
+                  variant="text"
                 />
               )}
-              {isOwner && handleEditComment && (
-                <Styled.ToolButton icon="edit_square" onClick={handleEditComment} />
+              {handleEditComment && (
+                <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
               )}
             </Styled.Tools>
+          ) : (
+            <div className="tools"></div>
           )}
+
+          {!isEditing && !isGuest && categoryData && (
+            <CategoryTag
+              value={categoryData.name}
+              color={categoryData.color}
+              style={{
+                top: -4,
+                left: -4,
+              }}
+              isCompact
+            />
+          )}
+
           {isEditing ? (
             <CommentInput
               initValue={body}
               initFiles={files}
+              initCategory={categoryData?.name}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
@@ -226,6 +259,8 @@ const ActivityComment = ({
                         onReferenceClick,
                         onReferenceTooltip: setRefTooltip,
                         activityId,
+                        categoryPrimary: categoryData?.color,
+                        categorySecondary: blendedCategoryColor.secondary,
                       }),
                     // checkbox inputs
                     // @ts-ignore
@@ -278,6 +313,10 @@ const ActivityComment = ({
                   reactions={mappedReactions}
                   changeHandler={reactionChangeHandler}
                   readOnly={readOnly}
+                  category={categoryData && !isGuest ? categoryData.name : undefined}
+                  categoryPrimary={categoryData?.color}
+                  categorySecondary={blendedCategoryColor.secondary}
+                  categoryTertiary={blendedCategoryColor.primary}
                 />
               )}
             </div>

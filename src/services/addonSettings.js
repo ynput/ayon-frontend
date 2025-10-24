@@ -29,7 +29,7 @@ const addonSettings = api.injectEndpoints({
         // TODO: we would normally use 'summary: true' here to reduce the payload,
         // but fulltext search in settings actually neeed the data
         // so for now we leave it out
-        const params = {}//{summary: true}
+        const params = {} //{summary: true}
         if (variant) params.variant = variant
         if (projectName) params.project_name = projectName
         if (siteId) params.site_id = siteId
@@ -81,7 +81,7 @@ const addonSettings = api.injectEndpoints({
       }),
 
       // eslint-disable-next-line no-unused-vars
-      providesTags: (result, error, arg) => [{ type: 'addonSettings', ...arg }],
+      providesTags: (result, error, arg) => [{ type: 'addonSettings', ...arg, id: arg.addonName }],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
@@ -172,6 +172,7 @@ const addonSettings = api.injectEndpoints({
           projectName: arg.projectName,
           siteId: arg.siteId,
           variant: arg.variant,
+          id: arg.addonName,
         },
         {
           type: 'addonSettingsOverrides',
@@ -211,6 +212,7 @@ const addonSettings = api.injectEndpoints({
           projectName: arg.projectName,
           siteId: arg.siteId,
           variant: arg.variant,
+          id: arg.addonName,
         },
         {
           type: 'addonSettingsOverrides',
@@ -250,6 +252,7 @@ const addonSettings = api.injectEndpoints({
           projectName: arg.projectName,
           siteId: arg.siteId,
           variant: arg.variant,
+          id: arg.addonName,
         },
         {
           type: 'addonSettingsOverrides',

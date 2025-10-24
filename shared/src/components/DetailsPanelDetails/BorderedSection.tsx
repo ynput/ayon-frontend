@@ -77,6 +77,7 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
   withPadding = false,
   onClick,
   className,
+  pt,
   ...props
 }) => {
   return (
@@ -86,14 +87,14 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
       {...props}
     >
       {showHeader ? (
-        <StyledHeader {...props.pt?.header}>
+        <StyledHeader {...pt?.header}>
           <span>{title}</span>
           {headerContent}
         </StyledHeader>
       ) : null}
       <StyledContent
-        {...props.pt?.content}
-        className={clsx(props.pt?.content?.className, {
+        {...pt?.content}
+        className={clsx(pt?.content?.className, {
           'with-padding': withPadding,
           'auto-height': autoHeight,
           'with-header': showHeader,

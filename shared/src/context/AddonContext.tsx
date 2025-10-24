@@ -10,6 +10,7 @@ export type RemoteAddon = {
 
 export interface RemoteAddonProps {
   router: RouterTypes
+  toast: any
 }
 
 // types for props passed to the provider

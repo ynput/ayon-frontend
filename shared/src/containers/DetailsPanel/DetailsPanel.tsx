@@ -8,7 +8,7 @@ import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
-import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
+import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel } from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -48,6 +48,8 @@ export type DetailsPanelProps = {
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
   entityListsContext?: EntityListsContextType
+  entityListId?: string
+  guestCategories?: Record<string, string> // only used for guests to find if they have access to any categories
 }
 
 export const DetailsPanel = ({
@@ -75,9 +77,11 @@ export const DetailsPanel = ({
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
+  entityListId,
+  guestCategories = {},
   entityListsContext,
 }: DetailsPanelProps) => {
-  const { closeSlideOut, openPip, user } = useDetailsPanelContext()
+  const { closeSlideOut, openPip, user, isGuest } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
 
   // Force details tab for specific entity types
@@ -213,6 +217,22 @@ export const DetailsPanel = ({
     requestPipWindow(500, 500)
   }
 
+  const isCommentingEnabled = () => {
+    // cannot comment on multiple projects
+    if (projectNames.length > 1) return false
+    if (isGuest) {
+      // Guest can only comment in review sessions (for now)
+      if (!entityListId) return false
+      // Guest must have at least one category set for list
+      const guestHasCategory = Object.prototype.hasOwnProperty.call(
+        guestCategories,
+        user.attrib?.email || '',
+      )
+      if (!guestHasCategory) return false
+    }
+    return true
+  }
+
   return (
     <>
       <Styled.Panel className="details-panel">
@@ -280,10 +300,11 @@ export const DetailsPanel = ({
             activeUsers={activeProjectUsers || []}
             projectInfo={firstProjectInfo}
             projectName={firstProject}
-            isMultiProjects={projectNames.length > 1}
+            disabled={!isCommentingEnabled()}
             scope={scope}
             statuses={allStatuses}
             readOnly={false}
+            entityListId={entityListId}
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
@@ -303,7 +324,7 @@ export const DetailsPanel = ({
             activeUsers={activeProjectUsers || []}
             projectInfo={firstProjectInfo}
             projectName={firstProject}
-            isMultiProjects={projectNames.length > 1}
+            disabled={!isCommentingEnabled()}
             scope={scope}
             statuses={allStatuses}
             readOnly={false}

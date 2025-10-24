@@ -54,7 +54,6 @@ import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
-import WatchActivities from './containers/WatchActivities'
 import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
@@ -179,7 +178,6 @@ const App = () => {
     () => (
       <>
         <Favicon />
-        <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
           <MenuProvider>
             <FeedbackProvider>

@@ -212,13 +212,6 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     }))
   }, [])
 
-  const validateFormData = () => {
-    const validation = validateFormDataHelper(form, version?.version, !version)
-    if (!validation.isValid) {
-      throw validation.error
-    }
-  }
-
   // Handle form submission
   const handleFormSubmit = useCallback(
     async (formData: FormData) => {
@@ -226,8 +219,11 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         setIsSubmitting(true)
         setError('')
 
-        // validate the form data
-        validateFormData()
+        // validate the form data using the passed formData parameter
+        const validation = validateFormDataHelper(formData, version?.version, !version)
+        if (!validation.isValid) {
+          throw validation.error
+        }
 
         const response = await onUploadVersion(formData)
 
@@ -248,7 +244,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         setIsSubmitting(false)
       }
     },
-    [onUploadVersion, pendingFiles.length, onCloseVersionUpload],
+    [onUploadVersion, pendingFiles.length, onCloseVersionUpload, version],
   )
 
   // Update form when version data changes

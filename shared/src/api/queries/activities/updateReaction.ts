@@ -1,6 +1,6 @@
 import { activityFeedApi } from '@shared/api/generated'
 import { ActivityNode } from '../../generated/graphql'
-import getActivitiesGQLApi from './getActivities'
+import { getActivitiesGQLApi } from './getActivities'
 
 // @ts-ignore
 const patchActivity = ({ activityId, userName, reaction }, { getState, dispatch }, action) => {

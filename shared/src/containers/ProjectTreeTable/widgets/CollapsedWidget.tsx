@@ -5,7 +5,7 @@ const StyledDot = styled.div`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #ffffff;
+  background-color: var(--color-table-collapsed-widget);
 
   position: absolute;
   top: 50%;

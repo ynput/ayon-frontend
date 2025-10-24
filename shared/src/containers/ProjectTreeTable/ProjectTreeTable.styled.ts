@@ -38,7 +38,7 @@ export const TR = styled.tr`
 
     /* row selection hover */
     td:not(.selected) {
-      background-color: hsl(215 14% 15%);
+      background-color: var(--color-table-row-hover);
     }
   }
 
@@ -225,7 +225,7 @@ type TableCellProps = {
 export const TableCell = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
-  background-color: var(--md-sys-color-surface-container-low);
+  background-color: var(--color-table-task);
 
   &.${DRAG_HANDLE_CLASS} {
     // Styles for the button inside the drag handle cell
@@ -248,29 +248,29 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
-  --task-background-color: hsl(216 15% 11.5% / 1);
-  &.task {
-    background-color: var(--task-background-color);
+  /* Lighter background for folders in hierarchy mode */
+  &.folder-in-hierarchy {
+    background-color: var(--color-table-folder);
   }
 
   &.selected-row {
-    background-color: var(--md-sys-color-surface-container-high);
+    background-color: var(--color-table-selected-row);
   }
 
   /* show hover effect only if direct child div does NOT have .readonly and is not selected */
   &:not(:has(> div.readonly)) {
     cursor: pointer;
     &:hover {
-      background-color: var(--md-sys-color-surface-container);
+      background-color: var(--color-table-hover);
     }
 
     &.selected {
-      background-color: var(--md-sys-color-secondary-container);
+      background-color: var(--color-table-selected);
     }
   }
 
   &.selected {
-    background-color: var(--md-sys-color-secondary-container);
+    background-color: var(--color-table-selected);
     position: relative;
     z-index: 1;
   }
@@ -383,11 +383,10 @@ export const TableCell = styled.td<TableCellProps>`
   /* read only fields are dimmed down for bg and border */
   &:has(> div.readonly) {
     &:not(.multiple-selected) {
-      --focused-readonly-color: hsl(212 15% 18% / 1);
       &.focused {
-        background-color: var(--focused-readonly-color);
+        background-color: var(--color-table-readonly-focused);
         &::after {
-          border-color: var(--focused-readonly-color);
+          border-color: var(--color-table-readonly-focused);
         }
       }
     }

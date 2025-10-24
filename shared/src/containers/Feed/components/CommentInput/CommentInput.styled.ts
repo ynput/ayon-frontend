@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -24,26 +24,66 @@ export const AutoHeight = styled.div`
   }
 `
 
-export const Comment = styled.div`
+export type CommentProps = {
+  $categoryPrimary?: string
+  $categorySecondary?: string
+  $categoryTertiary?: string
+}
+
+// Reusable function for category color CSS
+export const categoryColorCss = (
+  $categoryPrimary?: string,
+  $categorySecondary?: string,
+  $categoryTertiary?: string,
+) =>
+  $categoryPrimary &&
+  css`
+    --background-color: ${$categoryTertiary};
+    --button-color: ${$categoryPrimary};
+    --button-color-secondary: ${$categorySecondary};
+    --border-color: ${$categoryPrimary};
+  `
+
+export const Comment = styled.div<CommentProps>`
+  /* VARS */
+  --background-color: var(--md-sys-color-surface-container);
+  --button-color: var(--md-sys-color-primary);
+  --button-color-secondary: var(--md-sys-color-surface-container-highest);
+  --border-color: var(--md-sys-color-outline-variant);
+
+  &.category {
+    /* CATEGORY */
+    ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
+      categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
+    button.comment {
+      color: var(--md-sys-color-on-surface);
+      &:hover {
+        background-color: var(--button-color);
+        filter: brightness(1.2);
+      }
+    }
+  }
+
   display: flex;
   flex-direction: column;
   position: relative;
 
-  background-color: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
   &.isDropping.isOpen {
     border-color: var(--md-sys-color-primary);
   }
 
   border-radius: var(--border-radius-l);
   overflow: hidden;
+  transition: opacity 250ms 250ms, background-color 250ms, border-color 250ms;
 
   &.isOpen {
     /* box shadow */
     box-shadow: 0 -3px 10px 0 rgba(0, 0, 0, 0.2);
 
     .quill {
-      background-color: var(--md-sys-color-surface-container);
+      background-color: var(--background-color);
     }
   }
 
@@ -70,18 +110,17 @@ export const Comment = styled.div`
       white-space: nowrap;
       cursor: pointer;
 
-      color: var(--md-sys-color-primary);
-      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--button-color);
+      background-color: var(--button-color-secondary);
 
       &:hover {
-        background-color: var(--md-sys-color-surface-container-high-hover);
+        background-color: color-mix(in srgb, var(--button-color-secondary) 85%, white);
       }
       &:active {
-        background-color: var(--md-sys-color-surface-container-high-active);
+        background-color: color-mix(in srgb, var(--button-color-secondary) 70%, white);
       }
     }
   }
-
 
   /* container styles reset */
   .ql-container.ql-snow {
@@ -230,51 +269,102 @@ export const Comment = styled.div`
 
   &.isSubmitting {
     opacity: 0.3;
-    transition: opacity 250ms 250ms;
   }
 
   /* toolbar styles */
   .ql-toolbar.ql-snow {
     border: none;
-    background-color: var(--md-sys-color-surface-container);
+    background-color: var(--background-color);
     border-bottom: 1px solid var(--md-sys-color-surface-container-hover);
     padding: var(--padding-s);
     display: flex;
+    justify-content: flex-end;
     height: unset;
     width: unset;
 
     .ql-formats {
       height: 32px;
-      margin-right: 8px;
-      padding-right: 8px;
-      border-right: 1px solid var(--md-sys-color-surface-container-hover);
+      margin-left: 8px;
+      margin-right: 0;
+      padding-left: 8px;
+      border-left: 1px solid var(--md-sys-color-surface-container-hover);
       display: flex;
       gap: 2px;
 
-      /* remove border for last child */
-      &:last-child {
-        border-right: none;
-      }
-    }
+      button {
+        float: none;
+        padding: 6px;
+        border-radius: var(--border-radius-m);
+        height: 32px;
+        width: 32px;
 
-    button {
-      float: none;
-      padding: 6px;
-      border-radius: var(--border-radius-m);
-      height: 32px;
-      width: 32px;
-
-      /* highlight when action */
-      &.ql-active {
-        background-color: var(--md-sys-color-secondary-container);
-        .icon {
-          color: var(--md-sys-color-on-secondary-container);
+        /* highlight when action */
+        &.ql-active {
+          background-color: var(--button-color-secondary);
+          .icon {
+            color: var(--button-color);
+          }
         }
       }
     }
 
     button:hover {
-      background-color: var(--md-sys-color-surface-container-highest-hover);
+      background-color: var(--button-color-secondary);
+    }
+
+    /* container queries to hide buttons as the width gets smaller */
+    container-type: inline-size;
+    container-name: format-buttons;
+
+    @container format-buttons (max-width: 432px) {
+      /* hide first button */
+      .ql-formats:first-child {
+        button:first-child {
+          display: none;
+        }
+      }
+    }
+
+    @container format-buttons (max-width: 400px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(2) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 368px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(3) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 336px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(4) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 304px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        display: none;
+        button:nth-child(5) {
+          display: none;
+        }
+      }
+    }
+
+    /* it should never get this small but if it does: hide all list options */
+    @container format-buttons (max-width: 250px) {
+      /* hide first two buttons */
+      .ql-formats:nth-child(2) {
+        display: none;
+      }
     }
   }
 
@@ -305,7 +395,7 @@ export const Footer = styled.footer`
   justify-content: space-between;
   padding: var(--padding-m);
   border-top: 1px solid var(--md-sys-color-surface-container-hover);
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--background-color);
   z-index: 100;
 
   /* remove save button icon */
@@ -314,12 +404,21 @@ export const Footer = styled.footer`
     .icon {
       display: none;
     }
+    background-color: var(--button-color);
   }
 `
 
 export const Buttons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+
+  button {
+    &.text {
+      &:hover {
+        background-color: var(--button-color-secondary);
+      }
+    }
+  }
 `
 
 export const Markdown = styled.div`
