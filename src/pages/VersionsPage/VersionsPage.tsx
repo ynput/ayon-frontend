@@ -15,6 +15,7 @@ import { useVersionsViewsContext } from './context/VersionsViewsContext'
 import VersionsDetailsPanel from './components/VersionsDetailsPanel/VersionsDetailsPanel'
 import { useVersionsSelectionContext } from './context/VersionsSelectionContext'
 import { ProductsAndVersionsSettings } from './components/ProductsAndVersionsSettings/ProductsAndVersionsSettings'
+import { EarlyPreview } from '@shared/components'
 
 interface VersionsPageProps {
   projectName: string
@@ -102,6 +103,7 @@ const VersionsPage: FC<VersionsPageProps> = ({}) => {
           </Section>
         </SplitterPanel>
       </Splitter>
+      <EarlyPreview tooltip="The Products page intends to replace the old Browser page. Feedback is greatly appreciated!" />
     </main>
   )
 }
