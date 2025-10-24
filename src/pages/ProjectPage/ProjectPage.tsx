@@ -43,6 +43,7 @@ type NavLink = {
   uriSync?: boolean
   enabled?: boolean
   node?: React.ReactNode
+  deprecated?: boolean | string
 }
 
 const ProjectContextInfo = () => {
@@ -141,10 +142,11 @@ const ProjectPage = () => {
         uriSync: true,
       },
       {
-        name: 'Browser (legacy)',
+        name: 'Browser',
         path: `/projects/${projectName}/browser`,
         module: 'browser',
         uriSync: true,
+        deprecated: true,
       },
       {
         name: 'Products',
