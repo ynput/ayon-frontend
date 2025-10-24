@@ -140,8 +140,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     attribFields: attribFields,
   })
 
-  console.log(sliceFilter)
-
   // Separate slicer filters into different types
   const {
     version: [slicerVersionFilter],

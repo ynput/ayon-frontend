@@ -136,10 +136,7 @@ export const useVersionsViewSettings = (): VersionsViewSettingsReturn => {
     () => versionsSettings?.showEmptyGroups ?? false,
     [versionsSettings?.showEmptyGroups],
   )
-  const serverSortBy = useMemo(
-    () => versionsSettings?.sortBy ?? undefined,
-    [versionsSettings?.sortBy],
-  )
+  const serverSortBy = useMemo(() => versionsSettings?.sortBy ?? 'name', [versionsSettings?.sortBy])
   const serverSortDesc = useMemo(
     () => versionsSettings?.sortDesc ?? false,
     [versionsSettings?.sortDesc],
