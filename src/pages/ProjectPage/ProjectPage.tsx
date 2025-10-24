@@ -219,8 +219,6 @@ const ProjectPage = () => {
     [addonsData, projectName, remotePages, matchedAddons, module],
   )
 
-  console.log(links)
-
   const activeLink = useMemo(() => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
