@@ -646,7 +646,7 @@ const getOptionRoot = (
     case 'author':
       rootOption = {
         id: getRootIdWithPrefix('author'),
-        type: 'list_of_strings',
+        type: 'string',
         label: formatLabelWithScope('Author'),
         icon: getAttributeIcon('author'),
         inverted: false,

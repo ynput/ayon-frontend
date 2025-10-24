@@ -27,6 +27,8 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({
     assignees: 'list_of_strings',
     status: 'string',
     taskType: 'string',
+    productType: 'string',
+    author: 'string',
     hierarchy: undefined,
     ...attribFields.reduce((acc, field) => {
       // @ts-ignore

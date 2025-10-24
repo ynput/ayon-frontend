@@ -144,7 +144,7 @@ export const Cell = styled.div`
     font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
   }
 
-  img {
+  .image {
     width: auto;
     height: 24px;
     max-height: 24px;

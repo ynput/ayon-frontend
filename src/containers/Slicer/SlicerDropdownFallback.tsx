@@ -31,11 +31,11 @@ const StyledDropdown = styled(Dropdown)`
   }
 `
 
-export interface SlicerDropdownProps extends DropdownProps {
+export interface SlicerDropdownFallbackProps extends DropdownProps {
   sliceTypes: SliceType[]
 }
 
-const SlicerDropdown = forwardRef<DropdownRef, SlicerDropdownProps>(
+const SlicerDropdownFallback = forwardRef<DropdownRef, SlicerDropdownFallbackProps>(
   ({ sliceTypes, ...props }, ref) => {
     const { setPowerpackDialog } = usePowerpack()
 
@@ -68,4 +68,4 @@ const SlicerDropdown = forwardRef<DropdownRef, SlicerDropdownProps>(
   },
 )
 
-export default SlicerDropdown
+export default SlicerDropdownFallback

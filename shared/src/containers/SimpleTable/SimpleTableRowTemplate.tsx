@@ -114,7 +114,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
             src={img}
             {...pt?.img}
             alt=""
-            className={clsx(imgShape, pt?.img?.className)}
+            className={clsx('image', imgShape, pt?.img?.className)}
             style={{
               aspectRatio: imgRatio.toString(),
               ...pt?.img?.style,
