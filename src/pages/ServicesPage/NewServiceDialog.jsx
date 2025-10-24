@@ -114,7 +114,11 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       // Set envVars if available
       const envVars = editService.data?.env
       if (envVars && Object.keys(envVars).length) {
-        setEnvVars(Object.entries(envVars).map(([key, value]) => `${key}=${value}`).join('\n'))
+        setEnvVars(
+          Object.entries(envVars)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('\n'),
+        )
       }
     }
   }, [isEditMode, editService, addonData])
@@ -285,7 +289,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       header={isEditMode ? 'Edit service' : 'Spawn a new service'}
       onClose={onHide}
       footer={footer}
-      style={{ width: 550, maxHeight: '600px', zIndex: 999 }}
+      style={{ width: 550, maxHeight: '80vh', zIndex: 999 }}
       size="lg"
     >
       <FormLayout>
@@ -369,7 +373,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
             placeholder="/local/path:/container/path"
           />
         </FormRow>
-        
+
         <FormRow label="Ports">
           <InputTextarea
             value={ports}
