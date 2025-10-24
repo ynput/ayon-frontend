@@ -71,6 +71,9 @@ export const CategoryTag = forwardRef<HTMLDivElement, CategoryTagProps>(
     { value, color, isCompact, isEditing, isPower, isDisabled, style, className, ...props },
     ref,
   ) => {
+    // Calculate text color only for valid hex colors
+    const textColor = color && color.startsWith('#') ? getTextColor(color) : undefined
+
     return (
       <StyledTag
         {...props}
@@ -82,7 +85,12 @@ export const CategoryTag = forwardRef<HTMLDivElement, CategoryTagProps>(
           power: isPower,
           disabled: isDisabled,
         })}
-        style={{ ...style, backgroundColor: color, borderColor: color, color: getTextColor(color|| "#2E3133") }}
+        style={{
+          ...style,
+          backgroundColor: color,
+          borderColor: color,
+          color: textColor
+        }}
       >
         {value || NO_CATEGORY_LABEL}
       </StyledTag>

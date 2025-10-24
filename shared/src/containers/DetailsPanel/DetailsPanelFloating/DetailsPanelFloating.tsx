@@ -126,7 +126,7 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
           </Styled.Content>
         </Styled.Header>
         <Styled.Row>
-          <Styled.Status style={{ backgroundColor: statusAnatomy?.color, color: getTextColor(statusAnatomy?.color || '#000') }}>
+          <Styled.Status style={{ backgroundColor: statusAnatomy?.color, color: getTextColor(statusAnatomy?.color) }}>
             <Icon icon={statusAnatomy.icon || 'question_mark'} style={{ color: 'inherit' }} />
             <span className="label">{statusAnatomy?.name}</span>
           </Styled.Status>

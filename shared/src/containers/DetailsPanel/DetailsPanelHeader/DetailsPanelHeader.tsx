@@ -6,9 +6,9 @@ import { DropdownRef } from '@ynput/ayon-react-components'
 import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
 import { Actions, DetailsPanelProps } from '@shared/containers'
 // shared
-import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shared/api'
+import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery, Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
-import { getPriorityOptions } from '@shared/util'
+import { getPriorityOptions, getTextColor } from '@shared/util'
 import { useScopedStatuses, useEntityUpdate, useTagStyling } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
@@ -17,7 +17,6 @@ import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../helpers/getThumbnails'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
-import { useStatusStyling } from '@shared/hooks/useStatusStyling'
 
 export type EntityTypeIcons = {
   folder: Record<string, string>
@@ -135,7 +134,6 @@ const DetailsPanelHeader = ({
   // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
   //  and it prevents us from showing statuses that are not available for the selected entities
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
-  const statusesValues: string[][] = useMemo(() => entities.map((t) => [t.status]), [entities])
   const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
   const tagsValues: string[][] = useMemo(() => entities.map((t) => t.tags), [entities])
   const tagsOptionsObject = useMemo(
@@ -146,25 +144,12 @@ const DetailsPanelHeader = ({
       }, {}),
     [tagsOptions],
   )
-  const statusOptionsObject = useMemo(
-    () =>
-      (statuses || []).reduce((acc, status) => {
-        acc[status.name] = status
-        return acc
-      }, {} as Record<string, { color?: string }>),
-    [statuses],
-  )
+  console.log("Tags", tagsOptionsObject)
 
   useTagStyling({
     tagsValues,
     tagsOptionsObject,
     tagsSelectRef,
-  })
-
-  useStatusStyling({
-    StatusValues: statusesValues,
-    StatusOptionsObject: statusOptionsObject,
-    StatusSelectRef: statusSelectRef,
   })
 
   const isMultiple = entities.length > 1
@@ -221,7 +206,8 @@ const DetailsPanelHeader = ({
 
   // Get title and subtitle from the imported function
   const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
-
+  console.log("Statuses", statusesValue)
+  const status = statuses?.length!==0 && statuses?.find((status)=>  status.name=== statusesValue[0])
   return (
     <Styled.HeaderContainer>
       <EntityPanelUploader
@@ -277,6 +263,7 @@ const DetailsPanelHeader = ({
             onChange={(value) => handleUpdate('status', value)}
             className={clsx('status-select', { loading: isLoading })}
             align={isCompact ? 'right' : 'left'}
+            $textColor={getTextColor(status!==undefined? (status as Status).color: "#OOO")}
           />
           {!isCompact &&
             (!hasUser || isLoading ? (

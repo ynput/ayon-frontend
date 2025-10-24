@@ -34,7 +34,7 @@ const MIN_CONTRAST_RATIO = 4.5
 
 export const getTextColor = (backgroundColor?: string): string => {
   try {
-    const [r, g, b] = hexToRgb(backgroundColor || '#ffffff')
+    const [r, g, b] = hexToRgb(backgroundColor || '#000')
     const bgLuminance = getLuminance(r, g, b)
 
     // Actual luminance values for our CSS variables
