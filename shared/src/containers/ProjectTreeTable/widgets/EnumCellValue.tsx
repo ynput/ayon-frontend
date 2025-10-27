@@ -1,5 +1,5 @@
 import { AttributeEnumItem } from '@shared/api'
-import { Icon, IconProps } from '@ynput/ayon-react-components'
+import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
 // Inline the edit trigger class to avoid runtime import and circular dependency with CellWidget
@@ -205,7 +205,7 @@ export const EnumCellValue = ({
             {(showLabels || !option.icon) && (
               <StyledValue
                 style={{
-                  color: backgroundColor ? 'inherit' : option.color,
+                  color: backgroundColor && option.color ? getTextColor(option.color) : option.color,
                   backgroundColor: backgroundColor
                     ? option.color || 'var(--md-sys-color-surface-container)'
                     : 'transparent',

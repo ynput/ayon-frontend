@@ -1,4 +1,4 @@
-import { theme } from '@ynput/ayon-react-components'
+import { getTextColor, theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef } from 'react'
 import styled from 'styled-components'
@@ -70,6 +70,7 @@ export const CategoryTag = forwardRef<HTMLDivElement, CategoryTagProps>(
     { value, color, isCompact, isEditing, isPower, isDisabled, style, className, ...props },
     ref,
   ) => {
+
     return (
       <StyledTag
         {...props}
@@ -81,7 +82,14 @@ export const CategoryTag = forwardRef<HTMLDivElement, CategoryTagProps>(
           power: isPower,
           disabled: isDisabled,
         })}
-        style={{ ...style, backgroundColor: color, borderColor: color }}
+        style={{
+          ...style,
+          ...(color && {
+            backgroundColor: color,
+            borderColor: color,
+            color: getTextColor(color)
+          })
+        }}
       >
         {value || NO_CATEGORY_LABEL}
       </StyledTag>

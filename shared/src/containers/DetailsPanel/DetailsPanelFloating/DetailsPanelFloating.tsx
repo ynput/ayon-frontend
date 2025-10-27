@@ -3,7 +3,7 @@ import * as Styled from './DetailsPanelFloating.styled'
 import getThumbnails from '../helpers/getThumbnails'
 import { StackedThumbnails } from '@shared/components'
 import { upperFirst } from 'lodash'
-import { AssigneeField, Icon } from '@ynput/ayon-react-components'
+import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
 import { PiPWrapper, usePowerpack } from '@shared/context'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
@@ -11,7 +11,7 @@ import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
 import FeedWrapper from '../FeedWrapper'
 import mergeProjectInfo from '../helpers/mergeProjectInfo'
 import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
-import { productTypes } from '@shared/util'
+import { productTypes} from '@shared/util'
 import { useDetailsPanelContext } from '@shared/context'
 
 export interface DetailsPanelFloatingProps {}
@@ -126,8 +126,8 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
           </Styled.Content>
         </Styled.Header>
         <Styled.Row>
-          <Styled.Status style={{ backgroundColor: statusAnatomy?.color }}>
-            {<Icon icon={statusAnatomy.icon || 'question_mark'} />}
+          <Styled.Status style={{ backgroundColor: statusAnatomy?.color, color: getTextColor(statusAnatomy?.color) }}>
+            <Icon icon={statusAnatomy.icon || 'question_mark'} style={{ color: 'inherit' }} />
             <span className="label">{statusAnatomy?.name}</span>
           </Styled.Status>
           <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
