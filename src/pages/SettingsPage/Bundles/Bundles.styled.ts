@@ -151,3 +151,21 @@ export const StyledInput = styled(InputText)`
   color: inherit;
   border-radius: var(--border-radius-m);
 `
+
+export const SearchHintText = styled.span`
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--md-sys-color-outline);
+  height: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  margin-left: 3px;
+`
+
+export const SearchHintLink = styled.a`
+  cursor: pointer;
+  text-decoration: underline;
+  color: inherit;
+`

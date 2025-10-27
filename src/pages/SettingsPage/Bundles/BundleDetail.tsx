@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
+import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
@@ -48,7 +48,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
   const [formData, setFormData] = useState<Bundle | any>({} as Bundle)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const [updateBundle] = useUpdateBundleMutation()
-  const { search, onSearchChange, filteredAddons } = useAddonSearch(addons)
+  const { search, onSearchChange, filteredAddons, resetSearch } = useAddonSearch(addons)
 
   // list of all bundles because we need production versions of addons
   let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
@@ -163,14 +163,26 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           addons={filteredAddons}
           onAddonAutoUpdate={handleAddonAutoSave}
         >
-          <Styled.AddonTools>
-            <Styled.StyledInput
-              value={search}
-              onChange={onSearchChange}
-              placeholder="Search addons..."
-              aria-label="Search addons"
-            />
-          </Styled.AddonTools>
+          <Styled.StyledInput
+            value={search}
+            onChange={onSearchChange}
+            placeholder="Search addons..."
+            aria-label="Search addons"
+          />
+
+          <Styled.SearchHintText>
+            {search && (
+              <>
+                <span>
+                  <strong>{addons.length - filteredAddons.length}</strong>{' '}addon{addons.length - filteredAddons.length !== 1 ? 's' : ''}  filtered out,
+                </span>
+                <Styled.SearchHintLink onClick={resetSearch}>
+                  remove search filter
+                </Styled.SearchHintLink>
+              </>
+            )}
+          </Styled.SearchHintText>
+
           <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}

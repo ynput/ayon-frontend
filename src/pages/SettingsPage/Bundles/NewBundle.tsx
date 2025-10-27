@@ -66,7 +66,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   const [skipBundleCheck, setSkipBundleCheck] = useState<boolean>(false)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const previousFormData = usePrevious(formData)
-  const { search, onSearchChange, filteredAddons } = useAddonSearch(addons)
+  const { search, onSearchChange, filteredAddons, resetSearch } = useAddonSearch(addons)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation() as any
@@ -365,6 +365,18 @@ const NewBundle: React.FC<NewBundleProps> = ({
             placeholder="Search addons..."
             aria-label="Search addons"
           />
+          <Styled.SearchHintText>
+            {search && (
+              <>
+                <span>
+                  <strong>{addons.length - filteredAddons.length}</strong>{' '}addon{addons.length - filteredAddons.length !== 1 ? 's' : ''}  filtered out,
+                </span>
+                <Styled.SearchHintLink onClick={resetSearch}>
+                  remove search filter
+                </Styled.SearchHintLink>
+              </>
+            )}
+          </Styled.SearchHintText>
           <Button
             label="Select all addons"
             icon="select_all"

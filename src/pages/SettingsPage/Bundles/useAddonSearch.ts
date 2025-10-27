@@ -51,10 +51,15 @@ export const useAddonSearch = (
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addons])
+  const resetSearch = () => {
+    setSearch('')
+    setFilteredAddons(addons)
+  }
 
   return {
     search,
     onSearchChange,
-    filteredAddons
+    filteredAddons,
+    resetSearch
   }
 }
