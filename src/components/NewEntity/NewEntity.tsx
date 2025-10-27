@@ -199,39 +199,33 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     newState[id] = value
 
     if (value && id === 'subType') {
-      // User selected a new entity type from the dropdown
-      // Find the corresponding type option
+      // Find the current/old type option
+      const oldTypeOption = typeOptions.find((option) => option.name === entityForm.subType)
       const typeOption = typeOptions.find((option) => option.name === value)
 
       if (typeOption) {
-        newState.label = typeOption.name
-        // If name field is empty or matches any of the current type options,
-        // update it with the new type name
-        const copiedName = String(newState.name)
-        const currentNameLower = copiedName.toLowerCase()
-        const shouldUpdateName =
-          currentNameLower === '' ||
-          typeOptions.some(
-            (option) =>
-              currentNameLower.includes(option.name?.toLowerCase()) ||
-              (option.shortName && currentNameLower.includes(option.shortName?.toLowerCase())),
-          )
-        if (shouldUpdateName) {
-          // Generate name for backend (lowercase and sanitized)
-          newState.name = parseAndFormatName(typeOption.name, config)
+        const labelMatchesOldType =
+          entityForm.label === oldTypeOption?.shortName || entityForm.label === oldTypeOption?.name
+
+        if (labelMatchesOldType) {
+          newState.label = typeOption.shortName || typeOption.name
+
+          // Only update name if it matches what the current label would generate
+          const expectedNameFromLabel = parseAndFormatName(entityForm.label, config)
+          if (entityForm.name === expectedNameFromLabel) {
+            newState.name = parseAndFormatName(newState.label, config)
+          }
         }
       }
-
-      // Reset manual editing flag when type changes - allow auto-generation again
-      setNameManuallyEdited(false)
 
       // Focus the label input after type selection
       setTimeout(() => {
         labelRef.current?.focus()
       }, 100)
     } else if (id === 'label') {
-      // Update name based on the label (sanitizing it)
+      // User is manually editing the label
       newState.label = value
+
       // Only auto-generate name if user hasn't manually edited it
       if (!nameManuallyEdited) {
         newState.name = parseAndFormatName(value, config)
@@ -303,6 +297,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
           labelRef.current.focus()
           labelRef.current.select()
         }
+        setNameManuallyEdited(false)
       } else {
         handleClose()
       }
