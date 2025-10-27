@@ -166,9 +166,6 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
   const [nameManuallyEdited, setNameManuallyEdited] = useState<boolean>(false)
-  const [labelManuallyEdited, setLabelManuallyEdited] = useState<boolean>(false)
-  // Store the type that was active when user first manually edited the label
-  const [originalTypeWhenLabelEdited, setOriginalTypeWhenLabelEdited] = useState<string>('')
   //   build out form state
   const initData: EntityForm = { label: '', subType: '', name: '' }
 
@@ -202,23 +199,22 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     newState[id] = value
 
     if (value && id === 'subType') {
-      // Find the NEW type (the one user is selecting now)
+      // Find the current/old type option
+      const oldTypeOption = typeOptions.find((option) => option.name === entityForm.subType)
       const typeOption = typeOptions.find((option) => option.name === value)
 
-      // Use the stored original type if label was edited, otherwise use the current old type
-      const typeToCheckAgainst = originalTypeWhenLabelEdited || entityForm.subType
-      const originalType = typeOptions.find((option) => option.name === typeToCheckAgainst)
-
-      // Check if the current label matches the original type's name
-      const currentLabelMatchesOriginalType = originalType && entityForm.label === originalType.name
-
       if (typeOption) {
-        // Update label if: not manually edited AND (matches original type OR is empty)
-        if (!labelManuallyEdited && (currentLabelMatchesOriginalType || !entityForm.label)) {
-          newState.label = typeOption.name
-          newState.name = parseAndFormatName(typeOption.name, config)
-          // Clear the stored original type since label is now auto-updated
-          setOriginalTypeWhenLabelEdited('')
+        const labelMatchesOldType =
+          entityForm.label === oldTypeOption?.shortName || entityForm.label === oldTypeOption?.name
+
+        if (labelMatchesOldType) {
+          newState.label = typeOption.shortName || typeOption.name
+
+          // Only update name if it matches what the current label would generate
+          const expectedNameFromLabel = parseAndFormatName(entityForm.label, config)
+          if (entityForm.name === expectedNameFromLabel) {
+            newState.name = parseAndFormatName(newState.label, config)
+          }
         }
       }
 
@@ -229,21 +225,6 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     } else if (id === 'label') {
       // User is manually editing the label
       newState.label = value
-
-      // Store the current type as the original type when label is FIRST manually edited
-      if (!labelManuallyEdited) {
-        setOriginalTypeWhenLabelEdited(entityForm.subType)
-      }
-
-      setLabelManuallyEdited(true)
-
-      // Check if user changed label back to match the current type
-      const currentType = typeOptions.find((option) => option.name === entityForm.subType)
-      if (currentType && value === currentType.name) {
-        // User changed label back to match current type, clear flags
-        setLabelManuallyEdited(false)
-        setOriginalTypeWhenLabelEdited('')
-      }
 
       // Only auto-generate name if user hasn't manually edited it
       if (!nameManuallyEdited) {
@@ -279,8 +260,6 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setEntityForm(initData)
     setSequenceForm((prev) => ({ ...prev, active: false }))
     setNameManuallyEdited(false)
-    setLabelManuallyEdited(false)
-    setOriginalTypeWhenLabelEdited('')
   }
 
   // open dropdown - delay to wait for dialog opening
@@ -318,9 +297,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
           labelRef.current.focus()
           labelRef.current.select()
         }
-        setLabelManuallyEdited(false)
         setNameManuallyEdited(false)
-        setOriginalTypeWhenLabelEdited('')
       } else {
         handleClose()
       }
