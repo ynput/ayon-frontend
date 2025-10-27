@@ -13,11 +13,11 @@ import {
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import {
-  checkName,
   checkLabel,
-  parseAndFormatName,
+  checkName,
   getPlatformShortcutKey,
   KeyMode,
+  parseAndFormatName,
 } from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
@@ -166,6 +166,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
 
   const [nameFocused, setNameFocused] = useState<boolean>(false)
   const [nameManuallyEdited, setNameManuallyEdited] = useState<boolean>(false)
+  const [labelManuallyEdited, setLabelManuallyEdited] = useState<boolean>(false)
   //   build out form state
   const initData: EntityForm = { label: '', subType: '', name: '' }
 
@@ -204,26 +205,12 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       const typeOption = typeOptions.find((option) => option.name === value)
 
       if (typeOption) {
-        newState.label = typeOption.name
-        // If name field is empty or matches any of the current type options,
-        // update it with the new type name
-        const copiedName = String(newState.name)
-        const currentNameLower = copiedName.toLowerCase()
-        const shouldUpdateName =
-          currentNameLower === '' ||
-          typeOptions.some(
-            (option) =>
-              currentNameLower.includes(option.name?.toLowerCase()) ||
-              (option.shortName && currentNameLower.includes(option.shortName?.toLowerCase())),
-          )
-        if (shouldUpdateName) {
-          // Generate name for backend (lowercase and sanitized)
+        // Only update the label if it hasn't been manually edited
+        if (!labelManuallyEdited) {
+          newState.label = typeOption.name
           newState.name = parseAndFormatName(typeOption.name, config)
         }
       }
-
-      // Reset manual editing flag when type changes - allow auto-generation again
-      setNameManuallyEdited(false)
 
       // Focus the label input after type selection
       setTimeout(() => {
@@ -232,6 +219,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     } else if (id === 'label') {
       // Update name based on the label (sanitizing it)
       newState.label = value
+      setLabelManuallyEdited(true)
       // Only auto-generate name if user hasn't manually edited it
       if (!nameManuallyEdited) {
         newState.name = parseAndFormatName(value, config)
@@ -266,6 +254,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setEntityForm(initData)
     setSequenceForm((prev) => ({ ...prev, active: false }))
     setNameManuallyEdited(false)
+    setLabelManuallyEdited(false)
   }
 
   // open dropdown - delay to wait for dialog opening
@@ -303,6 +292,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
           labelRef.current.focus()
           labelRef.current.select()
         }
+        setLabelManuallyEdited(false)
+        setNameManuallyEdited(false)
       } else {
         handleClose()
       }
