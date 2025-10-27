@@ -41,6 +41,7 @@ type BundlesAddonListProps = {
   diffAddonVersions?: string[]
   isDev?: boolean
   onDevChange?: (addonNames: string[], payload: { value: any; key: 'enabled' | 'path' }) => void
+  addons?: SharedAddon[]
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
   handleSort?:(e: DataTableSortEvent) => void
   sortField?: string | null
@@ -143,6 +144,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       diffAddonVersions,
       isDev,
       onDevChange,
+      addons: addonsProp,
       onAddonAutoUpdate,
       sortOrder,
       sortField,
@@ -151,7 +153,8 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
     ref,
   ) => {
     const navigate = useNavigate()
-    const { data: { addons = [] } = {}, refetch } = useListAddonsQuery({}) as any
+    const { data: { addons: addonsQuery = [] } = {}, refetch } = useListAddonsQuery({}) as any
+    const addons = addonsProp || addonsQuery
 
     const readyState = useSocketContext().readyState
     useEffect(() => {

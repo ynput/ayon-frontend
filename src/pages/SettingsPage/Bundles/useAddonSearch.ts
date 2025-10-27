@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, ChangeEvent } from 'react'
+import { useCallback, useEffect, useRef, ChangeEvent, useState } from 'react'
 import { useLocalStorage } from '@shared/hooks'
 import type { Addon } from './types'
 
@@ -8,9 +8,9 @@ import type { Addon } from './types'
  */
 export const useAddonSearch = (
   addons: Addon[],
-  setSelectedAddons: (addons: Addon[]) => void,
 ) => {
   const [search, setSearch] = useLocalStorage('bundles-search', '')
+  const [filteredAddons, setFilteredAddons] = useState (addons)
   const hasAppliedInitialFilter = useRef(false)
 
   const filterAddons = useCallback(
@@ -25,13 +25,9 @@ export const useAddonSearch = (
           addon.name.toLowerCase().includes(lowerSearch) ||
           addon.title?.toLowerCase().includes(lowerSearch),
       )
-
-      // Only update selection if we actually have results
-      if (filtered.length > 0) {
-        setSelectedAddons(filtered)
-      }
+      setFilteredAddons(filtered)
     },
-    [addons, setSelectedAddons],
+    [addons],
   )
 
   const onSearchChange = useCallback(
@@ -42,13 +38,12 @@ export const useAddonSearch = (
       if (value.trim()) {
         filterAddons(value)
       } else {
-        setSelectedAddons([]) // Clear selection on empty search
+        setFilteredAddons(addons)
       }
     },
-    [setSearch, filterAddons, setSelectedAddons],
+    [setSearch, filterAddons],
   )
 
-  // Apply saved search filter ONLY ONCE on mount
   useEffect(() => {
     if (!hasAppliedInitialFilter.current && addons?.length && search?.trim()) {
       filterAddons(search)
@@ -60,5 +55,6 @@ export const useAddonSearch = (
   return {
     search,
     onSearchChange,
+    filteredAddons
   }
 }

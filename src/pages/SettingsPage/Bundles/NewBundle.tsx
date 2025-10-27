@@ -66,7 +66,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   const [skipBundleCheck, setSkipBundleCheck] = useState<boolean>(false)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const previousFormData = usePrevious(formData)
-  const { search, onSearchChange } = useAddonSearch(addons, setSelectedAddons)
+  const { search, onSearchChange, filteredAddons } = useAddonSearch(addons)
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation() as any
@@ -145,7 +145,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
 
   // Select addon if query search has addon=addonName
   const addonListRef = useRef<any>()
-  const { selectAndScrollToAddon } = useAddonSelection(addons, setSelectedAddons, addonListRef, [
+  const { selectAndScrollToAddon } = useAddonSelection(filteredAddons, setSelectedAddons, addonListRef, [
     formData,
   ])
 
@@ -303,14 +303,14 @@ const NewBundle: React.FC<NewBundleProps> = ({
     {
       key: 'A',
       action: () =>
-        selectedAddons.length === addons.length ? setSelectedAddons([]) : setSelectedAddons(addons),
+        selectedAddons.length === filteredAddons.length ? setSelectedAddons([]) : setSelectedAddons(filteredAddons),
     },
   ]
 
   return (
     <>
       {Shortcuts && (
-        <Shortcuts shortcuts={shortcuts as any} deps={[addons, selectedAddons] as any} />
+        <Shortcuts shortcuts={shortcuts as any} deps={[filteredAddons, selectedAddons] as any} />
       )}
       <Toolbar>
         <Spacer />
@@ -353,6 +353,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
         addonListRef={addonListRef}
+        addons={filteredAddons}
         onProjectSwitchChange={() =>
           formData && setFormData({ ...formData, isProject: !formData?.isProject })
         }
@@ -367,7 +368,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
           <Button
             label="Select all addons"
             icon="select_all"
-            onClick={() => setSelectedAddons(addons)}
+            onClick={() => setSelectedAddons(filteredAddons)}
             data-shortcut={getPlatformShortcutKey('a', [KeyMode.Shift])}
             id="select"
           />
@@ -381,13 +382,13 @@ const NewBundle: React.FC<NewBundleProps> = ({
           <Button
             label="Select activated"
             icon="check_circle"
-            onClick={() => setSelectedAddons(addons.filter((a) => !!formData?.addons?.[a.name]))}
+            onClick={() => setSelectedAddons(filteredAddons.filter((a) => !!formData?.addons?.[a.name]))}
             data-tooltip="Select addons that have a version"
           />
           <Button
             label="Select deactivated"
             icon="block"
-            onClick={() => setSelectedAddons(addons.filter((a) => !formData?.addons?.[a.name]))}
+            onClick={() => setSelectedAddons(filteredAddons.filter((a) => !formData?.addons?.[a.name]))}
             data-tooltip="Select addons that have a NONE version"
           />
           <Button
