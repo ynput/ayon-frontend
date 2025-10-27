@@ -357,7 +357,11 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id) || meta?.readOnly?.includes(fieldId)}
+            isReadOnly={
+              meta?.readOnly?.includes(column.id) ||
+              meta?.readOnly?.includes(fieldId) ||
+              (type === 'folder' && row.original.hasVersions)
+            }
           />
         )
       },

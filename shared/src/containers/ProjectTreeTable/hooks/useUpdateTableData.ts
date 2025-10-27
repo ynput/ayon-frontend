@@ -65,7 +65,28 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       }
 
       // Filter out link updates - they should be handled by useUpdateTableLinks
-      const entityUpdates = entities.filter((e) => !e.isLink)
+      let entityUpdates = entities.filter((e) => !e.isLink)
+
+      // Filter out folder type updates for folders with versions
+      const filteredUpdates = entityUpdates.filter((entity) => {
+        if (entity.field === 'folderType' && entity.type === 'folder') {
+          const entityData = getEntityById(entity.id)
+          if (entityData?.hasVersions) {
+            return false
+          }
+        }
+        return true
+      })
+
+      // Show warning if any updates were filtered out
+      const filteredCount = entityUpdates.length - filteredUpdates.length
+      if (filteredCount > 0) {
+        toast.error(
+          `Cannot change folder type for ${filteredCount} folder${filteredCount > 1 ? 's' : ''} with published versions`,
+        )
+      }
+
+      entityUpdates = filteredUpdates
 
       // If no entity updates to process, return early
       if (!entityUpdates.length) {
