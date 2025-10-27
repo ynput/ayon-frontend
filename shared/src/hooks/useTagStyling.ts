@@ -34,7 +34,6 @@ export const useTagStyling = ({
               if (tagColor) {
                 const htmlElement = tagElement as HTMLElement
                 htmlElement.style.backgroundColor = tagColor
-                htmlElement.style.color = 'var(--color-tag-text)'
               }
             })
           }
