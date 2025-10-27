@@ -9,7 +9,7 @@ import { Actions, DetailsPanelProps } from '@shared/containers'
 import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
-import { useScopedStatuses, useEntityUpdate, useTagStyling } from '@shared/hooks'
+import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
@@ -143,12 +143,6 @@ const DetailsPanelHeader = ({
       }, {}),
     [tagsOptions],
   )
-
-  useTagStyling({
-    tagsValues,
-    tagsOptionsObject,
-    tagsSelectRef,
-  })
 
   const isMultiple = entities.length > 1
 
