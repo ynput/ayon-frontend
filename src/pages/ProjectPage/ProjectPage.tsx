@@ -13,7 +13,6 @@ import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
 
-
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
@@ -31,7 +30,7 @@ import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
-import HelpButton from "@components/HelpButton/HelpButton.tsx"
+import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 
@@ -169,7 +168,7 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
-        enabled: matchedAddons?.get('reports'), // hide the report tab until the addon is out of development
+        enabled: !!matchedAddons?.get('reports'), // hide the report tab until the addon is out of development
       },
       {
         name: 'Workfiles',
@@ -177,12 +176,11 @@ const ProjectPage = () => {
         module: 'workfiles',
         uriSync: true,
       },
-      ...remotePages
-        .map((remote) => ({
-          name: remote.name,
-          module: remote.module,
-          path: `/projects/${projectName}/${remote.module}`,
-        })),
+      ...remotePages.map((remote) => ({
+        name: remote.name,
+        module: remote.module,
+        path: `/projects/${projectName}/${remote.module}`,
+      })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -303,8 +301,8 @@ const ProjectPage = () => {
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isGuest){
-    return <GuestUserPageLocked/>
+  if (isGuest) {
+    return <GuestUserPageLocked />
   }
 
   return (
