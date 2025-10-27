@@ -89,7 +89,6 @@ export const useLoadModule = <T>({
       from: 'runtime',
     })
       .then((remote) => {
-        console.log('loaded remote', module)
         setIsLoaded(module)
         setIsLoading(false)
         if (remote) loadedRemote.current = remote.default
