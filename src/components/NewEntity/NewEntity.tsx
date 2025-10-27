@@ -13,11 +13,11 @@ import {
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
 import {
-  checkLabel,
   checkName,
+  checkLabel,
+  parseAndFormatName,
   getPlatformShortcutKey,
   KeyMode,
-  parseAndFormatName,
 } from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
