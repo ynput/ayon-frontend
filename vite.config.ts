@@ -16,7 +16,6 @@ export default ({ mode }) => {
 
   // https://vitejs.dev/config/
   return defineConfig({
-    base: '/',
     server: {
       proxy: {
         '/api': {
@@ -84,8 +83,8 @@ export default ({ mode }) => {
     ],
     build: {
       target: 'chrome89',
-      // Ensure assets use relative paths, not absolute localhost URLs
-      assetsInlineLimit: 0,
+      // Disable module preload to prevent hardcoded URLs
+      modulePreload: false,
       // Use hash for better cache invalidation
       rollupOptions: {
         output: {
