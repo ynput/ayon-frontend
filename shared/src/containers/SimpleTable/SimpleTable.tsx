@@ -473,14 +473,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
   })
 
   // Memoize the ref callback to prevent infinite re-renders
-  const measureElementRef = useCallback(
-    (node: HTMLElement | null) => {
-      if (node) {
-        rowVirtualizer.measureElement(node)
-      }
-    },
-    [rowVirtualizer],
-  )
+  const measureElementRef = useCallback((node: HTMLElement | null) => {
+    if (node) {
+      rowVirtualizer.measureElement(node)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Handle scroll to bottom detection
   const handleScroll = useCallback(
