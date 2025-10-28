@@ -1,15 +1,15 @@
 import { useMemo, useRef } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
-import { DropdownRef } from '@ynput/ayon-react-components'
+import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
 
 import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
 import { Actions, DetailsPanelProps } from '@shared/containers'
 // shared
-import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shared/api'
+import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery, Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
-import { useScopedStatuses, useEntityUpdate, useTagStyling } from '@shared/hooks'
+import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
 import FeedFilters from '../FeedFilters/FeedFilters'
@@ -144,12 +144,6 @@ const DetailsPanelHeader = ({
     [tagsOptions],
   )
 
-  useTagStyling({
-    tagsValues,
-    tagsOptionsObject,
-    tagsSelectRef,
-  })
-
   const isMultiple = entities.length > 1
 
   const { updateEntity } = useEntityUpdate({
@@ -204,7 +198,7 @@ const DetailsPanelHeader = ({
 
   // Get title and subtitle from the imported function
   const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
-
+  const status = statuses?.length!==0 && statuses?.find((status)=>  status.name=== statusesValue[0])
   return (
     <Styled.HeaderContainer>
       <EntityPanelUploader
@@ -259,6 +253,7 @@ const DetailsPanelHeader = ({
             onChange={(value) => handleUpdate('status', value)}
             className={clsx('status-select', { loading: isLoading })}
             align={isCompact ? 'right' : 'left'}
+            $textColor={getTextColor(status!==undefined? (status as Status).color: "#OOO")}
           />
           {!isCompact &&
             (!hasUser || isLoading ? (

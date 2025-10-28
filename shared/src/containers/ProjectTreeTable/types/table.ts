@@ -81,6 +81,7 @@ export type EditorTaskNode = Omit<TaskNode, 'links'> & {
   entityType: 'task'
   groups?: { value: string; hasNextPage?: string }[]
   links: EntityLink[]
+  hasVersions?: boolean
 }
 
 export type EditorVersionNode = {
@@ -107,6 +108,7 @@ export type EditorVersionNode = {
     }
   }
   links: EntityLink[]
+  hasVersions?: boolean
 }
 
 type EditorProductNode = {
@@ -127,6 +129,7 @@ type EditorProductNode = {
   allAttrib: string
   attrib?: Record<string, any>
   links: EntityLink[]
+  hasVersions?: boolean
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>

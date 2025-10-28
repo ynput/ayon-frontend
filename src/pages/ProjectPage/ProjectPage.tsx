@@ -33,6 +33,7 @@ import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
 
 type NavLink = {
@@ -78,6 +79,7 @@ const ProjectPage = () => {
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
+  const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
     { projectName: projectName || '' },
@@ -226,6 +228,12 @@ const ProjectPage = () => {
   }, [links, module])
 
   const title = useTitle(module, links, projectName || 'AYON')
+
+  const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
+  const isAddon = !!addonName // Check if we're on an addon page
+  useEffect(() => {
+    trackCurrentTab(tab, isAddon)
+  }, [tab, isAddon, trackCurrentTab])
 
   //
   // Render page

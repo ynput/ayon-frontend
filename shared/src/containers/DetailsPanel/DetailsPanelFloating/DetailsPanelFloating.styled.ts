@@ -105,11 +105,6 @@ export const Status = styled.div`
   height: 32px;
   border-radius: var(--border-radius-m);
 
-  &,
-  .icon {
-    color: black;
-  }
-
   .icon {
     font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
   }

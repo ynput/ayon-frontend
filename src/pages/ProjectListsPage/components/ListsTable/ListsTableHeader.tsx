@@ -16,7 +16,7 @@ import {
   canDeleteAllLists,
   canDeleteAllFolders,
   UserPermissions,
-} from '@pages/ProjectListsPage/utils/listAccessControl'
+} from '@pages/ProjectListsPage/util/listAccessControl'
 
 export const MENU_ID = 'lists-table-menu'
 

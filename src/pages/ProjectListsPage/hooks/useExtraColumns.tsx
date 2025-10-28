@@ -61,7 +61,11 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                   value={isEntityRestricted(type) ? '' : value}
                   options={isEntityRestricted(type) ? [] : meta?.options?.[typeColumn.value]}
                   attributeData={{ type: 'string' }}
-                  isReadOnly={typeColumn.readonly || meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
+                  isReadOnly={
+                    typeColumn.readonly ||
+                    meta?.readOnly?.includes(column.id) ||
+                    isEntityRestricted(type)
+                  }
                   onChange={(value) =>
                     meta?.updateEntities?.([
                       { field: typeColumn.value, value, id, type, rowId: row.id },

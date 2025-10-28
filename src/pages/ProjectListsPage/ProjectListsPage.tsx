@@ -115,7 +115,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
     () => [
-      ...listAttributes.map((a) => ({ ...a, scopes: [selectedList?.entityType] })),
+      ...listAttributes.map((a) => ({ ...a, scope: [selectedList?.entityType] })),
       ...attribFields,
     ],
     [listAttributes, attribFields, selectedList],

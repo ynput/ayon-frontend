@@ -18,7 +18,7 @@ import {
   canEditAllFolders,
   canDeleteAllFolders,
   UserPermissions,
-} from '../utils/listAccessControl'
+} from '../util/listAccessControl'
 
 export const FOLDER_ICON = 'snippet_folder'
 export const FOLDER_ICON_ADD = 'create_new_folder'

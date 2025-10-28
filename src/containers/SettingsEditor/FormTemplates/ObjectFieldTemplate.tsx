@@ -244,27 +244,21 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
 
   if (props.idSchema.$id === 'root') {
     const projectMark = props.formContext.headerProjectName && (
-      <Badge hl="project" style={{}}>
-        {props.formContext.headerProjectName}
-      </Badge>
+      <Badge color="project" label={props.formContext.headerProjectName} />
     )
     const siteMark = props.formContext.headerSiteId && (
-      <Badge hl="site" style={{}}>
-        {props.formContext.headerSiteId}
-      </Badge>
+      <Badge color="site" label={props.formContext.headerSiteId} />
     )
 
     const envMark = props.formContext.headerVariant && (
       <Badge
-        hl={
+        color={
           ['production', 'staging'].includes(props.formContext.headerVariant)
             ? props.formContext.headerVariant
             : 'developer'
         }
-        style={{}}
-      >
-        {props.formContext.headerVariant}
-      </Badge>
+        label={props.formContext.headerVariant}
+      />
     )
 
     rootTitle = (
