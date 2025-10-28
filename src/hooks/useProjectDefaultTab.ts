@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'ayon-project-default-tab'
+const STORAGE_KEY = 'project-default-tab'
 
 /**
  * Hook to manage the default project tab preference
