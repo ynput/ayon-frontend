@@ -1,5 +1,6 @@
 import { ProductNode, VersionNode } from '@shared/api/queries'
 import { createMetaRowId, TableRow } from '@shared/containers'
+import { getEntityTypeIcon, productTypes } from '@shared/util'
 
 export const HERO_SYMBOL = '★'
 
@@ -7,6 +8,7 @@ export const buildProductRow = (product: ProductNode, subRows: TableRow[]): Tabl
   id: product.id,
   name: product.name,
   label: product.name,
+  icon: productTypes[product.productType]?.icon || getEntityTypeIcon('product'),
   entityId: product.id,
   entityType: 'product',
   createdAt: product.createdAt,
