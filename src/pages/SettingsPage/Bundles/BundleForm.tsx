@@ -36,11 +36,9 @@ type BundleFormProps = {
   ) => void
   developerMode?: boolean
   addonListRef?: any
-  addons?: Addon[]
+  addons: Addon[]
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
   onProjectSwitchChange?: () => void
-  totalAddonsCount?: number
-  onResetSearch?: () => void
 }
 
 const BundleForm: React.FC<BundleFormProps> = ({
@@ -58,8 +56,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
   addons,
   onAddonAutoUpdate,
   onProjectSwitchChange,
-  totalAddonsCount,
-  onResetSearch,
 }) => {
   const showNameError = formData && !formData?.name && isNew
   const currentUser = useAppSelector((state) => state.user.name)
@@ -206,8 +202,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
               ref={addonListRef}
               addons={addons}
               onAddonAutoUpdate={onAddonAutoUpdate}
-              totalAddonsCount={totalAddonsCount}
-              onResetSearch={onResetSearch}
             />
           </Styled.AddonListInnerSection>
         </Styled.AddonListSection>

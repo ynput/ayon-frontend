@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react'
 import BundlesAddonList from './BundlesAddonList'
 import useScrollSync from '@hooks/useScrollSync'
 import { DataTableSortEvent } from 'primereact/datatable'
+import { Addon } from '@pages/SettingsPage/Bundles/types.ts'
 
 type Bundle = {
   name: string
@@ -10,16 +11,12 @@ type Bundle = {
   addons: Record<string, string | null>
 }
 
-type Addon = { name: string }
-
 type BundleCompareProps = {
   bundles?: Bundle[]
   addons: Addon[]
-  onResetSearch?: () => void
-  totalAddonsCount?: number
 }
 
-const BundleCompare: React.FC<BundleCompareProps> = ({ bundles = [], addons, onResetSearch, totalAddonsCount, }) => {
+const BundleCompare: React.FC<BundleCompareProps> = ({ bundles = [], addons }) => {
   // for each bundle, in addons check if the same addon has a different version in another bundle
   // if so, set a flag on the addon to show it's different
   const diffAddonVersions: string[] = []
@@ -68,8 +65,7 @@ const BundleCompare: React.FC<BundleCompareProps> = ({ bundles = [], addons, onR
             handleSort={handleSort}
             sortOrder={sortOrder}
             sortField={sortField}
-            totalAddonsCount={totalAddonsCount}
-            onResetSearch={onResetSearch}
+            addons={addons}
           />
         </Panel>
       ))}

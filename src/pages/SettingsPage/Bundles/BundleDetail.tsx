@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
@@ -11,7 +11,8 @@ import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
-import { useAddonSearch } from './useAddonSearch'
+import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContext.tsx'
+import { AddonSearchInput } from '@pages/SettingsPage/Bundles/AddonSearchInput.tsx'
 
 type Installer = { version: string; platforms?: string[] }
 type Bundle = {
@@ -48,7 +49,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
   const [formData, setFormData] = useState<Bundle | any>({} as Bundle)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const [updateBundle] = useUpdateBundleMutation()
-  const { search, onSearchChange, filteredAddons, resetSearch } = useAddonSearch(addons)
+  const { filteredAddons } = useAddonSearchContext()
 
   // list of all bundles because we need production versions of addons
   let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
@@ -157,25 +158,16 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
         <BundleCompare
           bundles={selectedBundles as any}
           addons={filteredAddons as any}
-          onResetSearch={resetSearch}
-          totalAddonsCount={addons.length}
         />
       ) : (
         <BundleForm
           isNew={false}
-          totalAddonsCount={addons.length}
-          onResetSearch={resetSearch}
           addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           addons={filteredAddons}
           onAddonAutoUpdate={handleAddonAutoSave}
         >
-          <Styled.StyledInput
-            value={search}
-            onChange={onSearchChange}
-            placeholder="Search addons..."
-            aria-label="Search addons"
-          />
+          <AddonSearchInput />
           <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}

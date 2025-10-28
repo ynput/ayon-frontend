@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo } from 'react'
-import { useListAddonsQuery } from '@shared/api'
+import React, { useMemo } from 'react'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { DataTable, DataTableSortEvent } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { useSocketContext } from '@shared/context'
 import { compareBuild, coerce } from 'semver'
 import { Icon, InputSwitch, InputText, VersionSelect } from '@ynput/ayon-react-components'
 import { FilePath, LatestIcon } from './Bundles.styled'
@@ -12,6 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import type { Addon as SharedAddon } from './types'
 import * as Styled from '@pages/SettingsPage/Bundles/BundleForm.styled.ts'
+import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContext.tsx'
 
 type VersionsMap = Record<string, { projectCanOverrideAddonVersion?: boolean }>
 
@@ -42,13 +41,11 @@ type BundlesAddonListProps = {
   diffAddonVersions?: string[]
   isDev?: boolean
   onDevChange?: (addonNames: string[], payload: { value: any; key: 'enabled' | 'path' }) => void
-  addons?: SharedAddon[]
+  addons: SharedAddon[]
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
   handleSort?: (e: DataTableSortEvent) => void
   sortField?: string | null
   sortOrder?: 0 | 1 | -1 | null | undefined
-  totalAddonsCount?: number
-  onResetSearch?: () => void
 }
 
 const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
@@ -84,7 +81,7 @@ const AddonListItem: React.FC<{
   version?: string | null
   setVersion: (v: string | null) => void
   selection: any[] | any
-  addons?: Addon[]
+  addons?: SharedAddon[]
   versions: string[]
   isDev?: boolean
   addonName: string
@@ -148,24 +145,17 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       diffAddonVersions,
       isDev,
       onDevChange,
-      addons: addonsProp,
+      addons,
       onAddonAutoUpdate,
       sortOrder,
       sortField,
       handleSort,
-      totalAddonsCount,
-      onResetSearch,
     },
     ref,
   ) => {
     const navigate = useNavigate()
-    const { data: { addons: addonsQuery = [] } = {}, refetch } = useListAddonsQuery({}) as any
-    const addons = addonsProp || addonsQuery
-
-    const readyState = useSocketContext().readyState
-    useEffect(() => {
-      refetch()
-    }, [readyState])
+    const { filteredAddons, resetSearch, totalAddonsCount } = useAddonSearchContext()
+    const addonsToUse = addons || filteredAddons
 
     // get production bundle, because
     let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true }) as any
@@ -200,7 +190,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
     }
 
     const addonsTable = useMemo(() => {
-      const tableData = (addons as Addon[])
+      const tableData = (addonsToUse as Addon[])
         .map((addon) => ({
           ...addon,
           version: formData?.addons?.[addon.name] || 'NONE',
@@ -221,7 +211,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           return a.title.localeCompare(b.title)
         })
       return tableData
-    }, [addons, formData, readOnly, totalAddonsCount])
+    }, [addonsToUse, formData, readOnly])
 
     const createContextItems = (selected: any) => {
       let items = [
@@ -251,7 +241,8 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       ctxMenuShow(e.originalEvent, createContextItems(contextSelection))
     }
 
-const filteredCount = addonsTable.filter((a) => !diffAddonVersions?.includes(a.name)).length
+    const filteredCount = totalAddonsCount - filteredAddons.length
+
     return (
       <>
         <StyledDataTable
@@ -378,15 +369,17 @@ const filteredCount = addonsTable.filter((a) => !diffAddonVersions?.includes(a.n
             />
           )}
         </StyledDataTable>
-        <Styled.SearchHintText>
-          <span>
-            <strong>{filteredCount}</strong> addon
-            {filteredCount !== 1 ? 's' : ''} filtered out,
-          </span>
-          <Styled.SearchHintLink onClick={onResetSearch}>
-            remove search filter
-          </Styled.SearchHintLink>
-        </Styled.SearchHintText>
+        {filteredCount > 0 && (
+          <Styled.SearchHintText>
+            <span>
+              <strong>{filteredCount}</strong> addon
+              {filteredCount !== 1 ? 's' : ''} filtered out,
+            </span>
+            <Styled.SearchHintLink onClick={resetSearch}>
+              remove search filter
+            </Styled.SearchHintLink>
+          </Styled.SearchHintText>
+        )}
       </>
     )
   },

@@ -22,6 +22,7 @@ import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
 import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 import BundleFormLoading from './BundleFormLoading'
+import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/AddonSearchContext'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -458,6 +459,7 @@ const Bundles = () => {
             </Section>
           </SplitterPanel>
           <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
+            <AddonSearchProvider addons={addons}>
             <Section style={{ height: '100%' }}>
               {isLoadingAddons || isLoadingInstallers ? (
                 <BundleFormLoading />
@@ -492,6 +494,7 @@ const Bundles = () => {
                 ))
               )}
             </Section>
+            </AddonSearchProvider>
           </SplitterPanel>
         </Splitter>
       </main>

@@ -16,7 +16,8 @@ import { useCheckBundleCompatibilityQuery } from '@queries/bundles/getBundles'
 import BundleChecks from './BundleChecks/BundleChecks'
 import usePrevious from '@hooks/usePrevious'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
-import { useAddonSearch } from './useAddonSearch'
+import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContext.tsx'
+import { AddonSearchInput } from '@pages/SettingsPage/Bundles/AddonSearchInput.tsx'
 
 type AddonDevelopment = Record<string, { enabled?: boolean; path?: string }>
 
@@ -66,7 +67,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   const [skipBundleCheck, setSkipBundleCheck] = useState<boolean>(false)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const previousFormData = usePrevious(formData)
-  const { search, onSearchChange, filteredAddons, resetSearch } = useAddonSearch(addons)
+  const { filteredAddons } = useAddonSearchContext()
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation() as any
@@ -145,9 +146,12 @@ const NewBundle: React.FC<NewBundleProps> = ({
 
   // Select addon if query search has addon=addonName
   const addonListRef = useRef<any>()
-  const { selectAndScrollToAddon } = useAddonSelection(filteredAddons, setSelectedAddons, addonListRef, [
-    formData,
-  ])
+  const { selectAndScrollToAddon } = useAddonSelection(
+    filteredAddons,
+    setSelectedAddons,
+    addonListRef,
+    [formData],
+  )
 
   // if there's a version param of {[addonName]: version}, select that addon
   const [searchParams, setSearchParams] = useSearchParams()
@@ -303,7 +307,9 @@ const NewBundle: React.FC<NewBundleProps> = ({
     {
       key: 'A',
       action: () =>
-        selectedAddons.length === filteredAddons.length ? setSelectedAddons([]) : setSelectedAddons(filteredAddons),
+        selectedAddons.length === filteredAddons.length
+          ? setSelectedAddons([])
+          : setSelectedAddons(filteredAddons),
     },
   ]
 
@@ -354,19 +360,12 @@ const NewBundle: React.FC<NewBundleProps> = ({
         developerMode={developerMode}
         addonListRef={addonListRef}
         addons={filteredAddons}
-        onResetSearch={resetSearch}
-        totalAddonsCount={addons.length}
         onProjectSwitchChange={() =>
           formData && setFormData({ ...formData, isProject: !formData?.isProject })
         }
       >
         <Styled.AddonTools>
-          <Styled.StyledInput
-            value={search}
-            onChange={onSearchChange}
-            placeholder="Search addons..."
-            aria-label="Search addons"
-          />
+          <AddonSearchInput />
           <Button
             label="Select all addons"
             icon="select_all"
