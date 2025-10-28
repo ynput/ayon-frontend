@@ -52,6 +52,7 @@ type BundlesAddonListProps = {
 }
 
 const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
+ height: auto !important;
   tr {
     display: flex;
     flex-wrap: nowrap;
@@ -219,19 +220,6 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           }
           return a.title.localeCompare(b.title)
         })
-
-      // Add footer row only if there are filtered items
-      if (totalAddonsCount && totalAddonsCount > tableData.length) {
-        tableData.push({
-          name: '__footer__',
-          title: '',
-          addonType: '',
-          versions: {},
-          version: '',
-          isFooter: true,
-        } as any)
-      }
-
       return tableData
     }, [addons, formData, readOnly, totalAddonsCount])
 
@@ -263,148 +251,143 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       ctxMenuShow(e.originalEvent, createContextItems(contextSelection))
     }
 
-
+const filteredCount = addonsTable.filter((a) => !diffAddonVersions?.includes(a.name)).length
     return (
-      <StyledDataTable
-        value={addonsTable}
-        scrollable
-        scrollHeight="flex"
-        selectionMode="multiple"
-        responsive="true"
-        dataKey="name"
-        selection={selected}
-        onSelectionChange={(e: any) => setSelected(e.value)}
-        onContextMenu={handleContextClick}
-        tableStyle={{ ...style }}
-        className="addons-table"
-        rowClassName={(rowData: any) => diffAddonVersions?.includes(rowData.name) && 'diff-version'}
-        ref={ref}
-        {...(handleSort && {
-          onSort: (e: DataTableSortEvent) => handleSort(e),
-          sortField: sortField,
-          sortOrder: sortOrder,
-        })}
-      >
-        <Column
-          header="Title"
-          field="title"
-          pt={{
-            root: {
-              style: {
-                height: 38,
-                maxWidth: isDev ? 250 : 'unset',
-              },
-            },
-          }}
-          body={(addon: any) => {
-            if (addon.isFooter && totalAddonsCount) {
-              const filteredCount = totalAddonsCount - addonsTable.length + 1
-              return (
-                <Styled.SearchHintText>
-                  <span>
-                    <strong>{filteredCount}</strong> addon
-                    {filteredCount !== 1 ? 's' : ''} filtered out,
-                  </span>
-                  <Styled.SearchHintLink onClick={onResetSearch}>
-                    remove search filter
-                  </Styled.SearchHintLink>
-                </Styled.SearchHintText>
-              )
-            }
-            return addon.title
-          }}
-          sortable
-        />
-        <Column
-          sortable
-          field="version"
-          header="Version"
-          className="version-column"
-          body={(addon: any) => {
-            if (addon.isFooter) return null
-            const isPipeline = addon.addonType === 'pipeline'
-            const currentVersion = addon.version
-            const productionVersion = currentProductionAddons?.[addon.name]
-            const allVersions = addon.versions
-            const sortedVersions = Object.keys(allVersions).sort((a, b) => {
-              const comparison = -1 * compareBuild(coerce(a) ?? a, coerce(b) ?? b)
-              if (comparison === 0) {
-                return b.localeCompare(a)
-              }
-              return comparison
-            })
-            const latestVersion = sortedVersions[0]
-
-            if (formData.isProject && !addon.projectCanOverrideAddonVersion) {
-              return (
-                <span style={{ color: '#666' }}>
-                  <Icon icon="lock" /> {productionVersion || 'NONE'}
-                </span>
-              )
-            }
-
-            if (readOnly && isPipeline)
-              return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
-            // get all selected versions
-
-            const availableVersions = []
-            for (const version of Object.keys(addon?.versions || [])) {
-              // when we're editing a project bundle,
-              // we only show versions that are allowed to be overridden
-              if (formData.isProject && !addon.versions[version].projectCanOverrideAddonVersion)
-                continue
-              availableVersions.push(version)
-            }
-
-            return (
-              <AddonListItem
-                key={addon.name}
-                version={addon.version}
-                selection={selected}
-                addons={addons}
-                setVersion={(version) =>
-                  onSetVersion(addon.name, version || null, addon.addonType === 'server')
-                }
-                versions={availableVersions}
-                isDev={isDev}
-                addonName={addon.name}
-              />
-            )
-          }}
-        />
-        {isDev && (
+      <>
+        <StyledDataTable
+          value={addonsTable}
+          scrollable
+          scrollHeight="flex"
+          selectionMode="multiple"
+          responsive="true"
+          dataKey="name"
+          selection={selected}
+          onSelectionChange={(e: any) => setSelected(e.value)}
+          onContextMenu={handleContextClick}
+          tableStyle={{ ...style }}
+          className="addons-table"
+          rowClassName={(rowData: any) =>
+            diffAddonVersions?.includes(rowData.name) && 'diff-version'
+          }
+          ref={ref}
+          {...(handleSort && {
+            onSort: (e: DataTableSortEvent) => handleSort(e),
+            sortField: sortField,
+            sortOrder: sortOrder,
+          })}
+        >
           <Column
-            field="path"
-            header="Addon directory"
-            className="path-column"
-            body={(addon) => {
-              if (addon.isFooter) return null
+            header="Title"
+            field="title"
+            pt={{
+              root: {
+                style: {
+                  height: 38,
+                  maxWidth: isDev ? 250 : 'unset',
+                },
+              },
+            }}
+            sortable
+          />
+          <Column
+            sortable
+            field="version"
+            header="Version"
+            className="version-column"
+            body={(addon: any) => {
+              const isPipeline = addon.addonType === 'pipeline'
+              const currentVersion = addon.version
+              const productionVersion = currentProductionAddons?.[addon.name]
+              const allVersions = addon.versions
+              const sortedVersions = Object.keys(allVersions).sort((a, b) => {
+                const comparison = -1 * compareBuild(coerce(a) ?? a, coerce(b) ?? b)
+                if (comparison === 0) {
+                  return b.localeCompare(a)
+                }
+                return comparison
+              })
+              const latestVersion = sortedVersions[0]
+
+              if (formData.isProject && !addon.projectCanOverrideAddonVersion) {
+                return (
+                  <span style={{ color: '#666' }}>
+                    <Icon icon="lock" /> {productionVersion || 'NONE'}
+                  </span>
+                )
+              }
+
+              if (readOnly && isPipeline)
+                return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
+              // get all selected versions
+              const availableVersions = []
+              for (const version of Object.keys(addon?.versions || [])) {
+                // when we're editing a project bundle,
+                // we only show versions that are allowed to be overridden
+                if (formData.isProject && !addon.versions[version].projectCanOverrideAddonVersion)
+                  continue
+                availableVersions.push(version)
+              }
 
               return (
-                <FilePath>
-                  <InputSwitch
-                    checked={addon.dev?.enabled}
-                    onChange={() =>
-                      onDevChange &&
-                      onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
-                    }
-                  />
-                  <InputText
-                    value={addon.dev?.path || ''}
-                    style={{ width: '100%' }}
-                    placeholder="/path/to/dev/addon/client"
-                    data-tooltip="Path to the client folder of the addon to run client side code live from source."
-                    onChange={(e) =>
-                      onDevChange && onDevChange([addon.name], { value: e.target.value, key: 'path' })
-                    }
-                    disabled={!addon.dev?.enabled}
-                  />
-                </FilePath>
+                <AddonListItem
+                  key={addon.name}
+                  version={addon.version}
+                  selection={selected}
+                  addons={addons}
+                  setVersion={(version) =>
+                    onSetVersion(addon.name, version || null, addon.addonType === 'server')
+                  }
+                  versions={availableVersions}
+                  isDev={isDev}
+                  addonName={addon.name}
+                />
               )
             }}
           />
-        )}
-      </StyledDataTable>
+          {isDev && (
+            <Column
+              field="path"
+              header="Addon directory"
+              className="path-column"
+              body={(addon) => {
+                if (addon.isFooter) return null
+
+                return (
+                  <FilePath>
+                    <InputSwitch
+                      checked={addon.dev?.enabled}
+                      onChange={() =>
+                        onDevChange &&
+                        onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
+                      }
+                    />
+                    <InputText
+                      value={addon.dev?.path || ''}
+                      style={{ width: '100%' }}
+                      placeholder="/path/to/dev/addon/client"
+                      data-tooltip="Path to the client folder of the addon to run client side code live from source."
+                      onChange={(e) =>
+                        onDevChange &&
+                        onDevChange([addon.name], { value: e.target.value, key: 'path' })
+                      }
+                      disabled={!addon.dev?.enabled}
+                    />
+                  </FilePath>
+                )
+              }}
+            />
+          )}
+        </StyledDataTable>
+        <Styled.SearchHintText>
+          <span>
+            <strong>{filteredCount}</strong> addon
+            {filteredCount !== 1 ? 's' : ''} filtered out,
+          </span>
+          <Styled.SearchHintLink onClick={onResetSearch}>
+            remove search filter
+          </Styled.SearchHintLink>
+        </Styled.SearchHintText>
+      </>
     )
   },
 )
