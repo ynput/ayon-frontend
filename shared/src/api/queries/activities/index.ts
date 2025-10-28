@@ -1,7 +1,7 @@
 export * from './getActivities'
 export * from './updateActivities'
-export * from './updateActivities'
 export * from './updateReaction'
 export * from './getMentions'
+export * from './getCategories'
 export * from './types'
 export { filterActivityTypes, getFilterActivityTypes } from './util/activitiesHelpers'

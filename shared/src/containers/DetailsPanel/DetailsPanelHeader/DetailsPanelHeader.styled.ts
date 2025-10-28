@@ -152,8 +152,10 @@ export const LabelWrapper = styled.div`
   display: flex;
   flex-direction: column;
 `
-
-export const StatusSelect = styled(StatusSelectComponent)`
+interface StatusSelectProps {
+  $textColor: string;
+}
+export const StatusSelect = styled(StatusSelectComponent)<StatusSelectProps>`
   width: fit-content;
   .status-field.value {
     position: relative;
@@ -162,6 +164,7 @@ export const StatusSelect = styled(StatusSelectComponent)`
     padding-right: 8px;
     width: calc(100% - 1px);
     margin-bottom: 2px;
+    color: ${props => props.$textColor};
   }
 `
 
@@ -177,7 +180,6 @@ export const TagsSelect = styled(TagsSelectComponent)`
   }
   .tag {
     padding: 0 4px;
-    color: var(--color-tag-text) !important;
   }
   .placeholder {
     padding: 0 2px;

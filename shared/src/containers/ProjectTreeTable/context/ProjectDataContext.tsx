@@ -3,9 +3,11 @@ import {
   useGetUsersAssigneeQuery,
   useGetProjectQuery,
   useGetMyProjectPermissionsQuery,
+  useGetProjectAnatomyQuery,
 } from '@shared/api'
 import type { ProjectModel } from '@shared/api'
 import useAttributeFields, { ProjectTableAttribute } from '../hooks/useAttributesList'
+import { Anatomy } from '@shared/api/generated/projects'
 
 type User = {
   name: string
@@ -19,6 +21,7 @@ export interface ProjectDataContextProps {
   projectInfo?: ProjectModel
   projectName: string
   users: User[]
+  anatomy: Anatomy
   // Attributes
   attribFields: ProjectTableAttribute[]
   writableFields?: string[]
@@ -42,6 +45,9 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     isFetching: isFetchingProject,
   } = useGetProjectQuery({ projectName }, { skip: !projectName })
 
+  // GET PROJECT ANATOMY
+  const { data: anatomy = {} } = useGetProjectAnatomyQuery({ projectName })
+
   // GET PERMISSIONS
   const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
     { projectName },
@@ -52,8 +58,7 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
   const {
     attribFields,
     writableFields,
-    isSuccess: isSuccessAttribs,
-    isFetching: isFetchingAttribs,
+    isLoading: isLoadingAttribs,
   } = useAttributeFields({ projectPermissions })
 
   // GET USERS
@@ -82,16 +87,16 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     return attrib_write.fields.includes('label')
   }, [attrib_write])
 
-  const isInitialized =
-    isSuccessProject && isSuccessAttribs && !isFetchingProject && !isFetchingAttribs
+  const isInitialized = isSuccessProject && !isFetchingProject && !isLoadingAttribs
 
   const value = useMemo(
     () => ({
       isInitialized,
-      isLoading: isFetchingProject || isFetchingAttribs,
+      isLoading: isFetchingProject || isLoadingAttribs,
       projectInfo,
       projectName,
       users,
+      anatomy,
       attribFields,
       writableFields,
       canWriteNamePermission,
@@ -100,10 +105,11 @@ export const ProjectDataProvider = ({ children, projectName }: ProjectDataProvid
     [
       isInitialized,
       isFetchingProject,
-      isFetchingAttribs,
+      isLoadingAttribs,
       projectInfo,
       projectName,
       users,
+      anatomy,
       attribFields,
       writableFields,
       canWriteNamePermission,

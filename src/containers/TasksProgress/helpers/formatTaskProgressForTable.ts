@@ -50,7 +50,10 @@ const getParentKey = (parent: FolderGroup['parent']) =>
 export const formatTaskProgressForTable = (
   data: FolderTask[],
   collapsedFolders: string[] = [],
-  { folderTypes, statuses }: { folderTypes: FolderType[]; statuses: Status[] },
+  {
+    folderTypes,
+    taskStatuses,
+  }: { folderTypes: FolderType[]; taskStatuses: Status[]; folderStatuses: Status[] },
 ): FolderRow[] => {
   // TODO: try using a map instead of an array to easily lookup parent folders
   const rows = new Map<string, FolderRow>()
@@ -123,7 +126,7 @@ export const formatTaskProgressForTable = (
 
         const updateCompleted = () => {
           const status = task.status
-          const statusType = statuses.find((s) => s.name === status)
+          const statusType = taskStatuses.find((s) => s.name === status)
           const statusState = statusType?.state
           const completed = statusState === 'done'
           const toAdd = completed ? taskFraction : 0

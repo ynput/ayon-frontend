@@ -24,6 +24,7 @@ const SCOPE_OPTIONS = [
   { value: 'version', label: 'Version' },
   { value: 'representation', label: 'Representation' },
   { value: 'user', label: 'User' },
+  { value: 'list', label: 'List' },
 ]
 
 // Define types for constants
@@ -37,7 +38,7 @@ const GLOBAL_FIELDS: GlobalFieldEntry[] = [
   { value: 'example', scope: null },
   // @ts-expect-error - project is not a scope?
   { value: 'default', scope: ['project'] },
-  { value: 'inherit', scope: null },
+  { value: 'inherit', scope: ['project', 'folder', 'task', 'product', 'version', 'representation', 'user'] },
 ]
 
 interface TypeOptionDef {
@@ -78,6 +79,11 @@ const TYPE_OPTIONS: TypeOptionsMap = {
     fields: [],
     exclude: ['example'],
   },
+  datetime:{
+    value: 'datetime',
+    label: 'Datetime',
+    fields: [],
+  }
 }
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>

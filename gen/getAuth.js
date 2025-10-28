@@ -1,15 +1,11 @@
-// eslint-disable-next-line
 const axios = require('axios')
-// eslint-disable-next-line
 const fs = require('fs')
+const { exec } = require('child_process')
 
 async function getToken() {
   try {
-    // eslint-disable-next-line
     const response = await axios.post(`http://localhost:3000/api/auth/login`, {
-      // eslint-disable-next-line
       name: process.env.NAME,
-      // eslint-disable-next-line
       password: process.env.PASSWORD,
     })
 
@@ -17,6 +13,23 @@ async function getToken() {
 
     // write to .env file
     fs.writeFileSync('./gen/.env', token)
+
+    // copy token to clipboard
+    const platform = process.platform
+    const clipboardCmd =
+      platform === 'darwin'
+        ? `echo "${response.data.token}" | pbcopy`
+        : platform === 'win32'
+        ? `echo ${response.data.token} | clip`
+        : `echo "${response.data.token}" | xclip -selection clipboard`
+
+    exec(clipboardCmd, (err) => {
+      if (err) {
+        console.error('Failed to copy token to clipboard:', err)
+      } else {
+        console.log('Token copied to clipboard.')
+      }
+    })
   } catch (error) {
     console.error('Error getting token', error)
   }

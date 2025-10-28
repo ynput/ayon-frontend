@@ -11,6 +11,7 @@ type Hidden = {
   'select-all'?: boolean
   'archive-project'?: boolean
   'delete-project'?: boolean
+  'show-archived'?: boolean
 }
 
 interface MenuItemProps {
@@ -19,6 +20,7 @@ interface MenuItemProps {
   onNewProject?: () => void
   pinned: string[]
   multiSelect?: boolean
+  showArchived?: boolean
   onPin?: (pinned: string[]) => void
   onSearch?: () => void
   onManage?: (name: string) => void
@@ -26,6 +28,7 @@ interface MenuItemProps {
   onSelectAll?: () => void
   onArchive?: (projectName: string, active: boolean) => void
   onDelete?: (projectName: string) => void
+  onShowArchivedToggle?: () => void
 }
 
 type BuildMenuItems = (
@@ -40,6 +43,8 @@ type BuildMenuItems = (
   link?: string
   disabled?: boolean
   danger?: boolean
+  selected?: boolean
+  active?: boolean
 }[]
 
 const useProjectsListMenuItems = ({
@@ -47,6 +52,7 @@ const useProjectsListMenuItems = ({
   projects,
   pinned,
   multiSelect,
+  showArchived = false,
   onNewProject,
   onSearch,
   onPin,
@@ -55,6 +61,7 @@ const useProjectsListMenuItems = ({
   onSelectAll,
   onArchive,
   onDelete,
+  onShowArchivedToggle,
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
@@ -126,6 +133,15 @@ const useProjectsListMenuItems = ({
           icon: 'settings',
           [command ? 'command' : 'onClick']: () => singleProject && onManage?.(singleProject.name),
         },
+        {
+          id: 'show-archived',
+          label: 'Show archived',
+          icon: 'inventory_2',
+          [command ? 'command' : 'onClick']: onShowArchivedToggle,
+          selected: showArchived,
+          active: showArchived,
+          hidden: command, // hide on context menu
+        },
         { id: 'divider', label: '' },
         {
           id: 'pin-project',
@@ -170,9 +186,11 @@ const useProjectsListMenuItems = ({
       pinned,
       projects,
       multiSelect,
+      showArchived,
       isMenuItemEnabled,
       onArchive,
       onDelete,
+      onShowArchivedToggle,
     ],
   )
 

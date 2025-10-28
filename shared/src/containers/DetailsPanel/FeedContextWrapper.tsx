@@ -1,7 +1,7 @@
 import { FC, useState, ReactNode } from 'react'
 
 import { FeedProvider } from '@shared/containers/Feed'
-import type { EditingState } from '@shared/containers/Feed'
+import type { EditingState, FeedContextProps } from '@shared/containers/Feed'
 import type { Status } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 
@@ -12,7 +12,7 @@ interface FeedContextWrapperProps {
   projectInfo: any
   projectName: string
   entityType: string
-  isMultiProjects: boolean
+  disabled: boolean
   readOnly: boolean
   statuses: Status[]
   scope?: string

@@ -10,10 +10,11 @@ export const InputLabel = styled.label`
   color: var(--md-sys-color-outline);
 `
 const NameDisplay = styled.span`
-  padding: 2px 6px; // <- changed
+  position: relative;
+  padding: 2px 6px;
   font-size: ${theme.bodySmall};
   display: inline-flex;
-  height: 20px;
+  min-height: 20px;
   gap: var(--base-gap-small);
   cursor: pointer;
 
@@ -57,6 +58,16 @@ export const InputsContainer = styled.div`
   align-items: flex-start;
   gap: var(--base-gap-small);
   margin-bottom: calc(var(--base-gap-large) - 16px);
+
+  label {
+    white-space: nowrap;
+  }
+
+  [icon='info'] {
+    cursor: help;
+    font-size: 16px;
+    color: var(--md-sys-color-outline);
+  }
 `
 
 export const NameRow = styled.div`
@@ -65,6 +76,7 @@ export const NameRow = styled.div`
   margin-top: 6px;
   gap: var(--base-gap-small);
   width: 100%;
+  word-break: break-all;
 `
 
 type NewEntityFormProps = {
@@ -73,6 +85,7 @@ type NewEntityFormProps = {
   labelRef: any
   setNameFocused: (focused: boolean) => void
   handleKeyDown: (e: KeyboardEvent, isLabel: boolean) => void
+  nameInfo?: string
 }
 
 const NewEntityForm: React.FC<NewEntityFormProps> = ({
@@ -81,6 +94,7 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
   setNameFocused,
   handleKeyDown,
   labelRef,
+  nameInfo = '',
 }) => {
   const [nameInputFocused, setNameInputFocused] = useState(false)
   const [originalName, setOriginalName] = useState<string | undefined>(undefined)
@@ -167,6 +181,7 @@ const NewEntityForm: React.FC<NewEntityFormProps> = ({
       />
       <NameRow onKeyDown={handleNameKeydown}>
         <InputLabel>Name</InputLabel>
+        {nameInfo && <Icon icon="info" data-tooltip={nameInfo} data-tooltip-delay={0} />}
         {!nameInputFocused ? (
           <NameDisplay onClick={handleNameDisplayClick} tabIndex={0}>
             {entityForm.name} <Icon icon="edit" />

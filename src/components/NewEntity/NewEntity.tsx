@@ -12,7 +12,13 @@ import {
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import TypeEditor from './TypeEditor'
-import { checkName } from '@shared/util'
+import {
+  checkName,
+  checkLabel,
+  parseAndFormatName,
+  getPlatformShortcutKey,
+  KeyMode,
+} from '@shared/util'
 import ShortcutWidget from '@components/ShortcutWidget'
 import {
   EditorTaskNode,
@@ -21,12 +27,19 @@ import {
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
-import type { OperationResponseModel, ProjectModel } from '@shared/api'
+import { type OperationResponseModel, type ProjectModel } from '@shared/api'
 import FolderSequence from '@components/FolderSequence/FolderSequence'
 import { EntityForm, NewEntityType, useNewEntityContext } from '@context/NewEntityContext'
 import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@context/SlicerContext'
 import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
+import { toast } from 'react-toastify'
+
+const StyledDialog = styled(Dialog)`
+  .body {
+    overflow: visible;
+  }
+`
 
 const ContentStyled = styled.div`
   display: flex;
@@ -90,6 +103,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     setSequenceForm,
     onCreateNew,
     onOpenNew,
+    config,
   } = useNewEntityContext()
 
   const [createMore, setCreateMore] = useState(false)
@@ -185,46 +199,41 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     newState[id] = value
 
     if (value && id === 'subType') {
-      // User selected a new entity type from the dropdown
-      // Find the corresponding type option
+      // Find the current/old type option
+      const oldTypeOption = typeOptions.find((option) => option.name === entityForm.subType)
       const typeOption = typeOptions.find((option) => option.name === value)
 
       if (typeOption) {
-        newState.label = typeOption.name
-        // If name field is empty or matches any of the current type options,
-        // update it with the new type name
-        const currentNameLower = newState.name.toLowerCase()
-        const shouldUpdateName =
-          currentNameLower === '' ||
-          typeOptions.some(
-            (option) =>
-              currentNameLower.includes(option.name?.toLowerCase()) ||
-              (option.shortName && currentNameLower.includes(option.shortName?.toLowerCase())),
-          )
-        if (shouldUpdateName) {
-          // Generate name for backend (lowercase and sanitized)
-          newState.name = generateName(typeOption.name)
+        const labelMatchesOldType =
+          entityForm.label === oldTypeOption?.shortName || entityForm.label === oldTypeOption?.name
+
+        if (labelMatchesOldType) {
+          newState.label = typeOption.shortName || typeOption.name
+
+          // Only update name if it matches what the current label would generate
+          const expectedNameFromLabel = parseAndFormatName(entityForm.label, config)
+          if (entityForm.name === expectedNameFromLabel) {
+            newState.name = parseAndFormatName(newState.label, config)
+          }
         }
       }
-
-      // Reset manual editing flag when type changes - allow auto-generation again
-      setNameManuallyEdited(false)
 
       // Focus the label input after type selection
       setTimeout(() => {
         labelRef.current?.focus()
       }, 100)
     } else if (id === 'label') {
-      // Update name based on the label (sanitizing it)
+      // User is manually editing the label
       newState.label = value
+
       // Only auto-generate name if user hasn't manually edited it
       if (!nameManuallyEdited) {
-        newState.name = generateName(value)
+        newState.name = parseAndFormatName(value, config)
       }
     } else if (id === 'name') {
       // User is manually editing the name
       setNameManuallyEdited(true)
-      newState.name = generateName(value)
+      newState.name = value
     }
 
     setEntityForm(newState)
@@ -259,9 +268,25 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (stayOpen: boolean) => {
+    // validate the label
+    const labelCheck = checkLabel(entityForm.label)
+    if (!labelCheck.valid) {
+      toast.error(labelCheck.error || 'Invalid label')
+      return
+    }
+
+    // validate the name
+    const { valid, error } = checkName(entityForm.name)
+    if (!valid) {
+      toast.error(error || 'Invalid name')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const resOperations = await onCreateNew(selectedFolderIds)
+
+      console.log(resOperations)
 
       // callback function
       onNewEntities?.(resOperations, stayOpen)
@@ -272,6 +297,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
           labelRef.current.focus()
           labelRef.current.select()
         }
+        setNameManuallyEdited(false)
       } else {
         handleClose()
       }
@@ -368,13 +394,14 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
         data-tooltip={disabled ? 'Enable hierarchy to create new entity' : 'Create new entity'}
       />
       {entityType && (
-        <Dialog
+        <StyledDialog
           header={getDialogTitle()}
           isOpen
           onClose={handleClose}
           onShow={handleShow}
           size={sequenceForm.active ? 'lg' : 'md'}
           style={{ maxWidth: sequenceForm.active ? 'unset' : 430 }}
+          enableBackdropClose={false}
           footer={
             <Toolbar onFocus={() => setNameFocused(false)} style={{ width: '100%' }}>
               {entityType === 'folder' && (
@@ -401,8 +428,8 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 label={`Create ${capitalize(entityType)}`}
                 onClick={() => handleSubmit(createMore)}
                 active={!addDisabled || isSubmitting}
-                title="Ctrl/Cmd + Enter"
-                data-shortcut="Ctrl/Cmd+Enter"
+                disabled={!entityForm.name || !entityForm.label}
+                data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
                 saving={isSubmitting}
               />
             </Toolbar>
@@ -452,10 +479,11 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
                 labelRef={labelRef}
                 setNameFocused={setNameFocused}
                 handleKeyDown={handleKeyDown}
+                nameInfo={`Names are auto generated from the label using the Entity Naming setting on the project anatomy. Capitalization: ${config.capitalization}. Separator: "${config.separator}"`}
               />
             </ContentStyled>
           )}
-        </Dialog>
+        </StyledDialog>
       )}
     </>
   )
@@ -478,7 +506,4 @@ export const generateLabel = (
   if (!typeOption) return ''
 
   return type === 'folder' ? typeOption.shortName || typeOption.name : typeOption.name
-}
-export const generateName = (value: string): string => {
-  return checkName(value.replace(/ /g, '_')).toLowerCase()
 }

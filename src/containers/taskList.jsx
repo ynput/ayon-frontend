@@ -150,6 +150,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     buildListMenuItem,
     newListMenuItem,
     tasks: tasksLists,
+    buildHierarchicalMenuItems,
   } = useEntityListsContext()
 
   // CONTEXT MENU
@@ -182,7 +183,11 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
         command: () => handleFilterProductsBySelected(selected),
       },
       buildAddToListMenu([
-        ...tasksLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        ...buildHierarchicalMenuItems(
+          tasksLists.data,
+          selectedEntities,
+          () => false, // icons optional - hide for compactness
+        ),
         newListMenuItem('task', selectedEntities),
       ]),
       {

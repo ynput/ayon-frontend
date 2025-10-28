@@ -33,7 +33,10 @@ export const TooltipInner = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   white-space: break-spaces;
-  word-break: break-all;
+  overflow-wrap: break-word;
+
+  /* only break words aggressively when content overflows */
+  word-break: ${(props) => (props.$hasOverflow ? 'break-word' : 'normal')};
 
   /* box shadow */
   z-index: 1200;

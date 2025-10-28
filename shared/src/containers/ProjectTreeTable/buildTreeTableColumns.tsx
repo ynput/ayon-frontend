@@ -8,7 +8,7 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
-import { TableGroupBy, useCellEditing } from './context'
+import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
 import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
@@ -16,6 +16,7 @@ import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
+import { isEntityRestricted } from './utils/restrictedEntity'
 
 const MIN_SIZE = 50
 
@@ -31,17 +32,19 @@ const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
   }
 }
 
-const nameSort: SortingFn<any> = (rowA, rowB) => {
-  const labelA = rowA.original.label || rowA.original.name
-  const labelB = rowB.original.label || rowB.original.name
-  // sort alphabetically by label
-  return labelA.localeCompare(labelB)
-}
 const pathSort: SortingFn<any> = (rowA, rowB) => {
   const labelA = rowA.original.path || rowA.original.name
   const labelB = rowB.original.path || rowB.original.name
   // sort alphabetically by label
   return labelA.localeCompare(labelB)
+}
+
+const valueLengthSort: SortingFn<any> = (rowA, rowB, columnId) => {
+  const valueA = getCellValue(rowA.original, columnId)
+  const valueB = getCellValue(rowB.original, columnId)
+  const lengthA = Array.isArray(valueA) ? valueA.length : valueA ? String(valueA).length : 0
+  const lengthB = Array.isArray(valueB) ? valueB.length : valueB ? String(valueB).length : 0
+  return lengthA - lengthB
 }
 
 type AttribSortingFn = (rowA: any, rowB: any, columnId: string, attribute?: AttributeData) => number
@@ -53,7 +56,7 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   if (attrib && attrib.enum) {
     const indexA = attrib.enum.findIndex((o) => o.value === valueA)
     const indexB = attrib.enum.findIndex((o) => o.value === valueB)
-    return indexA - indexB < 0 ? 1 : -1
+    return indexB - indexA < 0 ? 1 : -1
   } else if (attrib?.type === 'datetime') {
     return sortingFns.datetime(rowA, rowB, columnId)
   } else if (attrib?.type === 'boolean') {
@@ -61,7 +64,6 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
     const boolB = valueB === true ? 1 : 0
     return boolA - boolB
   } else {
-    // default sorting
     return sortingFns.alphanumeric(rowA, rowB, columnId)
   }
 }
@@ -87,6 +89,8 @@ export type DefaultColumns =
   | 'subType'
   | 'assignees'
   | 'tags'
+  | 'createdAt'
+  | 'updatedAt'
 
 export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
 
@@ -137,7 +141,7 @@ const buildTreeTableColumns = ({
       id: 'thumbnail',
       header: 'Thumbnail',
       size: 63,
-      minSize: 64,
+      minSize: 24,
       enableResizing: true,
       enableSorting: false,
       cell: ({ row, column, table }) => {
@@ -168,7 +172,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'name',
       header: 'Folder / Task',
       minSize: MIN_SIZE,
-      sortingFn: withLoadingStateSort(showHierarchy ? nameSort : pathSort),
+      sortingFn: withLoadingStateSort(pathSort),
       enableSorting: groupBy ? false : true,
       enableResizing: true,
       enablePinning: true,
@@ -177,6 +181,7 @@ const buildTreeTableColumns = ({
         const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
         const { isEditing } = useCellEditing()
+        const { rowHeight = 40 } = useColumnSettingsContext()
         const cellId = getCellId(row.id, column.id)
 
         if (row.original.entityType === NEXT_PAGE_ID && row.original.group) {
@@ -189,7 +194,6 @@ const buildTreeTableColumns = ({
           )
         }
 
-        if (['group', NEXT_PAGE_ID].includes(type)) return null
         return (
           <TableCellContent
             id={cellId}
@@ -227,6 +231,7 @@ const buildTreeTableColumns = ({
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
                 toggleExpanded={row.getToggleExpandedHandler()}
+                rowHeight={rowHeight}
               />
             )}
             {isEditing(cellId) && (
@@ -291,7 +296,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
             pt={{
               enum: {
                 pt: {
@@ -323,11 +328,15 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
+      sortingFn: withLoadingStateSort((a, b, c) =>
+        attribSort(a, b, c, { enum: [...options.folderType, ...options.taskType], type: 'string' }),
+      ),
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type)) return null
         const fieldId = type === 'folder' ? 'folderType' : 'taskType'
         const meta = table.options.meta
+        const folderHasVersions = type === 'folder' && row.original.hasVersions
         return (
           <CellWidget
             rowId={id}
@@ -349,7 +358,16 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id) || meta?.readOnly?.includes(fieldId)}
+            isReadOnly={
+              meta?.readOnly?.includes(column.id) ||
+              meta?.readOnly?.includes(fieldId) ||
+              folderHasVersions
+            }
+            tooltip={
+              folderHasVersions
+                ? 'Folder type cannot be edited when versions exist within the folder'
+                : undefined
+            }
           />
         )
       },
@@ -366,6 +384,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
+      sortingFn: withLoadingStateSort(valueLengthSort),
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
@@ -396,7 +415,7 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
             pt={{
               enum: {
                 multiSelectClose: value?.length === 0, // close the dropdown on first assignment
@@ -420,6 +439,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
+      sortingFn: withLoadingStateSort(valueLengthSort),
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
@@ -439,8 +459,66 @@ const buildTreeTableColumns = ({
                 { selection: meta?.selection },
               )
             }
-            isReadOnly={meta?.readOnly?.includes(column.id)}
+            isReadOnly={meta?.readOnly?.includes(column.id) || isEntityRestricted(type)}
             enableCustomValues
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('createdAt')) {
+    staticColumns.push({
+      id: 'createdAt',
+      accessorKey: 'createdAt',
+      header: 'Created at',
+      minSize: MIN_SIZE,
+      enableSorting: true,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(sortingFns.datetime),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('createdAt', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={value}
+            attributeData={{ type: 'datetime' }}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly={true}
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('updatedAt')) {
+    staticColumns.push({
+      id: 'updatedAt',
+      accessorKey: 'updatedAt',
+      header: 'Updated at',
+      minSize: MIN_SIZE,
+      enableSorting: true,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(sortingFns.datetime),
+      cell: ({ row, column }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type)) return null
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('updatedAt', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={value}
+            attributeData={{ type: 'datetime' }}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly={true}
           />
         )
       },

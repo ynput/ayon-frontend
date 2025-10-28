@@ -79,6 +79,7 @@ const tagTypes = [
   'entityList',
   'entityListItem',
   'entityListAttribute',
+  'entityListFolder',
   'feedback',
   'folder',
   'hierarchy',
@@ -115,6 +116,9 @@ const tagTypes = [
   'watchers',
   'workfile',
   'link',
+  'linkSearchItem',
+  'guest',
+  'category',
 ]
 
 const prepareHeaders = (headers: any) => {

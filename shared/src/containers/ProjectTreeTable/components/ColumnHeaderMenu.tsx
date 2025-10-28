@@ -3,7 +3,9 @@ import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
 import { useRef } from 'react'
-import { useMenuContext } from '../../../context/MenuContext'
+import { useMenuContext } from '@shared/context'
+import { useColumnSettingsContext } from '../context'
+import { useColumnGroupBy } from '../hooks'
 // @ts-expect-error - non TS file
 import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
 // @ts-expect-error - non TS file
@@ -55,8 +57,13 @@ export const ColumnHeaderMenu = ({
   isOpen,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
+  const columnId = String(column.id)
   const { toggleMenuOpen } = useMenuContext()
+  const { updateGroupBy, groupBy } = useColumnSettingsContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
+
+  const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } =
+    useColumnGroupBy(columnId)
 
   // Hide the menu when resizing
   if (isResizing) {
@@ -71,6 +78,8 @@ export const ColumnHeaderMenu = ({
   const isPinned = column.getIsPinned()
   const isVisible = column.getIsVisible()
   const isSorted = column.getIsSorted()
+
+  // helpers for group by logic
 
   const menuItems: Array<{
     id: string
@@ -137,6 +146,25 @@ export const ColumnHeaderMenu = ({
     menuItems.push({
       id: 'divider',
       type: 'divider',
+    })
+  }
+
+  if (canGroupThisColumn && columnId !== 'name' && columnId !== 'thumbnail') {
+    // Check if this column is currently being used for grouping
+    const isCurrentlyGrouped = groupBy?.id === targetGroupById
+
+    menuItems.push({
+      id: 'group-by',
+      label: isCurrentlyGrouped ? 'Ungroup' : `Group by ${groupLabel}`,
+      icon: 'splitscreen',
+      onClick: () => {
+        if (isCurrentlyGrouped) {
+          updateGroupBy(undefined)
+        } else {
+          groupBySelectedColumn()
+        }
+        handleMenuToggle(false)
+      },
     })
   }
 

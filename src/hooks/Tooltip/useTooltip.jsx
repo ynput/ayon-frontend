@@ -12,6 +12,36 @@ const getTooltipId = (tooltip, shortcut, id) => {
 const useTooltip = () => {
   const tooltipRef = useRef(null)
   const [tooltip, setTooltip] = useState(null)
+  const [hasOverflow, setHasOverflow] = useState(false)
+
+  // callback ref to detect overflow when tooltip inner mounts/updates
+  const tooltipInnerRef = useCallback((node) => {
+    if (!node) {
+      setHasOverflow(false)
+      return
+    }
+
+    // check if content overflows
+    const checkOverflow = () => {
+      // check the node itself
+      if (node.scrollWidth > node.clientWidth) {
+        return true
+      }
+
+      // check all children
+      const children = node.querySelectorAll('*')
+      for (const child of children) {
+        if (child.scrollWidth > child.clientWidth) {
+          return true
+        }
+      }
+
+      return false
+    }
+
+    const overflow = checkOverflow()
+    setHasOverflow(overflow)
+  }, [tooltip?.tooltip])
 
   const getTooltipPos = (target, ref) => {
     if (!target || !ref.current) return
@@ -194,7 +224,11 @@ const useTooltip = () => {
         }}
         $targetPos={tooltip?.target}
       >
-        <Styled.TooltipInner as={tooltip?.as === 'markdown' ? 'div' : tooltip?.as}>
+        <Styled.TooltipInner
+          ref={tooltipInnerRef}
+          as={tooltip?.as === 'markdown' ? 'div' : tooltip?.as}
+          $hasOverflow={hasOverflow}
+        >
           {tooltip?.as === 'markdown' ? (
             <ReactMarkdown rehypePlugins={[[rehypeExternalLinks, { target: '_blank' }]]}>
               {tooltip?.tooltip}
@@ -207,7 +241,7 @@ const useTooltip = () => {
         </Styled.TooltipInner>
       </Styled.TooltipWidget>
     ),
-    [tooltip, hideTooltip],
+    [tooltip, hideTooltip, hasOverflow, tooltipInnerRef],
   )
 
   return [handleMouse, tooltipComponent]

@@ -19,6 +19,7 @@ export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement
   isCompact?: boolean
   isDownloadable?: boolean
   onExpand?: () => void
+  disableExpand?: boolean
   onJumpTo?: () => void
 }
 
@@ -87,6 +88,7 @@ const FileUploadCard = ({
   isCompact,
   isDownloadable = false,
   onExpand,
+  disableExpand,
   onJumpTo,
   className,
   ...props
@@ -147,7 +149,7 @@ const FileUploadCard = ({
           </Styled.ImageWrapper>
         )}
         <Styled.Buttons className="expand-buttons">
-          {isPreviewable && (
+          {isPreviewable && !disableExpand && (
             <Styled.ExpandButton
               data-tooltip="Open preview"
               icon="open_in_full"
@@ -165,7 +167,13 @@ const FileUploadCard = ({
           )}
         </Styled.Buttons>
       </Styled.ContentWrapper>
-      <Styled.Footer className={clsx({ inProgress, isPreviewable, isDownloadable })}>
+      <Styled.Footer
+        className={clsx({
+          inProgress,
+          isPreviewable: isPreviewable && !disableExpand,
+          isDownloadable,
+        })}
+      >
         <span className="progress" style={{ right: `${100 - progress}%` }} />
         <div className="name-wrapper">
           {someAnnotation ? (

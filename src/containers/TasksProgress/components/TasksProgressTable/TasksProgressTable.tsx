@@ -62,7 +62,8 @@ interface TasksProgressTableProps
   isLoading: boolean
   activeTask: string | null
   selectedAssignees: string[]
-  statuses: Status[]
+  taskStatuses: Status[]
+  folderStatuses: Status[]
   taskTypes: TaskType[]
   priorities: AttributeEnumItem[]
   users: Assignees
@@ -92,7 +93,8 @@ export const TasksProgressTable = ({
   isLoading,
   activeTask,
   selectedAssignees = [],
-  statuses = [], // project statuses schema
+  taskStatuses = [], // project task statuses schema
+  folderStatuses = [], // project folder statuses schema
   taskTypes = [], // project task types schema
   priorities = [], // project priorities schema
   users = [], // users in the project
@@ -197,9 +199,9 @@ export const TasksProgressTable = ({
 
   const {
     buildAddToListMenu,
-    buildListMenuItem,
     newListMenuItem,
     tasks: tasksLists,
+    buildHierarchicalMenuItems,
   } = useEntityListsContext()
 
   const buildContextMenu = (selection: string[], taskId: string) => {
@@ -218,7 +220,11 @@ export const TasksProgressTable = ({
         command: () => onOpenViewer({ taskId, quickView: true }),
       },
       buildAddToListMenu([
-        ...tasksLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        ...buildHierarchicalMenuItems(
+          tasksLists.data,
+          selectedEntities,
+          () => false, // no icon needed
+        ),
         newListMenuItem('task', selectedEntities),
       ]),
     ]
@@ -390,7 +396,7 @@ export const TasksProgressTable = ({
                 id: row.__folderId,
                 name: row._folder,
                 icon: row.__folderIcon,
-                status: statuses.find((s) => s.name === row.__folderStatus),
+                status: folderStatuses.find((s) => s.name === row.__folderStatus),
                 updatedAt: row.__folderUpdatedAt,
               }}
               isSelected={
@@ -427,7 +433,7 @@ export const TasksProgressTable = ({
           resizeable
           header={<TaskColumnHeader taskType={taskTypeKey} />}
           sortable
-          sortFunction={(e) => sortFolderFunction(e, taskStatusSortFunction(statuses))}
+          sortFunction={(e) => sortFolderFunction(e, taskStatusSortFunction(taskStatuses))}
           pt={{
             bodyCell: { style: { padding: 0 } },
             headerCell: { onContextMenu: (e) => handleColumnHeaderContextMenu(e, taskTypeKey) },
@@ -440,7 +446,7 @@ export const TasksProgressTable = ({
             if (rowData.__isParent) {
               const taskCellData = rowData[taskTypeKey] as TaskTypeStatusBar
 
-              return <TaskStatusBar statuses={statuses} statusCounts={taskCellData} />
+              return <TaskStatusBar statuses={taskStatuses} statusCounts={taskCellData} />
             }
 
             const taskCellData = rowData[taskTypeKey] as TaskTypeRow
@@ -522,7 +528,7 @@ export const TasksProgressTable = ({
                               assigneeOptions={assigneeOptions}
                               isExpanded={isExpanded}
                               taskIcon={taskType?.icon || ''}
-                              statuses={statuses}
+                              statuses={taskStatuses}
                               priorities={priorities}
                               onChange={onChange}
                             />

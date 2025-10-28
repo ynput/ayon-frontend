@@ -1,6 +1,5 @@
 import React from 'react'
 import CodeEditor from '@uiw/react-textarea-code-editor'
-import styled from 'styled-components'
 import { useEffect, useState } from 'react'
 import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../helpers'
 import { $Any } from '@types'
@@ -13,40 +12,13 @@ import {
   InputTextarea,
 } from '@ynput/ayon-react-components'
 
+import {CodeEditorWrapper} from '../SettingsEditor.styled'
+
 type PermissionWidgetProps = {
   value: number
   setValue: (value: number) => void
 }
 
-
-const CodeEditorWrapper = styled.div`
-  position: relative;
-  display: flex;
-  resize: vertical;
-  overflow: auto;
-  flex-direction: column;
-  min-height: 40px;
-  height: 200px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--border-radius-m);
-
-  .wrap {
-    position: relative;
-    top: 0;
-    left: 0;
-    overflow: scroll;
-  }
-  .w-tc-editor {
-    background-color: var(--md-sys-color-surface-container-low);
-    flex-grow: 1;
-    overflow: unset !important;
-    * {
-      background-color: var(--md-sys-color-surface-container-low);
-      font-family: monospace !important;
-      font-size: 12px;
-    }
-  }
-`
 
 const SettingsCodeEditor = (props: $Any) => {
   return (
@@ -191,6 +163,13 @@ export const TextWidget = (props: $Any) => {
     opts.value = value ? [value] : []
     opts.onChange = (e: $Any) => {
       props.onChange(e[0])
+    }
+  } else if (props.schema.widget === 'label') {
+    Input = InputText
+    opts.value = value || ''
+    opts.disabled = true
+    opts.onChange = (e: $Any) => {
+      onChange(e.target.value)
     }
   } else if (props.schema.widget === 'textarea' && props.schema.syntax) {
     

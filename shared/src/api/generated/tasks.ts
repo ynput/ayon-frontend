@@ -160,6 +160,7 @@ export type TaskModel = {
   assignees?: string[]
   /** Folder ID */
   folderId?: string
+  path?: string
   attrib?: TaskAttribModel
   data?: Record<string, any>
   /** Whether the task is active */

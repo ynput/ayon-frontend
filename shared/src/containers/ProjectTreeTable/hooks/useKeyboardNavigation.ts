@@ -6,6 +6,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { useProjectDataContext } from '../context/ProjectDataContext'
 import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { getEntityViewierIds } from '../utils'
+import { isEntityRestricted } from '../utils/restrictedEntity'
 
 export default function useKeyboardNavigation() {
   const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
@@ -130,7 +131,9 @@ export default function useKeyboardNavigation() {
           // Only open details panel for name column on folders/tasks
           if (colId === 'name') {
             const entity = getEntityById(rowId)
-            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
+            // Check if entity is restricted - prevent opening details panel
+            const isRestricted = entity && isEntityRestricted(entity.entityType)
+            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task') && !isRestricted) {
               setSelectedEntity({
                 entityId: rowId,
                 entityType: entity.entityType,

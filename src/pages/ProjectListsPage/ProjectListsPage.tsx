@@ -2,6 +2,8 @@ import {
   ProjectDataProvider,
   useDetailsPanelEntityContext,
   useProjectDataContext,
+  useProjectTableContext,
+  isEntityRestricted,
 } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
@@ -9,7 +11,6 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
-import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
 import {
@@ -59,6 +60,8 @@ import {
 } from '@dnd-kit/core'
 import { useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
+import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
+import ListsShortcuts from './components/ListsShortcuts.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -110,7 +113,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
     () => [
-      ...listAttributes.map((a) => ({ ...a, scopes: [selectedList?.entityType] })),
+      ...listAttributes.map((a) => ({ ...a, scope: [selectedList?.entityType] })),
       ...attribFields,
     ],
     [listAttributes, attribFields, selectedList],
@@ -209,6 +212,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                         isReview={isReview}
                         dndActiveId={dndActiveId}
                       />
+                      <ListsShortcuts />
                     </CellEditingProvider>
                   </SelectedRowsProvider>
                 </SelectionCellsProvider>
@@ -239,13 +243,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
+  const { getEntityById } = useProjectTableContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList } = useListsContext()
+  const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
 
   // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
+  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
   try {
     const entityContext = useDetailsPanelEntityContext()
     selectedEntity = entityContext.selectedEntity
@@ -254,8 +259,18 @@ const ProjectLists: FC<ProjectListsProps> = ({
     selectedEntity = null
   }
 
+  // Check if any selected rows are restricted entities
+  const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
+    const entity = getEntityById(rowId)
+    return entity && !isEntityRestricted(entity.entityType)
+  })
+
   // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  // Don't show entity details panel if only selected entity is restricted
+  const shouldShowEntityDetailsPanel =
+    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
+  const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
+  const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || shouldShowListDetailsPanel
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -317,7 +332,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={shouldShowDetailsPanel ? 4 : 0}
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
@@ -325,6 +339,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       extraColumns={extraColumns}
                       isReview={isReview}
                       dndActiveId={dndActiveId} // Pass prop
+                      viewOnly={(selectedList?.accessLevel || 0) < 20}
                     />
                   </SplitterPanel>
                   {shouldShowDetailsPanel ? (
@@ -335,10 +350,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         minWidth: 300,
                       }}
                     >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
+                      {shouldShowEntityDetailsPanel ? (
+                        <ProjectOverviewDetailsPanel
+                          projectInfo={projectInfo}
+                          projectName={projectName}
+                        />
+                      ) : selectedList ? (
+                        <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
+                      ) : null}
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
@@ -365,7 +384,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
           </Section>
         </SplitterPanel>
       </Splitter>
-      <ListInfoDialog />
       <ListsFiltersDialog />
     </main>
   )

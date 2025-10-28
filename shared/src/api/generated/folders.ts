@@ -173,6 +173,7 @@ export type FolderModel = {
   parentId?: string
   thumbnailId?: string
   path?: string
+  hasVersions?: boolean
   attrib?: FolderAttribModel
   data?: Record<string, any>
   /** Whether the folder is active */
@@ -227,8 +228,8 @@ export type FolderListItem = {
   status: string
   attrib?: object
   ownAttrib?: string[]
+  createdAt: string
   updatedAt: string
-  hasVersions?: boolean
 }
 export type FolderListModel = {
   detail: string

@@ -49,6 +49,7 @@ import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
 import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
+import useDynamicRowHeight from './hooks/useDynamicRowHeight'
 
 // EntityPickerDialog import
 import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
@@ -59,6 +60,7 @@ import { useProjectDataContext } from '@shared/containers'
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import { isEntityRestricted } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
@@ -353,7 +355,10 @@ export const ProjectTreeTable = ({
     // EXPANDABLE
     onExpandedChange: updateExpanded,
     // SORTING
-    getSortedRowModel: clientSorting ? getSortedRowModel() : undefined,
+    enableSorting: true,
+    getSortedRowModel: getSortedRowModel(),
+    sortDescFirst: false,
+    manualSorting: !clientSorting,
     onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
     onColumnPinningChange: columnPinningOnChange,
@@ -389,7 +394,6 @@ export const ProjectTreeTable = ({
       columnVisibility,
       columnOrder,
     },
-    enableSorting: true,
     meta: {
       projectName,
       options,
@@ -437,6 +441,9 @@ export const ProjectTreeTable = ({
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
+
+  // Calculate dynamic row height based on user setting from Customize panel
+  const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
     return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
@@ -562,6 +569,8 @@ export const ProjectTreeTable = ({
               sortableRows={sortableRows}
               error={error}
               isGrouping={isGrouping}
+              getRowHeight={getRowHeight}
+              defaultRowHeight={defaultRowHeight}
             />
           </table>
         </Styled.TableContainer>
@@ -624,7 +633,7 @@ export const ProjectTreeTable = ({
                           width: getColumnWidth(overlayRowInstance.id, cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
-                          height: 40,
+                          height: defaultRowHeight,
                         }
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
@@ -870,6 +879,8 @@ interface TableBodyProps {
   sortableRows: boolean
   error?: string
   isGrouping: boolean
+  getRowHeight: (row: TableRow) => number
+  defaultRowHeight: number
 }
 
 const TableBody = ({
@@ -885,6 +896,8 @@ const TableBody = ({
   sortableRows,
   error,
   isGrouping,
+  getRowHeight,
+  defaultRowHeight,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -912,7 +925,11 @@ const TableBody = ({
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
-    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
+    estimateSize: (index) => {
+      // Calculate dynamic row height based on specific row data
+      const row = rows[index]
+      return row ? getRowHeight(row.original) : defaultRowHeight
+    },
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -969,6 +986,7 @@ const TableBody = ({
             offsetTop={virtualRow.start}
             sortableRows={sortableRows}
             isGrouping={isGrouping}
+            rowHeight={getRowHeight(row.original)}
           />
         )
       })}
@@ -1008,6 +1026,7 @@ interface TableBodyRowProps {
   offsetTop: number
   sortableRows: boolean
   isGrouping: boolean
+  rowHeight: number
 }
 
 const TableBodyRow = ({
@@ -1022,6 +1041,7 @@ const TableBodyRow = ({
   offsetTop,
   sortableRows,
   isGrouping = false,
+  rowHeight,
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
@@ -1045,7 +1065,7 @@ const TableBodyRow = ({
     top: offsetTop, // Position based on virtualizer's calculation (virtualRow.start)
     left: 0, // Span full width of the relative parent (tbody)
     right: 0, // Span full width
-    height: 40, // Explicit height can be beneficial for absolute positioning
+    height: rowHeight, // Use dynamic row height
     zIndex: sortable && sortable.isDragging ? 0 : 1, // Ensure dragged item is above others
     display: 'flex', // Styled.TR is display:flex
     transform:
@@ -1072,6 +1092,9 @@ const TableBodyRow = ({
         const cellId = getCellId(row.id, cell.column.id)
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
+          // Check if this is a restricted entity - disable dragging
+          const isRestricted = isEntityRestricted(row.original.entityType)
+
           return (
             <Styled.TableCell
               key={cell.id + i.toString()}
@@ -1081,7 +1104,9 @@ const TableBodyRow = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: 40,
+                height: rowHeight,
+                pointerEvents: 'all',
+                cursor: 'grab',
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':
@@ -1111,6 +1136,7 @@ const TableBodyRow = ({
             key={cell.id + i.toString()}
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
+            rowHeight={rowHeight}
           />
         )
       })}
@@ -1130,6 +1156,7 @@ interface TableCellProps {
   className?: string
   showHierarchy: boolean
   sortableRows?: boolean
+  rowHeight?: number
 }
 
 const TableCell = ({
@@ -1139,6 +1166,7 @@ const TableCell = ({
   className,
   showHierarchy,
   sortableRows,
+  rowHeight,
   ...props
 }: TableCellProps) => {
   const { getEntityById, onOpenPlayer } = useProjectTableContext()
@@ -1181,7 +1209,7 @@ const TableCell = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
-          task: cell.row.original.entityType === 'task',
+          'folder-in-hierarchy': showHierarchy && cell.row.original.entityType === 'folder',
           'multiple-selected': isMultipleSelected,
         },
         className,
@@ -1190,7 +1218,7 @@ const TableCell = ({
       style={{
         ...getCommonPinningStyles(cell.column),
         width: getColumnWidth(cell.row.id, cell.column.id),
-        height: 40,
+        height: rowHeight,
       }}
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks
@@ -1201,6 +1229,9 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
+        // check if this is a restricted entity - prevent editing
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
         // if we are clicking on an edit trigger, we need to start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
           if (!isCellSelected(cellId)) {
@@ -1208,7 +1239,8 @@ const TableCell = ({
             selectCell(cellId, false, false)
             focusCell(cellId)
           }
-          // start editing the cell
+          // skip if restricted
+          if (isRestricted) return
           setEditingCellId(cellId)
 
           return
@@ -1232,6 +1264,8 @@ const TableCell = ({
       onMouseOver={(e) => {
         if (e.buttons === 1) {
           // Left button is pressed during mouse move - drag selection
+          // Note: extendSelection is always called to allow drag to continue through cells
+          // Restricted cells will be filtered out later
           extendSelection(cellId, isRowSelectionColumn)
         }
       }}
@@ -1239,11 +1273,15 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        // check if this is a restricted entity - prevent opening details/viewer
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
         // row selection on name column double click
         if (
           cell.column.id === 'name' &&
           !(e.target as HTMLElement).closest('.expander') &&
-          !isGroup
+          !isGroup &&
+          !isRestricted
         ) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
@@ -1253,7 +1291,7 @@ const TableCell = ({
           }
         }
         // open the viewer on thumbnail double click
-        if (cell.column.id === 'thumbnail') {
+        if (cell.column.id === 'thumbnail' && !isRestricted) {
           if (onOpenPlayer) {
             const entity = getEntityById(cell.row.original.entityId || cell.row.id)
             if (entity) {

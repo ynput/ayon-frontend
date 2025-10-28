@@ -1,13 +1,12 @@
 import clsx from 'clsx'
-import { kebabCase } from 'lodash'
-import { useEffect, useRef } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { DropdownRef, Icon } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 
 import * as Styled from './EnumEditor.styled'
 import { AttributeData } from './EnumEditor'
+import EnumEditorItem from './EnumEditorItem'
 
 type Props = {
   item: AttributeData
@@ -24,24 +23,7 @@ const DraggableEnumEditorItem = ({
   onRemove,
   onDuplicate,
 }: Props) => {
-  const { id, label, value, icon, color, isExpanded, isNewAttribute } = item
-  const labelRef = useRef<HTMLInputElement>(null)
-  const valueRef = useRef<HTMLInputElement>(null)
-  const colorPickerRef = useRef<HTMLInputElement>(null)
-  const iconSelectRef = useRef<DropdownRef>(null)
-
-  const focusLabelIfExpanded = () => {
-    if (!isExpanded) {
-      // Avoids jittery expand animation
-      setTimeout(() => labelRef.current!.focus(), 250)
-    }
-  }
-
-  useEffect(() => {
-    if (item.isNewAttribute) {
-      labelRef.current!.select()
-    }
-  }, [])
+  const { id, label, icon, color, isExpanded } = item
 
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: id,
@@ -63,7 +45,6 @@ const DraggableEnumEditorItem = ({
         className={clsx({ expanded: isExpanded })}
         onClick={() => {
           onChange && onChange(['isExpanded'], [!isExpanded])
-          focusLabelIfExpanded()
         }}
       >
         {color && <Styled.LabelColor style={{ backgroundColor: color }} />}
@@ -82,116 +63,16 @@ const DraggableEnumEditorItem = ({
       </Styled.EnumItemHeader>
 
       <Styled.EnumItemBodyExpander className={clsx({ expanded: isExpanded })}>
-        <Styled.EnumItemBody className={clsx(isExpanded ? 'expanded' : 'collapsed')}>
-          <Styled.Row key="label">
-            <Styled.Label> Label </Styled.Label>
-            <Styled.InputText
-              ref={labelRef}
-              value={label}
-              autoFocus={isNewAttribute}
-              onChange={(event) => {
-                if (!isNewAttribute) {
-                  return onChange && onChange(['label'], [event.target.value])
-                }
-                valueRef.current!.value = kebabCase(event.target.value)
-                onChange &&
-                  onChange(['label', 'value'], [event.target.value, kebabCase(event.target.value)])
-              }}
-            />
-          </Styled.Row>
-
-          <Styled.Row key="value">
-            <Styled.Label> Value </Styled.Label>
-            <Styled.InputText
-              ref={valueRef}
-              value={valueRef.current?.value || value}
-              onChange={(event) => onChange && onChange(['value'], [event.target.value])}
-            />
-          </Styled.Row>
-
-          <Styled.Row key="icon">
-            <Styled.Label> Icon </Styled.Label>
-
-            <Styled.PlaceholderWrapper style={{ position: 'relative' }}>
-              {
-                <Styled.Placeholder
-                  style={{ display: icon ? 'none' : 'flex' }}
-                  onClick={() => {
-                    iconSelectRef.current!.open()
-                  }}
-                >
-                  Pick an icon...
-                </Styled.Placeholder>
-              }
-
-              <Styled.IconSelect
-                ref={iconSelectRef}
-                value={[icon || 'question_mark']}
-                widthExpand
-                style={{
-                  position: icon ? 'relative' : 'absolute',
-                  visibility: icon ? 'visible' : 'hidden',
-                }}
-                onChange={(value) => {
-                  return onChange && onChange(['icon'], [value[0]])
-                }}
-              />
-              {icon && (
-                <Styled.Button
-                  icon="close"
-                  variant="text"
-                  onClick={() => {
-                    onChange && onChange(['icon'], [undefined])
-                  }}
-                />
-              )}
-            </Styled.PlaceholderWrapper>
-          </Styled.Row>
-
-          <Styled.Row key="color">
-            <Styled.Label> Color </Styled.Label>
-
-            <Styled.PlaceholderWrapper style={{ position: 'relative' }}>
-              <Styled.ColorPicker
-                className={clsx({ active: color })}
-                style={{ backgroundColor: color || undefined }}
-                onClick={() => colorPickerRef.current!.click()}
-              >
-                {!color ? 'Pick a color...' : ''}
-                <input
-                  type="color"
-                  ref={colorPickerRef}
-                  value={color || '#000000'}
-                  onChange={(event) =>
-                    onChange && onChange(['color'], [event?.target.value.toString()])
-                  }
-                />
-              </Styled.ColorPicker>
-              {color && (
-                <Styled.Button
-                  icon="close"
-                  variant="text"
-                  onClick={() => {
-                    onChange && onChange(['color'], [undefined])
-                  }}
-                />
-              )}
-            </Styled.PlaceholderWrapper>
-          </Styled.Row>
-
-          <Styled.Row className="footer">
-            <Styled.ActionWrapper>
-              <Styled.Button icon="close" variant="text" onClick={onRemove}>
-                Remove
-              </Styled.Button>
-            </Styled.ActionWrapper>
-            <Styled.ActionWrapper>
-              <Styled.Button icon="content_copy" variant="text" onClick={onDuplicate}>
-                Duplicate
-              </Styled.Button>
-            </Styled.ActionWrapper>
-          </Styled.Row>
-        </Styled.EnumItemBody>
+        <EnumEditorItem
+          item={item}
+          onChange={onChange}
+          onRemove={onRemove}
+          onDuplicate={onDuplicate}
+          showRemoveButton={true}
+          showDuplicateButton={true}
+          autoFocus={false}
+          isExpanded={isExpanded}
+        />
       </Styled.EnumItemBodyExpander>
     </Styled.EnumItemWrapper>
   )

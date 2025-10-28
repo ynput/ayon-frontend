@@ -149,6 +149,8 @@ export default function useBuildProjectDataTable({
         parents: task.parents || [],
         path: task.parents.join('/') || null, // todo: probably remove this and just use parents
         updatedAt: task.updatedAt,
+        createdAt: task.createdAt,
+        hasReviewables: task.hasReviewables || false,
         links: links,
       }
     }
@@ -223,6 +225,7 @@ export default function useBuildProjectDataTable({
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
+        createdAt: folder.createdAt,
         hasReviewables: folder.hasReviewables || false,
         hasVersions: folder.hasVersions || false,
         links: links,

@@ -6,8 +6,9 @@ import { Spacer, InputText, Toolbar, SaveButton, InputSwitch } from '@ynput/ayon
 import SettingsEditor from '@containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
-import { useCreateProjectMutation } from '@shared/api'
+import { useDeployProjectMutation } from '@shared/api'
 import { useGetConfigValueQuery } from '@queries/config/getConfig'
+import { camelCase } from 'lodash'
 
 // allow only alphanumeric and underscorer,
 // while underscore cannot be the first or last character
@@ -39,14 +40,16 @@ const NewProjectDialog = ({ onHide }) => {
 
   // Logic
   //
-  const [createProject, { isLoading }] = useCreateProjectMutation()
+  const [deployProject, { isLoading }] = useDeployProjectMutation()
 
   const handleSubmit = () => {
-    createProject({
-      name,
-      code,
-      anatomy: formData,
-      library: isLibrary,
+    deployProject({
+      deployProjectRequestModel: {
+        name,
+        code,
+        anatomy: formData,
+        library: isLibrary,
+      },
     })
       .unwrap()
       .then(() => {

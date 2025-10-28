@@ -33,6 +33,28 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    backgroundOperations: build.mutation<
+      BackgroundOperationsApiResponse,
+      BackgroundOperationsApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/operations/background`,
+        method: 'POST',
+        body: queryArg.operationsRequestModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    getBackgroundOperationsStatus: build.query<
+      GetBackgroundOperationsStatusApiResponse,
+      GetBackgroundOperationsStatusApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/operations/background/${queryArg.taskId}`,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -55,6 +77,20 @@ export type OperationsApiArg = {
   'x-sender'?: string
   'x-sender-type'?: string
   operationsRequestModel: OperationsRequestModel
+}
+export type BackgroundOperationsApiResponse =
+  /** status 200 Successful Response */ BackgroundOperationsResponseModel
+export type BackgroundOperationsApiArg = {
+  projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  operationsRequestModel: OperationsRequestModel
+}
+export type GetBackgroundOperationsStatusApiResponse =
+  /** status 200 Successful Response */ BackgroundOperationsResponseModel
+export type GetBackgroundOperationsStatusApiArg = {
+  taskId: string
+  projectName: string
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -138,7 +174,7 @@ export type OperationResponseModel = {
 }
 export type OperationsResponseModel = {
   operations?: OperationResponseModel[]
-  success: boolean
+  success?: boolean
 }
 export type OperationModel = {
   id?: string
@@ -154,4 +190,9 @@ export type OperationsRequestModel = {
   canFail?: boolean
   waitForEvents?: boolean
   raiseOnError?: boolean
+}
+export type BackgroundOperationsResponseModel = {
+  id: string
+  status?: 'pending' | 'in_progress' | 'completed'
+  result?: OperationsResponseModel
 }

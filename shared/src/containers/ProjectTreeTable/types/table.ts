@@ -19,6 +19,7 @@ export type FolderListItem = {
   attrib?: Record<string, any>
   ownAttrib?: string[]
   updatedAt: string
+  createdAt: string
   hasReviewables?: boolean
   hasVersions?: boolean
   links: EntityLink[]
@@ -35,6 +36,7 @@ export type TableRow = {
   tags?: string[]
   status?: string
   updatedAt?: string
+  createdAt: string
   parentId?: string
   folderId: string | null // all entities have a folder except root folders which will be null
   parents?: string[]
@@ -67,6 +69,7 @@ export type EditorTaskNode = Omit<TaskNode, 'links'> & {
   entityType: 'task'
   groups?: { value: string; hasNextPage?: string }[]
   links: EntityLink[]
+  hasVersions?: boolean
 }
 
 export type EditorVersionNode = {
@@ -81,6 +84,7 @@ export type EditorVersionNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string
@@ -92,6 +96,7 @@ export type EditorVersionNode = {
     }
   }
   links: EntityLink[]
+  hasVersions?: boolean
 }
 
 type EditorProductNode = {
@@ -106,11 +111,13 @@ type EditorProductNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
   links: EntityLink[]
+  hasVersions?: boolean
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>

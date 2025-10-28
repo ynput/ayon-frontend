@@ -22,7 +22,6 @@ const StyledHeader = styled.div`
   justify-content: space-between;
   padding: 10px;
   min-height: 40px;
-  font-weight: 500;
   color: var(--md-sys-color-outline);
 `
 
@@ -54,42 +53,48 @@ const StyledContent = styled.div`
   }
 `
 
-interface BorderedSectionProps {
+interface BorderedSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
   children: React.ReactNode
   headerContent?: React.ReactNode
-  contentClassName?: string
   showHeader?: boolean
   autoHeight?: boolean
   enableHover?: boolean
   withPadding?: boolean
-  onClick?: () => void
+  pt?: {
+    header?: Partial<React.HTMLAttributes<HTMLDivElement>>
+    content?: Partial<React.HTMLAttributes<HTMLDivElement>>
+  }
 }
 
 export const BorderedSection: React.FC<BorderedSectionProps> = ({
   title,
   children,
   headerContent,
-  contentClassName,
   showHeader = false,
   autoHeight = false,
   enableHover = false,
   withPadding = false,
   onClick,
+  className,
+  pt,
+  ...props
 }) => {
   return (
-    <StyledSection 
-      className={clsx({ 'enable-hover': enableHover })} 
+    <StyledSection
+      className={clsx(className, { 'enable-hover': enableHover })}
       onClick={onClick}
+      {...props}
     >
       {showHeader ? (
-        <StyledHeader>
+        <StyledHeader {...pt?.header}>
           <span>{title}</span>
           {headerContent}
         </StyledHeader>
       ) : null}
       <StyledContent
-        className={clsx(contentClassName, {
+        {...pt?.content}
+        className={clsx(pt?.content?.className, {
           'with-padding': withPadding,
           'auto-height': autoHeight,
           'with-header': showHeader,

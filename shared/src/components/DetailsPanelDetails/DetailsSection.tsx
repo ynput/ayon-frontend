@@ -5,6 +5,7 @@ import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
 import { BorderedSection } from './BorderedSection'
 import { FieldLabel } from './FieldLabel'
+import { format } from 'date-fns'
 
 const StyledRow = styled.div`
   display: grid;
@@ -61,17 +62,19 @@ const StyledShimmer = styled.div`
   }
 `
 
+type DetailsField = Pick<AttributeField, 'name' | 'data' | 'hidden'>
+
 interface DetailsSectionProps {
-  fields: AttributeField[]
+  fields: DetailsField[]
   form: Record<string, any>
-  mixedFields: string[]
+  mixedFields?: string[]
   isLoading: boolean
 }
 
 export const DetailsSection: React.FC<DetailsSectionProps> = ({
   fields,
   form,
-  mixedFields,
+  mixedFields = [],
   isLoading,
 }) => {
   const formatValue = (value: any, fieldName: string): string => {
@@ -81,18 +84,10 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
     if (fieldName === 'createdAt' || fieldName === 'updatedAt') {
       try {
-        return new Date(value).toLocaleString()
+        return format(new Date(value), 'PPpp')
       } catch {
         return value.toString()
       }
-    }
-
-    if (fieldName === 'path') {
-      return value.toString()
-    }
-
-    if (fieldName === 'entityType') {
-      return value.toString().charAt(0).toUpperCase() + value.toString().slice(1)
     }
 
     return value.toString()
@@ -125,7 +120,6 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
             <StyledRow key={field.name}>
               <FieldLabel name={field.name} data={field.data} showDetailedTooltip={true} />
               <StyledValue
-                title={displayValue}
                 style={{
                   color: isMixed
                     ? 'var(--md-sys-color-on-surface-variant)'

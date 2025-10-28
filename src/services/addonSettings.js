@@ -22,13 +22,19 @@ const apiSuffix = (projectName, siteId, variant, asVersion) => {
 const addonSettings = api.injectEndpoints({
   endpoints: (build) => ({
     getAddonSettingsList: build.query({
-      query: ({ variant, projectName, siteId }) => {
+      query: ({ variant, projectName, siteId, bundleName, projectBundleName }) => {
         // this should prevent passing null/undefined values to the query
         // params once and for all (until we have typescript)
-        const params = {}
+
+        // TODO: we would normally use 'summary: true' here to reduce the payload,
+        // but fulltext search in settings actually neeed the data
+        // so for now we leave it out
+        const params = {} //{summary: true}
         if (variant) params.variant = variant
         if (projectName) params.project_name = projectName
         if (siteId) params.site_id = siteId
+        if (bundleName) params.bundle_name = bundleName
+        if (projectBundleName) params.project_bundle_name = projectBundleName
 
         return {
           url: `/api/settings`,
@@ -41,6 +47,7 @@ const addonSettings = api.injectEndpoints({
       providesTags: (result, error, arg) => [
         { type: 'addonSettingsList', ...arg },
         { type: 'addonSettingsList' },
+        { type: 'addonSettingsList', id: 'LIST' },
       ],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
@@ -74,7 +81,7 @@ const addonSettings = api.injectEndpoints({
       }),
 
       // eslint-disable-next-line no-unused-vars
-      providesTags: (result, error, arg) => [{ type: 'addonSettings', ...arg }],
+      providesTags: (result, error, arg) => [{ type: 'addonSettings', ...arg, id: arg.addonName }],
       transformResponse: (response) => response,
       transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
@@ -165,6 +172,7 @@ const addonSettings = api.injectEndpoints({
           projectName: arg.projectName,
           siteId: arg.siteId,
           variant: arg.variant,
+          id: arg.addonName,
         },
         {
           type: 'addonSettingsOverrides',
@@ -204,6 +212,7 @@ const addonSettings = api.injectEndpoints({
           projectName: arg.projectName,
           siteId: arg.siteId,
           variant: arg.variant,
+          id: arg.addonName,
         },
         {
           type: 'addonSettingsOverrides',
@@ -243,6 +252,7 @@ const addonSettings = api.injectEndpoints({
           projectName: arg.projectName,
           siteId: arg.siteId,
           variant: arg.variant,
+          id: arg.addonName,
         },
         {
           type: 'addonSettingsOverrides',
