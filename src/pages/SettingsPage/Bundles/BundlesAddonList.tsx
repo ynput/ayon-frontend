@@ -11,6 +11,7 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import type { Addon as SharedAddon } from './types'
+import * as Styled from '@pages/SettingsPage/Bundles/BundleForm.styled.ts'
 
 type VersionsMap = Record<string, { projectCanOverrideAddonVersion?: boolean }>
 
@@ -43,9 +44,11 @@ type BundlesAddonListProps = {
   onDevChange?: (addonNames: string[], payload: { value: any; key: 'enabled' | 'path' }) => void
   addons?: SharedAddon[]
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
-  handleSort?:(e: DataTableSortEvent) => void
+  handleSort?: (e: DataTableSortEvent) => void
   sortField?: string | null
   sortOrder?: 0 | 1 | -1 | null | undefined
+  totalAddonsCount?: number
+  onResetSearch?: () => void
 }
 
 const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
@@ -149,6 +152,8 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       sortOrder,
       sortField,
       handleSort,
+      totalAddonsCount,
+      onResetSearch,
     },
     ref,
   ) => {
@@ -194,7 +199,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
     }
 
     const addonsTable = useMemo(() => {
-      return (addons as Addon[])
+      const tableData = (addons as Addon[])
         .map((addon) => ({
           ...addon,
           version: formData?.addons?.[addon.name] || 'NONE',
@@ -214,7 +219,21 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           }
           return a.title.localeCompare(b.title)
         })
-    }, [addons, formData, readOnly])
+
+      // Add footer row only if there are filtered items
+      if (totalAddonsCount && totalAddonsCount > tableData.length) {
+        tableData.push({
+          name: '__footer__',
+          title: '',
+          addonType: '',
+          versions: {},
+          version: '',
+          isFooter: true,
+        } as any)
+      }
+
+      return tableData
+    }, [addons, formData, readOnly, totalAddonsCount])
 
     const createContextItems = (selected: any) => {
       let items = [
@@ -277,6 +296,23 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
               },
             },
           }}
+          body={(addon: any) => {
+            if (addon.isFooter && totalAddonsCount) {
+              const filteredCount = totalAddonsCount - addonsTable.length + 1
+              return (
+                <Styled.SearchHintText>
+                  <span>
+                    <strong>{filteredCount}</strong> addon
+                    {filteredCount !== 1 ? 's' : ''} filtered out,
+                  </span>
+                  <Styled.SearchHintLink onClick={onResetSearch}>
+                    remove search filter
+                  </Styled.SearchHintLink>
+                </Styled.SearchHintText>
+              )
+            }
+            return addon.title
+          }}
           sortable
         />
         <Column
@@ -285,6 +321,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           header="Version"
           className="version-column"
           body={(addon: any) => {
+            if (addon.isFooter) return null
             const isPipeline = addon.addonType === 'pipeline'
             const currentVersion = addon.version
             const productionVersion = currentProductionAddons?.[addon.name]
@@ -340,27 +377,31 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
             field="path"
             header="Addon directory"
             className="path-column"
-            body={(addon) => (
-              <FilePath>
-                <InputSwitch
-                  checked={addon.dev?.enabled}
-                  onChange={() =>
-                    onDevChange &&
-                    onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
-                  }
-                />
-                <InputText
-                  value={addon.dev?.path || ''}
-                  style={{ width: '100%' }}
-                  placeholder="/path/to/dev/addon/client"
-                  data-tooltip="Path to the client folder of the addon to run client side code live from source."
-                  onChange={(e) =>
-                    onDevChange && onDevChange([addon.name], { value: e.target.value, key: 'path' })
-                  }
-                  disabled={!addon.dev?.enabled}
-                />
-              </FilePath>
-            )}
+            body={(addon) => {
+              if (addon.isFooter) return null
+
+              return (
+                <FilePath>
+                  <InputSwitch
+                    checked={addon.dev?.enabled}
+                    onChange={() =>
+                      onDevChange &&
+                      onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
+                    }
+                  />
+                  <InputText
+                    value={addon.dev?.path || ''}
+                    style={{ width: '100%' }}
+                    placeholder="/path/to/dev/addon/client"
+                    data-tooltip="Path to the client folder of the addon to run client side code live from source."
+                    onChange={(e) =>
+                      onDevChange && onDevChange([addon.name], { value: e.target.value, key: 'path' })
+                    }
+                    disabled={!addon.dev?.enabled}
+                  />
+                </FilePath>
+              )
+            }}
           />
         )}
       </StyledDataTable>

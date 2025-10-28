@@ -354,6 +354,8 @@ const NewBundle: React.FC<NewBundleProps> = ({
         developerMode={developerMode}
         addonListRef={addonListRef}
         addons={filteredAddons}
+        onResetSearch={resetSearch}
+        totalAddonsCount={addons.length}
         onProjectSwitchChange={() =>
           formData && setFormData({ ...formData, isProject: !formData?.isProject })
         }
@@ -365,18 +367,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
             placeholder="Search addons..."
             aria-label="Search addons"
           />
-          <Styled.SearchHintText>
-            {search && (
-              <>
-                <span>
-                  <strong>{addons.length - filteredAddons.length}</strong>{' '}addon{addons.length - filteredAddons.length !== 1 ? 's' : ''}  filtered out,
-                </span>
-                <Styled.SearchHintLink onClick={resetSearch}>
-                  remove search filter
-                </Styled.SearchHintLink>
-              </>
-            )}
-          </Styled.SearchHintText>
           <Button
             label="Select all addons"
             icon="select_all"

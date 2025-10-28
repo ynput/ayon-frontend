@@ -154,10 +154,17 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
         />
       </Toolbar>
       {selectedBundles.length > 1 && selectedBundles.length < 5 ? (
-        <BundleCompare bundles={selectedBundles as any} addons={filteredAddons as any} />
+        <BundleCompare
+          bundles={selectedBundles as any}
+          addons={filteredAddons as any}
+          onResetSearch={resetSearch}
+          totalAddonsCount={addons.length}
+        />
       ) : (
         <BundleForm
           isNew={false}
+          totalAddonsCount={addons.length}
+          onResetSearch={resetSearch}
           addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           addons={filteredAddons}
@@ -169,20 +176,6 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
             placeholder="Search addons..."
             aria-label="Search addons"
           />
-
-          <Styled.SearchHintText>
-            {search && (
-              <>
-                <span>
-                  <strong>{addons.length - filteredAddons.length}</strong>{' '}addon{addons.length - filteredAddons.length !== 1 ? 's' : ''}  filtered out,
-                </span>
-                <Styled.SearchHintLink onClick={resetSearch}>
-                  remove search filter
-                </Styled.SearchHintLink>
-              </>
-            )}
-          </Styled.SearchHintText>
-
           <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}
