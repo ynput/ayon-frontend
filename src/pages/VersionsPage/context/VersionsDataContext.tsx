@@ -1,4 +1,8 @@
-import { useGetVersionsByProductsQuery, useGetVersionsInfiniteQuery } from '@shared/api'
+import {
+  EntityGroup,
+  useGetVersionsByProductsQuery,
+  useGetVersionsInfiniteQuery,
+} from '@shared/api'
 import { useGetProductsInfiniteQuery } from '@shared/api/queries'
 import {
   flattenInfiniteVersionsData,
@@ -43,6 +47,7 @@ import { useVersionsViewsContext } from './VersionsViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
 import { DEFAULT_FEATURED_ORDER } from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
+import useVersionsGroupBy from '../hooks/useVersionsGroupBy'
 
 // Stable default filter to prevent unnecessary re-renders
 const EMPTY_FILTER: QueryFilter = { conditions: [] }
@@ -75,12 +80,15 @@ interface VersionsDataContextValue {
   // data
   versionsTableData: TableRow[]
   versionsMap: VersionMap // root versions only
+  groupedVersionsMap: VersionMap // grouped versions only
   childVersionsMap: VersionMap // child versions only
   allVersionsMap: VersionMap // all versions combined
   productsMap: ProductMap // all products
   entitiesMap: Map<string, VersionNodeExtended | ProductNodeExtended> // all versions and products
   hasNextPage: boolean | undefined
-  fetchNextPage: () => void
+  fetchNextPage: (group?: string) => void
+  // grouping
+  groups: EntityGroup[]
   // loading
   isLoading: boolean
   isFetchingNextPage: boolean
@@ -102,11 +110,16 @@ export const useVersionsDataContext = () => {
 interface VersionsDataProviderProps {
   projectName: string
   children: ReactNode
+  modules: any
 }
 
-export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectName, children }) => {
+export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
+  projectName,
+  children,
+  modules,
+}) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder } =
+  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy } =
     useVersionsViewsContext()
   const { isLoadingViews } = useViewsContext()
 
@@ -286,10 +299,26 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     },
   })
 
-  const isLoadingTable = useQueryArgumentChangeLoading(
-    { ...queryArgs, featuredVersionOrder },
-    isFetchingProducts || isFetchingVersions || isLoadingViews,
-  )
+  const {
+    groups,
+    isLoading: isLoadingGroups,
+    versions: groupedVersions,
+    incrementPageCount: incrementGroupPage,
+  } = useVersionsGroupBy({
+    projectName,
+    versionFilters: combinedVersionFilter.combinedFilters,
+    productFilterString: combinedProductFilter.filterString,
+    taskFilterString: combinedTaskFilter.filterString,
+    folderIds: slicerFolderIds,
+    sortBy: resolvedSortBy,
+    modules,
+  })
+
+  const isLoadingTable =
+    useQueryArgumentChangeLoading(
+      { ...queryArgs, featuredVersionOrder },
+      isFetchingProducts || isFetchingVersions || isLoadingViews,
+    ) || isLoadingGroups
 
   // Dynamic pagination based on showProducts
   const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage
@@ -321,10 +350,22 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
   )
 
   // Efficiently build all maps in a single pass using util
-  const { versionsMap, childVersionsMap, allVersionsMap, productsMap, entitiesMap } = useMemo(
-    () => buildVersionsAndProductsMaps(versions, childVersions, products),
-    [versions, childVersions, products],
+  let {
+    versionsMap,
+    childVersionsMap,
+    allVersionsMap,
+    productsMap,
+    entitiesMap,
+    groupedVersionsMap,
+  } = useMemo(
+    () => buildVersionsAndProductsMaps(versions, childVersions, products, groupedVersions),
+    [versions, childVersions, groupedVersions, products],
   )
+
+  if (groupBy) {
+    versionsMap = groupedVersionsMap
+    entitiesMap = groupedVersionsMap
+  }
 
   // Determine which products are currently loading versions
   const loadingProductVersions = useMemo(() => {
@@ -375,13 +416,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     })
   }, [productsError, versionsError, childVersionsError])
 
-  const handleFetchNextPage = () => {
+  const handleFetchNextPage = (group?: string) => {
     // check there is a next page
     if (!hasNextPage) return
     // check there aren't any errors
     if (error) return
 
-    fetchNextPage()
+    if (group) {
+      incrementGroupPage(group)
+    } else {
+      fetchNextPage()
+    }
   }
 
   const value: VersionsDataContextValue = {
@@ -394,12 +439,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({ projectNam
     // data
     versionsTableData,
     versionsMap,
+    groupedVersionsMap,
     childVersionsMap,
     allVersionsMap,
     productsMap,
     entitiesMap,
     hasNextPage,
     fetchNextPage: handleFetchNextPage,
+    // grouping
+    groups,
     // loading
     isLoading: isLoadingTable,
     isFetchingNextPage,

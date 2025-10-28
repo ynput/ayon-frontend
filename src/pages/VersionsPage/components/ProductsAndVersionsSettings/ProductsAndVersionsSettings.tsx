@@ -4,7 +4,7 @@ import { SizeSlider } from '@shared/components'
 import { useVersionsViewsContext } from '../../context/VersionsViewsContext'
 import ProductsAndVersionsSorting from './ProductsAndVersionsSorting'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
-import { useProjectDataContext, useProjectTableContext } from '@shared/containers'
+import { useProjectTableContext } from '@shared/containers'
 
 export interface ProductsAndVersionsSettingsProps {}
 
@@ -82,7 +82,15 @@ export const ProductsAndVersionsSettings: FC<ProductsAndVersionsSettingsProps> =
       extraColumns={extraColumns}
       settings={extraSettings}
       includeLinks={false}
-      order={['columns', 'featured-version-order', 'sort-by', 'row-height', 'grid-size']}
+      scope="version"
+      order={[
+        'columns',
+        'group-by',
+        'featured-version-order',
+        'sort-by',
+        'row-height',
+        'grid-size',
+      ]}
     />
   )
 }

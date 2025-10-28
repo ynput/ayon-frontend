@@ -79,6 +79,7 @@ export function versionNodeToEditorVersionNode(version: VersionNode): VersionNod
     attrib: version.attrib || {},
     product: version.product,
     links: [], // not applicable right now
+    groups: version.groups,
   }
 }
 
@@ -93,9 +94,11 @@ export function buildVersionsAndProductsMaps(
   versions: VersionNode[],
   childVersions: VersionNode[],
   products: ProductNode[],
+  groupedVersions: VersionNode[] = [],
 ) {
   const versionsMap = new Map<string, VersionNodeExtended>()
   const childVersionsMap = new Map<string, VersionNodeExtended>()
+  const groupedVersionsMap = new Map<string, VersionNodeExtended>()
   const allVersionsMap = new Map<string, VersionNodeExtended>()
   const productsMap = new Map<string, ProductNodeExtended>()
   const entitiesMap = new Map<string, VersionNodeExtended | ProductNodeExtended>()
@@ -118,6 +121,15 @@ export function buildVersionsAndProductsMaps(
     entitiesMap.set(v.id, editorVersion)
   }
 
+  // process grouped versions
+  for (let i = 0, len = groupedVersions.length; i < len; ++i) {
+    const v = groupedVersions[i]
+    const editorVersion = versionNodeToEditorVersionNode(v)
+    groupedVersionsMap.set(v.id, editorVersion)
+    allVersionsMap.set(v.id, editorVersion)
+    entitiesMap.set(v.id, editorVersion)
+  }
+
   // Process products
   for (let i = 0, len = products.length; i < len; ++i) {
     const p = products[i]
@@ -126,5 +138,12 @@ export function buildVersionsAndProductsMaps(
     entitiesMap.set(p.id, extendedProduct)
   }
 
-  return { versionsMap, childVersionsMap, allVersionsMap, productsMap, entitiesMap }
+  return {
+    versionsMap,
+    childVersionsMap,
+    groupedVersionsMap,
+    allVersionsMap,
+    productsMap,
+    entitiesMap,
+  }
 }

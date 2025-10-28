@@ -16,7 +16,8 @@ const ProductsAndVersionsTable: FC<ProductsAndVersionsTableProps> = ({ readOnly 
       scope={'versions-and-products'}
       sliceId={''}
       // pagination
-      onScrollBottom={fetchNextPage}
+      onScrollBottom={() => fetchNextPage()}
+      onScrollBottomGroupBy={(groupValue: string) => fetchNextPage(groupValue)}
       readOnly={readOnly}
       excludedColumns={['assignees']}
       isExpandable={showProducts}

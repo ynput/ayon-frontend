@@ -32,10 +32,7 @@ export const buildProductRow = (product: ProductNode, subRows: TableRow[]): Tabl
   links: {}, // TODO add links
 })
 
-export const buildVersionRow = (
-  version: VersionNode,
-  subRows?: TableRow[] | undefined,
-): TableRow => ({
+export const buildVersionRow = (version: VersionNode): TableRow => ({
   id: version.id,
   name: version.name,
   label: `${version.product.name} - ${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,
@@ -55,7 +52,6 @@ export const buildVersionRow = (
   subType: version.product.productType,
   hasReviewables: version.hasReviewables,
   author: version.author || '',
-  subRows,
   links: {}, // TODO add links
 })
 

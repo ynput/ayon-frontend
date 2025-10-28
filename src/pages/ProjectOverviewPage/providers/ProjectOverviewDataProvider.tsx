@@ -1,9 +1,6 @@
 import { FC } from 'react'
-import {
-  ColumnSettingsProvider,
-  ProjectDataProvider,
-  useProjectTableModules,
-} from '@shared/containers/ProjectTreeTable'
+import { ColumnSettingsProvider, ProjectDataProvider } from '@shared/containers/ProjectTreeTable'
+import { useGroupByRemoteModules } from '@shared/hooks'
 import { SettingsPanelProvider, MoveEntityProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
@@ -15,7 +12,7 @@ const ProjectOverviewDataProvider: FC = () => {
 
   const { columns, onUpdateColumns } = useOverviewViewSettings()
 
-  const modules = useProjectTableModules()
+  const modules = useGroupByRemoteModules()
 
   return (
     <ProjectDataProvider projectName={projectName}>

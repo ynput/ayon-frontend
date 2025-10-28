@@ -15,6 +15,7 @@ type EntityGridNode = {
   isPlayable: boolean
   thumbnailUrl: string | undefined
   versions?: string[]
+  groups?: { value?: string; hasNextPage?: string }[] // grouping metadata
 }
 
 export const getThumbnailUrl = (projectName: string, entity: { id: string; updatedAt: string }) =>
@@ -64,6 +65,7 @@ const buildVersionsGrid = (versionsMap: VersionsMap, projectName: string): Entit
       versions: [`${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`],
       isPlayable: version.hasReviewables,
       thumbnailUrl: getThumbnailUrl(projectName, version),
+      groups: version.groups,
     }
   })
 }

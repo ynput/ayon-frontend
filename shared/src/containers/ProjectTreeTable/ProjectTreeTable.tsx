@@ -142,6 +142,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
+  onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -166,6 +167,7 @@ export const ProjectTreeTable = ({
   onRowReorder,
   dndActiveId, // Destructure new prop
   columnsConfig,
+  onScrollBottomGroupBy, // Destructure new prop for group-by load more
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -377,7 +379,7 @@ export const ProjectTreeTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: () => !!isExpandable || showHierarchy,
+    getRowCanExpand: () => !!isExpandable || showHierarchy || isGrouping,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -430,7 +432,7 @@ export const ProjectTreeTable = ({
       readOnly: readOnlyColumns,
       updateEntities: handleCellUpdate,
       toggleExpandAll,
-      loadMoreTasks: fetchNextPage,
+      loadMoreRows: fetchNextPage,
       selection: Array.from(selectedCells),
       columnsConfig,
     },
@@ -506,8 +508,21 @@ export const ProjectTreeTable = ({
           }
         }
       }
+
+      // Handle scroll-to-bottom for grouped data
+      if (onScrollBottomGroupBy && groupBy) {
+        const containerRefElement = e.currentTarget
+        // look for a load more button
+        const loadMoreButton = containerRefElement?.querySelector('.load-more')
+        // get load more button id
+        const loadMoreButtonId = loadMoreButton?.getAttribute('id')
+        const groupValue = loadMoreButtonId?.split('-')[2] // assuming the id is in the format 'load-more-groupValue'
+        if (groupValue) {
+          onScrollBottomGroupBy(groupValue)
+        }
+      }
     },
-    [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
+    [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
   )
 
   // Get move entity functions for the dialog

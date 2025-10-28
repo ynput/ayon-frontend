@@ -234,15 +234,16 @@ const buildTreeTableColumns = ({
         if (row.original.entityType === NEXT_PAGE_ID && row.original.group) {
           return (
             <LoadMoreWidget
-              label={'Load more tasks'}
               id={row.original.group.value}
-              onLoadMore={(id) => meta?.loadMoreTasks?.(id)}
+              onLoadMore={(id) => meta?.loadMoreRows?.(id)}
             />
           )
         }
 
         const isExpandable =
-          row.getCanExpand() && !!row.originalSubRows && isEntityExpandable(row.original.entityType)
+          row.getCanExpand() &&
+          !!row.originalSubRows &&
+          (isEntityExpandable(row.original.entityType) || !!row.original.group)
 
         return (
           <TableCellContent

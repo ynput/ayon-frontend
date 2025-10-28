@@ -14,6 +14,7 @@ import { VersionsColumnSettingsProvider } from './VersionsColumnSettingsProvider
 import { VersionsDataProvider } from '../context/VersionsDataContext'
 import { VersionsViewsProvider } from '../context/VersionsViewsContext'
 import { VersionsSelectionProvider } from '../context/VersionsSelectionContext'
+import { useGroupByRemoteModules } from '@shared/hooks'
 
 interface VersionsProvidersProps {
   projectName: string
@@ -24,16 +25,17 @@ const VersionsProviders: FC<VersionsProvidersProps> = ({ projectName, children }
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: projectName,
   })
+  const modules = useGroupByRemoteModules()
 
   return (
     <VersionsViewsProvider>
       <ProjectDataProvider projectName={projectName}>
-        <VersionsDataProvider projectName={projectName}>
+        <VersionsDataProvider projectName={projectName} modules={modules}>
           <MoveEntityProvider>
             <SettingsPanelProvider>
               <VersionsColumnSettingsProvider>
                 <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-                  <VersionsProjectTableProvider projectName={projectName}>
+                  <VersionsProjectTableProvider projectName={projectName} modules={modules}>
                     <DetailsPanelEntityProvider>
                       <SelectionCellsProvider>
                         <SelectedRowsProvider>

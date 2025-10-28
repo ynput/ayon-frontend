@@ -36,7 +36,7 @@ export interface ProjectTableContextType {
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
 
   // grouping
-  taskGroups: ProjectTableProviderProps['taskGroups']
+  groups: ProjectTableProviderProps['groups']
 
   // Filters
   filters: ProjectTableProviderProps['filters']

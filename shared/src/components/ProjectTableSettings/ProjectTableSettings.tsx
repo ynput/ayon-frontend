@@ -11,6 +11,7 @@ import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
 import { SizeSlider } from '@shared/components'
+import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
@@ -41,18 +42,22 @@ export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
   hiddenColumns?: string[]
+  hiddenSettings?: ('columns' | 'row-height' | 'group-by')[]
   highlighted?: SettingHighlightedId
   includeLinks?: boolean
   order?: string[]
+  scope?: string
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   settings = [],
   extraColumns = [],
   hiddenColumns = [],
+  hiddenSettings = [],
   highlighted,
   includeLinks = true,
   order,
+  scope,
 }) => {
   const { attribFields, projectInfo, scopes } = useProjectTableContext()
   const {
@@ -145,6 +150,8 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     (column) => !(column.value in columnVisibility) || columnVisibility[column.value],
   ).length
 
+  const groupBySettings = useGroupBySettings({ scope })
+
   const defaultSettings: SettingConfig[] = [
     {
       id: 'columns',
@@ -153,6 +160,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       preview: `${visibleCount}/${visibleColumns.length}`,
       component: <ColumnsSettings columns={visibleColumns} highlighted={highlighted} />,
     },
+    groupBySettings,
     {
       id: 'row-height',
       component: (
@@ -167,6 +175,8 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
   ]
 
-  settings.forEach((setting) => defaultSettings.push(setting))
+  settings.forEach(
+    (setting) => !hiddenSettings.includes(setting.id as any) && defaultSettings.push(setting),
+  )
   return <SettingsPanel settings={defaultSettings} order={order} />
 }

@@ -51,6 +51,7 @@ export type VersionNode = VersionNodeRAW & {
     attrib: Record<string, any> // parsed from allAttrib JSON string
     folder: FolderAttribNode // folder with parsed attribs
   }
+  groups?: { value?: string; hasNextPage?: string }[] // grouping metadata
 }
 export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
 export type ProductNode = Omit<ProductNodeRAW, 'versions'> & {
@@ -96,6 +97,21 @@ type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
   desc?: boolean
 }
 
+export type GetGroupedVersionsListArgs = {
+  projectName: string
+  groups: { filter: string; count: number; value: string }[]
+  productFilter?: string
+  taskFilter?: string
+  folderIds?: string[]
+  desc?: boolean
+  sortBy?: string
+  featuredOnly?: string[]
+}
+
+export type GetGroupedVersionsListResult = {
+  versions: VersionNode[]
+}
+
 export type VersionInfiniteResult = InfiniteData<GetVersionsResult, VersionsPageParam> | undefined
 
 export type ProductInfiniteResult = InfiniteData<GetProductsResult, ProductsPageParam> | undefined
@@ -134,7 +150,7 @@ const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinit
   },
 })
 
-export const VP_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
+export const VP_INFINITE_QUERY_COUNT = 250 // Number of items to fetch per page
 const VERSIONS_BY_PRODUCT_ID_QUERY_COUNT = 1000 // max number of versions to fetch per product id
 const MAX_PAGES_PER_PRODUCT = 10 // Hard cutoff to prevent infinite loops
 
@@ -427,6 +443,88 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         providesTags: provideTagsForProductsInfinite,
       },
     ),
+
+    // Grouped versions query - fetches versions for multiple group filters
+    getGroupedVersionsList: build.query<GetGroupedVersionsListResult, GetGroupedVersionsListArgs>({
+      queryFn: async (
+        { projectName, groups, productFilter, taskFilter, folderIds, desc, sortBy, featuredOnly },
+        api,
+      ) => {
+        try {
+          const promises = []
+          for (const group of groups) {
+            const count = group.count || 500
+
+            const queryParams: GetVersionsQueryVariables = {
+              projectName,
+              versionFilter: group.filter,
+              productFilter,
+              taskFilter,
+              folderIds: folderIds?.length ? folderIds : undefined,
+              sortBy: sortBy,
+              featuredOnly,
+              // @ts-expect-error - group param used later on
+              group: group.value,
+            }
+
+            if (desc) {
+              queryParams.last = count
+            } else {
+              queryParams.first = count
+            }
+
+            const promise = api.dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+            promises.push(promise)
+          }
+
+          const result = await Promise.all(promises)
+          const versions: VersionNode[] = []
+
+          for (const res of result) {
+            if (res.error) throw res.error
+
+            // get group value
+            // @ts-expect-error - we know group does exist on res.originalArgs
+            const groupValue = res.originalArgs?.group as string
+
+            const hasNextPage =
+              res.data?.pageInfo?.hasNextPage || res.data?.pageInfo?.hasPreviousPage || false
+
+            const groupVersions =
+              res.data?.versions.map((version, i, a) => ({
+                ...version,
+                groups: [
+                  {
+                    value: groupValue,
+                    hasNextPage: i === a.length - 1 && hasNextPage ? groupValue : undefined,
+                  },
+                ],
+              })) || []
+
+            versions.push(...groupVersions)
+          }
+
+          return {
+            data: {
+              versions,
+            },
+          }
+        } catch (error: any) {
+          console.error('Error in getGroupedVersionsList queryFn:', error)
+          return {
+            error: {
+              status: 'FETCH_ERROR',
+              error: parseErrorMessage(error.message),
+            } as FetchBaseQueryError,
+          }
+        }
+      },
+      providesTags: provideTagsForVersionsResult,
+    }),
   }),
 })
 
@@ -437,6 +535,7 @@ export const {
   useGetVersionsInfiniteInfiniteQuery: useGetVersionsInfiniteQuery,
   useGetVersionsByProductsQuery,
   useGetProductsInfiniteInfiniteQuery: useGetProductsInfiniteQuery,
+  useGetGroupedVersionsListQuery,
 } = injectedVersionsPageApi
 
 // export API instances for cache manipulation

@@ -3,26 +3,28 @@ import {
   ContextMenuItemConstructors,
   ProjectTableProvider,
   useProjectDataContext,
-  useProjectTableModules,
   useVersionsViewSettings,
   useViewsContext,
 } from '@shared/containers'
 import { useAppSelector } from '@state/store'
 import { FC } from 'react'
 import { useVersionsDataContext } from '../context/VersionsDataContext'
+import { buildVersionRow } from '../util'
 
 interface VersionsProjectTableProviderProps {
   projectName: string
   children: React.ReactNode
+  modules: any
 }
 
 export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps> = ({
   projectName,
+  modules,
   children,
 }) => {
-  const { versionsTableData, entitiesMap, expanded, updateExpanded, error } =
+  const { versionsTableData, entitiesMap, groups, expanded, updateExpanded, error } =
     useVersionsDataContext()
-  const modules = useProjectTableModules()
+
   const { resetWorkingView } = useViewsContext()
   const { showProducts } = useVersionsViewSettings()
 
@@ -55,6 +57,9 @@ export const VersionsProjectTableProvider: FC<VersionsProjectTableProviderProps>
       foldersMap={foldersMap}
       tasksMap={tasksMap}
       tableRows={versionsTableData}
+      groups={groups}
+      groupByConfig={{ entityType: 'version' }}
+      groupRowFunc={buildVersionRow}
       expanded={expanded}
       updateExpanded={updateExpanded}
       isInitialized={isInitialized}
