@@ -544,12 +544,16 @@ export const EntityListsProvider = ({
   return <EntityListsContext.Provider value={value}>{children}</EntityListsContext.Provider>
 }
 
+const useEntityListsContextInternal = () => useContext(EntityListsContext)
+
 export const useEntityListsContext = () => {
-  const context = useContext(EntityListsContext)
+  const context = useEntityListsContextInternal()
   if (context === undefined) {
     throw new Error('useEntityListsContext must be used within an EntityListsProvider')
   }
   return context
 }
+
+export const useOptionalEntityListsContext = () => useEntityListsContextInternal()
 
 export default EntityListsContext

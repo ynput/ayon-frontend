@@ -3,13 +3,19 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { DetailsPanel } from '../DetailsPanel'
 import { useDetailsPanelContext } from '@shared/context'
 import type { ProjectModel } from '@shared/api'
+import { EntityListsContextType } from '../../../../../src/pages/ProjectListsPage/context'
 
 export type DetailsPanelSlideOutProps = {
   projectsInfo: Record<string, ProjectModel>
   scope: string
+  entityListsContext?: EntityListsContextType
 }
 
-export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideOutProps) => {
+export const DetailsPanelSlideOut = ({
+  projectsInfo,
+  scope,
+  entityListsContext,
+}: DetailsPanelSlideOutProps) => {
   const { slideOut, onOpenViewer } = useDetailsPanelContext()
   const { entityType, entityId, projectName } = slideOut || {}
   const isSlideOutOpen = !!entityType && !!entityId && !!projectName
@@ -39,6 +45,7 @@ export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideO
         scope={scope}
         onClose={handleClose}
         onOpenViewer={handleOpenViewer}
+        entityListsContext={entityListsContext}
       />
     </Styled.SlideOut>
   )

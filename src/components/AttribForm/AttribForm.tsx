@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react'
 import * as Styled from './AttribForm.styled'
 import AttribFormType from './AttribFormType'
+import { FormValue, FormData, FormField } from '@/types'
 
 type FieldType = 'string' | 'number' | 'boolean' | 'array' | string
 
 interface Field {
   type: FieldType
-  default?: any
+  default?: FormValue
   title?: string
   format?: string
   enumLabels?: Record<string, string>
@@ -14,20 +15,14 @@ interface Field {
 
 type Fields = Record<string, Field>
 
-interface FormField {
-  id: string
-  key: string
-  value: any
-}
-
 interface AttribFormProps {
-  form?: Record<string, any>
-  onChange: (key: string, value: any) => void
+  form?: FormData
+  onChange: (key: string, value: FormValue) => void
   fields: Fields
   isLoading: boolean
 }
 
-export const getDefaultFromType = (type: FieldType): any => {
+export const getDefaultFromType = (type: FieldType): FormValue => {
   switch (type) {
     case 'string':
       return ''
@@ -51,7 +46,7 @@ const AttribForm: React.FC<AttribFormProps> = ({ form = {}, onChange, fields, is
     if (!isLoading) return
 
     // build attribs form data
-    const attribForm: Record<string, any> = {}
+    const attribForm: FormData = {}
     for (const key in fields) {
       const field = fields[key]
 
