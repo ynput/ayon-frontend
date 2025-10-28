@@ -11,6 +11,7 @@ interface UseGridKeyboardNavigationProps {
   onEnterPress?: (entityId: string) => void
   gridColumnId?: string
   rowSelectionColumnId?: string
+  onTabPress?: () => void
 }
 
 export const useGridKeyboardNavigation = ({
@@ -22,6 +23,7 @@ export const useGridKeyboardNavigation = ({
   onEnterPress,
   gridColumnId = 'name',
   rowSelectionColumnId = 'rowSelection',
+  onTabPress,
 }: UseGridKeyboardNavigationProps) => {
   const { getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
   // Track the anchor point for shift selections
@@ -142,11 +144,20 @@ export const useGridKeyboardNavigation = ({
         openPlayerWithId(entityId)
       }
 
-      // Scroll the item into view
-      const gridItems = gridContainerRef.current?.querySelectorAll('.grid-item')
-      if (gridItems && gridItems[index]) {
-        gridItems[index].scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-      }
+      // Focus and scroll the selected card into view
+      requestAnimationFrame(() => {
+        if (!gridContainerRef.current) return
+
+        // Find the card by data-entity-id attribute
+        const card = gridContainerRef.current.querySelector(
+          `[data-entity-id="${entityId}"] .entity-card`,
+        ) as HTMLElement
+
+        if (card) {
+          card.focus()
+          card.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        }
+      })
     },
     [
       gridData,
@@ -227,9 +238,28 @@ export const useGridKeyboardNavigation = ({
 
         case 'Enter':
           e.preventDefault()
-          if (currentIndex !== -1 && onEnterPress) {
+          if (currentIndex !== -1) {
+            // Check if the current item is already selected (both name and rowSelection cells)
             const entityId = gridData[currentIndex].id
-            onEnterPress(entityId)
+            const nameCellId = getCellId(entityId, gridColumnId)
+            const rowCellId = getCellId(entityId, rowSelectionColumnId)
+            const isFullySelected = selectedCells.has(nameCellId) && selectedCells.has(rowCellId)
+
+            if (isFullySelected && onTabPress) {
+              // Already fully selected, move focus to versions table
+              onTabPress()
+            } else if (onEnterPress) {
+              // Not fully selected, execute normal enter behavior
+              onEnterPress(entityId)
+            }
+          }
+          break
+
+        case 'Tab':
+          // Only handle Tab (not Shift+Tab) if there's a selection and onTabPress is provided
+          if (currentIndex !== -1 && onTabPress && !e.shiftKey) {
+            e.preventDefault()
+            onTabPress()
           }
           break
 
@@ -259,6 +289,9 @@ export const useGridKeyboardNavigation = ({
       calculateColumnsCount,
       gridContainerRef,
       onEnterPress,
+      onTabPress,
+      selectedCells,
+      gridColumnId,
       rowSelectionColumnId,
       playerOpen,
     ],

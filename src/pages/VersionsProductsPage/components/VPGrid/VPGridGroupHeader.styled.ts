@@ -20,7 +20,7 @@ export const GroupHeader = styled.div`
   }
 
   /* Rotate expand icon when collapsed */
-  &.collapsed .expand-icon {
+  &.collapsed [icon='expand_more'] {
     rotate: -90deg;
   }
 `
@@ -31,7 +31,7 @@ export const Content = styled.div`
   gap: var(--base-gap-large);
   border-radius: var(--border-radius-m);
 
-  .expand-icon {
+  [icon='expand_more'] {
     transition: rotate 200ms;
   }
 

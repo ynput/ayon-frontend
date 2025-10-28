@@ -307,8 +307,56 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [handleSelectionLogic], // Depends only on handleSelectionLogic
   )
 
+  // Handle arrow key navigation
+  const handleArrowNavigation = useCallback(
+    (direction: 'up' | 'down', currentRow: Row<SimpleTableRow>, event: RowKeyboardEvent) => {
+      if (!tableRef.current) return
+
+      // Use the row model which respects expanded state, not filtered model
+      const visibleRows = tableRef.current.getRowModel().rows
+      const currentIndex = visibleRows.findIndex((r) => r.id === currentRow.id)
+
+      if (currentIndex === -1) return
+
+      let nextIndex = direction === 'down' ? currentIndex + 1 : currentIndex - 1
+
+      // Check bounds
+      if (nextIndex < 0 || nextIndex >= visibleRows.length) return
+
+      // Skip disabled rows
+      while (nextIndex >= 0 && nextIndex < visibleRows.length) {
+        const nextRow = visibleRows[nextIndex]
+        if (!nextRow.original.isDisabled) {
+          // Found a valid row
+          // Select the next row
+          handleSelectionLogic(
+            tableRef.current,
+            nextRow.id,
+            event.shiftKey,
+            event.ctrlKey || event.metaKey,
+          )
+
+          // Focus the next row's cell
+          requestAnimationFrame(() => {
+            const nextRowElement = document.getElementById(nextRow.id)
+            const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
+            if (nextCell) {
+              nextCell.focus()
+              nextCell.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+            }
+          })
+          return
+        }
+        // Move to next row if current is disabled
+        nextIndex = direction === 'down' ? nextIndex + 1 : nextIndex - 1
+      }
+    },
+    [handleSelectionLogic],
+  )
+
   const { handleRowKeyDown } = useRowKeydown<SimpleTableRow>({
     handleRowSelect: handleRowSelectForKeydown,
+    handleArrowNavigation,
   })
 
   const columns = useMemo<ColumnDef<SimpleTableRow>[]>(

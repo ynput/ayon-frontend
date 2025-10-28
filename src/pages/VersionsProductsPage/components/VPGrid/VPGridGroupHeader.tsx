@@ -28,7 +28,6 @@ export const VPGridGroupHeader: FC<GridGroupHeaderProps> = ({
           <Button icon="expand_more" className="expand-icon" variant="text" />
           {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
           <Styled.Label>{label}</Styled.Label>
-          {count !== undefined && <Styled.Count>({count})</Styled.Count>}
         </Styled.Content>
       </Styled.GroupHeader>
     </Styled.GroupWrapper>

@@ -1,5 +1,6 @@
 import GridLayout from '@components/GridLayout'
 import { useVersionsDataContext } from '../../context/VPDataContext'
+import { useVersionsSelectionContext } from '../../context/VPSelectionContext'
 import { useVPViewsContext } from '../../context/VPViewsContext'
 import { buildVPGrid } from '../../util'
 import {
@@ -13,6 +14,7 @@ import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { useGridKeyboardNavigation } from '../../hooks/useGridKeyboardNavigation'
 import { VPGridGroupHeader } from './VPGridGroupHeader'
 import { VPGridCard } from './VPGridCard'
+import { useVPFocusContext } from '../../context/VPFocusContext'
 import clsx from 'clsx'
 import { ExpandedState } from '@tanstack/react-table'
 import styled from 'styled-components'
@@ -43,10 +45,11 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   const { productsMap, versionsMap, isLoading, fetchNextPage, groups } = useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
+  const { showVersionsTable } = useVersionsSelectionContext()
+  const { focusVersionsTable, gridContainerRef } = useVPFocusContext()
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
-  const gridContainerRef = useRef<HTMLDivElement>(null)
 
   // Track expanded state - by default groups are expanded (not in the map)
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -158,6 +161,13 @@ const VPGrid: FC<VPGridProps> = ({}) => {
     [setSelectedCells, setFocusedCellId],
   )
 
+  // Handle Tab key press - move focus to versions table if visible
+  const handleTabPress = useCallback(() => {
+    if (showVersionsTable) {
+      focusVersionsTable()
+    }
+  }, [showVersionsTable, focusVersionsTable])
+
   // Initialize keyboard navigation early to get reset function
   const { resetPositionTracking } = useGridKeyboardNavigation({
     gridData: visibleGridData,
@@ -166,6 +176,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
     setFocusedCellId,
     gridContainerRef,
     onEnterPress: handleEnterPress,
+    onTabPress: handleTabPress,
     gridColumnId: GRID_COLUMN_ID,
     rowSelectionColumnId: ROW_SELECTION_COLUMN_ID,
   })
@@ -342,7 +353,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
           ratio={1.777777}
           minWidth={190}
           onScroll={handleScroll}
-          tabIndex={0}
+          tabIndex={-1}
         >
           {Array.from({ length: 20 }).map((_, index) => (
             <EntityCard
@@ -364,7 +375,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
       <GridContainer
         ref={gridContainerRef}
         onScroll={handleScroll}
-        tabIndex={0}
+        tabIndex={-1}
         data-grid-container="true"
       >
         {Object.entries(groupedData).map(([groupValue, groupEntities]) => {
@@ -436,7 +447,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
         ratio={1.777777}
         minWidth={gridHeight}
         onScroll={handleScroll}
-        tabIndex={0}
+        tabIndex={-1}
         data-grid-container="true"
       >
         {gridData.map((entity, index) => (

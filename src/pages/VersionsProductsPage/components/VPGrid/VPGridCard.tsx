@@ -47,6 +47,7 @@ export const VPGridCard: FC<VPGridCardProps> = memo(
           inView ? (
             <div ref={ref} data-entity-id={entity.id}>
               <EntityCard
+                tabIndex={0}
                 style={{
                   minWidth: 'unset',
                   maxHeight: 'unset',
