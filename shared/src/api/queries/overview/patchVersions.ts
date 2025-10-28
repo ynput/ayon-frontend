@@ -12,8 +12,8 @@
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { RootState } from '@reduxjs/toolkit/query'
 import { PatchOperation } from './updateOverview'
-import { injectedVersionsPageApi } from '../versions/getVersions'
-import type { VersionNode } from '../versions/getVersions'
+import { injectedVersionsPageApi } from '../versions/getVersionsProducts'
+import type { VersionNode } from '../versions/getVersionsProducts'
 
 // Helper to get version tags for selectInvalidatedBy and invalidation
 const getVersionTags = (versions: Pick<PatchOperation, 'entityId'>[]) => {

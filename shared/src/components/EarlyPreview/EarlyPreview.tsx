@@ -27,7 +27,7 @@ interface EarlyPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
 export const EarlyPreview = forwardRef<HTMLDivElement, EarlyPreviewProps>(
   ({ tooltip, ...props }, ref) => {
     return (
-      <Message data-tooltip={tooltip} {...props} ref={ref}>
+      <Message data-tooltip={tooltip} data-tooltip-delay={0} {...props} ref={ref}>
         Early preview
       </Message>
     )

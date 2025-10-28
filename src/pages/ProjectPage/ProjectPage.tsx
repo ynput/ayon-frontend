@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
-import VersionsPage from '../VersionsPage'
+import VersionsProductsPage from '../VersionsProductsPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
 import ProjectAddon from '../ProjectAddon'
@@ -254,7 +254,7 @@ const ProjectPage = () => {
       return <BrowserPage projectName={projectName} />
     }
     if (module === 'products') {
-      return <VersionsPage projectName={projectName} />
+      return <VersionsProductsPage projectName={projectName} />
     }
     if (module === 'lists') {
       return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />

@@ -20,7 +20,6 @@ export * from './hooks/pages/useTaskProgressViewSettings'
 export * from './hooks/pages/useOverviewViewSettings'
 export * from './hooks/pages/useListsViewSettings'
 export * from './hooks/pages/useReportsViewSettings'
-export * from './hooks/pages/useVersionsViewSettings'
 
 // Re-export the ViewsComponents for convenience
 export { Views } from './Views'

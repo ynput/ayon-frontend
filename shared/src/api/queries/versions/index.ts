@@ -1,2 +1,3 @@
 export * from './updateVersions'
-export * from './getVersions'
+export * from './getVersionsProducts'
+export * from './getVersionsProductsUtils'
