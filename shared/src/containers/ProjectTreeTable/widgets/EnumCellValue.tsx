@@ -7,7 +7,7 @@ const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
 const StyledWidget = styled.div`
   display: flex;
-  gap: var(--base-gap-small);
+  gap: 1px;
   align-items: center;
   width: 100%;
   height: 100%;
@@ -61,7 +61,7 @@ const StyledValuesContainer = styled.div`
 
 const StyledValueWrapper = styled.div`
   display: flex;
-  gap: var(--base-gap-small);
+  gap: 2px;
   align-items: center;
 
   max-width: 100%;
@@ -92,10 +92,6 @@ const StyledImg = styled.img`
 `
 
 const StyledExpandButton = styled.div`
-  width: 32px;
-  height: fit-content;
-  min-height: 32px;
-  aspect-ratio: 1;
   border-radius: var(--border-radius-m);
   display: flex;
   justify-content: center;
@@ -114,6 +110,7 @@ const StyledExpandButton = styled.div`
 
 const StyledExpandIcon = styled(Icon)`
   transition: rotate 0.2s;
+  padding: 2px;
 `
 
 export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -205,7 +202,8 @@ export const EnumCellValue = ({
             {(showLabels || !option.icon) && (
               <StyledValue
                 style={{
-                  color: backgroundColor && option.color ? getTextColor(option.color) : option.color,
+                  color:
+                    backgroundColor && option.color ? getTextColor(option.color) : option.color,
                   backgroundColor: backgroundColor
                     ? option.color || 'var(--md-sys-color-surface-container)'
                     : 'transparent',
