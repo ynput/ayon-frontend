@@ -336,6 +336,7 @@ const buildTreeTableColumns = ({
         if (['group', NEXT_PAGE_ID].includes(type)) return null
         const fieldId = type === 'folder' ? 'folderType' : 'taskType'
         const meta = table.options.meta
+        const folderHasVersions = type === 'folder' && row.original.hasVersions
         return (
           <CellWidget
             rowId={id}
@@ -360,7 +361,12 @@ const buildTreeTableColumns = ({
             isReadOnly={
               meta?.readOnly?.includes(column.id) ||
               meta?.readOnly?.includes(fieldId) ||
-              (type === 'folder' && row.original.hasVersions)
+              folderHasVersions
+            }
+            tooltip={
+              folderHasVersions
+                ? 'Folder type cannot be edited when versions exist within the folder'
+                : undefined
             }
           />
         )
