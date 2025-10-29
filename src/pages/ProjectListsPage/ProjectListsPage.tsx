@@ -203,7 +203,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               scopes={[selectedList?.entityType]}
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
-              onResetView={resetWorkingView}
+              onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
             >
               <DetailsPanelEntityProvider>
                 <SelectionCellsProvider>
