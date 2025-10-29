@@ -174,7 +174,7 @@ export const EntityNameWidget = ({
               {shouldShowPath && !isRestricted && (
                 <span className="path">
                   {path}
-                  {isCompact ? '/' : ''}
+                  {isCompact && path ? '/' : ''}
                 </span>
               )}
               <span className="label">{label || name}</span>
