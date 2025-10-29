@@ -1,4 +1,4 @@
-import { AssigneeSelect, Button, Toolbar, Icon } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button, Toolbar, Icon, InputText } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 export const FormRow = styled.div`
@@ -144,4 +144,10 @@ export const LatestIcon = styled(Icon)`
   &:hover {
     color: var(--md-sys-color-on-surface);
   }
+`
+export const StyledInput = styled(InputText)`
+  grid-column: 1 / -1;
+  background-color: var(--md-sys-color-surface-container-low);
+  color: inherit;
+  border-radius: var(--border-radius-m);
 `

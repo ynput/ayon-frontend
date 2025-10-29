@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { Toolbar, Spacer, Button } from '@ynput/ayon-react-components'
+import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import * as Styled from './Bundles.styled'
 import BundleForm from './BundleForm'
 import BundleDeps from './BundleDeps'
@@ -11,6 +11,8 @@ import { useUpdateBundleMutation } from '@queries/bundles/updateBundles'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 import type { Addon } from './types'
+import { useAddonSearchContext } from '@pages/SettingsPage/Bundles/AddonSearchContext.tsx'
+import { AddonSearchInput } from '@pages/SettingsPage/Bundles/AddonSearchInput.tsx'
 
 type Installer = { version: string; platforms?: string[] }
 type Bundle = {
@@ -32,7 +34,6 @@ type BundleDetailProps = {
   onDuplicate: (name: string) => void
   installers: Installer[]
   toggleBundleStatus: (state: 'staging' | 'production', name: string) => void
-  addons: Array<Addon>
 }
 
 const BundleDetail: React.FC<BundleDetailProps> = ({
@@ -40,13 +41,13 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
   onDuplicate,
   installers,
   toggleBundleStatus,
-  addons,
 }) => {
   const [selectedBundle, setSelectedBundle] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<Bundle | any>({} as Bundle)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const [updateBundle] = useUpdateBundleMutation()
+  const { filteredAddons, addons } = useAddonSearchContext()
 
   // list of all bundles because we need production versions of addons
   let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
@@ -73,7 +74,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
 
   // Select addon if query search has addon=addonName
   const addonListRef = useRef<any>()
-  useAddonSelection<Addon>(addons, setSelectedAddons, addonListRef, [formData])
+  useAddonSelection<Addon>(filteredAddons, setSelectedAddons, addonListRef, [formData])
 
   // every time we select a new bundle, update the form data
   useEffect(() => {
@@ -152,7 +153,10 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
         />
       </Toolbar>
       {selectedBundles.length > 1 && selectedBundles.length < 5 ? (
-        <BundleCompare bundles={selectedBundles as any} addons={addons as any} />
+        <BundleCompare
+          bundles={selectedBundles as any}
+          addons={filteredAddons as any}
+        />
       ) : (
         <BundleForm
           isNew={false}
@@ -160,6 +164,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
           onAddonAutoUpdate={handleAddonAutoSave}
         >
+          <AddonSearchInput />
           <BundleDeps bundle={bundle} onChange={undefined as any} />
         </BundleForm>
       )}
