@@ -8,7 +8,7 @@ import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
-import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel } from '@shared/context'
+import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel, DetailsPanelTab } from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -48,6 +48,9 @@ export type DetailsPanelProps = {
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
   entityListId?: string
   guestCategories?: Record<string, string> // only used for guests to find if they have access to any categories
+  // optional tab state for independent tab management
+  currentTab?: DetailsPanelTab
+  setCurrentTab?: (tab: DetailsPanelTab) => void
 }
 
 export const DetailsPanel = ({
@@ -78,9 +81,17 @@ export const DetailsPanel = ({
   exportAnnotationComposite,
   entityListId,
   guestCategories = {},
+  // optional tab state for independent tab management
+  currentTab: currentTabProp,
+  setCurrentTab: setCurrentTabProp,
 }: DetailsPanelProps) => {
   const { closeSlideOut, openPip, user, isGuest } = useDetailsPanelContext()
-  const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
+  const scopedTab = useScopedDetailsPanel(scope)
+
+  // Use provided tab state if available, otherwise use scope-based state
+  const currentTab = currentTabProp ?? scopedTab.currentTab
+  const setTab = setCurrentTabProp ?? scopedTab.setTab
+  const isFeed = scopedTab.isFeed
 
   // Force details tab for specific entity types
   useEffect(() => {
