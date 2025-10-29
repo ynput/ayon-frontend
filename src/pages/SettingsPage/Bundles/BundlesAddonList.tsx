@@ -48,7 +48,8 @@ type BundlesAddonListProps = {
 }
 
 const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
- height: auto !important;
+  height: auto !important;
+  max-height: 100%;
   tr {
     display: flex;
     flex-wrap: nowrap;
@@ -153,7 +154,6 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
   ) => {
     const navigate = useNavigate()
     const { filteredAddons: addons, addons: allAddons, resetSearch } = useAddonSearchContext()
-
 
     // get production bundle, because
     let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true }) as any
