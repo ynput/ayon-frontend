@@ -468,7 +468,6 @@ const Bundles = () => {
                   initBundle={newBundleOpen}
                   onSave={handleNewBundleEnd}
                   installers={installerVersions}
-                  addons={addons}
                   developerMode={developerMode}
                 />
               ) : (
@@ -478,7 +477,6 @@ const Bundles = () => {
                     initBundle={bundlesData[0]}
                     isLoading={isLoadingInstallers || isFetching}
                     installers={installerVersions}
-                    addons={addons}
                     isDev
                   />
                 ) : (
@@ -488,7 +486,6 @@ const Bundles = () => {
                     isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
                     installers={installerVersions}
                     toggleBundleStatus={toggleBundleStatus}
-                    addons={addons}
                     developerMode={developerMode}
                   />
                 ))

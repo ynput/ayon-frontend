@@ -34,7 +34,6 @@ type BundleDetailProps = {
   onDuplicate: (name: string) => void
   installers: Installer[]
   toggleBundleStatus: (state: 'staging' | 'production', name: string) => void
-  addons: Array<Addon>
 }
 
 const BundleDetail: React.FC<BundleDetailProps> = ({
@@ -42,14 +41,13 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
   onDuplicate,
   installers,
   toggleBundleStatus,
-  addons,
 }) => {
   const [selectedBundle, setSelectedBundle] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<Bundle | any>({} as Bundle)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const [updateBundle] = useUpdateBundleMutation()
-  const { filteredAddons } = useAddonSearchContext()
+  const { filteredAddons, addons } = useAddonSearchContext()
 
   // list of all bundles because we need production versions of addons
   let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true })
@@ -164,7 +162,6 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           isNew={false}
           addonListRef={addonListRef}
           {...{ selectedAddons, setSelectedAddons, formData, setFormData, installers }}
-          addons={filteredAddons}
           onAddonAutoUpdate={handleAddonAutoSave}
         >
           <AddonSearchInput />

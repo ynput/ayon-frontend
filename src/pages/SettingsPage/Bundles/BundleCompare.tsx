@@ -65,7 +65,6 @@ const BundleCompare: React.FC<BundleCompareProps> = ({ bundles = [], addons }) =
             handleSort={handleSort}
             sortOrder={sortOrder}
             sortField={sortField}
-            addons={addons}
           />
         </Panel>
       ))}

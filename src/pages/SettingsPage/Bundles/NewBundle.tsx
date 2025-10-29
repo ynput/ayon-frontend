@@ -48,7 +48,6 @@ interface LocalBundleFormData {
 type NewBundleProps = {
   initBundle: LocalBundleFormData | null
   onSave: (name: string) => void
-  addons: Addon[]
   installers: Installer[]
   isDev: boolean
   developerMode?: boolean
@@ -57,7 +56,6 @@ type NewBundleProps = {
 const NewBundle: React.FC<NewBundleProps> = ({
   initBundle,
   onSave,
-  addons,
   installers,
   isDev,
   developerMode,
@@ -67,7 +65,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   const [skipBundleCheck, setSkipBundleCheck] = useState<boolean>(false)
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([])
   const previousFormData = usePrevious(formData)
-  const { filteredAddons } = useAddonSearchContext()
+  const { filteredAddons, addons } = useAddonSearchContext()
 
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation()
   const [updateBundle, { isLoading: isUpdating }] = useUpdateBundleMutation() as any
@@ -359,7 +357,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
         addonListRef={addonListRef}
-        addons={filteredAddons}
         onProjectSwitchChange={() =>
           formData && setFormData({ ...formData, isProject: !formData?.isProject })
         }

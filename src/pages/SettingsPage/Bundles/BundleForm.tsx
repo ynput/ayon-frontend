@@ -36,7 +36,6 @@ type BundleFormProps = {
   ) => void
   developerMode?: boolean
   addonListRef?: any
-  addons: Addon[]
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
   onProjectSwitchChange?: () => void
 }
@@ -53,7 +52,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
   onAddonDevChange,
   developerMode,
   addonListRef,
-  addons,
   onAddonAutoUpdate,
   onProjectSwitchChange,
 }) => {
@@ -200,7 +198,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
               isDev={isDev || formData.isDev}
               onDevChange={onAddonDevChange}
               ref={addonListRef}
-              addons={addons}
               onAddonAutoUpdate={onAddonAutoUpdate}
             />
           </Styled.AddonListInnerSection>

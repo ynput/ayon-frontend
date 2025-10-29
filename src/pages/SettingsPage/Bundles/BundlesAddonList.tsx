@@ -41,7 +41,6 @@ type BundlesAddonListProps = {
   diffAddonVersions?: string[]
   isDev?: boolean
   onDevChange?: (addonNames: string[], payload: { value: any; key: 'enabled' | 'path' }) => void
-  addons: SharedAddon[]
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
   handleSort?: (e: DataTableSortEvent) => void
   sortField?: string | null
@@ -145,7 +144,6 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       diffAddonVersions,
       isDev,
       onDevChange,
-      addons,
       onAddonAutoUpdate,
       sortOrder,
       sortField,
@@ -154,8 +152,8 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
     ref,
   ) => {
     const navigate = useNavigate()
-    const { filteredAddons, resetSearch, totalAddonsCount } = useAddonSearchContext()
-    const addonsToUse = addons || filteredAddons
+    const { filteredAddons: addons, addons: allAddons, resetSearch } = useAddonSearchContext()
+
 
     // get production bundle, because
     let { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: true }) as any
@@ -190,7 +188,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
     }
 
     const addonsTable = useMemo(() => {
-      const tableData = (addonsToUse as Addon[])
+      const tableData = (addons as Addon[])
         .map((addon) => ({
           ...addon,
           version: formData?.addons?.[addon.name] || 'NONE',
@@ -211,7 +209,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
           return a.title.localeCompare(b.title)
         })
       return tableData
-    }, [addonsToUse, formData, readOnly])
+    }, [addons, formData, readOnly])
 
     const createContextItems = (selected: any) => {
       let items = [
@@ -241,7 +239,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
       ctxMenuShow(e.originalEvent, createContextItems(contextSelection))
     }
 
-    const filteredCount = totalAddonsCount - filteredAddons.length
+    const filteredCount = allAddons.length - addons.length
 
     return (
       <>
