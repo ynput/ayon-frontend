@@ -284,6 +284,8 @@ export const DetailsPanel = ({
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
+            currentTab={currentTab}
+            setCurrentTab={setTab}
           />
         )}
         {currentTab === 'files' && (
