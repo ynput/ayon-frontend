@@ -65,6 +65,7 @@ const useVersionsGroupBy = ({
     return groupBy
       ? getGroupQueries?.({
           groups,
+          taskGroups: groups, // deprecated, but keep for backward compatibility
           filters: versionFilters,
           groupBy,
           groupPageCounts,

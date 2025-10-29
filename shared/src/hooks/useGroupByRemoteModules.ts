@@ -6,6 +6,7 @@ import { usePowerpack } from '@shared/context'
 
 type GetGroupQueriesParams = {
   groups: EntityGroup[]
+  taskGroups?: EntityGroup[] // deprecated, but keep for backward compatibility
   filters: QueryFilter | undefined
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>

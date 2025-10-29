@@ -332,6 +332,7 @@ export const useFetchOverviewData = ({
     return groupBy
       ? getGroupQueries?.({
           groups: taskGroups,
+          taskGroups, // deprecated, but keep for backward compatibility
           filters: queryFilters.filter,
           groupBy,
           groupPageCounts,
