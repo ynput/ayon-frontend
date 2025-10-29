@@ -1,4 +1,11 @@
-import React, { createContext, useContext, ReactNode, useMemo, useCallback, ChangeEvent } from 'react'
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  useCallback,
+  ChangeEvent,
+} from 'react'
 import { useLocalStorage } from '@shared/hooks'
 import type { Addon } from './types'
 import { matchSorter } from 'match-sorter'
@@ -23,7 +30,10 @@ export const AddonSearchProvider: React.FC<AddonSearchProviderProps> = ({ addons
 
   const filteredAddons = useMemo(() => {
     if (!search) return addons
-    return matchSorter(addons, search, { keys: ['name', 'title'] })
+    return matchSorter(addons, search, {
+      keys: ['name', 'title'],
+      threshold: matchSorter.rankings.CONTAINS,
+    })
   }, [addons, search])
 
   const onSearchChange = useCallback(
@@ -49,11 +59,7 @@ export const AddonSearchProvider: React.FC<AddonSearchProviderProps> = ({ addons
     [search, onSearchChange, filteredAddons, addons, resetSearch],
   )
 
-  return (
-    <AddonSearchContext.Provider value={value}>
-      {children}
-    </AddonSearchContext.Provider>
-  )
+  return <AddonSearchContext.Provider value={value}>{children}</AddonSearchContext.Provider>
 }
 
 export const useAddonSearchContext = () => {
