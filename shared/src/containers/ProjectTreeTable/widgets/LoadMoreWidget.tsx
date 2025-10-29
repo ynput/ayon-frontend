@@ -15,7 +15,7 @@ const LoadMore = styled.div`
 
 interface LoadMoreWidgetProps {
   id: string | undefined
-  label: string
+  label?: string
   onLoadMore: (id?: string) => void
 }
 

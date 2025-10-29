@@ -1035,6 +1035,22 @@
             "deprecationReason": null
           },
           {
+            "name": "allAttrib",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createdAt",
             "description": null,
             "args": [],
@@ -3412,7 +3428,7 @@
               },
               {
                 "name": "filter",
-                "description": "Filter tasks using QueryFilter",
+                "description": "Filter products using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -3483,6 +3499,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -3596,7 +3628,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, productType, createdAt, updatedAt",
+                "description": "Sort by one of name, path, productType, folderName, createdAt, updatedAt, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -3641,6 +3673,30 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "versionFilter",
+                "description": "Filter products by their versions using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -5409,6 +5465,39 @@
             "deprecationReason": null
           },
           {
+            "name": "featuredVersion",
+            "description": null,
+            "args": [
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "VersionNode",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "folder",
             "description": "Parent folder of the product",
             "args": [],
@@ -5806,6 +5895,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnly",
+                "description": "List only one version for each product, based on the order of flags, that can be 'hero', 'latestDone' and 'latest.This is a replacement for the deprecated heroOnly, latestOnly and heroOrLatestOnly",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -5830,6 +5939,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderIds",
+                "description": "List of folder IDs to filter by",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "hasLinks",
                 "description": "Filter by links presence",
                 "type": {
@@ -5843,7 +5972,7 @@
               },
               {
                 "name": "heroOnly",
-                "description": "List only hero versions",
+                "description": "DEPRECATED List only hero versions",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -5859,7 +5988,7 @@
               },
               {
                 "name": "heroOrLatestOnly",
-                "description": "List hero versions. If hero does not exist, list latest",
+                "description": "DEPRECATED List hero versions. If hero does not exist, list latest",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -5894,6 +6023,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -5907,7 +6052,7 @@
               },
               {
                 "name": "latestOnly",
-                "description": "List only latest versions",
+                "description": "DEPRECATED List only latest versions",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -5918,6 +6063,18 @@
                   }
                 },
                 "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "productFilter",
+                "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -5955,7 +6112,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of version, status, createdAt, updatedAt",
+                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6000,6 +6157,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -7319,7 +7488,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt, folderType",
+                "description": "Sort by one of name, createdAt, updatedAt, folderType",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7538,7 +7707,7 @@
               },
               {
                 "name": "filter",
-                "description": "Filter tasks using QueryFilter",
+                "description": "Filter products using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7609,6 +7778,22 @@
                   }
                 },
                 "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -7722,7 +7907,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, productType, createdAt, updatedAt",
+                "description": "Sort by one of name, path, productType, folderName, createdAt, updatedAt, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7767,6 +7952,30 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "versionFilter",
+                "description": "Filter products by their versions using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -8608,6 +8817,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnly",
+                "description": "List only one version for each product, based on the order of flags, that can be 'hero', 'latestDone' and 'latest.This is a replacement for the deprecated heroOnly, latestOnly and heroOrLatestOnly",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -8632,6 +8861,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderIds",
+                "description": "List of folder IDs to filter by",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "hasLinks",
                 "description": "Filter by links presence",
                 "type": {
@@ -8645,7 +8894,7 @@
               },
               {
                 "name": "heroOnly",
-                "description": "List only hero versions",
+                "description": "DEPRECATED List only hero versions",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -8661,7 +8910,7 @@
               },
               {
                 "name": "heroOrLatestOnly",
-                "description": "List hero versions. If hero does not exist, list latest",
+                "description": "DEPRECATED List hero versions. If hero does not exist, list latest",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -8696,6 +8945,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -8709,7 +8974,7 @@
               },
               {
                 "name": "latestOnly",
-                "description": "List only latest versions",
+                "description": "DEPRECATED List only latest versions",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -8720,6 +8985,18 @@
                   }
                 },
                 "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "productFilter",
+                "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -8757,7 +9034,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of version, status, createdAt, updatedAt",
+                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8802,6 +9079,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -11819,6 +12108,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnly",
+                "description": "List only one version for each product, based on the order of flags, that can be 'hero', 'latestDone' and 'latest.This is a replacement for the deprecated heroOnly, latestOnly and heroOrLatestOnly",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": "Filter tasks using QueryFilter",
                 "type": {
@@ -11843,6 +12152,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderIds",
+                "description": "List of folder IDs to filter by",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "hasLinks",
                 "description": "Filter by links presence",
                 "type": {
@@ -11856,7 +12185,7 @@
               },
               {
                 "name": "heroOnly",
-                "description": "List only hero versions",
+                "description": "DEPRECATED List only hero versions",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -11872,7 +12201,7 @@
               },
               {
                 "name": "heroOrLatestOnly",
-                "description": "List hero versions. If hero does not exist, list latest",
+                "description": "DEPRECATED List hero versions. If hero does not exist, list latest",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -11907,6 +12236,22 @@
                 "deprecationReason": null
               },
               {
+                "name": "includeFolderChildren",
+                "description": "Include versions in child folders when folderIds is used",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {
@@ -11920,7 +12265,7 @@
               },
               {
                 "name": "latestOnly",
-                "description": "List only latest versions",
+                "description": "DEPRECATED List only latest versions",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -11931,6 +12276,18 @@
                   }
                 },
                 "defaultValue": "false",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "productFilter",
+                "description": "Filter versions by their product using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
                 "isDeprecated": false,
                 "deprecationReason": null
               },
@@ -11968,7 +12325,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of version, status, createdAt, updatedAt",
+                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -12013,6 +12370,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Filter products by their tasks (via versions) using QueryFilter",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -13509,6 +13878,18 @@
             "deprecationReason": null
           },
           {
+            "name": "featuredVersionType",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "hasReviewables",
             "description": null,
             "args": [],
@@ -13525,6 +13906,18 @@
             "deprecationReason": null
           },
           {
+            "name": "heroVersionId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": null,
             "args": [],
@@ -13534,6 +13927,38 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "isLatest",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "isLatestDone",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
                 "ofType": null
               }
             },

@@ -113,6 +113,7 @@ export type SimpleTableRow = {
   iconColor?: string
   iconFilled?: boolean
   img?: string | null
+  imgShape?: 'square' | 'circle'
   startContent?: JSX.Element
   endContent?: JSX.Element
   subRows: SimpleTableRow[]
@@ -134,6 +135,7 @@ export interface SimpleTableProps {
   globalFilter?: string
   meta?: Record<string, any>
   rowHeight?: number // height of each row, used for virtual scrolling
+  imgRatio?: number
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
   children?: (
     props: SimpleTableCellTemplateProps,
@@ -141,8 +143,8 @@ export interface SimpleTableProps {
     table: Table<SimpleTableRow>,
   ) => JSX.Element
   pt?: {
-    cell?: SimpleTableCellTemplateProps
-    row?: React.HTMLAttributes<HTMLTableRowElement>
+    cell?: Partial<SimpleTableCellTemplateProps>
+    row?: Partial<React.HTMLAttributes<HTMLTableRowElement>>
   }
 }
 
@@ -192,6 +194,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   globalFilter,
   meta,
   rowHeight,
+  imgRatio,
   onScrollBottom,
   children,
   pt,
@@ -304,8 +307,56 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [handleSelectionLogic], // Depends only on handleSelectionLogic
   )
 
+  // Handle arrow key navigation
+  const handleArrowNavigation = useCallback(
+    (direction: 'up' | 'down', currentRow: Row<SimpleTableRow>, event: RowKeyboardEvent) => {
+      if (!tableRef.current) return
+
+      // Use the row model which respects expanded state, not filtered model
+      const visibleRows = tableRef.current.getRowModel().rows
+      const currentIndex = visibleRows.findIndex((r) => r.id === currentRow.id)
+
+      if (currentIndex === -1) return
+
+      let nextIndex = direction === 'down' ? currentIndex + 1 : currentIndex - 1
+
+      // Check bounds
+      if (nextIndex < 0 || nextIndex >= visibleRows.length) return
+
+      // Skip disabled rows
+      while (nextIndex >= 0 && nextIndex < visibleRows.length) {
+        const nextRow = visibleRows[nextIndex]
+        if (!nextRow.original.isDisabled) {
+          // Found a valid row
+          // Select the next row
+          handleSelectionLogic(
+            tableRef.current,
+            nextRow.id,
+            event.shiftKey,
+            event.ctrlKey || event.metaKey,
+          )
+
+          // Focus the next row's cell
+          requestAnimationFrame(() => {
+            const nextRowElement = document.getElementById(nextRow.id)
+            const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
+            if (nextCell) {
+              nextCell.focus()
+              nextCell.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+            }
+          })
+          return
+        }
+        // Move to next row if current is disabled
+        nextIndex = direction === 'down' ? nextIndex + 1 : nextIndex - 1
+      }
+    },
+    [handleSelectionLogic],
+  )
+
   const { handleRowKeyDown } = useRowKeydown<SimpleTableRow>({
     handleRowSelect: handleRowSelectForKeydown,
+    handleArrowNavigation,
   })
 
   const columns = useMemo<ColumnDef<SimpleTableRow>[]>(
@@ -352,7 +403,6 @@ const SimpleTable: FC<SimpleTableProps> = ({
               // Corrected typo: handleRowKeydown -> handleRowKeyDown
               handleRowKeyDown(e, row)
             },
-            onClick: handleCellClick, // Added onClick handler
             depth: row.depth,
             tabIndex: 0,
             value: getValue<string>(),
@@ -360,6 +410,9 @@ const SimpleTable: FC<SimpleTableProps> = ({
             icon: row.original.icon || undefined,
             iconColor: row.original.iconColor,
             iconFilled: row.original.iconFilled,
+            img: row.original.img,
+            imgShape: row.original.imgShape,
+            imgRatio: imgRatio,
             isRowExpandable: row.getCanExpand(),
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
@@ -369,6 +422,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
+            ...pt?.cell,
+            onClick: handleCellClick, // Added onClick handler
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate
@@ -386,6 +441,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       handleRowKeyDown,
       enableClickToDeselect,
       enableNonFolderIndent,
+      imgRatio,
     ], // include enableClickToDeselect for completeness
   )
 
@@ -452,7 +508,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   // This ensures handleRowSelectForKeydown uses the current table instance.
   useEffect(() => {
     tableRef.current = table
-  }, [table])
+  }, [])
 
   const { rows } = table.getRowModel()
 

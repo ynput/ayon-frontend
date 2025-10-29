@@ -3,10 +3,9 @@ import { createContext, useContext } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
-import { isEmpty } from 'lodash'
 
 // Shared components and hooks
-import { useLocalStorage } from '@shared/hooks'
+import { useLocalStorage, useGetEntityGroups } from '@shared/hooks'
 
 // Shared ProjectTreeTable
 import {
@@ -19,7 +18,6 @@ import {
   useExpandedState,
   createLocalStorageKey,
   extractErrorMessage,
-  useGetTaskGroups,
   ProjectOverviewContextType,
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
@@ -83,9 +81,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useOverviewViewSettings()
 
   // GET GROUPING
-  const { taskGroups, error: groupingError } = useGetTaskGroups({
+  const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
     groupBy,
     projectName,
+    entityType: 'task',
   })
 
   // Use the shared hook to handle filter logic
@@ -94,15 +93,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     sliceFilter,
   })
 
-  // filter out by slice
-  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
-    ? null
-    : persistentRowSelectionData
-
   const selectedFolders = useSelectedFolders({
     rowSelection,
     sliceType,
-    persistentRowSelectionData: persistedHierarchySelection,
+    persistentRowSelectionData,
   })
 
   // DATA FETCHING

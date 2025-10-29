@@ -28,6 +28,7 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
@@ -62,7 +63,7 @@ import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
@@ -80,7 +81,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
-import { useSelector } from 'react-redux'
+import { upperFirst } from 'lodash'
+import { ColumnsConfig } from './types/columnConfig'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -95,6 +97,7 @@ declare module '@tanstack/react-table' {
     updateEntities?: CellUpdate
     toggleExpandAll?: ToggleExpandAll
     selection?: string[]
+    columnsConfig?: ColumnsConfig
   }
 }
 
@@ -129,12 +132,17 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onOpenNew?: (type: 'folder' | 'task') => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
+  excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
+  includeLinks?: boolean
   isLoading?: boolean
+  isExpandable?: boolean // if true, show the expand/collapse icons
   clientSorting?: boolean
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
+  columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
+  onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -149,12 +157,17 @@ export const ProjectTreeTable = ({
   onOpenNew,
   readOnly,
   excludedColumns,
+  excludedSorting,
   extraColumns,
+  includeLinks,
   isLoading: isLoadingProp,
+  isExpandable,
   clientSorting = false,
   sortableRows = false,
   onRowReorder,
   dndActiveId, // Destructure new prop
+  columnsConfig,
+  onScrollBottomGroupBy, // Destructure new prop for group-by load more
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -189,8 +202,9 @@ export const ProjectTreeTable = ({
     toggleExpandAll,
     showHierarchy,
     fetchNextPage,
-    scopes,
+    scopes, // or entityTypes
     getEntityById,
+    onResetView,
   } = useProjectTableContext()
 
   const { projectName: contextProjectName, writableFields } = useProjectDataContext()
@@ -231,7 +245,6 @@ export const ProjectTreeTable = ({
     const tableRowsCount = tableContainerRef.current?.querySelectorAll('tbody tr').length || 0
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
-      attribFields,
       showHierarchy && tableData.length > 0
         ? Math.min(tableRowsCount, 50)
         : groupBy
@@ -299,15 +312,22 @@ export const ProjectTreeTable = ({
     () => (isInitialized ? attribFields : loadingAttrib),
     [attribFields, loadingAttrib, isInitialized],
   )
+
+  const getNameLabelHeader = () => scopes.map((s) => upperFirst(s)).join(' / ')
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
+      scopes,
       attribs: columnAttribs,
       links: linkTypes,
+      includeLinks,
       showHierarchy,
       options,
       extraColumns,
       excluded: excludedColumns,
+      excludedSorting,
       groupBy,
+      nameLabel: getNameLabelHeader(),
     })
 
     if (sortableRows) {
@@ -328,7 +348,19 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
+  }, [
+    scopes,
+    columnAttribs,
+    showHierarchy,
+    isExpandable,
+    options,
+    linkTypes,
+    includeLinks,
+    extraColumns,
+    excludedColumns,
+    excludedSorting,
+    sortableRows,
+  ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date
   useEffect(() => {
@@ -347,7 +379,7 @@ export const ProjectTreeTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: () => true,
+    getRowCanExpand: () => !!isExpandable || showHierarchy || isGrouping,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -400,8 +432,9 @@ export const ProjectTreeTable = ({
       readOnly: readOnlyColumns,
       updateEntities: handleCellUpdate,
       toggleExpandAll,
-      loadMoreTasks: fetchNextPage,
+      loadMoreRows: fetchNextPage,
       selection: Array.from(selectedCells),
+      columnsConfig,
     },
   })
 
@@ -475,8 +508,21 @@ export const ProjectTreeTable = ({
           }
         }
       }
+
+      // Handle scroll-to-bottom for grouped data
+      if (onScrollBottomGroupBy && groupBy) {
+        const containerRefElement = e.currentTarget
+        // look for a load more button
+        const loadMoreButton = containerRefElement?.querySelector('.load-more')
+        // get load more button id
+        const loadMoreButtonId = loadMoreButton?.getAttribute('id')
+        const groupValue = loadMoreButtonId?.split('-')[2] // assuming the id is in the format 'load-more-groupValue'
+        if (groupValue) {
+          onScrollBottomGroupBy(groupValue)
+        }
+      }
     },
-    [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
+    [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
   )
 
   // Get move entity functions for the dialog
@@ -568,9 +614,11 @@ export const ProjectTreeTable = ({
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
               error={error}
+              isLoading={isLoading}
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
+              onResetView={onResetView}
             />
           </table>
         </Styled.TableContainer>
@@ -878,9 +926,11 @@ interface TableBodyProps {
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string
+  isLoading: boolean
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
+  onResetView?: () => void
 }
 
 const TableBody = ({
@@ -895,9 +945,11 @@ const TableBody = ({
   rowOrderIds,
   sortableRows,
   error,
+  isLoading,
   isGrouping,
   getRowHeight,
   defaultRowHeight,
+  onResetView,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -997,7 +1049,39 @@ const TableBody = ({
     return (
       tableContainerRef.current &&
       createPortal(
-        <EmptyPlaceholder message="No items found" error={error} />,
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found" error={error}>
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
+        tableContainerRef.current,
+      )
+    )
+  }
+
+  if (!rows.length && !isLoading) {
+    return (
+      tableContainerRef.current &&
+      createPortal(
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found">
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
         tableContainerRef.current,
       )
     )
@@ -1209,7 +1293,8 @@ const TableCell = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
-          'folder-in-hierarchy': showHierarchy && cell.row.original.entityType === 'folder',
+          expandable:
+            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,

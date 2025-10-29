@@ -34,5 +34,12 @@ export type ViewFormData = Required<
   }
 >
 
-export const viewTypes = ['overview', 'taskProgress', 'lists', 'reviews', 'reports'] as const
+export const viewTypes = [
+  'overview',
+  'taskProgress',
+  'versions',
+  'lists',
+  'reviews',
+  'reports',
+] as const
 export type ViewType = (typeof viewTypes)[number]

@@ -1,11 +1,11 @@
 import { useLoadModule } from '@shared/hooks'
-import { GroupSettingsFallback } from '../components/GroupSettingsFallback'
+import { GroupSettingsFallback } from '../containers/ProjectTreeTable/components/GroupSettingsFallback'
 import { EntityGroup, QueryFilter } from '@shared/api'
-import { TableGroupBy } from '../context'
+import { TableGroupBy } from '../containers/ProjectTreeTable/context'
 import { usePowerpack } from '@shared/context'
 
 type GetGroupQueriesParams = {
-  taskGroups: EntityGroup[]
+  groups: EntityGroup[]
   filters: QueryFilter | undefined
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>
@@ -26,7 +26,7 @@ export type ProjectTableModulesType = {
 
 const getGroupQueriesFallback = (params: GetGroupQueriesParams): GetGroupQueriesReturn => []
 
-export const useProjectTableModules = (): ProjectTableModulesType => {
+export const useGroupByRemoteModules = (): ProjectTableModulesType => {
   const { powerLicense } = usePowerpack()
 
   const minVersion = '1.1.1-dev'

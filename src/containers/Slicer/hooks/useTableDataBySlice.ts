@@ -3,15 +3,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHierarchyTable } from '@shared/hooks'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { Slice, SliceData, SliceOption, TableData } from '../types'
+import { Slice, SliceData, SliceTypeField, TableData } from '../types'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { SliceType } from '@shared/containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
-import { getAttributeIcon } from '@shared/util'
+import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 
 interface TableDataBySliceProps {
-  sliceFields: SliceType[]
+  sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
 }
 
@@ -45,14 +45,14 @@ const useTableDataBySlice = ({
   const projectName = useAppSelector((state) => state.project.name)
   const { formatAttribute } = useExtraSlices()
 
-  const defaultSliceOptions: SliceOption[] = [
+  const defaultSliceOptions: SliceTypeField[] = [
     {
       label: 'Hierarchy',
       value: 'hierarchy' as SliceType,
       icon: 'table_rows',
     },
     {
-      label: 'Assignees',
+      label: 'Assignee',
       value: 'assignees' as SliceType,
       icon: 'person',
     },
@@ -64,15 +64,35 @@ const useTableDataBySlice = ({
     {
       label: 'Task Type',
       value: 'taskType' as SliceType,
-      icon: 'check_circle',
+      icon: getEntityTypeIcon('task'),
+    },
+    {
+      label: 'Folder Type',
+      value: 'taskType' as SliceType,
+      icon: getEntityTypeIcon('folder'),
+    },
+    {
+      label: 'Product Type',
+      value: 'productType' as SliceType,
+      icon: getEntityTypeIcon('product'),
+    },
+    {
+      label: 'Author',
+      value: 'author' as SliceType,
+      icon: 'attribution',
     },
   ]
 
-  const sliceOptions = defaultSliceOptions.filter(
-    (option) => !sliceFields.length || sliceFields.includes(option.value),
-  )
+  const sliceOptions = sliceFields.map((field) => {
+    const defaultOption = defaultSliceOptions.find((opt) => opt.value === field.value)
+    // use default option as fallback data
+    return {
+      ...defaultOption,
+      ...field,
+    }
+  })
 
-  const showAttributes = sliceFields.includes('attributes')
+  const showAttributes = sliceFields.some((field) => field.value === 'attributes')
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
     skip: !showAttributes,
     entityTypes,
@@ -96,9 +116,10 @@ const useTableDataBySlice = ({
     getStatuses,
     getTypes,
     getTaskTypes,
+    getProductTypes,
     getAttribute,
     isLoading: isLoadingProject,
-  } = useProjectAnatomySlices({ projectName, useExtraSlices })
+  } = useProjectAnatomySlices({ projectName, scopes: entityTypes, useExtraSlices })
 
   //   Hierarchy
   const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({
@@ -125,6 +146,11 @@ const useTableDataBySlice = ({
       noValue: true,
       hasValue: true,
     },
+    author: {
+      getData: getUsersData,
+      isLoading: isUsersLoading,
+      isExpandable: false,
+    },
     status: {
       getData: getStatuses,
       isLoading: isLoadingProject,
@@ -138,6 +164,11 @@ const useTableDataBySlice = ({
     taskType: {
       getData: getTaskTypes,
       isLoading: isLoadingProject,
+      isExpandable: false,
+    },
+    productType: {
+      getData: getProductTypes,
+      isLoading: false,
       isExpandable: false,
     },
   }
@@ -167,7 +198,10 @@ const useTableDataBySlice = ({
       return
     }
     // check slice type is enabled
-    if ((sliceConfig.isAttribute && showAttributes) || sliceFields.includes(sliceType)) {
+    if (
+      (sliceConfig.isAttribute && showAttributes) ||
+      sliceFields.some((field) => field.value === sliceType)
+    ) {
       onSliceTypeChange(sliceType, leavePersistentSlice, returnToPersistentSlice)
     }
   }

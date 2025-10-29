@@ -2,6 +2,7 @@ import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
 
 const Expander = styled(Button)`
   &.expander {
@@ -27,7 +28,7 @@ const StyledEntityNameWidget = styled.div`
 
 const StyledContentWrapper = styled.div`
   width: 100%;
-  height: 24px;
+  height: 32px;
   overflow: hidden;
   position: relative;
 `
@@ -110,13 +111,14 @@ type EntityNameWidgetProps = {
   label: string
   name: string
   path?: string | null
-  showHierarchy?: boolean
+  isExpandable?: boolean
   icon?: string | null
   type: string
   isExpanded: boolean
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
   rowHeight?: number
+  columnDisplayConfig?: DisplayConfig
 }
 
 export const EntityNameWidget = ({
@@ -124,13 +126,14 @@ export const EntityNameWidget = ({
   label,
   name,
   path,
-  showHierarchy,
+  isExpandable,
   icon,
   type,
   isExpanded,
   toggleExpandAll,
   toggleExpanded,
   rowHeight = 40,
+  columnDisplayConfig,
 }: EntityNameWidgetProps) => {
   // Check if this is a restricted access entity
   const isRestricted = isEntityRestricted(type)
@@ -139,42 +142,41 @@ export const EntityNameWidget = ({
   // < 50px = single line (compact), >= 50px = stacked
   const isCompact = rowHeight < 50
 
-  // Always keep content height at 24px in compact mode or hierarchy mode to prevent jumping
-  // Only allow expansion to 32px in non-hierarchy mode when not compact and path exists
-  const contentHeight = (isCompact || showHierarchy) ? 24 : (path && !isRestricted ? 32 : 24)
-
-  // For restricted entities, don't show path
-  const displayPath = isRestricted ? null : path
+  // Determine if path should be shown based on display configuration
+  // Check layout-specific setting first, then general setting
+  const showPathCompact = getDisplayValue(columnDisplayConfig, 'path', 'compact') ?? true
+  const showPathFull = getDisplayValue(columnDisplayConfig, 'path', 'full') ?? true
+  const shouldShowPath = isCompact ? showPathCompact : showPathFull
 
   return (
     <StyledEntityNameWidget>
-      {showHierarchy ? (
-        type === 'folder' ? (
-          <Expander
-            onClick={(e) => {
-              e.stopPropagation()
-              if (e.altKey) {
-                // expand/collapse all children
-                toggleExpandAll(id)
-              } else {
-                // use built-in toggleExpanded function
-                toggleExpanded()
-              }
-            }}
-            className="expander"
-            icon={isExpanded ? 'expand_more' : 'chevron_right'}
-          />
-        ) : (
-          <div style={{ display: 'inline-block', minWidth: 24 }} />
-        )
+      {isExpandable ? (
+        <Expander
+          onClick={(e) => {
+            e.stopPropagation()
+            if (e.altKey) {
+              // expand/collapse all children
+              toggleExpandAll(id)
+            } else {
+              // use built-in toggleExpanded function
+              toggleExpanded()
+            }
+          }}
+          className="expander"
+          icon={isExpanded ? 'expand_more' : 'chevron_right'}
+        />
       ) : null}
-      <StyledContentWrapper style={{ height: contentHeight }}>
+      <StyledContentWrapper>
         <StyledContentAbsolute>
           <StyledContent>
             {icon && <Icon icon={icon} />}
             <StyledTextContent className={clsx({ compact: isCompact })}>
-              {displayPath && <span className="path">{displayPath}</span>}
-              {isCompact && displayPath && <span className="divider">/</span>}
+              {shouldShowPath && !isRestricted && (
+                <span className="path">
+                  {path}
+                  {isCompact ? '/' : ''}
+                </span>
+              )}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>
