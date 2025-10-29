@@ -123,7 +123,6 @@ function URIProvider({ children }) {
         dispatch(setUri(localUri))
         dispatch(setUriChanged())
       } else {
-        toast.error('Invalid uri')
         return null
       }
     },
