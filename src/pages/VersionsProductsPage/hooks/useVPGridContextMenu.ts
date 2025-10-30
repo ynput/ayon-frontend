@@ -6,20 +6,17 @@ import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
-  useProjectTableContext,
-  getEntityViewierIds,
 } from '@shared/containers'
+import { useVPContextMenuContext } from '../context/VPContextMenuContext'
 import { useVersionsDataContext } from '../context/VPDataContext'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
 const GRID_COLUMN_ID = 'name'
 
 export const useVPGridContextMenu = () => {
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
+  const { showDetailsItem, openViewerItem, addToListItem, deleteVersionItem } =
+    useVPContextMenuContext()
   const { entitiesMap } = useVersionsDataContext()
-  const { buildAddToListMenu, buildHierarchicalMenuItems, newListMenuItem, versions, reviews } =
-    useEntityListsContext()
-  const { onOpenPlayer } = useProjectTableContext()
   const [ctxMenuShow] = useCreateContextMenu([])
 
   // Get all selected entity IDs from the selectedCells set
@@ -33,127 +30,6 @@ export const useVPGridContextMenu = () => {
     })
     return Array.from(entityIds)
   }, [selectedCells])
-
-  // Build add to list menu items
-  const buildAddToListItem = useCallback(
-    (selectedEntityIds: string[]): ContextMenuItemType | undefined => {
-      // Filter to only version entities, converting products to their featuredVersion
-      const versionEntities: { entityId: string; entityType: string | undefined }[] = []
-      let singleVersionName: string | undefined
-
-      for (const entityId of selectedEntityIds) {
-        const entity = entitiesMap.get(entityId)
-        if (!entity) continue
-
-        if (entity.entityType === 'version') {
-          versionEntities.push({ entityId: entity.id, entityType: 'version' })
-          if (versionEntities.length === 1) {
-            singleVersionName = entity.name
-          }
-        } else if (entity.entityType === 'product' && 'featuredVersion' in entity) {
-          const product = entity as any
-          if (product.featuredVersion?.id) {
-            versionEntities.push({
-              entityId: product.featuredVersion.id,
-              entityType: 'version',
-            })
-            if (versionEntities.length === 1) {
-              singleVersionName = product.featuredVersion.name
-            }
-          }
-        }
-      }
-
-      // If no version entities, disable the menu
-      if (versionEntities.length === 0) {
-        return {
-          id: 'add-to-list',
-          label: 'Add to list',
-          icon: 'list',
-          disabled: true,
-          items: [],
-        }
-      }
-
-      // Build the menu items for add to list using versions and reviews data
-      const combined = [...versions.data, ...reviews.data]
-      const menuItems = buildHierarchicalMenuItems(combined, versionEntities, (list) => {
-        return list.entityListType === 'review-session' ? true : !!reviews.data.length
-      })
-      menuItems.push(newListMenuItem('version', versionEntities))
-
-      // Include version name in label if only one version
-      const label =
-        versionEntities.length === 1 && singleVersionName
-          ? `Add to list (${singleVersionName})`
-          : 'Add to list'
-
-      return buildAddToListMenu(menuItems, { label })
-    },
-    [
-      entitiesMap,
-      buildAddToListMenu,
-      buildHierarchicalMenuItems,
-      newListMenuItem,
-      versions.data,
-      reviews.data,
-    ],
-  )
-
-  const showDetailsItem = useCallback(
-    (selectedEntityIds: string[]): ContextMenuItemType => ({
-      label: 'Show details',
-      icon: 'dock_to_left',
-      shortcut: 'Double click',
-      command: () => {
-        // set row selection for all selected entities
-        const selectedRows = new Set<string>()
-        for (const entityId of selectedEntityIds) {
-          const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
-          selectedRows.add(rowSelectionCellId)
-        }
-
-        setSelectedCells(new Set<string>([...selectedCells, ...selectedRows]))
-      },
-    }),
-    [setSelectedCells, selectedCells],
-  )
-
-  const openViewerItem = useCallback(
-    (selectedEntityIds: string[]): ContextMenuItemType | undefined => {
-      // Find the first version or product entity
-      let targetEntity = selectedEntityIds
-        .map((id) => entitiesMap.get(id))
-        .find((entity) => entity?.entityType === 'version' || entity?.entityType === 'product')
-
-      // If we found a product, check if it has a featured version
-      if (targetEntity?.entityType === 'product') {
-        const product = targetEntity as any
-        if (product.featuredVersion?.id) {
-          targetEntity = entitiesMap.get(product.featuredVersion.id)
-        } else {
-          return undefined
-        }
-      }
-
-      if (!targetEntity || targetEntity.entityType !== 'version') {
-        return undefined
-      }
-
-      return {
-        label: 'Open in viewer',
-        icon: 'play_circle',
-        shortcut: 'Spacebar',
-        command: () => {
-          if (onOpenPlayer && targetEntity) {
-            const targetIds = getEntityViewierIds(targetEntity as any)
-            onOpenPlayer(targetIds, { quickView: true })
-          }
-        },
-      }
-    },
-    [entitiesMap, onOpenPlayer],
-  )
 
   const handleGridContextMenu = useCallback(
     (e: React.MouseEvent, entityId: string) => {
@@ -180,48 +56,97 @@ export const useVPGridContextMenu = () => {
 
         setSelectedCells(newSelection)
         setFocusedCellId(nameCellId)
-
-        // Update the selected entity IDs to just this one
-        const updatedSelectedIds = [entityId]
-        const menuItems: ContextMenuItemType[] = [showDetailsItem(updatedSelectedIds)]
-
-        const openViewerMenuItem = openViewerItem(updatedSelectedIds)
-        if (openViewerMenuItem) {
-          menuItems.push(openViewerMenuItem)
-        }
-
-        const addToListItem = buildAddToListItem(updatedSelectedIds)
-        if (addToListItem) {
-          menuItems.push(addToListItem)
-        }
-
-        ctxMenuShow(e, menuItems)
-      } else {
-        // Right-click is within the current selection, show menu for all selected items
-        const menuItems: ContextMenuItemType[] = [showDetailsItem(selectedEntityIds)]
-
-        const openViewerMenuItem = openViewerItem(selectedEntityIds)
-        if (openViewerMenuItem) {
-          menuItems.push(openViewerMenuItem)
-        }
-
-        const addToListItem = buildAddToListItem(selectedEntityIds)
-        if (addToListItem) {
-          menuItems.push(addToListItem)
-        }
-
-        ctxMenuShow(e, menuItems)
       }
+
+      // Determine which entity IDs to use
+      const targetEntityIds = selectedEntityIds.includes(entityId) ? selectedEntityIds : [entityId]
+
+      // Get entity for cell context
+      const entity = entitiesMap.get(entityId)
+      if (!entity) return
+
+      // Create mock cell and meta objects for ContextMenuItemConstructor
+      const mockCell = {
+        cellId: getCellId(entityId, GRID_COLUMN_ID),
+        columnId: GRID_COLUMN_ID,
+        entityId: entity.id,
+        entityType: entity.entityType,
+        parentId: undefined,
+        attribField: undefined,
+        column: {
+          id: GRID_COLUMN_ID,
+          label: 'Name',
+        },
+        isGroup: false,
+        data: entity,
+      }
+
+      const mockMeta = {
+        selectedCells: targetEntityIds.map((id) => getCellId(id, GRID_COLUMN_ID)),
+        selectedRows: targetEntityIds,
+        selectedColumns: [GRID_COLUMN_ID],
+        selectedFullRows: hasRowSelection ? targetEntityIds : [],
+        selectedGroups: [],
+      }
+
+      const mockContext = {
+        history: {} as any, // Mock history object - not used by our menu items
+      }
+
+      // Build menu items using ContextMenuItemConstructor functions
+      const menuItems: ContextMenuItemType[] = []
+
+      const showDetailsMenuItem = showDetailsItem(
+        e as any,
+        mockCell as any,
+        [],
+        mockMeta,
+        mockContext,
+      )
+      if (showDetailsMenuItem) {
+        menuItems.push(showDetailsMenuItem)
+      }
+
+      const openViewerMenuItem = openViewerItem(
+        e as any,
+        mockCell as any,
+        [],
+        mockMeta,
+        mockContext,
+      )
+      if (openViewerMenuItem) {
+        menuItems.push(openViewerMenuItem)
+      }
+
+      const addToListMenuItem = addToListItem(e as any, mockCell as any, [], mockMeta, mockContext)
+      if (addToListMenuItem) {
+        menuItems.push(addToListMenuItem)
+      }
+
+      const deleteVersionMenuItem = deleteVersionItem(
+        e as any,
+        mockCell as any,
+        [],
+        mockMeta,
+        mockContext,
+      )
+      if (deleteVersionMenuItem) {
+        menuItems.push(deleteVersionMenuItem)
+      }
+
+      ctxMenuShow(e, menuItems)
     },
     [
       ctxMenuShow,
       showDetailsItem,
-      buildAddToListItem,
+      addToListItem,
       openViewerItem,
+      deleteVersionItem,
       getSelectedEntityIds,
       setSelectedCells,
       setFocusedCellId,
       selectedCells,
+      entitiesMap,
     ],
   )
 

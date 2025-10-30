@@ -1,16 +1,10 @@
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
-import {
-  ContextMenuItemConstructors,
-  ProjectTableProvider,
-  useProjectDataContext,
-  useViewsContext,
-} from '@shared/containers'
+import { ProjectTableProvider, useProjectDataContext, useViewsContext } from '@shared/containers'
 import { useAppSelector } from '@state/store'
 import { FC } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { buildVersionRow } from '../util'
 import { useVPViewsContext } from '../context/VPViewsContext'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
 interface VPProjectTableProviderProps {
   projectName: string
@@ -25,8 +19,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
 }) => {
   const { versionsTableData, entitiesMap, groups, expanded, updateExpanded, error } =
     useVersionsDataContext()
-  // lists data
-  const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   const { resetWorkingView } = useViewsContext()
   const { showProducts } = useVPViewsContext()
@@ -36,14 +28,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   // loading states
   const isInitialized = true // replace with actual state
   const isLoadingAll = false // replace with actual state
-
-  // extra context menu items
-  const contextMenuItems: ContextMenuItemConstructors = [
-    'copy-paste',
-    'show-details',
-    'open-viewer',
-    menuItemsAddToList(),
-  ]
 
   // place holders, do we even need these?
   const foldersMap = new Map()
@@ -73,7 +57,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       isInitialized={isInitialized}
       showHierarchy={false}
       isLoading={isLoadingAll}
-      contextMenuItems={contextMenuItems}
       scopes={showProducts ? ['version', 'product'] : ['version']}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}

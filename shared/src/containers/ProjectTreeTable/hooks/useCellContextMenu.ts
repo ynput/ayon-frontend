@@ -14,6 +14,7 @@ import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { useMemo } from 'react'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -66,9 +67,15 @@ type CellContextMenuProps = {
   columns?: ColumnDef<TableRow>[]
   headerLabels: HeaderLabel[]
   onOpenNew?: (type: 'folder' | 'task') => void
+  contextMenuItems?: ContextMenuItemConstructors
 }
 
-const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellContextMenuProps) => {
+const useCellContextMenu = ({
+  attribs,
+  headerLabels = [],
+  onOpenNew,
+  contextMenuItems: propsContextMenuItems,
+}: CellContextMenuProps) => {
   // context hooks
   const {
     projectName,
@@ -77,10 +84,16 @@ const useCellContextMenu = ({ attribs, headerLabels = [], onOpenNew }: CellConte
     toggleExpandAll,
     toggleExpands,
     expanded,
-    contextMenuItems = [],
+    contextMenuItems: contextContextMenuItems = [],
     powerpack,
     onOpenPlayer,
   } = useProjectTableContext()
+
+  // Merge context menu items from props and context
+  const contextMenuItems = useMemo(
+    () => [...contextContextMenuItems, ...(propsContextMenuItems || [])],
+    [contextContextMenuItems, propsContextMenuItems],
+  )
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()

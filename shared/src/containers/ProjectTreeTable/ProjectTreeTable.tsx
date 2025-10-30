@@ -47,7 +47,10 @@ import { useMenuContext } from '../../context/MenuContext'
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
+import useCellContextMenu, {
+  HeaderLabel,
+  ContextMenuItemConstructors,
+} from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
@@ -143,6 +146,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
+  contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -168,6 +172,7 @@ export const ProjectTreeTable = ({
   dndActiveId, // Destructure new prop
   columnsConfig,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
+  contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -619,6 +624,7 @@ export const ProjectTreeTable = ({
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
               onResetView={onResetView}
+              contextMenuItems={propsContextMenuItems}
             />
           </table>
         </Styled.TableContainer>
@@ -931,6 +937,7 @@ interface TableBodyProps {
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
   onResetView?: () => void
+  contextMenuItems?: ContextMenuItemConstructors
 }
 
 const TableBody = ({
@@ -950,6 +957,7 @@ const TableBody = ({
   getRowHeight,
   defaultRowHeight,
   onResetView,
+  contextMenuItems,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -967,7 +975,12 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({
+    attribs,
+    onOpenNew,
+    headerLabels,
+    contextMenuItems,
+  })
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
