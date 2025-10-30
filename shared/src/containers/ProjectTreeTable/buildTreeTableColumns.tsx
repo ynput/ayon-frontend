@@ -700,6 +700,7 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'datetime' }}
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly={true}
+            pt={{ date: { showTime: true } }}
           />
         )
       },
@@ -729,6 +730,7 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'datetime' }}
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly={true}
+            pt={{ date: { showTime: true } }}
           />
         )
       },
