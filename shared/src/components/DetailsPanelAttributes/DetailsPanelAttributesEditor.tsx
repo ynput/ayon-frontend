@@ -11,7 +11,7 @@ import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) 1fr 32px;
+  grid-template-columns: minmax(150px, 1fr) 1fr 32px;
   row-gap: 2px;
   column-gap: 4px;
   align-items: center;
