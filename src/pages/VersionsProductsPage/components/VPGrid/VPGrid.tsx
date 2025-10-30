@@ -12,21 +12,23 @@ import { EntityCard } from '@ynput/ayon-react-components'
 import { FC, useMemo, useCallback, useRef, useState } from 'react'
 import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { useGridKeyboardNavigation } from '../../hooks/useGridKeyboardNavigation'
+import { useVPGridContextMenu } from '../../hooks'
 import { VPGridGroupHeader } from './VPGridGroupHeader'
 import { VPGridCard } from './VPGridCard'
 import { useVPFocusContext } from '../../context/VPFocusContext'
 import clsx from 'clsx'
 import { ExpandedState } from '@tanstack/react-table'
 import styled from 'styled-components'
+import { EmptyPlaceholder } from '@shared/components'
+import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 
 const GridContainer = styled.div`
   width: 100%;
   background-color: var(--md-sys-color-surface-container-low);
   padding: 0 var(--padding-m);
-  padding-right: 0;
   border-radius: var(--border-radius-m);
   max-height: 100%;
-  height: auto;
+  height: 100%;
   overflow: auto;
   outline: none;
 
@@ -38,15 +40,20 @@ const GridContainer = styled.div`
 const GRID_COLUMN_ID = 'name'
 const UNGROUPED_VALUE = '__UNGROUPED__'
 
-interface VPGridProps {}
+interface VPGridProps {
+  contextMenuItems: VPContextMenuItems
+}
 
-const VPGrid: FC<VPGridProps> = ({}) => {
+const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   const { projectName, projectInfo } = useProjectDataContext()
   const { productsMap, versionsMap, isLoading, fetchNextPage, groups } = useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { focusVersionsTable, gridContainerRef } = useVPFocusContext()
+
+  // context menu hook
+  const { handleGridContextMenu } = useVPGridContextMenu(contextMenuItems)
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
@@ -85,7 +92,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   // Build grouped data structure
   const groupedData = useMemo(() => {
     // Grouping only works for versions, not products
-    if (!groupBy || !groups.length || showProducts) return { '': gridData }
+    if (!groupBy || showProducts) return { '': gridData }
 
     const grouped: Record<string, typeof gridData> = {}
 
@@ -184,8 +191,6 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   // Handle card click with support for single, shift, and cmd/ctrl selection
   const handleCardClick = useCallback(
     (e: React.MouseEvent, entityId: string, index: number, columnId: string) => {
-      e.stopPropagation()
-
       // Use columnId column to match table behavior
       const cellId = getCellId(entityId, columnId)
 
@@ -273,9 +278,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
 
   // handle double click which selected the name and row selection cell
   const handleDoubleClick = useCallback(
-    (e: React.MouseEvent, entityId: string) => {
-      e.stopPropagation()
-
+    (_e: React.MouseEvent, entityId: string) => {
       // select both name and row selection cells
       const nameCellId = getCellId(entityId, GRID_COLUMN_ID)
       const rowCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
@@ -348,13 +351,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   if (isLoading) {
     return (
       <GridContainer>
-        <GridLayout
-          ref={gridContainerRef}
-          ratio={1.777777}
-          minWidth={190}
-          onScroll={handleScroll}
-          tabIndex={-1}
-        >
+        <GridLayout ref={gridContainerRef} ratio={1.777777} minWidth={190} onScroll={handleScroll}>
           {Array.from({ length: 20 }).map((_, index) => (
             <EntityCard
               key={index}
@@ -369,15 +366,36 @@ const VPGrid: FC<VPGridProps> = ({}) => {
     )
   }
 
-  // Render with grouping
-  if (groupBy && groups.length > 0 && !showProducts) {
+  if (groupBy && showProducts) {
     return (
-      <GridContainer
-        ref={gridContainerRef}
-        onScroll={handleScroll}
-        tabIndex={-1}
-        data-grid-container="true"
-      >
+      <GridContainer>
+        <EmptyPlaceholder message="Grouping is only available when viewing versions">
+          Please disable "Show Products" to use grouping.
+        </EmptyPlaceholder>
+      </GridContainer>
+    )
+  }
+
+  if (groupBy && !groups.length) {
+    return (
+      <GridContainer>
+        <EmptyPlaceholder message="No groups available for the selected grouping criteria." />
+      </GridContainer>
+    )
+  }
+
+  if (!gridData.length) {
+    return (
+      <GridContainer>
+        <EmptyPlaceholder message="No versions or products found." />
+      </GridContainer>
+    )
+  }
+
+  // Render with grouping
+  if (groupBy && !showProducts) {
+    return (
+      <GridContainer ref={gridContainerRef} onScroll={handleScroll} data-grid-container="true">
         {Object.entries(groupedData).map(([groupValue, groupEntities]) => {
           // Find the group metadata
           const group =
@@ -410,22 +428,17 @@ const VPGrid: FC<VPGridProps> = ({}) => {
                 onToggle={() => handleGroupToggle(groupValue)}
               />
               {isExpanded && (
-                <GridLayout
-                  ratio={1.777777}
-                  minWidth={gridHeight}
-                  style={{ outline: 'none' }}
-                  tabIndex={-1}
-                >
+                <GridLayout ratio={1.777777} minWidth={gridHeight} style={{ outline: 'none' }}>
                   {groupEntities.map((entity, index) => (
                     <VPGridCard
                       key={entity.id}
                       entity={entity}
                       index={index}
                       projectInfo={projectInfo}
-                      gridContainerRef={gridContainerRef}
                       isEntitySelected={isEntitySelected}
                       handleCardClick={handleCardClick}
                       handleDoubleClick={handleDoubleClick}
+                      handleContextMenu={handleGridContextMenu}
                       gridColumnId={GRID_COLUMN_ID}
                       rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
                     />
@@ -447,7 +460,6 @@ const VPGrid: FC<VPGridProps> = ({}) => {
         ratio={1.777777}
         minWidth={gridHeight}
         onScroll={handleScroll}
-        tabIndex={-1}
         data-grid-container="true"
       >
         {gridData.map((entity, index) => (
@@ -456,10 +468,11 @@ const VPGrid: FC<VPGridProps> = ({}) => {
             entity={entity}
             index={index}
             projectInfo={projectInfo}
-            gridContainerRef={gridContainerRef}
+            root={gridContainerRef.current}
             isEntitySelected={isEntitySelected}
             handleCardClick={handleCardClick}
             handleDoubleClick={handleDoubleClick}
+            handleContextMenu={handleGridContextMenu}
             gridColumnId={GRID_COLUMN_ID}
             rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
           />

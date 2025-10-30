@@ -58,7 +58,7 @@ export const useCreateContextMenu = (
       menuList: ContextMenuItemType[],
       ref: RefObject<{ hide: () => void }>,
     ): ContextMenuItemType[] => {
-      return menuList.map((item) => ({
+      return menuList.filter(Boolean).map((item) => ({
         template: (
           <ContextMenuItem
             key={item.label}

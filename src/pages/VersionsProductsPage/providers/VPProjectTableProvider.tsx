@@ -1,10 +1,5 @@
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
-import {
-  ContextMenuItemConstructors,
-  ProjectTableProvider,
-  useProjectDataContext,
-  useViewsContext,
-} from '@shared/containers'
+import { ProjectTableProvider, useProjectDataContext, useViewsContext } from '@shared/containers'
 import { useAppSelector } from '@state/store'
 import { FC } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
@@ -34,9 +29,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const isInitialized = true // replace with actual state
   const isLoadingAll = false // replace with actual state
 
-  // extra context menu items
-  const contextMenuItems: ContextMenuItemConstructors = [] // replace with actual context menu items
-
   // place holders, do we even need these?
   const foldersMap = new Map()
   const tasksMap = new Map()
@@ -65,7 +57,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       isInitialized={isInitialized}
       showHierarchy={false}
       isLoading={isLoadingAll}
-      contextMenuItems={contextMenuItems}
       scopes={showProducts ? ['version', 'product'] : ['version']}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}

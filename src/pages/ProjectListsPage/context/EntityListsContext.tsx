@@ -357,7 +357,7 @@ export const EntityListsProvider = ({
           })
         }
         // Filter out any special items that shouldn't be in cache (like __new-list__)
-        const filteredItems = cached.items.filter(item => !item.id.startsWith('__'))
+        const filteredItems = cached.items.filter((item) => !item.id.startsWith('__'))
         return rebindCommands(filteredItems)
       }
 
@@ -469,9 +469,19 @@ export const EntityListsProvider = ({
       } else if (cell.entityType === 'task') {
         subMenuItems = buildHierarchicalMenuItems(tasks.data, selected, () => getShowIconMultiple())
       } else if (cell.entityType === 'product') {
-        subMenuItems = buildHierarchicalMenuItems(products.data, selected, () =>
-          getShowIconMultiple(),
-        )
+        // if the product has a featured version, only allow adding that version to lists
+        // @ts-expect-error- just don't worry about it
+        if (cell.data?.featuredVersion?.id) {
+          // @ts-expect-error - featuredVersion is not supported in typings
+          const versionEntity = { entityId: cell.data.featuredVersion.id, entityType: 'version' }
+          subMenuItems = buildHierarchicalMenuItems(versions.data, [versionEntity], () =>
+            getShowIconMultiple(),
+          )
+        } else {
+          subMenuItems = buildHierarchicalMenuItems(products.data, selected, () =>
+            getShowIconMultiple(),
+          )
+        }
       } else if (cell.entityType === 'version') {
         const combined = [...versions.data, ...reviews.data]
         subMenuItems = buildHierarchicalMenuItems(combined, selected, (l) => getShowIconVersion(l))
@@ -488,7 +498,12 @@ export const EntityListsProvider = ({
         subMenuItems.push(newListMenuItem(cell.entityType as ListEntityType, selected))
       }
 
-      return buildAddToListMenu(subMenuItems)
+      // @ts-expect-error - featuredVersion is not supported in typings
+      return buildAddToListMenu(subMenuItems, {
+        label: cell.data?.featuredVersion?.id
+          ? `Add to list (${cell.data.featuredVersion.name})`
+          : undefined,
+      })
     },
     [
       folders.data,

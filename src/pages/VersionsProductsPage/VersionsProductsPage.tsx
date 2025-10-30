@@ -16,6 +16,7 @@ import VPDetailsPanel from './components/VPDetailsPanel/VPDetailsPanel'
 import { useVersionsSelectionContext } from './context/VPSelectionContext'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
 import { EarlyPreview } from '@shared/components'
+import { useVPContextMenu } from './hooks/useVPContextMenu'
 
 interface VersionsProductsPageProps {
   projectName: string
@@ -28,6 +29,9 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { config } = useSlicerContext()
   const { showGrid } = useVPViewsContext()
   const { showVersionDetails, showVersionsTable } = useVersionsSelectionContext()
+
+  // context menu items
+  const contextMenuItems = useVPContextMenu()
 
   // load slicer remote config
   const overviewSliceFields = config?.versions?.fields
@@ -66,7 +70,13 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
                   style={{ width: '100%', height: '100%' }}
                   gutterSize={!showVersionDetails && !showVersionsTable ? 0 : 4}
                 >
-                  <SplitterPanel size={70}>{showGrid ? <VPGrid /> : <VPTable />}</SplitterPanel>
+                  <SplitterPanel size={70}>
+                    {showGrid ? (
+                      <VPGrid contextMenuItems={contextMenuItems} />
+                    ) : (
+                      <VPTable contextMenuItems={contextMenuItems} />
+                    )}
+                  </SplitterPanel>
                   {showVersionsTable ? (
                     <SplitterPanel size={15} style={{ minWidth: 100 }}>
                       <VersionsListTable />

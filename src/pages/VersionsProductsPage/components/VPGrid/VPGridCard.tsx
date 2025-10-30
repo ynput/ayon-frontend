@@ -19,10 +19,11 @@ interface VPGridCardProps {
   }
   index: number
   projectInfo: ProjectModel | undefined
-  gridContainerRef: React.RefObject<HTMLDivElement>
+  root?: HTMLDivElement | null
   isEntitySelected: (entityId: string, entityType: string) => boolean
   handleCardClick: (e: React.MouseEvent, entityId: string, index: number, columnId: string) => void
   handleDoubleClick: (e: React.MouseEvent, entityId: string) => void
+  handleContextMenu: (e: React.MouseEvent, entityId: string) => void
   gridColumnId: string
   rowSelectionColumnId: string
 }
@@ -31,17 +32,18 @@ export const VPGridCard: FC<VPGridCardProps> = ({
   entity,
   index,
   projectInfo,
-  gridContainerRef,
+  root,
   isEntitySelected,
   handleCardClick,
   handleDoubleClick,
+  handleContextMenu,
   gridColumnId,
   rowSelectionColumnId,
 }) => {
   const status = projectInfo?.statuses?.find((s) => s.name === entity.status)
 
   return (
-    <InView key={entity.id} rootMargin="300px 0px 300px 0px" root={gridContainerRef.current}>
+    <InView key={entity.id} rootMargin="300px 0px 300px 0px" root={root}>
       {({ inView, ref }) =>
         inView ? (
           <div ref={ref} data-entity-id={entity.id}>
@@ -73,6 +75,7 @@ export const VPGridCard: FC<VPGridCardProps> = ({
               onTitleClick={(e) => handleCardClick(e, entity.id, index, rowSelectionColumnId)}
               onVersionsClick={(e) => handleCardClick(e, entity.id, index, rowSelectionColumnId)}
               onDoubleClick={(e) => handleDoubleClick(e, entity.id)}
+              onContextMenu={(e) => handleContextMenu(e, entity.id)}
             />
           </div>
         ) : (

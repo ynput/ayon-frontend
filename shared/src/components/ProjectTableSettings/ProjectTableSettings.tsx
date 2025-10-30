@@ -92,7 +92,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
     {
       value: 'product',
-      label: 'Product',
+      label: 'Product name',
       hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
     },
     {

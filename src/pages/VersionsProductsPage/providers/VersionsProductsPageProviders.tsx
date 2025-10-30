@@ -16,6 +16,7 @@ import { VPViewsProvider } from '../context/VPViewsContext'
 import { VersionsSelectionProvider } from '../context/VPSelectionContext'
 import { VPFocusProvider } from '../context/VPFocusContext'
 import { useGroupByRemoteModules } from '@shared/hooks'
+import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 
 interface VersionsProductsPageProvidersProps {
   projectName: string
@@ -40,17 +41,19 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
               <SettingsPanelProvider>
                 <VPColumnSettingsProvider>
                   <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
-                    <VPProjectTableProvider projectName={projectName} modules={modules}>
-                      <DetailsPanelEntityProvider>
-                        <SelectionCellsProvider>
-                          <SelectedRowsProvider>
-                            <VersionsSelectionProvider>
-                              <CellEditingProvider>{children}</CellEditingProvider>
-                            </VersionsSelectionProvider>
-                          </SelectedRowsProvider>
-                        </SelectionCellsProvider>
-                      </DetailsPanelEntityProvider>
-                    </VPProjectTableProvider>
+                    <EntityListsProvider entityTypes={['version']} projectName={projectName}>
+                      <VPProjectTableProvider projectName={projectName} modules={modules}>
+                        <DetailsPanelEntityProvider>
+                          <SelectionCellsProvider>
+                            <SelectedRowsProvider>
+                              <VersionsSelectionProvider>
+                                <CellEditingProvider>{children}</CellEditingProvider>
+                              </VersionsSelectionProvider>
+                            </SelectedRowsProvider>
+                          </SelectionCellsProvider>
+                        </DetailsPanelEntityProvider>
+                      </VPProjectTableProvider>
+                    </EntityListsProvider>
                   </ProjectTableQueriesProvider>
                 </VPColumnSettingsProvider>
               </SettingsPanelProvider>

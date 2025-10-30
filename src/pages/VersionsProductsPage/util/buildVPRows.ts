@@ -24,6 +24,7 @@ export const buildProductRow = (product: ProductNode, subRows: TableRow[]): Tabl
   subType: product.productType,
   version: product.featuredVersion?.version || null,
   versionsCount: product.versions.length,
+  versionName: product.featuredVersion?.name || '',
   author: product.featuredVersion?.author || '',
   thumbnail: {
     entityId: product.featuredVersion?.id || product.id,
@@ -44,6 +45,7 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   createdAt: version.createdAt,
   updatedAt: version.updatedAt,
   version: version.version,
+  versionName: version.name,
   status: version.status,
   tags: version.tags,
   parents: version.parents,

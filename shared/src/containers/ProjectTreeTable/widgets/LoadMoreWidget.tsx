@@ -25,7 +25,6 @@ const LoadMoreWidget: FC<LoadMoreWidgetProps> = ({ label = 'Load more', id, onLo
       <Button
         label={label}
         onClick={(e) => {
-          e.stopPropagation()
           onLoadMore(id)
         }}
         variant="tonal"

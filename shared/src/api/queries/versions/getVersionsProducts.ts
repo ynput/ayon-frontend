@@ -99,7 +99,7 @@ type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
 
 export type GetGroupedVersionsListArgs = {
   projectName: string
-  groups: { filter: string; count: number; value: string }[]
+  groups: { filter: string; count?: number | null; value: string }[]
   productFilter?: string
   taskFilter?: string
   folderIds?: string[]

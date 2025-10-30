@@ -47,7 +47,10 @@ import { useMenuContext } from '../../context/MenuContext'
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
+import useCellContextMenu, {
+  HeaderLabel,
+  ContextMenuItemConstructors,
+} from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
@@ -143,6 +146,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
+  contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -168,6 +172,7 @@ export const ProjectTreeTable = ({
   dndActiveId, // Destructure new prop
   columnsConfig,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
+  contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -619,6 +624,7 @@ export const ProjectTreeTable = ({
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
               onResetView={onResetView}
+              contextMenuItems={propsContextMenuItems}
             />
           </table>
         </Styled.TableContainer>
@@ -931,6 +937,7 @@ interface TableBodyProps {
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
   onResetView?: () => void
+  contextMenuItems?: ContextMenuItemConstructors
 }
 
 const TableBody = ({
@@ -950,6 +957,7 @@ const TableBody = ({
   getRowHeight,
   defaultRowHeight,
   onResetView,
+  contextMenuItems,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -967,7 +975,12 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({
+    attribs,
+    onOpenNew,
+    headerLabels,
+    contextMenuItems,
+  })
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
@@ -1176,9 +1189,6 @@ const TableBodyRow = ({
         const cellId = getCellId(row.id, cell.column.id)
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
-          // Check if this is a restricted entity - disable dragging
-          const isRestricted = isEntityRestricted(row.original.entityType)
-
           return (
             <Styled.TableCell
               key={cell.id + i.toString()}
@@ -1198,7 +1208,6 @@ const TableBodyRow = ({
               })}
               onMouseDown={(e) => e.stopPropagation()} // Prevent selection interference
               onMouseOver={(e) => e.stopPropagation()}
-              // Removed onMouseUp stopPropagation to allow dnd-kit to handle it
               onDoubleClick={(e) => e.stopPropagation()}
               onContextMenu={(e) => {
                 e.preventDefault()
@@ -1272,6 +1281,10 @@ const TableCell = ({
 
   const { isEditing, setEditingCellId } = useCellEditing()
 
+  // Track clicks to prevent selection from interfering with double-click
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lastClickTimeRef = useRef<number>(0)
+
   const borderClasses = getCellBorderClasses(cellId)
 
   const isPinned = cell.column.getIsPinned()
@@ -1337,13 +1350,33 @@ const TableCell = ({
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
+        // Clear any pending selection timer
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+        }
+
+        const now = Date.now()
+        const timeSinceLastClick = now - lastClickTimeRef.current
+        lastClickTimeRef.current = now
+
+        // If this is potentially a double-click (within 300ms), don't start selection yet
+        // The double-click handler will handle the action
+        if (timeSinceLastClick < 300) {
+          return
+        }
+
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
+
         if (e.shiftKey) {
-          // Shift+click extends selection from anchor cell
+          // Shift+click extends selection from anchor cell immediately
           selectCell(cellId, additive, true) // true for range selection
         } else {
-          // Normal click starts a new selection
-          startSelection(cellId, additive)
+          // Delay normal selection to allow double-click to be detected
+          clickTimerRef.current = setTimeout(() => {
+            startSelection(cellId, additive)
+            clickTimerRef.current = null
+          }, 200) // 200ms delay to detect double-click
         }
       }}
       onMouseOver={(e) => {
@@ -1358,6 +1391,12 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        // Cancel any pending selection timer
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+        }
+
         // check if this is a restricted entity - prevent opening details/viewer
         const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
@@ -1370,9 +1409,14 @@ const TableCell = ({
         ) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
+          const additive = e.metaKey || e.ctrlKey
+
+          // Select both the row-selection cell and the name cell
           if (!isCellSelected(rowSelectionCellId)) {
-            const additive = e.metaKey || e.ctrlKey
             selectCell(rowSelectionCellId, additive, false)
+          }
+          if (!isCellSelected(cellId)) {
+            selectCell(cellId, true, false) // additive=true to keep row-selection
           }
         }
         // open the viewer on thumbnail double click

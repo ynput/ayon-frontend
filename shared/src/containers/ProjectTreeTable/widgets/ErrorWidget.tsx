@@ -20,5 +20,5 @@ type ErrorWidgetProps = {
  * Shows a simple label indicating the Error state
  */
 export const ErrorWidget = ({ label }: ErrorWidgetProps) => {
-  return <StyledErrorWidget onClick={(e) => e.stopPropagation()}>{label}</StyledErrorWidget>
+  return <StyledErrorWidget>{label}</StyledErrorWidget>
 }

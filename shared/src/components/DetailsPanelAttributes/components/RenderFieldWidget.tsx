@@ -93,7 +93,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
       )
 
     case !!field.data.enum: {
-      const isListType = type.includes('list')
+      const isListType = type?.includes('list')
       let valueArray = []
 
       if (isListType) {

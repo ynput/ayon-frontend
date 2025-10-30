@@ -589,10 +589,10 @@ const buildTreeTableColumns = ({
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
-        let versionValue = value
+        let versionValue = row.original.versionName || value
         if (row.original.entityType === 'product') {
           // show summary of versions for products
-          versionValue = `${row.original.versionsCount || 0} versions`
+          versionValue = `${row.original.versionName} (${row.original.versionsCount || 0} versions)`
         }
 
         return (
@@ -700,6 +700,7 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'datetime' }}
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly={true}
+            pt={{ date: { showTime: true } }}
           />
         )
       },
@@ -729,6 +730,7 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'datetime' }}
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly={true}
+            pt={{ date: { showTime: true } }}
           />
         )
       },
