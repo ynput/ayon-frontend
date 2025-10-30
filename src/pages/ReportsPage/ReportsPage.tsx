@@ -7,10 +7,11 @@ import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useViewsContext, useReportsViewSettings } from '@shared/containers/Views'
 
 interface ReportsPageProps {}
 
-const ReportsPage: FC<ReportsPageProps> = ({}) => {
+const ReportsPage: FC<ReportsPageProps> = () => {
   const projectName = (useAppSelector((state) => state.project.name) as null | string) || ''
 
   const {
@@ -21,6 +22,10 @@ const ReportsPage: FC<ReportsPageProps> = ({}) => {
     rowSelectionData,
   } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
+
+  const viewsContext = useViewsContext()
+
+  const { onUpdateWidgets, onUpdateDateFormat } = useReportsViewSettings()
 
   const [Reports, { isLoaded, outdated }] = useLoadModule({
     addon: 'reports',
@@ -60,6 +65,11 @@ const ReportsPage: FC<ReportsPageProps> = ({}) => {
               type: sliceType,
               persistentRowSelectionData,
               setPersistentRowSelectionData,
+            }}
+            views={{
+              ...viewsContext,
+              onUpdateWidgets,
+              onUpdateDateFormat,
             }}
           />
         </SplitterPanel>
