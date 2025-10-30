@@ -234,11 +234,26 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const onUpdateColumns = useCallback(
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
       const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
-      await updateViewSettings(settings, setLocalColumns, tableSettings, {
-        errorMessage: 'Failed to update columns',
-      })
+      // If enabling groupBy, disable showProducts
+      if (settings.groupBy && showProducts) {
+        // @ts-expect-error - showProducts exists
+        settings.showProducts = false
+      }
+      await updateViewSettings(
+        settings,
+        () => {
+          setLocalColumns(tableSettings)
+          if (settings.groupBy && showProducts) {
+            setLocalShowProducts(false)
+          }
+        },
+        tableSettings,
+        {
+          errorMessage: 'Failed to update columns',
+        },
+      )
     },
-    [updateViewSettings],
+    [updateViewSettings, showProducts],
   )
 
   // Slicer type update handler
@@ -254,14 +269,24 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   // Show products update handler
   const onUpdateShowProducts = useCallback(
     async (newShowProducts: boolean) => {
+      const settings: any = { showProducts: newShowProducts }
+      // If enabling showProducts, disable groupBy
+      if (newShowProducts && groupBy) {
+        settings.groupBy = undefined
+      }
       await updateViewSettings(
-        { showProducts: newShowProducts },
-        setLocalShowProducts,
+        settings,
+        () => {
+          setLocalShowProducts(newShowProducts)
+          if (newShowProducts && groupBy) {
+            setLocalGroupBy(undefined)
+          }
+        },
         newShowProducts,
         { errorMessage: 'Failed to update stacked view setting' },
       )
     },
-    [updateViewSettings],
+    [updateViewSettings, groupBy],
   )
 
   // Show grid update handler
@@ -317,11 +342,27 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   // Group by update handler
   const onUpdateGroupBy = useCallback(
     async (newGroupBy: string | undefined) => {
-      await updateViewSettings({ groupBy: newGroupBy }, setLocalGroupBy, newGroupBy, {
-        errorMessage: 'Failed to update group by setting',
-      })
+      const settings: any = { groupBy: newGroupBy }
+      // If enabling groupBy, disable showProducts
+      if (newGroupBy && showProducts) {
+        settings.showProducts = false
+      }
+      console.log(settings)
+      await updateViewSettings(
+        settings,
+        () => {
+          setLocalGroupBy(newGroupBy)
+          if (newGroupBy && showProducts) {
+            setLocalShowProducts(false)
+          }
+        },
+        newGroupBy,
+        {
+          errorMessage: 'Failed to update group by setting',
+        },
+      )
     },
-    [updateViewSettings],
+    [updateViewSettings, showProducts],
   )
 
   // Show empty groups update handler
