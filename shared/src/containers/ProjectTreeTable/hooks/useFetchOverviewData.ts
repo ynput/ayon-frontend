@@ -12,6 +12,8 @@ import type {
   QueryTasksFoldersApiArg,
   QueryFilter,
 } from '@shared/api'
+import { useGroupedPagination } from '@shared/hooks'
+import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
@@ -21,7 +23,7 @@ import { TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
 import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
-import { ProjectTableModulesType } from './useProjectTableModules'
+import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
@@ -317,53 +319,20 @@ export const useFetchOverviewData = ({
     return tasksListInfiniteData.pages.flatMap((page) => page.tasks || [])
   }, [tasksListInfiniteData?.pages])
 
-  const initGroupPageCounts = useMemo(() => {
-    return taskGroups.reduce((acc, group) => {
-      acc[group.value] = 1 // initialize each group with 1 count
-      return acc
-    }, {} as Record<string, number>)
-  }, [taskGroups])
-  const [groupPageCounts, setGroupPageCounts] = useState<Record<string, number>>({})
-
-  // when initGroupPageCounts changes, set it to groupPageCounts
-  useEffect(() => {
-    const hasInitData = Object.keys(initGroupPageCounts).length > 0
-    const hasCurrentData = Object.keys(groupPageCounts).length > 0
-
-    if (hasInitData && !hasCurrentData) {
-      setGroupPageCounts(initGroupPageCounts)
-    }
-  }, [initGroupPageCounts])
+  const { pageCounts: groupPageCounts, incrementPageCount } = useGroupedPagination({
+    groups: taskGroups,
+  })
 
   // for grouped tasks, we fetch all tasks for each group
   // we do this by building a list of groups with filters for that group
+  const groupByDataType = getGroupByDataType(groupBy, attribFields)
 
-  // get the data type for the groupBy
-  const groupByDataType = useMemo(() => {
-    if (!groupBy?.id) return 'string'
-
-    const groupById = groupBy.id
-
-    // Handle special cases for built-in group types
-    if (groupById === 'assignees' || groupById === 'tags') {
-      return 'list_of_strings'
-    }
-
-    // Handle attribute-based grouping (format: "attrib.attributeName")
-    if (groupById.startsWith('attrib.')) {
-      const attributeName = groupById.split('.')[1]
-      const attribute = attribFields.find((field) => field.name === attributeName)
-      return attribute?.data?.type || 'string'
-    }
-
-    // Default fallback
-    return 'string'
-  }, [groupBy?.id, attribFields])
-
+  // get group queries from powerpack
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
     return groupBy
       ? getGroupQueries?.({
-          taskGroups,
+          groups: taskGroups,
+          taskGroups, // deprecated, but keep for backward compatibility
           filters: queryFilters.filter,
           groupBy,
           groupPageCounts,
@@ -416,12 +385,7 @@ export const useFetchOverviewData = ({
     if (groupBy) {
       if (group && group in groupPageCounts) {
         console.log('fetching next page for group:', group)
-        // fetch next page for a specific group by increasing the count in groupPageCounts
-        setGroupPageCounts((prevCounts) => {
-          const newCounts = { ...prevCounts }
-          newCounts[group] = (newCounts[group] || 1) + 1 // increment the count for this group
-          return newCounts
-        })
+        incrementPageCount(group)
       }
     } else if (hasNextPage) {
       console.log('fetching next page')

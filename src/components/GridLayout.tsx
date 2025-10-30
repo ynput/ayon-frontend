@@ -1,21 +1,26 @@
-import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import React from 'react'
+import React, { ReactNode } from 'react'
 import clsx from 'clsx'
 
-const StyledGridLayout = styled.div`
+const StyledGridLayout = styled.div<{ $minWidth: number }>`
   width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(${({ $minWidth }) => $minWidth}px, 1fr));
   grid-auto-rows: 1fr;
-  gap: 12px;
+  gap: var(--base-gap-large);
 
   @media (max-width: 425px) {
     grid-template-columns: 1fr 1fr;
   }
 `
 
-const GridLayout = React.forwardRef(
+interface GridLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
+  minWidth: number
+  ratio: number
+  children: ReactNode[]
+}
+
+const GridLayout = React.forwardRef<HTMLDivElement, GridLayoutProps>(
   ({ children = [], minWidth = 130, ratio = 1, ...props }, ref) => {
     return (
       <StyledGridLayout {...props} ref={ref} $minWidth={minWidth}>
@@ -25,7 +30,7 @@ const GridLayout = React.forwardRef(
               aspectRatio: `${ratio} / 1`,
             }}
             key={index}
-            className={clsx('grid-item', child.props.className)}
+            className={clsx('grid-item')}
           >
             {child}
           </div>
@@ -34,13 +39,5 @@ const GridLayout = React.forwardRef(
     )
   },
 )
-
-GridLayout.displayName = 'GridLayout'
-
-GridLayout.propTypes = {
-  children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node]).isRequired,
-  ratio: PropTypes.number,
-  minWidth: PropTypes.number,
-}
 
 export default GridLayout

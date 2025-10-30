@@ -36,24 +36,37 @@ export type TableRow = {
   tags?: string[]
   status?: string
   updatedAt?: string
-  createdAt: string
+  createdAt?: string
   parentId?: string
-  folderId: string | null // all entities have a folder except root folders which will be null
+  folderId?: string | null // all entities have a folder except root folders which will be null
   parents?: string[]
-  subRows: TableRow[]
+  folder?: string // parent folder name
+  product?: string // product name of product and version parent
+  subRows?: TableRow[]
   icon?: string | null
   color?: string | null
   img?: string | null
   hasReviewables?: boolean
   hasVersions?: boolean
+  version?: number | null // for versions
+  versionsCount?: number // for products
+  versionName?: string // for versions
   startContent?: JSX.Element
   assignees?: string[]
+  author?: string
   attrib?: Record<string, any>
-  links: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
+  links?: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
+  metaType?: 'empty' | 'error' // signals the row is a meta row (empty or error state)
   group?: GroupData // signals it is a group row and has some extra data like label, color, icon
+  thumbnail?: {
+    // if you want to use a thumbnail from a different entity, e.g. latest version of a product
+    entityId: string
+    entityType: string
+    updatedAt: string | undefined
+  }
 }
 
 export type MatchingFolder = FolderListItem & {

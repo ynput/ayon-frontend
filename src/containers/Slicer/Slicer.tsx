@@ -8,9 +8,10 @@ import { SliceType } from '@shared/containers/Slicer'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
+import { SliceTypeField } from './types'
 
 interface SlicerProps {
-  sliceFields: SliceType[]
+  sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
 }
@@ -44,8 +45,11 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
   // on first mount, check that current sliceType is in sliceFields, if not, change to first option
   useEffect(() => {
     const isAttribute = sliceType.startsWith('attrib.')
-    if (!sliceFields.includes(sliceType) && !(isAttribute && sliceFields.includes('attributes'))) {
-      handleSliceTypeChange(sliceFields[0], false, false)
+    if (
+      !sliceFields.some((field) => field.value === sliceType) &&
+      !(isAttribute && sliceFields.some((field) => field.value === 'attributes'))
+    ) {
+      handleSliceTypeChange(sliceFields[0].value, false, false)
     }
   }, [])
 
@@ -55,8 +59,8 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
         <SlicerDropdown
           options={sliceOptions || []}
           value={[sliceType]}
-          sliceTypes={sliceFields}
-          onChange={(value) =>
+          sliceTypes={sliceFields.map((field) => field.value)}
+          onChange={(value: any) =>
             handleSliceTypeChange(
               value[0] as SliceType,
               persistFieldId === sliceType,

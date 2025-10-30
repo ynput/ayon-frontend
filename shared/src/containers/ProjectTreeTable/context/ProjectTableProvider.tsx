@@ -43,7 +43,7 @@ import useBuildGroupByTableData, {
 } from '../hooks/useBuildGroupByTableData'
 import { PowerpackContextType } from '@shared/context'
 import { useColumnSettingsContext } from './ColumnSettingsContext'
-import { ProjectTableModulesType } from '../hooks'
+import { ProjectTableModulesType } from '@shared/hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
 
 export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
@@ -78,7 +78,8 @@ export interface ProjectTableProviderProps {
   tableRows?: TableRow[] // any extra rows that we want to add to the table
 
   // grouping
-  taskGroups: EntityGroup[]
+  groups: EntityGroup[]
+  groupRowFunc?: (node: any) => TableRow
 
   // data functions
   fetchNextPage: (value?: string) => void
@@ -127,6 +128,8 @@ export interface ProjectTableProviderProps {
     },
     config?: { quickView?: boolean },
   ) => void
+  // views
+  onResetView?: () => void
 }
 
 export const ProjectTableProvider = ({
@@ -148,7 +151,8 @@ export const ProjectTableProvider = ({
   users,
   attribFields,
   scopes,
-  taskGroups,
+  groups,
+  groupRowFunc,
   filters,
   setFilters,
   queryFilters,
@@ -165,6 +169,8 @@ export const ProjectTableProvider = ({
   // player
   playerOpen,
   onOpenPlayer,
+  // views
+  onResetView,
 }: ProjectTableProviderProps) => {
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
@@ -184,17 +190,23 @@ export const ProjectTableProvider = ({
 
   const buildGroupByTableData = useBuildGroupByTableData({
     entities: entitiesMap,
-    entityType: groupByConfig?.entityType,
-    groups: taskGroups,
+    entityType: groupByConfig?.entityType || 'unknown',
+    groups: groups,
     project: projectInfo,
     attribFields,
     showEmpty: showEmptyGroups,
+    groupRowFunc,
   })
+
+  const attribFieldsScoped = useMemo(
+    () => attribFields.filter((attrib) => attrib.scope?.some((scope) => scopes.includes(scope))),
+    [attribFields, scopes],
+  )
 
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
     () => !!groupBy && buildGroupByTableData(groupBy),
-    [groupBy, entitiesMap, taskGroups],
+    [groupBy, entitiesMap, groups],
   )
 
   const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
@@ -309,6 +321,7 @@ export const ProjectTableProvider = ({
         error,
         projectInfo,
         attribFields,
+        attribFieldsScoped,
         scopes,
         users,
         projectName,
@@ -317,7 +330,7 @@ export const ProjectTableProvider = ({
         entitiesMap,
         fetchNextPage,
         reloadTableData,
-        taskGroups,
+        groups,
         // filters
         filters,
         setFilters,
@@ -346,6 +359,8 @@ export const ProjectTableProvider = ({
         // player
         playerOpen,
         onOpenPlayer,
+        // views
+        onResetView,
       }}
     >
       {children}

@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
-import BrowserPage from '../BrowserPage'
+import VersionsProductsPage from '../VersionsProductsPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
 import ProjectAddon from '../ProjectAddon'
@@ -34,6 +34,7 @@ import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
+import BrowserPage from '@pages/BrowserPage'
 
 type NavLink = {
   name?: string
@@ -43,6 +44,7 @@ type NavLink = {
   uriSync?: boolean
   enabled?: boolean
   node?: React.ReactNode
+  deprecated?: boolean | string
 }
 
 const ProjectContextInfo = () => {
@@ -145,6 +147,14 @@ const ProjectPage = () => {
         name: 'Browser',
         path: `/projects/${projectName}/browser`,
         module: 'browser',
+        uriSync: true,
+        deprecated: true,
+      },
+      {
+        name: 'Products',
+        path: `/projects/${projectName}/products`,
+        module: 'products',
+        viewType: 'versions',
         uriSync: true,
       },
       {
@@ -251,6 +261,9 @@ const ProjectPage = () => {
     if (module === 'browser') {
       return <BrowserPage projectName={projectName} />
     }
+    if (module === 'products') {
+      return <VersionsProductsPage projectName={projectName} />
+    }
     if (module === 'lists') {
       return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
     }
@@ -298,14 +311,14 @@ const ProjectPage = () => {
       )
     }
 
-    // Fallback to browser page if no addon matches addonName
+    // Fallback to versions page if no addon matches addonName
     return <Navigate to={`/projects/${projectName}/overview`} />
   }
 
   const child = getPageByModuleAndAddonData(module, addonName)
 
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
-    // focus the new version in the browser
+    // focus the new version in the versions
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 

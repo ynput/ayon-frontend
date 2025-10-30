@@ -9,14 +9,28 @@ export interface DateWidgetProps
   value?: string
   isReadOnly?: boolean
   isInherited?: boolean
+  showTime?: boolean
 }
 
 export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
-  ({ value, isEditing, isReadOnly, isInherited, onChange, onCancelEdit, ...props }, ref) => {
+  (
+    {
+      value,
+      isEditing,
+      isReadOnly,
+      isInherited,
+      onChange,
+      onCancelEdit,
+      showTime = false,
+      ...props
+    },
+    ref,
+  ) => {
     let dateString = ''
     if (value) {
       try {
-          dateString = format(new Date(value), 'dd-MM-yyyy')
+        const formatString = showTime ? 'dd-MM-yyyy HH:mm:ss' : 'dd-MM-yyyy'
+        dateString = format(new Date(value), formatString)
       } catch (error) {
         console.error('Invalid date value:', value)
         dateString = 'Invalid Date'
@@ -37,7 +51,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
     }
 
     return (
-      <span {...props} ref={ref}>
+      <span {...props} ref={ref} style={{ whiteSpace: 'nowrap' }}>
         {dateString}
       </span>
     )

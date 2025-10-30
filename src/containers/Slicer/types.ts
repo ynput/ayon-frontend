@@ -2,10 +2,10 @@ import { OnSliceTypeChange } from '@context/SlicerContext'
 import { SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 
-export interface SliceOption {
+export interface SliceTypeField {
   value: SliceType
-  label: string
-  icon: string
+  label?: string
+  icon?: string
 }
 
 export interface SlicerTableProps {
@@ -33,7 +33,7 @@ export interface Slice {
 export type SliceMap = Map<string, SimpleTableRow>
 
 export interface TableData {
-  sliceOptions: SliceOption[]
+  sliceOptions: SliceTypeField[]
   table: Slice
   sliceMap: SliceMap
   isLoading: boolean

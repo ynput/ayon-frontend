@@ -28,6 +28,7 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
@@ -46,7 +47,10 @@ import { useMenuContext } from '../../context/MenuContext'
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
+import useCellContextMenu, {
+  HeaderLabel,
+  ContextMenuItemConstructors,
+} from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import useDynamicRowHeight from './hooks/useDynamicRowHeight'
@@ -62,7 +66,7 @@ import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
@@ -80,7 +84,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
-import { useSelector } from 'react-redux'
+import { upperFirst } from 'lodash'
+import { ColumnsConfig } from './types/columnConfig'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
@@ -95,6 +100,7 @@ declare module '@tanstack/react-table' {
     updateEntities?: CellUpdate
     toggleExpandAll?: ToggleExpandAll
     selection?: string[]
+    columnsConfig?: ColumnsConfig
   }
 }
 
@@ -129,12 +135,18 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onOpenNew?: (type: 'folder' | 'task') => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
+  excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
+  includeLinks?: boolean
   isLoading?: boolean
+  isExpandable?: boolean // if true, show the expand/collapse icons
   clientSorting?: boolean
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
+  columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
+  onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
+  contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -149,12 +161,18 @@ export const ProjectTreeTable = ({
   onOpenNew,
   readOnly,
   excludedColumns,
+  excludedSorting,
   extraColumns,
+  includeLinks,
   isLoading: isLoadingProp,
+  isExpandable,
   clientSorting = false,
   sortableRows = false,
   onRowReorder,
   dndActiveId, // Destructure new prop
+  columnsConfig,
+  onScrollBottomGroupBy, // Destructure new prop for group-by load more
+  contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -189,8 +207,9 @@ export const ProjectTreeTable = ({
     toggleExpandAll,
     showHierarchy,
     fetchNextPage,
-    scopes,
+    scopes, // or entityTypes
     getEntityById,
+    onResetView,
   } = useProjectTableContext()
 
   const { projectName: contextProjectName, writableFields } = useProjectDataContext()
@@ -231,7 +250,6 @@ export const ProjectTreeTable = ({
     const tableRowsCount = tableContainerRef.current?.querySelectorAll('tbody tr').length || 0
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
-      attribFields,
       showHierarchy && tableData.length > 0
         ? Math.min(tableRowsCount, 50)
         : groupBy
@@ -299,15 +317,22 @@ export const ProjectTreeTable = ({
     () => (isInitialized ? attribFields : loadingAttrib),
     [attribFields, loadingAttrib, isInitialized],
   )
+
+  const getNameLabelHeader = () => scopes.map((s) => upperFirst(s)).join(' / ')
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
+      scopes,
       attribs: columnAttribs,
       links: linkTypes,
+      includeLinks,
       showHierarchy,
       options,
       extraColumns,
       excluded: excludedColumns,
+      excludedSorting,
       groupBy,
+      nameLabel: getNameLabelHeader(),
     })
 
     if (sortableRows) {
@@ -328,7 +353,19 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
+  }, [
+    scopes,
+    columnAttribs,
+    showHierarchy,
+    isExpandable,
+    options,
+    linkTypes,
+    includeLinks,
+    extraColumns,
+    excludedColumns,
+    excludedSorting,
+    sortableRows,
+  ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date
   useEffect(() => {
@@ -347,7 +384,7 @@ export const ProjectTreeTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: () => true,
+    getRowCanExpand: () => !!isExpandable || showHierarchy || isGrouping,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -400,8 +437,9 @@ export const ProjectTreeTable = ({
       readOnly: readOnlyColumns,
       updateEntities: handleCellUpdate,
       toggleExpandAll,
-      loadMoreTasks: fetchNextPage,
+      loadMoreRows: fetchNextPage,
       selection: Array.from(selectedCells),
+      columnsConfig,
     },
   })
 
@@ -475,8 +513,21 @@ export const ProjectTreeTable = ({
           }
         }
       }
+
+      // Handle scroll-to-bottom for grouped data
+      if (onScrollBottomGroupBy && groupBy) {
+        const containerRefElement = e.currentTarget
+        // look for a load more button
+        const loadMoreButton = containerRefElement?.querySelector('.load-more')
+        // get load more button id
+        const loadMoreButtonId = loadMoreButton?.getAttribute('id')
+        const groupValue = loadMoreButtonId?.split('-')[2] // assuming the id is in the format 'load-more-groupValue'
+        if (groupValue) {
+          onScrollBottomGroupBy(groupValue)
+        }
+      }
     },
-    [onScroll, onScrollBottom, showHierarchy, groupBy, isLoading],
+    [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
   )
 
   // Get move entity functions for the dialog
@@ -568,9 +619,12 @@ export const ProjectTreeTable = ({
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
               error={error}
+              isLoading={isLoading}
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
+              onResetView={onResetView}
+              contextMenuItems={propsContextMenuItems}
             />
           </table>
         </Styled.TableContainer>
@@ -878,9 +932,12 @@ interface TableBodyProps {
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string
+  isLoading: boolean
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
+  onResetView?: () => void
+  contextMenuItems?: ContextMenuItemConstructors
 }
 
 const TableBody = ({
@@ -895,9 +952,12 @@ const TableBody = ({
   rowOrderIds,
   sortableRows,
   error,
+  isLoading,
   isGrouping,
   getRowHeight,
   defaultRowHeight,
+  onResetView,
+  contextMenuItems,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -915,7 +975,12 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const cellContextMenuHook = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({
+    attribs,
+    onOpenNew,
+    headerLabels,
+    contextMenuItems,
+  })
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
@@ -997,7 +1062,39 @@ const TableBody = ({
     return (
       tableContainerRef.current &&
       createPortal(
-        <EmptyPlaceholder message="No items found" error={error} />,
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found" error={error}>
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
+        tableContainerRef.current,
+      )
+    )
+  }
+
+  if (!rows.length && !isLoading) {
+    return (
+      tableContainerRef.current &&
+      createPortal(
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found">
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
         tableContainerRef.current,
       )
     )
@@ -1092,9 +1189,6 @@ const TableBodyRow = ({
         const cellId = getCellId(row.id, cell.column.id)
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
-          // Check if this is a restricted entity - disable dragging
-          const isRestricted = isEntityRestricted(row.original.entityType)
-
           return (
             <Styled.TableCell
               key={cell.id + i.toString()}
@@ -1114,7 +1208,6 @@ const TableBodyRow = ({
               })}
               onMouseDown={(e) => e.stopPropagation()} // Prevent selection interference
               onMouseOver={(e) => e.stopPropagation()}
-              // Removed onMouseUp stopPropagation to allow dnd-kit to handle it
               onDoubleClick={(e) => e.stopPropagation()}
               onContextMenu={(e) => {
                 e.preventDefault()
@@ -1188,6 +1281,10 @@ const TableCell = ({
 
   const { isEditing, setEditingCellId } = useCellEditing()
 
+  // Track clicks to prevent selection from interfering with double-click
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lastClickTimeRef = useRef<number>(0)
+
   const borderClasses = getCellBorderClasses(cellId)
 
   const isPinned = cell.column.getIsPinned()
@@ -1209,7 +1306,8 @@ const TableCell = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
-          'folder-in-hierarchy': showHierarchy && cell.row.original.entityType === 'folder',
+          expandable:
+            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.entityType),
           'multiple-selected': isMultipleSelected,
         },
         className,
@@ -1252,13 +1350,33 @@ const TableCell = ({
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
+        // Clear any pending selection timer
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+        }
+
+        const now = Date.now()
+        const timeSinceLastClick = now - lastClickTimeRef.current
+        lastClickTimeRef.current = now
+
+        // If this is potentially a double-click (within 300ms), don't start selection yet
+        // The double-click handler will handle the action
+        if (timeSinceLastClick < 300) {
+          return
+        }
+
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
+
         if (e.shiftKey) {
-          // Shift+click extends selection from anchor cell
+          // Shift+click extends selection from anchor cell immediately
           selectCell(cellId, additive, true) // true for range selection
         } else {
-          // Normal click starts a new selection
-          startSelection(cellId, additive)
+          // Delay normal selection to allow double-click to be detected
+          clickTimerRef.current = setTimeout(() => {
+            startSelection(cellId, additive)
+            clickTimerRef.current = null
+          }, 200) // 200ms delay to detect double-click
         }
       }}
       onMouseOver={(e) => {
@@ -1273,6 +1391,12 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        // Cancel any pending selection timer
+        if (clickTimerRef.current) {
+          clearTimeout(clickTimerRef.current)
+          clickTimerRef.current = null
+        }
+
         // check if this is a restricted entity - prevent opening details/viewer
         const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
@@ -1285,9 +1409,14 @@ const TableCell = ({
         ) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
+          const additive = e.metaKey || e.ctrlKey
+
+          // Select both the row-selection cell and the name cell
           if (!isCellSelected(rowSelectionCellId)) {
-            const additive = e.metaKey || e.ctrlKey
             selectCell(rowSelectionCellId, additive, false)
+          }
+          if (!isCellSelected(cellId)) {
+            selectCell(cellId, true, false) // additive=true to keep row-selection
           }
         }
         // open the viewer on thumbnail double click

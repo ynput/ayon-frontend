@@ -23,6 +23,10 @@ const StyledBaseTextWidget = styled.span`
     margin-top: 18px;
     height: 40px;
   }
+
+  &.regular {
+    display: block;
+  }
 `
 
 const StyledLink = styled.a`
@@ -32,7 +36,7 @@ const StyledLink = styled.a`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -51,7 +55,7 @@ const isValidUrl = (text: string): boolean => {
 // Function to parse text and extract URLs
 const parseTextWithUrls = (text: string) => {
   // Regex to match HTTP/HTTPS URLs
-  const urlRegex = /(https?:\/\/[^\s<>"]+[^\s.,!?;:<>\")\]])/gi;
+  const urlRegex = /(https?:\/\/[^\s<>"]+[^\s.,!?;:<>\")\]])/gi
   const parts = text.split(urlRegex)
 
   return parts.map((part, index) => {
@@ -67,7 +71,6 @@ const containsHtml = (text: string): boolean => {
   return /<[^>]*>/.test(text)
 }
 
-
 type AttributeType = AttributeData['type']
 export type TextWidgetType = Extract<AttributeType, 'string' | 'integer' | 'float'>
 
@@ -82,21 +85,43 @@ export interface TextWidgetProps
 }
 
 export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
-  ({ value, option, isEditing, isInherited, onChange, onCancelEdit, style, type, columnId, className, ...props }, ref) => {
+  (
+    {
+      value,
+      option,
+      isEditing,
+      isInherited,
+      onChange,
+      onCancelEdit,
+      style,
+      type,
+      columnId,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     const handleLinkClick = useCallback((e: React.MouseEvent, url: string) => {
-      e.stopPropagation()
       window.open(url, '_blank', 'noopener,noreferrer')
     }, [])
 
     if (isEditing) {
       return (
-        <TextWidgetInput value={value} onChange={onChange} onCancel={onCancelEdit} type={type || 'string'} />
+        <TextWidgetInput
+          value={value}
+          onChange={onChange}
+          onCancel={onCancelEdit}
+          type={type || 'string'}
+        />
       )
     }
 
     const displayText = option?.label || value
     const textValue = typeof displayText === 'string' ? displayText : String(displayText || '')
     const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
+    // does the content contain only regular text?
+    const isRegularText =
+      !isDescriptionColumn && !containsHtml(textValue) && !textValue.match(/(https?:\/\/\S+)/gi)
 
     const renderContent = () => {
       // For description columns, keep markdown rendering
@@ -144,7 +169,11 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
               </StyledLink>
             )
           }
-          return <span key={part.key} style={{ whiteSpace: 'pre-line' }}>{part.content}</span>
+          return (
+            <span key={part.key} style={{ whiteSpace: 'pre-line' }}>
+              {part.content}
+            </span>
+          )
         })
       }
 
@@ -178,10 +207,16 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
 
     const combinedClassName = clsx(className, EDIT_TRIGGER_CLASS, {
       markdown: isDescriptionColumn,
+      regular: isRegularText,
     })
 
     return (
-      <StyledBaseTextWidget className={combinedClassName} style={{ color: option?.color, ...style }} {...props} ref={ref}>
+      <StyledBaseTextWidget
+        className={combinedClassName}
+        style={{ color: option?.color, ...style }}
+        {...props}
+        ref={ref}
+      >
         {option?.icon && (
           <Icon
             icon={option.icon}
