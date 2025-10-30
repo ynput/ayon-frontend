@@ -19,7 +19,7 @@ const addTemplateToItems = (
     setPowerpackDialog?: (feature: PowerpackFeature | null) => void
   },
 ): ContextMenuItemType[] => {
-  return items.map((item) => {
+  return items.filter(Boolean).map((item) => {
     const newItem: ContextMenuItemType = {
       ...item,
       template: (
@@ -58,7 +58,7 @@ export const useCreateContextMenu = (
       menuList: ContextMenuItemType[],
       ref: RefObject<{ hide: () => void }>,
     ): ContextMenuItemType[] => {
-      return menuList.map((item) => ({
+      return menuList.filter(Boolean).map((item) => ({
         template: (
           <ContextMenuItem
             key={item.label}

@@ -11,7 +11,7 @@ interface VPTableProps {
 const VPTable: FC<VPTableProps> = ({ readOnly = [] }) => {
   const { fetchNextPage, isLoading } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
-  const { deleteVersionItem } = useVPContextMenuContext()
+  const { deleteVersionItem, deleteProductItem } = useVPContextMenuContext()
 
   return (
     <ProjectTreeTable
@@ -30,7 +30,13 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [] }) => {
           display: { path_compact: false, path_full: true },
         },
       }}
-      contextMenuItems={['copy-paste', 'show-details', 'open-viewer', deleteVersionItem]}
+      contextMenuItems={[
+        'copy-paste',
+        'show-details',
+        'open-viewer',
+        deleteVersionItem,
+        deleteProductItem,
+      ]}
     />
   )
 }
