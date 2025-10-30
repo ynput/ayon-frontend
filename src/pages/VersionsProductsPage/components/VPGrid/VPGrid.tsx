@@ -50,6 +50,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
+  const gridContainerGroupRef = useRef<HTMLDivElement | null>(null)
 
   // Track expanded state - by default groups are expanded (not in the map)
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -414,6 +415,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
                   ratio={1.777777}
                   minWidth={gridHeight}
                   style={{ outline: 'none' }}
+                  ref={gridContainerGroupRef}
                   tabIndex={-1}
                 >
                   {groupEntities.map((entity, index) => (
@@ -422,7 +424,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
                       entity={entity}
                       index={index}
                       projectInfo={projectInfo}
-                      gridContainerRef={gridContainerRef}
+                      root={gridContainerGroupRef.current}
                       isEntitySelected={isEntitySelected}
                       handleCardClick={handleCardClick}
                       handleDoubleClick={handleDoubleClick}
@@ -456,7 +458,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
             entity={entity}
             index={index}
             projectInfo={projectInfo}
-            gridContainerRef={gridContainerRef}
+            root={gridContainerRef.current}
             isEntitySelected={isEntitySelected}
             handleCardClick={handleCardClick}
             handleDoubleClick={handleDoubleClick}
