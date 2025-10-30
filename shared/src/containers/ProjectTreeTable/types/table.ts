@@ -50,6 +50,7 @@ export type TableRow = {
   hasVersions?: boolean
   version?: number | null // for versions
   versionsCount?: number // for products
+  versionName?: string // for versions
   startContent?: JSX.Element
   assignees?: string[]
   author?: string
