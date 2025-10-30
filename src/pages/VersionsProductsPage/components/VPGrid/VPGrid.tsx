@@ -387,6 +387,14 @@ const VPGrid: FC<VPGridProps> = ({}) => {
     )
   }
 
+  if (!gridData.length) {
+    return (
+      <GridContainer>
+        <EmptyPlaceholder message="No versions or products found." />
+      </GridContainer>
+    )
+  }
+
   // Render with grouping
   if (groupBy && !showProducts) {
     return (
