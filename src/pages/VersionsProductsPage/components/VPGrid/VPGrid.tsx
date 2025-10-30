@@ -348,13 +348,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   if (isLoading) {
     return (
       <GridContainer>
-        <GridLayout
-          ref={gridContainerRef}
-          ratio={1.777777}
-          minWidth={190}
-          onScroll={handleScroll}
-          tabIndex={-1}
-        >
+        <GridLayout ref={gridContainerRef} ratio={1.777777} minWidth={190} onScroll={handleScroll}>
           {Array.from({ length: 20 }).map((_, index) => (
             <EntityCard
               key={index}
@@ -398,12 +392,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   // Render with grouping
   if (groupBy && !showProducts) {
     return (
-      <GridContainer
-        ref={gridContainerRef}
-        onScroll={handleScroll}
-        tabIndex={-1}
-        data-grid-container="true"
-      >
+      <GridContainer ref={gridContainerRef} onScroll={handleScroll} data-grid-container="true">
         {Object.entries(groupedData).map(([groupValue, groupEntities]) => {
           // Find the group metadata
           const group =
@@ -436,12 +425,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
                 onToggle={() => handleGroupToggle(groupValue)}
               />
               {isExpanded && (
-                <GridLayout
-                  ratio={1.777777}
-                  minWidth={gridHeight}
-                  style={{ outline: 'none' }}
-                  tabIndex={-1}
-                >
+                <GridLayout ratio={1.777777} minWidth={gridHeight} style={{ outline: 'none' }}>
                   {groupEntities.map((entity, index) => (
                     <VPGridCard
                       key={entity.id}
@@ -472,7 +456,6 @@ const VPGrid: FC<VPGridProps> = ({}) => {
         ratio={1.777777}
         minWidth={gridHeight}
         onScroll={handleScroll}
-        tabIndex={-1}
         data-grid-container="true"
       >
         {gridData.map((entity, index) => (
