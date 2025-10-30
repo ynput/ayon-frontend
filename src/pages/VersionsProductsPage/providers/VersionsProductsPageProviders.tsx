@@ -15,7 +15,6 @@ import { VersionsDataProvider } from '../context/VPDataContext'
 import { VPViewsProvider } from '../context/VPViewsContext'
 import { VersionsSelectionProvider } from '../context/VPSelectionContext'
 import { VPFocusProvider } from '../context/VPFocusContext'
-import { VPContextMenuProvider } from '../context/VPContextMenuContext'
 import { useGroupByRemoteModules } from '@shared/hooks'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 
@@ -46,13 +45,11 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
                       <VPProjectTableProvider projectName={projectName} modules={modules}>
                         <DetailsPanelEntityProvider>
                           <SelectionCellsProvider>
-                            <VPContextMenuProvider>
-                              <SelectedRowsProvider>
-                                <VersionsSelectionProvider>
-                                  <CellEditingProvider>{children}</CellEditingProvider>
-                                </VersionsSelectionProvider>
-                              </SelectedRowsProvider>
-                            </VPContextMenuProvider>
+                            <SelectedRowsProvider>
+                              <VersionsSelectionProvider>
+                                <CellEditingProvider>{children}</CellEditingProvider>
+                              </VersionsSelectionProvider>
+                            </SelectedRowsProvider>
                           </SelectionCellsProvider>
                         </DetailsPanelEntityProvider>
                       </VPProjectTableProvider>

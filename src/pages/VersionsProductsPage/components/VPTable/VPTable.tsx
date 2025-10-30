@@ -2,16 +2,17 @@ import { ProjectTreeTable } from '@shared/containers'
 import { FC } from 'react'
 import { useVersionsDataContext } from '../../context/VPDataContext'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
-import { useVPContextMenuContext } from '../../context/VPContextMenuContext'
+import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 
 interface VPTableProps {
   readOnly?: string[]
+  contextMenuItems: VPContextMenuItems
 }
 
-const VPTable: FC<VPTableProps> = ({ readOnly = [] }) => {
+const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { fetchNextPage, isLoading } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
-  const { deleteVersionItem, deleteProductItem } = useVPContextMenuContext()
+  const { deleteVersionItem, deleteProductItem } = contextMenuItems
 
   return (
     <ProjectTreeTable

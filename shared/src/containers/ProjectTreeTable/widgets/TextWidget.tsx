@@ -102,7 +102,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     ref,
   ) => {
     const handleLinkClick = useCallback((e: React.MouseEvent, url: string) => {
-      e.stopPropagation()
       window.open(url, '_blank', 'noopener,noreferrer')
     }, [])
 

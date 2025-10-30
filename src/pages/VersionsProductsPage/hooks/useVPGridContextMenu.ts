@@ -7,15 +7,15 @@ import {
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
 } from '@shared/containers'
-import { useVPContextMenuContext } from '../context/VPContextMenuContext'
+import { VPContextMenuItems } from './useVPContextMenu'
 import { useVersionsDataContext } from '../context/VPDataContext'
 
 const GRID_COLUMN_ID = 'name'
 
-export const useVPGridContextMenu = () => {
+export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
   const { showDetailsItem, openViewerItem, addToListItem, deleteVersionItem, deleteProductItem } =
-    useVPContextMenuContext()
+    contextMenuItems
   const { entitiesMap } = useVersionsDataContext()
   const [ctxMenuShow] = useCreateContextMenu([])
 

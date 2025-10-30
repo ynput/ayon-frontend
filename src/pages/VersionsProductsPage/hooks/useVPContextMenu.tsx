@@ -1,4 +1,4 @@
-import { createContext, FC, ReactNode, useCallback, useContext } from 'react'
+import { useCallback } from 'react'
 import {
   useProjectDataContext,
   ContextMenuItemConstructor,
@@ -8,14 +8,13 @@ import {
   useProjectTableContext,
   getEntityViewierIds,
 } from '@shared/containers'
-import { useVersionsDataContext } from './VPDataContext'
+import { useVersionsDataContext } from '../context/VPDataContext'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { confirmDelete } from '@shared/util'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
 
-interface VPContextMenuContextValue {
-  // Unified context menu items (using ContextMenuItemConstructor)
+export interface VPContextMenuItems {
   showDetailsItem: ContextMenuItemConstructor
   openViewerItem: ContextMenuItemConstructor
   addToListItem: ContextMenuItemConstructor
@@ -23,21 +22,7 @@ interface VPContextMenuContextValue {
   deleteProductItem: ContextMenuItemConstructor
 }
 
-const VPContextMenuContext = createContext<VPContextMenuContextValue | null>(null)
-
-export const useVPContextMenuContext = () => {
-  const context = useContext(VPContextMenuContext)
-  if (!context) {
-    throw new Error('useVPContextMenuContext must be used within VPContextMenuProvider')
-  }
-  return context
-}
-
-interface VPContextMenuProviderProps {
-  children: ReactNode
-}
-
-export const VPContextMenuProvider: FC<VPContextMenuProviderProps> = ({ children }) => {
+export const useVPContextMenu = (): VPContextMenuItems => {
   const { selectedCells, setSelectedCells, selectCell } = useSelectionCellsContext()
   const { entitiesMap } = useVersionsDataContext()
   const { buildAddToListMenu, buildHierarchicalMenuItems, newListMenuItem, versions, reviews } =
@@ -302,13 +287,11 @@ export const VPContextMenuProvider: FC<VPContextMenuProviderProps> = ({ children
     [entitiesMap, handleDeleteProduct],
   )
 
-  const value: VPContextMenuContextValue = {
+  return {
     showDetailsItem,
     openViewerItem,
     addToListItem,
     deleteVersionItem,
     deleteProductItem,
   }
-
-  return <VPContextMenuContext.Provider value={value}>{children}</VPContextMenuContext.Provider>
 }

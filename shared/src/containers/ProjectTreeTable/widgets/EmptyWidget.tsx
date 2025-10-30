@@ -20,5 +20,5 @@ type EmptyWidgetProps = {
  * Shows a simple label indicating the empty state
  */
 export const EmptyWidget = ({ label }: EmptyWidgetProps) => {
-  return <StyledEmptyWidget onClick={(e) => e.stopPropagation()}>{label}</StyledEmptyWidget>
+  return <StyledEmptyWidget>{label}</StyledEmptyWidget>
 }

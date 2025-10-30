@@ -1189,9 +1189,6 @@ const TableBodyRow = ({
         const cellId = getCellId(row.id, cell.column.id)
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
-          // Check if this is a restricted entity - disable dragging
-          const isRestricted = isEntityRestricted(row.original.entityType)
-
           return (
             <Styled.TableCell
               key={cell.id + i.toString()}
@@ -1209,14 +1206,6 @@ const TableBodyRow = ({
                 'last-pinned-left':
                   cell.column.getIsPinned() === 'left' && cell.column.getIsLastColumn('left'),
               })}
-              onMouseDown={(e) => e.stopPropagation()} // Prevent selection interference
-              onMouseOver={(e) => e.stopPropagation()}
-              // Removed onMouseUp stopPropagation to allow dnd-kit to handle it
-              onDoubleClick={(e) => e.stopPropagation()}
-              onContextMenu={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-              }}
             >
               <RowDragHandleCellContent
                 attributes={sortable?.attributes}

@@ -20,6 +20,7 @@ import clsx from 'clsx'
 import { ExpandedState } from '@tanstack/react-table'
 import styled from 'styled-components'
 import { EmptyPlaceholder } from '@shared/components'
+import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 
 const GridContainer = styled.div`
   width: 100%;
@@ -39,9 +40,11 @@ const GridContainer = styled.div`
 const GRID_COLUMN_ID = 'name'
 const UNGROUPED_VALUE = '__UNGROUPED__'
 
-interface VPGridProps {}
+interface VPGridProps {
+  contextMenuItems: VPContextMenuItems
+}
 
-const VPGrid: FC<VPGridProps> = ({}) => {
+const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   const { projectName, projectInfo } = useProjectDataContext()
   const { productsMap, versionsMap, isLoading, fetchNextPage, groups } = useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
@@ -50,7 +53,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   const { focusVersionsTable, gridContainerRef } = useVPFocusContext()
 
   // context menu hook
-  const { handleGridContextMenu } = useVPGridContextMenu()
+  const { handleGridContextMenu } = useVPGridContextMenu(contextMenuItems)
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
@@ -188,8 +191,6 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   // Handle card click with support for single, shift, and cmd/ctrl selection
   const handleCardClick = useCallback(
     (e: React.MouseEvent, entityId: string, index: number, columnId: string) => {
-      e.stopPropagation()
-
       // Use columnId column to match table behavior
       const cellId = getCellId(entityId, columnId)
 
@@ -277,9 +278,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
 
   // handle double click which selected the name and row selection cell
   const handleDoubleClick = useCallback(
-    (e: React.MouseEvent, entityId: string) => {
-      e.stopPropagation()
-
+    (_e: React.MouseEvent, entityId: string) => {
       // select both name and row selection cells
       const nameCellId = getCellId(entityId, GRID_COLUMN_ID)
       const rowCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)

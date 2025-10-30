@@ -153,7 +153,6 @@ export const EntityNameWidget = ({
       {isExpandable ? (
         <Expander
           onClick={(e) => {
-            e.stopPropagation()
             if (e.altKey) {
               // expand/collapse all children
               toggleExpandAll(id)
