@@ -402,7 +402,7 @@ export const TableCell = styled.td<TableCellProps>`
 
   /* if there is no cell widget element (no children) then the cell should not be selectable at all */
   &:not(:has(> div)) {
-    pointer-events: none;
+    /* pointer-events: none; */
     cursor: default;
   }
 
