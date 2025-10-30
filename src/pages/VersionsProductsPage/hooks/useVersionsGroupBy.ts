@@ -62,7 +62,7 @@ const useVersionsGroupBy = ({
 
   // get group queries from powerpack
   const versionGroups: GetGroupedVersionsListArgs['groups'] = useMemo(() => {
-    return groupBy
+    return groupBy && groups.length
       ? getGroupQueries?.({
           groups,
           taskGroups: groups, // deprecated, but keep for backward compatibility

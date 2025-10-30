@@ -18,15 +18,15 @@ import { useVPFocusContext } from '../../context/VPFocusContext'
 import clsx from 'clsx'
 import { ExpandedState } from '@tanstack/react-table'
 import styled from 'styled-components'
+import { EmptyPlaceholder } from '@shared/components'
 
 const GridContainer = styled.div`
   width: 100%;
   background-color: var(--md-sys-color-surface-container-low);
   padding: 0 var(--padding-m);
-  padding-right: 0;
   border-radius: var(--border-radius-m);
   max-height: 100%;
-  height: auto;
+  height: 100%;
   overflow: auto;
   outline: none;
 
@@ -50,7 +50,6 @@ const VPGrid: FC<VPGridProps> = ({}) => {
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
-  const gridContainerGroupRef = useRef<HTMLDivElement | null>(null)
 
   // Track expanded state - by default groups are expanded (not in the map)
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -86,7 +85,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   // Build grouped data structure
   const groupedData = useMemo(() => {
     // Grouping only works for versions, not products
-    if (!groupBy || !groups.length || showProducts) return { '': gridData }
+    if (!groupBy || showProducts) return { '': gridData }
 
     const grouped: Record<string, typeof gridData> = {}
 
@@ -370,8 +369,26 @@ const VPGrid: FC<VPGridProps> = ({}) => {
     )
   }
 
+  if (groupBy && showProducts) {
+    return (
+      <GridContainer>
+        <EmptyPlaceholder message="Grouping is only available when viewing versions">
+          Please disable "Show Products" to use grouping.
+        </EmptyPlaceholder>
+      </GridContainer>
+    )
+  }
+
+  if (groupBy && !groups.length) {
+    return (
+      <GridContainer>
+        <EmptyPlaceholder message="No groups available for the selected grouping criteria." />
+      </GridContainer>
+    )
+  }
+
   // Render with grouping
-  if (groupBy && groups.length > 0 && !showProducts) {
+  if (groupBy && !showProducts) {
     return (
       <GridContainer
         ref={gridContainerRef}
@@ -415,7 +432,6 @@ const VPGrid: FC<VPGridProps> = ({}) => {
                   ratio={1.777777}
                   minWidth={gridHeight}
                   style={{ outline: 'none' }}
-                  ref={gridContainerGroupRef}
                   tabIndex={-1}
                 >
                   {groupEntities.map((entity, index) => (
@@ -424,7 +440,6 @@ const VPGrid: FC<VPGridProps> = ({}) => {
                       entity={entity}
                       index={index}
                       projectInfo={projectInfo}
-                      root={gridContainerGroupRef.current}
                       isEntitySelected={isEntitySelected}
                       handleCardClick={handleCardClick}
                       handleDoubleClick={handleDoubleClick}
