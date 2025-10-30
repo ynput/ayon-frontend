@@ -12,6 +12,7 @@ import { EntityCard } from '@ynput/ayon-react-components'
 import { FC, useMemo, useCallback, useRef, useState } from 'react'
 import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { useGridKeyboardNavigation } from '../../hooks/useGridKeyboardNavigation'
+import { useVPGridContextMenu } from '../../hooks'
 import { VPGridGroupHeader } from './VPGridGroupHeader'
 import { VPGridCard } from './VPGridCard'
 import { useVPFocusContext } from '../../context/VPFocusContext'
@@ -47,6 +48,9 @@ const VPGrid: FC<VPGridProps> = ({}) => {
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { focusVersionsTable, gridContainerRef } = useVPFocusContext()
+
+  // context menu hook
+  const { handleGridContextMenu } = useVPGridContextMenu()
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
@@ -435,6 +439,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
                       isEntitySelected={isEntitySelected}
                       handleCardClick={handleCardClick}
                       handleDoubleClick={handleDoubleClick}
+                      handleContextMenu={handleGridContextMenu}
                       gridColumnId={GRID_COLUMN_ID}
                       rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
                     />
@@ -468,6 +473,7 @@ const VPGrid: FC<VPGridProps> = ({}) => {
             isEntitySelected={isEntitySelected}
             handleCardClick={handleCardClick}
             handleDoubleClick={handleDoubleClick}
+            handleContextMenu={handleGridContextMenu}
             gridColumnId={GRID_COLUMN_ID}
             rowSelectionColumnId={ROW_SELECTION_COLUMN_ID}
           />

@@ -23,6 +23,7 @@ interface VPGridCardProps {
   isEntitySelected: (entityId: string, entityType: string) => boolean
   handleCardClick: (e: React.MouseEvent, entityId: string, index: number, columnId: string) => void
   handleDoubleClick: (e: React.MouseEvent, entityId: string) => void
+  handleContextMenu: (e: React.MouseEvent, entityId: string) => void
   gridColumnId: string
   rowSelectionColumnId: string
 }
@@ -35,6 +36,7 @@ export const VPGridCard: FC<VPGridCardProps> = ({
   isEntitySelected,
   handleCardClick,
   handleDoubleClick,
+  handleContextMenu,
   gridColumnId,
   rowSelectionColumnId,
 }) => {
@@ -73,6 +75,7 @@ export const VPGridCard: FC<VPGridCardProps> = ({
               onTitleClick={(e) => handleCardClick(e, entity.id, index, rowSelectionColumnId)}
               onVersionsClick={(e) => handleCardClick(e, entity.id, index, rowSelectionColumnId)}
               onDoubleClick={(e) => handleDoubleClick(e, entity.id)}
+              onContextMenu={(e) => handleContextMenu(e, entity.id)}
             />
           </div>
         ) : (

@@ -10,6 +10,7 @@ import { FC } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { buildVersionRow } from '../util'
 import { useVPViewsContext } from '../context/VPViewsContext'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
 interface VPProjectTableProviderProps {
   projectName: string
@@ -24,6 +25,8 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
 }) => {
   const { versionsTableData, entitiesMap, groups, expanded, updateExpanded, error } =
     useVersionsDataContext()
+  // lists data
+  const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   const { resetWorkingView } = useViewsContext()
   const { showProducts } = useVPViewsContext()
@@ -35,7 +38,12 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const isLoadingAll = false // replace with actual state
 
   // extra context menu items
-  const contextMenuItems: ContextMenuItemConstructors = [] // replace with actual context menu items
+  const contextMenuItems: ContextMenuItemConstructors = [
+    'copy-paste',
+    'show-details',
+    'open-viewer',
+    menuItemsAddToList(),
+  ]
 
   // place holders, do we even need these?
   const foldersMap = new Map()
