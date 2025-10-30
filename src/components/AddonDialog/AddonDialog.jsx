@@ -55,7 +55,7 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader, manager }) => {
       header={uploadHeader || 'Upload addon'}
       size="md"
       tabIndex={-1}
-      hideCancelButton
+      onClose={()=>setUploadOpen('')}
 
     >
       {uploadOpen && (
