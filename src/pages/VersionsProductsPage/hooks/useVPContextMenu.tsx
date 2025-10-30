@@ -13,10 +13,12 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { confirmDelete } from '@shared/util'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
+import { useVersionUploadContext } from '@shared/components'
 
 export interface VPContextMenuItems {
   showDetailsItem: ContextMenuItemConstructor
   openViewerItem: ContextMenuItemConstructor
+  uploadVersionItem: ContextMenuItemConstructor
   addToListItem: ContextMenuItemConstructor
   deleteVersionItem: ContextMenuItemConstructor
   deleteProductItem: ContextMenuItemConstructor
@@ -31,6 +33,7 @@ export const useVPContextMenu = (): VPContextMenuItems => {
   const { projectName } = useProjectDataContext()
   const [deleteVersion] = useDeleteVersionMutation()
   const [deleteProduct] = useDeleteProductMutation()
+  const { onOpenVersionUpload } = useVersionUploadContext()
 
   // Shared delete version handler
   const handleDeleteVersion = useCallback(
@@ -138,6 +141,45 @@ export const useVPContextMenu = (): VPContextMenuItems => {
       }
     },
     [entitiesMap, onOpenPlayer],
+  )
+
+  // Upload version context menu item
+  const uploadVersionItem: ContextMenuItemConstructor = useCallback(
+    (_e: any, cell: any, _selected: any, meta: any) => {
+      // Get selected entity IDs from meta, or use the cell entity
+      const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
+
+      // Only allow single selection for upload
+      if (selectedEntityIds.length !== 1) {
+        return {
+          label: 'Upload version',
+          icon: 'upload',
+          disabled: true,
+        }
+      }
+
+      const entityId = selectedEntityIds[0]
+      const entity = entitiesMap.get(entityId)
+      if (!entity) return undefined
+
+      // Get product ID - either directly from product or from version's product property
+      let productId: string | undefined
+      if (entity.entityType === 'product') {
+        productId = entity.id
+      } else if (entity.entityType === 'version' && 'product' in entity) {
+        productId = (entity as any).product?.id
+      }
+
+      if (!productId) return undefined
+
+      return {
+        label: 'Upload version',
+        icon: 'upload',
+        command: () => onOpenVersionUpload({ productId }),
+        hidden: cell.isGroup,
+      }
+    },
+    [entitiesMap, onOpenVersionUpload],
   )
 
   // Add to list context menu item
@@ -290,6 +332,7 @@ export const useVPContextMenu = (): VPContextMenuItems => {
   return {
     showDetailsItem,
     openViewerItem,
+    uploadVersionItem,
     addToListItem,
     deleteVersionItem,
     deleteProductItem,

@@ -14,8 +14,14 @@ const GRID_COLUMN_ID = 'name'
 
 export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
-  const { showDetailsItem, openViewerItem, addToListItem, deleteVersionItem, deleteProductItem } =
-    contextMenuItems
+  const {
+    showDetailsItem,
+    openViewerItem,
+    uploadVersionItem,
+    addToListItem,
+    deleteVersionItem,
+    deleteProductItem,
+  } = contextMenuItems
   const { entitiesMap } = useVersionsDataContext()
   const [ctxMenuShow] = useCreateContextMenu([])
 
@@ -118,6 +124,17 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
         menuItems.push(openViewerMenuItem)
       }
 
+      const uploadVersionMenuItem = uploadVersionItem(
+        e as any,
+        mockCell as any,
+        [],
+        mockMeta,
+        mockContext,
+      )
+      if (uploadVersionMenuItem) {
+        menuItems.push(uploadVersionMenuItem)
+      }
+
       const addToListMenuItem = addToListItem(e as any, mockCell as any, [], mockMeta, mockContext)
       if (addToListMenuItem) {
         menuItems.push(addToListMenuItem)
@@ -152,6 +169,7 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
       showDetailsItem,
       addToListItem,
       openViewerItem,
+      uploadVersionItem,
       deleteVersionItem,
       deleteProductItem,
       getSelectedEntityIds,

@@ -12,7 +12,8 @@ interface VPTableProps {
 const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { fetchNextPage, isLoading } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
-  const { deleteVersionItem, deleteProductItem, addToListItem } = contextMenuItems
+  const { uploadVersionItem, deleteVersionItem, deleteProductItem, addToListItem } =
+    contextMenuItems
 
   return (
     <ProjectTreeTable
@@ -35,6 +36,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         'copy-paste',
         'show-details',
         'open-viewer',
+        uploadVersionItem,
         addToListItem,
         deleteVersionItem,
         deleteProductItem,
