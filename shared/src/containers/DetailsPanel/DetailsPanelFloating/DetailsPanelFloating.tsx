@@ -4,7 +4,7 @@ import getThumbnails from '../helpers/getThumbnails'
 import { StackedThumbnails } from '@shared/components'
 import { upperFirst } from 'lodash'
 import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
-import { PiPWrapper, usePowerpack, DetailsPanelTab } from '@shared/context'
+import { PiPWrapper, usePowerpack, DetailsPanelTab, useScopedDetailsPanel } from '@shared/context'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
@@ -22,7 +22,8 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   const entities = pip?.entities || []
   const scope = pip?.scope || ''
   const isOpen = entities.length > 0 && !!entityType
-  const [currentTab, setCurrentTab] = useState<DetailsPanelTab>('activity')
+  const { currentTab: parentTab } = useScopedDetailsPanel(scope)
+  const [currentTab, setCurrentTab] = useState<DetailsPanelTab>(parentTab)
 
   const projects: string[] = entities.map((e: any) => e.projectName)
 
