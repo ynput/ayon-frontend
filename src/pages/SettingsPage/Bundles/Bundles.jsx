@@ -22,6 +22,7 @@ import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
 import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 import BundleFormLoading from './BundleFormLoading'
+import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/AddonSearchContext'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -458,6 +459,7 @@ const Bundles = () => {
             </Section>
           </SplitterPanel>
           <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
+            <AddonSearchProvider addons={addons}>
             <Section style={{ height: '100%' }}>
               {isLoadingAddons || isLoadingInstallers ? (
                 <BundleFormLoading />
@@ -466,7 +468,6 @@ const Bundles = () => {
                   initBundle={newBundleOpen}
                   onSave={handleNewBundleEnd}
                   installers={installerVersions}
-                  addons={addons}
                   developerMode={developerMode}
                 />
               ) : (
@@ -476,7 +477,6 @@ const Bundles = () => {
                     initBundle={bundlesData[0]}
                     isLoading={isLoadingInstallers || isFetching}
                     installers={installerVersions}
-                    addons={addons}
                     isDev
                   />
                 ) : (
@@ -486,12 +486,12 @@ const Bundles = () => {
                     isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
                     installers={installerVersions}
                     toggleBundleStatus={toggleBundleStatus}
-                    addons={addons}
                     developerMode={developerMode}
                   />
                 ))
               )}
             </Section>
+            </AddonSearchProvider>
           </SplitterPanel>
         </Splitter>
       </main>

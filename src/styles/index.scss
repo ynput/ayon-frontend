@@ -63,8 +63,8 @@ strong {
 
   // table colors
   --color-table-border: hsl(210 8% 18%);
-  --color-table-task: hsl(216 15% 11.5%);
-  --color-table-folder: var(--md-sys-color-surface-container-low);
+  --color-table-row: hsl(216 15% 11.5%);
+  --color-table-row-high: var(--md-sys-color-surface-container-low);
   --color-table-hover: var(--md-sys-color-surface-container);
   --color-table-row-hover: hsl(215 14% 15%);
   --color-table-selected: var(--md-sys-color-secondary-container);
@@ -482,6 +482,14 @@ a {
       }
     }
   }
+}
+
+// if the panel after the splitter gutter is hidden then hide the gutter too
+.p-splitter-gutter:has(+ .p-splitter-panel.hidden) {
+  display: none;
+}
+.p-splitter-panel.hidden {
+  display: none !important;
 }
 
 // confirm dialog buttons

@@ -3,14 +3,13 @@ import React, { useRef, useState } from 'react'
 import BundlesAddonList from './BundlesAddonList'
 import useScrollSync from '@hooks/useScrollSync'
 import { DataTableSortEvent } from 'primereact/datatable'
+import { Addon } from '@pages/SettingsPage/Bundles/types.ts'
 
 type Bundle = {
   name: string
   installerVersion?: string
   addons: Record<string, string | null>
 }
-
-type Addon = { name: string }
 
 type BundleCompareProps = {
   bundles?: Bundle[]

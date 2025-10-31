@@ -222,6 +222,20 @@ export const CellWidget: FC<EditorCellProps> = ({
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
           const selectedOptions = options.filter((option) => enumValue.includes(option.value))
+
+          if (enumValue.length && !selectedOptions.length) {
+            // value has something but it is not in options, show a placeholder
+            return (
+              <TextWidget
+                value={enumValue.join(', ')}
+                isInherited={isInherited}
+                columnId={columnId}
+                {...sharedProps}
+                {...pt?.text}
+              />
+            )
+          }
+
           return (
             <EnumCellValue
               selectedOptions={selectedOptions}

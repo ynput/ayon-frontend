@@ -62,6 +62,7 @@ import { useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
+import { useViewsContext } from '@shared/containers/index.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -109,6 +110,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   } = useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
+  const { resetWorkingView } = useViewsContext()
 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
@@ -201,6 +203,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               scopes={[selectedList?.entityType]}
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
+              onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
             >
               <DetailsPanelEntityProvider>
                 <SelectionCellsProvider>

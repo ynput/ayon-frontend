@@ -148,6 +148,7 @@ export default function useBuildProjectDataTable({
         ownAttrib: task.ownAttrib,
         parents: task.parents || [],
         path: task.parents.join('/') || null, // todo: probably remove this and just use parents
+        folder: task.parents[task.parents.length - 1] || undefined,
         updatedAt: task.updatedAt,
         createdAt: task.createdAt,
         hasReviewables: task.hasReviewables || false,
@@ -172,14 +173,10 @@ export default function useBuildProjectDataTable({
 
       // if we are loading more tasks, add loading rows
       if (isLoadingMore) {
-        const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
-        const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
-          name: key,
-        }))
         // number of tasks we loading with the infinite query
         const count = TASKS_INFINITE_QUERY_COUNT
         if (count > 0) {
-          const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
+          const loadingTaskRows = generateLoadingRows(count, {
             type: 'task',
           })
 
@@ -222,6 +219,7 @@ export default function useBuildProjectDataTable({
         subType: folder.folderType || null,
         ownAttrib: folder.ownAttrib || [],
         path: folder.path,
+        folder: folder.parents[folder.parents.length - 1] || undefined,
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
@@ -256,16 +254,9 @@ export default function useBuildProjectDataTable({
 
           // Add loading rows if applicable
           if (loadingTasks[folderId]) {
-            const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
-            const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
-              name: key,
-            }))
             const count = loadingTasks[folderId]
             if (count > 0) {
-              const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
-                type: 'task',
-                parentId: folderId,
-              })
+              const loadingTaskRows = generateLoadingRows(count, { parentId: folderId })
 
               taskRows.push(...loadingTaskRows)
             }
@@ -287,7 +278,7 @@ export default function useBuildProjectDataTable({
       if (!childRow || !parentRow) continue
 
       // Add folder to its parent's subRows
-      parentRow.subRows.push(childRow)
+      parentRow.subRows?.push(childRow)
     }
 
     // Add any extra rows to the root rows

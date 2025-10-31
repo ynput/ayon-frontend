@@ -7,9 +7,14 @@ export type RowKeyboardEvent = KeyboardEvent<HTMLDivElement>
 interface UseRowKeydownProps<T> {
   // Updated to use the more specific RowKeyboardEvent for clarity
   handleRowSelect: (event: RowKeyboardEvent, row: Row<T>) => void
+  handleArrowNavigation?: (
+    direction: 'up' | 'down',
+    currentRow: Row<T>,
+    event: RowKeyboardEvent,
+  ) => void
 }
 
-function useRowKeydown<T>({ handleRowSelect }: UseRowKeydownProps<T>) {
+function useRowKeydown<T>({ handleRowSelect, handleArrowNavigation }: UseRowKeydownProps<T>) {
   const handleRowKeyDown = useCallback(
     (event: RowKeyboardEvent, row: Row<T>) => {
       if (['Enter', ' '].includes(event.key)) {
@@ -17,9 +22,15 @@ function useRowKeydown<T>({ handleRowSelect }: UseRowKeydownProps<T>) {
         event.preventDefault()
         // select row
         handleRowSelect(event, row)
+      } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        // prevent default to prevent scrolling
+        event.preventDefault()
+        // navigate and select
+        const direction = event.key === 'ArrowDown' ? 'down' : 'up'
+        handleArrowNavigation?.(direction, row, event)
       }
     },
-    [handleRowSelect],
+    [handleRowSelect, handleArrowNavigation],
   )
 
   return { handleRowKeyDown }

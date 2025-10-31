@@ -1,4 +1,4 @@
-type ProductTypes = {
+export type ProductTypes = {
   [key: string]: { name: string; icon: string }
 }
 

@@ -12,10 +12,13 @@ import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slic
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useLoadModule } from '@shared/hooks'
 import type { ProjectModel, Assignees, AttributeModel } from '@shared/api'
-import SlicerDropdownFallback, { SlicerDropdownProps } from '@containers/Slicer/SlicerDropdown'
+import SlicerDropdownFallback, {
+  SlicerDropdownFallbackProps,
+} from '@containers/Slicer/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { SliceMap } from '@containers/Slicer/types'
+import { SliceMap, SliceTypeField } from '@containers/Slicer/types'
 import { usePowerpack } from '@shared/context'
+import { ProductTypes } from '@shared/util/productTypes'
 
 export type OnSliceTypeChange = (
   sliceType: SliceType,
@@ -25,13 +28,14 @@ export type OnSliceTypeChange = (
 
 export type SlicerConfig = {
   [page: string]: {
-    fields: SliceType[]
+    fields: SliceTypeField[]
   }
 }
 
 type ExtraSlices = {
-  formatStatuses: (project?: ProjectModel) => SimpleTableRow[]
+  formatStatuses: (project?: ProjectModel, scopes?: string[]) => SimpleTableRow[]
   formatTaskTypes: (project?: ProjectModel) => SimpleTableRow[]
+  formatProductTypes: (productTypes: ProductTypes) => SimpleTableRow[]
   formatTypes: (project?: ProjectModel) => SimpleTableRow[]
   formatAssignees: (assignees: Assignees) => SimpleTableRow[]
   formatAttribute: (attribute: AttributeModel) => SimpleTableRow[]
@@ -56,7 +60,9 @@ interface SlicerContextValue {
   setPersistentRowSelectionData: React.Dispatch<React.SetStateAction<SelectionData>>
   config: SlicerConfig
   useExtraSlices: UseExtraSlices
-  SlicerDropdown: ForwardRefExoticComponent<SlicerDropdownProps & RefAttributes<DropdownRef>>
+  SlicerDropdown: ForwardRefExoticComponent<
+    SlicerDropdownFallbackProps & RefAttributes<DropdownRef>
+  >
 }
 
 const SlicerContext = createContext<SlicerContextValue | undefined>(undefined)
@@ -74,10 +80,32 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
   const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
   const config: SlicerConfig = {
     progress: {
-      fields: ['hierarchy', 'assignees', 'status', 'taskType'],
+      fields: [
+        { value: 'hierarchy' },
+        { value: 'assignees' },
+        { value: 'status' },
+        { value: 'taskType' },
+      ],
     },
     overview: {
-      fields: ['hierarchy', 'assignees', 'status', 'type', 'taskType', 'attributes'],
+      fields: [
+        { value: 'hierarchy' },
+        { value: 'assignees' },
+        { value: 'status' },
+        { value: 'type' },
+        { value: 'taskType' },
+        { value: 'attributes' },
+      ],
+    },
+    versions: {
+      fields: [
+        { value: 'hierarchy' },
+        { value: 'assignees', label: 'Task assignee' },
+        { value: 'status', label: 'Version status' },
+        { value: 'author', label: 'Version author' },
+        { value: 'productType' },
+        { value: 'taskType' },
+      ],
     },
   }
 
@@ -188,6 +216,8 @@ const useSlicerRemotes = () => {
       formatTypes: () => [],
       formatAssignees: () => [],
       formatAttribute: () => [],
+      formatProductTypes: () => [],
+      formatAuthors: () => [],
     }
   }
 
