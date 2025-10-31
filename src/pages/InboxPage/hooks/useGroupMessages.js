@@ -8,13 +8,29 @@
 //     changes: [string],
 // }
 
-import { isSameDay } from 'date-fns'
+import { isSameDay, parseISO } from 'date-fns'
 import { useMemo } from 'react'
 
 const groupMessages = (messages = [], currentUser) => {
   const groups = []
   const visited = new Array(messages.length).fill(false) // Tracks if a message has been grouped
+  
+  const versionPublishGroups = groupVersionMessages(messages)
 
+  // Mark all grouped messages as visited and add their groups
+  for (const folderMessages of versionPublishGroups) {
+    if (folderMessages.length === 0) continue
+
+    // Mark these messages as visited
+    folderMessages.forEach((msg) => {
+      const index = messages.findIndex((m) => m.activityId === msg.activityId)
+      if (index !== -1) visited[index] = true
+    })
+
+    groups.push(folderMessages)
+  }
+
+  // Now handle other message types with the original logic
   for (let i = 0; i < messages.length; i++) {
     if (visited[i]) continue // Skip if the message is already grouped
 
@@ -60,6 +76,52 @@ const groupMessages = (messages = [], currentUser) => {
   return groups // Return the list of grouped messages
 }
 
+const groupVersionMessages = (messages) => {
+  const groupedByType = Object.groupBy(messages, (m) => m.activityType)
+
+  // Handle both version.publish and reviewable messages
+  const publishMessages = groupedByType?.['version.publish'] || []
+  const reviewableMessages = groupedByType?.['reviewable'] || []
+  const messagesToGroup = [...publishMessages, ...reviewableMessages]
+
+  // If there's only 1 message total, don't apply special grouping
+  if (messagesToGroup.length === 1) {
+    return []
+  }
+
+  // Group by time (5-minute windows)
+  const groupedByTime = Object.groupBy(messagesToGroup, (m) => {
+    const date = parseISO(m.createdAt)
+    if (isNaN(date)) return 'invalid-date'
+
+    // Round down to nearest 5 minutes and reset seconds/milliseconds
+    const rounded = new Date(date)
+    rounded.setMinutes(Math.floor(date.getMinutes() / 5) * 5, 0, 0)
+    return rounded.toISOString()
+  })
+
+  // Group by parent folder within each time window
+  const folderGroups = []
+
+  for (const [, timeGroup] of Object.entries(groupedByTime)) {
+    if (timeGroup.length === 0) continue
+
+    // Group by parent folder within this time window
+    const groupedByFolder = Object.groupBy(timeGroup, (m) => {
+      const parentFolder = m.activityData?.parents?.[0]
+      return parentFolder?.id || 'no-parent'
+    })
+
+    // Add each folder group to the result
+    for (const [folderId, folderMessages] of Object.entries(groupedByFolder)) {
+      if (folderId === 'no-parent' || folderMessages.length === 0) continue
+      folderGroups.push(folderMessages)
+    }
+  }
+
+  return folderGroups
+}
+
 const getChangedValues = (messages = []) => {
   const reversedMessages = messages.slice().reverse()
   const uniqueValues = []
@@ -102,19 +164,40 @@ const transformGroups = (groups = []) => {
 
     const { activityId } = lastMessage
 
+    // For grouped version.publish or reviewable messages, use the parent folder as the entity
+    let finalEntityId = entityId
+    let finalEntityType = entityType
+    let finalPath = firstMessage.path
+
+    // Check if this group contains version.publish or reviewable messages
+    const hasVersionOrReview = group.some(m =>
+      m.activityType === 'version.publish' || m.activityType === 'reviewable'
+    )
+
+    if (isMultiple && hasVersionOrReview) {
+      // Use the parent folder (first item in parents array) as the entity
+      const parentFolder = firstMessage.activityData?.parents?.[0]
+      if (parentFolder) {
+        finalEntityId = parentFolder.id
+        finalEntityType = parentFolder.type
+        // Show only the parent folder in the path
+        finalPath = [parentFolder.label || parentFolder.name]
+      }
+    }
+
     return {
       activityId: activityId,
       groupIds: group.map((m) => m.activityId),
       activityType: activityType,
       projectName: projectName,
-      entityId: entityId,
-      entityType: entityType,
+      entityId: finalEntityId,
+      entityType: finalEntityType,
       entitySubType: origin?.subtype,
       userName: author?.name,
       changes: getChangedValues(group),
       read: read,
       unRead: unReadCount,
-      path: firstMessage.path,
+      path: finalPath,
       date,
       img,
       isMultiple,
