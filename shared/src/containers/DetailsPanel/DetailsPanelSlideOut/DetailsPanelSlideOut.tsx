@@ -41,8 +41,6 @@ export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideO
         activeProjectUsers={users}
         isSlideOut
         scope={scope}
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
         onClose={handleClose}
         onOpenViewer={handleOpenViewer}
       />

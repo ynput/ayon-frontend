@@ -49,8 +49,6 @@ export type DetailsPanelProps = {
   entityListId?: string
   guestCategories?: Record<string, string> // only used for guests to find if they have access to any categories
   // optional tab state for independent tab management
-  currentTab?: DetailsPanelTab
-  setCurrentTab?: (tab: DetailsPanelTab) => void
 }
 
 export const DetailsPanel = ({
@@ -82,15 +80,13 @@ export const DetailsPanel = ({
   entityListId,
   guestCategories = {},
   // optional tab state for independent tab management
-  currentTab: currentTabProp,
-  setCurrentTab: setCurrentTabProp,
 }: DetailsPanelProps) => {
   const { closeSlideOut, openPip, user, isGuest } = useDetailsPanelContext()
   const scopedTab = useScopedDetailsPanel(scope)
 
   // Use provided tab state if available, otherwise use scope-based state
-  const currentTab = currentTabProp ?? scopedTab.currentTab
-  const setTab = setCurrentTabProp ?? scopedTab.setTab
+  const currentTab =  scopedTab.currentTab
+  const setTab =  scopedTab.setTab
   const isFeed = scopedTab.isFeed
 
   // Force details tab for specific entity types
