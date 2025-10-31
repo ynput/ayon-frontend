@@ -36,7 +36,7 @@
     "@rtk-query/codegen-openapi": "^2.0.0",
     "@rtk-query/graphql-request-base-query": "^2.3.1",
     "@tanstack/match-sorter-utils": "^8.19.4",
-    "@tanstack/react-table": "^8.21.2",
+    "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.4",
     "@uiw/react-textarea-code-editor": "^2.1.9",
     "@ynput/ayon-react-components": "^1.15.10",

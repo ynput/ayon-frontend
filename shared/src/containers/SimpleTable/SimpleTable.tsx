@@ -449,14 +449,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
     (updater) => {
       onRowSelectionChange(functionalUpdate(updater, rowSelection))
     },
-    [onRowSelectionChange, rowSelection], // Depends only on the stable setState function from context
+    [onRowSelectionChange],
   )
 
   const handleRowPinningChangeCallback: OnChangeFn<RowPinningState> = useCallback(
     (updater) => {
-      rowPinning && onRowPinningChange?.(functionalUpdate(updater, rowPinning))
+      onRowPinningChange?.(functionalUpdate(updater, rowPinning || {}))
     },
-    [onRowPinningChange], // Depends only on the stable setState function from context
+    [onRowPinningChange],
   )
 
   const handleExpandedChange = useCallback(
@@ -467,7 +467,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         return newExpanded
       })
     },
-    [setExpanded, onExpandedChange],
+    [setExpanded],
   )
 
   const table = useReactTable({
@@ -508,7 +508,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   // This ensures handleRowSelectForKeydown uses the current table instance.
   useEffect(() => {
     tableRef.current = table
-  }, [])
+  }, [table])
 
   const { rows } = table.getRowModel()
 
@@ -529,12 +529,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
   })
 
   // Memoize the ref callback to prevent infinite re-renders
-  const measureElementRef = useCallback((node: HTMLElement | null) => {
-    if (node) {
-      rowVirtualizer.measureElement(node)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const measureElementRef = useCallback(
+    (node: HTMLElement | null) => {
+      if (node) {
+        rowVirtualizer.measureElement(node)
+      }
+    },
+    [rowVirtualizer],
+  )
 
   // Handle scroll to bottom detection
   const handleScroll = useCallback(
