@@ -1,9 +1,8 @@
-import { FC, useState } from 'react'
+import { FC } from 'react'
 
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
-import type { EditingState, FeedContextProps } from '@shared/containers/Feed'
 import type { Status } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext, DetailsPanelTab } from '@shared/context'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -19,6 +18,8 @@ interface FeedWrapperProps {
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
+  currentTab: DetailsPanelTab
+  setCurrentTab: (tab: DetailsPanelTab) => void
 }
 
 // forwards any props
@@ -31,6 +32,8 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
+  currentTab,
+  setCurrentTab,
   ...props
 }) => {
   const annotationsProps = { annotations, removeAnnotation, exportAnnotationComposite }
@@ -39,8 +42,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
 
   const userName = user.name || ''
   const userFullName = user.attrib?.fullName || ''
-
-  const [editingId, setEditingId] = useState<EditingState>(null)
 
   return (
     <FeedProvider
@@ -54,7 +55,7 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
         userFullName,
       }}
       {...annotationsProps}
-      {...{ editingId, setEditingId }}
+      {...{ currentTab, setCurrentTab }}
       {...props}
     >
       <Feed {...props} />

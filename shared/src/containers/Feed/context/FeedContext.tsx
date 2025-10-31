@@ -19,7 +19,6 @@ import {
   DetailsPanelTab,
   PowerpackFeature,
   useDetailsPanelContext,
-  useScopedDetailsPanel,
 } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
 
@@ -54,13 +53,15 @@ export type FeedContextProps = {
   annotations?: Record<string, any>
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
-  // editingId state and functions
-  editingId: EditingState
-  setEditingId: (id: EditingState) => void
+  // currentTab
+  currentTab: DetailsPanelTab
+  setCurrentTab: (tab: DetailsPanelTab) => void
 }
 
 interface FeedContextType extends Omit<FeedContextProps, 'children'> {
-  currentTab: DetailsPanelTab
+  // local UI state
+  editingId: EditingState
+  setEditingId: (id: EditingState) => void
   // activities data props
   activitiesData: any[]
   isLoadingActivities: boolean
@@ -95,7 +96,9 @@ const FeedContext = createContext<FeedContextType | undefined>(undefined)
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const { isGuest } = useDetailsPanelContext()
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
-  const { currentTab } = useScopedDetailsPanel(props.scope)
+  const { currentTab } = props
+  const [editingId, setEditingId] = useState<EditingState>(null)
+  const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
 
   //   queries
   const [createEntityActivityMutation, { isLoading: isLoadingCreate }] =
@@ -128,8 +131,6 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     projectName: props.projectName,
     entityType: props.entityType,
   })
-
-  const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
   const skip = !props.projectName || !refTooltip?.id || refTooltip.type === 'user'
   const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
     { entityType: refTooltip?.type, entityId: refTooltip?.id, projectName: props.projectName },
@@ -145,7 +146,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
       },
       projectName: props.projectName,
     },
-    { skip: !props.editingId },
+    { skip: !editingId },
   )
 
   // get comment categories for this project and user
@@ -168,6 +169,8 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         activityTypes,
         currentTab,
         isGuest,
+        editingId,
+        setEditingId,
         setRefTooltip,
         // Query functions
         createEntityActivity,
