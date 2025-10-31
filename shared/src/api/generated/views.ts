@@ -91,6 +91,7 @@ export type CreateViewApiArg = {
     | ListsViewPostModel
     | ReviewsViewPostModel
     | VersionsViewPostModel
+    | ReportsViewModel
 }
 export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
@@ -98,6 +99,7 @@ export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
+  | ReportsViewModel
 export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
@@ -108,6 +110,7 @@ export type GetDefaultViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
+  | ReportsViewModel
 export type GetDefaultViewApiArg = {
   viewType: string
   projectName?: string
@@ -124,6 +127,7 @@ export type GetViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
+  | ReportsViewModel
 export type GetViewApiArg = {
   viewType: string
   viewId: string
@@ -146,6 +150,7 @@ export type UpdateViewApiArg = {
     | ListsViewPatchModel
     | ReviewsViewPatchModel
     | VersionsViewPatchModel
+    | ReportsViewPatchModel
 }
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
@@ -424,4 +429,31 @@ export type VersionsViewPatchModel = {
   label?: string
   owner?: string
   settings?: VersionsSettings
+}
+export type ReportsSettings = {
+  widgets?: any[] // Widget configurations from the reports addon
+  dateFormat?: string // Date format preference (e.g., 'us-padded', 'uk', 'iso', 'asian', 'dot')
+  slicer?: {
+    rowSelection?: object
+    expanded?: object
+    persistentRowSelectionData?: object
+  }
+}
+export type ReportsViewModel = {
+  id?: string
+  label: string
+  scope: 'project' | 'studio'
+  owner: string
+  visibility: 'public' | 'private'
+  working: boolean
+  position: number
+  accessLevel: number
+  settings: ReportsSettings
+  access: object
+  viewType?: 'reports'
+}
+export type ReportsViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: ReportsSettings
 }
