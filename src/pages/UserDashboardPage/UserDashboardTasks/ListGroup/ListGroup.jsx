@@ -101,7 +101,7 @@ const ListGroup = ({
                       return handleDoubleClick(e, task)
                     }
                     closeContext()
-                    onTaskSelected(e, task.id)
+                    onTaskSelected(e, task.id, task)
                   }}
                   onContextMenu={(e) => handleContextMenu(e)}
                   onMouseOver={() => onTaskHover(task)}

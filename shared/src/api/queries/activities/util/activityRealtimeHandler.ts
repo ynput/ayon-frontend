@@ -57,17 +57,13 @@ export const handleActivityRealtimeUpdates = async (
     getCacheEntry,
   }: CacheLifecycleApi,
 ) => {
-  console.log('[Activity RT] Setting up real-time handler for query args:', queryArg)
   let token: string | undefined
 
   try {
     // Wait for the initial query to resolve before proceeding
     await cacheDataLoaded
-    console.log('[Activity RT] Cache data loaded, handler is ready')
 
     const handlePubSub = async (topic: string, message: ActivityMessage) => {
-      console.log('[Activity RT] Received message:', { topic, message })
-
       const activityId = message.summary?.activity_id
       if (!activityId) {
         console.warn('[Activity RT] Activity message missing activity_id', message)
@@ -80,37 +76,24 @@ export const handleActivityRealtimeUpdates = async (
         .filter((reference) => reference.reference_type === 'origin')
         .map((reference) => reference.entity_id)
 
-      console.log('[Activity RT] Extracted data:', { activityId, projectName, entityIds })
-
       // Check if this activity is relevant to the current cache
       const queryEntityIds = Array.isArray(queryArg.entityIds)
         ? queryArg.entityIds
         : [queryArg.entityIds]
 
       const isRelevant = queryEntityIds.some((qId) => entityIds.includes(qId))
-      console.log('[Activity RT] Relevance check:', {
-        queryEntityIds,
-        entityIds,
-        isRelevant,
-        hasQueryEntityIds: queryEntityIds.length > 0,
-      })
 
       if (!isRelevant && queryEntityIds.length > 0) {
-        console.log('[Activity RT] Activity not relevant to this cache, skipping')
         return
       }
 
       const activityType = message.summary?.activity_type
       if (!activityType) {
-        console.warn('[Activity RT] Activity message missing activity_type', message)
         return
       }
 
-      console.log('[Activity RT] Activity type:', activityType)
-
       // Handle deletion
       if (topic === 'activity.deleted') {
-        console.log('[Activity RT] Handling deletion for activity:', activityId)
         updateCachedData((draft) => {
           if (!draft || !draft.pages) {
             console.warn('[Activity RT] No draft or pages found for deletion')
@@ -123,23 +106,19 @@ export const handleActivityRealtimeUpdates = async (
               (activity) => activity.activityId === activityId,
             )
             if (index !== -1) {
-              console.log('[Activity RT] Deleting activity at index:', index)
               page.activities.splice(index, 1)
               deleted = true
             }
           }
 
           if (deleted) {
-            console.log('[Activity RT] Activity deleted successfully')
           } else {
-            console.log('[Activity RT] Activity not found in cache for deletion')
           }
         })
         return
       }
 
       // Handle creation and updates
-      console.log('[Activity RT] Fetching activity data from server')
       try {
         // Fetch the updated activity data using the enhanced endpoint
         // The GetActivitiesById endpoint is enhanced to return ActivitiesResult via transformResponse
@@ -156,8 +135,6 @@ export const handleActivityRealtimeUpdates = async (
           ),
         )
 
-        console.log('[Activity RT] Fetch result:', result)
-
         // Check if we have an error
         if ('error' in result && result.error) {
           console.error('[Activity RT] Error fetching activity:', result.error)
@@ -169,10 +146,6 @@ export const handleActivityRealtimeUpdates = async (
         const unknownData: unknown = result.data
         const res = unknownData as ActivitiesResult
         const newActivities = res?.activities || []
-        console.log('[Activity RT] Fetched activities:', {
-          count: newActivities.length,
-          activities: newActivities,
-        })
 
         if (newActivities.length === 0) {
           console.warn('[Activity RT] No activities found for activity_id', activityId)
@@ -180,20 +153,16 @@ export const handleActivityRealtimeUpdates = async (
         }
 
         const newActivity: FeedActivity = newActivities[0]
-        console.log('[Activity RT] New activity data:', newActivity)
 
         // Determine activity types to check against
         const activityTypes = [activityType]
         if (activityType === 'comment') {
           const body = newActivity?.body
           const hasChecklist = bodyHasChecklist(body || '')
-          console.log('[Activity RT] Comment checklist check:', { hasChecklist, body })
           if (hasChecklist) {
             activityTypes.push('checklist')
           }
         }
-
-        console.log('[Activity RT] Activity types for filtering:', activityTypes)
 
         // Check if this activity type is relevant to the query
         const queryActivityTypes = queryArg.activityTypes
@@ -206,29 +175,16 @@ export const handleActivityRealtimeUpdates = async (
           queryActivityTypesArray.length === 0 ||
           queryActivityTypesArray.some((type: string) => activityTypes.includes(type))
 
-        console.log('[Activity RT] Activity type relevance check:', {
-          queryActivityTypes: queryActivityTypesArray,
-          activityTypes,
-          isActivityTypeRelevant,
-        })
-
         if (!isActivityTypeRelevant) {
-          console.log('[Activity RT] Activity type not relevant to this cache, skipping')
           return
         }
 
         // Update the cache
-        console.log('[Activity RT] Updating cache')
         updateCachedData((draft) => {
           if (!draft || !draft.pages) {
             console.warn('[Activity RT] No draft or pages found for update')
             return
           }
-
-          console.log('[Activity RT] Current cache state:', {
-            pageCount: draft.pages.length,
-            firstPageActivityCount: draft.pages[0]?.activities?.length,
-          })
 
           // Check if activity already exists in any page
           let existingActivityFound = false
@@ -238,7 +194,6 @@ export const handleActivityRealtimeUpdates = async (
             )
             if (index !== -1) {
               // Update existing activity
-              console.log('[Activity RT] Updating existing activity at index:', index)
               page.activities[index] = newActivity
               existingActivityFound = true
               break
@@ -247,31 +202,21 @@ export const handleActivityRealtimeUpdates = async (
 
           // If it's a new activity (topic is 'activity.created'), add it to the first page
           if (!existingActivityFound && topic === 'activity.created') {
-            console.log('[Activity RT] Adding new activity to first page')
             if (draft.pages.length > 0 && draft.pages[0].activities) {
               // Add to the beginning of the first page (most recent activities first)
               // Since we're using reverse chronological order (last: N), prepend to the beginning
               draft.pages[0].activities.unshift(newActivity)
-              console.log(
-                '[Activity RT] Activity added. New count:',
-                draft.pages[0].activities.length,
-              )
             } else {
               console.warn('[Activity RT] Cannot add activity: no pages or activities array')
             }
           } else if (!existingActivityFound) {
-            console.log('[Activity RT] Activity not found and topic is not creation:', topic)
           } else {
-            console.log('[Activity RT] Activity updated successfully')
           }
         })
-
-        console.log('[Activity RT] Cache update complete')
       } catch (error) {
         console.error('[Activity RT] Error fetching activity data for real-time update:', error)
 
         // Invalidate the cache for these entities to trigger a refetch
-        console.log('[Activity RT] Invalidating cache tags for entities:', entityIds)
         dispatch(
           gqlApi.util.invalidateTags(
             entityIds.map((entityId) => ({ type: 'entityActivities', id: entityId })),
@@ -282,7 +227,6 @@ export const handleActivityRealtimeUpdates = async (
 
     // Subscribe to activity topic
     token = PubSub.subscribe(['activity'], handlePubSub)
-    console.log('[Activity RT] Subscribed to activity topic with token:', token)
   } catch (error) {
     console.error('[Activity RT] Error in activity real-time handler setup:', error)
     // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`
@@ -290,11 +234,9 @@ export const handleActivityRealtimeUpdates = async (
 
   // Wait for cache entry to be removed
   await cacheEntryRemoved
-  console.log('[Activity RT] Cache entry removed, cleaning up')
 
   // Cleanup: unsubscribe from PubSub
   if (token) {
-    console.log('[Activity RT] Unsubscribing from activity topic')
     PubSub.unsubscribe(token)
   }
 }

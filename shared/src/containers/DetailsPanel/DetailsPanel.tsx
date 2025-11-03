@@ -81,9 +81,20 @@ export const DetailsPanel = ({
   entityListId,
   guestCategories = {},
 }: DetailsPanelProps) => {
-  const { closeSlideOut, openPip, user, isGuest } = useDetailsPanelContext()
+  const {
+    closeSlideOut,
+    openPip,
+    user,
+    isGuest,
+    entities: contextEntities,
+  } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
   const hasCalledOnOpen = useRef(false)
+
+  // Use context entities if available, otherwise use props
+  const activeEntityType = contextEntities?.entityType ?? entityType
+  const activeEntities = contextEntities?.entities ?? entities
+  const activeEntitySubTypes = contextEntities?.entitySubTypes ?? entitySubTypes
 
   // Fire onOpen callback once when component mounts and renders
   useEffect(() => {
@@ -95,10 +106,10 @@ export const DetailsPanel = ({
 
   // Force details tab for specific entity types
   useEffect(() => {
-    if (entitiesWithoutFeed.includes(entityType) && currentTab !== 'details') {
+    if (entitiesWithoutFeed.includes(activeEntityType) && currentTab !== 'details') {
       setTab('details')
     }
-  }, [entityType, currentTab, setTab])
+  }, [activeEntityType, currentTab, setTab])
 
   // reduce projectsInfo to selected projects and into one
   const projectInfo = useMemo(
@@ -129,15 +140,15 @@ export const DetailsPanel = ({
   useEffect(() => {
     if (currentTab === 'files') {
       // check entity type is still version
-      if (entityType !== 'version') {
+      if (activeEntityType !== 'version') {
         setTab('activity')
       }
     }
-  }, [entityType, currentTab, scope])
+  }, [activeEntityType, currentTab, scope])
 
   // now we get the full details data for selected entities
-  let entitiesToQuery = entities.length
-    ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+  let entitiesToQuery = activeEntities.length
+    ? activeEntities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : // @ts-expect-error = not sure what's going on with entitiesData, we should try and remove it
       entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
@@ -149,9 +160,9 @@ export const DetailsPanel = ({
     isError,
     originalArgs,
   } = useGetEntitiesDetailsPanelQuery(
-    { entityType, entities: entitiesToQuery },
+    { entityType: activeEntityType, entities: entitiesToQuery },
     {
-      skip: !entitiesToQuery.length || !detailsPanelEntityTypes.includes(entityType),
+      skip: !entitiesToQuery.length || !detailsPanelEntityTypes.includes(activeEntityType),
     },
   )
 
@@ -174,32 +185,37 @@ export const DetailsPanel = ({
   // build the full entity path for the first entity
   const [entityPathSegments, entityPathVersions] = useGetEntityPath({
     entity: firstEntityData,
-    entityType,
+    entityType: activeEntityType,
     projectName: firstProject,
     isLoading: isFetchingEntitiesDetails,
   })
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if we're in an input element
-      const target = e.target as HTMLElement
-      const isInputElement =
-        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
+      if (e.key === 'Escape' && onClose) {
+        // Don't trigger if we're in an input element
+        const target = e.target as HTMLElement
+        const isInputElement =
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
 
-      if (e.key === 'Escape' && !isInputElement && onClose) {
+        if (!isInputElement) return
+
+        // don't trigger if the viewer is open and panel not in slideout mode
+        if (isSlideOut === false && target.closest('#viewer-dialog')) return
+
         onClose()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [onClose, isSlideOut])
 
   const { requestPipWindow } = usePiPWindow()
 
   const handleOpenPip = () => {
     openPip({
-      entityType: entityType,
+      entityType: activeEntityType,
       entities: entitiesToQuery,
       scope: scope,
     })
@@ -233,7 +249,7 @@ export const DetailsPanel = ({
             projectName={firstProject}
             hideProjectName={isSlideOut}
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
-            entityType={entityType}
+            entityType={activeEntityType}
             scope={scope}
             // @ts-ignore
             entityTypeIcons={entityTypeIcons}
@@ -265,8 +281,8 @@ export const DetailsPanel = ({
         </Styled.Toolbar>
 
         <DetailsPanelHeader
-          entityType={entityType}
-          entitySubTypes={entitySubTypes}
+          entityType={activeEntityType}
+          entitySubTypes={activeEntitySubTypes}
           entities={entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
@@ -282,7 +298,7 @@ export const DetailsPanel = ({
         />
         {isFeed && !isError && (
           <FeedWrapper
-            entityType={entityType}
+            entityType={activeEntityType}
             entities={entityDetailsData}
             activeUsers={activeProjectUsers || []}
             projectInfo={firstProjectInfo}
@@ -306,7 +322,7 @@ export const DetailsPanel = ({
         )}
         {currentTab === 'details' && (
           <FeedContextWrapper
-            entityType={entityType}
+            entityType={activeEntityType}
             entities={entityDetailsData}
             activeUsers={activeProjectUsers || []}
             projectInfo={firstProjectInfo}

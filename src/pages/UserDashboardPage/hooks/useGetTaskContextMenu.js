@@ -61,7 +61,20 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {})
 
     // if task not already selected, select it and remove all other selections
     if (!selectedTasks.includes(selectedTask.id)) {
-      dispatch(onTaskSelected({ ids: [selectedTask.id], types: [selectedTask.taskType] }))
+      dispatch(
+        onTaskSelected({
+          ids: [selectedTask.id],
+          types: [selectedTask.taskType],
+          data: [
+            {
+              id: selectedTask.id,
+              projectName: selectedTask.projectName,
+              taskType: selectedTask.taskType,
+              name: selectedTask.name,
+            },
+          ],
+        }),
+      )
     }
 
     // get context model
