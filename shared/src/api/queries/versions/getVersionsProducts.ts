@@ -31,7 +31,7 @@ import {
   PageInfo,
 } from '@shared/api/generated'
 import {
-  parseErrorMessage,
+  parseGQLErrorMessage,
   provideTagsForProductsInfinite,
   provideTagsForProductsResult,
   provideTagsForVersionsInfinite,
@@ -233,7 +233,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             return {
               error: {
                 status: 'FETCH_ERROR',
-                error: parseErrorMessage(e.message),
+                error: parseGQLErrorMessage(e.message),
               } as FetchBaseQueryError,
             }
           }
@@ -287,7 +287,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           // Handle rejected promises
           if (settledResult.status === 'rejected') {
             console.error(`Error fetching versions for product ${productId}:`, settledResult.reason)
-            errors.push({ productId, error: parseErrorMessage(settledResult.reason) })
+            errors.push({ productId, error: parseGQLErrorMessage(settledResult.reason) })
             continue
           }
 
@@ -298,7 +298,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             errors.push({
               productId,
               // @ts-expect-error - message
-              error: parseErrorMessage(result.error?.message || 'Unknown error'),
+              error: parseGQLErrorMessage(result.error?.message || 'Unknown error'),
             })
             continue
           }
@@ -435,7 +435,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             return {
               error: {
                 status: 'FETCH_ERROR',
-                error: parseErrorMessage(e.message),
+                error: parseGQLErrorMessage(e.message),
               } as FetchBaseQueryError,
             }
           }
@@ -518,7 +518,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           return {
             error: {
               status: 'FETCH_ERROR',
-              error: parseErrorMessage(error.message),
+              error: parseGQLErrorMessage(error.message),
             } as FetchBaseQueryError,
           }
         }

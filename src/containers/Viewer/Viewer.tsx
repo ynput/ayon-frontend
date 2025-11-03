@@ -258,10 +258,9 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
-  // todo: noVersions modal smaller
   return (
     <ViewerProvider selectedVersionId={selectedVersion?.id}>
-      <Styled.Container>
+      <Styled.Container className="grid">
         <Styled.PlayerToolbar>
           <VersionSelectorTool
             versions={versionsAndReviewables}
@@ -307,7 +306,11 @@ const Viewer = ({ onClose }: ViewerProps) => {
           />
           <div id="annotation-tools" style={{ position: 'relative' }}></div>
         </Styled.RightToolBar>
-        {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
+        <ViewerDetailsPanel
+          versionIds={versionIds}
+          projectName={projectName}
+          noVersions={noVersions}
+        />
       </Styled.Container>
     </ViewerProvider>
   )

@@ -21,6 +21,7 @@ import styled from 'styled-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
+import { UserDashboardProvider } from './context/UserDashboardContext'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -176,37 +177,39 @@ const UserDashboardPage = () => {
     <>
       <DocumentTitle title={title} />
       <AppNavLinks links={links} />
-      <main>
-        <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-          {showProjectList ? (
-            <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
-              <SplitterPanel size={15}>
-                <ProjectsList
-                  multiSelect={isProjectsMultiSelect}
-                  selection={selectedProjects}
-                  onSelect={setSelectedProjects}
-                  onNewProject={() => setShowNewProject(true)}
-                  onDeleteProject={handleDeleteProject}
-                  onActivateProject={handleActivateProject}
-                />
-              </SplitterPanel>
-              <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
-                {moduleComponent}
-              </SplitterPanel>
-            </StyledSplitter>
-          ) : (
-            moduleComponent
-          )}
-        </Section>
-      </main>
-      {showNewProject && (
-        <NewProjectDialog
-          onHide={(name) => {
-            setShowNewProject(false)
-            if (name) navigate(`/manageProjects/anatomy?project=${name}`)
-          }}
-        />
-      )}
+      <UserDashboardProvider>
+        <main>
+          <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
+            {showProjectList ? (
+              <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
+                <SplitterPanel size={15}>
+                  <ProjectsList
+                    multiSelect={isProjectsMultiSelect}
+                    selection={selectedProjects}
+                    onSelect={setSelectedProjects}
+                    onNewProject={() => setShowNewProject(true)}
+                    onDeleteProject={handleDeleteProject}
+                    onActivateProject={handleActivateProject}
+                  />
+                </SplitterPanel>
+                <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
+                  {moduleComponent}
+                </SplitterPanel>
+              </StyledSplitter>
+            ) : (
+              moduleComponent
+            )}
+          </Section>
+        </main>
+        {showNewProject && (
+          <NewProjectDialog
+            onHide={(name) => {
+              setShowNewProject(false)
+              if (name) navigate(`/manageProjects/anatomy?project=${name}`)
+            }}
+          />
+        )}
+      </UserDashboardProvider>
     </>
   )
 }

@@ -186,7 +186,7 @@ export const transformProductsResponse = (response: GetProductsQuery): GetProduc
   return { pageInfo, products: productsWithFeaturedVersion }
 }
 
-export const parseErrorMessage = (error: string): string => {
+export const parseGQLErrorMessage = (error: string): string => {
   try {
     // First, try to extract the JSON part after the initial error message
     const jsonMatch = error.match(/:\s*({.*})$/)

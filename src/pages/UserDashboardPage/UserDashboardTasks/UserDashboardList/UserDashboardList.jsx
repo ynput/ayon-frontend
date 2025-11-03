@@ -106,7 +106,19 @@ const UserDashboardList = ({
 
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
+  const setSelectedTasks = (ids, types, data) =>
+    dispatch(
+      onTaskSelected({
+        ids,
+        types,
+        data: tasks.map((data) => ({
+          id: data.id,
+          projectName: data.projectName,
+          taskType: data.taskType,
+          name: data.name,
+        })),
+      }),
+    )
 
   const selectedTasksData = useMemo(
     () => tasks.filter((task) => selectedTasks.includes(task.id)),

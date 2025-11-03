@@ -46,7 +46,19 @@ const UserDashboardKanBan = ({
   const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
+  const setSelectedTasks = (ids, types, data) =>
+    dispatch(
+      onTaskSelected({
+        ids,
+        types,
+        data: tasks.map((data) => ({
+          id: data.id,
+          projectName: data.projectName,
+          taskType: data.taskType,
+          name: data.name,
+        })),
+      }),
+    )
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
 
@@ -207,7 +219,7 @@ const UserDashboardKanBan = ({
     if (!selectedTasks.includes(event.active.id)) {
       // get the task
       const task = tasks.find((t) => t.id === event.active.id)
-      setSelectedTasks([event.active.id], [task.taskType])
+      setSelectedTasks([event.active.id], [task.taskType], [task])
     }
   }
 

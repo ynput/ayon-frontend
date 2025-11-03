@@ -15,6 +15,13 @@ export const Container = styled.div`
     width: fit-content;
     justify-self: end;
   }
+
+  /* when there is related panel, details panel height full */
+  &:has(.related-tasks) {
+    .viewer-details-panel {
+      grid-row: span 2;
+    }
+  }
 `
 
 export const PlayerToolbar = styled.div`

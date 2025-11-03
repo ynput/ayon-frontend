@@ -20,6 +20,7 @@ import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { openViewer } from '@state/viewer'
+import RelatedTasksModule from './RelatedTasks'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -52,7 +53,7 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
-  const { isOpen: isPanelOpen } = useScopedDetailsPanel('dashboard')
+  let { isOpen: isPanelOpen } = useScopedDetailsPanel('dashboard')
 
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
@@ -135,6 +136,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     () => transformedTasks.filter((task) => selectedTasks.includes(task.id)),
     [selectedTasks, transformedTasks],
   )
+
+  isPanelOpen = selectedTasksData.length && isPanelOpen
 
   // for selected tasks, get flat list of projects
   const selectedTasksProjects = useMemo(
@@ -226,7 +229,17 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       gutterSize={selectedTasks.length ? 6 : 0}
     >
       <SplitterPanel
-        style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden', marginRight: -6 }}
+        style={{
+          height: '100%',
+          zIndex: 10,
+          padding: 0,
+          overflow: 'hidden',
+          marginRight: -6,
+
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
         size={4}
       >
         <UserDashboardKanBan
@@ -241,8 +254,14 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           projectUsers={projectUsers}
           isLoadingProjectUsers={isLoadingProjectUsers}
         />
+        <RelatedTasksModule
+          isPanelOpen={isPanelOpen}
+          projectsInfo={projectsInfo}
+          priorities={priorities}
+          onOpenViewer={handleOpenViewer}
+        />
       </SplitterPanel>
-      {selectedTasksData.length && isPanelOpen ? (
+      {isPanelOpen ? (
         <SplitterPanel
           size={1}
           className={clsx('details-panel-splitter', { dragging: isDragging })}
