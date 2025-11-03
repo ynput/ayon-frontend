@@ -23,6 +23,12 @@ export type DetailsPanelPip = {
   scope: string
 }
 
+export type Entities = {
+  entityType: DetailsPanelEntityType
+  entities: { id: string; projectName: string }[]
+  entitySubTypes?: string[]
+}
+
 export interface OpenStateByScope {
   [scope: string]: boolean
 }
@@ -91,6 +97,10 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   pip: DetailsPanelPip | null
   openPip: (pip: DetailsPanelPip) => void
   closePip: () => void
+
+  // Entities state
+  entities: Entities | null
+  setEntities: (entities: Entities | null) => void
 
   // Annotations
   feedAnnotations: SavedAnnotationMetadata[]
@@ -217,6 +227,8 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     setPip(null)
   }, [])
 
+  const [entities, setEntities] = useState<Entities | null>(null)
+
   const [highlightedActivities, setHighlightedActivities] = useState<string[]>([])
 
   const value = {
@@ -240,6 +252,9 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     pip,
     openPip,
     closePip,
+    // entities state
+    entities,
+    setEntities,
     feedAnnotations,
     setFeedAnnotations,
     isDeveloperMode,
