@@ -6,7 +6,7 @@
 import { FC, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setExpandedFolders } from '@state/context'
-import { useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 
 interface HierarchyExpandFoldersProps {
   parents?: Record<string, string[] | undefined>

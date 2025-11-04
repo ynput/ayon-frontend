@@ -5,7 +5,7 @@ import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { Badge, BadgeWrapper } from '@shared/components'
-import { useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 
 const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})

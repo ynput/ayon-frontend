@@ -7,7 +7,7 @@ import { Column } from 'primereact/column'
 import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 import getSettingsStateFromUri from './util/getSettingsSateFromUri'
 
 interface Addon {

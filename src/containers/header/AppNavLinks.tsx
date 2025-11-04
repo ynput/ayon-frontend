@@ -6,7 +6,7 @@ import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
-import { useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 
 interface NavLinkItem {
   name: string

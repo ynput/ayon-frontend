@@ -4,7 +4,7 @@ import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
 import { copyToClipboard } from '@shared/util'
-import { URL_PARAM_ID, useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 import clsx from 'clsx'
 
 const parseQueryParams = (query: string): Record<string, string> => {
@@ -130,21 +130,6 @@ const Breadcrumbs = () => {
       goThere(e)
     }
   }
-
-  useEffect(() => {
-    if (uri !== localUri) {
-      setLocalUri(uri)
-    }
-
-    const urlParams = new URLSearchParams(window.location.search)
-    const encodedAyonEntity = urlParams.get(URL_PARAM_ID)
-    if (encodedAyonEntity !== null) {
-      const ayonEntity = decodeURIComponent(encodedAyonEntity)
-      if (ayonEntity != uri) {
-        setUri(ayonEntity)
-      }
-    }
-  }, [uri])
 
   const uriDisplay = uri2crumbs(uri, location.pathname).join(' / ')
   const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'

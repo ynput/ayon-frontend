@@ -1,3 +1,11 @@
+// The URI is a unique AYON ID for entities and settings paths
+// Entity: ayon+entity://wing_it//shots/000_logo/000_0010?task=lighting
+// Settings: ayon+settings://maya/ext_mapping/0/name
+
+// The URI is always synced with the url search param "uri"
+// Components can update the URI when changing context, like opening the details panel or navigating to a settings page
+// Components state should not be directly synced to the URI, they should only read the URI on mount to set initial state
+
 import { createContext, useContext, useEffect, ReactNode, FC } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 

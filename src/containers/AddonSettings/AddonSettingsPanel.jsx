@@ -8,7 +8,7 @@ import {
 } from '@queries/addonSettings'
 
 import SettingsEditor from '@containers/SettingsEditor'
-import { useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 
 const AddonSettingsPanel = ({
   addon,

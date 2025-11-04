@@ -34,12 +34,11 @@ import TrialBanner from '@components/TrialBanner/TrialBanner'
 import { ShortcutsProvider } from '@context/ShortcutsContext'
 import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
-import { URIProvider } from '@context/UriContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { MenuProvider } from '@shared/context/MenuContext'
+import { MenuProvider, URIProvider } from '@shared/context'
 
 // containers
 import Header from '@containers/header'
