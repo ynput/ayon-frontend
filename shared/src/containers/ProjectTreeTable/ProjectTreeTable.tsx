@@ -279,9 +279,12 @@ export const ProjectTreeTable = ({
         entitiesToUpdate.push({ ...entity, id: entity.rowId })
       } else {
         // if includeSelection is true, update all the selected cells with the same columnId
-        const { field, value, isAttrib, type } = entity
+        const { field, value, isAttrib } = entity
         for (const cellId of selectedCells) {
           const { colId, rowId } = parseCellId(cellId) || {}
+
+          // ignore row selection column
+          if (colId === ROW_SELECTION_COLUMN_ID) continue
 
           const entity = getEntityById(rowId || '')
           if (!entity) {
