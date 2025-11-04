@@ -103,7 +103,12 @@ const groupVersionMessages = (messages) => {
   // Group by parent folder within each time window
   const folderGroups = []
 
-  for (const [, timeGroup] of Object.entries(groupedByTime)) {
+  // Sort time windows chronologically (newest first to match inbox order)
+  const sortedTimeEntries = Object.entries(groupedByTime)
+    .filter(([key]) => key !== 'invalid-date')
+    .sort(([timeA], [timeB]) => new Date(timeB) - new Date(timeA))
+
+  for (const [, timeGroup] of sortedTimeEntries) {
     if (timeGroup.length === 0) continue
 
     // Group by parent folder within this time window
@@ -115,7 +120,13 @@ const groupVersionMessages = (messages) => {
     // Add each folder group to the result
     for (const [folderId, folderMessages] of Object.entries(groupedByFolder)) {
       if (folderId === 'no-parent' || folderMessages.length === 0) continue
-      folderGroups.push(folderMessages)
+
+      // Sort messages within the folder group by time (newest first)
+      const sortedMessages = folderMessages.sort((a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+      )
+
+      folderGroups.push(sortedMessages)
     }
   }
 
