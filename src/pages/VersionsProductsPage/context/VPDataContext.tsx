@@ -104,6 +104,17 @@ export const useVersionsDataContext = () => {
   return context
 }
 
+export type QueryArguments = {
+  projectName: string
+  folderIds: string[]
+  versionFilter?: string
+  productFilter?: string
+  taskFilter?: string
+  sortBy?: string
+  desc: boolean
+  featuredOnly?: string[]
+}
+
 interface VersionsDataProviderProps {
   projectName: string
   children: ReactNode
@@ -212,7 +223,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
 
   const resolveEntityArguments = useCallback(
-    (entityType: 'version' | 'product') => {
+    (entityType: 'version' | 'product'): QueryArguments => {
       // remove sortBy based on excluded
       const excludedFields = EXCLUDED_SORT_FIELDS[entityType]
       let modifiedSortBy =
@@ -235,8 +246,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       }
 
       if (entityType === 'product') {
-        if (featuredVersionFilter?.at) {
-          // is there a version type filter, us that instead
+        if (featuredVersionFilter) {
+          // is there a version type filter, use that instead
           args.featuredVersionOrder = featuredVersionFilter
         } else {
           args.featuredVersionOrder = modifiedFeaturedVersionOrder
@@ -304,11 +315,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
-    productFilterString: combinedProductFilter.filterString,
-    taskFilterString: combinedTaskFilter.filterString,
-    folderIds: slicerFolderIds,
-    sortBy: resolvedSortBy,
     modules,
+    versionArguments,
   })
 
   const isLoadingTable =
