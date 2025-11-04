@@ -122,7 +122,7 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const handleSingleClick = () => {
     // clicking a cell that is not editing will close the editor on this cell
-    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1079
+    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1324
     if (!isCurrentCellEditing) {
       setEditingCellId(null)
     }
