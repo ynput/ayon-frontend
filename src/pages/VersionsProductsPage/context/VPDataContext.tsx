@@ -21,7 +21,7 @@ import {
   VersionNodeExtended,
   ProductNodeExtended,
   determineLoadingVP,
-  getFeaturedVersionFilter,
+  extractFilters,
 } from '../util'
 import { useBuildVersionsTableData } from '../hooks'
 import {
@@ -43,7 +43,10 @@ import { useSlicerContext } from '@context/SlicerContext'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { DEFAULT_FEATURED_ORDER } from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
+import {
+  DEFAULT_FEATURED_ORDER,
+  FEATURED_VERSION_TYPES,
+} from '../../../../shared/src/components/FeaturedVersionOrder/FeaturedVersionOrder'
 import useVersionsGroupBy from '../hooks/useVersionsGroupBy'
 
 // Stable default filter to prevent unnecessary re-renders
@@ -113,6 +116,7 @@ export type QueryArguments = {
   sortBy?: string
   desc: boolean
   featuredOnly?: string[]
+  hasReviewables?: boolean
 }
 
 interface VersionsDataProviderProps {
@@ -133,10 +137,30 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
-  const { filters: filtersWithoutFeatured, featuredVersionFilter } = useMemo(
-    () => getFeaturedVersionFilter(filters),
-    [filters],
-  )
+  const {
+    filters: filtersWithoutExtracted,
+    featuredVersionFilter,
+    hasReviewablesFilter,
+  } = useMemo(() => {
+    const FEATURED_VERSION_VALUES = FEATURED_VERSION_TYPES.map((type) => type.value)
+    const result = extractFilters(filters, [
+      {
+        filterKey: 'version',
+        valuesToExtract: FEATURED_VERSION_VALUES,
+        resultKey: 'featuredVersionFilter',
+      },
+      {
+        filterKey: 'hasReviewables',
+        resultKey: 'hasReviewablesFilter',
+        isBooleanFilter: true,
+      },
+    ])
+    return {
+      filters: result.filters,
+      featuredVersionFilter: result.featuredVersionFilter as string[] | undefined,
+      hasReviewablesFilter: result.hasReviewablesFilter as boolean | undefined,
+    }
+  }, [filters])
 
   // Separate the combined filters into version and product filters
   const {
@@ -144,8 +168,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     product: productFilter = EMPTY_FILTER,
     task: taskFilter = EMPTY_FILTER,
   } = useMemo(() => {
-    return splitFiltersByScope(filtersWithoutFeatured, ['version', 'product', 'task'])
-  }, [filtersWithoutFeatured])
+    return splitFiltersByScope(filtersWithoutExtracted, ['version', 'product', 'task'])
+  }, [filtersWithoutExtracted])
 
   const { updateExpanded, expandedIds } = useExpandedState({
     expanded,
@@ -258,11 +282,14 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         if (featuredVersionFilter?.length) {
           args.featuredOnly = featuredVersionFilter
         }
+        if (hasReviewablesFilter !== undefined) {
+          args.hasReviewables = hasReviewablesFilter
+        }
       }
 
       return args
     },
-    [queryArgs, resolvedSortBy, featuredVersionOrder, featuredVersionFilter],
+    [queryArgs, resolvedSortBy, featuredVersionOrder, featuredVersionFilter, hasReviewablesFilter],
   )
 
   const productArguments = useMemo(
@@ -340,6 +367,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     featuredOnly: versionArguments.featuredOnly,
+    hasReviewables: versionArguments.hasReviewables,
   }
 
   // QUERY: get child versions for expanded products

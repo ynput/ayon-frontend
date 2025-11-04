@@ -72,6 +72,7 @@ const useVersionsGroupBy = ({ projectName, versionFilters, modules, versionArgum
     desc: versionArguments.desc,
     folderIds: versionArguments.folderIds,
     featuredOnly: versionArguments.featuredOnly,
+    hasReviewables: versionArguments.hasReviewables,
   }
 
   const {

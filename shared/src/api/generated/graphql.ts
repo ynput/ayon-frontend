@@ -590,6 +590,7 @@ export type ProductNodeVersionsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   heroOnly?: Scalars['Boolean']['input'];
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -892,6 +893,7 @@ export type ProjectNodeVersionsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   heroOnly?: Scalars['Boolean']['input'];
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1230,6 +1232,7 @@ export type TaskNodeVersionsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']>>;
   hasLinks?: InputMaybe<HasLinksFilter>;
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   heroOnly?: Scalars['Boolean']['input'];
   heroOrLatestOnly?: Scalars['Boolean']['input'];
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1779,6 +1782,7 @@ export type GetVersionsQueryVariables = Exact<{
   productFilter?: InputMaybe<Scalars['String']['input']>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -1797,6 +1801,7 @@ export type GetVersionsByProductIdQueryVariables = Exact<{
   versionFilter?: InputMaybe<Scalars['String']['input']>;
   taskFilter?: InputMaybe<Scalars['String']['input']>;
   featuredOnly?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  hasReviewables?: InputMaybe<Scalars['Boolean']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -2734,7 +2739,7 @@ export const GetProductsDocument = `
 ${VersionBaseFragmentDoc}
 ${VpFolderFragmentDoc}`;
 export const GetVersionsDocument = `
-    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetVersions($projectName: String!, $productIds: [String!], $versionIds: [String!], $versionFilter: String, $productFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $folderIds: [String!], $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     versions(
       ids: $versionIds
@@ -2743,6 +2748,7 @@ export const GetVersionsDocument = `
       productFilter: $productFilter
       taskFilter: $taskFilter
       featuredOnly: $featuredOnly
+      hasReviewables: $hasReviewables
       folderIds: $folderIds
       includeFolderChildren: true
       search: $search
@@ -2767,13 +2773,14 @@ export const GetVersionsDocument = `
     ${PageInfoFragmentDoc}
 ${VersionExtendedFragmentDoc}`;
 export const GetVersionsByProductIdDocument = `
-    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
+    query GetVersionsByProductId($projectName: String!, $productIds: [String!]!, $versionFilter: String, $taskFilter: String, $featuredOnly: [String!], $hasReviewables: Boolean, $sortBy: String, $first: Int, $last: Int, $after: String, $before: String) {
   project(name: $projectName) {
     versions(
       productIds: $productIds
       filter: $versionFilter
       taskFilter: $taskFilter
       featuredOnly: $featuredOnly
+      hasReviewables: $hasReviewables
       sortBy: $sortBy
       last: $last
       first: $first
