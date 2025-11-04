@@ -18,6 +18,7 @@ type Props = {
   isFetchingNextPage?: boolean
   hasNextPage?: boolean
   loadingProductVersions?: Record<string, number>
+  loadingProductVersionsFinished?: string[]
   childVersionsErrors?: Array<{ productId: string; error: string }>
 }
 
@@ -29,6 +30,7 @@ export const useBuildVersionsTableData = ({
   isFetchingNextPage = false,
   hasNextPage = false,
   loadingProductVersions = {},
+  loadingProductVersionsFinished = [],
   childVersionsErrors = [],
 }: Props): TableRow[] => {
   return useMemo(() => {
@@ -70,8 +72,8 @@ export const useBuildVersionsTableData = ({
           const loadingRows = generateLoadingRows(loadingCount)
           subRows = [...subRows, ...loadingRows]
         }
-        // Add empty row if product has no versions and no loading versions
-        else if (subRows.length === 0) {
+        // Add empty row if product has no versions and has finished loading
+        else if (subRows.length === 0 && loadingProductVersionsFinished.includes(product.id)) {
           subRows = [buildEmptyRow(product.id)]
         }
 

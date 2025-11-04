@@ -375,11 +375,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     data: { versions: childVersions = [], errors: childVersionsErrors } = {},
     error: childVersionsError,
     isFetching: isFetchingChildren,
+    isLoading: isLoadingChildren,
   } = useGetVersionsByProductsQuery(childVersionsArgs, { skip: !showProducts || isLoadingViews })
 
   const isLoadingChildVersions = useQueryArgumentChangeLoading(
     childVersionsArgs,
-    isFetchingChildren,
+    isFetchingChildren || isLoadingChildren,
   )
 
   // Efficiently build all maps in a single pass using util
@@ -409,7 +410,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       hasFiltersApplied: (filters.conditions?.length || 0) > 0,
       isLoading: isLoadingChildVersions,
     })
-  }, [childVersions, expandedIds, productsMap])
+  }, [childVersions, expandedIds, productsMap, isLoadingChildVersions, filters])
+
+  const loadingProductVersionsFinished = useMemo(() => {
+    // Return array of product IDs that have finished loading
+    if (!expandedIds) return []
+
+    // Products that have been fetched and are no longer fetching
+    const finishedProducts = expandedIds.filter(
+      (id) => !loadingProductVersions[id] && !isFetchingChildren,
+    )
+
+    return finishedProducts
+  }, [expandedIds, loadingProductVersions, isFetchingChildren])
 
   const versionsTableData = useBuildVersionsTableData({
     rootVersionsMap: versionsMap,
@@ -419,6 +432,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isFetchingNextPage,
     hasNextPage,
     loadingProductVersions,
+    loadingProductVersionsFinished,
     childVersionsErrors,
   })
 
