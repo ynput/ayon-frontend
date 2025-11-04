@@ -55,7 +55,8 @@ const AddonDialog = ({ uploadOpen, setUploadOpen, uploadHeader, manager }) => {
       header={uploadHeader || 'Upload addon'}
       size="md"
       tabIndex={-1}
-      onClose={()=>setUploadOpen('')}
+      onClose={handleAddonInstallFinish}
+      enableBackdropClose={false}
 
     >
       {uploadOpen && (
