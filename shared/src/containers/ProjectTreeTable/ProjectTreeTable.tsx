@@ -321,7 +321,10 @@ export const ProjectTreeTable = ({
     [attribFields, loadingAttrib, isInitialized],
   )
 
-  const getNameLabelHeader = () => scopes.map((s) => upperFirst(s)).join(' / ')
+  const getNameLabelHeader = () => {
+    if (scopes.includes('version')) return 'Product / Version'
+    return scopes.map((s) => upperFirst(s)).join(' / ')
+  }
 
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
