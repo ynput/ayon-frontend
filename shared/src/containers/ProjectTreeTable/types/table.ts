@@ -42,6 +42,7 @@ export type TableRow = {
   parents?: string[]
   folder?: string // parent folder name
   product?: string // product name of product and version parent
+  productType?: string // product name of product and version parent
   subRows?: TableRow[]
   icon?: string | null
   color?: string | null
@@ -108,6 +109,7 @@ export type EditorVersionNode = {
       id: string
     }
   }
+  productType: string
   links: EntityLink[]
   hasVersions?: boolean
 }

@@ -78,6 +78,7 @@ export function versionNodeToEditorVersionNode(version: VersionNode): VersionNod
     allAttrib: version.allAttrib,
     attrib: version.attrib || {},
     product: version.product,
+    productType: version.product.productType, // this is essential for grouping by product type
     links: [], // not applicable right now
     groups: version.groups,
   }
