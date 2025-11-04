@@ -16,7 +16,6 @@ import {
   setFocusedVersions,
   setFocusedProducts,
   setSelectedVersions,
-  setUri,
   productSelected,
   onFocusChanged,
   updateBrowserFilters,
@@ -263,12 +262,6 @@ const Products = () => {
       dispatch(setSelectedVersions(newSelection))
       // set selected product
       dispatch(productSelected({ products: [productId], versions: [versionId] }))
-      // update breadcrumbs
-      let uri = `ayon+entity://${projectName}/`
-      uri += `${data.parents.join('/')}/${data.folder}`
-      uri += `?product=${data.name}`
-      uri += `&version=${versionName}`
-      dispatch(setUri(uri))
     }
   }
 
@@ -535,25 +528,11 @@ const Products = () => {
     }
   }
 
-  const updateUri = (node) => {
-    const isGroup = node.isGroup
-    if (isGroup) return
-
-    let uri = `ayon+entity://${projectName}/`
-    uri += `${node.parents.join('/')}/${node.folder}`
-    uri += `?product=${node.name}`
-    uri += `&version=${node.versionName}`
-    dispatch(setUri(uri))
-    dispatch(onFocusChanged(node.id))
-  }
-
   const onRowFocusChange = (event) => {
     const id = extractIdFromClassList(event.target.classList)
     if (!id) return
     const node = listData.find((s) => s.id === id)
     if (!node) return
-
-    updateUri(node)
   }
 
   const onSelectionChange = (event) => {
@@ -606,7 +585,6 @@ const Products = () => {
         dispatch(setFocusedProducts([]))
         dispatch(setFocusedVersions([]))
         dispatch(setSelectedVersions({}))
-        dispatch(setUri(`ayon+entity://${projectName}/`))
         dispatch(onFocusChanged(null))
       },
     })
@@ -777,7 +755,6 @@ const Products = () => {
           <ProductsGrid
             isLoading={isLoading || isFetching}
             data={tableData}
-            onItemClick={updateUri}
             onSelectionChange={onSelectionChange}
             onContext={handleContextMenu}
             selection={selection}

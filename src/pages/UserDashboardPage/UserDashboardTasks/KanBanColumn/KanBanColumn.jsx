@@ -82,10 +82,10 @@ const KanBanColumn = forwardRef(
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
     const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
-    const { navigate: navigateToUri } = useURIContext()
+    const { setUri } = useURIContext()
     const openInBrowser = async (task) => {
       const taskUri = getTaskRoute(task)
-      navigateToUri(taskUri)
+      setUri(taskUri)
 
       // // navigate to browser page with uri as query param
       if (taskUri) {

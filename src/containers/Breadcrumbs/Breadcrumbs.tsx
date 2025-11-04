@@ -1,61 +1,66 @@
 import { useEffect, useState, useRef } from 'react'
-import { useSelector } from 'react-redux'
 import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
 import { copyToClipboard } from '@shared/util'
-import { useURIContext } from '@context/UriContext'
-import { ayonUrlParam } from '@/constants'
+import { URL_PARAM_ID, useURIContext } from '@context/UriContext'
 import clsx from 'clsx'
 
-const uri2crumbs = (uri = '', pathname) => {
-  // parse uri to path and query params
+const parseQueryParams = (query: string): Record<string, string> => {
+  if (!query) return {}
+
+  const params: Record<string, string> = {}
+  const urlParams = new URLSearchParams(query)
+
+  urlParams.forEach((value, key) => {
+    params[key] = decodeURIComponent(value)
+  })
+
+  return params
+}
+
+const getSettingsScopeLabel = (query: string): string => {
+  return query?.includes('project') ? 'Projects Manager' : 'Studio Settings'
+}
+
+const getPathnameLabel = (pathname: string): string => {
+  const pageTitle = pathname.split('/')[1]
+
+  if (pageTitle?.includes('settings')) return 'Studio Settings'
+  if (pageTitle?.includes('manageProjects')) return 'Projects Manager'
+
+  return ''
+}
+
+const uri2crumbs = (uri: string = '', pathname: string): string[] => {
   const [scope, pathAndQuery = ''] = uri.split('://')
   const [path, query] = pathAndQuery.split('?')
-  const crumbs = path.split('/').filter((crumb) => crumb)
+  const crumbs: string[] = path.split('/').filter(Boolean)
 
+  // Add scope-based label
   if (scope?.includes('ayon+settings')) {
-    let settingsScope = ''
-    if (query?.includes('project')) {
-      settingsScope = 'Projects Manager'
-    } else {
-      settingsScope = 'Studio Settings'
-    }
-
-    crumbs.unshift(settingsScope)
+    crumbs.unshift(getSettingsScopeLabel(query))
   } else if (scope?.includes('ayon+entity')) {
     crumbs.unshift('Project')
   } else {
-    // anything that doesn't have a uri
-    let pageTitle = pathname.split('/')[1]
-
-    if (pageTitle.includes('settings')) pageTitle = 'Studio Settings'
-    else if (pageTitle.includes('manageProjects')) pageTitle = 'Projects Manager'
-    // just a regular url (use last part of pathname)
-    crumbs.unshift(
-      ...pathname
-        .slice(1)
-        .split('/')
-        .map((p) => upperFirst(p)),
-    )
-  }
-
-  const qp = {}
-
-  if (query) {
-    const params = query.split('&')
-    for (const param of params) {
-      const [key, value] = param.split('=')
-      qp[key] = value
+    const pathnameLabel = getPathnameLabel(pathname)
+    if (pathnameLabel) {
+      crumbs.unshift(pathnameLabel)
+    } else {
+      crumbs.unshift(...pathname.slice(1).split('/').filter(Boolean).map(upperFirst))
     }
   }
 
-  for (const level of ['product', 'task', 'workfile', 'version', 'representation']) {
-    if (qp[level]) {
-      crumbs.push(qp[level])
+  // Add query parameter breadcrumbs
+  const queryParams = parseQueryParams(query)
+  const queryLevels = ['product', 'task', 'workfile', 'version', 'representation']
+
+  queryLevels.forEach((level) => {
+    if (queryParams[level]) {
+      crumbs.push(queryParams[level])
     }
-  }
+  })
 
   return crumbs
 }
@@ -63,26 +68,26 @@ const uri2crumbs = (uri = '', pathname) => {
 const Breadcrumbs = () => {
   const location = window.location
 
-  const [localUri, setLocalUri] = useState('')
-  const [editMode, setEditMode] = useState(false)
-  const ctxUri = useSelector((state) => state.context.uri) || ''
-  const { navigate } = useURIContext()
+  const [localUri, setLocalUri] = useState<string>('')
+  const [editMode, setEditMode] = useState<boolean>(false)
+  const { uri = '' } = useURIContext()
+  const { setUri } = useURIContext()
 
-  const inputRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   //   when editing, select all text
   useEffect(() => {
     if (!editMode) return
-    inputRef.current.select()
+    inputRef.current?.select()
 
     // reselect to counter mouse movement
     const timeout = setTimeout(() => {
-      inputRef.current.select()
+      inputRef.current?.select()
     }, 50)
 
     // reselect again to really make sure
     const timeout2 = setTimeout(() => {
-      inputRef.current.select()
+      inputRef.current?.select()
     }, 400)
 
     return () => {
@@ -91,17 +96,20 @@ const Breadcrumbs = () => {
     }
   }, [editMode])
 
-  const goThere = async (e) => {
+  const goThere = async (e?: React.SyntheticEvent) => {
     e?.preventDefault()
     setEditMode(false)
     // blur input
-    inputRef.current.blur()
+    inputRef.current?.blur()
 
     try {
-      await navigate(localUri)
+      //  set uri
+      setUri(localUri)
+      // refresh page ensures that states use this new uri
+      location.reload()
     } catch (error) {
       console.error(error)
-      setLocalUri(ctxUri)
+      setLocalUri(uri)
     } finally {
       setEditMode(false)
     }
@@ -111,12 +119,12 @@ const Breadcrumbs = () => {
     copyToClipboard(localUri)
   }
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // if escape, cancel edit mode
     if (['Escape', 'Enter'].includes(e.key)) {
       setEditMode(false)
-      setLocalUri(ctxUri)
-      inputRef.current.blur()
+      setLocalUri(uri)
+      inputRef.current?.blur()
     }
     if (e.key === 'Enter') {
       goThere(e)
@@ -124,21 +132,21 @@ const Breadcrumbs = () => {
   }
 
   useEffect(() => {
-    if (ctxUri !== localUri) {
-      setLocalUri(ctxUri)
+    if (uri !== localUri) {
+      setLocalUri(uri)
     }
 
     const urlParams = new URLSearchParams(window.location.search)
-    const encodedAyonEntity = urlParams.get(ayonUrlParam)
+    const encodedAyonEntity = urlParams.get(URL_PARAM_ID)
     if (encodedAyonEntity !== null) {
       const ayonEntity = decodeURIComponent(encodedAyonEntity)
-      if (ayonEntity != ctxUri) {
-        navigate(ayonEntity)
+      if (ayonEntity != uri) {
+        setUri(ayonEntity)
       }
     }
-  }, [ctxUri])
+  }, [uri])
 
-  const uriDisplay = uri2crumbs(ctxUri, location.pathname).join(' / ')
+  const uriDisplay = uri2crumbs(uri, location.pathname).join(' / ')
   const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
 
   return (

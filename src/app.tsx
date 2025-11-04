@@ -199,15 +199,15 @@ const App = () => {
                           <PasteModal />
                           <BrowserRouter>
                             <NotificationsProvider>
-                              <URIProvider>
-                                <ShortcutsProvider>
-                                  <PiPProvider>
-                                    <QueryParamProvider
-                                      adapter={ReactRouter6Adapter}
-                                      options={{
-                                        updateType: 'replaceIn',
-                                      }}
-                                    >
+                              <QueryParamProvider
+                                adapter={ReactRouter6Adapter}
+                                options={{
+                                  updateType: 'replaceIn',
+                                }}
+                              >
+                                <URIProvider>
+                                  <ShortcutsProvider>
+                                    <PiPProvider>
                                       <Header />
                                       <ShareDialog />
                                       <ViewerDialog />
@@ -220,10 +220,10 @@ const App = () => {
                                       <PowerpackDialog />
                                       <AppRemoteLoader />
                                       <TrialBanner />
-                                    </QueryParamProvider>
-                                  </PiPProvider>
-                                </ShortcutsProvider>
-                              </URIProvider>
+                                    </PiPProvider>
+                                  </ShortcutsProvider>
+                                </URIProvider>
+                              </QueryParamProvider>
                             </NotificationsProvider>
                           </BrowserRouter>
                         </PasteProvider>

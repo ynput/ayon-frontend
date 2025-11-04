@@ -30,8 +30,8 @@ const ListGroup = ({
   containerRef,
 }) => {
   const dispatch = useDispatch()
-  const { navigate: navigateToUri } = useURIContext()
-  const openInBrowser = (task) => navigateToUri(getTaskRoute(task))
+  const { setUri } = useURIContext()
+  const openInBrowser = (task) => setUri(getTaskRoute(task))
   const column = groups[id] || {}
 
   const { setOpen } = useScopedDetailsPanel('dashboard')

@@ -15,7 +15,6 @@ import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { getIntersectionFields, getMergedFields } from '../util'
-import { setUri } from '@state/context'
 import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
@@ -110,22 +109,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task') || []
 
-  // update the uri breadcrumbs when the selected tasks change
-  useEffect(() => {
-    if (selectedTasks.length && !isLoadingTasks) {
-      // first find task
-      const task = tasks.find((t) => t.id === selectedTasks[0])
-      if (task) {
-        // updates the breadcrumbs
-        let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
-        dispatch(setUri(uri))
-        return
-      }
-    }
-    // no tasks in current project or selected tasks NOT in current project
-    dispatch(setUri(null))
-  }, [selectedTasks, isLoadingTasks, tasks])
-
   // add extra fields to tasks like: icons, thumbnailUrl, shortPath
   const transformedTasks = useMemo(
     () => transformKanbanTasks(tasks, { projectsInfo, isLoadingTasks, priorities }),
@@ -202,7 +185,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const { setOpen } = useScopedDetailsPanel('dashboard')
 
   const handlePanelClose = () => {
-    dispatch(setUri(null))
     setOpen(false)
   }
 

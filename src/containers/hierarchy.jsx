@@ -249,9 +249,6 @@ const Hierarchy = (props) => {
 
     // update redux
     dispatch(setExpandedFolders(mergedExpandedFolders))
-
-    //updating uri after expanded folder to avoid race condition
-    dispatch(setUri(newUri))
   }
 
   const onToggle = (event) => {
