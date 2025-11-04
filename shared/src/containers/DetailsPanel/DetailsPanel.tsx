@@ -8,7 +8,7 @@ import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { productTypes } from '@shared/util'
-import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel } from '@shared/context'
+import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel, DetailsPanelTab } from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -49,6 +49,7 @@ export type DetailsPanelProps = {
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
   entityListId?: string
   guestCategories?: Record<string, string> // only used for guests to find if they have access to any categories
+  // optional tab state for independent tab management
 }
 
 export const DetailsPanel = ({
@@ -80,6 +81,7 @@ export const DetailsPanel = ({
   exportAnnotationComposite,
   entityListId,
   guestCategories = {},
+  // optional tab state for independent tab management
 }: DetailsPanelProps) => {
   const {
     closeSlideOut,
@@ -311,6 +313,8 @@ export const DetailsPanel = ({
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
+            currentTab={currentTab}
+            setCurrentTab={setTab}
           />
         )}
         {currentTab === 'files' && (

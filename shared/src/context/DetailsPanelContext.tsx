@@ -82,7 +82,6 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // Tab preferences by scope
   tabsByScope: TabStateByScope
   getTabForScope: (scope: string) => DetailsPanelTab
-  setTab: (scope: string, tab: DetailsPanelTab) => void
 
   // Slide out state
   slideOut: null | SlideOut
@@ -170,7 +169,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
+  const [tabsByScope] = useLocalStorage<TabStateByScope>(
     'details/tabs-by-scope',
     {},
   )
@@ -190,17 +189,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Set tab for a scope
-  const setTab = useCallback(
-    (scope: string, tab: DetailsPanelTab) => {
-      // Create a new state object based on current tabsByScope
-      const newState = { ...tabsByScope }
-      newState[scope] = tab
-
-      // Update the state with the new object
-      setTabsByScope(newState)
-    },
-    [tabsByScope, setTabsByScope],
-  )
 
   // is the slide out open?
   const [slideOut, setSlideOut] = useState<null | SlideOut>(null)
@@ -240,7 +228,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     // tab preferences
     tabsByScope,
     getTabForScope,
-    setTab,
     // slide out state
     slideOut,
     openSlideOut,
@@ -277,14 +264,34 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
 }
 
 // Add a specialized hook for using a panel in a specific scope
-export const useScopedDetailsPanel = (scope: string) => {
-  const { getTabForScope, setTab, getOpenForScope, setPanelOpen } = useDetailsPanelContext()
+export const useScopedDetailsPanel = ( scope : string ) => {
+  const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
+
+  const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
+    'details/tabs-by-scope',
+    {}
+  )
+
+  const [tab, setTab] = useState<DetailsPanelTab>(() => tabsByScope[scope] ?? getTabForScope(scope))
+
+  // Keep localStorage and local state in sync
+  const updateTab = useCallback(
+    (newTab: DetailsPanelTab) => {
+      setTab(newTab)
+      setTabsByScope({ ...tabsByScope, [scope]: newTab })
+    },
+    [scope, setTabsByScope]
+  )
+
+
+  const currentTab = tab
+  const isFeed = ['activity', 'comments', 'versions', 'checklists'].includes(currentTab)
 
   return {
     isOpen: getOpenForScope(scope),
     setOpen: (isOpen: boolean) => setPanelOpen(scope, isOpen),
-    currentTab: getTabForScope(scope),
-    setTab: (tab: DetailsPanelTab) => setTab(scope, tab),
-    isFeed: ['activity', 'comments', 'versions', 'checklists'].includes(getTabForScope(scope)),
+    currentTab,
+    setTab: updateTab,
+    isFeed,
   }
 }
