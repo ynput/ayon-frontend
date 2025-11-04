@@ -11,6 +11,8 @@ export * from './ViewsDialogContainer/ViewFormDialogFallback'
 export * from './ViewsMenu/ViewsMenu'
 export * from './ViewsMenuContainer/ViewsMenuContainer'
 export * from './utils/generateWorkingView'
+export * from './utils/createUpdateViewSettings'
+export * from './utils/viewUpdateHelper'
 
 // hooks
 export * from './hooks'
@@ -19,7 +21,6 @@ export * from './hooks'
 export * from './hooks/pages/useTaskProgressViewSettings'
 export * from './hooks/pages/useOverviewViewSettings'
 export * from './hooks/pages/useListsViewSettings'
-export * from './hooks/pages/useReportsViewSettings'
 
 // Re-export the ViewsComponents for convenience
 export { Views } from './Views'

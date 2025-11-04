@@ -1,13 +1,15 @@
 import { useLoadModule } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import ReportsFallback from './ReportsFallback'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useViewsContext, useReportsViewSettings } from '@shared/containers/Views'
+import { useViewsContext } from '@shared/containers/Views'
+import { createUpdateViewSettings } from '@shared/containers/Views/utils/createUpdateViewSettings'
+import { useCreateViewMutation } from '@shared/api'
 
 interface ReportsPageProps {}
 
@@ -24,8 +26,13 @@ const ReportsPage: FC<ReportsPageProps> = () => {
   const overviewSliceFields = config?.overview?.fields
 
   const viewsContext = useViewsContext()
+  const [createView] = useCreateViewMutation()
 
-  const { onUpdateWidgets, onUpdateDateFormat } = useReportsViewSettings()
+  // Create the updateViewSettings function to pass to addon
+  const updateViewSettings = useMemo(
+    () => createUpdateViewSettings(createView, viewsContext),
+    [createView, viewsContext]
+  )
 
   const [Reports, { isLoaded, outdated }] = useLoadModule({
     addon: 'reports',
@@ -67,9 +74,8 @@ const ReportsPage: FC<ReportsPageProps> = () => {
               setPersistentRowSelectionData,
             }}
             views={{
-              ...viewsContext,
-              onUpdateWidgets,
-              onUpdateDateFormat,
+              context: viewsContext,
+              updateViewSettings,
             }}
           />
         </SplitterPanel>
