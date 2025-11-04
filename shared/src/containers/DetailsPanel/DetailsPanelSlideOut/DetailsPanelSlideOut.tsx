@@ -1,9 +1,8 @@
 import * as Styled from './DetailsPanelSlideOut.styled'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import { DetailsPanel } from '../DetailsPanel'
-import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context'
 import type { ProjectModel } from '@shared/api'
-import { useState, useEffect } from 'react'
 
 export type DetailsPanelSlideOutProps = {
   projectsInfo: Record<string, ProjectModel>
@@ -15,9 +14,6 @@ export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideO
   const { entityType, entityId, projectName } = slideOut || {}
   const isSlideOutOpen = !!entityType && !!entityId && !!projectName
 
-  // Get the current tab from parent scope to initialize slide-out with same tab
-  const { currentTab: parentTab } = useScopedDetailsPanel(scope)
-  const [currentTab, setCurrentTab] = useState(parentTab)
   const { data: users } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
   const projectInfo = projectsInfo[projectName || ''] || {}
