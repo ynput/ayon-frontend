@@ -73,6 +73,13 @@ const groupMessages = (messages = [], currentUser) => {
     groups.push(currentGroup) // Add the current group to the list of groups
   }
 
+  // Sort all groups by their most recent message date (newest first)
+  groups.sort((a, b) => {
+    const dateA = new Date(a[0].createdAt)
+    const dateB = new Date(b[0].createdAt)
+    return dateB - dateA
+  })
+
   return groups // Return the list of grouped messages
 }
 
