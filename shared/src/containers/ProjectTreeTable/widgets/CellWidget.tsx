@@ -11,7 +11,6 @@ import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
-import { useColumnSettingsContext } from '../context/ColumnSettingsContext'
 
 // Utils
 import { getCellId } from '../utils/cellUtils'
@@ -111,7 +110,6 @@ export const CellWidget: FC<EditorCellProps> = ({
   const { projectName } = useProjectTableContext()
   const { isEditing, setEditingCellId } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
-  const { rowHeight } = useColumnSettingsContext()
   const cellId = getCellId(rowId, columnId)
 
   const isCurrentCellEditing = isEditing(cellId)
@@ -124,7 +122,7 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const handleSingleClick = () => {
     // clicking a cell that is not editing will close the editor on this cell
-    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1079
+    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1324
     if (!isCurrentCellEditing) {
       setEditingCellId(null)
     }

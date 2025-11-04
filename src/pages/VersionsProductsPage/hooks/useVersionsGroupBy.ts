@@ -13,30 +13,20 @@ import {
 import { getGroupByDataType } from '@shared/util'
 import { useMemo } from 'react'
 import { useVPViewsContext } from '../context/VPViewsContext'
+import { QueryArguments } from '../context/VPDataContext'
 
 type Props = {
   projectName: string
-  folderIds: string[]
   versionFilters: QueryFilter
-  productFilterString: string | undefined
-  taskFilterString: string | undefined
-  sortBy: string | undefined
   modules: ProjectTableModulesType
+  versionArguments: QueryArguments
 }
 
-const useVersionsGroupBy = ({
-  projectName,
-  folderIds,
-  versionFilters,
-  productFilterString,
-  taskFilterString,
-  sortBy,
-  modules,
-}: Props) => {
+const useVersionsGroupBy = ({ projectName, versionFilters, modules, versionArguments }: Props) => {
   const { attribFields } = useProjectDataContext()
   const { getGroupQueries, isLoading: isLoadingModules } = modules
 
-  const { sortDesc, featuredVersionOrder, groupBy: groupById } = useVPViewsContext()
+  const { groupBy: groupById } = useVPViewsContext()
 
   const groupBy: TableGroupBy | undefined = groupById
     ? {
@@ -74,14 +64,15 @@ const useVersionsGroupBy = ({
   }, [groupBy, groups, groupPageCounts, groupByDataType, versionFilters, getGroupQueries])
 
   const queryArgs = {
-    projectName,
-    groups: versionGroups,
-    productFilter: productFilterString,
-    taskFilter: taskFilterString,
-    sortBy: sortBy,
-    desc: sortDesc,
-    folderIds: folderIds,
-    featuredOnly: featuredVersionOrder?.length ? featuredVersionOrder : undefined,
+    groups: versionGroups, // special groups argument that also include version filters
+    projectName: versionArguments.projectName,
+    productFilter: versionArguments.productFilter,
+    taskFilter: versionArguments.taskFilter,
+    sortBy: versionArguments.sortBy,
+    desc: versionArguments.desc,
+    folderIds: versionArguments.folderIds,
+    featuredOnly: versionArguments.featuredOnly,
+    hasReviewables: versionArguments.hasReviewables,
   }
 
   const {

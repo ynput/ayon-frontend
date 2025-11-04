@@ -43,12 +43,12 @@ export const useGetGroupedFields = ({
           icon: getAttributeIcon('task'),
           scopes: ['task'],
         },
-        // {
-        //   value: 'productType',
-        //   label: 'Product type',
-        //   icon: getAttributeIcon('product'),
-        //   scopes: ['product', 'version'],
-        // },
+        {
+          value: 'productType',
+          label: 'Product type',
+          icon: getAttributeIcon('product'),
+          scopes: ['product', 'version'],
+        },
         // {
         //   value: 'version',
         //   label: 'Version',
