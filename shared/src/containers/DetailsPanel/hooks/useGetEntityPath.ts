@@ -62,7 +62,7 @@ const useGetEntityPath = ({
 
   const segments = useMemo(
     () => (isFetching ? [] : getEntityPathData(entity, foldersMap)),
-    [projectFolders, entity],
+    [isFetching, projectFolders, entity],
   )
 
   return [segments, versions]
