@@ -183,28 +183,28 @@ const App = () => {
                 <RemoteModulesProvider skip={!user.name}>
                   <PowerpackProvider>
                     <ContextMenuProvider>
-                      <DetailsPanelProvider
-                        {...handlerProps}
-                        user={user}
-                        viewer={viewer}
-                        dispatch={dispatch}
-                        useLocation={useLocation}
-                        useNavigate={useNavigate}
-                        useParams={useParams}
-                        useSearchParams={useSearchParams}
-                      >
-                        <GlobalContextMenu />
-                        <PasteProvider>
-                          <PasteModal />
-                          <BrowserRouter>
-                            <NotificationsProvider>
-                              <QueryParamProvider
-                                adapter={ReactRouter6Adapter}
-                                options={{
-                                  updateType: 'replaceIn',
-                                }}
-                              >
-                                <URIProvider>
+                      <GlobalContextMenu />
+                      <PasteProvider>
+                        <PasteModal />
+                        <BrowserRouter>
+                          <NotificationsProvider>
+                            <QueryParamProvider
+                              adapter={ReactRouter6Adapter}
+                              options={{
+                                updateType: 'replaceIn',
+                              }}
+                            >
+                              <URIProvider>
+                                <DetailsPanelProvider
+                                  {...handlerProps}
+                                  user={user}
+                                  viewer={viewer}
+                                  dispatch={dispatch}
+                                  useLocation={useLocation}
+                                  useNavigate={useNavigate}
+                                  useParams={useParams}
+                                  useSearchParams={useSearchParams}
+                                >
                                   <ShortcutsProvider>
                                     <PiPProvider>
                                       <Header />
@@ -221,12 +221,12 @@ const App = () => {
                                       <TrialBanner />
                                     </PiPProvider>
                                   </ShortcutsProvider>
-                                </URIProvider>
-                              </QueryParamProvider>
-                            </NotificationsProvider>
-                          </BrowserRouter>
-                        </PasteProvider>
-                      </DetailsPanelProvider>
+                                </DetailsPanelProvider>
+                              </URIProvider>
+                            </QueryParamProvider>
+                          </NotificationsProvider>
+                        </BrowserRouter>
+                      </PasteProvider>
                     </ContextMenuProvider>
                   </PowerpackProvider>
                 </RemoteModulesProvider>

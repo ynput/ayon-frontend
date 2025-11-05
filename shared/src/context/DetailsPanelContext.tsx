@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  ReactNode,
+  useState,
+  useEffect,
+} from 'react'
 import { useLocalStorage } from '@shared/hooks'
 import { DetailsPanelEntityType, useGetCurrentUserQuery } from '@shared/api'
 import type { UserModel } from '@shared/api'
@@ -6,6 +13,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
+import { useURIContext } from './UriContext'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
@@ -169,10 +177,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope] = useLocalStorage<TabStateByScope>(
-    'details/tabs-by-scope',
-    {},
-  )
+  const [tabsByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
@@ -219,6 +224,44 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
   const [highlightedActivities, setHighlightedActivities] = useState<string[]>([])
 
+  const { uriType, uri, entity, getUriEntities } = useURIContext()
+  // on first load, check if there is a uri and open details panel if there is
+  useEffect(() => {
+    // check uri type is entity
+    if (uriType !== 'entity' || !entity || entity.entityType === 'product') return
+
+    getUriEntities()
+      .then((result) => {
+        if (result.length === 0) return
+
+        const entityUriData = result.find((r) => r.uri === uri)
+        const entityData = entityUriData?.entities?.[0]
+
+        if (!entityUriData || !entityData) return
+
+        const newEntities: Entities = {
+          entityType: entity.entityType as DetailsPanelEntityType,
+          entities: [
+            {
+              id:
+                entityData.representationId ||
+                entityData.versionId ||
+                entityData.productId ||
+                entityData.taskId ||
+                entityData.folderId ||
+                '',
+              projectName: entityData.projectName || entity.projectName || '',
+            },
+          ],
+        }
+
+        setEntities(newEntities)
+      })
+      .catch((err) => {
+        console.warn('Failed to get URI entities:', err)
+      })
+  }, [setEntities])
+
   const value = {
     // open state for the panel by scope
     panelOpenByScope,
@@ -264,12 +307,12 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
 }
 
 // Add a specialized hook for using a panel in a specific scope
-export const useScopedDetailsPanel = ( scope : string ) => {
+export const useScopedDetailsPanel = (scope: string) => {
   const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
 
   const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
     'details/tabs-by-scope',
-    {}
+    {},
   )
 
   const [tab, setTab] = useState<DetailsPanelTab>(() => tabsByScope[scope] ?? getTabForScope(scope))
@@ -280,9 +323,8 @@ export const useScopedDetailsPanel = ( scope : string ) => {
       setTab(newTab)
       setTabsByScope({ ...tabsByScope, [scope]: newTab })
     },
-    [scope, setTabsByScope]
+    [scope, setTabsByScope],
   )
-
 
   const currentTab = tab
   const isFeed = ['activity', 'comments', 'versions', 'checklists'].includes(currentTab)

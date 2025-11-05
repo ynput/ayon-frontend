@@ -22,7 +22,8 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
   const { projectName, projectInfo } = useProjectDataContext()
-  const { selectedVersions, setSelectedVersions } = useVersionsSelectionContext()
+  const { selectedVersions, setSelectedVersions, showVersionDetails } =
+    useVersionsSelectionContext()
   const { setSelectedCells, selectedRows } = useSelectionCellsContext()
 
   const { data: users = [] } = useGetUsersAssigneeQuery(
@@ -75,6 +76,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   return (
     <>
       <DetailsPanel
+        isOpen={showVersionDetails}
         entityType={'version'}
         entities={entities}
         projectsInfo={projectsInfo}

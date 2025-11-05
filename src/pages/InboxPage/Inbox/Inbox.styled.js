@@ -10,17 +10,18 @@ export const InboxSection = styled(Section)`
 
   overflow: hidden;
   align-items: flex-start;
+  height: 100%;
 
   & > * {
     width: unset;
   }
 
-  .inbox-details-panel {
-    max-width: clamp(550px, 33vw, 800px);
-    min-width: clamp(550px, 33vw, 800px);
-    position: relative;
+  .p-splitter {
     height: 100%;
-    padding-bottom: var(--padding-m);
+  }
+
+  .p-splitter-panel {
+    overflow: hidden;
   }
 `
 

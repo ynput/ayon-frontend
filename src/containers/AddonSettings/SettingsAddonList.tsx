@@ -8,7 +8,6 @@ import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useURIContext } from '@shared/context'
-import getSettingsStateFromUri from './util/getSettingsSateFromUri'
 
 interface Addon {
   name: string
@@ -123,13 +122,12 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
     setBundleName(data?.bundleName || null)
   }, [data?.bundleName])
 
-  const { uri } = useURIContext()
+  const { uriType, settings } = useURIContext()
 
   useEffect(() => {
-    // if no URI or already have selection, do nothin
-    // This is a one time effect
-    if (!uri || selectedAddons.length) return
-    const { addonName, addonVersion, settingsPath, site } = getSettingsStateFromUri(uri)
+    // check uri is valid and type settings, settings object is valid
+    if (uriType !== 'settings' || !settings || selectedAddons.length) return
+    const { addonName, addonVersion, site, settingsPath } = settings
 
     if (addonName) {
       const addon = addons.find(
@@ -145,7 +143,7 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
         })
       }
     }
-  }, [uri, selectedAddons, setSelectedAddons, onAddonFocus])
+  }, [uriType, settings, selectedAddons, setSelectedAddons, onAddonFocus])
 
   const onSelectionChange = (e: any) => {
     // if e.value is an array [], just set the selection

@@ -16,6 +16,7 @@ import { openViewer } from '@state/viewer'
 type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
+  isOpen?: boolean
 }
 
 type EntitySelection = {
@@ -27,6 +28,7 @@ type EntitySelection = {
 const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
+  isOpen,
 }: ProjectOverviewDetailsPanelProps) => {
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
@@ -60,21 +62,14 @@ const ProjectOverviewDetailsPanel = ({
     projectName,
   })
 
-  // Early return if no entities are selected
-  if (!entitySelection) {
-    return null
-  }
+  const isPanelOpen = !!entitySelection && (typeof isOpen !== 'boolean' || isOpen)
 
-  const { entities, entityType, handleClose } = entitySelection
-  // check that entityType is supported
-  if (!detailsPanelEntityTypes.includes(entityType)) {
-    console.warn(`Unsupported entity type: ${entityType}`)
-    return null
-  }
+  const { entities, entityType, handleClose } = entitySelection || {}
 
   return (
     <>
       <DetailsPanel
+        isOpen={isPanelOpen}
         entityType={entityType}
         entities={entities}
         projectsInfo={projectsInfo}

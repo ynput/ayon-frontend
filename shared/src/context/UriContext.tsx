@@ -6,14 +6,52 @@
 // Components can update the URI when changing context, like opening the details panel or navigating to a settings page
 // Components state should not be directly synced to the URI, they should only read the URI on mount to set initial state
 
-import { createContext, useContext, useEffect, ReactNode, FC } from 'react'
+import { createContext, useContext, useEffect, ReactNode, FC, useCallback } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import { buildEntityUri, parseUri } from '../util'
+import { ResolvedUriModel, useResolveUrisMutation } from '@shared/api'
 
 export const URL_PARAM_ID = 'uri'
 
+type SetEntityUriFunc = ({
+  projectName,
+  folderPath,
+  taskName,
+  productName,
+  versionName,
+}: {
+  projectName: string
+  folderPath: string
+  taskName?: string
+  productName?: string
+  versionName?: string
+}) => void
+
+export type EntityUri = {
+  projectName: string
+  entityType: 'task' | 'folder' | 'product' | 'version'
+  folderPath: string
+  taskName?: string
+  productName?: string
+  versionName?: string
+}
+
+export type SettingsUri = {
+  addonName: string
+  addonVersion: string
+  settingsPath: string[]
+  site: string | undefined
+  project: string | undefined
+}
+
 interface URIContextValue {
   uri: string
-  setUri: (uri: string) => void
+  uriType: 'settings' | 'entity' | undefined
+  entity?: EntityUri
+  settings?: SettingsUri
+  setUri: (uri: string | null | undefined) => void
+  setEntityUri: SetEntityUriFunc
+  getUriEntities: () => Promise<ResolvedUriModel[]>
 }
 
 interface URIProviderProps {
@@ -37,9 +75,43 @@ const URIProvider: FC<URIProviderProps> = ({ children }) => {
     }
   }, [pathname, setUri])
 
+  const { type: uriType, entity, settings } = parseUri(uri)
+
+  // helper function to set an entity URI
+  const setEntityUri = useCallback<SetEntityUriFunc>(
+    ({ projectName, folderPath, taskName, productName, versionName }) => {
+      const uri = buildEntityUri({ projectName, folderPath, taskName, productName, versionName })
+      setUri(uri)
+    },
+    [setUri],
+  )
+
+  // helper function to get entity ids from URI so that we can actually do something with it
+  const [resolveUris] = useResolveUrisMutation()
+  const getUriEntities = useCallback(async () => {
+    if (uriType !== 'entity' || !uri) return []
+
+    try {
+      const entities = await resolveUris({ resolveRequestModel: { uris: [uri] } }).unwrap()
+      // we could set more detailed entity info here if needed
+      // for now we just log it
+      console.log('Resolved entity from URI:', entities)
+
+      return entities
+    } catch (error) {
+      console.warn('Failed to resolve URI:', error)
+      return []
+    }
+  }, [resolveUris, uri, uriType])
+
   const contextValue: URIContextValue = {
     uri,
+    uriType,
+    entity,
+    settings,
     setUri,
+    setEntityUri,
+    getUriEntities,
   }
 
   return <URIContext.Provider value={contextValue}>{children}</URIContext.Provider>

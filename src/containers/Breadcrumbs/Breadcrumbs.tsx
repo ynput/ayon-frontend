@@ -75,6 +75,11 @@ const Breadcrumbs = () => {
 
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // keep localUri in sync with real uri
+  useEffect(() => {
+    setLocalUri(uri)
+  }, [uri])
+
   //   when editing, select all text
   useEffect(() => {
     if (!editMode) return

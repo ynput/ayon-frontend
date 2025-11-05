@@ -63,6 +63,7 @@ import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenVie
 import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { useViewsContext } from '@shared/containers/index.ts'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -273,7 +274,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const shouldShowEntityDetailsPanel =
     (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
-  const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || shouldShowListDetailsPanel
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -330,7 +330,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
               gutterSize={isPanelOpen && selectedList ? 4 : 0}
             >
               <SplitterPanel size={82}>
-                <Splitter
+                <DetailsPanelSplitter
                   layout="horizontal"
                   stateKey="overview-splitter-details"
                   stateStorage="local"
@@ -345,27 +345,26 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       viewOnly={(selectedList?.accessLevel || 0) < 20}
                     />
                   </SplitterPanel>
-                  {shouldShowDetailsPanel ? (
-                    <SplitterPanel
-                      size={30}
-                      style={{
-                        zIndex: 300,
-                        minWidth: 300,
-                      }}
-                    >
-                      {shouldShowEntityDetailsPanel ? (
-                        <ProjectOverviewDetailsPanel
-                          projectInfo={projectInfo}
-                          projectName={projectName}
-                        />
-                      ) : selectedList ? (
+                  <SplitterPanel
+                    size={30}
+                    style={{
+                      zIndex: 300,
+                      minWidth: 300,
+                    }}
+                    className="details"
+                  >
+                    <ProjectOverviewDetailsPanel
+                      projectInfo={projectInfo}
+                      projectName={projectName}
+                      isOpen={shouldShowEntityDetailsPanel}
+                    />
+                    {selectedList &&
+                      !shouldShowEntityDetailsPanel &&
+                      shouldShowListDetailsPanel && (
                         <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
-                      ) : null}
-                    </SplitterPanel>
-                  ) : (
-                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-                  )}
-                </Splitter>
+                      )}
+                  </SplitterPanel>
+                </DetailsPanelSplitter>
               </SplitterPanel>
               {isPanelOpen && selectedList ? (
                 <SplitterPanel

@@ -20,6 +20,7 @@ import styled from 'styled-components'
 import clsx from 'clsx'
 import { openViewer } from '@state/viewer'
 import RelatedTasksModule from './RelatedTasks'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -196,7 +197,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   if (isError) return <EmptyPlaceholder error={error} />
 
   return (
-    <StyledSplitter
+    <DetailsPanelSplitter
       layout="horizontal"
       style={{
         height: '100%',
@@ -208,7 +209,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       }}
       stateKey="user-dashboard-tasks"
       className="dashboard-tasks"
-      gutterSize={selectedTasks.length ? 6 : 0}
+      gutterSize={6}
     >
       <SplitterPanel
         style={{
@@ -243,39 +244,37 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           onOpenViewer={handleOpenViewer}
         />
       </SplitterPanel>
-      {isPanelOpen ? (
-        <SplitterPanel
-          size={1}
-          className={clsx('details-panel-splitter', { dragging: isDragging })}
-          style={{
-            maxWidth: isDragging
-              ? 0
-              : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-            minWidth: isDragging ? 0 : detailsMinWidth,
-          }}
-        >
-          <DetailsPanel
-            onClose={handlePanelClose}
-            entitiesData={selectedTasksData}
-            disabledStatuses={disabledStatuses}
-            tagsOptions={tagsOptions}
-            projectUsers={projectUsers}
-            activeProjectUsers={activeProjectUsers}
-            disabledProjectUsers={disabledProjectUsers}
-            selectedTasksProjects={selectedTasksProjects}
-            projectsInfo={projectsInfo}
-            projectNames={selectedTasksProjects}
-            entityType="task"
-            entitySubTypes={taskTypes}
-            scope="dashboard"
-            onOpenViewer={handleOpenViewer}
-          />
-          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
-        </SplitterPanel>
-      ) : (
-        <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-      )}
-    </StyledSplitter>
+
+      <SplitterPanel
+        size={1}
+        className={clsx('details-panel-splitter', 'details', { dragging: isDragging })}
+        style={{
+          maxWidth: isDragging
+            ? 0
+            : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+          minWidth: isDragging ? 0 : detailsMinWidth,
+        }}
+      >
+        <DetailsPanel
+          isOpen={isPanelOpen}
+          onClose={handlePanelClose}
+          entitiesData={selectedTasksData}
+          disabledStatuses={disabledStatuses}
+          tagsOptions={tagsOptions}
+          projectUsers={projectUsers}
+          activeProjectUsers={activeProjectUsers}
+          disabledProjectUsers={disabledProjectUsers}
+          selectedTasksProjects={selectedTasksProjects}
+          projectsInfo={projectsInfo}
+          projectNames={selectedTasksProjects}
+          entityType="task"
+          entitySubTypes={taskTypes}
+          scope="dashboard"
+          onOpenViewer={handleOpenViewer}
+        />
+        <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
+      </SplitterPanel>
+    </DetailsPanelSplitter>
   )
 }
 

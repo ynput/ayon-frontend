@@ -32,6 +32,7 @@ import { useAppSelector } from '@state/store'
 import { OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -161,33 +162,30 @@ const ProjectOverviewPage: FC = () => {
               gutterSize={!isPanelOpen ? 0 : 4}
             >
               <SplitterPanel size={82}>
-                <Splitter
+                <DetailsPanelSplitter
                   layout="horizontal"
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!shouldShowDetailsPanel ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     <ProjectOverviewTable />
                   </SplitterPanel>
-                  {shouldShowDetailsPanel ? (
-                    <SplitterPanel
-                      size={30}
-                      style={{
-                        zIndex: 300,
-                        minWidth: 300,
-                      }}
-                    >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
-                    </SplitterPanel>
-                  ) : (
-                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-                  )}
-                </Splitter>
+
+                  <SplitterPanel
+                    size={30}
+                    style={{
+                      zIndex: 300,
+                      minWidth: 300,
+                    }}
+                    className="details"
+                  >
+                    <ProjectOverviewDetailsPanel
+                      projectInfo={projectInfo}
+                      projectName={projectName}
+                    />
+                  </SplitterPanel>
+                </DetailsPanelSplitter>
               </SplitterPanel>
               {isPanelOpen ? (
                 <SplitterPanel

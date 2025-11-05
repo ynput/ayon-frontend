@@ -7,8 +7,8 @@ import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@share
 import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
-import { productTypes } from '@shared/util'
-import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel, DetailsPanelTab } from '@shared/context'
+import { extractEntityHierarchyFromParents, productTypes } from '@shared/util'
+import { useDetailsPanelContext, useScopedDetailsPanel, useURIContext } from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -52,7 +52,7 @@ export type DetailsPanelProps = {
   // optional tab state for independent tab management
 }
 
-export const DetailsPanel = ({
+const DetailsPanelInner = ({
   entityType,
   entitySubTypes = [],
   // entities is data we already have from kanban
@@ -81,14 +81,15 @@ export const DetailsPanel = ({
   exportAnnotationComposite,
   entityListId,
   guestCategories = {},
-  // optional tab state for independent tab management
-}: DetailsPanelProps) => {
+}: // optional tab state for independent tab management
+DetailsPanelProps) => {
   const {
     closeSlideOut,
     openPip,
     user,
     isGuest,
     entities: contextEntities,
+    setEntities,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
   const hasCalledOnOpen = useRef(false)
@@ -112,6 +113,13 @@ export const DetailsPanel = ({
       setTab('details')
     }
   }, [activeEntityType, currentTab, setTab])
+
+  // once component is provided with specific entities, remove context entities to avoid conflicts
+  useEffect(() => {
+    if (entities.length && contextEntities) {
+      setEntities(null)
+    }
+  }, [entities, contextEntities, setEntities])
 
   // reduce projectsInfo to selected projects and into one
   const projectInfo = useMemo(
@@ -192,6 +200,35 @@ export const DetailsPanel = ({
     isLoading: isFetchingEntitiesDetails,
   })
 
+  const { setEntityUri, setUri } = useURIContext()
+  // sync the uri when entity changes
+  useEffect(() => {
+    if (!firstEntityData?.parents) return
+    const { folderPath, taskName, versionName, productName } = extractEntityHierarchyFromParents(
+      firstEntityData.parents,
+      activeEntityType,
+      firstEntityData.name,
+    )
+    setEntityUri({
+      projectName: firstProject,
+      folderPath: folderPath,
+      taskName: taskName,
+      productName: productName,
+      versionName: versionName,
+    })
+
+    // unmount cleanup: clear uri
+    return () => {
+      setUri(null)
+    }
+  }, [firstEntityData])
+
+  const handleClose = () => {
+    onClose?.()
+    // also remove any entities in context
+    setEntities(null)
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && onClose) {
@@ -205,13 +242,13 @@ export const DetailsPanel = ({
         // don't trigger if the viewer is open and panel not in slideout mode
         if (isSlideOut === false && target.closest('#viewer-dialog')) return
 
-        onClose()
+        handleClose()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose, isSlideOut])
+  }, [handleClose, isSlideOut])
 
   const { requestPipWindow } = usePiPWindow()
 
@@ -271,11 +308,11 @@ export const DetailsPanel = ({
               onClick={handleOpenPip}
             />
 
-            {onClose && (
+            {(onClose || entities) && (
               <Button
                 icon="close"
                 variant={'text'}
-                onClick={() => onClose && onClose()}
+                onClick={handleClose}
                 data-shortcut={'Escape'}
               />
             )}
@@ -348,4 +385,17 @@ export const DetailsPanel = ({
       </Styled.Panel>
     </>
   )
+}
+
+// create a wrapper that checks if the details panel should be open or not based on isOpen prop and entities state
+export const DetailsPanel = ({
+  isOpen,
+  ...props
+}: DetailsPanelProps & { entityType?: DetailsPanelEntityType; isOpen: boolean }) => {
+  const { entities } = useDetailsPanelContext()
+
+  if (!isOpen && !entities) return null
+  if (!props.entityType && !entities) return null
+
+  return <DetailsPanelInner {...props} />
 }

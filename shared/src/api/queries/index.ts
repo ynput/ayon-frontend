@@ -22,6 +22,7 @@ export * from './users'
 export * from './versions'
 export * from './views'
 export * from './watchers'
+export * from './uris'
 
 // re-export
 export { confirmDialog } from 'primereact/confirmdialog'

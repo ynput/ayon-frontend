@@ -17,7 +17,7 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   const selected = useAppSelector((state) => state.progress.selected)
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
-  const { setOpen } = useScopedDetailsPanel('progress')
+  const { setOpen, isOpen } = useScopedDetailsPanel('progress')
 
   const projectsInfo = { [projectName]: projectInfo }
 
@@ -25,13 +25,12 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
-  if (!entities.length) return null
-
   return (
     <>
       {/* @ts-ignore */}
       <DetailsPanel
         // entitySubTypes={subTypes}
+        isOpen={isOpen && !!entities.length}
         entityType={selected.type}
         entities={entities as any}
         projectsInfo={projectsInfo}
