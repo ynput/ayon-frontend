@@ -162,7 +162,7 @@ const useProjectsListMenuItems = ({
           label: `${singleActive ? 'Deactivate to delete' : 'Delete'}`,
           icon: 'delete',
           [command ? 'command' : 'onClick']: () => handleDelete(singleProject, selection),
-          disabled: selection.length !== 1 || singleActive !== false,
+          disabled: selection.length !== 1 || singleActive || !singleProject,
           danger: true,
         },
       ]
