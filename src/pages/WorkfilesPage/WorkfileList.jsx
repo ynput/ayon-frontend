@@ -6,12 +6,12 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '@queries/getWorkfiles'
 import NoEntityFound from '@components/NoEntityFound'
 import { setFocusedWorkfiles } from '@state/context'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import { useTableKeyboardNavigation } from '@shared/containers/Feed'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
-import { useDeleteWorkfileMutation } from '@shared/api/generated/workfiles'
+import { useDeleteWorkfileMutation } from '@queries/workfiles/deleteWorkfile'
 
 const WorkfileList = ({ style }) => {
   const tableRef = useRef(null)
@@ -70,49 +70,58 @@ const WorkfileList = ({ style }) => {
     config: { multiSelect: false },
   })
 
-  const onDeleteFile = useCallback(() => {
-    if (!selection) return
+  // Create context menu items dynamically for a specific workfile
+  const createContextMenuItems = useCallback(
+    (workfile) => {
+      if (!workfile) return []
 
-    confirmDelete({
-      label: selection.name,
-      accept: async () => {
-        try {
-          await deleteWorkfile({
-            projectName,
-            workfileId: selection.id,
-          }).unwrap()
-          dispatch(setFocusedWorkfiles([]))
-        } catch (error) {
-          console.error(error)
-          toast.error('Error deleting workfile')
-        }
-      },
-    })
-  }, [selection, projectName, deleteWorkfile, dispatch])
+      const onDeleteFile = () => {
+        confirmDelete({
+          label: workfile.name,
+          accept: async () => {
+            try {
+              await deleteWorkfile({
+                projectName,
+                workfileId: workfile.id,
+              }).unwrap()
+              dispatch(setFocusedWorkfiles([]))
+            } catch (error) {
+              console.error(error)
+              toast.error('Error deleting workfile')
+            }
+          },
+        })
+      }
 
-  const globalContextItems = useMemo(
-    () => [
-      {
-        label: 'Delete File',
-        icon: 'delete',
-        command: onDeleteFile,
-        danger: true,
-        disabled: !selection,
-      },
-    ],
-    [onDeleteFile, selection],
+      return [
+        {
+          label: 'Delete File',
+          icon: 'delete',
+          command: onDeleteFile,
+          danger: true,
+        },
+      ]
+    },
+    [projectName, deleteWorkfile, dispatch],
   )
-  const [globalContextMenuShow] = useCreateContextMenu(globalContextItems)
+
+  const [globalContextMenuShow] = useCreateContextMenu([])
 
   const onContextMenu = useCallback(
     (e) => {
       const rowData = e.data
-      if (rowData && rowData.id !== selectedWorkfile) {
+      if (!rowData) return
+
+      // Update selection for visual feedback
+      if (rowData.id !== selectedWorkfile) {
         dispatch(setFocusedWorkfiles([rowData.id]))
       }
-      globalContextMenuShow(e.originalEvent)
+
+      // Create menu items with the right-clicked workfile data
+      const menuItems = createContextMenuItems(rowData)
+      globalContextMenuShow(e.originalEvent, menuItems)
     },
-    [selectedWorkfile, dispatch, globalContextMenuShow],
+    [selectedWorkfile, dispatch, globalContextMenuShow, createContextMenuItems],
   )
   
 
