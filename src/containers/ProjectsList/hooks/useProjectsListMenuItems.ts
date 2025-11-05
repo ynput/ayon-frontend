@@ -21,6 +21,7 @@ interface MenuItemProps {
   pinned: string[]
   multiSelect?: boolean
   showArchived?: boolean
+  userLevel?: number
   onPin?: (pinned: string[]) => void
   onSearch?: () => void
   onManage?: (name: string) => void
@@ -53,6 +54,7 @@ const useProjectsListMenuItems = ({
   pinned,
   multiSelect,
   showArchived = false,
+  userLevel = 0,
   onNewProject,
   onSearch,
   onPin,
@@ -126,12 +128,14 @@ const useProjectsListMenuItems = ({
           label: 'Open',
           icon: 'open_in_new',
           [command ? 'command' : 'onClick']: () => singleProject && onOpen?.(singleProject?.name),
+          hidden: userLevel < 500,
         },
         {
           id: 'manage-projects',
           label: 'Manage',
           icon: 'settings',
           [command ? 'command' : 'onClick']: () => singleProject && onManage?.(singleProject.name),
+          hidden: userLevel < 500,
         },
         {
           id: 'show-archived',
@@ -140,9 +144,9 @@ const useProjectsListMenuItems = ({
           [command ? 'command' : 'onClick']: onShowArchivedToggle,
           selected: showArchived,
           active: showArchived,
-          hidden: command, // hide on context menu
+          hidden: command || userLevel < 500, // hide on context menu
         },
-        { id: 'divider', label: '' },
+        { id: 'divider', label: '', hidden: userLevel < 500 },
         {
           id: 'pin-project',
           label: allPinned ? 'Unpin' : 'Pin',
@@ -187,6 +191,7 @@ const useProjectsListMenuItems = ({
       projects,
       multiSelect,
       showArchived,
+      userLevel,
       isMenuItemEnabled,
       onArchive,
       onDelete,

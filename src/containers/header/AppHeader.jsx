@@ -162,16 +162,18 @@ const Header = () => {
           />
         </Link>
 
-        <HeaderButton
-          icon="event_list"
-          label="Projects"
-          variant="nav"
-          onClick={() => handleToggleMenu('project')}
-          style={{
-            alignItems: 'center',
-            display: 'flex',
-          }}
-        />
+        {user.uiExposureLevel >= 500 && (
+          <HeaderButton
+            icon="event_list"
+            label="Projects"
+            variant="nav"
+            onClick={() => handleToggleMenu('project')}
+            style={{
+              alignItems: 'center',
+              display: 'flex',
+            }}
+          />
+        )}
 
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </FlexWrapper>

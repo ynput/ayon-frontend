@@ -23,10 +23,10 @@ import { RemoteAddon } from '@shared/context'
 import { toast } from 'react-toastify'
 
 interface AppRoutesProps {
-  isUser: boolean
+  level: number
 }
 
-const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
+const AppRoutes: FC<AppRoutesProps> = ({ level }) => {
   // dynamically import routes
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     moduleKey: 'Route',
@@ -57,19 +57,46 @@ const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
       <Route path="/dashboard" element={<Navigate replace to="/dashboard/tasks" />} />
       <Route path="/dashboard/:module" element={<UserDashboardPage />} />
       <Route path="/dashboard/addon/:addonName" element={<UserDashboardPage />} />
-
       <Route path="/manageProjects" element={<ProjectManagerPage />} />
       <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
-      <Route path={'/projects/:projectName'} element={<ProjectPage />} />
-      <Route path={'/projects/:projectName/:module/*'} element={<ProjectPage />} />
-      <Route path={'/projects/:projectName/addon/:addonName'} element={<ProjectPage />} />
+      <Route
+        path={'/projects/:projectName'}
+        element={
+          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+            <ProjectPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={'/projects/:projectName/:module/*'}
+        element={
+          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+            <ProjectPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={'/projects/:projectName/addon/:addonName'}
+        element={
+          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+            <ProjectPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/settings" element={<Navigate replace to="/settings/anatomyPresets" />} />
       <Route path="/settings/:module" element={<SettingsPage />} />
-      <Route path="/settings/addon/:addonName" element={<SettingsPage />} />
+      <Route
+        path="/settings/addon/:addonName"
+        element={
+          <ProtectedRoute isAllowed={level >= 700} redirectPath="/">
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/services"
         element={
-          <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+          <ProtectedRoute isAllowed={level >= 700} redirectPath="/">
             <ServicesPage />
           </ProtectedRoute>
         }
@@ -77,7 +104,7 @@ const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
       <Route
         path="/market"
         element={
-          <ProtectedRoute isAllowed={!isUser} redirectPath="/">
+          <ProtectedRoute isAllowed={level >= 700} redirectPath="/">
             <MarketPage />
           </ProtectedRoute>
         }
@@ -90,7 +117,14 @@ const AppRoutes: FC<AppRoutesProps> = ({ isUser }) => {
       <Route path="/doc/api" element={<APIDocsPage />} />
       <Route path="/account" element={<Navigate replace to="/account/profile" />} />
       <Route path="/account/:module" element={<AccountPage />} />
-      <Route path="/events" element={<EventsPage />} />
+      <Route
+        path="/events"
+        element={
+          <ProtectedRoute isAllowed={level >= 700} redirectPath="/">
+            <EventsPage />
+          </ProtectedRoute>
+        }
+      />
       <Route element={<ErrorPage code="404" />} />
     </Routes>
   )
