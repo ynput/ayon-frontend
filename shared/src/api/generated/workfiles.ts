@@ -36,6 +36,7 @@ const injectedRtkApi = api.injectEndpoints({
           'x-sender-type': queryArg['x-sender-type'],
         },
       }),
+      invalidatesTags: ['workfile'],
     }),
     updateWorkfile: build.mutation<UpdateWorkfileApiResponse, UpdateWorkfileApiArg>({
       query: (queryArg) => ({
@@ -63,6 +64,7 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export const { useDeleteWorkfileMutation } = injectedRtkApi
 export type GetWorkfileThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetWorkfileThumbnailApiArg = {
   projectName: string
