@@ -310,13 +310,24 @@ export type MaterializeEntityListApiArg = {
   'x-sender'?: string
   'x-sender-type'?: string
 }
-export type AttributeEnumItem = {
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for type material-symbols) */
+  name?: string
+  /** The color of the icon (for type material-symbols) */
+  color?: string
+  /** The URL of the icon (for type url) */
+  url?: string
+}
+export type EnumItem = {
   value: string | number | number | boolean
   label: string
-  icon?: string
+  description?: string
+  fulltext?: string[]
+  group?: string
+  /** Icon name (material symbol) or IconModel object */
+  icon?: string | IconModel
   color?: string
-  /** List of project this item is available on */
-  projects?: string[]
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -351,7 +362,11 @@ export type AttributeData = {
   /** Only for string types. The value must match this regex. */
   regex?: string
   /** List of enum items used for displaying select widgets */
-  enum?: AttributeEnumItem[]
+  enum?: EnumItem[]
+  /** Name of the function that provides enum values dynamically. */
+  enumResolver?: string
+  /** Settings passed to the enum resolver function. */
+  enumResolverSettings?: object
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
 }
