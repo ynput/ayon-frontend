@@ -149,6 +149,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   const navigate = useAyonNavigate()
   const onOpenProject = (project: string) => {
+    if ((user?.uiExposureLevel || 0) < 500) return
     handleProjectSelectionDispatches(project)
 
     const defaultTab = getDefaultTab()
@@ -174,6 +175,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     multiSelect,
     pinned: rowPinning,
     showArchived,
+    userLevel: user?.uiExposureLevel,
     onNewProject,
     onSearch: () => setClientSearch(''),
     onPin: (pinned) => onRowPinningChange({ top: pinned }),

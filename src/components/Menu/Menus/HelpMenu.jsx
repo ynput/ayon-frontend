@@ -3,10 +3,9 @@ import Menu from '../MenuComponents/Menu'
 import { useFeedback } from '@shared/components'
 
 export const HelpMenu = ({ user, ...props }) => {
-  const isUser = user.data.isUser
   const { openSupport, openFeedback, openPortal, loaded } = useFeedback()
 
-  const items = [
+  const help = [
     {
       id: 'forum',
       label: 'Community Forum',
@@ -64,10 +63,11 @@ export const HelpMenu = ({ user, ...props }) => {
       icon: 'feedback',
       onClick: () => openFeedback(),
     },
-    { id: 'divider' },
   ]
 
-  if (loaded) items.unshift(...feedback)
+  if (loaded) help.unshift(...[...feedback, { id: 'divider' }])
+
+  const items = user.uiExposureLevel >= 500 ? help : feedback
 
   return <Menu menu={items} {...props} />
 }
