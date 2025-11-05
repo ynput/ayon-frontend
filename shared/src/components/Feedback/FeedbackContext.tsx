@@ -85,6 +85,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
 
     const identifyData = {
       ...verificationData,
+      email: verificationData.email || user?.attrib?.email,
       customFields: {
         origin: window.location.origin,
         serverVersion: serverVersion,
@@ -114,11 +115,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     const win = window as any
     if (typeof win.Featurebase === 'function') {
       console.log('Initializing Featurebase messenger widget')
+      if (!verification?.email && !user?.attrib?.email)
+        return console.warn('No email provided for Featurebase messenger widget')
       win.Featurebase(
         'boot',
         {
           appId: '67b76a31b8a7a2f3181da4ba',
-          email: verification?.email,
+          email: verification?.email || user?.attrib?.email,
           theme: 'dark',
           userId: verification?.userId, // user ID from verification
           userHash: verification?.userHash, // generated user hash token
