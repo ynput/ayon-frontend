@@ -75,6 +75,9 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   entityListTypes,
   isReview,
 }) => {
+  // lists page does not support grouping yet
+  const modules = undefined
+
   return (
     <ListsModuleProvider>
       <ProjectDataProvider projectName={projectName}>
@@ -83,7 +86,7 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
             <ListItemsDataProvider>
               <ListsAttributesProvider>
                 <MoveEntityProvider>
-                  <ProjectListsWithInnerProviders isReview={isReview} />
+                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
                 </MoveEntityProvider>
               </ListsAttributesProvider>
             </ListItemsDataProvider>
@@ -96,9 +99,13 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
 
 type ProjectListsWithInnerProvidersProps = {
   isReview?: boolean
+  modules?: any
 }
 
-const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({ isReview }) => {
+const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({
+  isReview,
+  modules,
+}) => {
   const {
     projectName,
     selectedListId,
@@ -190,6 +197,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               attribFields={mergedAttribFields}
               projectInfo={props.projectInfo}
               users={props.users}
+              modules={modules}
               // @ts-ignore
               entitiesMap={props.listItemsMap}
               foldersMap={props.foldersMap}

@@ -152,7 +152,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
 
   const groupBySettings = useGroupBySettings({ scope })
 
-  const defaultSettings: SettingConfig[] = [
+  const defaultSettings: (SettingConfig | undefined | null)[] = [
     {
       id: 'columns',
       title: 'Columns',
@@ -173,10 +173,12 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         />
       ),
     },
-  ]
+  ].filter(Boolean)
+
+  console.log(defaultSettings)
 
   settings.forEach(
     (setting) => !hiddenSettings.includes(setting.id as any) && defaultSettings.push(setting),
   )
-  return <SettingsPanel settings={defaultSettings} order={order} />
+  return <SettingsPanel settings={defaultSettings as SettingConfig[]} order={order} />
 }
