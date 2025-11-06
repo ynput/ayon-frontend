@@ -10,12 +10,14 @@
 
 import { isSameDay, parseISO } from 'date-fns'
 import { useMemo } from 'react'
+import RemoveMarkdown from 'remove-markdown'
 
 const groupMessages = (messages = [], currentUser) => {
   const groups = []
   const visited = new Array(messages.length).fill(false) // Tracks if a message has been grouped
   
   const versionPublishGroups = groupVersionMessages(messages)
+  const assigneeGroups = groupAssigneeMessages(messages)
 
   // Mark all grouped messages as visited and add their groups
   for (const folderMessages of versionPublishGroups) {
@@ -28,6 +30,18 @@ const groupMessages = (messages = [], currentUser) => {
     })
 
     groups.push(folderMessages)
+  }
+  
+  for (const reassignmentGroup of assigneeGroups) {
+    if (reassignmentGroup.length === 0) continue
+
+    // Mark these messages as visited
+    reassignmentGroup.forEach((msg) => {
+      const index = messages.findIndex((m) => m.activityId === msg.activityId)
+      if (index !== -1) visited[index] = true
+    })
+
+    groups.push(reassignmentGroup)
   }
 
   // Now handle other message types with the original logic
@@ -139,6 +153,44 @@ const groupVersionMessages = (messages) => {
 
   return folderGroups
 }
+const groupAssigneeMessages = (messages) => {
+  const removes = messages.filter((m) => m.activityType === 'assignee.remove')
+  const adds = messages.filter((m) => m.activityType === 'assignee.add')
+  const groups = []
+  const usedAdds = new Set()
+  const usedRemoves = new Set()
+  
+  removes.forEach((remove) => {
+    if (usedRemoves.has(remove.activityId)) return
+
+    const removeTime = new Date(remove.createdAt)
+    const matchingAdd = adds.find((add) => {
+      if (usedAdds.has(add.activityId)) return false
+      if (add.entityId !== remove.entityId) return false
+
+      const addTime = new Date(add.createdAt)
+      const timeDiff = Math.abs(addTime - removeTime)
+      
+      return timeDiff <= 5000
+    })
+
+    if (matchingAdd) {
+      const addTime = new Date(matchingAdd.createdAt)
+      const removeIsFirst = removeTime < addTime
+      
+      if (removeIsFirst) {
+        groups.push([remove, matchingAdd])
+      } else {
+        groups.push([matchingAdd, remove])
+      }
+
+      usedAdds.add(matchingAdd.activityId)
+      usedRemoves.add(remove.activityId)
+    }
+  })
+
+  return groups
+}
 
 const getChangedValues = (messages = []) => {
   const reversedMessages = messages.slice().reverse()
@@ -178,9 +230,50 @@ const transformGroups = (groups = []) => {
     const read = group.every((m) => m.read)
     const unReadCount = group.filter((m) => !m.read).length
 
-    const { activityType, projectName, author = {}, entityId, entityType, origin } = firstMessage
+    let { activityType, projectName, author = {}, entityId, entityType, origin } = firstMessage
 
     const { activityId } = lastMessage
+
+    // Check if this is a reassignment group (remove + add in either order)
+    const isReassignment =
+      group.length === 2 &&
+      ((group[0].activityType === 'assignee.remove' && group[1].activityType === 'assignee.add') ||
+        (group[0].activityType === 'assignee.add' && group[1].activityType === 'assignee.remove'))
+
+    let customBody = null
+
+    if (isReassignment) {
+      // Use a special activity type for reassignments
+      activityType = 'assignee.reassign'
+
+      // Find the remove and add messages
+      const removeMsg = group.find((m) => m.activityType === 'assignee.remove')
+      const addMsg = group.find((m) => m.activityType === 'assignee.add')
+
+      if (removeMsg && addMsg) {
+        // Extract entity link from either message (both should have it)
+        // Format: "... from [entity_name](type:id)" or "... to [entity_name](type:id)"
+        const entityLinkMatch =
+          removeMsg.body?.match(/(?:from|to) (\[.*?\]\(.*?\))/) ||
+          addMsg.body?.match(/(?:from|to) (\[.*?\]\(.*?\))/)
+        const entityLink = entityLinkMatch ? entityLinkMatch[1] : ''
+
+        // Extract removed user link from remove message
+        // Format: "Removed [User Name](user:id) from ..."
+        const removedUserMatch = removeMsg.body?.match(/Removed (\[.*?\]\(user:.*?\))/)
+        const removedUser = removedUserMatch ? removedUserMatch[1] : ''
+
+        // Extract added user link from add message
+        // Format: "Added [User Name](user:id) to ..."
+        const addedUserMatch = addMsg.body?.match(/Added (\[.*?\]\(user:.*?\))/)
+        const addedUser = addedUserMatch ? addedUserMatch[1] : ''
+
+        // Create the reassignment body message
+        if (entityLink && removedUser && addedUser) {
+          customBody = `Reassigned ${entityLink} from ${removedUser} to ${addedUser}`
+        }
+      }
+    }
 
     // For grouped version.publish or reviewable messages, use the parent folder as the entity
     let finalEntityId = entityId
@@ -203,7 +296,7 @@ const transformGroups = (groups = []) => {
       }
     }
 
-    return {
+    const result = {
       activityId: activityId,
       groupIds: group.map((m) => m.activityId),
       activityType: activityType,
@@ -221,6 +314,13 @@ const transformGroups = (groups = []) => {
       isMultiple,
       messages: group,
     }
+
+    // Add custom body if it's a reassignment
+    if (customBody) {
+      result.body = RemoveMarkdown(customBody)
+    }
+
+    return result
   })
 }
 
