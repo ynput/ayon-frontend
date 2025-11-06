@@ -157,36 +157,93 @@ const groupAssigneeMessages = (messages) => {
   const removes = messages.filter((m) => m.activityType === 'assignee.remove')
   const adds = messages.filter((m) => m.activityType === 'assignee.add')
   const groups = []
-  const usedAdds = new Set()
-  const usedRemoves = new Set()
-  
-  removes.forEach((remove) => {
-    if (usedRemoves.has(remove.activityId)) return
+  const used = new Set()
 
-    const removeTime = new Date(remove.createdAt)
-    const matchingAdd = adds.find((add) => {
-      if (usedAdds.has(add.activityId)) return false
-      if (add.entityId !== remove.entityId) return false
+  const entityTimeWindowGroups = new Map()
 
-      const addTime = new Date(add.createdAt)
-      const timeDiff = Math.abs(addTime - removeTime)
-      
-      return timeDiff <= 5000
-    })
+  // Sort all messages by time to ensure chronological processing
+  const allAssigneeMessages = [...removes, ...adds].sort(
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+  )
 
-    if (matchingAdd) {
-      const addTime = new Date(matchingAdd.createdAt)
-      const removeIsFirst = removeTime < addTime
-      
-      if (removeIsFirst) {
-        groups.push([remove, matchingAdd])
-      } else {
-        groups.push([matchingAdd, remove])
+  allAssigneeMessages.forEach((msg) => {
+    if (used.has(msg.activityId)) return
+
+    const entityId = msg.entityId
+    const msgTime = new Date(msg.createdAt)
+    
+    if (!entityTimeWindowGroups.has(entityId)) {
+      entityTimeWindowGroups.set(entityId, [])
+    }
+
+    const timeWindowGroups = entityTimeWindowGroups.get(entityId)
+
+    // Check if this message belongs to an existing time window group
+    let addedToGroup = false
+    for (const timeWindowGroup of timeWindowGroups) {
+      const groupTime = new Date(timeWindowGroup[0].createdAt)
+      const timeDiff = Math.abs(msgTime - groupTime)
+
+      // Strictly less than 5 seconds to avoid edge cases
+      if (timeDiff < 5000) {
+        timeWindowGroup.push(msg)
+        addedToGroup = true
+        break
+      }
+    }
+
+    if (!addedToGroup) {
+      timeWindowGroups.push([msg])
+    }
+  })
+
+  // Process each entity's time window groups to create assignee change messages
+  entityTimeWindowGroups.forEach((timeWindowGroups) => {
+    timeWindowGroups.forEach((group) => {
+      const groupRemoves = group.filter((m) => m.activityType === 'assignee.remove')
+      const groupAdds = group.filter((m) => m.activityType === 'assignee.add')
+
+      // Collect all removed and added assignees
+      const removedAssignees = new Set(
+        groupRemoves.map((m) => m.activityData?.assignee).filter(Boolean),
+      )
+      const addedAssignees = new Set(
+        groupAdds.map((m) => m.activityData?.assignee).filter(Boolean),
+      )
+
+      // Calculate net changes
+      const netRemoved = new Set(
+        [...removedAssignees].filter((assignee) => !addedAssignees.has(assignee)),
+      )
+      const netAdded = new Set(
+        [...addedAssignees].filter((assignee) => !removedAssignees.has(assignee)),
+      )
+
+      // If there are no net changes (e.g., user removed then added back), hide the group
+      if (netRemoved.size === 0 && netAdded.size === 0) {
+        group.forEach((m) => used.add(m.activityId))
+        return
       }
 
-      usedAdds.add(matchingAdd.activityId)
-      usedRemoves.add(remove.activityId)
-    }
+      // Only create grouped messages for multiple operations, not single ones
+      if (group.length >= 2) {
+        const isMultipleAddsOnly = groupRemoves.length === 0 && groupAdds.length >= 2
+        const isMultipleRemovesOnly = groupAdds.length === 0 && groupRemoves.length >= 2
+        const isReassignment = netRemoved.size > 0 && netAdded.size > 0
+
+        if (isMultipleAddsOnly || isMultipleRemovesOnly || isReassignment) {
+          // This group should be shown as a combined message
+          const sortedGroup = group.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+          groups.push(sortedGroup)
+        }
+        // Mark all messages as used regardless of whether they were grouped
+        group.forEach((m) => used.add(m.activityId))
+      } else {
+        // Single messages: add them individually and mark as used to prevent fallback grouping
+        groups.push(group)
+        group.forEach((m) => used.add(m.activityId))
+      }
+    })
   })
 
   return groups
@@ -234,46 +291,72 @@ const transformGroups = (groups = []) => {
 
     const { activityId } = lastMessage
 
-    // Check if this is a reassignment group (remove + add in either order)
-    const isReassignment =
-      group.length === 2 &&
-      ((group[0].activityType === 'assignee.remove' && group[1].activityType === 'assignee.add') ||
-        (group[0].activityType === 'assignee.add' && group[1].activityType === 'assignee.remove'))
+    // Check if this is an assignee change group
+    const removeMessages = group.filter((m) => m.activityType === 'assignee.remove')
+    const addMessages = group.filter((m) => m.activityType === 'assignee.add')
+    const hasAssigneeChanges = removeMessages.length > 0 || addMessages.length > 0
 
     let customBody = null
 
-    if (isReassignment) {
-      // Use a special activity type for reassignments
-      activityType = 'assignee.reassign'
+    if (hasAssigneeChanges && isMultiple) {
+      // Build a user lookup map from messages (user ID -> full name)
+      const userLookup = new Map()
 
-      // Find the remove and add messages
-      const removeMsg = group.find((m) => m.activityType === 'assignee.remove')
-      const addMsg = group.find((m) => m.activityType === 'assignee.add')
-
-      if (removeMsg && addMsg) {
-        // Extract entity link from either message (both should have it)
-        // Format: "... from [entity_name](type:id)" or "... to [entity_name](type:id)"
-        const entityLinkMatch =
-          removeMsg.body?.match(/(?:from|to) (\[.*?\]\(.*?\))/) ||
-          addMsg.body?.match(/(?:from|to) (\[.*?\]\(.*?\))/)
-        const entityLink = entityLinkMatch ? entityLinkMatch[1] : ''
-
-        // Extract removed user link from remove message
-        // Format: "Removed [User Name](user:id) from ..."
-        const removedUserMatch = removeMsg.body?.match(/Removed (\[.*?\]\(user:.*?\))/)
-        const removedUser = removedUserMatch ? removedUserMatch[1] : ''
-
-        // Extract added user link from add message
-        // Format: "Added [User Name](user:id) to ..."
-        const addedUserMatch = addMsg.body?.match(/Added (\[.*?\]\(user:.*?\))/)
-        const addedUser = addedUserMatch ? addedUserMatch[1] : ''
-        
-        console.log("Author", addMsg.author.attrib.fullName)
-        const author = addMsg.author.attrib.fullName || addMsg.author.name
-        // Create the reassignment body message
-        if (entityLink && removedUser && addedUser) {
-          customBody = `${author} Reassigned ${entityLink} from ${removedUser} to ${addedUser}`
+      // Collect user info from all assignee messages in the group
+      const allAssigneeMessages = [...removeMessages, ...addMessages]
+      allAssigneeMessages.forEach((msg) => {
+        const userId = msg.activityData?.assignee
+        if (userId && !userLookup.has(userId)) {
+          // Try to extract full name from message body as fallback
+          const nameMatch = msg.body?.match(/\[([^\]]+)\]\(user:.*?\)/)
+          const fullName = nameMatch ? nameMatch[1] : userId
+          userLookup.set(userId, fullName)
         }
+      })
+
+      // Extract entity link from first message
+      const firstMsg = removeMessages[0] || addMessages[0]
+      const entityLinkMatch = firstMsg.body?.match(/(?:from|to) (\[.*?\]\(.*?\))/)
+      const entityLink = entityLinkMatch ? entityLinkMatch[1] : ''
+
+      // Collect all removed and added assignees (user IDs)
+      const removedAssignees = new Set(
+        removeMessages.map((m) => m.activityData?.assignee).filter(Boolean),
+      )
+      const addedAssignees = new Set(
+        addMessages.map((m) => m.activityData?.assignee).filter(Boolean),
+      )
+
+      // Calculate net changes
+      const netRemoved = [...removedAssignees].filter((assignee) => !addedAssignees.has(assignee))
+      const netAdded = [...addedAssignees].filter((assignee) => !removedAssignees.has(assignee))
+
+      // Build lists of usernames using the lookup map
+      const removedUserNames = netRemoved
+        .map((userId) => userLookup.get(userId))
+        .filter(Boolean)
+
+      const addedUserNames = netAdded
+        .map((userId) => userLookup.get(userId))
+        .filter(Boolean)
+
+      // Determine a message type based on what we have
+      if (removedUserNames.length > 0 && addedUserNames.length > 0) {
+        // Reassignment: both adds and removes
+        activityType = 'assignee.reassign'
+        const removedList = removedUserNames.join(', ')
+        const addedList = addedUserNames.join(', ')
+        customBody = `${author.attrib.fullName || author.name || ""}: Reassigned ${entityLink} from ${removedList} to ${addedList}`
+      } else if (addedUserNames.length > 0) {
+        // Multiple adds only
+        activityType = 'assignee.add'
+        const addedList = addedUserNames.join(', ')
+        customBody = `${author.attrib.fullName || author.name || ""}: Added ${addedList} to ${entityLink}`
+      } else if (removedUserNames.length > 0) {
+        // Multiple removes only
+        activityType = 'assignee.remove'
+        const removedList = removedUserNames.join(', ')
+        customBody = `${author.attrib.fullName || author.name || ""}: Removed ${removedList} from ${entityLink}`
       }
     }
 
@@ -316,8 +399,7 @@ const transformGroups = (groups = []) => {
       isMultiple,
       messages: group,
     }
-
-    // Add custom body if it's a reassignment
+    
     if (customBody) {
       result.body = RemoveMarkdown(customBody)
     }
