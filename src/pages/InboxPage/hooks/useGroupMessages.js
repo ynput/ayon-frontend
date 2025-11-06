@@ -267,10 +267,12 @@ const transformGroups = (groups = []) => {
         // Format: "Added [User Name](user:id) to ..."
         const addedUserMatch = addMsg.body?.match(/Added (\[.*?\]\(user:.*?\))/)
         const addedUser = addedUserMatch ? addedUserMatch[1] : ''
-
+        
+        console.log("Author", addMsg.author.attrib.fullName)
+        const author = addMsg.author.attrib.fullName || addMsg.author.name
         // Create the reassignment body message
         if (entityLink && removedUser && addedUser) {
-          customBody = `Reassigned ${entityLink} from ${removedUser} to ${addedUser}`
+          customBody = `${author} Reassigned ${entityLink} from ${removedUser} to ${addedUser}`
         }
       }
     }
