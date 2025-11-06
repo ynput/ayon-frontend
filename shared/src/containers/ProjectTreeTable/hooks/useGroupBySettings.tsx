@@ -1,5 +1,3 @@
-import { OverviewSettingsChange } from '@shared/components'
-import { FC } from 'react'
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
 import { useGetGroupedFields } from '..'
 
@@ -10,9 +8,10 @@ interface UseGroupBySettingsProps {
 export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig } = useColumnSettingsContext()
   const { modules } = useProjectTableContext()
-  const { GroupSettings, requiredVersion } = modules
-
   const groupByFields = useGetGroupedFields({ scope })
+  if (!modules) return null
+  const { GroupSettings, requiredVersion } = modules || {}
+
   return {
     id: 'group-by',
     title: 'Group',

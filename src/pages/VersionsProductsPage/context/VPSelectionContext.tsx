@@ -1,4 +1,4 @@
-import { useSelectedRowsContext } from '@shared/containers'
+import { parseRowId, useSelectedRowsContext } from '@shared/containers'
 import {
   createContext,
   FC,
@@ -51,15 +51,18 @@ export const VersionsSelectionProvider: FC<VersionsSelectionProviderProps> = ({ 
     const versions: string[] = []
     const products: string[] = []
     selectedRows.forEach((rowId) => {
-      const entity = entitiesMap.get(rowId)
+      const entityId = parseRowId(rowId)
+      const entity = entitiesMap.get(entityId)
       if (entity?.entityType === 'version') {
-        versions.push(rowId)
+        versions.push(entityId)
       } else if (entity?.entityType === 'product') {
-        products.push(rowId)
+        products.push(entityId)
       }
     })
     return { versions, products }
   }, [selectedRows, entitiesMap])
+
+  console.log(selectedRowEntities, entitiesMap, selectedRows)
 
   const selectedRowProducts = selectedRowEntities.products
   const selectedRowVersions = selectedRowEntities.versions

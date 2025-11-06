@@ -13,7 +13,7 @@ import clsx from 'clsx'
 import { useURIContext } from '@context/UriContext'
 import { getTaskRoute } from '@helpers/routes'
 import { useScopedDetailsPanel } from '@shared/context'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 
 const KanBanColumn = forwardRef(
   (
