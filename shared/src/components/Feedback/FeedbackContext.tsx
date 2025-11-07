@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import {
   useGetCurrentUserQuery,
@@ -37,7 +36,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user?.name })
   const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user?.name })
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
-    undefined,
+    {},
     {
       skip: !user?.name || !connect,
     },
@@ -68,24 +67,10 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const frontendVersion = siteInfo?.version?.split('+')[1] || 'unknown'
 
   const identifyUser = () => {
-    if (!user?.name || !verification) return
-    const verificationData = cloneDeep(verification)
-    // delete any undefined/null properties
-    const cleanObject = (obj: any) => {
-      Object.keys(obj).forEach((key) => {
-        if (obj[key] && typeof obj[key] === 'object') {
-          cleanObject(obj[key])
-        } else if (obj[key] === undefined || obj[key] === null) {
-          delete obj[key]
-        }
-      })
-    }
-
-    cleanObject(verificationData)
+    if (!user?.name || !verification?.available) return
 
     const identifyData = {
-      ...verificationData,
-      email: verificationData.email || user?.attrib?.email,
+      ...verification.data,
       customFields: {
         origin: window.location.origin,
         serverVersion: serverVersion,
@@ -115,16 +100,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     const win = window as any
     if (typeof win.Featurebase === 'function') {
       console.log('Initializing Featurebase messenger widget')
-      if (!verification?.email && !user?.attrib?.email)
-        return console.warn('No email provided for Featurebase messenger widget')
+      if (!verification?.available)
+        return console.warn('messenger verification not available, skipping messenger init')
       win.Featurebase(
         'boot',
         {
-          appId: '67b76a31b8a7a2f3181da4ba',
-          email: verification?.email || user?.attrib?.email,
           theme: 'dark',
-          userId: verification?.userId, // user ID from verification
-          userHash: verification?.userHash, // generated user hash token
+          ...verification?.data,
         },
         (err: any) => {
           // Callback function. Called when identify completed.
@@ -268,7 +250,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   }, [
     user?.name,
     connect?.instanceId,
-    verification?.userHash,
+    verification?.available,
     scriptLoaded,
     window.location.pathname,
     identified,

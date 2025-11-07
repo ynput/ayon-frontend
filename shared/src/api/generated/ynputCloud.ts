@@ -26,7 +26,12 @@ const injectedRtkApi = api.injectEndpoints({
       GetFeedbackVerificationApiResponse,
       GetFeedbackVerificationApiArg
     >({
-      query: () => ({ url: `/api/connect/feedback` }),
+      query: (queryArg) => ({
+        url: `/api/connect/feedback`,
+        params: {
+          force: queryArg.force,
+        },
+      }),
     }),
   }),
   overrideExisting: false,
@@ -46,7 +51,9 @@ export type ConnectToYnputCloudApiArg = {
 }
 export type GetFeedbackVerificationApiResponse =
   /** status 200 Successful Response */ UserVerificationResponse
-export type GetFeedbackVerificationApiArg = void
+export type GetFeedbackVerificationApiArg = {
+  force?: boolean
+}
 export type YnputCloudSubscriptionModel = {
   /** Name of the subscription */
   name: string
@@ -87,23 +94,8 @@ export type YnputConnectRequestModel = {
   /** Ynput cloud key */
   key: string
 }
-export type UserCustomFields = {
-  level?: string
-  instanceId?: string
-  verifiedUser?: string
-}
-export type CompanyInfo = {
-  id: string
-  name: string
-  subscriptions?: string
-}
 export type UserVerificationResponse = {
-  organization?: string
-  name: string
-  email?: string
-  userId: string
-  userHash: string
-  profilePicture?: string
-  customFields: UserCustomFields
-  companies: CompanyInfo[]
+  available?: boolean
+  detail?: string
+  data?: Record<string, any>
 }
