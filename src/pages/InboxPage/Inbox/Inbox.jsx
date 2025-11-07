@@ -393,6 +393,7 @@ const Inbox = ({ filter }) => {
               projectsInfo={projectsInfo}
               isMultiple={group.isMultiple}
               onContextMenu={handleContextMenu}
+              customBody={group.body}
             />
           ))}
           {hasPreviousPage && !isLoadingInbox && !!messages.length && (
