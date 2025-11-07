@@ -97,7 +97,7 @@ const WorkfileList = ({ style }) => {
 
       return [
         {
-          label: 'Product detail',
+          label: 'Workfile detail',
           command: () => setShowDetail(true),
           icon: 'database',
         },
