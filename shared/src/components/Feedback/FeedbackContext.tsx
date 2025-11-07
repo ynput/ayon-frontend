@@ -36,7 +36,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user?.name })
   const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user?.name })
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
-    undefined,
+    {},
     {
       skip: !user?.name || !connect,
     },
@@ -106,7 +106,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         'boot',
         {
           theme: 'dark',
-          ...verification?.data
+          ...verification?.data,
         },
         (err: any) => {
           // Callback function. Called when identify completed.
