@@ -7,6 +7,7 @@ const userSlice = createSlice({
     name: '',
     redirectUrl: null,
     avatarKey: '',
+    uiExposureLevel: 0,
     data: {
       frontendPreferences: {
         notifications: false,

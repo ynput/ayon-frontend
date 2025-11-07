@@ -39,6 +39,7 @@ export type FilterFieldType =
   | 'status'
   | 'tags'
   | 'version'
+  | 'hasReviewables'
 type AttributeType =
   | string
   | number
@@ -358,6 +359,31 @@ export const useBuildFilterOptions = ({
         })
 
         options.push(versionOption)
+      }
+    }
+
+    // HAS REVIEWABLES
+    // add hasReviewables option
+    if (scopeFilterTypes.includes('hasReviewables')) {
+      const hasReviewablesOption = getOptionRoot('hasReviewables', config, scopePrefix, scopeLabel)
+
+      if (hasReviewablesOption) {
+        const options_list = [
+          {
+            id: 'true',
+            label: 'Yes',
+            values: [],
+            icon: 'radio_button_checked',
+          },
+          {
+            id: 'false',
+            label: 'No',
+            values: [],
+            icon: 'radio_button_unchecked',
+          },
+        ]
+        hasReviewablesOption.values?.push(...options_list)
+        options.push(hasReviewablesOption)
       }
     }
 
@@ -689,6 +715,23 @@ const getOptionRoot = (
         allowNoValue: false,
         allowExcludes: false,
         operatorChangeable: false,
+      }
+      break
+    case 'hasReviewables':
+      rootOption = {
+        id: getRootIdWithPrefix('hasReviewables'),
+        type: 'boolean',
+        label: formatLabelWithScope('Has Reviewables'),
+        icon: 'play_circle',
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: config?.enableExcludes,
+        operatorChangeable: false,
+        singleSelect: true,
       }
       break
     default:

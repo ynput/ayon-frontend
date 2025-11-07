@@ -11,7 +11,11 @@ type Props = {
 }
 
 export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
-  const { data: { folders = [] } = {}, isFetching: isFetchingRaw } = useGetFolderListQuery(
+  const {
+    data: { folders = [] } = {},
+    isLoading,
+    isFetching: isFetchingRaw,
+  } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
   )
@@ -89,16 +93,21 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
   }
 
   const tableData: SimpleTableRow[] = useMemo(() => {
-    if (!folders.length || isFetching) return []
+    if (!folders.length || isFetching || isLoading) return []
 
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes, isFetching])
+  }, [folders, folderTypes, isFetching, isLoading])
 
   const getHierarchyData = useCallback(async () => {
     return tableData
   }, [tableData])
 
-  return { data: tableData, folders, getData: getHierarchyData, isFetching: isFetching }
+  return {
+    data: tableData,
+    folders,
+    getData: getHierarchyData,
+    isFetching: isFetching || isLoading,
+  }
 }

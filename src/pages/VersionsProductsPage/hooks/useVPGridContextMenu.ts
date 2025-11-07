@@ -19,6 +19,8 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
     openViewerItem,
     uploadVersionItem,
     addToListItem,
+    productDetailItem,
+    versionDetailItem,
     deleteVersionItem,
     deleteProductItem,
   } = contextMenuItems
@@ -140,6 +142,28 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
         menuItems.push(addToListMenuItem)
       }
 
+      const productDetailMenuItem = productDetailItem(
+        e as any,
+        mockCell as any,
+        [],
+        mockMeta,
+        mockContext,
+      )
+      if (productDetailMenuItem) {
+        menuItems.push(productDetailMenuItem)
+      }
+
+      const versionDetailMenuItem = versionDetailItem(
+        e as any,
+        mockCell as any,
+        [],
+        mockMeta,
+        mockContext,
+      )
+      if (versionDetailMenuItem) {
+        menuItems.push(versionDetailMenuItem)
+      }
+
       const deleteVersionMenuItem = deleteVersionItem(
         e as any,
         mockCell as any,
@@ -170,6 +194,8 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
       addToListItem,
       openViewerItem,
       uploadVersionItem,
+      productDetailItem,
+      versionDetailItem,
       deleteVersionItem,
       deleteProductItem,
       getSelectedEntityIds,

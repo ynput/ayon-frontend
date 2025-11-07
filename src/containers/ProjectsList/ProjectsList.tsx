@@ -149,6 +149,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   const navigate = useAyonNavigate()
   const onOpenProject = (project: string) => {
+    if ((user?.uiExposureLevel || 0) < 500) return
     handleProjectSelectionDispatches(project)
 
     const defaultTab = getDefaultTab()
@@ -162,6 +163,30 @@ const ProjectsList: FC<ProjectsListProps> = ({
     // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
   }
+  const onArchive = (projectName: string, active: boolean) => {
+    onActivateProject?.(projectName, active)
+
+    if (!active && !showArchived) {
+      const newSelection = selection.filter((p) => p !== projectName)
+      if (newSelection.length === 0 && projects.length > 0) {
+        const firstAvailable = projects.find((p) => p.name !== projectName)
+        if (firstAvailable) {
+          onSelect([firstAvailable.name])
+        } else {
+          onSelect([])
+        }
+      } else {
+        onSelect(newSelection)
+      }
+    }
+  }
+  const onShowArchivedToggle = () => {
+    if (showArchived) {
+      const activeProjects = projects.filter((p) => p.active)
+      onSelect(selection.filter((s) => activeProjects.some((p) => p.name === s)))
+    }
+    setShowArchived(!showArchived)
+  }
 
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
@@ -174,15 +199,16 @@ const ProjectsList: FC<ProjectsListProps> = ({
     multiSelect,
     pinned: rowPinning,
     showArchived,
+    userLevel: user?.uiExposureLevel,
     onNewProject,
     onSearch: () => setClientSearch(''),
     onPin: (pinned) => onRowPinningChange({ top: pinned }),
     onSelectAll: toggleSelectAll,
-    onArchive: onActivateProject,
+    onArchive,
     onDelete: onDeleteProject,
     onOpen: onOpenProject,
     onManage: onOpenProjectManage,
-    onShowArchivedToggle: () => setShowArchived(!showArchived),
+    onShowArchivedToggle,
   })
 
   // attach context menu

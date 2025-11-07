@@ -13,7 +13,15 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
   const scopesConfig: ScopeWithFilterTypes[] = [
     {
       scope: 'version',
-      filterTypes: ['status', 'tags', 'author', 'attributes', 'version'],
+      filterTypes: [
+        'status',
+        'tags',
+        'productType',
+        'author',
+        'attributes',
+        'version',
+        'hasReviewables',
+      ],
     },
     {
       scope: 'product',
@@ -27,6 +35,7 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
 
   return (
     <SearchFilterWrapper
+      // @ts-ignore
       queryFilters={filters}
       onChange={onUpdateFilters}
       scopes={scopesConfig}

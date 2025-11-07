@@ -279,9 +279,12 @@ export const ProjectTreeTable = ({
         entitiesToUpdate.push({ ...entity, id: entity.rowId })
       } else {
         // if includeSelection is true, update all the selected cells with the same columnId
-        const { field, value, isAttrib, type } = entity
+        const { field, value, isAttrib } = entity
         for (const cellId of selectedCells) {
           const { colId, rowId } = parseCellId(cellId) || {}
+
+          // ignore row selection column
+          if (colId === ROW_SELECTION_COLUMN_ID) continue
 
           const entity = getEntityById(rowId || '')
           if (!entity) {
@@ -318,7 +321,10 @@ export const ProjectTreeTable = ({
     [attribFields, loadingAttrib, isInitialized],
   )
 
-  const getNameLabelHeader = () => scopes.map((s) => upperFirst(s)).join(' / ')
+  const getNameLabelHeader = () => {
+    if (scopes.includes('version')) return 'Product / Version'
+    return scopes.map((s) => upperFirst(s)).join(' / ')
+  }
 
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
@@ -1381,6 +1387,10 @@ const TableCell = ({
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
+          // check not selecting am edit trigger
+          const target = e.target as HTMLElement
+          if (target.closest('.' + EDIT_TRIGGER_CLASS)) return
+
           // Left button is pressed during mouse move - drag selection
           // Note: extendSelection is always called to allow drag to continue through cells
           // Restricted cells will be filtered out later

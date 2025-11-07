@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import VersionsProductsPageProviders from './providers'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -15,8 +15,9 @@ import { useVPViewsContext } from './context/VPViewsContext'
 import VPDetailsPanel from './components/VPDetailsPanel/VPDetailsPanel'
 import { useVersionsSelectionContext } from './context/VPSelectionContext'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
-import { EarlyPreview } from '@shared/components'
+import { EarlyPreview, DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'
+import { useProjectDataContext } from '@shared/containers'
 
 interface VersionsProductsPageProps {
   projectName: string
@@ -29,9 +30,23 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { config } = useSlicerContext()
   const { showGrid } = useVPViewsContext()
   const { showVersionDetails, showVersionsTable } = useVersionsSelectionContext()
+  const { projectName } = useProjectDataContext()
+
+  // modal dialog state for product and version details
+  const [showDetail, setShowDetail] = useState<false | 'product' | 'version'>(false)
+  const [detailIds, setDetailIds] = useState<string[]>([])
 
   // context menu items
-  const contextMenuItems = useVPContextMenu()
+  const contextMenuItems = useVPContextMenu({
+    onOpenProductDetail: (ids: string[]) => {
+      setDetailIds(ids)
+      setShowDetail('product')
+    },
+    onOpenVersionDetail: (ids: string[]) => {
+      setDetailIds(ids)
+      setShowDetail('version')
+    },
+  })
 
   // load slicer remote config
   const overviewSliceFields = config?.versions?.fields
@@ -115,6 +130,13 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
           </Section>
         </SplitterPanel>
       </Splitter>
+      <DetailsDialog
+        projectName={projectName}
+        entityType={showDetail || 'product'}
+        entityIds={detailIds}
+        visible={!!showDetail}
+        onHide={() => setShowDetail(false)}
+      />
       <EarlyPreview tooltip="The Products page intends to replace the old Browser page. Feedback is greatly appreciated!" />
     </main>
   )

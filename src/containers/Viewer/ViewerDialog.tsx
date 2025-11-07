@@ -75,7 +75,7 @@ const ViewerDialog = () => {
 
   return (
     <>
-      <StyledDialog isOpen hideCancelButton size="full" onClose={() => {}}>
+      <StyledDialog isOpen hideCancelButton size="full" onClose={() => {}} id="viewer-dialog">
         <Viewer onClose={handleClose} />
       </StyledDialog>
     </>

@@ -20,11 +20,16 @@ export interface VPContextMenuItems {
   openViewerItem: ContextMenuItemConstructor
   uploadVersionItem: ContextMenuItemConstructor
   addToListItem: ContextMenuItemConstructor
+  productDetailItem: ContextMenuItemConstructor
+  versionDetailItem: ContextMenuItemConstructor
   deleteVersionItem: ContextMenuItemConstructor
   deleteProductItem: ContextMenuItemConstructor
 }
 
-export const useVPContextMenu = (): VPContextMenuItems => {
+export const useVPContextMenu = (callbacks?: {
+  onOpenProductDetail?: (productIds: string[]) => void
+  onOpenVersionDetail?: (versionIds: string[]) => void
+}): VPContextMenuItems => {
   const { selectedCells, setSelectedCells, selectCell } = useSelectionCellsContext()
   const { entitiesMap } = useVersionsDataContext()
   const { buildAddToListMenu, buildHierarchicalMenuItems, newListMenuItem, versions, reviews } =
@@ -182,6 +187,72 @@ export const useVPContextMenu = (): VPContextMenuItems => {
     [entitiesMap, onOpenVersionUpload],
   )
 
+  // Product detail context menu item
+  const productDetailItem: ContextMenuItemConstructor = useCallback(
+    (_e: any, cell: any, _selected: any, meta: any) => {
+      // Get selected entity IDs from meta, or use the cell entity
+      const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
+
+      // Filter to only product entities
+      const productIds: string[] = []
+
+      for (const entityId of selectedEntityIds) {
+        const entity = entitiesMap.get(entityId)
+        if (entity && entity.entityType === 'product') {
+          productIds.push(entity.id)
+        }
+      }
+
+      // If no products selected, don't show the menu item
+      if (productIds.length === 0) {
+        return undefined
+      }
+
+      return {
+        label: 'Product data',
+        icon: 'database',
+        command: () => {
+          callbacks?.onOpenProductDetail?.(productIds)
+        },
+        hidden: cell.isGroup,
+      }
+    },
+    [entitiesMap, callbacks],
+  )
+
+  // Version detail context menu item
+  const versionDetailItem: ContextMenuItemConstructor = useCallback(
+    (_e: any, cell: any, _selected: any, meta: any) => {
+      // Get selected entity IDs from meta, or use the cell entity
+      const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
+
+      // Filter to only version entities
+      const versionIds: string[] = []
+
+      for (const entityId of selectedEntityIds) {
+        const entity = entitiesMap.get(entityId)
+        if (entity && entity.entityType === 'version') {
+          versionIds.push(entity.id)
+        }
+      }
+
+      // If no versions selected, don't show the menu item
+      if (versionIds.length === 0) {
+        return undefined
+      }
+
+      return {
+        label: 'Version data',
+        icon: 'database',
+        command: () => {
+          callbacks?.onOpenVersionDetail?.(versionIds)
+        },
+        hidden: cell.isGroup,
+      }
+    },
+    [entitiesMap, callbacks],
+  )
+
   // Add to list context menu item
   const addToListItem: ContextMenuItemConstructor = useCallback(
     (_e: any, cell: any, _selected: any, meta: any) => {
@@ -334,6 +405,8 @@ export const useVPContextMenu = (): VPContextMenuItems => {
     openViewerItem,
     uploadVersionItem,
     addToListItem,
+    productDetailItem,
+    versionDetailItem,
     deleteVersionItem,
     deleteProductItem,
   }

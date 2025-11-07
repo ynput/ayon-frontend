@@ -27,8 +27,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
   let error = null
   if (accessGroupNames.includes(accessGroupName.toLowerCase()))
     error = 'This access group already exists'
-  else if (!accessGroupName.match('^[a-zA-Z_]{2,20}$')) error = 'Invalid access group name'
-
+  else if (!accessGroupName.match('^[a-zA-Z0-9_]([a-zA-Z0-9_.\\-]*[a-zA-Z0-9_])?$')) error = 'Invalid access group name'
   const handleKeyDown = (e) => {
     e?.stopPropagation()
     const isEnter = e.key === 'Enter'

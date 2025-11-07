@@ -5971,6 +5971,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "hasReviewables",
+                "description": "Filter versions that have reviewables",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "heroOnly",
                 "description": "DEPRECATED List only hero versions",
                 "type": {
@@ -8886,6 +8898,18 @@
                 "type": {
                   "kind": "ENUM",
                   "name": "HasLinksFilter",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasReviewables",
+                "description": "Filter versions that have reviewables",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
                   "ofType": null
                 },
                 "defaultValue": "null",
@@ -12177,6 +12201,18 @@
                 "type": {
                   "kind": "ENUM",
                   "name": "HasLinksFilter",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "hasReviewables",
+                "description": "Filter versions that have reviewables",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
                   "ofType": null
                 },
                 "defaultValue": "null",

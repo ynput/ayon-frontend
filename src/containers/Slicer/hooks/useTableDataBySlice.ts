@@ -83,14 +83,16 @@ const useTableDataBySlice = ({
     },
   ]
 
-  const sliceOptions = sliceFields.map((field) => {
-    const defaultOption = defaultSliceOptions.find((opt) => opt.value === field.value)
-    // use default option as fallback data
-    return {
-      ...defaultOption,
-      ...field,
-    }
-  })
+  const sliceOptions = sliceFields
+    .filter((f) => defaultSliceOptions.some((o) => o.value === f.value))
+    .map((field) => {
+      const defaultOption = defaultSliceOptions.find((opt) => opt.value === field.value)
+      // use default option as fallback data
+      return {
+        ...defaultOption,
+        ...field,
+      }
+    })
 
   const showAttributes = sliceFields.some((field) => field.value === 'attributes')
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({

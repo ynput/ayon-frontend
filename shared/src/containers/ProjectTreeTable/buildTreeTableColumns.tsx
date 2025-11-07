@@ -43,8 +43,8 @@ const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
 }
 
 const pathSort: SortingFn<any> = (rowA, rowB) => {
-  const labelA = rowA.original.path || rowA.original.name
-  const labelB = rowB.original.path || rowB.original.name
+  const labelA = rowA.original.path || rowA.original.name || ''
+  const labelB = rowB.original.path || rowB.original.name || ''
   // sort alphabetically by label
   return labelA.localeCompare(labelB)
 }
