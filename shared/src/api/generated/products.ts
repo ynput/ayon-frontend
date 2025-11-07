@@ -104,8 +104,10 @@ export type ProductModel = {
   name: string
   /** ID of the parent folder */
   folderId: string
-  /** Product  */
+  /** Product type */
   productType: string
+  /** Product base type */
+  productBaseType?: string
   path?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
@@ -134,8 +136,10 @@ export type ProductPatchModel = {
   name?: string
   /** ID of the parent folder */
   folderId?: string
-  /** Product  */
+  /** Product type */
   productType?: string
+  /** Product base type */
+  productBaseType?: string
   /** Status of the product */
   status?: string
   /** Tags assigned to the the product */
@@ -156,8 +160,10 @@ export type ProductPostModel = {
   name: string
   /** ID of the parent folder */
   folderId: string
-  /** Product  */
+  /** Product type */
   productType: string
+  /** Product base type */
+  productBaseType?: string
   /** Status of the product */
   status?: string
   /** Tags assigned to the the product */
