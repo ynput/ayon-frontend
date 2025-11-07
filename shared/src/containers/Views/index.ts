@@ -11,7 +11,6 @@ export * from './ViewsDialogContainer/ViewFormDialogFallback'
 export * from './ViewsMenu/ViewsMenu'
 export * from './ViewsMenuContainer/ViewsMenuContainer'
 export * from './utils/generateWorkingView'
-export * from './utils/createUpdateViewSettings'
 export * from './utils/viewUpdateHelper'
 
 // hooks
