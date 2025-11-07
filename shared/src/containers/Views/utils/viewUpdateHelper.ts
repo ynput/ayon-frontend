@@ -8,112 +8,101 @@
  * - Working view management
  */
 
+import { CreateViewApiArg, EntityIdResponse, useCreateViewMutation } from '@shared/api'
 import { generateWorkingView } from './generateWorkingView'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
-import { useViewsContext } from '../context/ViewsContext'
-import { useCreateViewMutation } from '@shared/api'
+import { useViewsContext, ViewsContextValue } from '../context/ViewsContext'
 
 interface UpdateOptions {
   successMessage?: string
   errorMessage?: string
 }
 
-/**
- * Standalone updateViewSettings function that can be passed to addons.
- * This function doesn't use hooks and can be passed as a prop.
- */
-export const createUpdateViewSettings = (
-  createView: any,
-  viewsContext: any,
-) => {
-  return async (
-    updatedSettings: any,
-    localStateSetter: (value: any) => void,
-    newLocalValue: any,
-    options: UpdateOptions = {},
-  ) => {
-    try {
-      const {
-        viewSettings,
-        viewType,
-        projectName,
-        selectedView,
-        setSelectedView,
-        workingView,
-        onSettingsChanged,
-      } = viewsContext
+export type UpdateViewSettingsFn = (
+  updatedSettings: any,
+  localStateSetter: (value: any) => void,
+  newLocalValue: any,
+  options?: UpdateOptions,
+) => Promise<void>
 
-      if (!viewType) throw 'No view type provided for updating view settings'
-      if (!projectName) throw 'No project name provided for updating view settings'
+export const updateViewSettings = async (
+  updatedSettings: any,
+  localStateSetter: (value: any) => void,
+  newLocalValue: any,
+  options: UpdateOptions = {},
+  viewContext: ViewsContextValue,
+  onCreateView: (payload: CreateViewApiArg) => Promise<EntityIdResponse>,
+): Promise<void> => {
+  try {
+    const {
+      viewSettings,
+      viewType,
+      projectName,
+      selectedView,
+      setSelectedView,
+      workingView,
+      onSettingsChanged,
+    } = viewContext
+    if (!viewType) throw 'No view type provided for updating view settings'
+    if (!projectName) throw 'No project name provided for updating view settings'
 
-      // Immediately update local state for fast UI response
-      localStateSetter(newLocalValue)
+    // Immediately update local state for fast UI response
+    localStateSetter(newLocalValue)
 
-      // Create settings with updates
-      const newSettings = { ...viewSettings, ...updatedSettings }
+    // Create settings with updates
+    const newSettings = { ...viewSettings, ...updatedSettings }
 
-      // always update the working view no matter what
-      const newWorkingView = generateWorkingView(newSettings)
-      // only use the generated ID if there is no working view already
-      const newWorkingViewId = workingView?.id || newWorkingView.id
+    // always update the working view no matter what
+    const newWorkingView = generateWorkingView(newSettings)
+    // only use the generated ID if there is no working view already
+    const newWorkingViewId = workingView?.id || newWorkingView.id
 
-      // Make API call in background
-      const promise = createView({
-        payload: newWorkingView,
-        viewType: viewType,
-        projectName: projectName,
-      }).unwrap()
+    // Make API call in background
+    const promise = onCreateView({
+      payload: newWorkingView,
+      viewType: viewType,
+      projectName: projectName,
+    })
 
-      // if not working: set that the settings have been changed to show the little blue save button
-      if (selectedView && !selectedView.working) {
-        onSettingsChanged(true)
-      }
-      // Always switch to the working view after updating anything
-      setSelectedView(newWorkingViewId as string)
-
-      await promise
-
-      // Clear local state after successful API call - the server data will take over
-      localStateSetter(null)
-
-      if (options.successMessage) {
-        toast.success(options.successMessage)
-      }
-    } catch (error) {
-      // Revert local state on error
-      localStateSetter(null)
-      console.error(error)
-      const errorMsg = options.errorMessage || `Failed to update view settings: ${error}`
-      toast.error(errorMsg)
+    // if not working: set that the settings have been changed to show the little blue save button
+    if (selectedView && !selectedView.working) {
+      onSettingsChanged(true)
     }
+    // Always switch to the working view after updating anything
+    setSelectedView(newWorkingViewId as string)
+
+    await promise
+
+    // Clear local state after successful API call - the server data will take over
+    localStateSetter(null)
+
+    if (options.successMessage) {
+      toast.success(options.successMessage)
+    }
+  } catch (error) {
+    // Revert local state on error
+    localStateSetter(null)
+    console.error(error)
+    const errorMsg = options.errorMessage || `Failed to update view settings: ${error}`
+    toast.error(errorMsg)
   }
 }
 
-/**
- * Hook version of updateViewSettings for use within the frontend.
- * This uses hooks internally and provides the same updateViewSettings function.
- */
 export const useViewUpdateHelper = () => {
   const [createView] = useCreateViewMutation()
-  const viewsContext = useViewsContext()
 
-  const updateViewSettings = useCallback(
-    async (
-      updatedSettings: any,
-      localStateSetter: (value: any) => void,
-      newLocalValue: any,
-      options: UpdateOptions = {},
-    ) => {
-      return createUpdateViewSettings(createView, viewsContext)(
-        updatedSettings,
-        localStateSetter,
-        newLocalValue,
-        options,
-      )
-    },
-    [createView, viewsContext],
+  const viewContext = useViewsContext()
+
+  const onCreateView = useCallback(
+    async (payload: CreateViewApiArg) => await createView(payload).unwrap(),
+    [createView],
   )
 
-  return { updateViewSettings }
+  const updateViewSettingsHandler = useCallback<UpdateViewSettingsFn>(
+    async (...args) => await updateViewSettings(...args, viewContext, onCreateView),
+    [viewContext],
+  )
+
+  return { updateViewSettings: updateViewSettingsHandler, onCreateView }
 }

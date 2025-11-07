@@ -1,3 +1,0 @@
-{
-    "githubIssues.issueBranchTitle": "${issueNumber}-${sanitizedIssueTitle}"
-  }

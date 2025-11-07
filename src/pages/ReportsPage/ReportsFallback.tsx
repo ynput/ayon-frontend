@@ -1,7 +1,8 @@
 import { SelectionData, SliceType } from '@shared/containers'
 import { RemoteAddonProjectProps } from '@shared/context'
-import { ViewsContextValue } from '@shared/containers/Views'
+import { UpdateViewSettingsFn, ViewsContextValue } from '@shared/containers/Views'
 import { FC } from 'react'
+import { ReportsSettings } from '@shared/api'
 
 type Slicer = {
   selection: SelectionData
@@ -10,14 +11,9 @@ type Slicer = {
   setPersistentRowSelectionData: (data: SelectionData) => void
 }
 
-type ViewData = {
-  widgets?: any[]
-  dateFormat?: string
-}
-
 type ViewsWithReportsSettings = ViewsContextValue & {
-  onUpdateWidgets: (viewData: ViewData) => void
-  onUpdateDateFormat: (viewData: ViewData) => void
+  settings: ReportsSettings
+  updateViewSettings: UpdateViewSettingsFn
 }
 
 interface ReportsFallbackProps extends RemoteAddonProjectProps {

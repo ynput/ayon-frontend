@@ -1,20 +1,21 @@
 import { useLoadModule } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
-import { FC, useMemo } from 'react'
+import { FC, useState, useEffect } from 'react'
 import ReportsFallback from './ReportsFallback'
+import ReportsLoadingScreen from './ReportsLoadingScreen'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useViewsContext } from '@shared/containers/Views'
-import { createUpdateViewSettings } from '@shared/containers/Views/utils/createUpdateViewSettings'
-import { useCreateViewMutation } from '@shared/api'
+import { updateViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
+import { ReportsSettings } from '@shared/api'
 
 interface ReportsPageProps {}
 
 const ReportsPage: FC<ReportsPageProps> = () => {
   const projectName = (useAppSelector((state) => state.project.name) as null | string) || ''
+  const [showLoading, setShowLoading] = useState(false)
 
   const {
     config,
@@ -26,13 +27,7 @@ const ReportsPage: FC<ReportsPageProps> = () => {
   const overviewSliceFields = config?.overview?.fields
 
   const viewsContext = useViewsContext()
-  const [createView] = useCreateViewMutation()
-
-  // Create the updateViewSettings function to pass to addon
-  const updateViewSettings = useMemo(
-    () => createUpdateViewSettings(createView, viewsContext),
-    [createView, viewsContext]
-  )
+  const { onCreateView } = useViewUpdateHelper()
 
   const [Reports, { isLoaded, outdated }] = useLoadModule({
     addon: 'reports',
@@ -42,12 +37,21 @@ const ReportsPage: FC<ReportsPageProps> = () => {
     minVersion: '0.1.0-dev',
   })
 
+  useEffect(() => {
+    if (!isLoaded) {
+      const timer = setTimeout(() => setShowLoading(true), 200)
+      return () => clearTimeout(timer)
+    } else {
+      setShowLoading(false)
+    }
+  }, [isLoaded])
+
   if (outdated) {
     return <div>Report requires Report addon 0.1.0 or higher</div>
   }
 
-  if (!isLoaded) {
-    return <div>Loading...</div>
+  if (!isLoaded && showLoading) {
+    return <ReportsLoadingScreen />
   }
 
   return (
@@ -74,8 +78,10 @@ const ReportsPage: FC<ReportsPageProps> = () => {
               setPersistentRowSelectionData,
             }}
             views={{
-              context: viewsContext,
-              updateViewSettings,
+              ...viewsContext,
+              settings: viewsContext.viewSettings as ReportsSettings,
+              updateViewSettings: (...args) =>
+                updateViewSettings(...args, viewsContext, onCreateView),
             }}
           />
         </SplitterPanel>
