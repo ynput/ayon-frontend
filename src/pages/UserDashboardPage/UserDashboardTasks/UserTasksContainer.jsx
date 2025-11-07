@@ -12,7 +12,7 @@ import { EmptyPlaceholder } from '@shared/components'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '@state/dashboard'
+import { onAssigneesChanged, onTaskSelected } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { getIntersectionFields, getMergedFields } from '../util'
 import transformKanbanTasks from './transformKanbanTasks'
@@ -185,6 +185,33 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   const { setOpen } = useScopedDetailsPanel('dashboard')
 
+  // when there is a task open in the panel through the uri, try to select the task
+  const handleUri = (entity) => {
+    // check entity is a task
+    if (entity?.entityType !== 'task') return
+    // check entity id is in tasks
+    const task = transformedTasks.find((t) => t.id === entity.id)
+    if (task) {
+      // select the task
+      dispatch(
+        onTaskSelected({
+          ids: [task.id],
+          types: [task.taskType],
+          data: [
+            {
+              id: task.id,
+              projectName: task.projectName,
+              taskType: task.taskType,
+              name: task.name,
+            },
+          ],
+        }),
+      )
+      // open the panel
+      setOpen(true)
+    }
+  }
+
   const handlePanelClose = () => {
     setOpen(false)
   }
@@ -271,6 +298,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           entitySubTypes={taskTypes}
           scope="dashboard"
           onOpenViewer={handleOpenViewer}
+          onUriOpen={handleUri}
         />
         <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
       </SplitterPanel>

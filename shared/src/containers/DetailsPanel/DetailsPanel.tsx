@@ -8,7 +8,12 @@ import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { extractEntityHierarchyFromParents, productTypes } from '@shared/util'
-import { useDetailsPanelContext, useScopedDetailsPanel, useURIContext } from '@shared/context'
+import {
+  Entities,
+  useDetailsPanelContext,
+  useScopedDetailsPanel,
+  useURIContext,
+} from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -98,6 +103,10 @@ DetailsPanelProps) => {
   const activeEntityType = contextEntities?.entityType ?? entityType
   const activeEntities = contextEntities?.entities ?? entities
   const activeEntitySubTypes = contextEntities?.entitySubTypes ?? entitySubTypes
+  const activeEntitiesData = contextEntities?.entities ? [] : entitiesData
+  const activeProjectNames = contextEntities?.entities
+    ? contextEntities.entities.map((e) => e.projectName)
+    : projectNames
 
   // Fire onOpen callback once when component mounts and renders
   useEffect(() => {
@@ -123,8 +132,8 @@ DetailsPanelProps) => {
 
   // reduce projectsInfo to selected projects and into one
   const projectInfo = useMemo(
-    () => mergeProjectInfo(projectsInfo, projectNames),
-    [projectsInfo, projectNames],
+    () => mergeProjectInfo(projectsInfo, activeProjectNames),
+    [projectsInfo, activeProjectNames],
   )
 
   // build icons for entity types
@@ -159,8 +168,8 @@ DetailsPanelProps) => {
   // now we get the full details data for selected entities
   let entitiesToQuery = activeEntities.length
     ? activeEntities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
-    : // @ts-expect-error = not sure what's going on with entitiesData, we should try and remove it
-      entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+    : // @ts-expect-error = not sure what's going on with activeEntitiesData, we should try and remove it
+      activeEntitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
   entitiesToQuery = entitiesToQuery.filter((entity) => entity.id)
 
@@ -188,7 +197,7 @@ DetailsPanelProps) => {
   const allStatuses = getAllProjectStatuses(projectsInfo)
 
   // get the first project name and info to be used in the feed.
-  const firstProject = projectNames[0]
+  const firstProject = activeProjectNames[0]
   const firstProjectInfo = projectsInfo[firstProject] || {}
   const firstEntityData = entityDetailsData[0] || {}
 
@@ -204,11 +213,13 @@ DetailsPanelProps) => {
   // sync the uri when entity changes
   useEffect(() => {
     if (!firstEntityData?.parents) return
+    if (!firstProject) return
     const { folderPath, taskName, versionName, productName } = extractEntityHierarchyFromParents(
       firstEntityData.parents,
       activeEntityType,
       firstEntityData.name,
     )
+
     setEntityUri({
       projectName: firstProject,
       folderPath: folderPath,
@@ -263,7 +274,7 @@ DetailsPanelProps) => {
 
   const isCommentingEnabled = () => {
     // cannot comment on multiple projects
-    if (projectNames.length > 1) return false
+    if (activeProjectNames.length > 1) return false
     if (isGuest) {
       // Guest can only comment in review sessions (for now)
       if (!entityListId) return false
@@ -387,15 +398,40 @@ DetailsPanelProps) => {
   )
 }
 
+export type UriDetailsEntity = {
+  projectName: string
+  id: string
+  entityType: DetailsPanelEntityType
+}
+
 // create a wrapper that checks if the details panel should be open or not based on isOpen prop and entities state
 export const DetailsPanel = ({
   isOpen,
+  onUriOpen,
   ...props
-}: DetailsPanelProps & { entityType?: DetailsPanelEntityType; isOpen: boolean }) => {
+}: DetailsPanelProps & {
+  entityType?: DetailsPanelEntityType
+  isOpen: boolean
+  onUriOpen?: (entity: UriDetailsEntity) => void
+}) => {
   const { entities } = useDetailsPanelContext()
 
   if (!isOpen && !entities) return null
   if (!props.entityType && !entities) return null
+
+  // if the details panel is opened vair the uri, run callback
+  useEffect(() => {
+    if (entities?.source === 'uri' && entities?.entities?.length && !!onUriOpen) {
+      const uriEntity = entities.entities[0]
+      if (!uriEntity) return
+
+      onUriOpen({
+        projectName: uriEntity.projectName,
+        id: uriEntity.id,
+        entityType: entities.entityType,
+      })
+    }
+  }, [])
 
   return <DetailsPanelInner {...props} />
 }

@@ -35,6 +35,7 @@ export type Entities = {
   entityType: DetailsPanelEntityType
   entities: { id: string; projectName: string }[]
   entitySubTypes?: string[]
+  source?: string // 'uri' | 'related'
 }
 
 export interface OpenStateByScope {
@@ -237,22 +238,28 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
         const entityUriData = result.find((r) => r.uri === uri)
         const entityData = entityUriData?.entities?.[0]
 
+        // http://localhost:3000/dashboard/tasks?uri=ayon%2Bentity%3A%2F%2Fdemo_Commercial%2Fassets%2Fprops%2F07_drandauett_typangoects%3Ftask%3Dlookdev
+
         if (!entityUriData || !entityData) return
+        const projectName = entityData?.projectName || entity.projectName || ''
+        const id =
+          entityData.representationId ||
+          entityData.versionId ||
+          entityData.productId ||
+          entityData.taskId ||
+          entityData.folderId
+
+        if (!projectName || !id) return
 
         const newEntities: Entities = {
           entityType: entity.entityType as DetailsPanelEntityType,
           entities: [
             {
-              id:
-                entityData.representationId ||
-                entityData.versionId ||
-                entityData.productId ||
-                entityData.taskId ||
-                entityData.folderId ||
-                '',
-              projectName: entityData.projectName || entity.projectName || '',
+              id: id,
+              projectName: projectName,
             },
           ],
+          source: 'uri',
         }
 
         setEntities(newEntities)
