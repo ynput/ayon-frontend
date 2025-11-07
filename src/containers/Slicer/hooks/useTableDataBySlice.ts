@@ -96,7 +96,6 @@ const useTableDataBySlice = ({
 
   const showAttributes = sliceFields.some((field) => field.value === 'attributes')
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
-    skip: !showAttributes,
     entityTypes,
   })
 

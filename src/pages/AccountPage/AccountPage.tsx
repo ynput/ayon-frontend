@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import SessionList from './SessionListPage'
 import { Panel } from '@ynput/ayon-react-components'
 import { Navigate, useParams } from 'react-router-dom'
-import { useGetCurrentUserQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 import styled from 'styled-components'
 import AppNavLinks from '@containers/header/AppNavLinks'
 // import SiteSettings from './SiteSettingsPage'
@@ -21,18 +21,20 @@ export const PanelButtonsStyled = styled(Panel)`
 
 const AccountPage = () => {
   const { module } = useParams()
-  
 
   // RTK QUERIES
   // GET USER DATA
-  const { data: userData, isLoading } = useGetCurrentUserQuery()
+  const {
+    user,
+    isLoading: { siteInfo: isLoading },
+  } = useGlobalContext()
 
   const moduleComponent = useMemo(() => {
     switch (module) {
       case 'profile':
-        return <ProfilePage user={userData} isLoading={isLoading} />
+        return <ProfilePage user={user} isLoading={isLoading} />
       case 'sessions':
-        return <SessionList userName={userData?.name} />
+        return <SessionList userName={user?.name} />
       case 'downloads':
         return <DownloadsPage />
       case 'settings':
@@ -40,7 +42,7 @@ const AccountPage = () => {
       default:
         return <Navigate to="/account/profile" />
     }
-  }, [module, userData])
+  }, [module, user])
 
   let links = [
     {
@@ -60,12 +62,13 @@ const AccountPage = () => {
     //   module: 'settings',
     // },
   ]
-  
-  const title = useTitle(module, links, 'AYON')
-  
+
+  const title = useTitle(module || '', links, 'AYON')
+
   return (
     <>
       <DocumentTitle title={title} />
+      {/* @ts-expect-error: AppNavLinks not TS */}
       <AppNavLinks links={links} />
       {moduleComponent}
     </>
