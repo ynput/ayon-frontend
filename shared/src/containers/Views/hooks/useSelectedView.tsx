@@ -39,8 +39,6 @@ export const useSelectedView = ({ viewType, projectName }: Props): Return => {
       previousSelectedViewIdByType.current[viewType] = defaultView.id
     }
 
-    console.log('setting default view:', viewId)
-
     try {
       await setDefaultView({
         setDefaultViewRequestModel: {

@@ -93,7 +93,8 @@ export type CreateViewApiArg = {
     | VersionsViewPostModel
     | ReportsViewPostModel
 }
-export type GetWorkingViewApiResponse = /** status 200 Successful Response */
+export type GetWorkingViewApiResponse =
+  /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
@@ -104,7 +105,8 @@ export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetDefaultViewApiResponse = /** status 200 Successful Response */
+export type GetDefaultViewApiResponse =
+  /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
@@ -121,7 +123,8 @@ export type SetDefaultViewApiArg = {
   projectName?: string
   setDefaultViewRequestModel: SetDefaultViewRequestModel
 }
-export type GetViewApiResponse = /** status 200 Successful Response */
+export type GetViewApiResponse =
+  /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
