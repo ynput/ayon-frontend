@@ -399,8 +399,8 @@ const transformGroups = (groups = []) => {
         // Collect product names from the group
         const productNames = []
         group.forEach(msg => {
-          // Get product name from activityData
-          const productName = msg.activityData?.product?.name || msg.activityData?.productName
+          // Get product name from activityData.context
+          const productName = msg.activityData?.context?.productName
           if (productName && !productNames.includes(productName)) {
             productNames.push(productName)
           }
@@ -466,6 +466,7 @@ const transformGroups = (groups = []) => {
 }
 
 const useGroupMessages = ({ messages, currentUser }) => {
+  console.log(messages)
   const grouped = useMemo(() => {
     // const simpleGroups = messages.map((message) => [message])
     const simpleGroups = groupMessages(messages, currentUser)
