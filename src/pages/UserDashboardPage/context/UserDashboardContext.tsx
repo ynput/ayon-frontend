@@ -6,6 +6,7 @@ import {
   RelatedTasksFallback,
   RelatedTasksFallbackProps,
 } from '../UserDashboardTasks/RelatedTasks/RelatedTasksFallback'
+import { usePowerpack } from '@shared/context'
 
 interface UserDashboardContextType {
   RelatedTasks: React.FC<RelatedTasksFallbackProps>
@@ -18,11 +19,15 @@ interface UserDashboardProviderProps {
 }
 
 export const UserDashboardProvider: React.FC<UserDashboardProviderProps> = ({ children }) => {
+  const { powerLicense } = usePowerpack()
+
   const [RelatedTasks] = useLoadModule({
     addon: 'powerpack',
     remote: 'views',
     module: 'RelatedTasks',
     fallback: RelatedTasksFallback,
+    skip: !powerLicense,
+    minVersion: '1.5.0',
   })
 
   return (

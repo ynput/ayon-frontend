@@ -38,6 +38,7 @@ const activityTypeIcons = {
   'version.publish': 'layers',
   'assignee.add': 'person_add',
   'assignee.remove': 'person_remove',
+  'assignee.reassign': 'swap_horiz',
   reviewable: 'play_circle',
 }
 const activityTypeIconsMultiple = {
@@ -45,6 +46,7 @@ const activityTypeIconsMultiple = {
   'version.publish': activityTypeIcons['version.publish'],
   'assignee.add': 'group_add',
   'assignee.remove': 'group_remove',
+  'assignee.reassign': 'swap_horiz',
 }
 
 const getDateString = (date) => {
@@ -82,6 +84,7 @@ const InboxMessage = ({
   onSelect,
   projectsInfo,
   isMultiple, // are there multiple messages in this group
+  customBody, // custom body for special message types (e.g. reassignment)
   ...props
 }) => {
   const typeIcon =
@@ -100,7 +103,7 @@ const InboxMessage = ({
     }
   }
 
-  const body = useMemo(() => getMessageBody(messages), [])
+  const body = useMemo(() => customBody ? customBody : getMessageBody(messages), [customBody, messages])
 
   let statusChanges = []
   const isStatusChange = type === 'status.change'

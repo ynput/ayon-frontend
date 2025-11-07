@@ -78,6 +78,7 @@ export type CustomizationModel = {
   studio_logo?: string
   /** The message that is displayed to users on the login page. Markdown syntax is supported. */
   motd?: string
+  frontend_flags?: string[]
 }
 export type AuthenticationModel = {
   /** If enabled, password authentication will be hidden from the login page. */

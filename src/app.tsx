@@ -214,7 +214,7 @@ const App = () => {
                                       <FileUploadPreviewContainer />
                                       <ReleaseInstallerDialog />
                                       <CompleteProfilePrompt />
-                                      <AppRoutes isUser={isUser} />
+                                      <AppRoutes level={user.uiExposureLevel} />
                                       <DetailsPanelFloating />
                                       <PowerpackDialog />
                                       <AppRemoteLoader />
