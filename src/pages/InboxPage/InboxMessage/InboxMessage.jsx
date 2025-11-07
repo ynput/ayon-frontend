@@ -103,7 +103,7 @@ const InboxMessage = ({
     }
   }
 
-  const body =  useMemo(() => customBody? customBody: getMessageBody(messages), [])
+  const body = useMemo(() => customBody ? customBody : getMessageBody(messages), [customBody, messages])
 
   let statusChanges = []
   const isStatusChange = type === 'status.change'

@@ -378,6 +378,53 @@ const transformGroups = (groups = []) => {
         finalEntityType = parentFolder.type
         // Show only the parent folder in the path
         finalPath = [parentFolder.label || parentFolder.name]
+
+        const authorMap = new Map()
+        group.forEach(msg => {
+          if (msg.author) {
+            const authorKey = msg.author.name
+            if (!authorMap.has(authorKey)) {
+              authorMap.set(authorKey, msg.author)
+            }
+          }
+        })
+
+        const authors = Array.from(authorMap.values())
+        const versionCount = group.length
+        const hasReviewable = group.some(m => m.activityType === 'reviewable')
+
+        // Use only the primary author
+        const primaryAuthor = authors[0]?.attrib?.fullName || authors[0]?.name
+
+        // Collect entity names (version/task names) from the group
+        const entityNames = []
+        group.forEach(msg => {
+          // Get entity name from the last element of the path (the version/task name)
+          const entityName = msg.path?.[msg.path.length - 1] || msg.entityLabel
+          if (entityName && !entityNames.includes(entityName)) {
+            entityNames.push(entityName)
+          }
+        })
+
+        // Build the description based on count
+        let actionText = ''
+        if (versionCount <= 4 && entityNames.length > 0) {
+          // Show individual entity names when 4 or fewer
+          const entityList = entityNames.join(', ')
+          actionText = hasReviewable
+            ? `Published and submitted new versions for review to ${entityList}`
+            : `Published new versions to ${entityList}`
+        } else {
+          // Show count when more than 4
+          const versionText = versionCount === 1 ? 'new version' : 'new versions'
+          actionText = hasReviewable
+            ? `Published and submitted ${versionCount} ${versionText} for review`
+            : `Published ${versionCount} ${versionText}`
+        }
+
+        if (primaryAuthor) {
+          customBody = `${primaryAuthor}: ${actionText}`
+        }
       }
     }
 
