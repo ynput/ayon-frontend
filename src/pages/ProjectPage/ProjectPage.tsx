@@ -23,7 +23,7 @@ import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
-import { RemoteAddonProject } from '@shared/context'
+import { RemoteAddonProject, useGlobalContext } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
@@ -35,6 +35,8 @@ import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
+
+const BROWSER_FLAG = 'enable-legacy-version-browser'
 
 type NavLink = {
   name?: string
@@ -72,10 +74,10 @@ const ProjectPage = () => {
    * It parses the url, loads the project data, dispatches the
    * project data to the store, and renders the requested page.
    */
-
+  const { siteInfo } = useGlobalContext()
+  const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
-  const isGuest = useAppSelector((state) => state.user.data.isGuest)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
@@ -149,6 +151,7 @@ const ProjectPage = () => {
         module: 'browser',
         uriSync: true,
         deprecated: true,
+        enabled: frontendFlags.includes(BROWSER_FLAG),
       },
       {
         name: 'Products',
@@ -259,6 +262,9 @@ const ProjectPage = () => {
       return <TasksProgressPage />
     }
     if (module === 'browser') {
+      if (!frontendFlags.includes(BROWSER_FLAG)) {
+        return <Navigate to={`/projects/${projectName}/overview`} />
+      }
       return <BrowserPage projectName={projectName} />
     }
     if (module === 'products') {
@@ -322,7 +328,7 @@ const ProjectPage = () => {
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isGuest) {
+  if (uiExposureLevel >= 500) {
     return <GuestUserPageLocked />
   }
 

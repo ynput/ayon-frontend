@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react'
 import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType, useGetCurrentUserQuery } from '@shared/api'
+import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
+import { useGlobalContext } from './GlobalContext'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
 
@@ -126,7 +127,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   ...forwardedProps
 }) => {
   // get current user
-  const { data: currentUser } = useGetCurrentUserQuery()
+  const { user: currentUser } = useGlobalContext()
   const isDeveloperMode =
     'isDeveloperMode' in debug
       ? (debug.isDeveloperMode as boolean)
@@ -169,10 +170,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope] = useLocalStorage<TabStateByScope>(
-    'details/tabs-by-scope',
-    {},
-  )
+  const [tabsByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
@@ -264,12 +262,12 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
 }
 
 // Add a specialized hook for using a panel in a specific scope
-export const useScopedDetailsPanel = ( scope : string ) => {
+export const useScopedDetailsPanel = (scope: string) => {
   const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
 
   const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
     'details/tabs-by-scope',
-    {}
+    {},
   )
 
   const [tab, setTab] = useState<DetailsPanelTab>(() => tabsByScope[scope] ?? getTabForScope(scope))
@@ -280,9 +278,8 @@ export const useScopedDetailsPanel = ( scope : string ) => {
       setTab(newTab)
       setTabsByScope({ ...tabsByScope, [scope]: newTab })
     },
-    [scope, setTabsByScope]
+    [scope, setTabsByScope],
   )
-
 
   const currentTab = tab
   const isFeed = ['activity', 'comments', 'versions', 'checklists'].includes(currentTab)

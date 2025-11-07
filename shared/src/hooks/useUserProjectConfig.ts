@@ -1,4 +1,5 @@
-import { useGetCurrentUserQuery, useSetFrontendPreferencesMutation } from '@shared/api'
+import { useSetFrontendPreferencesMutation } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 import { toast } from 'react-toastify'
 
 type Props = {
@@ -14,7 +15,7 @@ type Result = [
 
 export const useUserProjectConfig = ({ selectors = [], init }: Props): Result => {
   // GET CURRENT USER
-  const { data: user, isSuccess } = useGetCurrentUserQuery()
+  const { user } = useGlobalContext()
   // extract out columns config for project
   const { data: { frontendPreferences: preferences = {} } = {} } = user || {}
 
@@ -67,5 +68,5 @@ export const useUserProjectConfig = ({ selectors = [], init }: Props): Result =>
     }
   }
 
-  return [userConfig, updateProjectConfig, { isSuccess: isSuccess }]
+  return [userConfig, updateProjectConfig, { isSuccess: true }]
 }

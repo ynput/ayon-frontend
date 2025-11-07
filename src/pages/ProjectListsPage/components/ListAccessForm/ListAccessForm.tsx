@@ -3,12 +3,11 @@ import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModu
 import {
   EntityListModel,
   useGetActivityCategoriesQuery,
-  useGetCurrentUserQuery,
   useGetShareOptionsQuery,
   useUpdateEntityListMutation,
 } from '@shared/api'
 import { RequiredAddonVersion } from '@shared/components/Powerpack'
-import { usePowerpack } from '@shared/context'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import { FC } from 'react'
 import { toast } from 'react-toastify'
 import { Section } from '../ListDetailsPanel/ListDetailsPanel.styled'
@@ -27,7 +26,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
   isReview,
 }) => {
   //   get current user data
-  const { data: currentUser } = useGetCurrentUserQuery()
+  const { user: currentUser } = useGlobalContext()
   const { powerLicense } = usePowerpack()
 
   const { data: shareOptions = [], isFetching: isShareOptionsLoading } = useGetShareOptionsQuery(

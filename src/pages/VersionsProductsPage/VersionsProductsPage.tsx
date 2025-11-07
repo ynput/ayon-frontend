@@ -137,7 +137,10 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
         visible={!!showDetail}
         onHide={() => setShowDetail(false)}
       />
-      <EarlyPreview tooltip="The Products page intends to replace the old Browser page. Feedback is greatly appreciated!" />
+      <EarlyPreview
+        tooltip={`The Products page replaces the old Browser page. Show the browser page again at [/settings/server](/settings/server)`}
+        data-tooltip-as="markdown"
+      />
     </main>
   )
 }
