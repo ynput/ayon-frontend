@@ -396,30 +396,40 @@ const transformGroups = (groups = []) => {
         // Use only the primary author
         const primaryAuthor = authors[0]?.attrib?.fullName || authors[0]?.name
 
-        // Collect entity names (version/task names) from the group
-        const entityNames = []
+        // Collect product names from the group
+        const productNames = []
         group.forEach(msg => {
-          // Get entity name from the last element of the path (the version/task name)
-          const entityName = msg.path?.[msg.path.length - 1] || msg.entityLabel
-          if (entityName && !entityNames.includes(entityName)) {
-            entityNames.push(entityName)
+          // Get product name from activityData
+          const productName = msg.activityData?.product?.name || msg.activityData?.productName
+          if (productName && !productNames.includes(productName)) {
+            productNames.push(productName)
           }
         })
 
         // Build the description based on count
-        let actionText = ''
-        if (versionCount <= 4 && entityNames.length > 0) {
-          // Show individual entity names when 4 or fewer
-          const entityList = entityNames.join(', ')
+        let actionText
+        if (versionCount <= 4 && productNames.length > 0) {
+          // Show individual product names when 4 or fewer versions
+          const productList = productNames.join(', ')
           actionText = hasReviewable
-            ? `Published and submitted new versions for review to ${entityList}`
-            : `Published new versions to ${entityList}`
+            ? `Published and submitted new versions for review to ${productList}`
+            : `Published new versions to ${productList}`
         } else {
-          // Show count when more than 4
+          // Show version and product counts when more than 4 versions
           const versionText = versionCount === 1 ? 'new version' : 'new versions'
-          actionText = hasReviewable
-            ? `Published and submitted ${versionCount} ${versionText} for review`
-            : `Published ${versionCount} ${versionText}`
+          const productCount = productNames.length
+          const productText = productCount === 1 ? 'product' : 'products'
+
+          if (productCount > 0) {
+            actionText = hasReviewable
+              ? `Published and submitted ${versionCount} ${versionText} for review to ${productCount} ${productText}`
+              : `Published ${versionCount} ${versionText} to ${productCount} ${productText}`
+          } else {
+            // Fallback if no product names found
+            actionText = hasReviewable
+              ? `Published and submitted ${versionCount} ${versionText} for review`
+              : `Published ${versionCount} ${versionText}`
+          }
         }
 
         if (primaryAuthor) {
