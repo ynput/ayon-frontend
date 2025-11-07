@@ -62,8 +62,6 @@ export const VersionsSelectionProvider: FC<VersionsSelectionProviderProps> = ({ 
     return { versions, products }
   }, [selectedRows, entitiesMap])
 
-  console.log(selectedRowEntities, entitiesMap, selectedRows)
-
   const selectedRowProducts = selectedRowEntities.products
   const selectedRowVersions = selectedRowEntities.versions
 

@@ -1,4 +1,5 @@
-import { useGetSiteInfoQuery, AttributeModel, Permissions } from '@shared/api'
+import { AttributeModel, Permissions } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
 export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean
@@ -9,8 +10,10 @@ interface UseAttributeFieldsParams {
 }
 
 const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) => {
-  const { data: info, isLoading } = useGetSiteInfoQuery({ full: true })
-  const { attributes = [] } = info || {}
+  const {
+    attributes,
+    isLoading: { siteInfo: isLoading },
+  } = useGlobalContext()
 
   const { attrib_read, attrib_write } = projectPermissions || {}
   const { enabled: attribReadEnabled, attributes: attribReadAttributes } = attrib_read || {}

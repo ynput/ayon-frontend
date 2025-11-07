@@ -13,6 +13,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    deleteSite: build.mutation<DeleteSiteApiResponse, DeleteSiteApiArg>({
+      query: (queryArg) => ({ url: `/api/system/sites/${queryArg.siteId}`, method: 'DELETE' }),
+    }),
     getSiteInfo: build.query<GetSiteInfoApiResponse, GetSiteInfoApiArg>({
       query: (queryArg) => ({
         url: `/api/info`,
@@ -76,6 +79,10 @@ export type GetSitesApiResponse = /** status 200 Successful Response */ SiteInfo
 export type GetSitesApiArg = {
   platform?: 'windows' | 'linux' | 'darwin'
   hostname?: string
+}
+export type DeleteSiteApiResponse = /** status 200 Successful Response */ any
+export type DeleteSiteApiArg = {
+  siteId: string
 }
 export type GetSiteInfoApiResponse = /** status 200 Successful Response */ InfoResponseModel
 export type GetSiteInfoApiArg = {
@@ -155,6 +162,7 @@ export type UserAttribModel = {
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
+  uiExposureLevel?: number
   attrib?: UserAttribModel
   data?: Record<string, any>
   /** Whether the user is active */
@@ -281,6 +289,7 @@ export type InfoResponseModel = {
   attributes?: AttributeModel[]
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
+  frontendFlags?: string[]
   extras?: string
 }
 export type SystemMetricsData = {

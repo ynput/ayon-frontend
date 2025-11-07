@@ -2,7 +2,6 @@ import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallbac
 import { ViewType, viewTypes, WORKING_VIEW_ID } from '../index'
 import {
   GetDefaultViewApiResponse,
-  useGetCurrentUserQuery,
   useGetWorkingViewQuery,
   useGetViewQuery,
   useListViewsQuery,
@@ -14,7 +13,7 @@ import {
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
-import { usePowerpack } from '@shared/context'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
@@ -101,7 +100,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     powerLicense = debug.powerLicense
   }
 
-  const { data: currentUser } = useGetCurrentUserQuery()
+  const { user: currentUser } = useGlobalContext()
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)

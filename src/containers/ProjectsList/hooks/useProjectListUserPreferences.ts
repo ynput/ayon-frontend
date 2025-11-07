@@ -1,8 +1,9 @@
-import { useGetCurrentUserQuery, useSetFrontendPreferencesMutation } from '@shared/api'
+import { useSetFrontendPreferencesMutation } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 import { RowPinningState } from '@tanstack/react-table'
 
 const useProjectListUserPreferences = () => {
-  const { data: user } = useGetCurrentUserQuery()
+  const { user } = useGlobalContext()
   const { data: { frontendPreferences: preferences = {} } = {} } = user || {}
   const rowPinning: RowPinningState['top'] = preferences?.pinnedProjects || []
 

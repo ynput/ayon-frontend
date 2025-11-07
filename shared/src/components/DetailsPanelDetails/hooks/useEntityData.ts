@@ -1,4 +1,5 @@
-import { useGetSiteInfoQuery, useGetProjectQuery } from '@shared/api'
+import { useGetProjectQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
 interface UseEntityDataProps {
   projectName?: string
@@ -6,14 +7,12 @@ interface UseEntityDataProps {
 }
 
 export const useEntityData = ({ projectName, isProjectNameMixed }: UseEntityDataProps) => {
+  const { attributes } = useGlobalContext()
   const { data: projectData } = useGetProjectQuery(
     { projectName: projectName || '' },
     { skip: !projectName || isProjectNameMixed },
   )
   const { folderTypes = [], taskTypes = [], statuses = [], tags = [] } = projectData || {}
-
-  const { data: info } = useGetSiteInfoQuery({ full: true })
-  const { attributes = [] } = info || {}
 
   return {
     folderTypes,

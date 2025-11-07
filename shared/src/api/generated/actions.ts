@@ -133,6 +133,8 @@ export type BaseActionManifest = {
   identifier: string
   /** Human-friendly name of the action */
   label: string
+  /** A short description of the action */
+  description?: string
   /** The label of the group the action belongs to */
   groupLabel?: string
   /** Action category */

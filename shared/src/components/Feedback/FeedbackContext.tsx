@@ -1,10 +1,6 @@
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import {
-  useGetCurrentUserQuery,
-  useGetFeedbackVerificationQuery,
-  useGetSiteInfoQuery,
-  useGetYnputCloudInfoQuery,
-} from '@shared/api'
+import { useGetFeedbackVerificationQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
 export type FeedbackContextType = {
   loaded: boolean
@@ -31,14 +27,11 @@ type FeedbackProviderProps = {
 
 export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) => {
   const [scriptLoaded, setScriptLoaded] = useState(false)
-
-  const { data: user } = useGetCurrentUserQuery()
-  const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user?.name })
-  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user?.name })
+  const { siteInfo, user, cloudInfo } = useGlobalContext()
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
     {},
     {
-      skip: !user?.name || !connect,
+      skip: !user?.name || !cloudInfo,
     },
   )
 
@@ -75,7 +68,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
         origin: window.location.origin,
         serverVersion: serverVersion,
         frontendVersion: frontendVersion,
-        instanceId: connect?.instanceId,
+        instanceId: cloudInfo?.instanceId,
       },
     }
 
@@ -241,7 +234,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // verify user
   useEffect(() => {
     // check if we can identify the user
-    if (!user?.name || !connect || !verification || !scriptLoaded) return
+    if (!user?.name || !cloudInfo || !verification || !scriptLoaded) return
     // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
@@ -249,7 +242,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     setIdentified(true)
   }, [
     user?.name,
-    connect?.instanceId,
+    cloudInfo?.instanceId,
     verification?.available,
     scriptLoaded,
     window.location.pathname,
