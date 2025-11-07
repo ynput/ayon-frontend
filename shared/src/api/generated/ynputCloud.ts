@@ -87,23 +87,7 @@ export type YnputConnectRequestModel = {
   /** Ynput cloud key */
   key: string
 }
-export type UserCustomFields = {
-  level?: string
-  instanceId?: string
-  verifiedUser?: string
-}
-export type CompanyInfo = {
-  id: string
-  name: string
-  subscriptions?: string
-}
 export type UserVerificationResponse = {
-  organization?: string
-  name: string
-  email?: string
-  userId: string
-  userHash: string
-  profilePicture?: string
-  customFields: UserCustomFields
-  companies: CompanyInfo[]
+  available: boolean
+  data: Record<string, any>
 }
