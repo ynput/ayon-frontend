@@ -4,7 +4,7 @@ import * as Styled from './DetailsPanel.styled'
 
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
-import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
+import type { ProjectModel, Tag, DetailsPanelEntityType, DetailsPanelEntityData } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { extractEntityHierarchyFromParents, productTypes } from '@shared/util'
@@ -48,6 +48,7 @@ export type DetailsPanelProps = {
   onOpenViewer?: (entity: any) => void
   onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   onOpen?: () => void
+  onUriOpen?: (entity: DetailsPanelEntityData) => void
   // annotations
   annotations?: any
   removeAnnotation?: (id: string) => void
@@ -80,6 +81,7 @@ const DetailsPanelInner = ({
   onOpenViewer,
   onEntityFocus,
   onOpen,
+  onUriOpen, // when the details panel is opened from uri
   // annotations
   annotations,
   removeAnnotation,
@@ -191,6 +193,20 @@ DetailsPanelProps) => {
       closeSlideOut()
     }
   }, [originalArgs, isSlideOut])
+
+  // if the details panel is opened vair the uri, run callback
+  useEffect(() => {
+    if (isFetchingEntitiesDetails) return
+
+    if (contextEntities?.source === 'uri' && contextEntities?.entities?.length && !!onUriOpen) {
+      const uriEntity = entityDetailsData.find(
+        (entity) => entity.id === contextEntities.entities[0].id,
+      )
+      if (!uriEntity) return
+
+      onUriOpen(uriEntity)
+    }
+  }, [entityDetailsData, isFetchingEntitiesDetails])
 
   // TODO:  merge current entities data with fresh details data
 
@@ -307,7 +323,7 @@ DetailsPanelProps) => {
           <Styled.RightTools className="right-tools">
             <Watchers
               entities={entitiesToQuery}
-              entityType={entityType}
+              entityType={activeEntityType}
               options={projectUsers || []}
               onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
               userName={user.name}
@@ -398,40 +414,19 @@ DetailsPanelProps) => {
   )
 }
 
-export type UriDetailsEntity = {
-  projectName: string
-  id: string
-  entityType: DetailsPanelEntityType
-}
-
 // create a wrapper that checks if the details panel should be open or not based on isOpen prop and entities state
 export const DetailsPanel = ({
   isOpen,
-  onUriOpen,
+  entityType,
   ...props
-}: DetailsPanelProps & {
+}: Omit<DetailsPanelProps, 'entityType'> & {
   entityType?: DetailsPanelEntityType
   isOpen: boolean
-  onUriOpen?: (entity: UriDetailsEntity) => void
 }) => {
   const { entities } = useDetailsPanelContext()
 
   if (!isOpen && !entities) return null
-  if (!props.entityType && !entities) return null
+  if (!entityType && !entities) return null
 
-  // if the details panel is opened vair the uri, run callback
-  useEffect(() => {
-    if (entities?.source === 'uri' && entities?.entities?.length && !!onUriOpen) {
-      const uriEntity = entities.entities[0]
-      if (!uriEntity) return
-
-      onUriOpen({
-        projectName: uriEntity.projectName,
-        id: uriEntity.id,
-        entityType: entities.entityType,
-      })
-    }
-  }, [])
-
-  return <DetailsPanelInner {...props} />
+  return <DetailsPanelInner {...props} entityType={entityType || entities.entityType} />
 }

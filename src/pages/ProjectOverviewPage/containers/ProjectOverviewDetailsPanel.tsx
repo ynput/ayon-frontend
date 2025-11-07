@@ -2,7 +2,7 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
-import { detailsPanelEntityTypes, useGetUsersAssigneeQuery } from '@shared/api'
+import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { ProjectModel } from '@shared/api'
 import {
   useProjectTableContext,
@@ -99,7 +99,7 @@ function getEntitySelection({
   projectName,
 }: {
   selectedRows: string[]
-  selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
+  selectedEntity: { entityId: string; entityType: 'folder' | 'task' | 'version' } | null
   getEntityById: (id: string, field?: string) => EntityMap | undefined
   clearRowsSelection: () => void
   clearSelectedEntity?: () => void
@@ -174,7 +174,7 @@ function getEntitySelectionData({
   clearSelectedEntity,
   projectName,
 }: {
-  selectedEntity: { entityId: string; entityType: 'folder' | 'task' }
+  selectedEntity: { entityId: string; entityType: 'folder' | 'task' | 'version' }
   clearSelectedEntity: () => void
   projectName: string
 }): EntitySelection | null {
