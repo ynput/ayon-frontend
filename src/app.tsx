@@ -66,7 +66,7 @@ import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
 
 const App = () => {
-  const user = useAppSelector((state) => state.user)
+  const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
   const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
@@ -215,7 +215,7 @@ const App = () => {
                                         <FileUploadPreviewContainer />
                                         <ReleaseInstallerDialog />
                                         <CompleteProfilePrompt />
-                                        <AppRoutes level={user.uiExposureLevel} />
+                                        <AppRoutes />
                                         <DetailsPanelFloating />
                                         <PowerpackDialog />
                                         <AppRemoteLoader />

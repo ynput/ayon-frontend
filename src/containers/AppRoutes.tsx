@@ -19,20 +19,20 @@ const ErrorPage = lazy(() => import('@pages/ErrorPage'))
 import { useLoadRemotePages } from '../remote/useLoadRemotePages'
 
 import LoadingPage from '@pages/LoadingPage'
-import { RemoteAddon } from '@shared/context'
+import { RemoteAddon, useGlobalContext } from '@shared/context'
 import { toast } from 'react-toastify'
 
-interface AppRoutesProps {
-  level: number
-}
+interface AppRoutesProps {}
 
-const AppRoutes: FC<AppRoutesProps> = ({ level }) => {
+const AppRoutes: FC<AppRoutesProps> = () => {
+  const { user } = useGlobalContext()
+  const { uiExposureLevel: level = 0 } = user || {}
   // dynamically import routes
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     moduleKey: 'Route',
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
 
-  if (isLoadingModules) {
+  if (isLoadingModules || !user) {
     return <LoadingPage />
   }
 
