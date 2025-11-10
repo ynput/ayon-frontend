@@ -82,7 +82,7 @@ const EntityTooltip: React.FC<EntityTooltipProps> = ({
     updatedAt,
     projectName,
   })
-  const productIcon = project.getProductType(productType).icon || 'layers'
+  const productIcon = project.getProductType(productType).icon
 
   const icons: Record<string, string | undefined> = {
     task: taskIcon,

@@ -1,4 +1,5 @@
-import type { ProjectModel, FolderType, TaskType, Status, Tag, LinkTypeModel, ProductTypeOverride } from '@shared/api'
+import type { FolderType, TaskType, Status, Tag, LinkTypeModel, ProductType } from '@shared/api'
+import { ProjectModelWithProducts } from '@shared/context'
 
 type ProjectInfo = {
   folderTypes: FolderType[]
@@ -6,13 +7,13 @@ type ProjectInfo = {
   statuses: Status[]
   tags: Tag[]
   linkTypes: LinkTypeModel[]
-  productTypes: ProductTypeOverride[]
+  productTypes: ProductType[]
 }
 
 // takes multiple project infos from different projects and merges them into a single object
 // based on the projects provided
 const mergeProjectInfo = (
-  projectsInfo: Record<string, ProjectModel | undefined>,
+  projectsInfo: Record<string, ProjectModelWithProducts | undefined>,
   projects: string[],
 ): ProjectInfo => {
   // If there are no project infos or project names, return empty object
@@ -36,7 +37,7 @@ const mergeProjectInfo = (
       statuses: model?.statuses || [],
       tags: model?.tags || [],
       linkTypes: model?.linkTypes || [],
-      productTypes: (model?.config?.productTypes?.default || []) as ProductTypeOverride[],
+      productTypes: model?.productTypes || [],
     }
   }
 
@@ -77,11 +78,10 @@ const mergeProjectInfo = (
     ;(Object.keys(arrayProps) as Array<keyof typeof arrayProps>).forEach((prop) => {
       if (prop === 'productTypes') {
         // Special handling for productTypes to ensure correct type
-        if (projectInfo.config?.productTypes?.default) {
-          arrayProps[prop].push(projectInfo.config.productTypes.default as any)
+        if (projectInfo.productTypes) {
+          arrayProps[prop].push(projectInfo as any)
         }
-      }
-      else if (Array.isArray(projectInfo[prop])) {
+      } else if (Array.isArray(projectInfo[prop])) {
         arrayProps[prop].push(projectInfo[prop] as any)
       }
     })
@@ -98,10 +98,8 @@ const mergeProjectInfo = (
   ;(Object.keys(arrayProps) as Array<keyof typeof arrayProps>).forEach((prop) => {
     if (prop === 'productTypes') {
       // Special handling for productTypes to ensure correct type
-      (result as any)[prop] = mergeArraysByKey(arrayProps[prop] as ProductTypeOverride[][])
-    }
-
-    else if (arrayProps[prop].length > 0) {
+      ;(result as any)[prop] = mergeArraysByKey(arrayProps[prop] as ProductType[][])
+    } else if (arrayProps[prop].length > 0) {
       ;(result as any)[prop] = mergeArraysByKey(arrayProps[prop])
     }
   })

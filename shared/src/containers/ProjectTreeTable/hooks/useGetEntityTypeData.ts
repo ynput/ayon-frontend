@@ -1,17 +1,14 @@
 import { useCallback, useMemo } from 'react'
-import { ProjectModel, TaskType, FolderType } from '../types/project'
-import { ProductTypeOverride } from '@shared/api'
+import { TaskType, FolderType } from '../types/project'
+import { ProjectModelWithProducts } from '@shared/context'
+import { ProductType } from '@shared/api'
 
 type Props = {
-  projectInfo?: ProjectModel
+  projectInfo?: ProjectModelWithProducts
 }
 
 export const useGetEntityTypeData = ({ projectInfo }: Props) => {
-  const { folderTypes = [], taskTypes = [], config = {} } = projectInfo || {}
-
-
-  // @ts-ignore
-  const productTypes = config.productTypes?.default || []  //trust me. it's there
+  const { folderTypes = [], taskTypes = [], productTypes = [] } = projectInfo || {}
 
   // create a map of folder types by name for efficient lookups
   const folderTypesByName = useMemo(() => {
@@ -33,7 +30,7 @@ export const useGetEntityTypeData = ({ projectInfo }: Props) => {
 
   //   convert object to map for product types
   const productTypesByName = useMemo(() => {
-    const map: Map<string, ProductTypeOverride> = new Map()
+    const map: Map<string, ProductType> = new Map()
     for (const productType of productTypes) {
       map.set(productType.name, productType)
     }

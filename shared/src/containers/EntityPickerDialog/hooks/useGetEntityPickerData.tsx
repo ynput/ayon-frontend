@@ -6,7 +6,7 @@ import {
 import { useProjectContext } from '@shared/context'
 import { useHierarchyTable } from '@shared/hooks'
 import { FC, useMemo } from 'react'
-import { PickerEntityType, PickerSearch, PickerSelection } from '../EntityPickerDialog'
+import { PickerEntityType, PickerSearch } from '../EntityPickerDialog'
 import {
   buildEntityPickerTableData,
   buildFolderPickerTableData,

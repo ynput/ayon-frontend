@@ -41,7 +41,7 @@ import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
-import { PowerpackContextType } from '@shared/context'
+import { PowerpackContextType, useProjectContext } from '@shared/context'
 import { useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
@@ -62,9 +62,6 @@ export interface ProjectTableProviderProps {
   isLoadingMore: boolean
   loadingTasks?: LoadingTasks
   error?: string
-  // Project Info
-  projectInfo?: ProjectModel
-  projectName: string
   users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
@@ -140,14 +137,12 @@ export const ProjectTableProvider = ({
   entitiesMap,
   tasksByFolderMap,
   expanded,
-  projectInfo,
   showHierarchy,
   loadingTasks,
   isLoadingMore,
   isLoading,
   error,
   isInitialized,
-  projectName,
   users,
   attribFields,
   scopes,
@@ -172,6 +167,7 @@ export const ProjectTableProvider = ({
   // views
   onResetView,
 }: ProjectTableProviderProps) => {
+  const { attrib: projectAttrib } = useProjectContext()
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
     foldersMap,
@@ -179,7 +175,6 @@ export const ProjectTableProvider = ({
     rows: tableRows,
     tasksByFolderMap,
     expanded,
-    projectInfo,
     showHierarchy,
     loadingTasks,
     isLoadingMore,
@@ -253,7 +248,7 @@ export const ProjectTableProvider = ({
     tasksMap,
     tasksByFolderMap,
     getEntityById,
-    projectAttrib: projectInfo?.attrib,
+    projectAttrib,
     attribFields: attribFields,
   })
 

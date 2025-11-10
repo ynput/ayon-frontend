@@ -4,11 +4,12 @@ import * as Styled from './DetailsPanel.styled'
 
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
-import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
+import type { Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import {
   ProjectContextProvider,
+  ProjectModelWithProducts,
   useDetailsPanelContext,
   useScopedDetailsPanel,
 } from '@shared/context'
@@ -35,7 +36,7 @@ export type DetailsPanelProps = {
   projectUsers?: User[]
   disabledProjectUsers?: string[]
   activeProjectUsers?: string[]
-  projectsInfo?: Record<string, ProjectModel>
+  projectsInfo?: Record<string, ProjectModelWithProducts>
   projectNames?: string[]
   isSlideOut?: boolean
   style?: React.CSSProperties

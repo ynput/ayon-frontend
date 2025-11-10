@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
 import type { Status } from '@shared/api'
-import { useDetailsPanelContext, DetailsPanelTab, ProjectContextProvider } from '@shared/context'
+import { useDetailsPanelContext, DetailsPanelTab } from '@shared/context'
 
 interface FeedWrapperProps {
   entities: any[]

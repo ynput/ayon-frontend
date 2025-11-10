@@ -6,7 +6,6 @@ import { upperFirst } from 'lodash'
 import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
 import {
   PiPWrapper,
-  usePowerpack,
   DetailsPanelTab,
   useScopedDetailsPanel,
   ProjectContextProvider,

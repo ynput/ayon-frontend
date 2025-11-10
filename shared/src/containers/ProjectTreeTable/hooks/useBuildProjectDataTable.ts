@@ -10,11 +10,10 @@ import { ExpandedState } from '@tanstack/react-table'
 import { generateLoadingRows } from '../utils/loadingUtils'
 const TASKS_INFINITE_QUERY_COUNT = 100
 import { LoadingTasks } from '../types'
-import { ProjectModel } from '../types/project'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 import { linksToTableData } from '../utils'
-import { useProjectContext } from '@shared/context'
+import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -22,7 +21,6 @@ type Params = {
   tasksByFolderMap: TasksByFolderMap
   rows?: TableRow[]
   expanded: ExpandedState
-  projectInfo?: ProjectModel
   showHierarchy: boolean
   loadingTasks?: LoadingTasks
   isLoadingMore?: boolean
@@ -35,13 +33,12 @@ export default function useBuildProjectDataTable({
   rows,
   tasksByFolderMap,
   expanded,
-  projectInfo,
   showHierarchy,
   loadingTasks = {},
   isLoadingMore = false,
 }: Params): TableRow[] {
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
   const project = useProjectContext()
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   // Convert expanded object to a stable string for memoization comparison
   const expandedKey = useMemo(() => JSON.stringify(expanded), [expanded])
