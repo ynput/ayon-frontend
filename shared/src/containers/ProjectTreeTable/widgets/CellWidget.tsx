@@ -19,6 +19,8 @@ import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectTableContext } from '../context'
 import { EnumCellValue } from './EnumCellValue'
+import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
+import { NameWidgetData } from '@shared/components/RenameForm'
 
 const Cell = styled.div`
   position: absolute;
@@ -46,7 +48,7 @@ const Cell = styled.div`
 // use this class to trigger the editing mode on a single click
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
-type WidgetAttributeData = { type: AttributeData['type'] | 'links' }
+type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' }
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -65,6 +67,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   isReadOnly?: boolean
   enableCustomValues?: boolean
   folderId?: string | null
+  tooltip?: string
   onChange?: (value: CellValue | CellValue[], key?: 'Enter' | 'Click' | 'Escape') => void
   // options passthrough props
   pt?: {
@@ -73,6 +76,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
     date?: Partial<DateWidgetProps>
     boolean?: Partial<BooleanWidgetProps>
   }
+  entityType?: string
 }
 
 export interface WidgetBaseProps {
@@ -94,7 +98,9 @@ export const CellWidget: FC<EditorCellProps> = ({
   isReadOnly,
   enableCustomValues,
   folderId,
+  tooltip,
   onChange,
+  entityType,
   pt,
   ...props
 }) => {
@@ -116,7 +122,7 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const handleSingleClick = () => {
     // clicking a cell that is not editing will close the editor on this cell
-    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1079
+    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1324
     if (!isCurrentCellEditing) {
       setEditingCellId(null)
     }
@@ -175,6 +181,17 @@ export const CellWidget: FC<EditorCellProps> = ({
         const color = firstSelectedOption?.color
         return <CollapsedWidget color={color} />
       }
+      case type === 'name': {
+        return (
+          <NameWidget
+            value={value as CellValue}
+            valueData={valueData as NameWidgetData}
+            cellId={cellId}
+            entityType={entityType || ''}
+            {...sharedProps}
+          />
+        )
+      }
 
       case type === 'links': {
         const linksValue = valueData as LinkWidgetData | undefined
@@ -203,6 +220,20 @@ export const CellWidget: FC<EditorCellProps> = ({
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
           const selectedOptions = options.filter((option) => enumValue.includes(option.value))
+
+          if (enumValue.length && !selectedOptions.length) {
+            // value has something but it is not in options, show a placeholder
+            return (
+              <TextWidget
+                value={enumValue.join(', ')}
+                isInherited={isInherited}
+                columnId={columnId}
+                {...sharedProps}
+                {...pt?.text}
+              />
+            )
+          }
+
           return (
             <EnumCellValue
               selectedOptions={selectedOptions}
@@ -230,6 +261,7 @@ export const CellWidget: FC<EditorCellProps> = ({
           <TextWidget
             value={value as string}
             isInherited={isInherited}
+            columnId={columnId}
             {...sharedProps}
             {...pt?.text}
           />
@@ -277,7 +309,8 @@ export const CellWidget: FC<EditorCellProps> = ({
       onClick={handleSingleClick}
       id={cellId}
       data-tooltip={
-        isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined
+        tooltip ||
+        (isInherited && !isCurrentCellEditing && isCurrentCellFocused ? 'Inherited' : undefined)
       }
       data-tooltip-delay={200}
     >

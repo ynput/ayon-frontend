@@ -197,7 +197,7 @@ const UserList = ({
             resizeable
           />
           <Column
-            header="Guest"
+            header="Guest (legacy)"
             body={(rowData) => (rowData.isGuest ? 'yes' : '')}
             field="isGuest"
             sortable

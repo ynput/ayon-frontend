@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux'
+import customProtocolCheck from 'custom-protocol-check'
 import { api } from '@shared/api'
-import { useCustomProtocolCheck } from './useCustomProtocolCheck'
 
 
 export type ActionTriggersProps = {
@@ -29,30 +29,17 @@ export const useActionTriggers = ({
   onNavigate,
 }: ActionTriggersProps) => {
   const dispatch = useDispatch()
-  
-  const { checkProtocol } = useCustomProtocolCheck({
-    timeout: 2000,
-    showSuccessMessage: false,
-    showErrorMessage: true,
-    enableFallback: true
-  })
-  
-  const handleActionPayload = async (actionType: string, payload: ActionPayload | null): Promise<void> => {
+  const handleActionPayload = (actionType: string, payload: ActionPayload | null): void => {
     if (!payload) return
 
     if (actionType === 'launcher') {
       if (payload?.uri) {
-        try {
-          const success = await checkProtocol(payload.uri)
-          
-          if (!success) {
-            console.log('Protocol launch failed - AYON client may not be running')
-          }
-        } catch (error) {
-          console.error('Protocol launch error:', error)
-        }
-      } else {
-        console.warn('Launcher action has no URI:', payload)
+        customProtocolCheck(
+          payload.uri,
+          () => {},
+          () => {},
+          2000,
+        )
       }
     } else if (actionType === 'query') {
       // Validate it is an object of key:value pairs with value being string
@@ -120,9 +107,14 @@ export const useActionTriggers = ({
         throw new Error('Invalid payload: extra_clipboard')
       } else {
         // Copy content to clipboard
-        navigator.clipboard.writeText(payload.extra_clipboard).catch((err) => {
-          console.error('Failed to copy text to clipboard:', err)
-        })
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(payload.extra_clipboard).catch((err) => {
+            // Only log unexpected errors, not permission denials
+            if (err.name !== 'NotAllowedError' && !err.message.includes('not allowed')) {
+              console.error('Failed to copy text to clipboard:', err)
+            }
+          })
+        }
       }
     }
 

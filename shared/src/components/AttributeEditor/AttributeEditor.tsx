@@ -24,6 +24,7 @@ const SCOPE_OPTIONS = [
   { value: 'version', label: 'Version' },
   { value: 'representation', label: 'Representation' },
   { value: 'user', label: 'User' },
+  { value: 'list', label: 'List' },
 ]
 
 // Define types for constants
@@ -37,7 +38,10 @@ const GLOBAL_FIELDS: GlobalFieldEntry[] = [
   { value: 'example', scope: null },
   // @ts-expect-error - project is not a scope?
   { value: 'default', scope: ['project'] },
-  { value: 'inherit', scope: null },
+  {
+    value: 'inherit',
+    scope: ['project', 'folder', 'task', 'product', 'version', 'representation', 'user'],
+  },
 ]
 
 interface TypeOptionDef {
@@ -77,6 +81,11 @@ const TYPE_OPTIONS: TypeOptionsMap = {
     label: 'Boolean',
     fields: [],
     exclude: ['example'],
+  },
+  datetime: {
+    value: 'datetime',
+    label: 'Datetime',
+    fields: [],
   },
 }
 
@@ -348,9 +357,20 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
             <FormRow label="Type">
               <Dropdown
                 value={[formData?.data?.type]}
-                disabled={formData.builtin}
+                disabled={formData.builtin || !isNew}
                 options={Object.values(TYPE_OPTIONS)}
-                onChange={(v) => setData('type', v[0] as AttributeData['type'])}
+                onChange={(v) => {
+                  const newType = v[0] as AttributeData['type']
+                  // Check if regex is supported for the new type
+                  const typeOpt = TYPE_OPTIONS[newType]
+                  const supportsRegex = typeOpt?.fields?.includes('regex')
+
+                  setData('type', newType)
+                  // Clear regex if not supported by the new type
+                  if (!supportsRegex && formData?.data?.regex) {
+                    setData('regex', '')
+                  }
+                }}
                 minSelected={1}
                 widthExpand
               />

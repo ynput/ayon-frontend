@@ -87,6 +87,12 @@ export type AnatomyPresetListModel = {
   version: string
   presets?: AnatomyPresetListItem[]
 }
+export type EntityNaming = {
+  /** How to capitalize the entity names */
+  capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
+  /** Character to separate different parts of the name */
+  separator?: '' | '_' | '-' | '.'
+}
 export type Root = {
   name: string
   windows?: string
@@ -205,6 +211,8 @@ export type ProductBaseTypes = {
   definitions?: ProductBaseType[]
 }
 export type Anatomy = {
+  /** Settings for automatic entity name generation */
+  entity_naming?: EntityNaming
   /** Setup root paths for the project */
   roots?: Root[]
   /** Path templates configuration */

@@ -38,6 +38,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProductTypes: build.query<GetProductTypesApiResponse, GetProductTypesApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/productTypes` }),
+    }),
     getProductionMetrics: build.query<GetProductionMetricsApiResponse, GetProductionMetricsApiArg>({
       query: (queryArg) => ({
         url: `/api/metrics`,
@@ -78,6 +81,10 @@ export type CreateProductApiArg = {
   'x-sender-type'?: string
   productPostModel: ProductPostModel
 }
+export type GetProductTypesApiResponse = /** status 200 Successful Response */ ProductTypesList
+export type GetProductTypesApiArg = {
+  projectName: string
+}
 export type GetProductionMetricsApiResponse = /** status 200 Successful Response */ Metrics
 export type GetProductionMetricsApiArg = {
   /** Collect system metrics */
@@ -97,9 +104,8 @@ export type ProductModel = {
   name: string
   /** ID of the parent folder */
   folderId: string
-  /** Product  */
+  /** Product type */
   productType: string
-  path?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
   /** Whether the product is active */
@@ -127,8 +133,10 @@ export type ProductPatchModel = {
   name?: string
   /** ID of the parent folder */
   folderId?: string
-  /** Product  */
+  /** Product type */
   productType?: string
+  /** Product base type */
+  productBaseType?: string
   /** Status of the product */
   status?: string
   /** Tags assigned to the the product */
@@ -149,8 +157,10 @@ export type ProductPostModel = {
   name: string
   /** ID of the parent folder */
   folderId: string
-  /** Product  */
+  /** Product type */
   productType: string
+  /** Product base type */
+  productBaseType?: string
   /** Status of the product */
   status?: string
   /** Tags assigned to the the product */
@@ -159,6 +169,20 @@ export type ProductPostModel = {
   data?: Record<string, any>
   /** Whether the product is active */
   active?: boolean
+}
+export type ProductTypeListItem = {
+  name: string
+  baseType?: string
+  color?: string
+  icon?: string
+}
+export type DefaultProductType = {
+  color: string
+  icon: string
+}
+export type ProductTypesList = {
+  productTypes?: ProductTypeListItem[]
+  default: DefaultProductType
 }
 export type ReleaseInfo = {
   version: string
@@ -220,6 +244,9 @@ export type ProductionBundle = {
     [key: string]: string
   }
   launcherVersion?: string
+  dependencyPackages?: {
+    [key: string]: string
+  }
 }
 export type SettingsOverrides = {
   addonName?: string

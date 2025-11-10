@@ -653,6 +653,7 @@ const Products = () => {
     newListMenuItem,
     versions: versionsLists,
     reviews: reviewsLists,
+    buildHierarchicalMenuItems,
   } = useEntityListsContext()
 
   const ctxMenuItems = (id, selectedProducts, selectedVersions) => {
@@ -675,10 +676,11 @@ const Products = () => {
       },
       buildAddToListMenu(
         [
-          ...versionsLists.data.map((list) =>
-            buildListMenuItem(list, selectedEntities, !!reviewsLists.data.length),
+          ...buildHierarchicalMenuItems(
+            [...versionsLists.data, ...reviewsLists.data],
+            selectedEntities,
+            (l) => (l.entityListType === 'review-session' ? true : !!reviewsLists.data.length),
           ),
-          ...reviewsLists.data.map((list) => buildListMenuItem(list, selectedEntities, true)),
           newListMenuItem('version', selectedEntities),
         ],
         { label: 'Add to list (version)' },

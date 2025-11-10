@@ -48,13 +48,23 @@ turndownService.addRule('doubleBackslash', {
   },
 })
 
-// ordered list for both ul and ol
+// unordered list
 turndownService.addRule('unOrderedList', {
   filter: function (node) {
     return node.nodeName === 'LI' && node.getAttribute('data-list') === 'bullet'
   },
   replacement: function (content) {
     return '- ' + content + '\n'
+  },
+})
+
+// ordered list
+turndownService.addRule('orderedList', {
+  filter: function (node) {
+    return node.nodeName === 'LI' && node.getAttribute('data-list') === 'ordered'
+  },
+  replacement: function (content) {
+    return '1. ' + content + '\n'
   },
 })
 

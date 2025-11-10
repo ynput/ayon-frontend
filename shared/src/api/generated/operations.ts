@@ -41,6 +41,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/operations/background`,
         method: 'POST',
         body: queryArg.operationsRequestModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     getBackgroundOperationsStatus: build.query<
@@ -74,6 +78,8 @@ export type BackgroundOperationsApiResponse =
   /** status 200 Successful Response */ BackgroundOperationsResponseModel
 export type BackgroundOperationsApiArg = {
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   operationsRequestModel: OperationsRequestModel
 }
 export type GetBackgroundOperationsStatusApiResponse =
@@ -164,7 +170,7 @@ export type OperationResponseModel = {
 }
 export type OperationsResponseModel = {
   operations?: OperationResponseModel[]
-  success: boolean
+  success?: boolean
 }
 export type OperationModel = {
   id?: string

@@ -24,6 +24,16 @@ const injectedRtkApi = api.injectEndpoints({
     deleteAttribute: build.mutation<DeleteAttributeApiResponse, DeleteAttributeApiArg>({
       query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}`, method: 'DELETE' }),
     }),
+    patchAttributeConfig: build.mutation<
+      PatchAttributeConfigApiResponse,
+      PatchAttributeConfigApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/attributes/${queryArg.attributeName}`,
+        method: 'PATCH',
+        body: queryArg.attributePatchModel,
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -48,17 +58,33 @@ export type DeleteAttributeApiResponse = unknown
 export type DeleteAttributeApiArg = {
   attributeName: string
 }
-export type AttributeEnumItem = {
+export type PatchAttributeConfigApiResponse = unknown
+export type PatchAttributeConfigApiArg = {
+  attributeName: string
+  attributePatchModel: AttributePatchModel
+}
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for type material-symbols) */
+  name?: string
+  /** The color of the icon (for type material-symbols) */
+  color?: string
+  /** The URL of the icon (for type url) */
+  url?: string
+}
+export type EnumItem = {
   value: string | number | number | boolean
   label: string
-  icon?: string
+  description?: string
+  fulltext?: string[]
+  group?: string
+  /** Icon name (material symbol) or IconModel object */
+  icon?: string | IconModel
   color?: string
-  /** List of project this item is available on */
-  projects?: string[]
 }
 export type AttributeData = {
   /** Type of attribute value */
-  type:
+  type?:
     | 'string'
     | 'integer'
     | 'float'
@@ -89,7 +115,11 @@ export type AttributeData = {
   /** Only for string types. The value must match this regex. */
   regex?: string
   /** List of enum items used for displaying select widgets */
-  enum?: AttributeEnumItem[]
+  enum?: EnumItem[]
+  /** Name of the function that provides enum values dynamically. */
+  enumResolver?: string
+  /** Settings passed to the enum resolver function. */
+  enumResolverSettings?: object
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
 }
@@ -103,9 +133,9 @@ export type AttributeModel = {
     | ('project' | 'user')
     | 'list'
   )[]
+  data: AttributeData
   /** Is attribute builtin. Built-in attributes cannot be removed. */
   builtin?: boolean
-  data: AttributeData
 }
 export type GetAttributeListModel = {
   attributes?: AttributeModel[]
@@ -132,7 +162,16 @@ export type AttributePutModel = {
     | ('project' | 'user')
     | 'list'
   )[]
-  /** Is attribute builtin. Built-in attributes cannot be removed. */
-  builtin?: boolean
   data: AttributeData
+}
+export type AttributePatchModel = {
+  /** Default order */
+  position?: number
+  /** List of entity types the attribute is available on */
+  scope?: (
+    | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
+    | ('project' | 'user')
+    | 'list'
+  )[]
+  data?: AttributeData
 }

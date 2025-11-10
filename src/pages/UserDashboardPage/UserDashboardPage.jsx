@@ -16,11 +16,12 @@ import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
+import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import styled from 'styled-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
+import { UserDashboardProvider } from './context/UserDashboardContext'
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -38,7 +39,7 @@ const UserDashboardPage = () => {
   const user = useSelector((state) => state.user)
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
-  const isExternal = user?.data?.isExternal
+  const isGuest = user?.data?.isGuest
 
   const {
     data: addonsData = [],
@@ -71,14 +72,17 @@ const UserDashboardPage = () => {
       module: addon.name,
     })
   }
-    links.push({ node: 'spacer' })
-    links.push({
-        node: <HelpButton module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'} />,
-    })
-  
+  links.push({ node: 'spacer' })
+  links.push({
+    node: (
+      <HelpButton
+        module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'}
+      />
+    ),
+  })
+
   const title = useTitle(addonName || module, links, 'AYON', '')
-  
-  
+
   const addonData = addonsData.find((addon) => addon.name === addonName)
 
   const addonModule = addonData ? (
@@ -128,7 +132,7 @@ const UserDashboardPage = () => {
   }
 
   const handleActivateProject = async (sel, active) => {
-    await updateProject({ projectName: sel, update: { active } }).unwrap()
+    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
   }
 
   const isProjectsMultiSelect = module === 'tasks'
@@ -165,47 +169,47 @@ const UserDashboardPage = () => {
     }
   }
 
-  if (isExternal) {
-    return <ExternalUserPageLocked />
+  if (isGuest) {
+    return <GuestUserPageLocked />
   }
-
 
   return (
     <>
       <DocumentTitle title={title} />
       <AppNavLinks links={links} />
-      <main>
-        <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-          {showProjectList ? (
-            <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
-              <SplitterPanel size={15}>
-                <ProjectsList
-                  showInactive={module === 'overview'}
-                  multiSelect={isProjectsMultiSelect}
-                  selection={selectedProjects}
-                  onSelect={setSelectedProjects}
-                  onNewProject={() => setShowNewProject(true)}
-                  onDeleteProject={handleDeleteProject}
-                  onActivateProject={handleActivateProject}
-                />
-              </SplitterPanel>
-              <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
-                {moduleComponent}
-              </SplitterPanel>
-            </StyledSplitter>
-          ) : (
-            moduleComponent
-          )}
-        </Section>
-      </main>
-      {showNewProject && (
-        <NewProjectDialog
-          onHide={(name) => {
-            setShowNewProject(false)
-            if (name) navigate(`/manageProjects/anatomy?project=${name}`)
-          }}
-        />
-      )}
+      <UserDashboardProvider>
+        <main>
+          <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
+            {showProjectList ? (
+              <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
+                <SplitterPanel size={15}>
+                  <ProjectsList
+                    multiSelect={isProjectsMultiSelect}
+                    selection={selectedProjects}
+                    onSelect={setSelectedProjects}
+                    onNewProject={() => setShowNewProject(true)}
+                    onDeleteProject={handleDeleteProject}
+                    onActivateProject={handleActivateProject}
+                  />
+                </SplitterPanel>
+                <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
+                  {moduleComponent}
+                </SplitterPanel>
+              </StyledSplitter>
+            ) : (
+              moduleComponent
+            )}
+          </Section>
+        </main>
+        {showNewProject && (
+          <NewProjectDialog
+            onHide={(name) => {
+              setShowNewProject(false)
+              if (name) navigate(`/manageProjects/anatomy?project=${name}`)
+            }}
+          />
+        )}
+      </UserDashboardProvider>
     </>
   )
 }

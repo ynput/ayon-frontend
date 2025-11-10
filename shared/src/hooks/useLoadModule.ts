@@ -2,7 +2,6 @@ import { useRemoteModules } from '@shared/context/RemoteModulesContext'
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
-import { usePowerpack } from '@shared/context'
 
 interface Props<T> {
   addon: string
@@ -90,7 +89,6 @@ export const useLoadModule = <T>({
       from: 'runtime',
     })
       .then((remote) => {
-        console.log('loaded remote', module)
         setIsLoaded(module)
         setIsLoading(false)
         if (remote) loadedRemote.current = remote.default

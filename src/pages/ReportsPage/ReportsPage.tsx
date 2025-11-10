@@ -1,74 +1,33 @@
 import { useLoadModule } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
-import { FC, useEffect } from 'react'
+import { FC, useState, useEffect } from 'react'
 import ReportsFallback from './ReportsFallback'
+import ReportsLoadingScreen from './ReportsLoadingScreen'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useReportsViewSettings } from '@shared/containers/Views'
+import { updateViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
+import { ReportsSettings } from '@shared/api'
 
 interface ReportsPageProps {}
 
-const ReportsPage: FC<ReportsPageProps> = ({}) => {
+const ReportsPage: FC<ReportsPageProps> = () => {
   const projectName = (useAppSelector((state) => state.project.name) as null | string) || ''
+  const [showLoading, setShowLoading] = useState(false)
 
-  // Get view settings from the Views system
-  const {
-    rowSelection: viewRowSelection,
-    onUpdateRowSelection,
-    expanded: viewExpanded,
-    onUpdateExpanded,
-    persistentRowSelectionData: viewPersistentData,
-    onUpdatePersistentRowSelectionData,
-  } = useReportsViewSettings()
-
-  // load slicer remote config
   const {
     config,
     sliceType,
     persistentRowSelectionData,
     setPersistentRowSelectionData,
     rowSelectionData,
-    rowSelection,
-    setRowSelection,
-    expanded,
-    setExpanded,
   } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
 
-  // Sync view settings with slicer context on mount and when view settings change
-  useEffect(() => {
-    if (viewRowSelection && Object.keys(viewRowSelection).length > 0) {
-      setRowSelection(viewRowSelection)
-    }
-    if (viewExpanded && Object.keys(viewExpanded).length > 0) {
-      setExpanded(viewExpanded)
-    }
-    if (viewPersistentData && Object.keys(viewPersistentData).length > 0) {
-      setPersistentRowSelectionData(viewPersistentData)
-    }
-  }, [viewRowSelection, viewExpanded, viewPersistentData, setRowSelection, setExpanded, setPersistentRowSelectionData])
-
-  // Update view settings when slicer context changes
-  useEffect(() => {
-    if (rowSelection && Object.keys(rowSelection).length > 0) {
-      onUpdateRowSelection(rowSelection)
-    }
-  }, [rowSelection, onUpdateRowSelection])
-
-  useEffect(() => {
-    if (expanded && Object.keys(expanded).length > 0) {
-      onUpdateExpanded(expanded)
-    }
-  }, [expanded, onUpdateExpanded])
-
-  useEffect(() => {
-    if (persistentRowSelectionData && Object.keys(persistentRowSelectionData).length > 0) {
-      onUpdatePersistentRowSelectionData(persistentRowSelectionData)
-    }
-  }, [persistentRowSelectionData, onUpdatePersistentRowSelectionData])
+  const viewsContext = useViewsContext()
+  const { onCreateView } = useViewUpdateHelper()
 
   const [Reports, { isLoaded, outdated }] = useLoadModule({
     addon: 'reports',
@@ -78,12 +37,21 @@ const ReportsPage: FC<ReportsPageProps> = ({}) => {
     minVersion: '0.1.0-dev',
   })
 
+  useEffect(() => {
+    if (!isLoaded) {
+      const timer = setTimeout(() => setShowLoading(true), 200)
+      return () => clearTimeout(timer)
+    } else {
+      setShowLoading(false)
+    }
+  }, [isLoaded])
+
   if (outdated) {
     return <div>Report requires Report addon 0.1.0 or higher</div>
   }
 
-  if (!isLoaded) {
-    return <div>Loading...</div>
+  if (!isLoaded && showLoading) {
+    return <ReportsLoadingScreen />
   }
 
   return (
@@ -108,6 +76,12 @@ const ReportsPage: FC<ReportsPageProps> = ({}) => {
               type: sliceType,
               persistentRowSelectionData,
               setPersistentRowSelectionData,
+            }}
+            views={{
+              ...viewsContext,
+              settings: viewsContext.viewSettings as ReportsSettings,
+              updateViewSettings: (...args) =>
+                updateViewSettings(...args, viewsContext, onCreateView),
             }}
           />
         </SplitterPanel>

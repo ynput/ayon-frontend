@@ -46,6 +46,9 @@ const ProjectManagerPage = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
+  console.log('ProjectManagerPage render', { projectName })
+
+
   let { module } = useParams()
 
   const [showNewProject, setShowNewProject] = useState(false)
@@ -89,7 +92,7 @@ const ProjectManagerPage = () => {
   }
 
   const handleActivateProject = async (sel, active) => {
-    await updateProject({ projectName: sel, update: { active } }).unwrap()
+    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
   }
 
   const links = []

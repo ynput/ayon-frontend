@@ -1,25 +1,28 @@
-import {
-  TableRow,
-  useGetEntityTypeData,
-  useProjectDataContext,
-  linksToTableData,
-} from '@shared/containers'
+import { TableRow, useGetEntityTypeData, linksToTableData } from '@shared/containers'
 import { useMemo } from 'react'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
 import { useProjectContext } from '@shared/context/ProjectContext'
+import {
+  isEntityRestricted,
+  RESTRICTED_ENTITY_NAME,
+  RESTRICTED_ENTITY_LABEL,
+  RESTRICTED_ENTITY_ICON,
+} from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 type Props = {
   listItemsData: EntityListItemWithLinks[]
 }
 
 const useBuildListItemsTableData = ({ listItemsData }: Props) => {
-  const { projectInfo } = useProjectDataContext()
   const project = useProjectContext()
 
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
     return listItemsData.map((item) => {
+      // Check if this is a restricted access entity
+      const isRestricted = isEntityRestricted(item.entityType)
+
       // Process links if they exist
       const links = linksToTableData(item.links, item.entityType, {
         folderTypes: project?.folderTypes || [],
@@ -29,21 +32,25 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
       return {
         id: item.id,
-        name: item.name,
-        label:
-          (item.entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
-          (item.label || item.name),
+        name: isRestricted ? RESTRICTED_ENTITY_NAME : item.name,
+        label: isRestricted
+          ? RESTRICTED_ENTITY_LABEL
+          : (item.entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
+            (item.label || item.name),
         entityId: item.entityId,
         entityType: item.entityType,
         assignees: item.assignees || [],
         ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
         updatedAt: item.updatedAt,
+        createdAt: item.createdAt,
         attrib: item.attrib,
         ownAttrib: item.ownAttrib
           ? [...item.ownAttrib, ...item.ownItemAttrib]
           : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
-        icon: getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
-          ?.icon,
+        icon: isRestricted
+          ? RESTRICTED_ENTITY_ICON
+          : getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+              ?.icon,
         folderId: extractFolderId(item, item.entityType),
         parents: item.parents || [],
         tags: item.tags,

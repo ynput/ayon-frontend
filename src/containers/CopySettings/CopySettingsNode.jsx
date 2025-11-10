@@ -123,8 +123,12 @@ const CopySettingsNode = ({
   forcedSourceVersion,
   forcedSourceVariant,
   forcedSourceProjectName,
+
+  preferredSourceVersion,
+
+  isDev,
 }) => {
-  const [sourceVersion, setSourceVersion] = useState(null)
+  const [sourceVersion, setSourceVersion] = useState(preferredSourceVersion || null)
   const [sourceVariant, setSourceVariant] = useState(null)
   const [sourceProjectName, setSourceProjectName] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -132,6 +136,14 @@ const CopySettingsNode = ({
 
   const [triggerGetOverrides] = useLazyGetAddonSettingsOverridesQuery()
   const [triggerGetSettings] = useLazyGetAddonSettingsQuery()
+
+
+  useEffect(() => {
+    if (preferredSourceVersion && preferredSourceVersion !== sourceVersion) {
+      setSourceVersion(preferredSourceVersion)
+    }
+  }, [preferredSourceVersion])
+
 
   useEffect(() => {
     if (forcedSourceVersion && forcedSourceVersion !== sourceVersion) {
@@ -326,7 +338,7 @@ const CopySettingsNode = ({
 
   const expanded = !!(nodeData?.available && nodeData?.enabled)
 
-  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available) {
+  if (forcedSourceVersion && forcedSourceVariant && !nodeData?.available && !isDev) { 
     return null
   }
 
@@ -344,21 +356,21 @@ const CopySettingsNode = ({
         addonName={addonName}
         addonVersion={sourceVersion}
         setAddonVersion={setSourceVersion}
-        disabled={forcedSourceVersion}
+        disabled={forcedSourceVersion && !isDev}
       />
 
       {sourceProjectName && (
         <ProjectDropdown
           projectName={sourceProjectName}
           setProjectName={setSourceProjectName}
-          disabled={forcedSourceProjectName}
+          disabled={forcedSourceProjectName && !isDev}
         />
       )}
       {!forcedSourceVariant && (
         <VariantSelector
           variant={sourceVariant}
           setVariant={setSourceVariant}
-          disabled={forcedSourceVariant}
+          disabled={forcedSourceVariant && !isDev}
         />
       )}
 

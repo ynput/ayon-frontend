@@ -4,6 +4,7 @@ import * as Styled from './Menu.styled'
 import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
+import { usePowerpack } from '@shared/context'
 
 const MenuItem = forwardRef(
   (
@@ -21,11 +22,15 @@ const MenuItem = forwardRef(
       isDev,
       shortcut,
       disabled,
+      powerFeature,
+      active,
       ...props
     },
     ref,
   ) => {
     const labelsArray = isArray(label) ? label : [label]
+    const { powerLicense, isLoading } = usePowerpack()
+    const isPowerFeature = !powerLicense && powerFeature
 
     const Item = (
       <Styled.Item
@@ -38,19 +43,26 @@ const MenuItem = forwardRef(
             notification: notification,
             danger: danger,
             dev: isDev,
-            disabled: disabled,
+            disabled: disabled || isLoading,
+            power: isPowerFeature,
           },
           className,
         )}
         {...props}
         label={labelsArray.join(', ')}
       >
-        {icon && <Icon icon={icon} />}
+        {(icon || isPowerFeature) && <Icon icon={isPowerFeature ? 'bolt' : icon} />}
         {img && <Styled.Img src={img} alt={`${label} icon`} />}
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>
         ))}
-        {shortcut && <ShortcutTag align={'right'}>{shortcut}</ShortcutTag>}
+        {shortcut && (
+          <ShortcutTag style={{ minWidth: 22, textAlign: 'center' }} align={'right'}>
+            {shortcut}
+          </ShortcutTag>
+        )}
+        {active && <Icon icon="check" style={{ marginLeft: 'auto' }} />}
+
         {!!items.length && <Icon icon="arrow_right" className="more" />}
       </Styled.Item>
     )

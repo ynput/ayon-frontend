@@ -1,10 +1,21 @@
-import { Chips, ChipValue, LinkEntity } from '@shared/components'
-import { LinksManagerDialog } from '@shared/components/LinksManager/LinksManagerDialog'
+import { Chips, ChipValue, LinkEntity, LinksManager } from '@shared/components'
+import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { createPortal } from 'react-dom'
 import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
+import { Container } from '@shared/components/LinksManager/LinksManager.styled'
+import { isEntityRestricted } from '../utils/restrictedEntity'
+
+export const sortEntityLinksByPath = (links: LinkEntity[]) => {
+  return [...links].sort((a, b) => {
+    const aPath = a.parents.join('/') + a.label
+    const bPath = b.parents.join('/') + b.label
+
+    return aPath.localeCompare(bPath)
+  })
+}
 
 export const isLinkEditable = (
   direction: 'in' | 'out',
@@ -75,6 +86,12 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   }
 
   const handleEntityClick = (entityId: string, entityType: string) => {
+    // Check if entity is restricted - prevent opening details panel
+    const isRestricted = isEntityRestricted(entityType)
+    if (isRestricted) {
+      return
+    }
+
     // Clear any row selection first if context is available
     if (clearRowsSelection) {
       clearRowsSelection()
@@ -90,11 +107,14 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
       console.log('Entity clicked:', entityId, entityType)
     }
   }
+
+  const sortedLinks = value?.links ? sortEntityLinksByPath(value.links) : []
+
   return (
     <>
       <Chips
         values={
-          value?.links?.map((v) => ({
+          sortedLinks.map((v) => ({
             label: v.label,
             tooltip: v.parents.join('/') + '/' + v.label,
           })) || []
@@ -102,28 +122,32 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={disabled}
       />
-      {isEditing &&
-        value &&
-        createPortal(
-          <LinksManagerDialog
-            isEditing={isEditing}
-            anchorId={cellId}
-            projectName={projectName}
-            linkTypeLabel={value.link.label || ''}
-            links={value.links}
-            direction={value.direction}
-            entityId={value.entityId}
-            entityType={value.entityType}
-            targetEntityType={value.link.targetEntityType}
-            linkType={value.link.linkType}
-            selectedEntityIds={selectedEntityIds}
-            onClose={onCancelEdit}
-            onEntityClick={handleEntityClick}
-            disabled={disabled}
-            folderId={folderId}
-          />,
-          document.body,
-        )}
+      {isEditing && value && (
+        <CellEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>
+          {disabled ? (
+            <Container style={{ color: 'var(--md-sys-color-outline)' }}>
+              {`${value.link.label || ''} ${value.direction} link is not of type ${
+                value.entityType
+              }`}
+            </Container>
+          ) : (
+            <LinksManager
+              projectName={projectName}
+              linkTypeLabel={value.link.label || ''}
+              links={sortedLinks}
+              direction={value.direction}
+              entityId={value.entityId}
+              entityType={value.entityType}
+              targetEntityType={value.link.targetEntityType}
+              linkType={value.link.linkType}
+              selectedEntityIds={selectedEntityIds}
+              onEntityClick={handleEntityClick}
+              folderId={folderId}
+              onClose={onCancelEdit}
+            />
+          )}
+        </CellEditingDialog>
+      )}
     </>
   )
 }

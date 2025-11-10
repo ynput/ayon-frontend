@@ -2,9 +2,10 @@ import { EntityGroup, QueryTasksFoldersApiArg } from '@shared/api'
 import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap } from '.'
 import { ProjectDataContextProps } from '../context'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
-import { ContextMenuItemConstructors, ProjectTableModulesType } from '../hooks'
-import { ReactNode } from 'react'
+import { ContextMenuItemConstructors } from '../hooks'
+import { ProjectTableModulesType } from '@shared/hooks'
 import { QueryFilter } from './operations'
+import { ReactNode } from 'react'
 
 interface EntityMoveData {
   entityId: string

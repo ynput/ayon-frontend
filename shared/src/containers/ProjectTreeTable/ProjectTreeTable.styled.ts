@@ -38,7 +38,7 @@ export const TR = styled.tr`
 
     /* row selection hover */
     td:not(.selected) {
-      background-color: hsl(215 14% 15%);
+      background-color: var(--color-table-row-hover);
     }
   }
 
@@ -58,7 +58,6 @@ export const TableCellContent = styled.div`
   width: 100%;
   padding: 0px 8px;
   overflow: hidden;
-  white-space: nowrap;
   border-radius: var(--border-radius-m);
   user-select: none;
   padding-right: 0;
@@ -71,12 +70,8 @@ export const TableCellContent = styled.div`
     margin: 0px 5px;
     padding: 0 !important;
     width: calc(100% - 10px);
-    height: 28px;
+    height: calc(100% - 6px);
     margin-top: 3px;
-
-    &:not(.hierarchy) {
-      height: 32px;
-    }
   }
 
   &:focus-visible {
@@ -117,17 +112,19 @@ export const HeaderCell = styled.th`
   display: flex;
   align-items: center;
   min-height: fit-content;
+  white-space: nowrap;
 
   &:hover {
     .resize-handle {
       opacity: 1;
     }
-  }
 
-  /* show action buttons */
-  &:hover {
     .actions {
-      display: flex;
+      display: flex !important;
+    }
+
+    .actions .header-menu {
+      display: flex !important;
     }
   }
 
@@ -138,7 +135,6 @@ export const HeaderCell = styled.th`
     }
     cursor: col-resize !important;
 
-    /* Ensure all child elements also have the resize cursor */
     * {
       cursor: col-resize !important;
     }
@@ -161,8 +157,15 @@ export const HeaderCell = styled.th`
   }
 `
 
-export const HeaderButtons = styled.div`
+export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   display: none;
+
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    display: flex !important;
+  `}
+
   gap: var(--base-gap-small);
   align-items: center;
 
@@ -177,6 +180,43 @@ export const HeaderButtons = styled.div`
   .resizing & {
     cursor: col-resize !important;
   }
+
+  &:has(.sort-button.visible),
+  &:has(.sort-button.selected) {
+    display: flex !important;
+  }
+
+  .sort-button.visible {
+    display: flex !important;
+  }
+
+  .sort-button.selected {
+    display: flex !important;
+  }
+
+  .header-menu {
+    display: none;
+  }
+
+  ${({ $isOpen }) =>
+    $isOpen &&
+    `
+    .header-menu {
+      display: flex !important;
+    }
+  `}
+
+  .header-menu.open,
+  .header-menu.active {
+    display: flex !important;
+  }
+
+  .resizing & {
+    .sort-button,
+    .header-menu {
+      display: none !important;
+    }
+  }
 `
 
 type TableCellProps = {
@@ -186,7 +226,7 @@ type TableCellProps = {
 export const TableCell = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
-  background-color: var(--md-sys-color-surface-container-low);
+  background-color: var(--color-table-row);
 
   &.${DRAG_HANDLE_CLASS} {
     // Styles for the button inside the drag handle cell
@@ -209,29 +249,29 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
-  --task-background-color: hsl(216 15% 11.5% / 1);
-  &.task {
-    background-color: var(--task-background-color);
+  /* Lighter background for expandable rows */
+  &.expandable {
+    background-color: var(--color-table-row-high);
   }
 
   &.selected-row {
-    background-color: var(--md-sys-color-surface-container-high);
+    background-color: var(--color-table-selected-row);
   }
 
   /* show hover effect only if direct child div does NOT have .readonly and is not selected */
   &:not(:has(> div.readonly)) {
     cursor: pointer;
     &:hover {
-      background-color: var(--md-sys-color-surface-container);
+      background-color: var(--color-table-hover);
     }
 
     &.selected {
-      background-color: var(--md-sys-color-secondary-container);
+      background-color: var(--color-table-selected);
     }
   }
 
   &.selected {
-    background-color: var(--md-sys-color-secondary-container);
+    background-color: var(--color-table-selected);
     position: relative;
     z-index: 1;
   }
@@ -344,11 +384,10 @@ export const TableCell = styled.td<TableCellProps>`
   /* read only fields are dimmed down for bg and border */
   &:has(> div.readonly) {
     &:not(.multiple-selected) {
-      --focused-readonly-color: hsl(212 15% 18% / 1);
       &.focused {
-        background-color: var(--focused-readonly-color);
+        background-color: var(--color-table-readonly-focused);
         &::after {
-          border-color: var(--focused-readonly-color);
+          border-color: var(--color-table-readonly-focused);
         }
       }
     }
@@ -363,7 +402,7 @@ export const TableCell = styled.td<TableCellProps>`
 
   /* if there is no cell widget element (no children) then the cell should not be selectable at all */
   &:not(:has(> div)) {
-    pointer-events: none;
+    /* pointer-events: none; */
     cursor: default;
   }
 
@@ -429,6 +468,13 @@ export const TableContainer = styled.div`
     overflow: hidden;
   }
 
+  /* Hide all header buttons when any column is being resized */
+  &.resizing {
+    .actions {
+      display: none !important;
+    }
+  }
+
   table {
     height: fit-content;
     width: 100%;
@@ -458,5 +504,20 @@ export const LinkColumnHeader = styled.div`
   .icon {
     font-size: 18px;
     color: var(--md-sys-color-outline);
+  }
+`
+
+export const AnimatedEmptyPlaceholder = styled.div`
+  animation: fadeIn 20ms ease-in forwards;
+  animation-delay: 300ms;
+  opacity: 0;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 `

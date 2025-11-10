@@ -22,6 +22,7 @@ export interface ProjectTableContextType {
   users: ProjectTableProviderProps['users']
   // Attributes
   attribFields: ProjectTableProviderProps['attribFields']
+  attribFieldsScoped: ProjectTableProviderProps['attribFields']
   error?: string
   scopes: ProjectTableProviderProps['scopes']
 
@@ -35,7 +36,7 @@ export interface ProjectTableContextType {
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
 
   // grouping
-  taskGroups: ProjectTableProviderProps['taskGroups']
+  groups: ProjectTableProviderProps['groups']
 
   // Filters
   filters: ProjectTableProviderProps['filters']
@@ -72,6 +73,9 @@ export interface ProjectTableContextType {
   // player
   playerOpen?: ProjectTableProviderProps['playerOpen']
   onOpenPlayer?: ProjectTableProviderProps['onOpenPlayer']
+
+  // views
+  onResetView?: () => void
 }
 
 export const ProjectTableContext = createContext<ProjectTableContextType | undefined>(undefined)

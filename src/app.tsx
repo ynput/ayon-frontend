@@ -37,8 +37,9 @@ import { PasteProvider, PasteModal } from '@context/PasteContext'
 import { URIProvider } from '@context/UriContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
-import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
+import { RemoteModulesProvider, DetailsPanelProvider, GlobalProvider } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
+import { MenuProvider } from '@shared/context/MenuContext'
 
 // containers
 import Header from '@containers/header'
@@ -53,7 +54,6 @@ import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
-import WatchActivities from './containers/WatchActivities'
 import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
@@ -67,7 +67,7 @@ import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
 
 const App = () => {
-  const user = useAppSelector((state) => state.user)
+  const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
   const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
@@ -177,62 +177,65 @@ const App = () => {
     () => (
       <>
         <Favicon />
-        <WatchActivities />
         <Suspense fallback={<LoadingPage />}>
-          <FeedbackProvider>
-            <RestartProvider>
-              <RemoteModulesProvider skip={!user.name}>
-                <PowerpackProvider>
-                  <ContextMenuProvider>
-                    <DetailsPanelProvider
-                      {...handlerProps}
-                      user={user}
-                      viewer={viewer}
-                      dispatch={dispatch}
-                      useLocation={useLocation}
-                      useNavigate={useNavigate}
-                      useParams={useParams}
-                      useSearchParams={useSearchParams}
-                    >
-                      <GlobalContextMenu />
-                      <PasteProvider>
-                        <PasteModal />
-                        <BrowserRouter>
-                          <NotificationsProvider>
-                            <URIProvider>
-                              <ShortcutsProvider>
-                                <PiPProvider>
-                                  <QueryParamProvider
-                                    adapter={ReactRouter6Adapter}
-                                    options={{
-                                      updateType: 'replaceIn',
-                                    }}
-                                  >
-                                    <Header />
-                                    <ShareDialog />
-                                    <ViewerDialog />
-                                    <ConfirmDialog />
-                                    <FileUploadPreviewContainer />
-                                    <ReleaseInstallerDialog />
-                                    <CompleteProfilePrompt />
-                                    <AppRoutes isUser={isUser} />
-                                    <DetailsPanelFloating />
-                                    <PowerpackDialog />
-                                    <AppRemoteLoader />
-                                    <TrialBanner />
-                                  </QueryParamProvider>
-                                </PiPProvider>
-                              </ShortcutsProvider>
-                            </URIProvider>
-                          </NotificationsProvider>
-                        </BrowserRouter>
-                      </PasteProvider>
-                    </DetailsPanelProvider>
-                  </ContextMenuProvider>
-                </PowerpackProvider>
-              </RemoteModulesProvider>
-            </RestartProvider>
-          </FeedbackProvider>
+          <GlobalProvider>
+            <MenuProvider>
+              <FeedbackProvider>
+                <RestartProvider>
+                  <RemoteModulesProvider skip={!user.name}>
+                    <PowerpackProvider>
+                      <ContextMenuProvider>
+                        <DetailsPanelProvider
+                          {...handlerProps}
+                          user={user}
+                          viewer={viewer}
+                          dispatch={dispatch}
+                          useLocation={useLocation}
+                          useNavigate={useNavigate}
+                          useParams={useParams}
+                          useSearchParams={useSearchParams}
+                        >
+                          <GlobalContextMenu />
+                          <PasteProvider>
+                            <PasteModal />
+                            <BrowserRouter>
+                              <NotificationsProvider>
+                                <URIProvider>
+                                  <ShortcutsProvider>
+                                    <PiPProvider>
+                                      <QueryParamProvider
+                                        adapter={ReactRouter6Adapter}
+                                        options={{
+                                          updateType: 'replaceIn',
+                                        }}
+                                      >
+                                        <Header />
+                                        <ShareDialog />
+                                        <ViewerDialog />
+                                        <ConfirmDialog />
+                                        <FileUploadPreviewContainer />
+                                        <ReleaseInstallerDialog />
+                                        <CompleteProfilePrompt />
+                                        <AppRoutes />
+                                        <DetailsPanelFloating />
+                                        <PowerpackDialog />
+                                        <AppRemoteLoader />
+                                        <TrialBanner />
+                                      </QueryParamProvider>
+                                    </PiPProvider>
+                                  </ShortcutsProvider>
+                                </URIProvider>
+                              </NotificationsProvider>
+                            </BrowserRouter>
+                          </PasteProvider>
+                        </DetailsPanelProvider>
+                      </ContextMenuProvider>
+                    </PowerpackProvider>
+                  </RemoteModulesProvider>
+                </RestartProvider>
+              </FeedbackProvider>
+            </MenuProvider>
+          </GlobalProvider>
         </Suspense>
       </>
     ),
@@ -242,10 +245,10 @@ const App = () => {
   const loadingComponent = useMemo(() => <LoadingPage />, [])
 
   useEffect(() => {
-      if (user.name && user.redirectUrl) {
-        window.location.href = user.redirectUrl
-        //dispatch(clearRedirectUrl())
-      }
+    if (user.name && user.redirectUrl) {
+      window.location.href = user.redirectUrl
+      //dispatch(clearRedirectUrl())
+    }
   }, [user.name, user.redirectUrl, dispatch])
 
   const errorComponent = useMemo(
@@ -296,7 +299,6 @@ const App = () => {
     const provider = window.location.pathname.split('/')
     return provider[1] === 'login' && provider[2] === '_token'
   }
-
 
   // User is not logged in
   if (!user.name && !noAdminUser) {

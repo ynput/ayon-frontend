@@ -2,13 +2,13 @@
 // each group is a root node with subItems as the grouped items
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
-import { ProjectModel, EntityGroup } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 import { linksToTableData } from '../utils'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { ProjectModelWithProducts, useProjectContext } from '@shared/context/ProjectContext'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -62,18 +62,18 @@ export const parseGroupId = (groupId: string): string | null => {
 export const isGroupId = (id: string): boolean => id.startsWith(GROUP_BY_ID)
 
 type BuildGroupByTableProps = {
-  project?: ProjectModel
   entities: EntitiesMap
-  entityType?: GroupByEntityType
+  entityType: string
   groups?: EntityGroup[]
   attribFields: ProjectTableAttribute[]
   showEmpty?: boolean
+  groupRowFunc?: (node: any) => TableRow
 }
 
 // get sorting ids based on the groupBy field
 const getSortingIds = (
   groupBy: TableGroupBy,
-  project?: ProjectModel,
+  project?: ProjectModelWithProducts,
   attribFields: ProjectTableAttribute[] = [],
 ): string[] => {
   const attributeId = groupBy.id.replace('attrib.', '')
@@ -95,41 +95,67 @@ const getSortingIds = (
   } else return []
 }
 
-const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
-  const { project: pdata, entities, entityType, groups = [], attribFields, showEmpty } = props
+const defaultEntityToGroupRow = (
+  task: EditorTaskNode,
+  group: string | undefined,
+  entityType: string,
+  project: ProjectModelWithProducts,
+  getEntityTypeData: ReturnType<typeof useGetEntityTypeData>,
+): TableRow & { subRows: TableRow[] } => {
+  const typeData = getEntityTypeData(entityType, task.taskType)
+  return {
+    id: task.id + ROW_ID_SEPARATOR + group, // unique id for the task in the folder
+    entityId: task.id,
+    entityType: entityType,
+    parentId: task.folderId,
+    name: task.name || '',
+    label: task.label || task.name || '',
+    icon: typeData?.icon || null,
+    color: typeData?.color || null,
+    status: task.status,
+    assignees: task.assignees,
+    tags: task.tags,
+    img: null,
+    subRows: [],
+    subType: task.taskType || null,
+    attrib: task.attrib,
+    ownAttrib: task.ownAttrib,
+    parents: task.parents || [],
+    updatedAt: task.updatedAt,
+    links: linksToTableData(task.links, entityType, {
+      folderTypes: project?.folderTypes || [],
+      productTypes: Object.values(project.productTypes) || [],
+      taskTypes: project?.taskTypes || [],
+    }),
+  }
+}
+
+const useBuildGroupByTableData = ({
+  entities,
+  entityType,
+  groups = [],
+  attribFields,
+  showEmpty,
+  groupRowFunc, // for versions etc
+}: BuildGroupByTableProps) => {
   const project = useProjectContext()
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo: pdata })
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   const entityToGroupRow = useCallback(
-    (task: EditorTaskNode, group?: string): TableRow => {
-      const typeData = getEntityTypeData('task', task.taskType)
+    (task: EditorTaskNode, group?: string): TableRow & { subRows: TableRow[] } => {
+      // Use provided groupRowFunc or fall back to default
+      const baseRow = groupRowFunc
+        ? groupRowFunc(task)
+        : defaultEntityToGroupRow(task, group, entityType, project, getEntityTypeData)
+
+      // Ensure group-specific fields are set
       return {
-        id: task.id + ROW_ID_SEPARATOR + group, // unique id for the task in the folder
-        entityId: task.id,
-        entityType: 'task',
-        parentId: task.folderId,
-        name: task.name || '',
-        label: task.label || task.name || '',
-        icon: typeData?.icon || null,
-        color: typeData?.color || null,
-        status: task.status,
-        assignees: task.assignees,
-        tags: task.tags,
-        img: null,
-        subRows: [],
-        subType: task.taskType || null,
-        attrib: task.attrib,
-        ownAttrib: task.ownAttrib,
-        parents: task.parents || [],
-        updatedAt: task.updatedAt,
-        links: linksToTableData(task.links, 'task', {
-          folderTypes: project?.folderTypes || [],
-          productTypes: project?.productTypes || [],
-          taskTypes: project?.taskTypes || [],
-        }),
+        ...baseRow,
+        id: task.id + ROW_ID_SEPARATOR + group, // unique id for the task in the group
+        subRows: baseRow.subRows || [],
       }
     },
-    [getEntityTypeData],
+    [groupRowFunc, getEntityTypeData, entityType, project],
   )
 
   const buildGroupByTableData = (groupBy: TableGroupBy): TableRow[] => {
@@ -186,17 +212,17 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
       // if there are no values, add to "Ungrouped" group
       if (groupValues.length === 0) {
         const ungroupedGroup = getUnGroupedGroup()
-        ungroupedGroup.subRows.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
+        ungroupedGroup.subRows?.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
       }
       // for each group value, find it's group and add the entity to it
       // if we can't find the group, add it to "Ungrouped"
       for (const groupValue of groupValues) {
         const groupRow = groupsMap.get(groupValue)
         if (groupRow) {
-          groupRow.subRows.push(entityToGroupRow(entity as EditorTaskNode, groupValue))
+          groupRow.subRows?.push(entityToGroupRow(entity as EditorTaskNode, groupValue))
         } else {
           const ungroupedGroup = getUnGroupedGroup()
-          ungroupedGroup.subRows.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
+          ungroupedGroup.subRows?.push(entityToGroupRow(entity as EditorTaskNode, UNGROUPED_VALUE))
         }
       }
 
@@ -208,7 +234,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
             // add a next page row to the group
             const groupRow = groupsMap.get(group.value)
             if (groupRow) {
-              groupRow.subRows.push({
+              groupRow.subRows?.push({
                 id: `${group.value}-next-page`,
                 name: `Load more tasks...`,
                 entityType: NEXT_PAGE_ID,
@@ -250,7 +276,7 @@ const useBuildGroupByTableData = (props: BuildGroupByTableProps) => {
     })
 
     // filter out empty groups
-    const nonEmptyGroups = groupsList.filter((group) => group.subRows.length > 0)
+    const nonEmptyGroups = groupsList.filter((group) => group.subRows && group.subRows.length > 0)
 
     return showEmpty ? groupsList : nonEmptyGroups
   }

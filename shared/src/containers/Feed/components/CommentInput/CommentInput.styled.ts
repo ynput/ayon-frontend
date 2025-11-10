@@ -1,4 +1,5 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import { getTextColor } from '@ynput/ayon-react-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -24,26 +25,67 @@ export const AutoHeight = styled.div`
   }
 `
 
-export const Comment = styled.div`
+export type CommentProps = {
+  $categoryPrimary?: string
+  $categorySecondary?: string
+  $categoryTertiary?: string
+}
+
+// Reusable function for category color CSS
+export const categoryColorCss = (
+  $categoryPrimary?: string,
+  $categorySecondary?: string,
+  $categoryTertiary?: string,
+) =>
+  $categoryPrimary &&
+  css`
+    --background-color: ${$categoryTertiary};
+    --button-color: ${$categoryPrimary};
+    --button-color-secondary: ${$categorySecondary};
+    --button-text-color: ${getTextColor($categoryPrimary)};
+    --border-color: ${$categoryPrimary};
+  `
+
+export const Comment = styled.div<CommentProps>`
+  /* VARS */
+  --background-color: var(--md-sys-color-surface-container);
+  --button-color: var(--md-sys-color-primary);
+  --button-color-secondary: var(--md-sys-color-surface-container-highest);
+  --button-text-color: var(--md-sys-color-on-primary);
+  --border-color: var(--md-sys-color-outline-variant);
+
+  &.category {
+    /* CATEGORY */
+    ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
+      categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
+    button.comment {
+      &:hover {
+        background-color: var(--button-color);
+        filter: brightness(1.2);
+      }
+    }
+  }
+
   display: flex;
   flex-direction: column;
   position: relative;
 
-  background-color: var(--md-sys-color-surface-container);
-  border: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
   &.isDropping.isOpen {
     border-color: var(--md-sys-color-primary);
   }
 
   border-radius: var(--border-radius-l);
   overflow: hidden;
+  transition: opacity 250ms 250ms, background-color 250ms, border-color 250ms;
 
   &.isOpen {
     /* box shadow */
     box-shadow: 0 -3px 10px 0 rgba(0, 0, 0, 0.2);
 
     .quill {
-      background-color: var(--md-sys-color-surface-container);
+      background-color: var(--background-color);
     }
   }
 
@@ -70,68 +112,14 @@ export const Comment = styled.div`
       white-space: nowrap;
       cursor: pointer;
 
-      color: var(--md-sys-color-primary);
-      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--button-color);
+      background-color: var(--button-color-secondary);
 
       &:hover {
-        background-color: var(--md-sys-color-surface-container-high-hover);
+        background-color: color-mix(in srgb, var(--button-color-secondary) 85%, white);
       }
       &:active {
-        background-color: var(--md-sys-color-surface-container-high-active);
-      }
-    }
-  }
-
-  /* list and check box styles */
-  .ql-editor ol,
-  .ql-editor ul {
-    li {
-      padding-left: 0;
-
-      /* Hide React Quill's ::before pseudo-elements */
-      &::before {
-        content: none;
-      }
-
-      &[data-list='ordered'] {
-        list-style-type: decimal;
-        list-style-position: inside;
-      }
-
-      &[data-list='bullet'] {
-        list-style-type: circle;
-        list-style-position: inside;
-      }
-
-      /* checkbox data-checked false or true */
-      &[data-list='unchecked'],
-      &[data-list='checked'] {
-        margin-left: 8px;
-        min-height: 25px;
-
-        &::before {
-          font-size: unset;
-          top: 7px;
-          position: relative;
-        }
-
-        .ql-ui {
-          /* tick circle */
-          margin-right: 8px;
-        }
-      }
-
-      &[data-list='checked'] {
-        &::before {
-          /* tick circle svg */
-          content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24' fill='%2323E0A9'%3E%3Cpath d='m427.462-343.692 233.846-232.846L620-617.846 427.462-426.308l-87-86L299.154-471l128.308 127.308ZM480.134-104q-77.313 0-145.89-29.359-68.577-29.36-120.025-80.762-51.447-51.402-80.833-119.917Q104-402.554 104-479.866q0-78.569 29.418-146.871 29.419-68.303 80.922-119.917 51.503-51.614 119.916-80.48Q402.67-856 479.866-856q78.559 0 146.853 28.839 68.294 28.84 119.922 80.422 51.627 51.582 80.493 119.841Q856-558.639 856-480.05q0 77.589-28.839 145.826-28.84 68.237-80.408 119.786-51.569 51.548-119.81 80.993Q558.702-104 480.134-104Z'/%3E%3C/svg%3E");
-        }
-      }
-      &[data-list='unchecked'] {
-        &::before {
-          /* open circle svg */
-          content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24' fill='%23F4F5F5'%3E%3Cpath d='M480.409-104q-77.588 0-146.165-29.359-68.577-29.36-120.025-80.762-51.447-51.402-80.833-119.876Q104-402.471 104-480.325q0-78.11 29.418-146.412 29.419-68.303 80.922-119.917 51.503-51.614 119.875-80.48Q402.587-856 480.325-856q78.1 0 146.394 28.839 68.294 28.84 119.922 80.422 51.627 51.582 80.493 120.065Q856-558.191 856-480.326q0 77.865-28.839 146.102-28.84 68.237-80.408 119.786-51.569 51.548-120.034 80.993Q558.253-104 480.409-104ZM480-162q132.513 0 225.256-92.744Q798-347.487 798-480t-92.744-225.256Q612.513-798 480-798t-225.256 92.744Q162-612.513 162-480t92.744 225.256Q347.487-162 480-162Zm0-318Z'/%3E%3C/svg%3E");
-        }
+        background-color: color-mix(in srgb, var(--button-color-secondary) 70%, white);
       }
     }
   }
@@ -143,11 +131,20 @@ export const Comment = styled.div`
     height: calc(100% - 41px);
 
     .ql-editor {
+      max-height: 259px !important;
+
       /* code block */
       .ql-code-block-container {
         background-color: var(--md-sys-color-surface-container-lowest);
         padding: var(--padding-m);
         border-radius: var(--border-radius-m);
+      }
+
+      .ql-code-block-container .ql-code-block,
+      .ql-code-block-container .ql-code-block *,
+      .ql-code-block-container * {
+        font-family: monospace;
+        font-size: var(--md-sys-typescale-body-small-font-size);
       }
 
       a {
@@ -274,51 +271,102 @@ export const Comment = styled.div`
 
   &.isSubmitting {
     opacity: 0.3;
-    transition: opacity 250ms 250ms;
   }
 
   /* toolbar styles */
   .ql-toolbar.ql-snow {
     border: none;
-    background-color: var(--md-sys-color-surface-container);
+    background-color: var(--background-color);
     border-bottom: 1px solid var(--md-sys-color-surface-container-hover);
     padding: var(--padding-s);
     display: flex;
+    justify-content: flex-end;
     height: unset;
     width: unset;
 
     .ql-formats {
       height: 32px;
-      margin-right: 8px;
-      padding-right: 8px;
-      border-right: 1px solid var(--md-sys-color-surface-container-hover);
+      margin-left: 8px;
+      margin-right: 0;
+      padding-left: 8px;
+      border-left: 1px solid var(--md-sys-color-surface-container-hover);
       display: flex;
       gap: 2px;
 
-      /* remove border for last child */
-      &:last-child {
-        border-right: none;
-      }
-    }
+      button {
+        float: none;
+        padding: 6px;
+        border-radius: var(--border-radius-m);
+        height: 32px;
+        width: 32px;
 
-    button {
-      float: none;
-      padding: 6px;
-      border-radius: var(--border-radius-m);
-      height: 32px;
-      width: 32px;
-
-      /* highlight when action */
-      &.ql-active {
-        background-color: var(--md-sys-color-secondary-container);
-        .icon {
-          color: var(--md-sys-color-on-secondary-container);
+        /* highlight when action */
+        &.ql-active {
+          background-color: var(--button-color-secondary);
+          .icon {
+            color: var(--button-color);
+          }
         }
       }
     }
 
     button:hover {
-      background-color: var(--md-sys-color-surface-container-highest-hover);
+      background-color: var(--button-color-secondary);
+    }
+
+    /* container queries to hide buttons as the width gets smaller */
+    container-type: inline-size;
+    container-name: format-buttons;
+
+    @container format-buttons (max-width: 432px) {
+      /* hide first button */
+      .ql-formats:first-child {
+        button:first-child {
+          display: none;
+        }
+      }
+    }
+
+    @container format-buttons (max-width: 400px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(2) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 368px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(3) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 336px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        button:nth-child(4) {
+          display: none;
+        }
+      }
+    }
+    @container format-buttons (max-width: 304px) {
+      /* hide first two buttons */
+      .ql-formats:first-child {
+        display: none;
+        button:nth-child(5) {
+          display: none;
+        }
+      }
+    }
+
+    /* it should never get this small but if it does: hide all list options */
+    @container format-buttons (max-width: 250px) {
+      /* hide first two buttons */
+      .ql-formats:nth-child(2) {
+        display: none;
+      }
     }
   }
 
@@ -349,7 +397,7 @@ export const Footer = styled.footer`
   justify-content: space-between;
   padding: var(--padding-m);
   border-top: 1px solid var(--md-sys-color-surface-container-hover);
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--background-color);
   z-index: 100;
 
   /* remove save button icon */
@@ -358,12 +406,22 @@ export const Footer = styled.footer`
     .icon {
       display: none;
     }
+    background-color: var(--button-color);
+    color: var(--button-text-color);
   }
 `
 
 export const Buttons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+
+  button {
+    &.text {
+      &:hover {
+        background-color: var(--button-color-secondary);
+      }
+    }
+  }
 `
 
 export const Markdown = styled.div`

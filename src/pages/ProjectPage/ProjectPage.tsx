@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
-import BrowserPage from '../BrowserPage'
+import VersionsProductsPage from '../VersionsProductsPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
 import ProjectAddon from '../ProjectAddon'
@@ -12,7 +12,6 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
-
 
 import { selectProject } from '@state/project'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
@@ -24,17 +23,21 @@ import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
-import { RemoteAddonProject } from '@shared/context'
+import { RemoteAddonProject, useGlobalContext } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import { ProjectContextProvider } from '@shared/context/ProjectContext'
-import ExternalUserPageLocked from '@components/ExternalUserPageLocked'
 import { Views, ViewsProvider, ViewType } from '@shared/containers'
-import HelpButton from "@components/HelpButton/HelpButton.tsx"
+import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
+import BrowserPage from '@pages/BrowserPage'
+import GuestUserPageLocked from '@components/GuestUserPageLocked'
+import { ProjectContextProvider } from '@shared/context/ProjectContext'
+
+const BROWSER_FLAG = 'enable-legacy-version-browser'
 
 type NavLink = {
   name?: string
@@ -44,6 +47,7 @@ type NavLink = {
   uriSync?: boolean
   enabled?: boolean
   node?: React.ReactNode
+  deprecated?: boolean | string
 }
 
 const ProjectContextInfo = () => {
@@ -71,13 +75,14 @@ const ProjectPage = () => {
    * It parses the url, loads the project data, dispatches the
    * project data to the store, and renders the requested page.
    */
-
+  const { siteInfo } = useGlobalContext()
+  const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
-  const isExternal = useAppSelector((state) => (state.user.data as any)?.isExternal || false)
   const navigate = useNavigate()
   const { projectName, module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
+  const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
   const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
     { projectName: projectName || '' },
@@ -146,6 +151,15 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/browser`,
         module: 'browser',
         uriSync: true,
+        deprecated: true,
+        enabled: frontendFlags.includes(BROWSER_FLAG),
+      },
+      {
+        name: 'Products',
+        path: `/projects/${projectName}/products`,
+        module: 'products',
+        viewType: 'versions',
+        uriSync: true,
       },
       {
         name: 'Lists',
@@ -170,7 +184,7 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
-        enabled: matchedAddons?.get('reports') === '0.1.0-dev', // hide the report tab until the addon is out of development
+        enabled: !!matchedAddons?.get('reports'), // hide the report tab until the addon is out of development
       },
       {
         name: 'Workfiles',
@@ -178,12 +192,11 @@ const ProjectPage = () => {
         module: 'workfiles',
         uriSync: true,
       },
-      ...remotePages
-        .map((remote) => ({
-          name: remote.name,
-          module: remote.module,
-          path: `/projects/${projectName}/${remote.module}`,
-        })),
+      ...remotePages.map((remote) => ({
+        name: remote.name,
+        module: remote.module,
+        path: `/projects/${projectName}/${remote.module}`,
+      })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -220,6 +233,12 @@ const ProjectPage = () => {
 
   const title = useTitle(module, links, projectName || 'AYON')
 
+  const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
+  const isAddon = !!addonName // Check if we're on an addon page
+  useEffect(() => {
+    trackCurrentTab(tab, isAddon)
+  }, [tab, isAddon, trackCurrentTab])
+
   //
   // Render page
   //
@@ -244,7 +263,13 @@ const ProjectPage = () => {
       return <TasksProgressPage />
     }
     if (module === 'browser') {
+      if (!frontendFlags.includes(BROWSER_FLAG)) {
+        return <Navigate to={`/projects/${projectName}/overview`} />
+      }
       return <BrowserPage projectName={projectName} />
+    }
+    if (module === 'products') {
+      return <VersionsProductsPage projectName={projectName} />
     }
     if (module === 'lists') {
       return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
@@ -293,19 +318,19 @@ const ProjectPage = () => {
       )
     }
 
-    // Fallback to browser page if no addon matches addonName
+    // Fallback to versions page if no addon matches addonName
     return <Navigate to={`/projects/${projectName}/overview`} />
   }
 
   const child = getPageByModuleAndAddonData(module, addonName)
 
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
-    // focus the new version in the browser
+    // focus the new version in the versions
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isExternal){
-    return <ExternalUserPageLocked/>
+  if (uiExposureLevel >= 500) {
+    return <GuestUserPageLocked />
   }
 
   return (

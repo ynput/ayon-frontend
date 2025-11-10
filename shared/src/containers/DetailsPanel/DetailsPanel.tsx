@@ -1,19 +1,26 @@
-import { Button, Panel } from '@ynput/ayon-react-components'
-import React, { useEffect, useMemo } from 'react'
+import { Button } from '@ynput/ayon-react-components'
+import React, { useEffect, useMemo, useRef } from 'react'
 import * as Styled from './DetailsPanel.styled'
 
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
 import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
-import { DetailsPanelAttributes, EntityPath, Watchers } from '@shared/components'
+import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
-import { useDetailsPanelContext, useScopedDetailsPanel } from '@shared/context'
+import { productTypes } from '@shared/util'
+import {
+  useDetailsPanelContext,
+  usePowerpack,
+  useScopedDetailsPanel,
+  DetailsPanelTab,
+} from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './FeedWrapper'
+import FeedContextWrapper from './FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 
 export const entitiesWithoutFeed = ['product', 'representation']
@@ -40,10 +47,14 @@ export type DetailsPanelProps = {
   onWatchersUpdate?: (added: any[], removed: any[]) => void
   onOpenViewer?: (entity: any) => void
   onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
+  onOpen?: () => void
   // annotations
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
+  entityListId?: string
+  guestCategories?: Record<string, string> // only used for guests to find if they have access to any categories
+  // optional tab state for independent tab management
 }
 
 export const DetailsPanel = ({
@@ -68,20 +79,44 @@ export const DetailsPanel = ({
   onWatchersUpdate,
   onOpenViewer,
   onEntityFocus,
+  onOpen,
   // annotations
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
-}: DetailsPanelProps) => {
-  const { closeSlideOut, openPip, user } = useDetailsPanelContext()
+  entityListId,
+  guestCategories = {},
+}: // optional tab state for independent tab management
+DetailsPanelProps) => {
+  const {
+    closeSlideOut,
+    openPip,
+    user,
+    isGuest,
+    entities: contextEntities,
+  } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
+  const hasCalledOnOpen = useRef(false)
 
-  // Force attribs tab for specific entity types
+  // Use context entities if available, otherwise use props
+  const activeEntityType = contextEntities?.entityType ?? entityType
+  const activeEntities = contextEntities?.entities ?? entities
+  const activeEntitySubTypes = contextEntities?.entitySubTypes ?? entitySubTypes
+
+  // Fire onOpen callback once when component mounts and renders
   useEffect(() => {
-    if (entitiesWithoutFeed.includes(entityType) && currentTab !== 'attribs') {
-      setTab('attribs')
+    if (onOpen && !hasCalledOnOpen.current) {
+      hasCalledOnOpen.current = true
+      onOpen()
     }
-  }, [entityType, currentTab, setTab])
+  }, [])
+
+  // Force details tab for specific entity types
+  useEffect(() => {
+    if (entitiesWithoutFeed.includes(activeEntityType) && currentTab !== 'details') {
+      setTab('details')
+    }
+  }, [activeEntityType, currentTab, setTab])
 
   // reduce projectsInfo to selected projects and into one
   const projectInfo = useMemo(
@@ -111,15 +146,15 @@ export const DetailsPanel = ({
   useEffect(() => {
     if (currentTab === 'files') {
       // check entity type is still version
-      if (entityType !== 'version') {
+      if (activeEntityType !== 'version') {
         setTab('activity')
       }
     }
-  }, [entityType, currentTab, scope])
+  }, [activeEntityType, currentTab, scope])
 
   // now we get the full details data for selected entities
-  let entitiesToQuery = entities.length
-    ? entities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
+  let entitiesToQuery = activeEntities.length
+    ? activeEntities.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
     : // @ts-expect-error = not sure what's going on with entitiesData, we should try and remove it
       entitiesData.map((entity) => ({ id: entity.id, projectName: entity.projectName }))
 
@@ -131,9 +166,9 @@ export const DetailsPanel = ({
     isError,
     originalArgs,
   } = useGetEntitiesDetailsPanelQuery(
-    { entityType, entities: entitiesToQuery },
+    { entityType: activeEntityType, entities: entitiesToQuery },
     {
-      skip: !entitiesToQuery.length || !detailsPanelEntityTypes.includes(entityType),
+      skip: !entitiesToQuery.length || !detailsPanelEntityTypes.includes(activeEntityType),
     },
   )
 
@@ -156,51 +191,62 @@ export const DetailsPanel = ({
   // build the full entity path for the first entity
   const [entityPathSegments, entityPathVersions] = useGetEntityPath({
     entity: firstEntityData,
-    entityType,
+    entityType: activeEntityType,
     projectName: firstProject,
     isLoading: isFetchingEntitiesDetails,
   })
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if we're in an input element
-      const target = e.target as HTMLElement
-      const isInputElement =
-        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
+      if (e.key === 'Escape' && onClose) {
+        // Don't trigger if we're in an input element
+        const target = e.target as HTMLElement
+        const isInputElement =
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
 
-      if (e.key === 'Escape' && !isInputElement && onClose) {
+        if (!isInputElement) return
+
+        // don't trigger if the viewer is open and panel not in slideout mode
+        if (isSlideOut === false && target.closest('#viewer-dialog')) return
+
         onClose()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [onClose, isSlideOut])
 
   const { requestPipWindow } = usePiPWindow()
 
   const handleOpenPip = () => {
     openPip({
-      entityType: entityType,
+      entityType: activeEntityType,
       entities: entitiesToQuery,
       scope: scope,
     })
     requestPipWindow(500, 500)
   }
 
+  const isCommentingEnabled = () => {
+    // cannot comment on multiple projects
+    if (projectNames.length > 1) return false
+    if (isGuest) {
+      // Guest can only comment in review sessions (for now)
+      if (!entityListId) return false
+      // Guest must have at least one category set for list
+      const guestHasCategory = Object.prototype.hasOwnProperty.call(
+        guestCategories,
+        user.attrib?.email || '',
+      )
+      if (!guestHasCategory) return false
+    }
+    return true
+  }
+
   return (
     <>
-      <Panel
-        style={{
-          gap: 0,
-          height: '100%',
-          padding: 0,
-          boxShadow: '-2px 0 6px #00000047',
-          zIndex: 300,
-          ...style,
-        }}
-        className="details-panel"
-      >
+      <Styled.Panel className="details-panel">
         <Styled.Toolbar>
           {/* TODO FIX PATH */}
           <EntityPath
@@ -209,7 +255,7 @@ export const DetailsPanel = ({
             projectName={firstProject}
             hideProjectName={isSlideOut}
             isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
-            entityType={entityType}
+            entityType={activeEntityType}
             scope={scope}
             // @ts-ignore
             entityTypeIcons={entityTypeIcons}
@@ -241,8 +287,8 @@ export const DetailsPanel = ({
         </Styled.Toolbar>
 
         <DetailsPanelHeader
-          entityType={entityType}
-          entitySubTypes={entitySubTypes}
+          entityType={activeEntityType}
+          entitySubTypes={activeEntitySubTypes}
           entities={entityDetailsData}
           users={projectUsers}
           disabledAssignees={disabledProjectUsers}
@@ -258,18 +304,21 @@ export const DetailsPanel = ({
         />
         {isFeed && !isError && (
           <FeedWrapper
-            entityType={entityType}
+            entityType={activeEntityType}
             entities={entityDetailsData}
             activeUsers={activeProjectUsers || []}
             projectInfo={firstProjectInfo}
             projectName={firstProject}
-            isMultiProjects={projectNames.length > 1}
+            disabled={!isCommentingEnabled()}
             scope={scope}
             statuses={allStatuses}
             readOnly={false}
+            entityListId={entityListId}
             annotations={annotations}
             removeAnnotation={removeAnnotation}
             exportAnnotationComposite={exportAnnotationComposite}
+            currentTab={currentTab}
+            setCurrentTab={setTab}
           />
         )}
         {currentTab === 'files' && (
@@ -279,13 +328,28 @@ export const DetailsPanel = ({
             isLoadingVersion={isFetchingEntitiesDetails}
           />
         )}
-        {currentTab === 'attribs' && (
-          <DetailsPanelAttributes
+        {currentTab === 'details' && (
+          <FeedContextWrapper
+            entityType={activeEntityType}
             entities={entityDetailsData}
-            isLoading={isFetchingEntitiesDetails}
-          />
+            activeUsers={activeProjectUsers || []}
+            projectInfo={firstProjectInfo}
+            projectName={firstProject}
+            disabled={!isCommentingEnabled()}
+            scope={scope}
+            statuses={allStatuses}
+            readOnly={false}
+            annotations={annotations}
+            removeAnnotation={removeAnnotation}
+            exportAnnotationComposite={exportAnnotationComposite}
+          >
+            <DetailsPanelDetails
+              entities={entityDetailsData}
+              isLoading={isFetchingEntitiesDetails}
+            />
+          </FeedContextWrapper>
         )}
-      </Panel>
+      </Styled.Panel>
     </>
   )
 }

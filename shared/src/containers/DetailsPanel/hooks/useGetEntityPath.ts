@@ -4,6 +4,7 @@ import getEntityPathData from '../helpers/getEntityPathData'
 import { PathSegment } from '@shared/components'
 import { useGetProductVersionsQuery, useGetFolderListQuery } from '@shared/api'
 import type { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api'
+import { useQueryArgumentChangeLoading } from '@shared/hooks'
 
 type Props = {
   entity: DetailsPanelEntityData
@@ -19,9 +20,15 @@ const useGetEntityPath = ({
   isLoading,
 }: Props): [PathSegment[], PathSegment[]] => {
   // get the folders list for the project
-  const { data: { folders: projectFolders = [] } = {}, isFetching } = useGetFolderListQuery(
-    { projectName: projectName, attrib: true },
-    { skip: !projectName || isLoading },
+  const { data: { folders: projectFolders = [] } = {}, isFetching: isFetchingRaw } =
+    useGetFolderListQuery(
+      { projectName: projectName, attrib: true },
+      { skip: !projectName || isLoading },
+    )
+
+  const isFetching = useQueryArgumentChangeLoading(
+    { projectName: projectName || '' },
+    isFetchingRaw,
   )
 
   // if the entityType is version, get sibling versions
@@ -55,7 +62,7 @@ const useGetEntityPath = ({
 
   const segments = useMemo(
     () => (isFetching ? [] : getEntityPathData(entity, foldersMap)),
-    [projectFolders, entity],
+    [isFetching, projectFolders, entity],
   )
 
   return [segments, versions]

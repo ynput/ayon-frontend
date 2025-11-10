@@ -10,6 +10,11 @@ export * from './getEntityId'
 export * from './extractVersionFromFilename'
 export * from './versionUploadHelpers'
 export * from './columnConfigConverter'
+export * from './checkName'
+export * from './humanizeFieldName'
+export * from './parseHtmlToPlainTextWithLinks'
+export * from './colorUtils'
+export * from './getGroupByDataType'
 
 import PubSub from './pubsub'
 export { PubSub }

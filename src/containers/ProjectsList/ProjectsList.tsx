@@ -8,23 +8,25 @@ import ProjectsListTableHeader, { MENU_ID } from './ProjectsListTableHeader'
 import ProjectsListRow from './ProjectsListRow'
 import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
 import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
-import { toggleMenuOpen } from '@state/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import { useAppDispatch } from '@state/store'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
 import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useCreateContextMenu } from '@shared/containers'
+import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
+import { useLocalStorage } from '@shared/hooks'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
 interface ProjectsListProps {
   selection: string[]
   onSelect: (ids: string[]) => void
-  showInactive?: boolean
   multiSelect?: boolean
   onNewProject?: () => void
   onActivateProject?: (projectName: string, active: boolean) => void
   onDeleteProject?: (projectName: string) => void
+  onNoProjectSelected?: (projectName: string) => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -33,21 +35,24 @@ interface ProjectsListProps {
 const ProjectsList: FC<ProjectsListProps> = ({
   selection,
   onSelect,
-  showInactive,
   multiSelect,
   onNewProject,
   onActivateProject,
   onDeleteProject,
+  onNoProjectSelected,
   pt,
 }) => {
+  // GET USER PREFERENCES (moved to hook)
+  const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
+
+  // Show archived state (stored in local storage)
+  const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
+
   const {
     data = [],
     isLoading,
     error,
-  } = useListProjectsQuery({ active: showInactive ? undefined : true })
-
-  // GET USER PREFERENCES (moved to hook)
-  const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
+  } = useListProjectsQuery({ active: showArchived ? undefined : true })
 
   // transformations
   // sort projects by active pinned, active, inactive (active=false) and then alphabetically
@@ -68,6 +73,13 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const selectedProjects = useMemo(() => {
     return projects.filter((p) => selection.includes(p.name))
   }, [projects, selection])
+
+  useEffect(() => {
+    if (selection?.length) return
+    if (!projects?.length) return
+    if (!onNoProjectSelected) return
+    onNoProjectSelected(projects[0].name)
+  }, [selection, projects, onNoProjectSelected])
 
   // if not multi-select, remove selected projects except the first one
   // if there is no project selected, select the first one
@@ -115,8 +127,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
     [onSelect],
   )
   const dispatch = useAppDispatch()
+  const { toggleMenuOpen } = useMenuContext()
   const toggleMenu = (open: boolean = true) => {
-    dispatch(toggleMenuOpen(open ? MENU_ID : false))
+    toggleMenuOpen(open ? MENU_ID : false)
   }
 
   const toggleSelectAll = () => {
@@ -132,12 +145,15 @@ const ProjectsList: FC<ProjectsListProps> = ({
   }
 
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher()
+  const { getDefaultTab } = useProjectDefaultTab()
 
   const navigate = useAyonNavigate()
   const onOpenProject = (project: string) => {
+    if ((user?.uiExposureLevel || 0) < 500) return
     handleProjectSelectionDispatches(project)
 
-    const link = `/projects/${project}/overview`
+    const defaultTab = getDefaultTab()
+    const link = `/projects/${project}/${defaultTab}`
     // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
   }
@@ -146,6 +162,30 @@ const ProjectsList: FC<ProjectsListProps> = ({
     const link = `/manageProjects/anatomy?project=${project}`
     // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
     setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
+  }
+  const onArchive = (projectName: string, active: boolean) => {
+    onActivateProject?.(projectName, active)
+
+    if (!active && !showArchived) {
+      const newSelection = selection.filter((p) => p !== projectName)
+      if (newSelection.length === 0 && projects.length > 0) {
+        const firstAvailable = projects.find((p) => p.name !== projectName)
+        if (firstAvailable) {
+          onSelect([firstAvailable.name])
+        } else {
+          onSelect([])
+        }
+      } else {
+        onSelect(newSelection)
+      }
+    }
+  }
+  const onShowArchivedToggle = () => {
+    if (showArchived) {
+      const activeProjects = projects.filter((p) => p.active)
+      onSelect(selection.filter((s) => activeProjects.some((p) => p.name === s)))
+    }
+    setShowArchived(!showArchived)
   }
 
   // Generate menu items used in both header and context menu
@@ -158,14 +198,17 @@ const ProjectsList: FC<ProjectsListProps> = ({
     projects: projects,
     multiSelect,
     pinned: rowPinning,
+    showArchived,
+    userLevel: user?.uiExposureLevel,
     onNewProject,
     onSearch: () => setClientSearch(''),
     onPin: (pinned) => onRowPinningChange({ top: pinned }),
     onSelectAll: toggleSelectAll,
-    onArchive: onActivateProject,
+    onArchive,
     onDelete: onDeleteProject,
     onOpen: onOpenProject,
     onManage: onOpenProjectManage,
+    onShowArchivedToggle,
   })
 
   // attach context menu

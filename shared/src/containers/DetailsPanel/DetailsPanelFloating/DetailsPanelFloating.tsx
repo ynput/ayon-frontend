@@ -1,10 +1,10 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import * as Styled from './DetailsPanelFloating.styled'
 import getThumbnails from '../helpers/getThumbnails'
 import { StackedThumbnails } from '@shared/components'
 import { upperFirst } from 'lodash'
-import { AssigneeField, Icon } from '@ynput/ayon-react-components'
-import { PiPWrapper } from '@shared/context'
+import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
+import { PiPWrapper, usePowerpack, DetailsPanelTab, useScopedDetailsPanel } from '@shared/context'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
@@ -16,12 +16,13 @@ import { useDetailsPanelContext } from '@shared/context'
 export interface DetailsPanelFloatingProps {}
 
 export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
-  // TODO: fix this
   const { pip } = useDetailsPanelContext()
   const entityType = pip?.entityType
   const entities = pip?.entities || []
   const scope = pip?.scope || ''
   const isOpen = entities.length > 0 && !!entityType
+  const { currentTab: parentTab } = useScopedDetailsPanel(scope)
+  const [currentTab, setCurrentTab] = useState<DetailsPanelTab>(parentTab)
 
   const projects: string[] = entities.map((e: any) => e.projectName)
 
@@ -125,8 +126,13 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
           </Styled.Content>
         </Styled.Header>
         <Styled.Row>
-          <Styled.Status style={{ backgroundColor: statusAnatomy?.color }}>
-            {<Icon icon={statusAnatomy.icon || 'question_mark'} />}
+          <Styled.Status
+            style={{
+              backgroundColor: statusAnatomy?.color,
+              color: getTextColor(statusAnatomy?.color),
+            }}
+          >
+            <Icon icon={statusAnatomy.icon || 'question_mark'} style={{ color: 'inherit' }} />
             <span className="label">{statusAnatomy?.name}</span>
           </Styled.Status>
           <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
@@ -140,11 +146,13 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
             // selectedTasksProjects={{}}
             projectInfo={projectsInfo[projectName]}
             projectName={projectName}
-            isMultiProjects={false}
+            disabled={false}
             scope={scope}
             readOnly
             // @ts-ignore
             statuses={statuses}
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
           />
         </Styled.FeedContainer>
       </Styled.Container>

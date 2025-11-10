@@ -10,6 +10,8 @@ import {
   foldersApi,
 } from '@shared/api/generated'
 import { formatEntityLabel } from './utils/formatEntityLinks'
+import { toast } from 'react-toastify'
+import { PubSub } from '@shared/util'
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -128,22 +130,25 @@ const injectedQueries = foldersApi.injectEndpoints({
             result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => ({
               id: node.id,
               links:
-                node.links.edges?.map((linkEdge: EntityLinkQuery) => ({
-                  ...linkEdge,
-                  node: {
-                    id: linkEdge.node.id,
-                    name: linkEdge.node.name,
-                    label: formatEntityLabel(linkEdge.node),
-                    parents: linkEdge.node.parents || [],
-                    subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                  },
-                })) || [], // Flatten the edges structure
+                node.links.edges
+                  ?.filter((e: EntityLinkQuery | null) => !!e?.node)
+                  ?.map((linkEdge: EntityLinkQuery) => ({
+                    ...linkEdge,
+                    node: {
+                      id: linkEdge.node.id,
+                      name: linkEdge.node.name,
+                      label: formatEntityLabel(linkEdge.node),
+                      parents: linkEdge.node.parents || [],
+                      subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                    },
+                  })) || [], // Flatten the edges structure
             })) || []
 
           // Return the new entities - the merge function will handle combining with existing cache
           return { data: newEntities }
         } catch (error: any) {
           console.error(`Error in getEntityLinks queryFn for ${entityType}:`, error)
+          toast.error(`Error fetching ${entityType} links`)
           return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
         }
       },
@@ -192,6 +197,109 @@ const injectedQueries = foldersApi.injectEndpoints({
               { type: 'link', id: `${arg.projectName}-${arg.entityType}` },
             ]
           : [{ type: 'link', id: `${arg.projectName}-${arg.entityType}` }],
+      // Subscribe to link.created and link.deleted WebSocket events
+      async onCacheEntryAdded(
+        { projectName, entityIds, entityType },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+      ) {
+        let token: any
+        const pendingEntityIds = new Set<string>()
+        const MAX_BATCH = 100
+        const INTERVAL = 500
+        let scheduled = false
+
+        const schedule = () => {
+          if (scheduled) return
+          scheduled = true
+          setTimeout(flush, INTERVAL)
+        }
+
+        const flush = async () => {
+          scheduled = false
+          if (!pendingEntityIds.size) return
+          const batchIds = Array.from(pendingEntityIds).slice(0, MAX_BATCH)
+          batchIds.forEach((id) => pendingEntityIds.delete(id))
+
+          try {
+            // Get the appropriate endpoint and parameter names
+            const endpoint = entityEndpoints[entityType]
+            const resultPath = entityResultPaths[entityType]
+
+            // Fetch fresh data for the affected entities
+            const result = await dispatch(
+              (gqlLinksApi.endpoints as any)[endpoint].initiate(
+                { projectName, entityIds: batchIds },
+                { forceRefetch: true },
+              ),
+            ).unwrap()
+
+            const updatedEntities =
+              result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => ({
+                id: node.id,
+                links:
+                  node.links.edges
+                    ?.filter((e: EntityLinkQuery | null) => !!e?.node)
+                    ?.map((linkEdge: EntityLinkQuery) => ({
+                      ...linkEdge,
+                      node: {
+                        id: linkEdge.node.id,
+                        name: linkEdge.node.name,
+                        label: formatEntityLabel(linkEdge.node),
+                        parents: linkEdge.node.parents || [],
+                        subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                      },
+                    })) || [],
+              })) || []
+
+            updateCachedData((draft: EntityWithLinks[]) => {
+              for (const updatedEntity of updatedEntities) {
+                const idx = draft.findIndex((entity) => entity.id === updatedEntity.id)
+                if (idx > -1) {
+                  // Update existing entity's links
+                  draft[idx] = updatedEntity
+                } else {
+                  // Add new entity if not in cache
+                  draft.push(updatedEntity)
+                }
+              }
+            })
+          } catch (err) {
+            console.error('Realtime link batch update failed', err)
+          } finally {
+            if (pendingEntityIds.size) schedule()
+          }
+        }
+
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            // Only react to link.created and link.deleted events for this project
+            if (!_topic.startsWith('link.created') && !_topic.startsWith('link.deleted')) return
+            if (message?.project !== projectName) return
+
+            // Link events have inputId and outputId in the summary (both entities affected by the link)
+            const inputId = message?.summary?.inputId
+            const outputId = message?.summary?.outputId
+            if (!inputId && !outputId) return
+
+            // Add both entities to pending list since both are affected by the link change
+            if (inputId) pendingEntityIds.add(inputId)
+            if (outputId) pendingEntityIds.add(outputId)
+            schedule()
+          }
+
+          // Subscribe to link events
+          // NOTE: backend emits topics like 'link.created' and 'link.deleted'.
+          // PubSub supports prefix matching when subscribing.
+          token = PubSub.subscribe('link', handlePubSub)
+        } catch (e) {
+          // cache entry removed before loaded - ignore
+        }
+
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
+      },
     }),
   }),
 })

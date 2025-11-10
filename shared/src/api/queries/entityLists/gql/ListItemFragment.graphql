@@ -2,6 +2,7 @@ fragment ListItemFragment on BaseNode {
   active
   name
   updatedAt
+  createdAt
   parents
   ... on TaskNode {
     label

@@ -8,9 +8,12 @@ import {
   useUpdateEntityListItemsMutation,
   EntityList,
   useCreateEntityListMutation,
+  EntityListFolderModel,
+  useGetEntityListFoldersQuery,
 } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
+import { usePowerpack } from '@shared/context'
 
 interface EntityListsContextProps {
   entityTypes: ListEntityType[]
@@ -27,7 +30,10 @@ type ListSubMenuItem = {
   id: string
   label: string
   icon?: string
-  command: () => void
+  command?: () => void
+  items?: ListSubMenuItem[]
+  disabled?: boolean
+  hidden?: boolean
 }
 
 export interface EntityListsContextType {
@@ -71,6 +77,12 @@ export interface EntityListsContextType {
   // Remove entities parameter as it will be stored in newListData
   createNewList: (label: string) => Promise<void>
   newListErrorMessage?: string
+  // Build hierarchical menu items for arbitrary list collections (folders grouping)
+  buildHierarchicalMenuItems: (
+    lists: EntityList[],
+    selected: { entityId: string; entityType: string | undefined }[],
+    getShowIcon?: (list: EntityList) => boolean,
+  ) => ListSubMenuItem[]
 }
 
 const EntityListsContext = createContext<EntityListsContextType | undefined>(undefined)
@@ -88,6 +100,7 @@ export const EntityListsProvider = ({
   entityTypes = [],
   projectName,
 }: EntityListsProviderProps) => {
+  const { powerLicense } = usePowerpack()
   const [, setSearchParams] = useSearchParams()
 
   // FOLDERS
@@ -125,6 +138,15 @@ export const EntityListsProvider = ({
     entityListTypes: ['review-session'],
   })
 
+  // fetch list folders to build hierarchy (only needed when power license)
+  const { data: listFoldersAll = [] } = useGetEntityListFoldersQuery(
+    { projectName },
+    { skip: !projectName || !powerLicense },
+  )
+
+  // no filtering by scope here (UI using this context is overview page)
+  const listFolders = listFoldersAll as EntityListFolderModel[]
+
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
   // add an item to a list
@@ -154,13 +176,14 @@ export const EntityListsProvider = ({
             items: entitiesToAdd,
             mode: 'merge',
           },
-        })
+        }).unwrap()
 
         toast.success(`Item${entitiesToAdd.length > 1 ? 's' : ''} added to list`)
 
         return Promise.resolve()
-      } catch (error) {
-        toast.error('Error adding to list')
+      } catch (error: any) {
+        console.error('Error adding to list', error)
+        toast.error(error || 'Error adding to list')
         return Promise.reject(error)
       }
     },
@@ -279,47 +302,189 @@ export const EntityListsProvider = ({
     [],
   )
 
+  // Build a hierarchical structure of folders -> lists (lists only actionable)
+  const buildHierarchicalMenuItems = useCallback(
+    (
+      lists: EntityList[],
+      selected: { entityId: string; entityType: string | undefined }[],
+      getShowIcon?: (list: EntityList) => boolean,
+    ): ListSubMenuItem[] => {
+      // Simple cache keyed by folder+list ids + selection length + powerLicense flag
+      // This prevents rebuilding identical structures across repeated context menu openings.
+      // (Selection identities beyond length don't affect structure of destination list tree).
+      type CacheValue = {
+        items: ListSubMenuItem[]
+        selectedRef: { entityId: string; entityType: string | undefined }[]
+      }
+      const staticCache = (buildHierarchicalMenuItems as any)._cache as
+        | Map<string, CacheValue>
+        | undefined
+      const cache: Map<string, CacheValue> = staticCache || new Map()
+      if (!(buildHierarchicalMenuItems as any)._cache) {
+        ;(buildHierarchicalMenuItems as any)._cache = cache
+      }
+
+      const folderSig = powerLicense
+        ? listFolders.map((f) => `${f.id}:${f.parentId || ''}:${f.label}`).join('|')
+        : 'nofolders'
+      const listSig = lists.map((l) => `${l.id}:${l.entityListFolderId || ''}`).join('|')
+      const key = `${folderSig}::${listSig}::${selected.length}::${powerLicense}`
+
+      const cached = cache.get(key)
+      if (cached) {
+        // Recreate command closures with current selection (list items carry command depending on selected)
+        const rebindCommands = (items: ListSubMenuItem[]): ListSubMenuItem[] => {
+          return items.map((item) => {
+            // Skip special items like '__new-list__' which should not be in the cache
+            if (item.id.startsWith('__')) {
+              return item
+            }
+            // If this is a list item (has command), rebind it with current selection
+            if (item.command) {
+              const list = lists.find((l) => l.id === item.id)
+              if (list) {
+                return buildListMenuItem(list, selected, item.icon !== undefined)
+              }
+            }
+            // If this is a folder (has nested items), recursively rebind children
+            if (item.items) {
+              return {
+                ...item,
+                items: rebindCommands(item.items),
+              }
+            }
+            return item
+          })
+        }
+        // Filter out any special items that shouldn't be in cache (like __new-list__)
+        const filteredItems = cached.items.filter((item) => !item.id.startsWith('__'))
+        return rebindCommands(filteredItems)
+      }
+
+      const resolveShowIcon = getShowIcon || (() => false)
+
+      // Filter lists to only include those with editor access (accessLevel >= 20)
+      const editableLists = lists.filter((list) => (list.accessLevel ?? 0) >= 20)
+
+      if (!powerLicense || !listFolders.length) {
+        return editableLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+      }
+
+      // folder node structure
+      interface FolderNode {
+        folder: EntityListFolderModel
+        children: FolderNode[]
+        lists: EntityList[]
+      }
+      const nodeMap = new Map<string, FolderNode>()
+
+      // init nodes
+      listFolders.forEach((f) => {
+        nodeMap.set(f.id, { folder: f, children: [], lists: [] })
+      })
+
+      // link children
+      listFolders.forEach((f) => {
+        if (f.parentId && nodeMap.has(f.parentId)) {
+          nodeMap.get(f.parentId)!.children.push(nodeMap.get(f.id)!)
+        }
+      })
+
+      // assign lists (only editable ones)
+      editableLists.forEach((list) => {
+        if (list.entityListFolderId && nodeMap.has(list.entityListFolderId)) {
+          nodeMap.get(list.entityListFolderId)!.lists.push(list)
+        }
+      })
+
+      // determine which folders (and ancestors) actually contain lists
+      const folderHasListCache = new Map<string, boolean>()
+      const hasAnyLists = (folderId: string): boolean => {
+        if (folderHasListCache.has(folderId)) return folderHasListCache.get(folderId)!
+        const node = nodeMap.get(folderId)
+        if (!node) return false
+        const value =
+          node.lists.length > 0 || node.children.some((child) => hasAnyLists(child.folder.id))
+        folderHasListCache.set(folderId, value)
+        return value
+      }
+
+      const buildFolderItems = (nodes: FolderNode[]): ListSubMenuItem[] => {
+        return nodes
+          .filter((n) => hasAnyLists(n.folder.id))
+          .map((n) => {
+            const childFolders = buildFolderItems(n.children)
+            const listItems = n.lists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+            return {
+              id: `folder-${n.folder.id}`,
+              label: n.folder.label,
+              icon: n.folder.data?.icon || 'snippet_folder',
+              // Folders themselves are not actionable, only their items
+              items: [...childFolders, ...listItems],
+            }
+          })
+      }
+
+      // root folders (no parentId)
+      const rootNodes = listFolders
+        .filter((f) => !f.parentId)
+        .map((f) => nodeMap.get(f.id)!)
+        .filter(Boolean)
+
+      const folderItems = buildFolderItems(rootNodes)
+
+      // lists without a folder (root lists)
+      const rootLists = editableLists.filter((l) => !l.entityListFolderId)
+      const rootListItems = rootLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+
+      const result = [...folderItems, ...rootListItems]
+      cache.set(key, { items: result, selectedRef: selected })
+      return result
+    },
+    [buildListMenuItem, listFolders, powerLicense],
+  )
+
   const menuItems: EntityListsContextType['menuItems'] = useCallback(
     (filter) => (_e, cell, selected, _meta) => {
       const isMultipleEntityTypes = selected.some(
         (item) => item.entityType !== selected[0].entityType,
       )
 
-      const foldersMenuItems = folders.data.map((folder) =>
-        buildListMenuItem(folder, selected, isMultipleEntityTypes),
-      )
+      if (cell.isGroup) return []
 
-      const tasksMenuItems = tasks.data.map((task) =>
-        buildListMenuItem(task, selected, isMultipleEntityTypes),
-      )
-
-      const productsMenuItems = products.data.map((product) =>
-        buildListMenuItem(product, selected, isMultipleEntityTypes),
-      )
-
-      const versionsMenuItems = versions.data.map((version) =>
-        buildListMenuItem(version, selected, !!reviews.data.length),
-      )
-
-      const reviewsMenuItems = reviews.data.map((review) =>
-        buildListMenuItem(review, selected, true),
-      )
+      // helpers to decide icon visibility
+      const getShowIconMultiple = () => isMultipleEntityTypes
+      const getShowIconVersion = (list: EntityList) =>
+        list.entityListType === 'review-session' ? true : !!reviews.data.length
 
       let subMenuItems: ListSubMenuItem[] = []
 
-      if (cell.isGroup) {
-        // If the cell is a group, we don't show the add to list menu
-        return []
-      } else if (isMultipleEntityTypes) {
-        subMenuItems = [...foldersMenuItems, ...tasksMenuItems]
+      if (isMultipleEntityTypes) {
+        const combined = [...folders.data, ...tasks.data]
+        subMenuItems = buildHierarchicalMenuItems(combined, selected, () => getShowIconMultiple())
       } else if (cell.entityType === 'folder') {
-        subMenuItems = foldersMenuItems
+        subMenuItems = buildHierarchicalMenuItems(folders.data, selected, () =>
+          getShowIconMultiple(),
+        )
       } else if (cell.entityType === 'task') {
-        subMenuItems = tasksMenuItems
+        subMenuItems = buildHierarchicalMenuItems(tasks.data, selected, () => getShowIconMultiple())
       } else if (cell.entityType === 'product') {
-        subMenuItems = productsMenuItems
+        // if the product has a featured version, only allow adding that version to lists
+        // @ts-expect-error- just don't worry about it
+        if (cell.data?.featuredVersion?.id) {
+          // @ts-expect-error - featuredVersion is not supported in typings
+          const versionEntity = { entityId: cell.data.featuredVersion.id, entityType: 'version' }
+          subMenuItems = buildHierarchicalMenuItems(versions.data, [versionEntity], () =>
+            getShowIconMultiple(),
+          )
+        } else {
+          subMenuItems = buildHierarchicalMenuItems(products.data, selected, () =>
+            getShowIconMultiple(),
+          )
+        }
       } else if (cell.entityType === 'version') {
-        subMenuItems = [...versionsMenuItems, ...reviewsMenuItems]
+        const combined = [...versions.data, ...reviews.data]
+        subMenuItems = buildHierarchicalMenuItems(combined, selected, (l) => getShowIconVersion(l))
       }
 
       // Apply filter if provided
@@ -327,17 +492,29 @@ export const EntityListsProvider = ({
         subMenuItems = subMenuItems.filter(filter)
       }
 
-      // @ts-expect-error - product is not supported
+      // Add new list item at end
+      // @ts-expect-error - product is not supported in typings
       if (cell.entityType && listEntityTypes.includes(cell.entityType)) {
-        // update to pass selected entities
         subMenuItems.push(newListMenuItem(cell.entityType as ListEntityType, selected))
       }
 
-      const menuItems = buildAddToListMenu(subMenuItems)
-
-      return menuItems
+      // @ts-expect-error - featuredVersion is not supported in typings
+      return buildAddToListMenu(subMenuItems, {
+        label: cell.data?.featuredVersion?.id
+          ? `Add to list (${cell.data.featuredVersion.name})`
+          : undefined,
+      })
     },
-    [folders.data, tasks.data, products.data, versions.data, buildListMenuItem, newListMenuItem],
+    [
+      folders.data,
+      tasks.data,
+      products.data,
+      versions.data,
+      reviews.data,
+      buildHierarchicalMenuItems,
+      newListMenuItem,
+      buildAddToListMenu,
+    ],
   )
 
   const value = useMemo(
@@ -357,6 +534,7 @@ export const EntityListsProvider = ({
       closeCreateNewList,
       createNewList,
       newListErrorMessage,
+      buildHierarchicalMenuItems,
     }),
     [
       folders,
@@ -374,6 +552,7 @@ export const EntityListsProvider = ({
       closeCreateNewList,
       createNewList,
       newListErrorMessage,
+      buildHierarchicalMenuItems,
     ],
   )
 

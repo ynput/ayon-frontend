@@ -1,5 +1,8 @@
 import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import clsx from 'clsx'
+import { isEntityRestricted } from '../utils/restrictedEntity'
+import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
 
 const Expander = styled(Button)`
   &.expander {
@@ -25,7 +28,7 @@ const StyledEntityNameWidget = styled.div`
 
 const StyledContentWrapper = styled.div`
   width: 100%;
-  height: 24px;
+  height: 32px;
   overflow: hidden;
   position: relative;
 `
@@ -59,18 +62,47 @@ const StyledContent = styled.div`
 const StyledTextContent = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   overflow: hidden;
+  flex: 1;
+  min-width: 0;
 
-  .path {
-    ${theme.labelSmall}
-    margin-bottom: -4px;
-    color: var(--md-sys-color-outline);
+  &.compact {
+    flex-direction: row;
+    align-items: center;
   }
 
-  span {
+  .path {
+    ${theme.bodyMedium}
+    font-size: 14px;
+    margin-bottom: -4px;
+    color: var(--md-sys-color-outline);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.compact .path {
+    margin-bottom: 0;
+    text-overflow: unset;
+    flex-shrink: 0 1 auto;
+  }
+
+  .label {
+    ${theme.bodyMedium}
+    font-size: 14px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .divider {
+    ${theme.bodyMedium}
+    font-size: 14px;
+    color: var(--md-sys-color-outline);
+    flex-shrink: 0;
   }
 `
 
@@ -79,12 +111,14 @@ type EntityNameWidgetProps = {
   label: string
   name: string
   path?: string | null
-  showHierarchy?: boolean
+  isExpandable?: boolean
   icon?: string | null
   type: string
   isExpanded: boolean
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
+  rowHeight?: number
+  columnDisplayConfig?: DisplayConfig
 }
 
 export const EntityNameWidget = ({
@@ -92,41 +126,56 @@ export const EntityNameWidget = ({
   label,
   name,
   path,
-  showHierarchy,
+  isExpandable,
   icon,
   type,
   isExpanded,
   toggleExpandAll,
   toggleExpanded,
+  rowHeight = 40,
+  columnDisplayConfig,
 }: EntityNameWidgetProps) => {
+  // Check if this is a restricted access entity
+  const isRestricted = isEntityRestricted(type)
+
+  // Determine layout based on row height
+  // < 50px = single line (compact), >= 50px = stacked
+  const isCompact = rowHeight < 50
+
+  // Determine if path should be shown based on display configuration
+  // Check layout-specific setting first, then general setting
+  const showPathCompact = getDisplayValue(columnDisplayConfig, 'path', 'compact') ?? true
+  const showPathFull = getDisplayValue(columnDisplayConfig, 'path', 'full') ?? true
+  const shouldShowPath = isCompact ? showPathCompact : showPathFull
+
   return (
     <StyledEntityNameWidget>
-      {showHierarchy ? (
-        type === 'folder' ? (
-          <Expander
-            onClick={(e) => {
-              e.stopPropagation()
-              if (e.altKey) {
-                // expand/collapse all children
-                toggleExpandAll(id)
-              } else {
-                // use built-in toggleExpanded function
-                toggleExpanded()
-              }
-            }}
-            className="expander"
-            icon={isExpanded ? 'expand_more' : 'chevron_right'}
-          />
-        ) : (
-          <div style={{ display: 'inline-block', minWidth: 24 }} />
-        )
+      {isExpandable ? (
+        <Expander
+          onClick={(e) => {
+            if (e.altKey) {
+              // expand/collapse all children
+              toggleExpandAll(id)
+            } else {
+              // use built-in toggleExpanded function
+              toggleExpanded()
+            }
+          }}
+          className="expander"
+          icon={isExpanded ? 'expand_more' : 'chevron_right'}
+        />
       ) : null}
-      <StyledContentWrapper style={{ height: path ? 32 : 24 }}>
+      <StyledContentWrapper>
         <StyledContentAbsolute>
           <StyledContent>
             {icon && <Icon icon={icon} />}
-            <StyledTextContent>
-              {path && <span className="path">{path}</span>}
+            <StyledTextContent className={clsx({ compact: isCompact })}>
+              {shouldShowPath && !isRestricted && (
+                <span className="path">
+                  {path}
+                  {isCompact && path ? '/' : ''}
+                </span>
+              )}
               <span className="label">{label || name}</span>
             </StyledTextContent>
           </StyledContent>

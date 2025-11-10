@@ -25,11 +25,20 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   onChange,
 }) => {
   const allColumnsRef = React.useRef<string[]>([])
+  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const prevRowHeightRef = React.useRef<number | undefined>(undefined)
+  const lockedAspectRatioRef = React.useRef<number | null>(null)
+  // Internal state for immediate updates (similar to column sizing)
+  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
+  const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
+
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
   }
   const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
   const columnsConfig = config as ColumnsConfig
+
   const {
     columnOrder: columnOrderInit = [],
     columnPinning: columnPinningInit = {},
@@ -38,7 +47,26 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
-  } = columnsConfig
+    rowHeight: configRowHeight = 34,
+  } = columnsConfig || {}
+
+  // Clear internal row height when config changes (e.g., when switching views)
+  // This happens during render, before the component uses the value
+  if (prevRowHeightRef.current !== configRowHeight && prevRowHeightRef.current !== undefined) {
+    // Config changed, clear internal state
+    if (internalRowHeight !== null) {
+      setInternalRowHeight(null)
+    }
+    // Clear any pending timeout
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
+      rowHeightTimeoutRef.current = null
+    }
+  }
+  prevRowHeightRef.current = configRowHeight
+
+  // Use internal row height during adjustments, otherwise use config value
+  const rowHeight = internalRowHeight ?? configRowHeight
 
   const sorting = [...sortingInit]
   const columnOrder = [...columnOrderInit]
@@ -119,12 +147,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
-  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
-
   // use internalColumnSizing if it exists, otherwise use the external column sizing
   const columnSizing = internalColumnSizing || columnsSizingExternal
-
-  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   const setColumnSizing = (sizing: ColumnSizingState) => {
     setInternalColumnSizing(sizing)
@@ -233,6 +257,62 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  // Update row height for immediate UI feedback (no API call)
+  const updateRowHeight = React.useCallback((newRowHeight: number) => {
+    // Lock the aspect ratio on first call if not already locked
+    if (lockedAspectRatioRef.current === null) {
+      const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
+      const currentRowHeight = configRowHeight || 34
+      lockedAspectRatioRef.current = currentThumbnailWidth / currentRowHeight
+    }
+    const newThumbnailWidth = lockedAspectRatioRef.current * newRowHeight
+
+    setInternalRowHeight(newRowHeight)
+    setInternalColumnSizing({
+      ...(internalColumnSizing || columnsSizingExternal),
+      thumbnail: newThumbnailWidth
+    })
+  }, [columnsSizingExternal, configRowHeight])
+
+  // Update row height and persist to API
+  const updateRowHeightWithPersistence = React.useCallback((newRowHeight: number) => {
+    const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
+    const currentRowHeight = configRowHeight || 34
+    const currentRatio = currentThumbnailWidth / currentRowHeight
+
+    const newThumbnailWidth = currentRatio * newRowHeight
+
+    // Update UI immediately
+    setInternalRowHeight(newRowHeight)
+    setInternalColumnSizing({
+      ...(internalColumnSizing || columnsSizingExternal),
+      thumbnail: newThumbnailWidth
+    })
+
+    // Clear any existing timeout to debounce API calls
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
+    }
+
+    // Debounce API call to avoid excessive requests
+    rowHeightTimeoutRef.current = setTimeout(() => {
+      // Persist to API
+      onChangeWithColumns({
+        ...columnsConfig,
+        rowHeight: newRowHeight,
+        columnSizing: {
+          ...columnsSizingExternal,
+          thumbnail: newThumbnailWidth
+        }
+      })
+
+      // Clean up internal state after API call completes
+      setInternalRowHeight(null)
+      setInternalColumnSizing(null)
+      lockedAspectRatioRef.current = null
+    }, 300)
+  }, [columnsConfig, onChangeWithColumns, columnsSizingExternal, configRowHeight, internalColumnSizing])
+
   // Remove redundant local updater functions in favor of unified updaters with all columns
 
   // ON-CHANGE HANDLERS (TanStack-compatible)
@@ -294,6 +374,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         updateGroupBy,
         groupByConfig,
         updateGroupByConfig,
+        // row height
+        rowHeight,
+        updateRowHeight,
+        updateRowHeightWithPersistence,
 
         // global change
         setColumnsConfig: (config: ColumnsConfig) => onChangeWithColumns(config),

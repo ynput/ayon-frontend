@@ -11,7 +11,37 @@ const getBaseTags = (projectName?: string) => {
   return tags
 }
 
-const getShareOptionsTags = (options: getShareOptionsResult) => options.map((o) => o.value)
+const getShareOptionsTags = (options: getShareOptionsResult) => {
+  const tags = []
+
+  for (const option of options) {
+    const sharedTag = { type: 'shared' as const, id: option.value }
+    tags.push(sharedTag)
+
+    let type: string | null
+    switch (option.shareType) {
+      case 'user':
+        type = 'user'
+        break
+      case 'group':
+        type = 'accessGroup'
+        break
+      case 'team':
+        type = 'team'
+        break
+      default:
+        type = null
+        break
+    }
+
+    if (type) {
+      const typeTag = { type: type, id: option.name } as const
+      tags.push(typeTag)
+    }
+  }
+
+  return tags
+}
 
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 

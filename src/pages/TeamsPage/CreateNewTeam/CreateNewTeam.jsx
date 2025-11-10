@@ -9,7 +9,7 @@ import {
   SaveButton,
   Spacer,
 } from '@ynput/ayon-react-components'
-import checkName from '@helpers/checkName'
+import { parseAndFormatName } from '@shared/util'
 import UserListTeams from '../UserListTeams'
 import useSearchFilter from '@hooks/useSearchFilter'
 import * as Styled from './CreateNewTeam.styled'
@@ -63,8 +63,9 @@ const CreateNewTeam = ({
     const addedRoles = rolesForm.filter((role) => !roles.includes(role))
     const removedRoles = roles.filter((role) => !rolesForm.includes(role))
 
+    const formatted = parseAndFormatName(nameForm)
     return {
-      name: checkName(nameForm),
+      name: formatted,
       members: users
         .filter((user) => selectedUsers.includes(user.name))
         .map((user) => {
@@ -85,8 +86,9 @@ const CreateNewTeam = ({
   }
 
   const createNewTeam = () => {
+    const formatted = parseAndFormatName(nameForm)
     const newTeam = {
-      name: checkName(nameForm),
+      name: formatted,
       members: selectedUsers.map((name) => ({
         name,
         roles: rolesForm.filter((r) => r),
@@ -100,6 +102,7 @@ const CreateNewTeam = ({
   const handleSubmit = (closeDialog = true) => {
     // first check team name is valid
     if (!nameForm) return
+    const formatted = parseAndFormatName(nameForm)
 
     let newTeam
 

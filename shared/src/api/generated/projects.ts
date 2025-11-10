@@ -126,19 +126,19 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.deployProjectRequestModel,
       }),
     }),
-    listExternalUsers: build.query<ListExternalUsersApiResponse, ListExternalUsersApiArg>({
-      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/externalUsers` }),
+    listGuestUsers: build.query<ListGuestUsersApiResponse, ListGuestUsersApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/guests` }),
     }),
-    addExternalUser: build.mutation<AddExternalUserApiResponse, AddExternalUserApiArg>({
+    addGuestUser: build.mutation<AddGuestUserApiResponse, AddGuestUserApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/externalUsers`,
+        url: `/api/projects/${queryArg.projectName}/guests`,
         method: 'POST',
-        body: queryArg.addExternalUserModel,
+        body: queryArg.addGuestUserModel,
       }),
     }),
-    removeExternalUser: build.mutation<RemoveExternalUserApiResponse, RemoveExternalUserApiArg>({
+    removeGuestUser: build.mutation<RemoveGuestUserApiResponse, RemoveGuestUserApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/externalUsers/${queryArg.email}`,
+        url: `/api/projects/${queryArg.projectName}/guests/${queryArg.email}`,
         method: 'DELETE',
       }),
     }),
@@ -338,23 +338,21 @@ export type DeployProjectApiResponse = /** status 201 Successful Response */ any
 export type DeployProjectApiArg = {
   deployProjectRequestModel: DeployProjectRequestModel
 }
-export type ListExternalUsersApiResponse =
-  /** status 200 Successful Response */ ExternalUsersListModel
-export type ListExternalUsersApiArg = {
+export type ListGuestUsersApiResponse = /** status 200 Successful Response */ GuestUsersListModel
+export type ListGuestUsersApiArg = {
   projectName: string
 }
-export type AddExternalUserApiResponse = /** status 200 Successful Response */ any
-export type AddExternalUserApiArg = {
+export type AddGuestUserApiResponse = /** status 200 Successful Response */ any
+export type AddGuestUserApiArg = {
   projectName: string
-  addExternalUserModel: AddExternalUserModel
+  addGuestUserModel: AddGuestUserModel
 }
-export type RemoveExternalUserApiResponse = /** status 200 Successful Response */ any
-export type RemoveExternalUserApiArg = {
+export type RemoveGuestUserApiResponse = /** status 200 Successful Response */ any
+export type RemoveGuestUserApiArg = {
   email: string
   projectName: string
 }
-export type GetProductTypesApiResponse =
-  /** status 200 Successful Response */ ProductTypesList
+export type GetProductTypesApiResponse = /** status 200 Successful Response */ ProductTypesList
 export type GetProductTypesApiArg = {
   projectName: string
 }
@@ -513,6 +511,12 @@ export type ProjectTeamsResponseModel = {
     [key: string]: number
   }
 }
+export type EntityNaming = {
+  /** How to capitalize the entity names */
+  capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
+  /** Character to separate different parts of the name */
+  separator?: '' | '_' | '-' | '.'
+}
 export type Root = {
   name: string
   windows?: string
@@ -631,6 +635,8 @@ export type ProductBaseTypes = {
   definitions?: ProductBaseType[]
 }
 export type Anatomy = {
+  /** Settings for automatic entity name generation */
+  entity_naming?: EntityNaming
   /** Setup root paths for the project */
   roots?: Root[]
   /** Path templates configuration */
@@ -679,15 +685,15 @@ export type DeployProjectRequestModel = {
   /** Assign default users to the project */
   assignUsers?: boolean
 }
-export type ExternalUserModel = {
+export type GuestUserModel = {
   email: string
   fullName?: string
   status?: 'pending' | 'active'
 }
-export type ExternalUsersListModel = {
-  users?: ExternalUserModel[]
+export type GuestUsersListModel = {
+  users?: GuestUserModel[]
 }
-export type AddExternalUserModel = {
+export type AddGuestUserModel = {
   email: string
   fullName?: string
 }

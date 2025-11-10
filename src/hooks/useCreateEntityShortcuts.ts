@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { NewEntityType } from '@context/NewEntityContext'
-import { useAppSelector } from '@state/store'
+import { useMenuContext } from '@shared/context/MenuContext'
 import { useCellEditing } from '@shared/containers'
 
 interface EntityOption {
@@ -23,7 +23,7 @@ interface UseCreateEntityShortcutsProps {
  * @param onOpenNew Callback function to open entity creation dialog
  */
 const useCreateEntityShortcuts = ({ options, onOpenNew }: UseCreateEntityShortcutsProps) => {
-  const menuOpen = useAppSelector((state) => state.context.menuOpen)
+  const { menuOpen } = useMenuContext()
   const { editingCellId } = useCellEditing()
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

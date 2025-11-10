@@ -1,10 +1,8 @@
-import { FC, useState } from 'react'
+import { FC } from 'react'
 
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
-import type { EditingState } from '@shared/containers/Feed'
 import type { Status } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
-import { ProjectContextProvider } from '@shared/context/ProjectContext'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -12,13 +10,16 @@ interface FeedWrapperProps {
   projectInfo: any
   projectName: string
   entityType: string
-  isMultiProjects: boolean
+  disabled: boolean
   readOnly: boolean
   statuses: Status[]
   scope: string
+  entityListId?: string
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
+  currentTab: DetailsPanelTab
+  setCurrentTab: (tab: DetailsPanelTab) => void
 }
 
 // forwards any props
@@ -31,6 +32,8 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
+  currentTab,
+  setCurrentTab,
   ...props
 }) => {
   const annotationsProps = { annotations, removeAnnotation, exportAnnotationComposite }
@@ -40,27 +43,23 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   const userName = user.name || ''
   const userFullName = user.attrib?.fullName || ''
 
-  const [editingId, setEditingId] = useState<EditingState>(null)
-
   return (
-    <ProjectContextProvider projectName={projectName}>
-      <FeedProvider
-        {...{
-          scope,
-          entities,
-          projectName,
-          entityType,
-          projectInfo,
-          userName,
-          userFullName,
-        }}
-        {...annotationsProps}
-        {...{ editingId, setEditingId }}
-      >
-        <Feed {...props} />
-        <ActivityReferenceTooltip />
-      </FeedProvider>
-    </ProjectContextProvider>
+    <FeedProvider
+      {...{
+        scope,
+        entities,
+        projectName,
+        entityType,
+        projectInfo,
+        userName,
+        userFullName,
+      }}
+      {...annotationsProps}
+      {...{ editingId, setEditingId }}
+    >
+      <Feed {...props} />
+      <ActivityReferenceTooltip />
+    </FeedProvider>
   )
 }
 

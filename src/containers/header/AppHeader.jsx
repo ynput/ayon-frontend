@@ -10,7 +10,7 @@ import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
-import { toggleMenuOpen, setMenuOpen } from '@state/context'
+import { useMenuContext } from '@shared/context/MenuContext'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
 import { toast } from 'react-toastify'
@@ -74,13 +74,14 @@ const StyledSwitch = styled(InputSwitch)`
 
 const Header = () => {
   const dispatch = useAppDispatch()
-  const menuOpen = useAppSelector((state) => state.context.menuOpen)
-  const handleToggleMenu = (menu) => dispatch(toggleMenuOpen(menu))
-  const handleSetMenu = (menu) => dispatch(setMenuOpen(menu))
+  const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
+  const handleToggleMenu = (menu) => toggleMenuOpen(menu)
+  const handleSetMenu = (menu) => setMenuOpen(menu)
   const location = useLocation()
   const navigate = useNavigate()
   // get user from redux store
   const user = useAppSelector((state) => state.user)
+  const avatarKey = useAppSelector((state) => state.user.avatarKey)
 
   // restart server notification
   const { isSnoozing } = useRestart()
@@ -161,16 +162,18 @@ const Header = () => {
           />
         </Link>
 
-        <HeaderButton
-          icon="event_list"
-          label="Projects"
-          variant="nav"
-          onClick={() => handleToggleMenu('project')}
-          style={{
-            alignItems: 'center',
-            display: 'flex',
-          }}
-        />
+        {user.uiExposureLevel >= 500 && (
+          <HeaderButton
+            icon="event_list"
+            label="Projects"
+            variant="nav"
+            onClick={() => handleToggleMenu('project')}
+            style={{
+              alignItems: 'center',
+              display: 'flex',
+            }}
+          />
+        )}
 
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </FlexWrapper>
@@ -186,38 +189,38 @@ const Header = () => {
           </DeveloperSwitch>
         )}
 
-        {!user.data.isExternal && (
+        {!user.data.isGuest && (
           <>
-          <ChatBubbleButton />
+            <ChatBubbleButton />
 
-          {/* help icon and menu vvv */}
-          <HeaderButton
-            icon="help"
-            ref={helpButtonRef}
-            onClick={() => handleToggleMenu('help')}
-            className={clsx({ active: menuOpen === 'help' })}
-            variant="nav"
-          />
-          <MenuContainer id="help" target={helpButtonRef.current}>
-            <HelpMenu user={user} />
-          </MenuContainer>
-          {/* help icon and menu ^^^ */}
+            {/* help icon and menu vvv */}
+            <HeaderButton
+              icon="help"
+              ref={helpButtonRef}
+              onClick={() => handleToggleMenu('help')}
+              className={clsx({ active: menuOpen === 'help' })}
+              variant="nav"
+            />
+            <MenuContainer id="help" target={helpButtonRef.current}>
+              <HelpMenu user={user} />
+            </MenuContainer>
+            {/* help icon and menu ^^^ */}
 
-          {/* Inbox icon */}
-          <InboxNotificationIcon />
+            {/* Inbox icon */}
+            <InboxNotificationIcon />
 
-          {/* App icon and menu vvv */}
-          <HeaderButton
-            icon="apps"
-            onClick={() => handleToggleMenu('app')}
-            ref={appButtonRef}
-            variant="nav"
-            className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
-          />
+            {/* App icon and menu vvv */}
+            <HeaderButton
+              icon="apps"
+              onClick={() => handleToggleMenu('app')}
+              ref={appButtonRef}
+              variant="nav"
+              className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
+            />
 
-          <MenuContainer id="app" target={appButtonRef.current}>
-            <AppMenu user={user} />
-          </MenuContainer>
+            <MenuContainer id="app" target={appButtonRef.current}>
+              <AppMenu user={user} />
+            </MenuContainer>
           </>
         )}
         {/* App icon and menu ^^^ */}
@@ -231,7 +234,7 @@ const Header = () => {
           variant="nav"
           style={{ padding: 6 }}
         >
-          <UserImage size={26} name={user?.name} />
+          <UserImage size={26} name={user?.name} imageKey={avatarKey} />
         </HeaderButton>
         <MenuContainer id="user" target={userButtonRef.current}>
           <UserMenu user={user} />

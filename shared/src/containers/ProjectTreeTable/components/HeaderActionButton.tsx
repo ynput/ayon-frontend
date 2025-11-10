@@ -4,6 +4,10 @@ import { FC } from 'react'
 import styled from 'styled-components'
 
 const ActionButton = styled(Button)`
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+
   &.action {
     padding: 0px;
     display: flex;
@@ -11,7 +15,7 @@ const ActionButton = styled(Button)`
   }
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container);
+    background-color: var(--md-sys-color-surface-container-hover) !important;
   }
 
   &.selected {

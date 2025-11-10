@@ -53,22 +53,25 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     )
 
     // Check if all values are present in options, if not, add a warning
+    const invalidOptions: AttributeEnumItem[] = []
     valueAsStrings.forEach((val) => {
       if (!options.find((option) => option.value === val)) {
-        selectedOptions = [
-          ...selectedOptions,
-          {
-            label: val,
-            value: val,
-            color: enableCustomValues
-              ? 'var(--md-sys-color-surface-container)'
-              : 'var(--md-sys-color-error)',
-            icon: enableCustomValues ? undefined : 'warning',
-          },
-        ]
+        const invalidOption = {
+          label: val,
+          value: val,
+          color: enableCustomValues
+            ? 'var(--md-sys-color-surface-container)'
+            : 'var(--md-sys-color-error)',
+          icon: enableCustomValues ? undefined : 'warning',
+        }
+        selectedOptions = [...selectedOptions, invalidOption]
+        invalidOptions.push(invalidOption)
       }
     })
     const hasMultipleValues = selectedOptions.length > 1
+
+    // Merge valid options with invalid options for the dropdown
+    const allOptions = [...options, ...invalidOptions]
 
     const dropdownRef = useRef<DropdownRef>(null)
 
@@ -84,7 +87,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     // when the dropdown is open, focus the first item
     useEffect(() => {
-      if (dropdownOpen && !dropdownProps.search) {
+      if (dropdownOpen && !dropdownProps.search && allOptions.length < 20) {
         const optionsUlEl = dropdownRef.current?.getOptions() as HTMLUListElement
         const firstItem = optionsUlEl?.querySelector('li')
         if (firstItem) {
@@ -93,27 +96,29 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           firstItem.style.outline = 'none'
         }
       }
-    }, [dropdownOpen, dropdownProps.search])
+    }, [dropdownOpen, dropdownProps.search, allOptions.length])
 
     const isMultiSelect = !!type?.includes('list')
 
     const handleChange = (value: string[]) => {
-      const filteredValue = enableCustomValues
+      let filteredValue: string | string[] = enableCustomValues
         ? value
         : value.filter((v) => options.find((o) => o.value === v))
-
       if (type?.includes('list')) {
         onChange(filteredValue, 'Click')
       } else {
+        // check if the value is an array or a string and for arrays take the first value only
+        filteredValue = Array.isArray(filteredValue) ? filteredValue[0] : filteredValue
+
         // take first value as the type is not list]
-        onChange(filteredValue[0], 'Click')
+        onChange(filteredValue, 'Click')
       }
     }
 
     if (isEditing) {
       return (
         <StyledDropdown
-          options={options}
+          options={allOptions}
           value={valueAsStrings}
           ref={dropdownRef}
           valueTemplate={(_value, selected, isOpen) => (
@@ -145,9 +150,11 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           disableOpen={isReadOnly}
           disabled={isReadOnly}
           sortBySelected
+          searchOnNumber={10}
           {...dropdownProps}
           onChange={handleChange}
           onClose={onCancelEdit}
+          editable={enableCustomValues}
         />
       )
     }

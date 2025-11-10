@@ -2,6 +2,8 @@ import {
   ProjectDataProvider,
   useDetailsPanelEntityContext,
   useProjectDataContext,
+  useProjectTableContext,
+  isEntityRestricted,
 } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
@@ -9,7 +11,6 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
-import ListInfoDialog from './components/ListInfoDialog/ListInfoDialog'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
 import {
@@ -59,6 +60,9 @@ import {
 } from '@dnd-kit/core'
 import { useAppSelector } from '@state/store.ts'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
+import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
+import ListsShortcuts from './components/ListsShortcuts.tsx'
+import { useViewsContext } from '@shared/containers/index.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -71,6 +75,9 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   entityListTypes,
   isReview,
 }) => {
+  // lists page does not support grouping yet
+  const modules = undefined
+
   return (
     <ListsModuleProvider>
       <ProjectDataProvider projectName={projectName}>
@@ -79,7 +86,7 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
             <ListItemsDataProvider>
               <ListsAttributesProvider>
                 <MoveEntityProvider>
-                  <ProjectListsWithInnerProviders isReview={isReview} />
+                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
                 </MoveEntityProvider>
               </ListsAttributesProvider>
             </ListItemsDataProvider>
@@ -92,9 +99,13 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
 
 type ProjectListsWithInnerProvidersProps = {
   isReview?: boolean
+  modules?: any
 }
 
-const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({ isReview }) => {
+const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({
+  isReview,
+  modules,
+}) => {
   const {
     projectName,
     selectedListId,
@@ -106,11 +117,12 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   } = useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
+  const { resetWorkingView } = useViewsContext()
 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
     () => [
-      ...listAttributes.map((a) => ({ ...a, scopes: [selectedList?.entityType] })),
+      ...listAttributes.map((a) => ({ ...a, scope: [selectedList?.entityType] })),
       ...attribFields,
     ],
     [listAttributes, attribFields, selectedList],
@@ -185,6 +197,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               attribFields={mergedAttribFields}
               projectInfo={props.projectInfo}
               users={props.users}
+              modules={modules}
               // @ts-ignore
               entitiesMap={props.listItemsMap}
               foldersMap={props.foldersMap}
@@ -198,6 +211,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               scopes={[selectedList?.entityType]}
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
+              onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
             >
               <DetailsPanelEntityProvider>
                 <SelectionCellsProvider>
@@ -209,6 +223,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                         isReview={isReview}
                         dndActiveId={dndActiveId}
                       />
+                      <ListsShortcuts />
                     </CellEditingProvider>
                   </SelectedRowsProvider>
                 </SelectionCellsProvider>
@@ -239,13 +254,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName, projectInfo } = useProjectDataContext()
+  const { getEntityById } = useProjectTableContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList } = useListsContext()
+  const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
   const { deleteListItemAction } = useListItemsDataContext()
 
   // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
+  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
   try {
     const entityContext = useDetailsPanelEntityContext()
     selectedEntity = entityContext.selectedEntity
@@ -254,8 +270,18 @@ const ProjectLists: FC<ProjectListsProps> = ({
     selectedEntity = null
   }
 
+  // Check if any selected rows are restricted entities
+  const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
+    const entity = getEntityById(rowId)
+    return entity && !isEntityRestricted(entity.entityType)
+  })
+
   // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
+  // Don't show entity details panel if only selected entity is restricted
+  const shouldShowEntityDetailsPanel =
+    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
+  const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
+  const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || shouldShowListDetailsPanel
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -317,7 +343,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={shouldShowDetailsPanel ? 4 : 0}
                 >
                   <SplitterPanel size={70}>
                     {/* ITEMS TABLE */}
@@ -325,6 +350,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       extraColumns={extraColumns}
                       isReview={isReview}
                       dndActiveId={dndActiveId} // Pass prop
+                      viewOnly={(selectedList?.accessLevel || 0) < 20}
                     />
                   </SplitterPanel>
                   {shouldShowDetailsPanel ? (
@@ -335,10 +361,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         minWidth: 300,
                       }}
                     >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
+                      {shouldShowEntityDetailsPanel ? (
+                        <ProjectOverviewDetailsPanel
+                          projectInfo={projectInfo}
+                          projectName={projectName}
+                        />
+                      ) : selectedList ? (
+                        <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
+                      ) : null}
                     </SplitterPanel>
                   ) : (
                     <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
@@ -365,7 +395,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
           </Section>
         </SplitterPanel>
       </Splitter>
-      <ListInfoDialog />
       <ListsFiltersDialog />
     </main>
   )

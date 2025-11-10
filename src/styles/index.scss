@@ -63,6 +63,34 @@ strong {
 
   // table colors
   --color-table-border: hsl(210 8% 18%);
+  --color-table-row: hsl(216 15% 11.5%);
+  --color-table-row-high: var(--md-sys-color-surface-container-low);
+  --color-table-hover: var(--md-sys-color-surface-container);
+  --color-table-row-hover: hsl(215 14% 15%);
+  --color-table-selected: var(--md-sys-color-secondary-container);
+  --color-table-selected-row: var(--md-sys-color-surface-container-high);
+  --color-table-readonly-focused: hsl(212 15% 18%);
+  --color-table-collapsed-widget: hsl(0 0% 100%);
+  --color-table-boolean-border: hsl(212.31deg 16.83% 74.65%);
+  --color-table-status-border: #21252b;
+
+  // row highlight colors (for matching products/tasks)
+  --color-row-hl-1: #01cc34;
+  --color-row-hl-2: #9b00ff;
+  --color-row-hl-3: #ffea02;
+  --color-row-hl-4: #dc1d83;
+  --color-row-hl-5: #fd9a04;
+  --color-row-hl-6: #ff5e50;
+  --color-row-hl-7: #009b77;
+  --color-row-hl-8: #dd4124;
+  --color-row-hl-9: #d65076;
+  --color-row-hl-10: #efc050;
+  --color-row-hl-11: #5b5ea6;
+
+  // row status colors
+  --color-row-error: #dd4124;
+  --color-row-warning: #efc050;
+  --color-row-success: #01cc34;
 
   // sub colors
   --color-sub-pro: var(--md-sys-color-tertiary);
@@ -71,6 +99,9 @@ strong {
   --color-sub-studio: hsl(42, 100%, 50%);
   --color-on-sub-studio: hsl(53, 100%, 11%);
   --color-sub-studio-hover: hsl(42, 100%, 45%);
+
+  // tag colors
+  --color-tag-text: hsl(180, 5%, 96%);
 }
 
 #root {
@@ -217,47 +248,47 @@ p strong {
 // Highlighting (used to match product/tasks in the browser)
 
 .row-hl-1 {
-  color: #01cc34 !important;
+  color: var(--color-row-hl-1) !important;
 }
 .row-hl-2 {
-  color: #9b00ff !important;
+  color: var(--color-row-hl-2) !important;
 }
 .row-hl-3 {
-  color: #ffea02 !important;
+  color: var(--color-row-hl-3) !important;
 }
 .row-hl-4 {
-  color: #dc1d83 !important;
+  color: var(--color-row-hl-4) !important;
 }
 .row-hl-5 {
-  color: #fd9a04 !important;
+  color: var(--color-row-hl-5) !important;
 }
 .row-hl-6 {
-  color: #ff5e50 !important;
+  color: var(--color-row-hl-6) !important;
 }
 .row-hl-7 {
-  color: #009b77 !important;
+  color: var(--color-row-hl-7) !important;
 }
 .row-hl-8 {
-  color: #dd4124 !important;
+  color: var(--color-row-hl-8) !important;
 }
 .row-hl-9 {
-  color: #d65076 !important;
+  color: var(--color-row-hl-9) !important;
 }
 .row-hl-10 {
-  color: #efc050 !important;
+  color: var(--color-row-hl-10) !important;
 }
 .row-hl-11 {
-  color: #5b5ea6 !important;
+  color: var(--color-row-hl-11) !important;
 }
 
 .row-error {
-  border-left-color: #dd4124 !important;
+  border-left-color: var(--color-row-error) !important;
 }
 .row-warning {
-  border-left-color: #efc050 !important;
+  border-left-color: var(--color-row-warning) !important;
 }
 .row-success {
-  border-left-color: #01cc34 !important;
+  border-left-color: var(--color-row-success) !important;
 }
 
 .p-treetable {
@@ -283,7 +314,7 @@ p strong {
   max-height: none !important;
 }
 .p-treetable td.status {
-  border-bottom: 1px solid #21252b !important;
+  border-bottom: 1px solid var(--color-table-status-border) !important;
 }
 
 // fixes editing with a button next to the input
@@ -453,6 +484,14 @@ a {
   }
 }
 
+// if the panel after the splitter gutter is hidden then hide the gutter too
+.p-splitter-gutter:has(+ .p-splitter-panel.hidden) {
+  display: none;
+}
+.p-splitter-panel.hidden {
+  display: none !important;
+}
+
 // confirm dialog buttons
 .p-dialog.p-confirm-dialog {
   .p-dialog-footer {
@@ -504,4 +543,14 @@ a {
 .p-sidebar-left .p-sidebar {
   min-width: 20rem;
   width: auto;
+}
+
+.sort-asc-icon .icon,
+.sort-asc-icon svg {
+  transform: rotate(180deg) scaleX(-1) !important;
+}
+
+.sort-desc-icon .icon,
+.sort-desc-icon svg {
+  transform: none !important;
 }

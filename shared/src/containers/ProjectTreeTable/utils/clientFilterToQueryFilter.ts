@@ -5,7 +5,7 @@ const NO_DATE = 'no-date'
 // New type that cherry picks only the needed fields from Filter
 export type FilterForQuery = {
   id: string
-  values?: { id: string; values?: { id: string }[] }[]
+  values?: { id: string; values?: { id: string }[]; isCustom?: boolean }[]
   type?: string
   singleSelect?: boolean
   inverted?: boolean
@@ -32,7 +32,7 @@ export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilte
 }
 
 // Helper function to convert a single Filter to a QueryCondition
-const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
+const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | QueryFilter => {
   // Extract key from filter ID (split by underscore if needed)
   const key = getFilterFromId(filter.id)
 
@@ -60,6 +60,12 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
     filter.type?.startsWith('list_of_') || key.includes('tags') || key.includes('assignees')
   const isDateField = filter.type === 'datetime'
   const isBooleanField = filter.type === 'boolean'
+  // Version field is a special numeric field that should use exact matching
+  const isNumberField =
+    key.endsWith('version') || filter.type === 'integer' || filter.type === 'float'
+
+  // Check if any of the values are custom (user-entered values)
+  const hasCustomValues = filter.values && filter.values.some((v) => v.isCustom === true)
 
   // Determine the appropriate operator based on filter properties and type
   let operator: QueryCondition['operator'] = 'eq'
@@ -130,7 +136,6 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
 
       // If we have date conditions, return them as a nested filter instead of continuing
       if (dateConditions.length > 0) {
-        // @ts-expect-error
         return {
           conditions: dateConditions,
           operator: filter.inverted ? 'or' : 'and',
@@ -142,6 +147,69 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition => {
     operator = filter.inverted ? 'ne' : 'eq'
   } else if (isBooleanField) {
     operator = filter.inverted ? 'ne' : 'eq'
+  } else if (hasCustomValues && !isListField && !isNumberField) {
+    // Handle custom values with partial matching using LIKE operator
+    // If we have custom values, we need to use LIKE operator with wildcards for partial matching
+    // Note: Version fields and numeric fields use exact matching (eq/in) instead
+
+    if (!filter.values || filter.values.length === 0) {
+      // This shouldn't happen but handle it gracefully
+      operator = filter.inverted ? 'notin' : 'in'
+    } else {
+      // Separate custom and non-custom values
+      const customValues = filter.values.filter((v) => v.isCustom === true)
+      const nonCustomValues = filter.values.filter((v) => !v.isCustom)
+
+      // If we only have custom values
+      if (nonCustomValues.length === 0) {
+        if (customValues.length === 1) {
+          // Single custom value - use simple LIKE operator
+          operator = 'like'
+          value = `%${customValues[0].id}%`
+        } else {
+          // Multiple custom values - create OR conditions for each
+          const conditions: QueryCondition[] = customValues.map((v) => ({
+            key,
+            operator: 'like' as QueryCondition['operator'],
+            value: `%${v.id}%`,
+          }))
+
+          return {
+            conditions,
+            operator: filter.inverted ? 'and' : 'or',
+          } as QueryFilter
+        }
+      } else {
+        // We have both custom and non-custom values
+        // Create separate conditions for each type
+        const conditions: QueryCondition[] = []
+
+        // Add non-custom values condition
+        if (nonCustomValues.length > 0) {
+          conditions.push({
+            key,
+            operator: filter.inverted ? 'notin' : 'in',
+            value: nonCustomValues.map((v) =>
+              convertValueByType(v.id, filter.type),
+            ) as QueryCondition['value'],
+          })
+        }
+
+        // Add custom values conditions (each needs its own LIKE)
+        customValues.forEach((v) => {
+          conditions.push({
+            key,
+            operator: 'like' as QueryCondition['operator'],
+            value: `%${v.id}%`,
+          })
+        })
+
+        return {
+          conditions,
+          operator: filter.inverted ? 'and' : 'or',
+        } as QueryFilter
+      }
+    }
   } else {
     // DEFAULT for other scalar fields
     operator = filter.inverted ? 'notin' : 'in'

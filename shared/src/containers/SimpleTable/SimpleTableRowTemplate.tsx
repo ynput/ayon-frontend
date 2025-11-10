@@ -1,10 +1,12 @@
 import { forwardRef, Fragment } from 'react'
 import * as Styled from './SimpleTable.styled'
 import { Icon } from '@ynput/ayon-react-components'
+import clsx from 'clsx'
 
 export type RowExpanderProps = {
   isRowExpandable?: boolean
   isRowExpanded?: boolean
+  enableNonFolderIndent?: boolean
   isTableExpandable?: boolean
   onExpandClick?: () => void
 }
@@ -12,6 +14,7 @@ export type RowExpanderProps = {
 export const RowExpander = ({
   isRowExpandable,
   isRowExpanded,
+  enableNonFolderIndent = true,
   isTableExpandable,
   onExpandClick,
 }: RowExpanderProps) =>
@@ -26,7 +29,8 @@ export const RowExpander = ({
       style={{ cursor: 'pointer' }}
     />
   ) : (
-    isTableExpandable && <div style={{ display: 'inline-block', minWidth: 24 }} />
+    isTableExpandable &&
+    enableNonFolderIndent && <div style={{ display: 'inline-block', minWidth: 24 }} />
   )
 
 export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -34,9 +38,14 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   icon?: string
   parents?: string[]
   iconColor?: string
+  iconFilled?: boolean
+  img?: string | null
+  imgShape?: 'square' | 'circle'
+  imgRatio?: number
   isRowExpandable?: boolean
   isRowExpanded?: boolean
   isTableExpandable?: boolean
+  enableNonFolderIndent?: boolean
   onExpandClick?: () => void
   //  when used as a template
   startContent?: React.ReactNode
@@ -44,6 +53,13 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   depth?: number
   isDisabled?: boolean
   disabledMessage?: string
+  active?: boolean
+  pt?: {
+    img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
+    expander?: Partial<React.ComponentProps<typeof RowExpander>>
+    icon?: Partial<React.ComponentProps<typeof Icon>>
+    text?: React.HTMLAttributes<HTMLDivElement>
+  }
 }
 
 export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCellTemplateProps>(
@@ -53,16 +69,23 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       icon,
       parents,
       iconColor,
+      iconFilled,
+      img,
+      imgShape = 'square',
+      imgRatio = 1,
       isRowExpandable,
       isRowExpanded,
       isTableExpandable,
+      enableNonFolderIndent = true,
       onExpandClick,
       startContent,
       endContent,
       depth = 0,
       isDisabled,
       disabledMessage,
+      active,
       style,
+      pt,
       ...props
     },
     ref,
@@ -74,9 +97,6 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
         style={{
           ...style,
           paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
-          ...(isDisabled && {
-            cursor: 'not-allowed',
-          }),
         }}
         title={isDisabled ? disabledMessage : undefined}
       >
@@ -85,20 +105,37 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
+          enableNonFolderIndent={enableNonFolderIndent}
+          {...pt?.expander}
         />
         {startContent && startContent}
-        {icon && <Icon icon={icon} style={{ color: iconColor }} />}
-        {parents && (
-          <span className="path">
-            {parents.map((part, index) => (
-              <Fragment key={index}>
-                <span key={index + '-path'}>{part}</span>
-                <span key={index + '-separator'}>/</span>
-              </Fragment>
-            ))}
-          </span>
+        {img && (
+          <img
+            src={img}
+            {...pt?.img}
+            alt=""
+            className={clsx('image', imgShape, pt?.img?.className)}
+            style={{
+              aspectRatio: imgRatio.toString(),
+              ...pt?.img?.style,
+            }}
+          />
         )}
-        <span className="value">{value}</span>
+        {icon && (
+          <Icon
+            icon={icon}
+            className={clsx({ filled: iconFilled }, pt?.icon?.className)}
+            style={{
+              color: iconColor,
+              ...pt?.icon?.style,
+            }}
+            {...pt?.icon}
+          />
+        )}
+        <div className="text" {...pt?.text}>
+          {parents && <span className="path">{parents.join(' / ')} / </span>}
+          <span className="value">{value}</span>
+        </div>
         {endContent && endContent}
       </Styled.Cell>
     )

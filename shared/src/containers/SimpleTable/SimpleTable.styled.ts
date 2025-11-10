@@ -68,16 +68,25 @@ export const Cell = styled.div`
 
   border-radius: var(--border-radius-m);
 
-  .value {
+  .text {
     width: 100%;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .value {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .path {
-    display: flex;
-    gap: var(--base-gap-small);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: fit-content;
+    margin-right: 4px;
+    flex: 1; // path ellipsis first before value
   }
 
   .loading {
@@ -95,12 +104,26 @@ export const Cell = styled.div`
     .icon {
       color: var(--md-sys-color-on-primary-container);
     }
+
+    /* update expander styles */
+    .expander {
+      &:hover {
+        background-color: var(--md-sys-color-on-primary);
+      }
+    }
+  }
+
+  &.inactive {
+    .icon,
+    .value {
+      color: var(--md-sys-color-outline);
+    }
   }
 
   &.disabled {
     opacity: 0.5;
     cursor: not-allowed !important;
-    
+
     &,
     .value,
     .icon {
@@ -113,6 +136,29 @@ export const Cell = styled.div`
 
     .value {
       text-decoration: line-through;
+    }
+  }
+
+  /* filled icon */
+  .icon.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  }
+
+  .image {
+    width: auto;
+    height: 24px;
+    max-height: 24px;
+    object-fit: cover;
+    aspect-ratio: 1;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    margin-right: 4px;
+
+    &.circle {
+      border-radius: 50%;
+    }
+
+    &.square {
+      border-radius: 4px;
     }
   }
 `

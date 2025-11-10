@@ -5,6 +5,7 @@ import { ProjectTableSettings } from '@shared/components'
 import { SettingHighlightedId } from '@shared/context'
 import { confirmDelete } from '@shared/util'
 import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
+import { useListsContext } from '@pages/ProjectListsPage/context'
 
 export interface ListsTableSettingsProps {
   onGoTo: (name: string) => void
@@ -17,6 +18,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   extraColumns,
   highlightedSetting,
 }) => {
+  const { selectedList } = useListsContext()
   const { listAttributes, entityAttribFields, updateAttributes, isUpdating, isLoadingNewList } =
     useListsAttributesContext()
   const { ListsAttributesSettings, requiredVersion } = useListsModuleContext()
@@ -31,7 +33,9 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   return (
     <ProjectTableSettings
       extraColumns={extraColumns}
+      hiddenColumns={['folder']}
       highlighted={highlightedSetting}
+      hiddenSettings={['group-by']}
       settings={[
         {
           id: 'list_attributes',
@@ -49,11 +53,12 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
               onSuccess={onSuccess}
               onError={onError}
               confirmDelete={confirmDelete}
-              requiredVersion={requiredVersion}
+              requiredVersion={requiredVersion.settings}
             />
           ),
         },
       ]}
+      scope={selectedList?.entityType}
     />
   )
 }

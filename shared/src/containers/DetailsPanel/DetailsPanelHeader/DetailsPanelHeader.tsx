@@ -1,12 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
-import { Icon } from '@ynput/ayon-react-components'
+import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
 
 import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
 import { Actions, DetailsPanelProps } from '@shared/containers'
 // shared
-import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery } from '@shared/api'
+import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery, Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
@@ -60,6 +60,7 @@ const DetailsPanelHeader = ({
   const { useSearchParams, useNavigate, isDeveloperMode } = useDetailsPanelContext()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const tagsSelectRef = useRef<DropdownRef>(null)
 
   const statuses = useScopedStatuses(
     entities.map((entity) => entity.projectName),
@@ -95,6 +96,7 @@ const DetailsPanelHeader = ({
       attrib: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      path: '',
     }
   }
 
@@ -196,7 +198,7 @@ const DetailsPanelHeader = ({
 
   // Get title and subtitle from the imported function
   const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
-
+  const status = statuses?.length!==0 && statuses?.find((status)=>  status.name=== statusesValue[0])
   return (
     <Styled.HeaderContainer>
       <EntityPanelUploader
@@ -223,6 +225,7 @@ const DetailsPanelHeader = ({
               <Styled.Title>
                 <h2>{title}</h2>
                 <Styled.TagsSelect
+                  ref={tagsSelectRef}
                   value={union(...tagsValues)}
                   tags={tagsOptionsObject}
                   options={[]}
@@ -232,6 +235,7 @@ const DetailsPanelHeader = ({
                   align="right"
                   styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
                   className="tags-select"
+                  itemClassName="details-tag"
                 />
               </Styled.Title>
               <div className="sub-title">
@@ -249,6 +253,7 @@ const DetailsPanelHeader = ({
             onChange={(value) => handleUpdate('status', value)}
             className={clsx('status-select', { loading: isLoading })}
             align={isCompact ? 'right' : 'left'}
+            $textColor={getTextColor(status!==undefined? (status as Status).color: "#OOO")}
           />
           {!isCompact &&
             (!hasUser || isLoading ? (

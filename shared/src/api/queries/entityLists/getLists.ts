@@ -1,4 +1,4 @@
-import { gqlApi } from '@shared/api/generated'
+import { entityListsApi, gqlApi } from '@shared/api/generated'
 import {
   FetchBaseQueryError,
   DefinitionsFromApi,
@@ -23,6 +23,21 @@ import {
   ListsPageParam,
 } from './types'
 
+// Helper function to safely parse entity list data field from JSON string to object
+const parseJSON = (data: string | null | undefined): Record<string, any> => {
+  if (!data) return {}
+
+  try {
+    if (typeof data !== 'string') {
+      return (data as unknown as Record<string, any>) ?? {}
+    }
+    return JSON.parse(data)
+  } catch (e) {
+    console.warn('Failed to parse entity list data field:', e, data)
+    return {}
+  }
+}
+
 // GRAPHQL API (getLists and getListItems)
 // Define the LISTS_PER_PAGE constant for pagination
 export const LISTS_PER_PAGE = 500
@@ -46,7 +61,11 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
       transformResponse: (response: GetListsQuery): GetListsResult => {
         return {
           // @ts-expect-error - entityType is string
-          lists: response.project.entityLists.edges.map((edge) => edge.node),
+          lists: response.project.entityLists.edges.map((edge) => ({
+            ...edge.node,
+            data: parseJSON(edge.node.data),
+            attrib: parseJSON(edge.node.allAttrib),
+          })),
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
@@ -114,7 +133,10 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             getListsGqlApiEnhanced.endpoints.GetLists.initiate(queryParams, { forceRefetch: true }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            // Preserve original error (e.g. 403) so the UI can react accordingly
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -132,17 +154,17 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
         }
       },
-      providesTags: (result) => [
-        { type: 'entityList', id: 'LIST' },
-        ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
-          type: 'entityList' as const,
-          id: list.id,
-        })),
-        ...(result?.pages.flatMap((page) => page.lists) || []).map((list) => ({
-          type: 'entityList' as const,
-          id: list.entityListType,
-        })),
-      ],
+      providesTags: (result) => {
+        const lists = result?.pages.flatMap((page) => page.lists) || []
+        return [
+          { type: 'entityList', id: 'LIST' },
+          ...lists.flatMap((list) => [
+            { type: 'entityList' as const, id: list.id },
+            { type: 'entityList' as const, id: list.entityListType },
+            { type: 'entityList' as const, id: list.entityListFolderId || 'NO_FOLDER' },
+          ]),
+        ]
+      },
       async onCacheEntryAdded(
         _args,
         { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
@@ -238,7 +260,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -355,7 +379,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             }),
           )
 
-          if (result.error) throw result.error
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
 
           return {
             data: result.data || {
@@ -384,6 +410,26 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
   }),
 })
 
+export const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
+  endpoints: {
+    getEntityList: {
+      providesTags: (result, _e, { listId, projectName }) => [
+        { type: 'entityList', id: listId },
+        { type: 'entityList', id: projectName },
+        ...(result
+          ? [
+              { type: 'entityList', id: result.entityListType },
+              {
+                type: 'entityList',
+                id: result.entityListFolderId || 'NO_FOLDER',
+              },
+            ]
+          : []),
+      ],
+    },
+  },
+})
+
 export default getListsGqlApiInjected
 
 export const {
@@ -394,3 +440,5 @@ export const {
   useLazyGetListsItemsForReviewSessionQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected
+
+export const { useGetEntityListQuery } = getListsApiEnhanced

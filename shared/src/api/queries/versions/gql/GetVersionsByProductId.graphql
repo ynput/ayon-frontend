@@ -1,0 +1,38 @@
+query GetVersionsByProductId(
+  $projectName: String!
+  $productIds: [String!]!
+  $versionFilter: String
+  $taskFilter: String
+  $featuredOnly: [String!]
+  $hasReviewables: Boolean
+  $sortBy: String
+  $first: Int
+  $last: Int
+  $after: String
+  $before: String
+) {
+  project(name: $projectName) {
+    versions(
+      productIds: $productIds
+      filter: $versionFilter
+      taskFilter: $taskFilter
+      featuredOnly: $featuredOnly
+      hasReviewables: $hasReviewables
+      sortBy: $sortBy
+      last: $last
+      first: $first
+      after: $after
+      before: $before
+    ) {
+      pageInfo {
+        ...PageInfo
+      }
+      edges {
+        cursor
+        node {
+          ...VersionExtended
+        }
+      }
+    }
+  }
+}

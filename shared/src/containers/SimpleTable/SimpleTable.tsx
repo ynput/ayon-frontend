@@ -50,9 +50,25 @@ declare module '@tanstack/react-table' {
 }
 
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
+  const cellValue = row.getValue(columnId)
+  // convert non-string cell values to string
+  let searchString =
+    typeof cellValue === 'string'
+      ? cellValue
+      : Array.isArray(cellValue)
+      ? cellValue.join(' ')
+      : JSON.stringify(cellValue)
+
+  // combine label and parents into a single string for searching if columnId is 'label'
+  if (columnId === 'label') {
+    searchString = [row.original.label, row.original.name, ...(row.original.parents || [])].join(
+      ' ',
+    )
+  }
+
   // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
+  const itemRank = rankItem(searchString, searchValue)
 
   // Store the itemRank info
   addMeta({
@@ -95,13 +111,16 @@ export type SimpleTableRow = {
   parents?: string[]
   icon?: string | null
   iconColor?: string
+  iconFilled?: boolean
   img?: string | null
+  imgShape?: 'square' | 'circle'
   startContent?: JSX.Element
   endContent?: JSX.Element
   subRows: SimpleTableRow[]
   data: RowItemData
   isDisabled?: boolean
   disabledMessage?: string
+  inactive?: boolean
 }
 
 export interface SimpleTableProps {
@@ -111,10 +130,12 @@ export interface SimpleTableProps {
   isExpandable?: boolean // show expand/collapse icons
   isMultiSelect?: boolean // enable multi-select with shift+click and ctrl/cmd+click
   enableClickToDeselect?: boolean // allow deselecting a single selected row by clicking it again & clicking outside clears selection
+  enableNonFolderIndent?: boolean // indent non-folder rows to align with folder rows
   forceUpdateTable?: any
   globalFilter?: string
   meta?: Record<string, any>
   rowHeight?: number // height of each row, used for virtual scrolling
+  imgRatio?: number
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
   children?: (
     props: SimpleTableCellTemplateProps,
@@ -122,8 +143,8 @@ export interface SimpleTableProps {
     table: Table<SimpleTableRow>,
   ) => JSX.Element
   pt?: {
-    cell?: SimpleTableCellTemplateProps
-    row?: React.HTMLAttributes<HTMLTableRowElement>
+    cell?: Partial<SimpleTableCellTemplateProps>
+    row?: Partial<React.HTMLAttributes<HTMLTableRowElement>>
   }
 }
 
@@ -168,10 +189,12 @@ const SimpleTable: FC<SimpleTableProps> = ({
   isExpandable,
   isMultiSelect = true,
   enableClickToDeselect = true,
+  enableNonFolderIndent = true,
   forceUpdateTable,
   globalFilter,
   meta,
   rowHeight,
+  imgRatio,
   onScrollBottom,
   children,
   pt,
@@ -284,8 +307,56 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [handleSelectionLogic], // Depends only on handleSelectionLogic
   )
 
+  // Handle arrow key navigation
+  const handleArrowNavigation = useCallback(
+    (direction: 'up' | 'down', currentRow: Row<SimpleTableRow>, event: RowKeyboardEvent) => {
+      if (!tableRef.current) return
+
+      // Use the row model which respects expanded state, not filtered model
+      const visibleRows = tableRef.current.getRowModel().rows
+      const currentIndex = visibleRows.findIndex((r) => r.id === currentRow.id)
+
+      if (currentIndex === -1) return
+
+      let nextIndex = direction === 'down' ? currentIndex + 1 : currentIndex - 1
+
+      // Check bounds
+      if (nextIndex < 0 || nextIndex >= visibleRows.length) return
+
+      // Skip disabled rows
+      while (nextIndex >= 0 && nextIndex < visibleRows.length) {
+        const nextRow = visibleRows[nextIndex]
+        if (!nextRow.original.isDisabled) {
+          // Found a valid row
+          // Select the next row
+          handleSelectionLogic(
+            tableRef.current,
+            nextRow.id,
+            event.shiftKey,
+            event.ctrlKey || event.metaKey,
+          )
+
+          // Focus the next row's cell
+          requestAnimationFrame(() => {
+            const nextRowElement = document.getElementById(nextRow.id)
+            const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
+            if (nextCell) {
+              nextCell.focus()
+              nextCell.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+            }
+          })
+          return
+        }
+        // Move to next row if current is disabled
+        nextIndex = direction === 'down' ? nextIndex + 1 : nextIndex - 1
+      }
+    },
+    [handleSelectionLogic],
+  )
+
   const { handleRowKeyDown } = useRowKeydown<SimpleTableRow>({
     handleRowSelect: handleRowSelectForKeydown,
+    handleArrowNavigation,
   })
 
   const columns = useMemo<ColumnDef<SimpleTableRow>[]>(
@@ -324,21 +395,26 @@ const SimpleTable: FC<SimpleTableProps> = ({
             className: clsx({
               selected: row.getIsSelected(),
               loading: cellMeta?.isLoading,
-              disabled: row.original.isDisabled,
+              disabled: row.original.isDisabled, // you can't select disabled rows
+              inactive: row.original.inactive, // false: archived items but still selectable
             }),
             onKeyDown: (e) => {
               if (e.target instanceof HTMLInputElement) return
               // Corrected typo: handleRowKeydown -> handleRowKeyDown
               handleRowKeyDown(e, row)
             },
-            onClick: handleCellClick, // Added onClick handler
             depth: row.depth,
             tabIndex: 0,
             value: getValue<string>(),
             parents: row.original.parents,
             icon: row.original.icon || undefined,
             iconColor: row.original.iconColor,
+            iconFilled: row.original.iconFilled,
+            img: row.original.img,
+            imgShape: row.original.imgShape,
+            imgRatio: imgRatio,
             isRowExpandable: row.getCanExpand(),
+            enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
             isTableExpandable: cellMeta?.isExpandable,
             onExpandClick: row.getToggleExpandedHandler(),
@@ -346,6 +422,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
+            ...pt?.cell,
+            onClick: handleCellClick, // Added onClick handler
           }
 
           // Use children function if provided, otherwise default to SimpleTableCellTemplate
@@ -357,21 +435,28 @@ const SimpleTable: FC<SimpleTableProps> = ({
         },
       },
     ],
-    [forceUpdateTable, handleSelectionLogic, handleRowKeyDown, enableClickToDeselect], // include enableClickToDeselect for completeness
+    [
+      forceUpdateTable,
+      handleSelectionLogic,
+      handleRowKeyDown,
+      enableClickToDeselect,
+      enableNonFolderIndent,
+      imgRatio,
+    ], // include enableClickToDeselect for completeness
   )
 
   const handleRowSelectionChangeCallback: OnChangeFn<RowSelectionState> = useCallback(
     (updater) => {
       onRowSelectionChange(functionalUpdate(updater, rowSelection))
     },
-    [onRowSelectionChange, rowSelection], // Depends only on the stable setState function from context
+    [onRowSelectionChange],
   )
 
   const handleRowPinningChangeCallback: OnChangeFn<RowPinningState> = useCallback(
     (updater) => {
-      rowPinning && onRowPinningChange?.(functionalUpdate(updater, rowPinning))
+      onRowPinningChange?.(functionalUpdate(updater, rowPinning || {}))
     },
-    [onRowPinningChange], // Depends only on the stable setState function from context
+    [onRowPinningChange],
   )
 
   const handleExpandedChange = useCallback(
@@ -382,7 +467,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         return newExpanded
       })
     },
-    [setExpanded, onExpandedChange],
+    [setExpanded],
   )
 
   const table = useReactTable({
@@ -399,6 +484,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
     filterFns: {
       fuzzy: fuzzyFilter,
     },
+    globalFilterFn: 'fuzzy',
     enableRowSelection: true, //enable row selection for all rows
     enableRowPinning: !!onRowPinningChange,
     getRowId: (row) => row.id,

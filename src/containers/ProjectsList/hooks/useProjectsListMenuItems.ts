@@ -11,6 +11,7 @@ type Hidden = {
   'select-all'?: boolean
   'archive-project'?: boolean
   'delete-project'?: boolean
+  'show-archived'?: boolean
 }
 
 interface MenuItemProps {
@@ -19,6 +20,8 @@ interface MenuItemProps {
   onNewProject?: () => void
   pinned: string[]
   multiSelect?: boolean
+  showArchived?: boolean
+  userLevel?: number
   onPin?: (pinned: string[]) => void
   onSearch?: () => void
   onManage?: (name: string) => void
@@ -26,6 +29,7 @@ interface MenuItemProps {
   onSelectAll?: () => void
   onArchive?: (projectName: string, active: boolean) => void
   onDelete?: (projectName: string) => void
+  onShowArchivedToggle?: () => void
 }
 
 type BuildMenuItems = (
@@ -40,6 +44,8 @@ type BuildMenuItems = (
   link?: string
   disabled?: boolean
   danger?: boolean
+  selected?: boolean
+  active?: boolean
 }[]
 
 const useProjectsListMenuItems = ({
@@ -47,6 +53,8 @@ const useProjectsListMenuItems = ({
   projects,
   pinned,
   multiSelect,
+  showArchived = false,
+  userLevel = 0,
   onNewProject,
   onSearch,
   onPin,
@@ -55,6 +63,7 @@ const useProjectsListMenuItems = ({
   onSelectAll,
   onArchive,
   onDelete,
+  onShowArchivedToggle,
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
@@ -119,14 +128,25 @@ const useProjectsListMenuItems = ({
           label: 'Open',
           icon: 'open_in_new',
           [command ? 'command' : 'onClick']: () => singleProject && onOpen?.(singleProject?.name),
+          hidden: userLevel < 500,
         },
         {
           id: 'manage-projects',
           label: 'Manage',
           icon: 'settings',
           [command ? 'command' : 'onClick']: () => singleProject && onManage?.(singleProject.name),
+          hidden: userLevel < 500,
         },
-        { id: 'divider', label: '' },
+        {
+          id: 'show-archived',
+          label: 'Show archived',
+          icon: 'inventory_2',
+          [command ? 'command' : 'onClick']: onShowArchivedToggle,
+          selected: showArchived,
+          active: showArchived,
+          hidden: command || userLevel < 500, // hide on context menu
+        },
+        { id: 'divider', label: '', hidden: userLevel < 500 },
         {
           id: 'pin-project',
           label: allPinned ? 'Unpin' : 'Pin',
@@ -170,9 +190,12 @@ const useProjectsListMenuItems = ({
       pinned,
       projects,
       multiSelect,
+      showArchived,
+      userLevel,
       isMenuItemEnabled,
       onArchive,
       onDelete,
+      onShowArchivedToggle,
     ],
   )
 

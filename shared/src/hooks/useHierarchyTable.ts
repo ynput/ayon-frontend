@@ -3,6 +3,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useGetFolderListQuery } from '@shared/api'
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
+import { useQueryArgumentChangeLoading } from './useQueryArgumentChangeLoading'
 
 type Props = {
   projectName: string | null
@@ -10,9 +11,18 @@ type Props = {
 }
 
 export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
-  const { data: { folders = [] } = {}, isFetching } = useGetFolderListQuery(
+  const {
+    data: { folders = [] } = {},
+    isLoading,
+    isFetching: isFetchingRaw,
+  } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },
+  )
+
+  const isFetching = useQueryArgumentChangeLoading(
+    { projectName: projectName || '' },
+    isFetchingRaw,
   )
 
   const getFolderIcon = (type: string) => {
@@ -32,6 +42,8 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
       name: folder.name,
       label: folder.label || folder.name,
       subType: folder.folderType,
+      path: folder.path,
+      parents: folder.parents,
     },
   })
 
@@ -81,16 +93,21 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
   }
 
   const tableData: SimpleTableRow[] = useMemo(() => {
-    if (!folders.length || isFetching) return []
+    if (!folders.length || isFetching || isLoading) return []
 
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes, isFetching])
+  }, [folders, folderTypes, isFetching, isLoading])
 
   const getHierarchyData = useCallback(async () => {
     return tableData
   }, [tableData])
 
-  return { data: tableData, folders, getData: getHierarchyData, isFetching: isFetching }
+  return {
+    data: tableData,
+    folders,
+    getData: getHierarchyData,
+    isFetching: isFetching || isLoading,
+  }
 }
