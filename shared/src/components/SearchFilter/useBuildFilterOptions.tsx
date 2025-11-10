@@ -1,9 +1,5 @@
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
-import {
-  useGetSiteInfoQuery,
-  useGetKanbanProjectUsersQuery,
-  useGetProjectsInfoQuery,
-} from '@shared/api'
+import { getAttributeIcon } from '@shared/util'
+import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import type {
   GetProjectsInfoResponse,
   FolderType,
@@ -13,7 +9,7 @@ import type {
   AttributeModel,
   AttributeEnumItem,
   AttributeData,
-  ProductTypeOverride,
+  ProductType,
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter } from '@ynput/ayon-react-components'
@@ -70,6 +66,7 @@ export type BuildFilterOptions = {
     tags?: string[]
     attributes?: Record<string, AttributeDataValue[]>
     assignees?: string[]
+    productTypes?: ProductType[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
@@ -502,35 +499,28 @@ const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: ScopeType): Op
   if (type === 'product') {
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all productTypes and add them to the options (if they don't already exist)
-      const productTypes = project?.config?.productTypes?.default || []
-      productTypes.forEach((productType: ProductTypeOverride) => {
-        if (!options.some((option) => option.id === productType.name)) {
-          options.push({
-            id: productType.name,
-            type: 'string',
-            label: productType.name,
-            icon: getAttributeIcon('product', productType.icon),
-            inverted: false,
-            values: [],
-            allowsCustomValues: false,
-          })
-        }
-      })
+      const productTypes = project?.anatomy?.product_base_types?.definitions || []
+      // this project seems to have no product types
+      if (productTypes.length === 0) {
+        return
+      }
+      productTypes
+        .filter((p) => !!p.name)
+        .forEach((productType) => {
+          if (!options.some((option) => option.id === productType.name)) {
+            options.push({
+              id: productType.name as string,
+              type: 'string',
+              label: productType.name as string,
+              icon: productType.icon,
+              color: productType.color,
+              inverted: false,
+              values: [],
+              allowsCustomValues: false,
+            })
+          }
+        })
     })
-
-    /*
-    Object.values(productTypes).forEach(({ icon, name }) => {
-      options.push({
-        id: name,
-        type: 'string',
-        label: name,
-        icon: icon,
-        inverted: false,
-        values: [],
-        allowsCustomValues: false,
-      })
-    })
-    */
   } else if (type === 'task') {
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all task types and add them to the options (if they don't already exist)

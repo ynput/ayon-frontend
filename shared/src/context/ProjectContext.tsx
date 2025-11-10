@@ -118,16 +118,10 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
 
   const getProductType = useCallback(
     (productType: string) => {
-      if (!productType) {
-        return {
-          icon: getEntityTypeIcon('product'),
-          color: undefined,
-        }
-      }
-      const type = productTypes.find((t) => t.name === productType)
+      const type = productTypes.find((t) => t.name === productType) || defaultProductType
       return {
-        icon: type?.icon || defaultProductType?.icon || '',
-        color: type?.color || defaultProductType?.color,
+        icon: type?.icon || getEntityTypeIcon('product'),
+        color: type?.color,
       }
     },
     [productTypes, defaultProductType],
