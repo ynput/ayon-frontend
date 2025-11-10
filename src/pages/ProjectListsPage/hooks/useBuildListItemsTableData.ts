@@ -1,12 +1,7 @@
-import {
-  TableRow,
-  useGetEntityTypeData,
-  useProjectDataContext,
-  linksToTableData,
-} from '@shared/containers'
+import { TableRow, useGetEntityTypeData, linksToTableData } from '@shared/containers'
 import { useMemo } from 'react'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
-import { productTypes } from '@shared/util'
+import { useProjectContext } from '@shared/context'
 import {
   isEntityRestricted,
   RESTRICTED_ENTITY_NAME,
@@ -19,9 +14,9 @@ type Props = {
 }
 
 const useBuildListItemsTableData = ({ listItemsData }: Props) => {
-  const { projectInfo } = useProjectDataContext()
+  const project = useProjectContext()
 
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
     return listItemsData.map((item) => {
@@ -30,9 +25,9 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
 
       // Process links if they exist
       const links = linksToTableData(item.links, item.entityType, {
-        folderTypes: projectInfo?.folderTypes || [],
-        productTypes: Object.values(productTypes || {}),
-        taskTypes: projectInfo?.taskTypes || [],
+        folderTypes: project?.folderTypes || [],
+        productTypes: project.productTypes || [],
+        taskTypes: project?.taskTypes || [],
       })
 
       return {
@@ -52,8 +47,10 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         ownAttrib: item.ownAttrib
           ? [...item.ownAttrib, ...item.ownItemAttrib]
           : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
-        icon: isRestricted ? RESTRICTED_ENTITY_ICON : getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
-          ?.icon,
+        icon: isRestricted
+          ? RESTRICTED_ENTITY_ICON
+          : getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+              ?.icon,
         folderId: extractFolderId(item, item.entityType),
         parents: item.parents || [],
         tags: item.tags,

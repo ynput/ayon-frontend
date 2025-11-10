@@ -1,6 +1,5 @@
 import Slicer from '@containers/Slicer'
 import TasksProgress from '@containers/TasksProgress'
-import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
@@ -10,7 +9,7 @@ import { useGetAttributeConfigQuery } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
-import { useScopedDetailsPanel } from '@shared/context'
+import { useProjectContext, useScopedDetailsPanel } from '@shared/context'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const TasksProgressPage: FC = () => {
@@ -22,7 +21,7 @@ const TasksProgressPage: FC = () => {
   const taskProgressSliceFields = config?.progress?.fields
 
   //   GET PROJECT INFO FOR STATUS
-  const { data: projectInfo } = useGetProjectQuery({ projectName }, { skip: !projectName })
+  const { ...projectInfo } = useProjectContext()
   // Get attributes so we can use priority
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task')

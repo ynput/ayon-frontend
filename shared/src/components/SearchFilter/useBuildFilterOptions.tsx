@@ -9,8 +9,8 @@ import type {
   AttributeModel,
   AttributeEnumItem,
   AttributeData,
+  ProductType,
 } from '@shared/api'
-import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter } from '@ynput/ayon-react-components'
 import { dateOptions } from './filterDates'
@@ -66,6 +66,7 @@ export type BuildFilterOptions = {
     tags?: string[]
     attributes?: Record<string, AttributeDataValue[]>
     assignees?: string[]
+    productTypes?: ProductType[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
@@ -496,16 +497,29 @@ export const useBuildFilterOptions = ({
 const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: ScopeType): Option[] => {
   const options: Option[] = []
   if (type === 'product') {
-    Object.values(productTypes).forEach(({ icon, name }) => {
-      options.push({
-        id: name,
-        type: 'string',
-        label: name,
-        icon: icon,
-        inverted: false,
-        values: [],
-        allowsCustomValues: false,
-      })
+    Object.values(projectsInfo).forEach((project) => {
+      // for each project, get all productTypes and add them to the options (if they don't already exist)
+      const productTypes = project?.anatomy?.product_base_types?.definitions || []
+      // this project seems to have no product types
+      if (productTypes.length === 0) {
+        return
+      }
+      productTypes
+        .filter((p) => !!p.name)
+        .forEach((productType) => {
+          if (!options.some((option) => option.id === productType.name)) {
+            options.push({
+              id: productType.name as string,
+              type: 'string',
+              label: productType.name as string,
+              icon: productType.icon,
+              color: productType.color,
+              inverted: false,
+              values: [],
+              allowsCustomValues: false,
+            })
+          }
+        })
     })
   } else if (type === 'task') {
     Object.values(projectsInfo).forEach((project) => {

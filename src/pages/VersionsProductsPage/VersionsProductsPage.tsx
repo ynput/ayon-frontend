@@ -4,7 +4,7 @@ import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import Slicer from '@containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
-import { useSettingsPanel } from '@shared/context'
+import { useProjectContext, useSettingsPanel } from '@shared/context'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
 import VPTable from './components/VPTable/VPTable'
@@ -17,7 +17,6 @@ import { useVersionsSelectionContext } from './context/VPSelectionContext'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
 import { EarlyPreview, DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'
-import { useProjectDataContext } from '@shared/containers'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 interface VersionsProductsPageProps {
@@ -31,7 +30,7 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { config } = useSlicerContext()
   const { showGrid } = useVPViewsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
-  const { projectName } = useProjectDataContext()
+  const { projectName } = useProjectContext()
 
   // modal dialog state for product and version details
   const [showDetail, setShowDetail] = useState<false | 'product' | 'version'>(false)

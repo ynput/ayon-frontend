@@ -17,7 +17,7 @@ import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { AttributeData, AttributeEnumItem } from '../types'
-import { useProjectTableContext } from '../context'
+import { useProjectContext } from '@shared/context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
 import { NameWidgetData } from '@shared/components/RenameForm'
@@ -107,7 +107,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const ref = useRef<HTMLDivElement>(null)
   const type = attributeData?.type
 
-  const { projectName } = useProjectTableContext()
+  const { projectName } = useProjectContext()
   const { isEditing, setEditingCellId } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)

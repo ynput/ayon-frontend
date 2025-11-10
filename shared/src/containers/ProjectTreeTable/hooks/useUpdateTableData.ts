@@ -8,6 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
 import { PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
+import { useProjectContext } from '@shared/context'
 
 export type EntityUpdate = {
   rowId: string
@@ -49,9 +50,9 @@ interface UseUpdateTableDataProps {
 
 const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
   const { pushHistory } = props || {}
+  const { projectName } = useProjectContext()
   const {
     getEntityById,
-    projectName,
     getInheritedDependents,
     findInheritedValueFromAncestors,
     findNonInheritedValues,
@@ -82,7 +83,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       const filteredCount = entityUpdates.length - filteredUpdates.length
       if (filteredCount > 0) {
         toast.error(
-          `Cannot change folder type for ${filteredCount} folder${filteredCount > 1 ? 's' : ''} with published versions`,
+          `Cannot change folder type for ${filteredCount} folder${
+            filteredCount > 1 ? 's' : ''
+          } with published versions`,
         )
       }
 

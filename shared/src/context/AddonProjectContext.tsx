@@ -30,7 +30,7 @@ export interface RemoteAddonProjectProps {
 }
 
 // types for props passed to the provider
-export interface AddonProjectContextProps extends RemoteAddonProjectProps {
+export interface AddonProjectContextValue extends RemoteAddonProjectProps {
   children: React.ReactNode
 }
 
@@ -49,7 +49,7 @@ export const AddonProjectProvider = ({
   // utils
   toast,
   ...props
-}: AddonProjectContextProps) => {
+}: AddonProjectContextValue) => {
   // get current project data
   const { data: project } = useGetProjectQuery(
     { projectName: projectName as string },

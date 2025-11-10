@@ -1,7 +1,6 @@
 import {
   ProjectDataProvider,
   useDetailsPanelEntityContext,
-  useProjectDataContext,
   useProjectTableContext,
   isEntityRestricted,
 } from '@shared/containers/ProjectTreeTable'
@@ -20,7 +19,12 @@ import {
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
-import { MoveEntityProvider, SettingsPanelProvider, useSettingsPanel } from '@shared/context'
+import {
+  MoveEntityProvider,
+  SettingsPanelProvider,
+  useProjectContext,
+  useSettingsPanel,
+} from '@shared/context'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
@@ -107,15 +111,9 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   isReview,
   modules,
 }) => {
-  const {
-    projectName,
-    selectedListId,
-    contextMenuItems,
-    attribFields,
-    columns,
-    onUpdateColumns,
-    ...props
-  } = useListItemsDataContext()
+  const { projectName, ...projectInfo } = useProjectContext()
+  const { selectedListId, contextMenuItems, attribFields, columns, onUpdateColumns, ...props } =
+    useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
@@ -196,7 +194,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
             <ProjectTableProvider
               projectName={projectName}
               attribFields={mergedAttribFields}
-              projectInfo={props.projectInfo}
+              projectInfo={projectInfo}
               users={props.users}
               modules={modules}
               // @ts-ignore
@@ -254,7 +252,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const isDeveloperMode = user?.developerMode ?? false
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { projectName, projectInfo } = useProjectDataContext()
+  const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList, listDetailsOpen } = useListsContext()

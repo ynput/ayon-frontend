@@ -15,6 +15,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useMemo } from 'react'
+import { useProjectContext } from '@shared/context'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -76,9 +77,9 @@ const useCellContextMenu = ({
   onOpenNew,
   contextMenuItems: propsContextMenuItems,
 }: CellContextMenuProps) => {
+  const { projectName } = useProjectContext()
   // context hooks
   const {
-    projectName,
     showHierarchy,
     getEntityById,
     toggleExpandAll,

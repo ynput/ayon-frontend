@@ -7,12 +7,9 @@ import { useGetActivitiesInfiniteInfiniteQuery } from '@shared/api'
 import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
-import {
-  useEntityFormData,
-  useEntityFields,
-  useEntityEditing,
-  useEntityData,
-} from './hooks'
+import { useEntityFormData, useEntityFields, useEntityEditing } from './hooks'
+import { useProjectContext } from '@shared/context'
+import { useGlobalContext } from '@shared/context'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -36,10 +33,8 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     isLoading,
   )
 
-  const { folderTypes, taskTypes, statuses, tags, attributes } = useEntityData({
-    projectName: formData?.projectName,
-    isProjectNameMixed: mixedFields.includes('projectName'),
-  })
+  const { attributes } = useGlobalContext()
+  const { folderTypes = [], taskTypes = [], statuses = [], tags = [] } = useProjectContext()
 
   // Determine if any selected folder has published versions
   const folderEntities = (entities || []).filter((entity) => entity.entityType === 'folder')
@@ -73,7 +68,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     entityType,
   })
 
-  const handleChange: DetailsPanelAttributesEditorProps["onChange"] = (key, value) => {
+  const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
     if (key === 'tags') {
       if (Array.isArray(value)) {
         // keep as-is

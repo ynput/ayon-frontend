@@ -16,6 +16,7 @@ import {
 import type { EntityListAttributeDefinition } from '@shared/api'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { ListEntityType } from '../components/NewListDialog/NewListDialog'
+import { useProjectContext } from '@shared/context'
 
 export interface ListsAttributesContextValue {
   listAttributes: EntityListAttributeDefinition[]
@@ -33,7 +34,8 @@ interface ListsAttributesProviderProps {
 }
 
 export const ListsAttributesProvider = ({ children }: ListsAttributesProviderProps) => {
-  const { projectName, attribFields } = useProjectDataContext()
+  const { projectName } = useProjectContext()
+  const { attribFields } = useProjectDataContext()
   const { selectedList } = useListsContext()
 
   const [isLoadingNewList, setIsLoadingNewList] = useState(false)
