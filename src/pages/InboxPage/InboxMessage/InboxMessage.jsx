@@ -142,7 +142,8 @@ const InboxMessage = ({
           className={clsx({ loading: isPlaceholder })}
           showBorder={false}
         />
-        <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
+        <span className={clsx('project-name', { loading: isPlaceholder })}>{projectName}</span>
+        <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' / ')}</span>
       </Styled.Left>
       <Styled.Middle className={clsx('middle', { loading: isPlaceholder })}>
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: unReadCount < 2 })}>
