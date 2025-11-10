@@ -32,7 +32,7 @@ const AppRoutes: FC<AppRoutesProps> = () => {
     moduleKey: 'Route',
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
 
-  if (isLoadingModules) {
+  if (isLoadingModules || !user) {
     return <LoadingPage />
   }
 
