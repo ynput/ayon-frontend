@@ -184,30 +184,30 @@ const App = () => {
                   <RemoteModulesProvider skip={!user.name}>
                     <PowerpackProvider>
                       <ContextMenuProvider>
-                        <URIProvider>
-                          <DetailsPanelProvider
-                            {...handlerProps}
-                            user={user}
-                            viewer={viewer}
-                            dispatch={dispatch}
-                            useLocation={useLocation}
-                            useNavigate={useNavigate}
-                            useParams={useParams}
-                            useSearchParams={useSearchParams}
-                          >
-                            <GlobalContextMenu />
-                            <PasteProvider>
-                              <PasteModal />
-                              <BrowserRouter>
-                                <NotificationsProvider>
-                                  <ShortcutsProvider>
-                                    <PiPProvider>
-                                      <QueryParamProvider
-                                        adapter={ReactRouter6Adapter}
-                                        options={{
-                                          updateType: 'replaceIn',
-                                        }}
-                                      >
+                        <GlobalContextMenu />
+                        <PasteProvider>
+                          <PasteModal />
+                          <BrowserRouter>
+                            <QueryParamProvider
+                              adapter={ReactRouter6Adapter}
+                              options={{
+                                updateType: 'replaceIn',
+                              }}
+                            >
+                              <URIProvider>
+                                <DetailsPanelProvider
+                                  {...handlerProps}
+                                  user={user}
+                                  viewer={viewer}
+                                  dispatch={dispatch}
+                                  useLocation={useLocation}
+                                  useNavigate={useNavigate}
+                                  useParams={useParams}
+                                  useSearchParams={useSearchParams}
+                                >
+                                  <NotificationsProvider>
+                                    <ShortcutsProvider>
+                                      <PiPProvider>
                                         <Header />
                                         <ShareDialog />
                                         <ViewerDialog />
@@ -220,14 +220,14 @@ const App = () => {
                                         <PowerpackDialog />
                                         <AppRemoteLoader />
                                         <TrialBanner />
-                                      </QueryParamProvider>
-                                    </PiPProvider>
-                                  </ShortcutsProvider>
-                                </NotificationsProvider>
-                              </BrowserRouter>
-                            </PasteProvider>
-                          </DetailsPanelProvider>
-                        </URIProvider>
+                                      </PiPProvider>
+                                    </ShortcutsProvider>
+                                  </NotificationsProvider>
+                                </DetailsPanelProvider>
+                              </URIProvider>
+                            </QueryParamProvider>
+                          </BrowserRouter>
+                        </PasteProvider>
                       </ContextMenuProvider>
                     </PowerpackProvider>
                   </RemoteModulesProvider>
