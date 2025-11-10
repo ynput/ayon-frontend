@@ -16,7 +16,7 @@ import { ViewerProvider } from '@context/ViewerContext'
 import { useGetViewerReviewablesQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
 import { getGroupedReviewables } from '@shared/components'
-import { useDetailsPanelContext } from '@shared/context'
+import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
 
 interface ViewerProps {
@@ -58,7 +58,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     return Array.from(uniqueProductIds)
   }, [allVersionsAndReviewables])
 
-
   const productOptions = useMemo(() => {
     return [...uniqueProducts]
       .map((id) => {
@@ -66,8 +65,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
         return {
           value: id,
           label: product?.productName || 'Unknown product',
-          icon: (product?.productType && project.getProductTypeIcon(product.productType)) || 'inventory_2',
-          color: (product?.productType && project.getProductTypeColor(product.productType)),
+          icon:
+            (product?.productType && project.getProductTypeIcon(product.productType)) ||
+            'inventory_2',
+          color: product?.productType && project.getProductTypeColor(product.productType),
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -83,32 +84,32 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     () =>
       hasMultipleProducts
         ? [...allVersionsAndReviewables].sort((a, b) => {
-          // Find the reviewable with the latest createdAt date in a
-          const aLatestReviewable = a.reviewables?.reduce((latest, current) => {
-            return compareDesc(
-              new Date(latest.createdAt || 0),
-              new Date(current.createdAt || 0),
-            ) === 1
-              ? latest
-              : current
-          }, a.reviewables[0])
+            // Find the reviewable with the latest createdAt date in a
+            const aLatestReviewable = a.reviewables?.reduce((latest, current) => {
+              return compareDesc(
+                new Date(latest.createdAt || 0),
+                new Date(current.createdAt || 0),
+              ) === 1
+                ? latest
+                : current
+            }, a.reviewables[0])
 
-          // Find the reviewable with the latest createdAt date in b
-          const bLatestReviewable = b.reviewables?.reduce((latest, current) => {
-            return compareDesc(
-              new Date(latest.createdAt || 0),
-              new Date(current.createdAt || 0),
-            ) === 1
-              ? latest
-              : current
-          }, b.reviewables[0])
+            // Find the reviewable with the latest createdAt date in b
+            const bLatestReviewable = b.reviewables?.reduce((latest, current) => {
+              return compareDesc(
+                new Date(latest.createdAt || 0),
+                new Date(current.createdAt || 0),
+              ) === 1
+                ? latest
+                : current
+            }, b.reviewables[0])
 
-          // Use compareDesc to compare the latest reviewables' createdAt dates
-          return compareDesc(
-            new Date(aLatestReviewable?.createdAt || 0),
-            new Date(bLatestReviewable?.createdAt || 0),
-          )
-        })
+            // Use compareDesc to compare the latest reviewables' createdAt dates
+            return compareDesc(
+              new Date(aLatestReviewable?.createdAt || 0),
+              new Date(bLatestReviewable?.createdAt || 0),
+            )
+          })
         : allVersionsAndReviewables,
     [allVersionsAndReviewables, hasMultipleProducts],
   )
@@ -215,18 +216,18 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
-  const { setTab } = useDetailsPanelContext()
+  const { setTab } = useScopedDetailsPanel('review')
 
   const handleUploadAction =
     (toggleNativeFileUpload = false) =>
-      () => {
-        // switch to files tab
-        setTab('review', 'files')
-        // open the file dialog
-        if (toggleNativeFileUpload) {
-          dispatch(toggleUpload(true))
-        }
+    () => {
+      // switch to files tab
+      setTab('files')
+      // open the file dialog
+      if (toggleNativeFileUpload) {
+        dispatch(toggleUpload(true))
       }
+    }
 
   const handle = useFullScreenHandle()
 
@@ -316,8 +317,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   )
 }
 
-
-
 const Viewer = ({ onClose }: ViewerProps) => {
   const { projectName } = useAppSelector((state) => state.viewer)
 
@@ -331,9 +330,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
       <ViewerBody onClose={onClose} />
     </ProjectContextProvider>
   )
-
 }
-
-
 
 export default Viewer
