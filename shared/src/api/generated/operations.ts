@@ -67,11 +67,15 @@ export type ActivitiesOperationsApiResponse =
   /** status 200 Successful Response */ ActivityOperationsResponseModel
 export type ActivitiesOperationsApiArg = {
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   activityOperationsRequestModel: ActivityOperationsRequestModel
 }
 export type OperationsApiResponse = /** status 200 Successful Response */ OperationsResponseModel
 export type OperationsApiArg = {
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   operationsRequestModel: OperationsRequestModel
 }
 export type BackgroundOperationsApiResponse =

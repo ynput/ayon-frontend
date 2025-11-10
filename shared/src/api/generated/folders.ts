@@ -162,7 +162,7 @@ export type FolderAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  }
+}
 export type FolderModel = {
   /** Unique identifier of the {entity_name} */
   id?: string

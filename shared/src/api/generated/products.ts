@@ -106,6 +106,9 @@ export type ProductModel = {
   folderId: string
   /** Product type */
   productType: string
+  /** Product base type */
+  productBaseType?: string
+  path?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
   /** Whether the product is active */
