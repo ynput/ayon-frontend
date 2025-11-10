@@ -17,7 +17,7 @@ import { useGetViewerReviewablesQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
 import { productTypes } from '@shared/util'
 import { getGroupedReviewables } from '@shared/components'
-import { useDetailsPanelContext } from '@shared/context'
+import { useScopedDetailsPanel } from '@shared/context'
 
 interface ViewerProps {
   onClose?: () => void
@@ -216,13 +216,13 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
-  const { setTab } = useDetailsPanelContext()
+  const { setTab } = useScopedDetailsPanel('review')
 
   const handleUploadAction =
     (toggleNativeFileUpload = false) =>
     () => {
       // switch to files tab
-      setTab('review', 'files')
+      setTab('files')
       // open the file dialog
       if (toggleNativeFileUpload) {
         dispatch(toggleUpload(true))
