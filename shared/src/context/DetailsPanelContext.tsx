@@ -7,12 +7,13 @@ import React, {
   useEffect,
 } from 'react'
 import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType, useGetCurrentUserQuery } from '@shared/api'
+import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
+import { useGlobalContext } from './GlobalContext'
 import { useURIContext } from './UriContext'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
@@ -135,7 +136,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   ...forwardedProps
 }) => {
   // get current user
-  const { data: currentUser } = useGetCurrentUserQuery()
+  const { user: currentUser } = useGlobalContext()
   const isDeveloperMode =
     'isDeveloperMode' in debug
       ? (debug.isDeveloperMode as boolean)

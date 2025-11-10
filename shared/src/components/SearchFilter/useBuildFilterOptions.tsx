@@ -1,9 +1,5 @@
 import { getAttributeIcon } from '@shared/util'
-import {
-  useGetSiteInfoQuery,
-  useGetKanbanProjectUsersQuery,
-  useGetProjectsInfoQuery,
-} from '@shared/api'
+import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import type {
   GetProjectsInfoResponse,
   FolderType,
@@ -21,6 +17,7 @@ import { dateOptions } from './filterDates'
 import { isEmpty } from 'lodash'
 import { SliceFilter } from '@shared/containers'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
+import { useGlobalContext } from '@shared/context'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version'
 type Scope = ScopeType | ScopeType[]
@@ -132,8 +129,7 @@ export const useBuildFilterOptions = ({
     },
   )
 
-  const { data: info } = useGetSiteInfoQuery({ full: true }, { skip: !anyNeedsAttributes })
-  const { attributes = [] } = info || {}
+  const { attributes } = useGlobalContext()
   //
   //
   // QUERIES

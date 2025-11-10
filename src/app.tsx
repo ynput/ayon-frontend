@@ -36,7 +36,7 @@ import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
-import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
+import { RemoteModulesProvider, DetailsPanelProvider, GlobalProvider } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
 import { MenuProvider, URIProvider } from '@shared/context'
 
@@ -177,62 +177,64 @@ const App = () => {
       <>
         <Favicon />
         <Suspense fallback={<LoadingPage />}>
-          <MenuProvider>
-            <FeedbackProvider>
-              <RestartProvider>
-                <RemoteModulesProvider skip={!user.name}>
-                  <PowerpackProvider>
-                    <ContextMenuProvider>
-                      <GlobalContextMenu />
-                      <PasteProvider>
-                        <PasteModal />
-                        <BrowserRouter>
-                          <NotificationsProvider>
-                            <QueryParamProvider
-                              adapter={ReactRouter6Adapter}
-                              options={{
-                                updateType: 'replaceIn',
-                              }}
-                            >
-                              <URIProvider>
-                                <DetailsPanelProvider
-                                  {...handlerProps}
-                                  user={user}
-                                  viewer={viewer}
-                                  dispatch={dispatch}
-                                  useLocation={useLocation}
-                                  useNavigate={useNavigate}
-                                  useParams={useParams}
-                                  useSearchParams={useSearchParams}
-                                >
+          <GlobalProvider>
+            <MenuProvider>
+              <FeedbackProvider>
+                <RestartProvider>
+                  <RemoteModulesProvider skip={!user.name}>
+                    <PowerpackProvider>
+                      <ContextMenuProvider>
+                        <URIProvider>
+                          <DetailsPanelProvider
+                            {...handlerProps}
+                            user={user}
+                            viewer={viewer}
+                            dispatch={dispatch}
+                            useLocation={useLocation}
+                            useNavigate={useNavigate}
+                            useParams={useParams}
+                            useSearchParams={useSearchParams}
+                          >
+                            <GlobalContextMenu />
+                            <PasteProvider>
+                              <PasteModal />
+                              <BrowserRouter>
+                                <NotificationsProvider>
                                   <ShortcutsProvider>
                                     <PiPProvider>
-                                      <Header />
-                                      <ShareDialog />
-                                      <ViewerDialog />
-                                      <ConfirmDialog />
-                                      <FileUploadPreviewContainer />
-                                      <ReleaseInstallerDialog />
-                                      <CompleteProfilePrompt />
-                                      <AppRoutes level={user.uiExposureLevel} />
-                                      <DetailsPanelFloating />
-                                      <PowerpackDialog />
-                                      <AppRemoteLoader />
-                                      <TrialBanner />
+                                      <QueryParamProvider
+                                        adapter={ReactRouter6Adapter}
+                                        options={{
+                                          updateType: 'replaceIn',
+                                        }}
+                                      >
+                                        <Header />
+                                        <ShareDialog />
+                                        <ViewerDialog />
+                                        <ConfirmDialog />
+                                        <FileUploadPreviewContainer />
+                                        <ReleaseInstallerDialog />
+                                        <CompleteProfilePrompt />
+                                        <AppRoutes level={user.uiExposureLevel} />
+                                        <DetailsPanelFloating />
+                                        <PowerpackDialog />
+                                        <AppRemoteLoader />
+                                        <TrialBanner />
+                                      </QueryParamProvider>
                                     </PiPProvider>
                                   </ShortcutsProvider>
-                                </DetailsPanelProvider>
-                              </URIProvider>
-                            </QueryParamProvider>
-                          </NotificationsProvider>
-                        </BrowserRouter>
-                      </PasteProvider>
-                    </ContextMenuProvider>
-                  </PowerpackProvider>
-                </RemoteModulesProvider>
-              </RestartProvider>
-            </FeedbackProvider>
-          </MenuProvider>
+                                </NotificationsProvider>
+                              </BrowserRouter>
+                            </PasteProvider>
+                          </DetailsPanelProvider>
+                        </URIProvider>
+                      </ContextMenuProvider>
+                    </PowerpackProvider>
+                  </RemoteModulesProvider>
+                </RestartProvider>
+              </FeedbackProvider>
+            </MenuProvider>
+          </GlobalProvider>
         </Suspense>
       </>
     ),

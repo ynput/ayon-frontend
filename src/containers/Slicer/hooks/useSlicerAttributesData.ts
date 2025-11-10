@@ -1,15 +1,10 @@
-import { useGetSiteInfoQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
-const useSlicerAttributesData = ({
-  skip,
-  entityTypes,
-}: {
-  skip: boolean
-  entityTypes: string[]
-}) => {
-  // get attributes data
-  const { data: info, isLoading } = useGetSiteInfoQuery({ full: true }, { skip })
-  const { attributes = [] } = info || {}
+const useSlicerAttributesData = ({ entityTypes }: { entityTypes: string[] }) => {
+  const {
+    attributes,
+    isLoading: { siteInfo: isLoading },
+  } = useGlobalContext()
 
   //   filter attributes by ones that have enums and
   const enumAttributes = attributes
