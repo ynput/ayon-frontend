@@ -4,7 +4,13 @@ import getThumbnails from '../helpers/getThumbnails'
 import { StackedThumbnails } from '@shared/components'
 import { upperFirst } from 'lodash'
 import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
-import { PiPWrapper, usePowerpack, DetailsPanelTab, useScopedDetailsPanel } from '@shared/context'
+import {
+  PiPWrapper,
+  usePowerpack,
+  DetailsPanelTab,
+  useScopedDetailsPanel,
+  ProjectContextProvider,
+} from '@shared/context'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
@@ -114,48 +120,50 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
 
   return (
     <PiPWrapper>
-      <Styled.Container>
-        <Styled.Header>
-          <StackedThumbnails thumbnails={thumbnails} />
-          <Styled.Content>
-            <h2>{title}</h2>
-            <div className="sub-title">
-              <span>{upperFirst(entityType)} - </span>
-              <h3>{subTitle}</h3>
-            </div>
-          </Styled.Content>
-        </Styled.Header>
-        <Styled.Row>
-          <Styled.Status
-            style={{
-              backgroundColor: statusAnatomy?.color,
-              color: getTextColor(statusAnatomy?.color),
-            }}
-          >
-            <Icon icon={statusAnatomy.icon || 'question_mark'} style={{ color: 'inherit' }} />
-            <span className="label">{statusAnatomy?.name}</span>
-          </Styled.Status>
-          <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
-        </Styled.Row>
-        <Styled.FeedContainer>
-          <FeedWrapper
-            entityType={entityType}
-            // @ts-ignore
-            entities={entitiesData}
-            activeUsers={[]}
-            // selectedTasksProjects={{}}
-            projectInfo={projectsInfo[projectName]}
-            projectName={projectName}
-            disabled={false}
-            scope={scope}
-            readOnly
-            // @ts-ignore
-            statuses={statuses}
-            currentTab={currentTab}
-            setCurrentTab={setCurrentTab}
-          />
-        </Styled.FeedContainer>
-      </Styled.Container>
+      <ProjectContextProvider projectName={projectName}>
+        <Styled.Container>
+          <Styled.Header>
+            <StackedThumbnails thumbnails={thumbnails} />
+            <Styled.Content>
+              <h2>{title}</h2>
+              <div className="sub-title">
+                <span>{upperFirst(entityType)} - </span>
+                <h3>{subTitle}</h3>
+              </div>
+            </Styled.Content>
+          </Styled.Header>
+          <Styled.Row>
+            <Styled.Status
+              style={{
+                backgroundColor: statusAnatomy?.color,
+                color: getTextColor(statusAnatomy?.color),
+              }}
+            >
+              <Icon icon={statusAnatomy.icon || 'question_mark'} style={{ color: 'inherit' }} />
+              <span className="label">{statusAnatomy?.name}</span>
+            </Styled.Status>
+            <AssigneeField users={users} style={{ pointerEvents: 'none' }} />
+          </Styled.Row>
+          <Styled.FeedContainer>
+            <FeedWrapper
+              entityType={entityType}
+              // @ts-ignore
+              entities={entitiesData}
+              activeUsers={[]}
+              // selectedTasksProjects={{}}
+              projectInfo={projectsInfo[projectName]}
+              projectName={projectName}
+              disabled={false}
+              scope={scope}
+              readOnly
+              // @ts-ignore
+              statuses={statuses}
+              currentTab={currentTab}
+              setCurrentTab={setCurrentTab}
+            />
+          </Styled.FeedContainer>
+        </Styled.Container>
+      </ProjectContextProvider>
     </PiPWrapper>
   )
 }

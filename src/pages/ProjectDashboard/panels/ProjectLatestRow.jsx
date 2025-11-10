@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { useGetProjectDashboardActivityQuery } from '@queries/getProjectDashboard'
 import { EntityCard } from '@ynput/ayon-react-components'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 const GridStyled = styled.div`
   /* 1 row, 3 columns */
@@ -87,7 +87,7 @@ const ProjectLatestRow = ({
     let typeIcon = ''
 
     if (type === 'product' || type === 'version') {
-      typeIcon = projectContext.getProductTypeIcon(icon) || 'help_center'
+      typeIcon = projectContext.getProductType(icon).icon
     } else if (type === 'folder') {
       typeIcon = folders?.[icon]?.icon
     } else if (type === 'task') {

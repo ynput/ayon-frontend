@@ -4,7 +4,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 import { getEntityIcon } from '@shared/containers'
 
 export type LinkSearchType = 'search' | 'picker' | null

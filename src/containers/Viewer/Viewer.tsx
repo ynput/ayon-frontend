@@ -65,10 +65,8 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
         return {
           value: id,
           label: product?.productName || 'Unknown product',
-          icon:
-            (product?.productType && project.getProductTypeIcon(product.productType)) ||
-            'inventory_2',
-          color: product?.productType && project.getProductTypeColor(product.productType),
+          icon: product?.productType && project.getProductType(product.productType).icon,
+          color: product?.productType && project.getProductType(product.productType).color,
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))

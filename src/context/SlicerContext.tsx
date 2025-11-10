@@ -11,14 +11,13 @@ import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useLoadModule } from '@shared/hooks'
-import type { ProjectModel, Assignees, AttributeModel } from '@shared/api'
+import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import SlicerDropdownFallback, {
   SlicerDropdownFallbackProps,
 } from '@containers/Slicer/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
 import { SliceMap, SliceTypeField } from '@containers/Slicer/types'
 import { usePowerpack } from '@shared/context'
-import { ProductTypes } from '@shared/util/productTypes'
 
 export type OnSliceTypeChange = (
   sliceType: SliceType,
@@ -35,7 +34,7 @@ export type SlicerConfig = {
 type ExtraSlices = {
   formatStatuses: (project?: ProjectModel, scopes?: string[]) => SimpleTableRow[]
   formatTaskTypes: (project?: ProjectModel) => SimpleTableRow[]
-  formatProductTypes: (productTypes: ProductTypes) => SimpleTableRow[]
+  formatProductTypes: (productTypes: ProductType[]) => SimpleTableRow[]
   formatTypes: (project?: ProjectModel) => SimpleTableRow[]
   formatAssignees: (assignees: Assignees) => SimpleTableRow[]
   formatAttribute: (attribute: AttributeModel) => SimpleTableRow[]

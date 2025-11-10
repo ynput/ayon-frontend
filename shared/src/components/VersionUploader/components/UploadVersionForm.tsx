@@ -4,8 +4,7 @@ import { FormLayout, FormRow, InputText, InputNumber, Dropdown } from '@ynput/ay
 import type { DropdownRef } from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '@shared/components'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { ProductTypeItemTemplate } from './ProductTypePicker'
+import { useProjectContext } from '@shared/context'
 
 const StyledForm = styled.form`
   display: flex;
@@ -71,10 +70,6 @@ interface UploadVersionFormProps {
   versionId?: string | null
   productId?: string | null
 }
-
-
-
-
 
 export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   formData,

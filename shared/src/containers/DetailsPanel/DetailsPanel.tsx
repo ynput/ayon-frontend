@@ -7,12 +7,10 @@ import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@share
 import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
-import { productTypes } from '@shared/util'
 import {
+  ProjectContextProvider,
   useDetailsPanelContext,
-  usePowerpack,
   useScopedDetailsPanel,
-  DetailsPanelTab,
 } from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
@@ -302,53 +300,55 @@ DetailsPanelProps) => {
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
         />
-        {isFeed && !isError && (
-          <FeedWrapper
-            entityType={activeEntityType}
-            entities={entityDetailsData}
-            activeUsers={activeProjectUsers || []}
-            projectInfo={firstProjectInfo}
-            projectName={firstProject}
-            disabled={!isCommentingEnabled()}
-            scope={scope}
-            statuses={allStatuses}
-            readOnly={false}
-            entityListId={entityListId}
-            annotations={annotations}
-            removeAnnotation={removeAnnotation}
-            exportAnnotationComposite={exportAnnotationComposite}
-            currentTab={currentTab}
-            setCurrentTab={setTab}
-          />
-        )}
-        {currentTab === 'files' && (
-          <DetailsPanelFiles
-            entities={entityDetailsData}
-            scope={scope}
-            isLoadingVersion={isFetchingEntitiesDetails}
-          />
-        )}
-        {currentTab === 'details' && (
-          <FeedContextWrapper
-            entityType={activeEntityType}
-            entities={entityDetailsData}
-            activeUsers={activeProjectUsers || []}
-            projectInfo={firstProjectInfo}
-            projectName={firstProject}
-            disabled={!isCommentingEnabled()}
-            scope={scope}
-            statuses={allStatuses}
-            readOnly={false}
-            annotations={annotations}
-            removeAnnotation={removeAnnotation}
-            exportAnnotationComposite={exportAnnotationComposite}
-          >
-            <DetailsPanelDetails
+        <ProjectContextProvider projectName={firstProject}>
+          {isFeed && !isError && (
+            <FeedWrapper
+              entityType={activeEntityType}
               entities={entityDetailsData}
-              isLoading={isFetchingEntitiesDetails}
+              activeUsers={activeProjectUsers || []}
+              projectInfo={firstProjectInfo}
+              projectName={firstProject}
+              disabled={!isCommentingEnabled()}
+              scope={scope}
+              statuses={allStatuses}
+              readOnly={false}
+              entityListId={entityListId}
+              annotations={annotations}
+              removeAnnotation={removeAnnotation}
+              exportAnnotationComposite={exportAnnotationComposite}
+              currentTab={currentTab}
+              setCurrentTab={setTab}
             />
-          </FeedContextWrapper>
-        )}
+          )}
+          {currentTab === 'files' && (
+            <DetailsPanelFiles
+              entities={entityDetailsData}
+              scope={scope}
+              isLoadingVersion={isFetchingEntitiesDetails}
+            />
+          )}
+          {currentTab === 'details' && (
+            <FeedContextWrapper
+              entityType={activeEntityType}
+              entities={entityDetailsData}
+              activeUsers={activeProjectUsers || []}
+              projectInfo={firstProjectInfo}
+              projectName={firstProject}
+              disabled={!isCommentingEnabled()}
+              scope={scope}
+              statuses={allStatuses}
+              readOnly={false}
+              annotations={annotations}
+              removeAnnotation={removeAnnotation}
+              exportAnnotationComposite={exportAnnotationComposite}
+            >
+              <DetailsPanelDetails
+                entities={entityDetailsData}
+                isLoading={isFetchingEntitiesDetails}
+              />
+            </FeedContextWrapper>
+          )}
+        </ProjectContextProvider>
       </Styled.Panel>
     </>
   )

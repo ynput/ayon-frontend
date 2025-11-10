@@ -1,7 +1,7 @@
 import { TableRow, useGetEntityTypeData, linksToTableData } from '@shared/containers'
 import { useMemo } from 'react'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 import {
   isEntityRestricted,
   RESTRICTED_ENTITY_NAME,

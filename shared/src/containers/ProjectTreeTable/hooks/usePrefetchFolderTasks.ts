@@ -8,7 +8,7 @@ export const usePrefetchFolderTasks = () => {
 
   const [prefetchedIds, setPrefetchedIds] = useState<string[]>([])
 
-  const { projectName, queryFilters } = useProjectTableContext()
+  const { queryFilters } = useProjectTableContext()
 
   const handlePreFetchTasks = (e: React.MouseEvent<HTMLTableSectionElement>) => {
     const target = e.target as HTMLTableCellElement

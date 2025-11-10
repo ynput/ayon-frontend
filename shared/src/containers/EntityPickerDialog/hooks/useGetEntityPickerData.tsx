@@ -1,10 +1,9 @@
 import {
   FolderListItem,
   SearchEntityLink,
-  useGetProjectQuery,
   useGetSearchedEntitiesLinksInfiniteQuery,
 } from '@shared/api'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 import { useHierarchyTable } from '@shared/hooks'
 import { FC, useMemo } from 'react'
 import { PickerEntityType, PickerSearch, PickerSelection } from '../EntityPickerDialog'
@@ -52,7 +51,6 @@ export const useGetEntityPickerData = ({
   const entityDependencies = entityHierarchies[entityType] || []
 
   // Get project data
-  //const { data: project } = useGetProjectQuery({ projectName })
   const project = useProjectContext()
   // convert flat list to table rows for the table
   const {

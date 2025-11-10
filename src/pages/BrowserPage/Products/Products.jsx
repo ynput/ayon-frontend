@@ -41,7 +41,7 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 const Products = () => {
   const dispatch = useDispatch()
@@ -58,7 +58,6 @@ const Products = () => {
     tasksOrder = [],
     tasks = {},
   } = useSelector((state) => state.project)
-
 
   // focused redux
   const {
@@ -84,7 +83,6 @@ const Products = () => {
       }
     })
   }, [tasks, tasksOrder])
-
 
   const handleTaskTypeChange = (value) => {
     dispatch(updateBrowserFilters({ productTaskTypes: value }))
@@ -297,8 +295,7 @@ const Products = () => {
 
           const icon = node.data.isGroup
             ? 'folder'
-            : project.getProductTypeIcon(node.data.productType) || 'inventory_2'
-
+            : project.getProductType(node.data.productType).icon
 
           return (
             <CellWithIcon
@@ -344,15 +341,10 @@ const Products = () => {
         width: 120,
         body: (node) => {
           if (!node.data.productType) return ''
-          const color = project.getProductTypeColor(node.data.productType) || '#cccccc'
+          const color = project.getProductType(node.data.productType).color || '#cccccc'
 
-          return (
-            <CellWithIcon
-              text={node.data.productType}
-              textStyle={{ color }}
-            />
-          )
-        }
+          return <CellWithIcon text={node.data.productType} textStyle={{ color }} />
+        },
       },
       {
         field: 'taskName',

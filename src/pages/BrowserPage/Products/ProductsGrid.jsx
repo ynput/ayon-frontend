@@ -7,7 +7,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import clsx from 'clsx'
 import Shortcuts from '@containers/Shortcuts'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 const StyledGridLayout = styled(PerfectScrollbar)`
   padding: 4px 12px;
@@ -246,7 +246,7 @@ const ProductsGrid = ({
                   data-tooltip-delay={300}
                 />
                 <span className="content">
-                  <Icon icon={ project.getProductTypeIcon(groupName) || 'inventory_2'} />
+                  <Icon icon={project.getProductType(groupName).icon} />
                   <h2>{groupName}</h2>
                   <span className="count">{groupData.length}</span>
                 </span>
@@ -280,9 +280,9 @@ const ProductsGrid = ({
                         header={product.name}
                         path={multipleFoldersSelected && product.folder}
                         title={product.versionName}
-                        titleIcon={project.getProductTypeIcon(product.productType) || 'layers'}
+                        titleIcon={project.getProductType(product.productType).icon}
                         users={[{ name: product.versionAuthor }]}
-                        imageIcon={project.getProductTypeIcon(product.productType) || 'inventory_2'}
+                        imageIcon={project.getProductType(product.productType).icon}
                         status={status}
                         hidePriority
                         imageUrl={project.name && thumbnailUrl}

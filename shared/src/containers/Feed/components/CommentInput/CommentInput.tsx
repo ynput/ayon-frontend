@@ -37,7 +37,7 @@ import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 var Delta = Quill.import('delta')
 

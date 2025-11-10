@@ -8,6 +8,7 @@ import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
 import { UniqueIdentifier } from '@dnd-kit/core'
+import { useProjectContext } from '@shared/context'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
@@ -24,8 +25,9 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   dndActiveId, // Destructure new prop
   viewOnly,
 }) => {
+  const { projectName } = useProjectContext()
   const { selectedLists, selectedList } = useListsContext()
-  const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
+  const { isError, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = useMemo(

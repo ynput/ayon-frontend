@@ -1,9 +1,12 @@
 import { getFuzzyDate } from '../components/ActivityDate'
 import { getEntityTypeIcon } from '@shared/util'
 import { VersionSuggestionItem } from '@shared/api'
-import { ProjectContextProps } from '@shared/context/ProjectContext'
+import { ProjectContextValue } from '@shared/context'
 
-const getMentionVersions = (versions: VersionSuggestionItem[] = [], project: ProjectContextProps) => {
+const getMentionVersions = (
+  versions: VersionSuggestionItem[] = [],
+  project: ProjectContextValue,
+) => {
   return versions?.map((v) => {
     if (!v.parent) {
       return null

@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
 import type { Status } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext, DetailsPanelTab, ProjectContextProvider } from '@shared/context'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -55,7 +55,8 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
         userFullName,
       }}
       {...annotationsProps}
-      {...{ editingId, setEditingId }}
+      {...{ currentTab, setCurrentTab }}
+      {...props}
     >
       <Feed {...props} />
       <ActivityReferenceTooltip />

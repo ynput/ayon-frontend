@@ -14,7 +14,7 @@ import { ProjectModel } from '../types/project'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
 import { linksToTableData } from '../utils'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 type Params = {
   foldersMap: FolderNodeMap

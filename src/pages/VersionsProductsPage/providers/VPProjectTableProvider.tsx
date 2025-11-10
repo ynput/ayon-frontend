@@ -5,6 +5,7 @@ import { FC } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { buildVersionRow } from '../util'
 import { useVPViewsContext } from '../context/VPViewsContext'
+import { useProjectContext } from '@shared/context'
 
 interface VPProjectTableProviderProps {
   projectName: string
@@ -23,7 +24,8 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const { resetWorkingView } = useViewsContext()
   const { showProducts } = useVPViewsContext()
 
-  const { attribFields, projectInfo, users } = useProjectDataContext()
+  const { ...projectInfo } = useProjectContext()
+  const { attribFields, users } = useProjectDataContext()
 
   // loading states
   const isInitialized = true // replace with actual state

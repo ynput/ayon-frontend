@@ -29,19 +29,14 @@ import { createFilterFromSlicer, useOverviewViewSettings } from '@shared/contain
 // Local context and hooks
 import { useSlicerContext } from '@context/SlicerContext'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
+import { useProjectContext } from '@shared/context'
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextType | undefined>(undefined)
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
   // Get project data from the new context
-  const {
-    projectName,
-    projectInfo,
-    attribFields,
-    users,
-    isInitialized,
-    isLoading: isLoadingData,
-  } = useProjectDataContext()
+  const { projectName, ...projectInfo } = useProjectContext()
+  const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
   const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
     useSlicerContext()

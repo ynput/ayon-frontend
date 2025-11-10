@@ -1,7 +1,7 @@
 import * as Styled from './EntityTooltip.styled'
 import { useFeedContext } from '@shared/containers/Feed'
 import { Status } from '@shared/containers/ProjectTreeTable/types/project'
-import { useProjectContext } from '@shared/context/ProjectContext'
+import { useProjectContext } from '@shared/context'
 
 interface ThumbnailUrlParams {
   entityId?: string
@@ -82,7 +82,7 @@ const EntityTooltip: React.FC<EntityTooltipProps> = ({
     updatedAt,
     projectName,
   })
-  const productIcon = project.getProductTypeIcon(productType) ||'layers'
+  const productIcon = project.getProductType(productType).icon || 'layers'
 
   const icons: Record<string, string | undefined> = {
     task: taskIcon,

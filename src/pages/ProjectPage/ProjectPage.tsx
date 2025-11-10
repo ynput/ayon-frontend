@@ -14,7 +14,6 @@ import ProjectListsPage from '../ProjectListsPage'
 import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
 
 import { selectProject } from '@state/project'
-import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks from '@containers/header/AppNavLinks'
@@ -23,7 +22,7 @@ import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
-import { RemoteAddonProject, useGlobalContext } from '@shared/context'
+import { RemoteAddonProject, useGlobalContext, useProjectContext } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
@@ -35,7 +34,7 @@ import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
-import { ProjectContextProvider } from '@shared/context/ProjectContext'
+import { ProjectContextProvider } from '@shared/context'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -69,7 +68,7 @@ const ProjectContextInfo = () => {
   )
 }
 
-const ProjectPage = () => {
+const ProjectPageInner = () => {
   /**
    * This component is a wrapper for all project pages
    * It parses the url, loads the project data, dispatches the
@@ -77,17 +76,14 @@ const ProjectPage = () => {
    */
   const { siteInfo } = useGlobalContext()
   const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
+  const { projectName, isLoading, error, isUninitialized, refetch } = useProjectContext()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
-  const { projectName, module = '', addonName } = useParams()
+  const { module = '', addonName } = useParams()
   const dispatch = useAppDispatch()
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
-  const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
-    { projectName: projectName || '' },
-    { skip: !projectName },
-  )
 
   const {
     data: addonsData = [],
@@ -248,7 +244,7 @@ const ProjectPage = () => {
   }
 
   // error
-  if (isError) {
+  if (error) {
     setTimeout(() => {
       navigate('/')
     }, 1500)
@@ -368,6 +364,19 @@ const ProjectPage = () => {
         <UploadVersionDialog />
       </VersionUploadProvider>
       <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
+    </ProjectContextProvider>
+  )
+}
+
+const ProjectPage = () => {
+  const { projectName } = useParams()
+
+  // umm... projectName is required
+  if (!projectName) return <Navigate to="/" />
+
+  return (
+    <ProjectContextProvider projectName={projectName}>
+      <ProjectPageInner />
     </ProjectContextProvider>
   )
 }

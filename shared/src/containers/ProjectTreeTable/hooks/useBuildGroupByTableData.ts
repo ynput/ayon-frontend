@@ -8,7 +8,7 @@ import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 import { linksToTableData } from '../utils'
-import { ProjectModelWithProducts, useProjectContext } from '@shared/context/ProjectContext'
+import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
