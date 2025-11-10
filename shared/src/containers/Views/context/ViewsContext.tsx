@@ -123,12 +123,6 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     }
   }
 
-  const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView } = useViewsMutations({
-    viewType,
-    projectName,
-    onCreate: handleOnViewCreated,
-  })
-
   // when editing the view, get all users that can be shared to that view
   const { data: shareOptions } = useGetShareOptionsQuery(
     { projectName },
@@ -150,6 +144,13 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
+
+  const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView } = useViewsMutations({
+    viewType,
+    projectName,
+    viewsList,
+    onCreate: handleOnViewCreated,
+  })
 
   //   always get your working view
   const { currentData: workingView } = useGetWorkingViewQuery(

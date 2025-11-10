@@ -3,6 +3,7 @@ import * as Styled from './ViewItem.styled'
 import clsx from 'clsx'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { confirmDialog } from 'primereact/confirmdialog'
+import { useGlobalContext } from '@shared/context'
 
 export interface ViewItem {
   id: string
@@ -17,6 +18,7 @@ export interface ViewItem {
   onSave?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void // saves the view settings from selected view
   onResetView?: (e: React.MouseEvent<HTMLButtonElement>) => void // resets working view
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void
+  onMakeDefaultView?:(e: React.MouseEvent<HTMLButtonElement>) => void
 }
 
 export interface ViewMenuItemProps
@@ -38,10 +40,13 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       onSave,
       onResetView,
       className,
+      onMakeDefaultView,
       ...props
     },
     ref,
   ) => {
+    const { user } = useGlobalContext()
+    const isAdmin = user?.data?.isAdmin
     const handleSave = (e: React.MouseEvent<HTMLButtonElement>, requireConfirm: boolean) => {
       // prevent selecting the view when clicking save
       e.stopPropagation()
@@ -66,6 +71,15 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       >
         {startContent && startContent}
         <span className="label">{label}</span>
+        {onMakeDefaultView && isAdmin && (
+          <Styled.ActionButton
+            icon="push_pin"
+            variant="text"
+            className="make_default"
+            onClick={onMakeDefaultView}
+            data-tooltip="Make/Update default view"
+          />
+        )}
         {/* Reset button (e.g., for working view) - shows if handler is provided */}
         {onResetView && (
           <Styled.ActionButton

@@ -1,14 +1,15 @@
-import { useCreateViewMutation, UserModel, ViewListItemModel } from '@shared/api'
+import { useCreateViewMutation, UserModel, ViewListItemModel, useSetDefaultViewMutation } from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
-import { generateWorkingView } from '../utils/generateWorkingView'
+import { generateWorkingView, generateViewId } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule, useLocalStorage } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useRemoteModules } from '@shared/context'
 import { CollapsedViewState } from '../context/ViewsContext'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 // constants
 export const WORKING_VIEW_ID = '_working_' as const
@@ -51,10 +52,16 @@ const useBuildViewMenuItems = ({
   onResetWorkingView,
   selectedId,
 }: Props): ViewMenuItem[] => {
-  const { powerLicense } = usePowerpack()
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const { modules } = useRemoteModules()
+
+  // Get powerpack version
+  const powerpackModule = modules.find((m) => m.addonName === 'powerpack')
+  const powerpackVersion = powerpackModule?.addonVersion
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
+  const [setDefaultView] = useSetDefaultViewMutation()
 
   const extendedViewsList: ViewListItemModelExtended[] = useMemo(
     () =>
@@ -105,6 +112,76 @@ const useBuildViewMenuItems = ({
       toast.error(error)
     }
   }
+  const onMakeDefaultView = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+
+      if (!powerLicense) {
+        setPowerpackDialog('sharedViews')
+        return
+      }
+
+      confirmDialog({
+        message: 'Set this view as the default for all users in this project?',
+        header: 'Confirm Default View',
+        accept: async () => {
+          try {
+            const existingDefaultView = viewsList.find((view) => view.label === '_default_')
+            let defaultViewId: string
+
+            if (existingDefaultView) {
+              defaultViewId = existingDefaultView.id
+              await onSave(defaultViewId)
+            } else {
+              // Create new _default_ view
+              defaultViewId = generateViewId()
+              const defaultViewPayload = {
+                ...workingView,
+                id: defaultViewId,
+                label: '_default_',
+                working: true,
+              }
+
+              await createView({
+                payload: defaultViewPayload,
+                viewType: viewType as string,
+                projectName: projectName,
+              }).unwrap()
+
+              // Call powerpack share endpoint to make the view public
+              if (powerpackVersion) {
+                try {
+                  const shareUrl = `/api/addons/powerpack/${powerpackVersion}/views/${viewType}/${defaultViewId}/share?project_name=${projectName}`
+                  const shareResponse = await fetch(shareUrl, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      access: {
+                        __everyone__: 10,
+                      },
+                    }),
+                  })
+
+                  if (!shareResponse.ok) {
+                    console.warn('Failed to share view:', await shareResponse.text())
+                  }
+                } catch (shareError) {
+                  console.warn('Failed to share view:', shareError)
+                }
+              }
+            }
+
+          } catch (error: any) {
+            console.error('Failed to set default view:', error)
+            toast.error(`Failed to set default view: ${error?.message || error}`)
+          }
+        },
+      })
+    },
+    [powerLicense, setPowerpackDialog, workingView, viewsList, viewType, projectName, createView, setDefaultView, onSave, powerpackVersion],
+  )
 
   const [getCustomViews, { isLoading: isLoadingQueries }] = useLoadModule({
     addon: 'powerpack',
@@ -144,8 +221,9 @@ const useBuildViewMenuItems = ({
       // expose reset button when handler is provided
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
+      onMakeDefaultView: onMakeDefaultView,
     }),
-    [handleWorkingViewChange, onResetWorkingView],
+    [handleWorkingViewChange, onResetWorkingView, onMakeDefaultView],
   )
 
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
