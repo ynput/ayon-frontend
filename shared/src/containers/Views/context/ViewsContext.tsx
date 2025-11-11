@@ -208,6 +208,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
         setSelectedView,
         setSettingsChanged: setViewSettingsChanged,
         notify: true,
+        viewsList
       })
     } catch (error) {
       console.error('Failed to reset view:', error)
@@ -226,7 +227,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     selectedId: selectedView?.id,
     collapsed: collapsedSections,
     setCollapsed: setCollapsedSections,
-    onResetWorkingView,
+    onResetWorkingView: resetWorkingView,
     onSelect: (viewId) => {
       setSelectedView(viewId)
       // reset the settings changed state when switching views

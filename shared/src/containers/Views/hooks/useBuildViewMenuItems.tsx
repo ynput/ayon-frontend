@@ -123,14 +123,14 @@ const useBuildViewMenuItems = ({
         header: 'Confirm Base View',
         accept: async () => {
           try {
-            const existingDefaultView = viewsList.find((view) => view.label === '_default_')
+            const existingBaseView = viewsList.find((view) => view.label === '__base__')
             let baseViewId: string
 
-            if (existingDefaultView) {
-              baseViewId = existingDefaultView.id as string
+            if (existingBaseView) {
+              baseViewId = existingBaseView.id as string
               await onSave(baseViewId)
             } else {
-              // Create new _default_ view
+              // Create new __base__ view
               baseViewId = generateViewId()
 
               // Use settings from working view, or default to empty settings if not available
