@@ -112,40 +112,40 @@ const useBuildViewMenuItems = ({
       toast.error(error)
     }
   }
-  const onMakeDefaultView = useCallback(
+  const onMakeBaseView = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
 
 
 
       confirmDialog({
-        message: 'Set this view as the default for all users in this project?',
-        header: 'Confirm Default View',
+        message: 'Set this view as the base for all users in this project?',
+        header: 'Confirm Base View',
         accept: async () => {
           try {
             const existingDefaultView = viewsList.find((view) => view.label === '_default_')
-            let defaultViewId: string
+            let baseViewId: string
 
             if (existingDefaultView) {
-              defaultViewId = existingDefaultView.id as string
-              await onSave(defaultViewId)
+              baseViewId = existingDefaultView.id as string
+              await onSave(baseViewId)
             } else {
               // Create new _default_ view
-              defaultViewId = generateViewId()
+              baseViewId = generateViewId()
 
               // Use settings from working view, or default to empty settings if not available
               const settings = workingView?.settings || {}
 
-              const defaultViewPayload = {
-                id: defaultViewId,
-                label: '_default_',
+              const baseViewPayload = {
+                id: baseViewId,
+                label: '__base__',
                 working: true,
                 visibility: 'public',
                 settings,
               } as any
 
               await createView({
-                payload: defaultViewPayload,
+                payload: baseViewPayload,
                 viewType: viewType as string,
                 projectName: projectName,
               }).unwrap()
@@ -200,9 +200,9 @@ const useBuildViewMenuItems = ({
       // expose reset button when handler is provided
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
-      onMakeDefaultView: onMakeDefaultView,
+      onMakeDefaultView: onMakeBaseView,
     }),
-    [handleWorkingViewChange, onResetWorkingView, onMakeDefaultView],
+    [handleWorkingViewChange, onResetWorkingView, onMakeBaseView],
   )
 
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
