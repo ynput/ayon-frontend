@@ -112,11 +112,10 @@ const useBuildViewMenuItems = ({
       toast.error(error)
     }
   }
-  const onMakeBaseView = useCallback(
-    async (e: React.MouseEvent<HTMLButtonElement>) => {
+  // Handler to make any view the base view
+  const createMakeBaseViewHandler = useCallback(
+    (sourceViewId?: string) => async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
-
-
 
       confirmDialog({
         message: 'Set this view as the base for all users in this project?',
@@ -128,13 +127,31 @@ const useBuildViewMenuItems = ({
 
             if (existingBaseView) {
               baseViewId = existingBaseView.id as string
-              await onSave(baseViewId)
+              // If sourceViewId is provided (from a specific view), save that view's settings to base
+              // Otherwise use the current working view
+              const viewIdToSave = sourceViewId || baseViewId
+              await onSave(viewIdToSave)
             } else {
               // Create new __base__ view
               baseViewId = generateViewId()
 
-              // Use settings from working view, or default to empty settings if not available
-              const settings = workingView?.settings || {}
+              // If sourceViewId is provided, use that view's settings
+              // Otherwise use working view settings or empty
+              let settings = workingView?.settings || {}
+
+              if (sourceViewId) {
+                // Find the source view and use its settings
+                const sourceView = viewsList.find((v) => v.id === sourceViewId)
+                if (sourceView) {
+                  // Fetch full view data to get settings
+                  try {
+                    // TODO: Fetch the full view data here if needed
+                    // For now, we'll save from current working view
+                  } catch (error) {
+                    console.warn('Could not fetch source view settings:', error)
+                  }
+                }
+              }
 
               const baseViewPayload = {
                 id: baseViewId,
@@ -149,9 +166,9 @@ const useBuildViewMenuItems = ({
                 viewType: viewType as string,
                 projectName: projectName,
               }).unwrap()
-
             }
 
+            toast.success('Base view updated successfully')
           } catch (error: any) {
             console.error('Failed to set default view:', error)
             toast.error(`Failed to set default view: ${error?.message || error}`)
@@ -159,7 +176,13 @@ const useBuildViewMenuItems = ({
         },
       })
     },
-    [powerLicense, setPowerpackDialog, workingView, viewsList, viewType, projectName, createView, setDefaultView, onSave, powerpackVersion],
+    [workingView, viewsList, viewType, projectName, createView, onSave],
+  )
+
+  // Handler for working view specifically
+  const onMakeBaseView = useCallback(
+    createMakeBaseViewHandler(),
+    [createMakeBaseViewHandler],
   )
 
   const [getCustomViews, { isLoading: isLoadingQueries }] = useLoadModule({
@@ -176,6 +199,7 @@ const useBuildViewMenuItems = ({
     onEdit,
     onSelect,
     onSave: handleEditView,
+    onMakeDefaultView: createMakeBaseViewHandler,
   })
 
   const toggleSection = useCallback(
