@@ -1,4 +1,4 @@
-import { useCreateViewMutation, UserModel, ViewListItemModel, useSetDefaultViewMutation } from '@shared/api'
+import { useCreateViewMutation, UserModel, ViewListItemModel, useSetDefaultViewMutation, GetWorkingViewApiResponse } from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
@@ -21,7 +21,7 @@ export type ViewListItemModelExtended = ViewListItemModel & {
 
 type Props = {
   viewsList: ViewListItemModel[]
-  workingView?: ViewListItemModel
+  workingView?: GetWorkingViewApiResponse
   viewType?: string
   projectName?: string
   currentUser?: UserModel
@@ -116,10 +116,7 @@ const useBuildViewMenuItems = ({
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
 
-      if (!powerLicense) {
-        setPowerpackDialog('sharedViews')
-        return
-      }
+
 
       confirmDialog({
         message: 'Set this view as the default for all users in this project?',
@@ -130,17 +127,22 @@ const useBuildViewMenuItems = ({
             let defaultViewId: string
 
             if (existingDefaultView) {
-              defaultViewId = existingDefaultView.id
+              defaultViewId = existingDefaultView.id as string
               await onSave(defaultViewId)
             } else {
               // Create new _default_ view
               defaultViewId = generateViewId()
+
+              // Use settings from working view, or default to empty settings if not available
+              const settings = workingView?.settings || {}
+
               const defaultViewPayload = {
-                ...workingView,
                 id: defaultViewId,
                 label: '_default_',
                 working: true,
-              }
+                visibility: 'public',
+                settings,
+              } as any
 
               await createView({
                 payload: defaultViewPayload,
@@ -148,29 +150,6 @@ const useBuildViewMenuItems = ({
                 projectName: projectName,
               }).unwrap()
 
-              // Call powerpack share endpoint to make the view public
-              if (powerpackVersion) {
-                try {
-                  const shareUrl = `/api/addons/powerpack/${powerpackVersion}/views/${viewType}/${defaultViewId}/share?project_name=${projectName}`
-                  const shareResponse = await fetch(shareUrl, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      access: {
-                        __everyone__: 10,
-                      },
-                    }),
-                  })
-
-                  if (!shareResponse.ok) {
-                    console.warn('Failed to share view:', await shareResponse.text())
-                  }
-                } catch (shareError) {
-                  console.warn('Failed to share view:', shareError)
-                }
-              }
             }
 
           } catch (error: any) {
