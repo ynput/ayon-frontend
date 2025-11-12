@@ -100,6 +100,8 @@ type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
 export type GetGroupedVersionsListArgs = {
   projectName: string
   groups: { filter: string; count?: number | null; value: string }[]
+  groupFilterKey?: string
+  versionFilter?: string
   productFilter?: string
   taskFilter?: string
   folderIds?: string[]
@@ -451,6 +453,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         {
           projectName,
           groups,
+          groupFilterKey = 'versionFilter',
+          versionFilter, // most of the time overridden by group filters
           productFilter,
           taskFilter,
           folderIds,
@@ -468,9 +472,12 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
             const queryParams: GetVersionsQueryVariables = {
               projectName,
-              versionFilter: group.filter,
+              // base filters
               productFilter,
               taskFilter,
+              versionFilter,
+              // specific group filter
+              [groupFilterKey]: group.filter,
               folderIds: folderIds?.length ? folderIds : undefined,
               sortBy: sortBy,
               featuredOnly,

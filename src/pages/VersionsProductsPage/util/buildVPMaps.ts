@@ -42,7 +42,7 @@ export function productNodeToExtended(product: ProductNode): ProductNodeExtended
     ownAttrib: Object.keys(product.attrib || {}),
     status: product.status || '',
     tags: product.tags || [],
-    taskType: '', // not applicable
+    taskType: product.featuredVersion?.task?.taskType || '',
     updatedAt: product.updatedAt,
     createdAt: product.createdAt || '',
     active: product.active || false,
@@ -70,7 +70,7 @@ export function versionNodeToEditorVersionNode(version: VersionNode): VersionNod
     ownAttrib: [], // not applicable
     status: version.status || '',
     tags: version.tags || [],
-    taskType: '', // not applicable
+    taskType: version.task?.taskType || '',
     updatedAt: version.updatedAt,
     createdAt: version.createdAt || '',
     active: version.active || false,
