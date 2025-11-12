@@ -18,11 +18,18 @@ import { QueryArguments } from '../context/VPDataContext'
 type Props = {
   projectName: string
   versionFilters: QueryFilter
+  taskFilters: QueryFilter
   modules: ProjectTableModulesType
   versionArguments: QueryArguments
 }
 
-const useVersionsGroupBy = ({ projectName, versionFilters, modules, versionArguments }: Props) => {
+const useVersionsGroupBy = ({
+  projectName,
+  versionFilters,
+  taskFilters,
+  modules,
+  versionArguments,
+}: Props) => {
   const { attribFields } = useProjectDataContext()
   const { getGroupQueries, isLoading: isLoadingModules } = modules
 
@@ -51,12 +58,12 @@ const useVersionsGroupBy = ({ projectName, versionFilters, modules, versionArgum
   const groupByDataType = getGroupByDataType(groupBy, attribFields)
 
   // get group queries from powerpack
-  const versionGroups: GetGroupedVersionsListArgs['groups'] = useMemo(() => {
+  const groupFilters: GetGroupedVersionsListArgs['groups'] = useMemo(() => {
     return groupBy && groups.length
       ? getGroupQueries?.({
           groups,
           taskGroups: groups, // deprecated, but keep for backward compatibility
-          filters: versionFilters,
+          filters: groupById === 'taskType' ? taskFilters : versionFilters,
           groupBy,
           groupPageCounts,
         }) ?? []
@@ -64,10 +71,12 @@ const useVersionsGroupBy = ({ projectName, versionFilters, modules, versionArgum
   }, [groupBy, groups, groupPageCounts, groupByDataType, versionFilters, getGroupQueries])
 
   const queryArgs = {
-    groups: versionGroups, // special groups argument that also include version filters
+    groups: groupFilters, // special groups argument that also include version filters
+    groupFilterKey: groupById === 'taskType' ? 'taskFilter' : 'versionFilter',
     projectName: versionArguments.projectName,
     productFilter: versionArguments.productFilter,
     taskFilter: versionArguments.taskFilter,
+    versionFilter: versionArguments.versionFilter,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     folderIds: versionArguments.folderIds,
@@ -80,7 +89,7 @@ const useVersionsGroupBy = ({ projectName, versionFilters, modules, versionArgum
     isFetching: isFetchingGroups,
     refetch: refetchGroupedVersions,
   } = useGetGroupedVersionsListQuery(queryArgs, {
-    skip: !groupBy || !versionGroups.length || isLoadingModules,
+    skip: !groupBy || !groupFilters.length || isLoadingModules,
   })
 
   const isLoading = useQueryArgumentChangeLoading(queryArgs, isFetchingGroups)
