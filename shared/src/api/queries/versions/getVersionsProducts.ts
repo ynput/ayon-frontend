@@ -106,6 +106,7 @@ export type GetGroupedVersionsListArgs = {
   desc?: boolean
   sortBy?: string
   featuredOnly?: string[]
+  hasReviewables?: boolean
 }
 
 export type GetGroupedVersionsListResult = {
@@ -447,7 +448,17 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
     // Grouped versions query - fetches versions for multiple group filters
     getGroupedVersionsList: build.query<GetGroupedVersionsListResult, GetGroupedVersionsListArgs>({
       queryFn: async (
-        { projectName, groups, productFilter, taskFilter, folderIds, desc, sortBy, featuredOnly },
+        {
+          projectName,
+          groups,
+          productFilter,
+          taskFilter,
+          folderIds,
+          desc,
+          sortBy,
+          featuredOnly,
+          hasReviewables,
+        },
         api,
       ) => {
         try {
@@ -463,6 +474,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               folderIds: folderIds?.length ? folderIds : undefined,
               sortBy: sortBy,
               featuredOnly,
+              hasReviewables,
               // @ts-expect-error - group param used later on
               group: group.value,
             }

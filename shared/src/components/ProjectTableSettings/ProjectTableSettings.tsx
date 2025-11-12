@@ -175,8 +175,6 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
   ].filter(Boolean)
 
-  console.log(defaultSettings)
-
   settings.forEach(
     (setting) => !hiddenSettings.includes(setting.id as any) && defaultSettings.push(setting),
   )
