@@ -64,7 +64,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   )
 
   // do we have the premium transcoder?
-  const { data: hasTranscoder } = useHasTranscoderQuery(undefined)
+  const hasTranscoder = false
 
   // are we currently looking at review? (is it selected in the viewer)
   const reviewableIds = viewer?.reviewableIds || []
@@ -168,12 +168,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     }))
   }
 
-  let incompatibleMessage = ''
-  if (!hasTranscoder) {
-    incompatibleMessage = `The conversion transcoder is only supported on [**Ynput Cloud**](https://ynput.cloud/subscribe/ayon). Please subscribe or [contact support](https://ynput.io/services/) for more information.`
-  } else {
-    incompatibleMessage = 'The file is not supported by the transcoder'
-  }
+  const incompatibleMessage = `File type not supported at this time. Please contact support for further assistance.`
 
   const handleDownloadFile = (fileId: string, fileName: string = '') => {
     let url = `/api/projects/${projectName}/files/${fileId}`
