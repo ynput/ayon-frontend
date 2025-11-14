@@ -2,7 +2,7 @@
 // we do this so that focused changes do not re-render the entire page
 
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { DetailsPanel, DetailsPanelSlideOut, useTaskProgressViewSettings } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import { $Any } from '@types'
 import { openViewer } from '@state/viewer'
@@ -21,6 +21,7 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
   const { setOpen, isOpen } = useScopedDetailsPanel('progress')
+  const { onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
 
   const projectsInfo = { [projectName]: projectInfo }
 
@@ -33,6 +34,10 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
 
   const { goToEntity } = useGoToEntity({
     page: 'progress',
+    onViewUpdate: () => {
+      // reset filters
+      setQueryFilters({})
+    },
     onExpand: (expanded) => {
       // open slicer folders
       slicer.setExpanded(expanded)

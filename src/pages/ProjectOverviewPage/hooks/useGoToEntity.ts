@@ -34,9 +34,7 @@ const useGoToEntity = ({ page, onViewUpdate, onExpand, onSelection, onParentSele
   const goToEntity = useCallback<Value['goToEntity']>(
     (entityId, entityType, parents) => {
       // first if there is a callback to change the view, call it
-      if (onViewUpdate) {
-        onViewUpdate()
-      }
+      onViewUpdate?.()
 
       const getExpandedFolders = (folderId: string) => {
         // get all parent folder IDs

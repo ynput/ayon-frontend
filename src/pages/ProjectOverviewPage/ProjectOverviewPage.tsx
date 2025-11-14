@@ -18,7 +18,6 @@ import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   useColumnSettingsContext,
-  useDetailsPanelEntityContext,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
@@ -47,16 +46,6 @@ const ProjectOverviewPage: FC = () => {
   const user = useAppSelector((state) => state.user?.attrib)
   const isDeveloperMode = user?.developerMode ?? false
 
-  // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
-  try {
-    const entityContext = useDetailsPanelEntityContext()
-    selectedEntity = entityContext.selectedEntity
-  } catch {
-    // Context not available, that's fine
-    selectedEntity = null
-  }
-
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -71,7 +60,7 @@ const ProjectOverviewPage: FC = () => {
     updateExpanded,
   } = useProjectOverviewContext()
 
-  useColumnSettingsContext()
+  const { updateGroupBy } = useColumnSettingsContext()
 
   const { isPanelOpen } = useSettingsPanel()
   //   table contexts
@@ -110,7 +99,14 @@ const ProjectOverviewPage: FC = () => {
 
   const { goToEntity } = useGoToEntity({
     page: 'overview',
-    onViewUpdate: () => updateShowHierarchy(true), // ensure hierarchy is shown
+    onViewUpdate: () => {
+      // clear all filters
+      setQueryFilters({})
+      // remove any group by
+      updateGroupBy(undefined)
+      // ensure hierarchy is shown
+      updateShowHierarchy(true)
+    },
     onExpand: (expanded) => {
       updateExpanded(expanded) // expand table folders
       setExpanded(expanded) // expand slicer folders
