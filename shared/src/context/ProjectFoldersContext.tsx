@@ -94,7 +94,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
       folders,
       getFolderById,
       getParentFolderIds,
-      isLoading,
+      isLoadingFolders,
       isFetching,
       isSuccess,
       isUninitialized,
