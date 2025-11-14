@@ -113,12 +113,10 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     })
   }
 
-  const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
+  const { playable, incompatible, processing, queued } = getGroupedReviewables(
     reviewables,
     hasTranscoder,
   )
-
-  const sortableReviewables = [...optimized, ...unoptimized]
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event
@@ -134,13 +132,11 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     if (over?.id && active.id !== over.id) {
       console.log('update review position')
 
-      const oldIndex = sortableReviewables.findIndex(
-        (reviewable) => reviewable.fileId === active.id,
-      )
-      const newIndex = sortableReviewables.findIndex((reviewable) => reviewable.fileId === over.id)
+      const oldIndex = playable.findIndex((reviewable) => reviewable.fileId === active.id)
+      const newIndex = playable.findIndex((reviewable) => reviewable.fileId === over.id)
 
       //   resort the reviewables
-      const newReviewables = arrayMove(sortableReviewables, oldIndex, newIndex)
+      const newReviewables = arrayMove(playable, oldIndex, newIndex)
 
       const newOrder = newReviewables.map((reviewable) => reviewable.activityId)
 
@@ -284,7 +280,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
                 strategy={verticalListSortingStrategy}
               >
-                {sortableReviewables.map((reviewable) => (
+                {playable.map((reviewable) => (
                   <SortableReviewableCard
                     key={reviewable.fileId}
                     projectName={projectName}
