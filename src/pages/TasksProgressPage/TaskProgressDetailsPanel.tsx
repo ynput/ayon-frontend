@@ -7,6 +7,9 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { $Any } from '@types'
 import { openViewer } from '@state/viewer'
 import { useScopedDetailsPanel } from '@shared/context'
+import useGoToEntity from '@pages/ProjectOverviewPage/hooks/useGoToEntity'
+import { useSlicerContext } from '@context/SlicerContext'
+import { selectProgress } from '@state/progress'
 
 type TaskProgressDetailsPanelProps = {
   projectInfo: $Any
@@ -25,6 +28,24 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
 
+  //   slicer context
+  const slicer = useSlicerContext()
+
+  const { goToEntity } = useGoToEntity({
+    page: 'progress',
+    onExpand: (expanded) => {
+      // open slicer folders
+      slicer.setExpanded(expanded)
+    },
+    onSelection: (selected, entityType) => {
+      dispatch(selectProgress({ ids: selected, type: entityType as 'task' | 'folder' }))
+      setOpen(true)
+    },
+    onParentSelection: (parentId) => {
+      slicer.setRowSelection({ [parentId]: true })
+    },
+  })
+
   return (
     <>
       {/* @ts-ignore */}
@@ -42,6 +63,9 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
         scope="progress"
         onClose={() => setOpen(false)}
         onOpenViewer={handleOpenViewer}
+        onUriOpen={(entity) =>
+          goToEntity(entity.id, entity.entityType, { folder: entity.folder?.id })
+        }
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
     </>

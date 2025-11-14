@@ -19,6 +19,7 @@ import { Actions } from '@shared/containers/Actions/Actions'
 import {
   useColumnSettingsContext,
   useDetailsPanelEntityContext,
+  useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import { CustomizeButton } from '@shared/components'
@@ -73,9 +74,12 @@ const ProjectOverviewPage: FC = () => {
   useColumnSettingsContext()
 
   const { isPanelOpen } = useSettingsPanel()
+  //   table contexts
+  const { setSelectedCells } = useSelectionCellsContext()
 
   // load slicer remote config
-  const { config, sliceType, setPersistentRowSelectionData } = useSlicerContext()
+  const { config, sliceType, setPersistentRowSelectionData, setExpanded, setRowSelection } =
+    useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
 
   const handleFiltersChange = (newQueryFilters: QueryFilter) => {
@@ -105,14 +109,21 @@ const ProjectOverviewPage: FC = () => {
   }
 
   const { goToEntity } = useGoToEntity({
+    page: 'overview',
     onViewUpdate: () => updateShowHierarchy(true), // ensure hierarchy is shown
-    onExpand: (expanded) => updateExpanded(expanded), // expand folders
+    onExpand: (expanded) => {
+      updateExpanded(expanded) // expand table folders
+      setExpanded(expanded) // expand slicer folders
+    }, // expand folders
+    onSelection: (selectedIds: string[]) => setSelectedCells(new Set(selectedIds)), // select entities
+    onParentSelection: (parentId) => {
+      setRowSelection({ [parentId]: true })
+    },
   })
 
   // select the entity in the table and expand its parent folders
   const handleUriOpen = (entity: DetailsPanelEntityData) => {
     console.debug('URI found, selecting and expanding folders to entity:', entity.name)
-    // @ts-expect-error - entityType is correctly typed
     goToEntity(entity.id, entity.entityType, { folder: entity.folder?.id })
   }
 
