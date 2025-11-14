@@ -6,6 +6,7 @@ export type GetCustomViews = {
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
   onSave: (viewId: string) => void
+  onMakeDefaultView?: (viewId: string) => (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>
 }
 
 export type CustomViews = {

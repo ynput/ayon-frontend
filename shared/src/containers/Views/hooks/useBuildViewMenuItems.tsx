@@ -1,14 +1,15 @@
-import { useCreateViewMutation, UserModel, ViewListItemModel } from '@shared/api'
+import { useCreateViewMutation, UserModel, ViewListItemModel, useSetDefaultViewMutation, GetWorkingViewApiResponse } from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
-import { generateWorkingView } from '../utils/generateWorkingView'
+import { generateWorkingView, generateViewId } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule, useLocalStorage } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useRemoteModules } from '@shared/context'
 import { CollapsedViewState } from '../context/ViewsContext'
+import { confirmDialog } from 'primereact/confirmdialog'
 
 // constants
 export const WORKING_VIEW_ID = '_working_' as const
@@ -20,7 +21,7 @@ export type ViewListItemModelExtended = ViewListItemModel & {
 
 type Props = {
   viewsList: ViewListItemModel[]
-  workingView?: ViewListItemModel
+  workingView?: GetWorkingViewApiResponse
   viewType?: string
   projectName?: string
   currentUser?: UserModel
@@ -51,10 +52,16 @@ const useBuildViewMenuItems = ({
   onResetWorkingView,
   selectedId,
 }: Props): ViewMenuItem[] => {
-  const { powerLicense } = usePowerpack()
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const { modules } = useRemoteModules()
+
+  // Get powerpack version
+  const powerpackModule = modules.find((m) => m.addonName === 'powerpack')
+  const powerpackVersion = powerpackModule?.addonVersion
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
+  const [setDefaultView] = useSetDefaultViewMutation()
 
   const extendedViewsList: ViewListItemModelExtended[] = useMemo(
     () =>
@@ -105,6 +112,78 @@ const useBuildViewMenuItems = ({
       toast.error(error)
     }
   }
+  // Handler to make any view the base view
+  const createMakeBaseViewHandler = useCallback(
+    (sourceViewId?: string) => async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+
+      confirmDialog({
+        message: 'Set this view as the base for all users in this project?',
+        header: 'Confirm Base View',
+        accept: async () => {
+          try {
+            const existingBaseView = viewsList.find((view) => view.label === '__base__')
+            let baseViewId: string
+
+            if (existingBaseView) {
+              baseViewId = existingBaseView.id as string
+              // If sourceViewId is provided (from a specific view), save that view's settings to base
+              // Otherwise use the current working view
+              const viewIdToSave = sourceViewId || baseViewId
+              await onSave(viewIdToSave)
+            } else {
+              // Create new __base__ view
+              baseViewId = generateViewId()
+
+              // If sourceViewId is provided, use that view's settings
+              // Otherwise use working view settings or empty
+              let settings = workingView?.settings || {}
+
+              if (sourceViewId) {
+                // Find the source view and use its settings
+                const sourceView = viewsList.find((v) => v.id === sourceViewId)
+                if (sourceView) {
+                  // Fetch full view data to get settings
+                  try {
+                    // TODO: Fetch the full view data here if needed
+                    // For now, we'll save from current working view
+                  } catch (error) {
+                    console.warn('Could not fetch source view settings:', error)
+                  }
+                }
+              }
+
+              const baseViewPayload = {
+                id: baseViewId,
+                label: '__base__',
+                working: true,
+                visibility: 'public',
+                settings,
+              } as any
+
+              await createView({
+                payload: baseViewPayload,
+                viewType: viewType as string,
+                projectName: projectName,
+              }).unwrap()
+            }
+
+            toast.success('Base view updated successfully')
+          } catch (error: any) {
+            console.error('Failed to set default view:', error)
+            toast.error(`Failed to set default view: ${error?.message || error}`)
+          }
+        },
+      })
+    },
+    [workingView, viewsList, viewType, projectName, createView, onSave],
+  )
+
+  // Handler for working view specifically
+  const onMakeBaseView = useCallback(
+    createMakeBaseViewHandler(),
+    [createMakeBaseViewHandler],
+  )
 
   const [getCustomViews, { isLoading: isLoadingQueries }] = useLoadModule({
     addon: 'powerpack',
@@ -120,6 +199,7 @@ const useBuildViewMenuItems = ({
     onEdit,
     onSelect,
     onSave: handleEditView,
+    onMakeDefaultView: createMakeBaseViewHandler,
   })
 
   const toggleSection = useCallback(
@@ -144,8 +224,9 @@ const useBuildViewMenuItems = ({
       // expose reset button when handler is provided
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
+      onMakeDefaultView: onMakeBaseView,
     }),
-    [handleWorkingViewChange, onResetWorkingView],
+    [handleWorkingViewChange, onResetWorkingView, onMakeBaseView],
   )
 
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed

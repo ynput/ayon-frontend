@@ -3,8 +3,12 @@ import {
   useCreateViewMutation,
   useDeleteViewMutation,
   useUpdateViewMutation,
+  ViewListItemModel,
+  viewsQueries,
 } from '@shared/api'
 import { useCallback } from 'react'
+import { useDispatch } from 'react-redux'
+import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { ViewData } from '../context/ViewsContext'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
@@ -12,6 +16,7 @@ import { toast } from 'react-toastify'
 type Props = {
   viewType?: string
   projectName?: string
+  viewsList?: ViewListItemModel[]
   onCreate?: (view: ViewData) => void
   onUpdate?: (view: ViewData) => void
   onDelete?: (viewId: string) => void
@@ -31,6 +36,7 @@ export type UseViewMutations = {
     setSelectedView?: (id: string) => void
     setSettingsChanged?: (changed: boolean) => void
     notify?: boolean
+    viewsList?: any[]
   }) => Promise<string>
 }
 type R = UseViewMutations
@@ -38,11 +44,13 @@ type R = UseViewMutations
 export const useViewsMutations = ({
   viewType,
   projectName,
+  viewsList,
   onCreate,
   onDelete,
   onUpdate,
 }: Props): UseViewMutations => {
   // forward mutations to the dialog
+  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>()
   const [createView] = useCreateViewMutation()
   const [deleteView] = useDeleteViewMutation()
   const [updateView] = useUpdateViewMutation()
@@ -122,13 +130,35 @@ export const useViewsMutations = ({
 
   const onResetWorkingView = useCallback<R['onResetWorkingView']>(
     async (args) => {
-      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify } =
+      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify, viewsList } =
         args || {}
       if (!viewType) {
         throw new Error('viewType are required for resetting a view')
       }
 
-      const freshWorkingView = generateWorkingView({})
+      // Check if __base__ view exists
+      const baseView = viewsList?.find((v) => v.label === '__base__')
+      let baseSettings = {}
+
+      // If __base__ exists, fetch its full data to get settings
+      if (baseView) {
+        try {
+          // Use dispatch to fetch the view data using RTK Query's initiate
+          const queryAction = viewsQueries.endpoints.getView.initiate({
+            viewId: baseView.id,
+            viewType: viewType as string,
+            projectName,
+          })
+          const result = await dispatch(queryAction as any)
+          const baseViewData = await result.unwrap()
+          baseSettings = baseViewData.settings || {}
+          result.unsubscribe()
+        } catch (error) {
+          console.warn('Error fetching __base__ view:', error)
+        }
+      }
+
+      const freshWorkingView = generateWorkingView(baseSettings)
       if (existingWorkingViewId) {
         freshWorkingView.id = existingWorkingViewId
       }
@@ -160,7 +190,7 @@ export const useViewsMutations = ({
         throw error
       }
     },
-    [createView, viewType, projectName],
+    [createView, viewType, projectName, viewsList, dispatch],
   )
 
   return {

@@ -43,12 +43,14 @@ export const ViewItem = styled.li`
 
   /* hide save button by default */
   .save,
-  .reset {
+  .reset,
+  .make_default{
     display: none;
   }
   &:hover {
     .save,
-    .reset {
+    .reset,
+    .make_default{
       display: flex;
     }
   }
