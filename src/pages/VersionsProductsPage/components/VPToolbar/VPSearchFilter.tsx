@@ -25,7 +25,7 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
     },
     {
       scope: 'product',
-      filterTypes: ['status', 'tags', 'productType', 'attributes'],
+      filterTypes: ['status', 'tags', 'attributes'],
     },
     {
       scope: 'task',
