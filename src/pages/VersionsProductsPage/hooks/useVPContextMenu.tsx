@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import {
-  useProjectDataContext,
   ContextMenuItemConstructor,
   getCellId,
   ROW_SELECTION_COLUMN_ID,
@@ -14,6 +13,7 @@ import { confirmDelete } from '@shared/util'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
 import { useVersionUploadContext } from '@shared/components'
+import { useProjectContext } from '@shared/context'
 
 export interface VPContextMenuItems {
   showDetailsItem: ContextMenuItemConstructor
@@ -35,7 +35,7 @@ export const useVPContextMenu = (callbacks?: {
   const { buildAddToListMenu, buildHierarchicalMenuItems, newListMenuItem, versions, reviews } =
     useEntityListsContext()
   const { onOpenPlayer } = useProjectTableContext()
-  const { projectName } = useProjectDataContext()
+  const { projectName } = useProjectContext()
   const [deleteVersion] = useDeleteVersionMutation()
   const [deleteProduct] = useDeleteProductMutation()
   const { onOpenVersionUpload } = useVersionUploadContext()

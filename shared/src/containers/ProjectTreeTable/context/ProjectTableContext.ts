@@ -16,9 +16,6 @@ export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
 export interface ProjectTableContextType {
   isInitialized: ProjectTableProviderProps['isInitialized']
   isLoading: ProjectTableProviderProps['isLoading']
-  // Project Info
-  projectInfo: ProjectTableProviderProps['projectInfo']
-  projectName: ProjectTableProviderProps['projectName']
   users: ProjectTableProviderProps['users']
   // Attributes
   attribFields: ProjectTableProviderProps['attribFields']

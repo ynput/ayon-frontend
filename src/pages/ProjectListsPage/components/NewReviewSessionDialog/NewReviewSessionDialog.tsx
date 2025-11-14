@@ -1,4 +1,4 @@
-import { useProjectDataContext } from '@shared/containers'
+import { useProjectContext } from '@shared/context'
 import { Dialog, DialogProps } from '@ynput/ayon-react-components'
 import { FC, useRef, useCallback } from 'react'
 import ListRow from '../ListRow/ListRow'
@@ -18,7 +18,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
   submitLoading,
   ...props
 }) => {
-  const { projectName } = useProjectDataContext()
+  const { projectName } = useProjectContext()
 
   // get a list of all version lists in the project
   const {

@@ -20,7 +20,6 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     onUpdateFeaturedVersionOrder,
   } = useVPViewsContext()
 
-  // const { attribFields } = useProjectDataContext()
   const { attribFieldsScoped } = useProjectTableContext()
 
   const extraColumns = [

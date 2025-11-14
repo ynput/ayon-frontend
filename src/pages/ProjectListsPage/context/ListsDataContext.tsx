@@ -1,12 +1,11 @@
 import { createContext, useContext, ReactNode, useMemo } from 'react'
 import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from '@shared/api'
-import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
 import useGetListsData from '../hooks/useGetListsData'
 import { buildListsTableData } from '../util'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useProjectContext } from '@shared/context'
 
 export type ListsMap = Map<string, EntityList>
 
@@ -42,7 +41,7 @@ export const ListsDataProvider = ({
   isReview,
 }: ListsDataProviderProps) => {
   const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
-  const { projectName, isLoading: isFetchingProject } = useProjectDataContext()
+  const { projectName, isLoading: isFetchingProject } = useProjectContext()
 
   const isLoadingProject = useQueryArgumentChangeLoading({ projectName }, isFetchingProject)
 

@@ -1,5 +1,3 @@
-import productTypes from './productTypes'
-
 export * from './platform'
 export * from './confirmDelete'
 export * from './getEntityTypeIcon'
@@ -18,6 +16,5 @@ export * from './parseHtmlToPlainTextWithLinks'
 export * from './colorUtils'
 export * from './getGroupByDataType'
 
-export { productTypes }
 import PubSub from './pubsub'
 export { PubSub }

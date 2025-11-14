@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom'
 import styled from 'styled-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { AttributeData, AttributeEnumItem, EntityList, useGetAttributeListQuery } from '@shared/api'
-import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import { useProjectContext } from '@shared/context'
 import { getAttributeIcon } from '@shared/util'
 
 // Helper function to aggregate attribute values from lists
@@ -116,7 +116,7 @@ interface ListsFiltersDialogProps {}
 const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
   const { listsFilters, setListsFilters, listsData } = useListsDataContext()
   const { listsFiltersOpen, setListsFiltersOpen } = useListsContext()
-  const { projectInfo } = useProjectDataContext()
+  const { ...projectInfo } = useProjectContext()
 
   const filtersRef = useRef<SearchFilterRef>(null)
 

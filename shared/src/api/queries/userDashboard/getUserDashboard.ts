@@ -4,6 +4,7 @@ import {
   GetKanbanQuery,
   ProjectModel,
   KanbanNode,
+  Anatomy,
 } from '@shared/api/generated'
 import { projectQueries } from '@shared/api/queries/project'
 import { PubSub } from '@shared/util'
@@ -235,7 +236,9 @@ type GetProjectsInfoParams = {
   projects: string[]
 }
 
-export type GetProjectsInfoResponse = { [projectName: string]: ProjectModel | undefined }
+export type ProjectModeWithAnatomy = ProjectModel & { anatomy?: Anatomy }
+
+export type GetProjectsInfoResponse = { [projectName: string]: ProjectModeWithAnatomy | undefined }
 
 const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
   endpoints: (build) => ({
@@ -243,21 +246,34 @@ const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
       async queryFn({ projects = [] }, { dispatch }) {
         try {
           // get project info for each project
-          const projectInfo: Record<string, ProjectModel | undefined> = {}
+          const projectInfo: Record<string, ProjectModeWithAnatomy | undefined> = {}
           for (const project of projects) {
+            const projectName = project as string
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
-            const response = await dispatch(
-              projectQueries.endpoints.getProject.initiate(
-                { projectName: project },
-                { forceRefetch: true },
-              ),
-            )
+            const responses = [
+              dispatch(
+                projectQueries.endpoints.getProject.initiate(
+                  { projectName },
+                  { forceRefetch: true },
+                ),
+              ).unwrap(),
+              dispatch(
+                projectQueries.endpoints.getProjectAnatomy.initiate(
+                  { projectName },
+                  { forceRefetch: true },
+                ),
+              ).unwrap(),
+            ]
 
-            if (response.status === 'rejected') {
-              throw 'No projects found'
+            const response = await Promise.all(responses)
+
+            const projectData = response[0] as ProjectModel | undefined
+            const anatomyData = response[1] as Anatomy | undefined
+
+            if (projectData) {
+              projectInfo[projectName] = { ...projectData, anatomy: anatomyData }
             }
-            projectInfo[project] = response.data
           }
 
           return { data: projectInfo, meta: undefined, error: undefined }

@@ -4,11 +4,15 @@ import * as Styled from './DetailsPanel.styled'
 
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
-import type { ProjectModel, Tag, DetailsPanelEntityType } from '@shared/api'
+import type { Tag, DetailsPanelEntityType } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
-import { productTypes } from '@shared/util'
-import { useDetailsPanelContext, usePowerpack, useScopedDetailsPanel, DetailsPanelTab } from '@shared/context'
+import {
+  ProjectContextProvider,
+  ProjectModelWithProducts,
+  useDetailsPanelContext,
+  useScopedDetailsPanel,
+} from '@shared/context'
 
 import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './DetailsPanelFiles'
@@ -32,7 +36,7 @@ export type DetailsPanelProps = {
   projectUsers?: User[]
   disabledProjectUsers?: string[]
   activeProjectUsers?: string[]
-  projectsInfo?: Record<string, ProjectModel>
+  projectsInfo?: Record<string, ProjectModelWithProducts>
   projectNames?: string[]
   isSlideOut?: boolean
   style?: React.CSSProperties
@@ -81,8 +85,8 @@ export const DetailsPanel = ({
   exportAnnotationComposite,
   entityListId,
   guestCategories = {},
-  // optional tab state for independent tab management
-}: DetailsPanelProps) => {
+}: // optional tab state for independent tab management
+DetailsPanelProps) => {
   const {
     closeSlideOut,
     openPip,
@@ -128,10 +132,9 @@ export const DetailsPanel = ({
       folder: projectInfo.folderTypes
         .filter((folder) => !!folder.icon)
         .reduce((acc, folder) => ({ ...acc, [folder.name]: folder.icon }), {}),
-      product: Object.entries(productTypes).reduce(
-        (acc, [key, product]) => ({ ...acc, [key]: product.icon }),
-        {},
-      ),
+      product: projectInfo.productTypes
+        .filter((product) => !!product.icon)
+        .reduce((acc, product) => ({ ...acc, [product.name]: product.icon }), {}),
     }),
     [projectInfo],
   )
@@ -298,53 +301,55 @@ export const DetailsPanel = ({
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
         />
-        {isFeed && !isError && (
-          <FeedWrapper
-            entityType={activeEntityType}
-            entities={entityDetailsData}
-            activeUsers={activeProjectUsers || []}
-            projectInfo={firstProjectInfo}
-            projectName={firstProject}
-            disabled={!isCommentingEnabled()}
-            scope={scope}
-            statuses={allStatuses}
-            readOnly={false}
-            entityListId={entityListId}
-            annotations={annotations}
-            removeAnnotation={removeAnnotation}
-            exportAnnotationComposite={exportAnnotationComposite}
-            currentTab={currentTab}
-            setCurrentTab={setTab}
-          />
-        )}
-        {currentTab === 'files' && (
-          <DetailsPanelFiles
-            entities={entityDetailsData}
-            scope={scope}
-            isLoadingVersion={isFetchingEntitiesDetails}
-          />
-        )}
-        {currentTab === 'details' && (
-          <FeedContextWrapper
-            entityType={activeEntityType}
-            entities={entityDetailsData}
-            activeUsers={activeProjectUsers || []}
-            projectInfo={firstProjectInfo}
-            projectName={firstProject}
-            disabled={!isCommentingEnabled()}
-            scope={scope}
-            statuses={allStatuses}
-            readOnly={false}
-            annotations={annotations}
-            removeAnnotation={removeAnnotation}
-            exportAnnotationComposite={exportAnnotationComposite}
-          >
-            <DetailsPanelDetails
+        <ProjectContextProvider projectName={firstProject}>
+          {isFeed && !isError && (
+            <FeedWrapper
+              entityType={activeEntityType}
               entities={entityDetailsData}
-              isLoading={isFetchingEntitiesDetails}
+              activeUsers={activeProjectUsers || []}
+              projectInfo={firstProjectInfo}
+              projectName={firstProject}
+              disabled={!isCommentingEnabled()}
+              scope={scope}
+              statuses={allStatuses}
+              readOnly={false}
+              entityListId={entityListId}
+              annotations={annotations}
+              removeAnnotation={removeAnnotation}
+              exportAnnotationComposite={exportAnnotationComposite}
+              currentTab={currentTab}
+              setCurrentTab={setTab}
             />
-          </FeedContextWrapper>
-        )}
+          )}
+          {currentTab === 'files' && (
+            <DetailsPanelFiles
+              entities={entityDetailsData}
+              scope={scope}
+              isLoadingVersion={isFetchingEntitiesDetails}
+            />
+          )}
+          {currentTab === 'details' && (
+            <FeedContextWrapper
+              entityType={activeEntityType}
+              entities={entityDetailsData}
+              activeUsers={activeProjectUsers || []}
+              projectInfo={firstProjectInfo}
+              projectName={firstProject}
+              disabled={!isCommentingEnabled()}
+              scope={scope}
+              statuses={allStatuses}
+              readOnly={false}
+              annotations={annotations}
+              removeAnnotation={removeAnnotation}
+              exportAnnotationComposite={exportAnnotationComposite}
+            >
+              <DetailsPanelDetails
+                entities={entityDetailsData}
+                isLoading={isFetchingEntitiesDetails}
+              />
+            </FeedContextWrapper>
+          )}
+        </ProjectContextProvider>
       </Styled.Panel>
     </>
   )

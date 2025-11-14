@@ -81,6 +81,8 @@ import {
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+
+import { useProjectContext } from '@shared/context'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
@@ -191,9 +193,9 @@ export const ProjectTreeTable = ({
     groupBy,
   } = useColumnSettingsContext()
   const isGrouping = !!groupBy
+  const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
   const {
-    projectInfo,
     tableData,
     attribFields,
     entitiesMap,
@@ -202,7 +204,6 @@ export const ProjectTreeTable = ({
     error,
     isInitialized,
     expanded,
-    projectName,
     updateExpanded,
     toggleExpandAll,
     showHierarchy,
@@ -212,7 +213,7 @@ export const ProjectTreeTable = ({
     onResetView,
   } = useProjectTableContext()
 
-  const { projectName: contextProjectName, writableFields } = useProjectDataContext()
+  const { writableFields } = useProjectDataContext()
 
   const isLoading = isLoadingProp || isLoadingData
 
@@ -230,6 +231,7 @@ export const ProjectTreeTable = ({
         statuses,
         folderTypes,
         taskTypes,
+        productTypes,
         tags,
         scopes,
       }),
@@ -546,7 +548,7 @@ export const ProjectTreeTable = ({
     getDisabledFolderIds,
     getDisabledMessage,
   } = useMoveEntities({
-    projectName: contextProjectName || projectName || '',
+    projectName,
   })
 
   const handleMoveSubmitWithExpand = (selection: string[]) => {

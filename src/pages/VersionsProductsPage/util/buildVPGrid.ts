@@ -1,7 +1,8 @@
 // transforms data for the grid tiles
 import { HERO_SYMBOL } from './buildVPRows'
 import { ProductsMap, VersionsMap } from './buildVPMaps'
-import { getEntityTypeIcon, productTypes } from '@shared/util'
+import { ProductType } from '@shared/api'
+import { getEntityTypeIcon } from '@shared/util'
 
 type EntityGridNode = {
   id: string
@@ -21,9 +22,13 @@ type EntityGridNode = {
 export const getThumbnailUrl = (projectName: string, entity: { id: string; updatedAt: string }) =>
   `/api/projects/${projectName}/versions/${entity.id}/thumbnail?updatedAt=${entity?.updatedAt}`
 
-const buildProductsGrid = (productsMap: ProductsMap, projectName: string): EntityGridNode[] => {
+const buildProductsGrid = (
+  productsMap: ProductsMap,
+  projectName: string,
+  productTypes: ProductType[],
+): EntityGridNode[] => {
   return Array.from(productsMap.values()).map((product) => {
-    const productType = productTypes[product.productType]
+    const productType = productTypes.find((pt) => pt.name === product.productType)
     const featuredVersion = product.featuredVersion?.name
 
     return {
@@ -50,9 +55,13 @@ const buildProductsGrid = (productsMap: ProductsMap, projectName: string): Entit
   })
 }
 
-const buildVersionsGrid = (versionsMap: VersionsMap, projectName: string): EntityGridNode[] => {
+const buildVersionsGrid = (
+  versionsMap: VersionsMap,
+  projectName: string,
+  productTypes: ProductType[],
+): EntityGridNode[] => {
   return Array.from(versionsMap.values()).map((version) => {
-    const productType = productTypes[version.product.productType]
+    const productType = productTypes.find((pt) => pt.name === version.product.productType)
 
     return {
       id: version.id,
@@ -75,12 +84,19 @@ type Props = {
   versionsMap: VersionsMap
   showProducts: boolean
   projectName: string
+  productTypes: ProductType[]
 }
 
-export const buildVPGrid = ({ productsMap, versionsMap, showProducts, projectName }: Props) => {
+export const buildVPGrid = ({
+  productsMap,
+  versionsMap,
+  showProducts,
+  projectName,
+  productTypes,
+}: Props) => {
   if (showProducts) {
-    return buildProductsGrid(productsMap, projectName)
+    return buildProductsGrid(productsMap, projectName, productTypes)
   } else {
-    return buildVersionsGrid(versionsMap, projectName)
+    return buildVersionsGrid(versionsMap, projectName, productTypes)
   }
 }

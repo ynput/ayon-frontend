@@ -5,11 +5,10 @@ import {
   ContextMenuItemConstructors,
   TableCellContextData,
   useColumnSettingsContext,
-  useProjectDataContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
-import { useMoveEntityContext } from '@shared/context'
+import { useMoveEntityContext, useProjectContext } from '@shared/context'
 import { useGetFolderListQuery } from '@shared/api'
 
 type OverviewContextMenuProps = {}
@@ -22,7 +21,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   // Get project context for folder version data
-  const { projectName } = useProjectDataContext()
+  const { projectName } = useProjectContext()
   const { data: { folders = [] } = {} } = useGetFolderListQuery(
     { projectName: projectName || '', attrib: true },
     { skip: !projectName },

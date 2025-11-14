@@ -37,6 +37,7 @@ import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
+import { useProjectContext } from '@shared/context'
 
 var Delta = Quill.import('delta')
 
@@ -92,6 +93,8 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const { hasLicense, onPowerFeature, user } = useDetailsPanelContext()
   const isUser = !user?.data?.isAdmin && !user?.data?.isManager
+
+  const project = useProjectContext()
 
   const {
     users: mentionUsers,
@@ -165,7 +168,7 @@ const CommentInput: FC<CommentInputProps> = ({
         mention?.type,
         {
           '@': () => getMentionUsers(mentionUsers),
-          '@@': () => getMentionVersions(mentionVersions),
+          '@@': () => getMentionVersions(mentionVersions, project),
           '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
         mention?.search,

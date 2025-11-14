@@ -1,12 +1,8 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
-import {
-  EntityListModel,
-  useGetProjectQuery,
-  useUpdateEntityListMutation,
-  useGetAttributeListQuery,
-} from '@shared/api'
+import { EntityListModel, useUpdateEntityListMutation, useGetAttributeListQuery } from '@shared/api'
 import { toast } from 'react-toastify'
+import { useProjectContext } from '@shared/context'
 
 interface ListAttributeFormProps {
   projectName: string
@@ -40,8 +36,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
 
   // You must be an admin to edit the list itself
   const canEdit = (list?.accessLevel || 0) >= 30
-
-  const { data: project } = useGetProjectQuery({ projectName })
+  const { tags } = useProjectContext()
 
   // Fetch list-scoped attributes
   const { data: allAttributes = [] } = useGetAttributeListQuery()
@@ -64,7 +59,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         data: {
           type: 'list_of_strings',
           title: 'Tags',
-          enum: project?.tags?.map((t) => ({ value: t.name, label: t.name, color: t.color })),
+          enum: tags?.map((t) => ({ value: t.name, label: t.name, color: t.color })),
           enableCustomValues: true,
           enableSearch: true,
         },
@@ -73,7 +68,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
       { name: 'active', data: { type: 'boolean', title: 'Active' } },
       ...attributes,
     ],
-    [project?.tags, listScopedAttributes, attributes],
+    [tags, listScopedAttributes, attributes],
   )
 
   useEffect(() => {

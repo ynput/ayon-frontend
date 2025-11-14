@@ -3,11 +3,7 @@ import { useVersionsDataContext } from '../../context/VPDataContext'
 import { useVersionsSelectionContext } from '../../context/VPSelectionContext'
 import { useVPViewsContext } from '../../context/VPViewsContext'
 import { buildVPGrid } from '../../util'
-import {
-  ROW_SELECTION_COLUMN_ID,
-  useProjectDataContext,
-  useSelectionCellsContext,
-} from '@shared/containers'
+import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '@shared/containers'
 import { EntityCard } from '@ynput/ayon-react-components'
 import { FC, useMemo, useCallback, useRef, useState } from 'react'
 import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
@@ -21,6 +17,7 @@ import { ExpandedState } from '@tanstack/react-table'
 import styled from 'styled-components'
 import { EmptyPlaceholder } from '@shared/components'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
+import { useProjectContext } from '@shared/context'
 
 const GridContainer = styled.div`
   width: 100%;
@@ -45,7 +42,7 @@ interface VPGridProps {
 }
 
 const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
-  const { projectName, projectInfo } = useProjectDataContext()
+  const { productTypes, projectName, ...projectInfo } = useProjectContext()
   const { productsMap, versionsMap, isLoading, fetchNextPage, groups } = useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
@@ -85,6 +82,7 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
         versionsMap,
         showProducts: showProducts,
         projectName,
+        productTypes,
       }),
     [productsMap, versionsMap, showProducts, projectName],
   )

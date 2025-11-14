@@ -34,6 +34,7 @@ import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@context/SlicerContext'
 import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
 import { toast } from 'react-toastify'
+import { useProjectContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`
   .body {
@@ -94,6 +95,7 @@ export interface NewEntityProps {
 }
 
 const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
+  const { ...projectInfo } = useProjectContext()
   const {
     entityType,
     setEntityType,
@@ -113,7 +115,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     rowSelectionData: slicerSelectionData,
     sliceType,
   } = useSlicerContext()
-  const { getEntityById, projectInfo } = useProjectTableContext()
+  const { getEntityById } = useProjectTableContext()
 
   const [selectedFolderIds, selectedEntitiesLabels] = React.useMemo(() => {
     const selectedRowIds = Array.from(

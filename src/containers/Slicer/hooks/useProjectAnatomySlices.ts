@@ -1,20 +1,14 @@
 import { UseExtraSlices } from '@context/SlicerContext'
-import { useGetProjectQuery } from '@queries/project/enhancedProject'
+import { useProjectContext } from '@shared/context'
 import { AttributeModel } from '@shared/api'
-import { productTypes } from '@shared/util'
 
 type Props = {
-  projectName: string | null
   scopes?: string[]
   useExtraSlices: UseExtraSlices
 }
 
-const useProjectAnatomySlices = ({ projectName, scopes, useExtraSlices }: Props) => {
-  // project info
-  const { data: project, isLoading } = useGetProjectQuery(
-    { projectName: projectName || '' },
-    { skip: !projectName },
-  )
+const useProjectAnatomySlices = ({ scopes, useExtraSlices }: Props) => {
+  const { isLoading, productTypes, ...project } = useProjectContext()
 
   const { formatStatuses, formatTaskTypes, formatProductTypes, formatTypes, formatAttribute } =
     useExtraSlices()

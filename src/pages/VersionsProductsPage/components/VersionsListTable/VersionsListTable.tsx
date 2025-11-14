@@ -6,14 +6,14 @@ import SimpleTable, { SimpleTableProvider } from '@shared/containers/SimpleTable
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useMemo, useEffect } from 'react'
 import * as Styled from './VersionsListTable.styled'
-import { useProjectDataContext } from '@shared/containers'
+import { useProjectContext } from '@shared/context'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { guessImgRatio } from '@pages/VersionsProductsPage/util/guessImgRatio'
 
 interface VersionsListTableProps {}
 
 const VersionsListTable: FC<VersionsListTableProps> = ({}) => {
-  const { projectName } = useProjectDataContext()
+  const { projectName } = useProjectContext()
   const { selectedProducts, selectedVersions, setSelectedVersions } = useVersionsSelectionContext()
   const { productsMap } = useVersionsDataContext()
   const { columns, rowHeight } = useVPViewsContext()

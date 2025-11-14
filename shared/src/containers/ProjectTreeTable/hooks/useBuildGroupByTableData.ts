@@ -2,13 +2,13 @@
 // each group is a root node with subItems as the grouped items
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
-import { ProjectModel, EntityGroup } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
 import { linksToTableData } from '../utils'
-import { productTypes } from '@shared/util'
+import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
 export type GroupData = {
@@ -62,7 +62,6 @@ export const parseGroupId = (groupId: string): string | null => {
 export const isGroupId = (id: string): boolean => id.startsWith(GROUP_BY_ID)
 
 type BuildGroupByTableProps = {
-  project?: ProjectModel
   entities: EntitiesMap
   entityType: string
   groups?: EntityGroup[]
@@ -74,7 +73,7 @@ type BuildGroupByTableProps = {
 // get sorting ids based on the groupBy field
 const getSortingIds = (
   groupBy: TableGroupBy,
-  project?: ProjectModel,
+  project?: ProjectModelWithProducts,
   attribFields: ProjectTableAttribute[] = [],
 ): string[] => {
   const attributeId = groupBy.id.replace('attrib.', '')
@@ -100,7 +99,7 @@ const defaultEntityToGroupRow = (
   task: EditorTaskNode,
   group: string | undefined,
   entityType: string,
-  project: ProjectModel | undefined,
+  project: ProjectModelWithProducts,
   getEntityTypeData: ReturnType<typeof useGetEntityTypeData>,
 ): TableRow & { subRows: TableRow[] } => {
   const typeData = getEntityTypeData(entityType, task.taskType)
@@ -125,14 +124,13 @@ const defaultEntityToGroupRow = (
     updatedAt: task.updatedAt,
     links: linksToTableData(task.links, entityType, {
       folderTypes: project?.folderTypes || [],
-      productTypes: Object.values(productTypes) || [],
+      productTypes: Object.values(project.productTypes) || [],
       taskTypes: project?.taskTypes || [],
     }),
   }
 }
 
 const useBuildGroupByTableData = ({
-  project,
   entities,
   entityType,
   groups = [],
@@ -140,6 +138,7 @@ const useBuildGroupByTableData = ({
   showEmpty,
   groupRowFunc, // for versions etc
 }: BuildGroupByTableProps) => {
+  const project = useProjectContext()
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   const entityToGroupRow = useCallback(
