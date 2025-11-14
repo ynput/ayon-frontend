@@ -3,7 +3,7 @@
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
-import type { ProjectModel } from '@shared/api'
+import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
 import {
   useProjectTableContext,
   useSelectedRowsContext,
@@ -17,6 +17,7 @@ type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
   isOpen?: boolean
+  onUriOpen?: (entity: DetailsPanelEntityData) => void
 }
 
 type EntitySelection = {
@@ -29,6 +30,7 @@ const ProjectOverviewDetailsPanel = ({
   projectInfo,
   projectName,
   isOpen,
+  onUriOpen,
 }: ProjectOverviewDetailsPanelProps) => {
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
@@ -81,6 +83,7 @@ const ProjectOverviewDetailsPanel = ({
         scope="overview"
         onClose={handleClose}
         onOpenViewer={handleOpenViewer}
+        onUriOpen={onUriOpen}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
     </>

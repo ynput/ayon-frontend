@@ -18,7 +18,6 @@ import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   useColumnSettingsContext,
-  useSelectedRowsContext,
   useDetailsPanelEntityContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
@@ -29,10 +28,11 @@ import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@state/store'
-import { OperationResponseModel } from '@shared/api'
+import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import useGoToEntity from './hooks/useGoToEntity'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -45,7 +45,6 @@ const searchFilterTypes: FilterFieldType[] = [
 const ProjectOverviewPage: FC = () => {
   const user = useAppSelector((state) => state.user?.attrib)
   const isDeveloperMode = user?.developerMode ?? false
-  const { selectedRows } = useSelectedRowsContext()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
@@ -68,6 +67,7 @@ const ProjectOverviewPage: FC = () => {
     showHierarchy,
     updateShowHierarchy,
     tasksMap,
+    updateExpanded,
   } = useProjectOverviewContext()
 
   useColumnSettingsContext()
@@ -98,13 +98,22 @@ const ProjectOverviewPage: FC = () => {
 
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
 
-  // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
-
   // select new entities and expand their parents
   const handleNewEntities = (ops: OperationResponseModel[], stayOpen: boolean) => {
     // expands to newly created folders and selects them
     expandAndSelectNewFolders(ops, { enableSelect: !stayOpen, enableExpand: true })
+  }
+
+  const { goToEntity } = useGoToEntity({
+    onViewUpdate: () => updateShowHierarchy(true), // ensure hierarchy is shown
+    onExpand: (expanded) => updateExpanded(expanded), // expand folders
+  })
+
+  // select the entity in the table and expand its parent folders
+  const handleUriOpen = (entity: DetailsPanelEntityData) => {
+    console.debug('URI found, selecting and expanding folders to entity:', entity.name)
+    // @ts-expect-error - entityType is correctly typed
+    goToEntity(entity.id, entity.entityType, { folder: entity.folder?.id })
   }
 
   return (
@@ -183,6 +192,7 @@ const ProjectOverviewPage: FC = () => {
                     <ProjectOverviewDetailsPanel
                       projectInfo={projectInfo}
                       projectName={projectName}
+                      onUriOpen={handleUriOpen}
                     />
                   </SplitterPanel>
                 </DetailsPanelSplitter>

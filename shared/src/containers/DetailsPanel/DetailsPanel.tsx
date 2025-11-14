@@ -10,6 +10,7 @@ import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { extractEntityHierarchyFromParents } from '@shared/util'
 import {
   Entities,
+  ProjectContextProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
   useURIContext,
