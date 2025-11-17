@@ -342,6 +342,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
+    taskFilters: combinedTaskFilter.combinedFilters,
     modules,
     versionArguments,
   })

@@ -64,7 +64,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   )
 
   // do we have the premium transcoder?
-  const { data: hasTranscoder } = useHasTranscoderQuery(undefined)
+  const hasTranscoder = false
 
   // are we currently looking at review? (is it selected in the viewer)
   const reviewableIds = viewer?.reviewableIds || []
@@ -113,12 +113,10 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     })
   }
 
-  const { optimized, unoptimized, incompatible, processing, queued } = getGroupedReviewables(
+  const { playable, incompatible, processing, queued } = getGroupedReviewables(
     reviewables,
     hasTranscoder,
   )
-
-  const sortableReviewables = [...optimized, ...unoptimized]
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event
@@ -134,13 +132,11 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     if (over?.id && active.id !== over.id) {
       console.log('update review position')
 
-      const oldIndex = sortableReviewables.findIndex(
-        (reviewable) => reviewable.fileId === active.id,
-      )
-      const newIndex = sortableReviewables.findIndex((reviewable) => reviewable.fileId === over.id)
+      const oldIndex = playable.findIndex((reviewable) => reviewable.fileId === active.id)
+      const newIndex = playable.findIndex((reviewable) => reviewable.fileId === over.id)
 
       //   resort the reviewables
-      const newReviewables = arrayMove(sortableReviewables, oldIndex, newIndex)
+      const newReviewables = arrayMove(playable, oldIndex, newIndex)
 
       const newOrder = newReviewables.map((reviewable) => reviewable.activityId)
 
@@ -168,12 +164,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     }))
   }
 
-  let incompatibleMessage = ''
-  if (!hasTranscoder) {
-    incompatibleMessage = `The conversion transcoder is only supported on [**Ynput Cloud**](https://ynput.cloud/subscribe/ayon). Please subscribe or [contact support](https://ynput.io/services/) for more information.`
-  } else {
-    incompatibleMessage = 'The file is not supported by the transcoder'
-  }
+  const incompatibleMessage = `File type not supported at this time. Please contact support for further assistance.`
 
   const handleDownloadFile = (fileId: string, fileName: string = '') => {
     let url = `/api/projects/${projectName}/files/${fileId}`
@@ -289,7 +280,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
                 items={reviewables.map(({ fileId }) => fileId as UniqueIdentifier)}
                 strategy={verticalListSortingStrategy}
               >
-                {sortableReviewables.map((reviewable) => (
+                {playable.map((reviewable) => (
                   <SortableReviewableCard
                     key={reviewable.fileId}
                     projectName={projectName}

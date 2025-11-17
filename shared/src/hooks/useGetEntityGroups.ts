@@ -8,6 +8,10 @@ type GetEntityGroupsProps = {
 }
 
 export const useGetEntityGroups = ({ groupBy, projectName, entityType }: GetEntityGroupsProps) => {
+  // if groupBy is taskType always use entityType 'task'
+  if (groupBy?.id === 'taskType') {
+    entityType = 'task'
+  }
   // GROUPING
   // 1. get groups data
   // 2. add that filter to the combined filter

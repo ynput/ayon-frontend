@@ -247,12 +247,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   const reviewables = selectedVersion?.reviewables || []
 
-  const { optimized, unoptimized } = useMemo(
-    () => getGroupedReviewables(reviewables as any),
-    [reviewables],
-  )
-
-  const shownOptions = [...optimized, ...unoptimized]
+  const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
@@ -297,7 +292,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
         </Styled.FullScreenWrapper>
         <Styled.RightToolBar style={{ zIndex: 1100 }}>
           <ReviewablesSelector
-            reviewables={shownOptions}
+            reviewables={playable}
             selected={reviewableIds}
             onChange={handleReviewableChange}
             onUpload={handleUploadAction(true)}

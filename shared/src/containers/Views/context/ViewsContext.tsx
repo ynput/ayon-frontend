@@ -67,7 +67,7 @@ export interface ViewsContextValue {
 
   // api
   api: typeof viewsQueries
-  dispatch: any
+  dispatch: any // dispatch is used to dispatch api mutations in pp like the share one.
 }
 
 const ViewsContext = createContext<ViewsContextValue | null>(null)
