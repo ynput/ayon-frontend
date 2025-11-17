@@ -35,6 +35,14 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getBaseView: build.query<GetBaseViewApiResponse, GetBaseViewApiArg>({
+      query: (queryArg) => ({
+        url: `/api/views/${queryArg.viewType}/base`,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
     setDefaultView: build.mutation<SetDefaultViewApiResponse, SetDefaultViewApiArg>({
       query: (queryArg) => ({
         url: `/api/views/${queryArg.viewType}/default`,
@@ -114,6 +122,18 @@ export type GetDefaultViewApiResponse =
   | VersionsViewModel
   | ReportsViewModel
 export type GetDefaultViewApiArg = {
+  viewType: string
+  projectName?: string
+}
+export type GetBaseViewApiResponse =
+/** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
+  | ReportsViewModel
+export type GetBaseViewApiArg = {
   viewType: string
   projectName?: string
 }

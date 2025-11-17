@@ -10,6 +10,7 @@ import {
   viewsQueries,
   useGetShareOptionsQuery,
   ShareOption,
+  useGetBaseViewQuery,
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
@@ -41,6 +42,7 @@ export interface ViewsContextValue {
   viewSettings: ViewSettings | undefined
   workingSettings: ViewSettings | undefined
   workingView: ViewListItemModel | undefined
+  baseView: ViewListItemModel | undefined
   editingViewId: string | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
@@ -157,6 +159,10 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
+  const {currentData: baseView} = useGetBaseViewQuery(
+    { projectName: projectName, viewType: viewType as string },
+    { skip: !viewType },
+  )
 
   const workingSettings = workingView?.settings
 
@@ -208,7 +214,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
         setSelectedView,
         setSettingsChanged: setViewSettingsChanged,
         notify: true,
-        viewsList
+        baseViewId: baseView?.id
       })
     } catch (error) {
       console.error('Failed to reset view:', error)
@@ -252,6 +258,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     isLoadingEditingViewData,
     viewsList,
     workingView,
+    baseView,
     editingViewId,
     viewMenuItems,
     isLoadingViews,

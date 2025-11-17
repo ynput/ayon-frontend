@@ -36,7 +36,7 @@ export type UseViewMutations = {
     setSelectedView?: (id: string) => void
     setSettingsChanged?: (changed: boolean) => void
     notify?: boolean
-    viewsList?: any[]
+    baseViewId?: string
   }) => Promise<string>
 }
 type R = UseViewMutations
@@ -130,11 +130,13 @@ export const useViewsMutations = ({
 
   const onResetWorkingView = useCallback<R['onResetWorkingView']>(
     async (args) => {
-      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify, viewsList } =
+      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify, baseViewId } =
         args || {}
       if (!viewType) {
         throw new Error('viewType are required for resetting a view')
       }
+      if(baseViewId) return baseViewId
+
 
       const freshWorkingView = generateWorkingView({})
       if (existingWorkingViewId) {
