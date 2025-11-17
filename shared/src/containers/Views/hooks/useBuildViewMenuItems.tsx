@@ -13,13 +13,14 @@ import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
-import { usePowerpack, useRemoteModules } from '@shared/context'
+import { usePowerpack } from '@shared/context'
 import { CollapsedViewState } from '../context/ViewsContext'
 import { confirmDialog } from 'primereact/confirmdialog'
 
 // constants
 export const WORKING_VIEW_ID = '_working_' as const
 export const NEW_VIEW_ID = '_new_view_' as const
+export const BASE_VIEW_ID = '__base__' as const
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
   highlighted?: 'save' | 'edit'
@@ -124,7 +125,7 @@ const useBuildViewMenuItems = ({
         header: 'Confirm Base View',
         accept: async () => {
           try {
-            const existingBaseView = viewsList.find((view) => view.label === '__base__')
+            const existingBaseView = viewsList.find((view) => view.label === BASE_VIEW_ID)
             let baseViewId: string
 
             if (existingBaseView) {
@@ -137,7 +138,7 @@ const useBuildViewMenuItems = ({
               let settings = workingView?.settings || {}
 
               const baseViewPayload = {
-                label: '__base__',
+                label:BASE_VIEW_ID,
                 visibility: 'public',
                 working: false,
                 settings,
