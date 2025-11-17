@@ -62,7 +62,11 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route
         path={'/projects/:projectName'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }
@@ -70,7 +74,11 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route
         path={'/projects/:projectName/:module/*'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }
@@ -78,7 +86,11 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route
         path={'/projects/:projectName/addon/:addonName'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }
