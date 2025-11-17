@@ -7,7 +7,7 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { $Any } from '@types'
 import { openViewer } from '@state/viewer'
 import { useScopedDetailsPanel } from '@shared/context'
-import useGoToEntity from '@pages/ProjectOverviewPage/hooks/useGoToEntity'
+import useGoToEntity from '@hooks/useGoToEntity'
 import { useSlicerContext } from '@context/SlicerContext'
 import { selectProgress } from '@state/progress'
 

@@ -32,7 +32,7 @@ import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
-import useGoToEntity from './hooks/useGoToEntity'
+import useGoToEntity from '../../hooks/useGoToEntity'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
