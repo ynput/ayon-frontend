@@ -155,6 +155,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
             // special handling of link cells
             if (colId.startsWith('link_')) {
+              // @ts-expect-error - only complaining about missing __typename
               cellValue = getLinkEntityIdsByColumnId(entity.links, colId)
             } else {
               // @ts-ignore
@@ -444,20 +445,43 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             isAttrib = colId.startsWith('attrib_')
             isLink = colId.startsWith('link_')
 
-            // Determine if field is an array and its value type
-            // @ts-ignore - Check entity property or attribute
-            const fieldValue = getCellValue(entity, colId)
-            if (Array.isArray(fieldValue) || isLink) {
-              fieldValueType = 'array'
-            } else if (typeof fieldValue === 'number') {
-              fieldValueType = 'number'
-            } else if (typeof fieldValue === 'boolean') {
-              fieldValueType = 'boolean'
-            }
-
-            // Special case for subType
-            if (colId === 'subType') {
+            // Determine field type based on type or attrib type
+            if (colId === 'status' || colId === 'subType') {
+              // status and subType are strings
+              fieldValueType = 'string'
+              // special case to avoid treating subType as attrib (not sure if this is needed)
               isAttrib = false
+            } else if (colId === 'tags' || colId === 'assignees') {
+              // tags and assignees are always arrays
+              fieldValueType = 'array'
+            } else if (isAttrib) {
+              // find type based on attribFields
+              const fieldName = colId.replace('attrib_', '')
+              const attribField = attribFields.find((f) => f.name === fieldName)
+              if (attribField) {
+                const dataType = attribField.data.type
+                switch (dataType) {
+                  case 'boolean':
+                    fieldValueType = 'boolean'
+                    break
+                  case 'float':
+                  case 'integer':
+                    fieldValueType = 'number'
+                    break
+                  case 'list_of_strings':
+                  case 'list_of_any':
+                  case 'list_of_integers':
+                  case 'list_of_submodels':
+                    fieldValueType = 'array'
+                    break
+                  default:
+                    // everything else is string
+                    fieldValueType = 'string'
+                }
+              }
+            } else if (isLink) {
+              // links are always arrays
+              fieldValueType = 'array'
             }
           }
         }

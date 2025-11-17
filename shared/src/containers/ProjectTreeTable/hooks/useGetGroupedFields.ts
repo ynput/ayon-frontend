@@ -41,7 +41,7 @@ export const useGetGroupedFields = ({
           value: 'taskType',
           label: 'Task type',
           icon: getAttributeIcon('task'),
-          scopes: ['task'],
+          scopes: ['task', 'version'],
         },
         {
           value: 'productType',

@@ -1,5 +1,9 @@
-import { getAttributeIcon } from '@shared/util'
-import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
+import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import {
+  useGetEntityGroupsQuery,
+  useGetKanbanProjectUsersQuery,
+  useGetProjectsInfoQuery,
+} from '@shared/api'
 import type {
   GetProjectsInfoResponse,
   FolderType,
@@ -9,7 +13,7 @@ import type {
   AttributeModel,
   AttributeEnumItem,
   AttributeData,
-  ProductType,
+  EntityGroup,
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter } from '@ynput/ayon-react-components'
@@ -112,7 +116,22 @@ export const useBuildFilterOptions = ({
       s.filterTypes.includes(type as FilterFieldType),
     ),
   )
-  const anyNeedsAttributes = scopesWithTypes.some((s) => s.filterTypes.includes('attributes'))
+  // find if any search field is in any of the scopesWithTypes
+  const fieldInScopes = (field: FilterFieldType): boolean => {
+    return scopesWithTypes.some((s) => s.filterTypes.includes(field))
+  }
+
+  // get grouping options for productTypes
+  // NOTE: We should revisit this to be used for all attribs and fields
+  const { data: { groups: productTypes = [] } = {} } = useGetEntityGroupsQuery(
+    {
+      entityType: 'product',
+      groupingKey: 'productType',
+      projectName: projectNames[0],
+      empty: true,
+    },
+    { skip: !projectNames?.length || !fieldInScopes('productType') },
+  )
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     {
@@ -159,7 +178,7 @@ export const useBuildFilterOptions = ({
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
-        let subTypes = getSubTypes(projectsInfo, 'task')
+        let subTypes = getSubTypes({ projectsInfo, productTypes }, 'task')
 
         entitySubTypeOption.values?.push(...subTypes)
 
@@ -181,7 +200,7 @@ export const useBuildFilterOptions = ({
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
-        let subTypes = getSubTypes(projectsInfo, 'folder')
+        let subTypes = getSubTypes({ projectsInfo, productTypes }, 'folder')
 
         entitySubTypeOption.values?.push(...subTypes)
 
@@ -203,7 +222,7 @@ export const useBuildFilterOptions = ({
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
-        let subTypes = getSubTypes(projectsInfo, 'product')
+        let subTypes = getSubTypes({ projectsInfo, productTypes }, 'product')
         entitySubTypeOption.values?.push(...subTypes)
         options.push(entitySubTypeOption)
       }
@@ -494,32 +513,25 @@ export const useBuildFilterOptions = ({
 //
 //
 //
-const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: ScopeType): Option[] => {
+const getSubTypes = (
+  {
+    projectsInfo,
+    productTypes,
+  }: { projectsInfo: GetProjectsInfoResponse; productTypes: EntityGroup[] },
+  type: ScopeType,
+): Option[] => {
   const options: Option[] = []
   if (type === 'product') {
-    Object.values(projectsInfo).forEach((project) => {
-      // for each project, get all productTypes and add them to the options (if they don't already exist)
-      const productTypes = project?.anatomy?.product_base_types?.definitions || []
-      // this project seems to have no product types
-      if (productTypes.length === 0) {
-        return
-      }
-      productTypes
-        .filter((p) => !!p.name)
-        .forEach((productType) => {
-          if (!options.some((option) => option.id === productType.name)) {
-            options.push({
-              id: productType.name as string,
-              type: 'string',
-              label: productType.name as string,
-              icon: productType.icon,
-              color: productType.color,
-              inverted: false,
-              values: [],
-              allowsCustomValues: false,
-            })
-          }
-        })
+    productTypes.forEach(({ icon, label, value }) => {
+      options.push({
+        id: value,
+        type: 'string',
+        label: label || value,
+        icon: icon || getEntityTypeIcon('product'),
+        inverted: false,
+        values: [],
+        allowsCustomValues: false,
+      })
     })
   } else if (type === 'task') {
     Object.values(projectsInfo).forEach((project) => {

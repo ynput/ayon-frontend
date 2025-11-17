@@ -101,10 +101,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     },
     ref,
   ) => {
-    const handleLinkClick = useCallback((e: React.MouseEvent, url: string) => {
-      window.open(url, '_blank', 'noopener,noreferrer')
-    }, [])
-
     if (isEditing) {
       return (
         <TextWidgetInput
@@ -135,7 +131,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
               a: ({ href, children }) => (
                 <StyledLink
                   href={href || '#'}
-                  onClick={(e) => href && handleLinkClick(e as unknown as React.MouseEvent, href)}
                   onMouseDown={(e) => e.stopPropagation()}
                   target="_blank"
                   rel="noopener noreferrer"
