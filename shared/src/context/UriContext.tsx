@@ -1,5 +1,5 @@
 // The URI is a unique AYON ID for entities and settings paths
-// Entity: ayon+entity://wing_it//shots/000_logo/000_0010?task=lighting
+// Entity: ayon+entity://project_name//shots/000_logo/000_0010?task=lighting
 // Settings: ayon+settings://maya/ext_mapping/0/name
 
 // The URI is always synced with the url search param "uri"
