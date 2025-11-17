@@ -3,8 +3,11 @@ import {
   useDetailsPanelEntityContext,
   useProjectTableContext,
   isEntityRestricted,
+  useSelectionCellsContext,
+  getCellId,
+  ROW_SELECTION_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable'
-import { FC, useMemo, useState } from 'react' // Added useState
+import { FC, useEffect, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
@@ -257,7 +260,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
-  const { deleteListItemAction } = useListItemsDataContext()
+  const { setSelectedCells } = useSelectionCellsContext()
+  const {
+    deleteListItemAction,
+    listItemsData,
+    isLoadingAll: isLoadingListItems,
+    listItemsFilters,
+    setListItemsFilters,
+  } = useListItemsDataContext()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
@@ -285,6 +295,38 @@ const ProjectLists: FC<ProjectListsProps> = ({
     // open settings panel and highlig the attribute
     selectSetting('columns', attrib)
   }
+
+  // Handle URI opening to select list item
+  // We use state and effect because the uri callback can be called before data is loaded
+  const [uriEntityId, setUriEntityId] = useState<null | string>(null)
+  useEffect(() => {
+    if (!uriEntityId) return
+
+    // if there are filters, we need to remove them first
+    if (listItemsFilters.conditions?.length) {
+      setListItemsFilters({})
+      return
+      // now the list items data will reload without filters, and the effect will run again
+    }
+
+    if (isLoadingListItems || !listItemsData.length) return
+
+    setUriEntityId(null)
+    console.debug('URI found, navigating to list item:', uriEntityId)
+
+    // find the list item by entity id
+    const listItem = listItemsData.find((item) => item.entityId === uriEntityId)
+    if (!listItem) {
+      console.warn('List item not found for entity ID:', uriEntityId)
+      return
+    }
+
+    // select the list item in the table
+    // Select the entity in the table
+    setSelectedCells(
+      new Set([getCellId(listItem.id, 'name'), getCellId(listItem.id, ROW_SELECTION_COLUMN_ID)]),
+    )
+  }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
 
   return (
     <main style={{ gap: 4 }}>
@@ -363,6 +405,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       projectInfo={projectInfo}
                       projectName={projectName}
                       isOpen={shouldShowEntityDetailsPanel}
+                      onUriOpen={(entity) => setUriEntityId(entity.id)}
                     />
                     {selectedList &&
                       !shouldShowEntityDetailsPanel &&
