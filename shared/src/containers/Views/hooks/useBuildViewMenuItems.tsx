@@ -1,11 +1,17 @@
-import { useCreateViewMutation, UserModel, ViewListItemModel, useSetDefaultViewMutation, GetWorkingViewApiResponse } from '@shared/api'
+import {
+  GetWorkingViewApiResponse,
+  useCreateViewMutation,
+  UserModel,
+  useSetDefaultViewMutation,
+  ViewListItemModel,
+} from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
-import { generateWorkingView, generateViewId } from '../utils/generateWorkingView'
+import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
-import { useLoadModule, useLocalStorage } from '@shared/hooks'
+import { useLoadModule } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack, useRemoteModules } from '@shared/context'
 import { CollapsedViewState } from '../context/ViewsContext'
@@ -52,12 +58,8 @@ const useBuildViewMenuItems = ({
   onResetWorkingView,
   selectedId,
 }: Props): ViewMenuItem[] => {
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
-  const { modules } = useRemoteModules()
+  const { powerLicense } = usePowerpack()
 
-  // Get powerpack version
-  const powerpackModule = modules.find((m) => m.addonName === 'powerpack')
-  const powerpackVersion = powerpackModule?.addonVersion
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
@@ -132,32 +134,12 @@ const useBuildViewMenuItems = ({
               const viewIdToSave = sourceViewId || baseViewId
               await onSave(viewIdToSave)
             } else {
-              // Create new __base__ view
-              baseViewId = generateViewId()
-
-              // If sourceViewId is provided, use that view's settings
-              // Otherwise use working view settings or empty
               let settings = workingView?.settings || {}
 
-              if (sourceViewId) {
-                // Find the source view and use its settings
-                const sourceView = viewsList.find((v) => v.id === sourceViewId)
-                if (sourceView) {
-                  // Fetch full view data to get settings
-                  try {
-                    // TODO: Fetch the full view data here if needed
-                    // For now, we'll save from current working view
-                  } catch (error) {
-                    console.warn('Could not fetch source view settings:', error)
-                  }
-                }
-              }
-
               const baseViewPayload = {
-                id: baseViewId,
                 label: '__base__',
-                working: true,
                 visibility: 'public',
+                working: false,
                 settings,
               } as any
 
@@ -167,8 +149,6 @@ const useBuildViewMenuItems = ({
                 projectName: projectName,
               }).unwrap()
             }
-
-            toast.success('Base view updated successfully')
           } catch (error: any) {
             console.error('Failed to set default view:', error)
             toast.error(`Failed to set default view: ${error?.message || error}`)
@@ -180,10 +160,7 @@ const useBuildViewMenuItems = ({
   )
 
   // Handler for working view specifically
-  const onMakeBaseView = useCallback(
-    createMakeBaseViewHandler(),
-    [createMakeBaseViewHandler],
-  )
+  const onMakeBaseView = useCallback(createMakeBaseViewHandler(), [createMakeBaseViewHandler])
 
   const [getCustomViews, { isLoading: isLoadingQueries }] = useLoadModule({
     addon: 'powerpack',

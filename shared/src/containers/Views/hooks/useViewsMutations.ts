@@ -136,29 +136,7 @@ export const useViewsMutations = ({
         throw new Error('viewType are required for resetting a view')
       }
 
-      // Check if __base__ view exists
-      const baseView = viewsList?.find((v) => v.label === '__base__')
-      let baseSettings = {}
-
-      // If __base__ exists, fetch its full data to get settings
-      if (baseView) {
-        try {
-          // Use dispatch to fetch the view data using RTK Query's initiate
-          const queryAction = viewsQueries.endpoints.getView.initiate({
-            viewId: baseView.id,
-            viewType: viewType as string,
-            projectName,
-          })
-          const result = await dispatch(queryAction as any)
-          const baseViewData = await result.unwrap()
-          baseSettings = baseViewData.settings || {}
-          result.unsubscribe()
-        } catch (error) {
-          console.warn('Error fetching __base__ view:', error)
-        }
-      }
-
-      const freshWorkingView = generateWorkingView(baseSettings)
+      const freshWorkingView = generateWorkingView({})
       if (existingWorkingViewId) {
         freshWorkingView.id = existingWorkingViewId
       }
