@@ -4,7 +4,7 @@
 
 import { getCellId, ROW_SELECTION_COLUMN_ID } from '@shared/containers'
 import { useProjectFoldersContext } from '@shared/context'
-import { ExpandedState } from '@tanstack/react-table'
+import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { useCallback } from 'react'
 
 type Value = {
@@ -21,13 +21,19 @@ type Value = {
 type Props = {
   page: 'overview' | 'progress' | 'products' | 'lists'
   onViewUpdate?: () => void // do something to update the view before selecting
-  onExpand?: (expanded: ExpandedState) => void // callback when folders are expanded (unique for each page)
+  onExpandFolders?: (expanded: ExpandedState, selected: RowSelectionState) => void // callback when folders are expanded and selected (unique for each page)
   onSelection?: (selectedIds: string[], entityType: string) => void // callback when entity is selected
   onParentSelection?: (parentId: string) => void // callback when parent entity is selected
 }
 
 // return function to go to the entity
-const useGoToEntity = ({ page, onViewUpdate, onExpand, onSelection, onParentSelection }: Props) => {
+const useGoToEntity = ({
+  page,
+  onViewUpdate,
+  onExpandFolders,
+  onSelection,
+  onParentSelection,
+}: Props) => {
   // folders context with folders data with helper function
   const { getParentFolderIds } = useProjectFoldersContext()
 
@@ -36,6 +42,7 @@ const useGoToEntity = ({ page, onViewUpdate, onExpand, onSelection, onParentSele
       // first if there is a callback to change the view, call it
       onViewUpdate?.()
 
+      // helpers function to get expanded folders state
       const getExpandedFolders = (folderId: string) => {
         // get all parent folder IDs
         const parentFolderIds = getParentFolderIds(folderId)
@@ -48,40 +55,64 @@ const useGoToEntity = ({ page, onViewUpdate, onExpand, onSelection, onParentSele
         return expandedFolderState
       }
 
+      // helper function to get selection with row selection cell
+      const getTableSelection = (id: string) => {
+        return [getCellId(id, 'name'), getCellId(id, ROW_SELECTION_COLUMN_ID)]
+      }
+
       let selectionList: string[] = []
-      let expandedDict: ExpandedState = {}
+      let expandedFolders: ExpandedState = {}
+      let selectedFolders: RowSelectionState = {}
+      let folderId: string | undefined = parents.folder
       let parentId: string | undefined = undefined
 
       if (['folder', 'task'].includes(entityType) && parents.folder) {
-        const folderId = entityType === 'folder' ? entityId : parents.folder
+        // for folders, the parentId is the folder itself
+        folderId = entityType === 'folder' ? entityId : parents.folder
         parentId = folderId
-        expandedDict = getExpandedFolders(folderId)
 
+        // OVERVIEW PAGE
         if (page === 'overview') {
-          selectionList = [
-            getCellId(entityId, 'name'),
-            getCellId(entityId, ROW_SELECTION_COLUMN_ID),
-          ]
+          selectionList = getTableSelection(entityId)
         }
 
+        // TASK PROGRESS PAGE
         if (page === 'progress') {
           selectionList = [entityId]
         }
+
+        // TODO: lists page?
+      }
+
+      // version selection for products page
+      if (entityType === 'version' && page === 'products') {
+        // check we have a product and folder parent
+        if (parents.product && parents.folder) {
+          parentId = parents.product
+          // expand parent product folder
+          expandedFolders = getExpandedFolders(parents.folder)
+          // set selection to version id
+          selectionList = getTableSelection(entityId)
+        }
+      }
+
+      // what folders are this entity in?
+      if (folderId) {
+        expandedFolders = getExpandedFolders(folderId)
+        selectedFolders = { [folderId]: true }
+        onExpandFolders?.(expandedFolders, selectedFolders)
       }
 
       // Call onSelection and onExpand at the end once
       if (selectionList.length) {
         onSelection?.(selectionList, entityType)
       }
-      if (Object.keys(expandedDict).length) {
-        onExpand?.(expandedDict)
-      }
+
       if (parentId) {
-        // also select the parent folder if applicable
         onParentSelection?.(parentId)
       }
     },
-    [onSelection, getParentFolderIds, onViewUpdate, onExpand],
+    [onSelection, getParentFolderIds, onViewUpdate, onExpandFolders],
   )
 
   return { goToEntity }

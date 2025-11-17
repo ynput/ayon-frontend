@@ -67,8 +67,7 @@ const ProjectOverviewPage: FC = () => {
   const { setSelectedCells } = useSelectionCellsContext()
 
   // load slicer remote config
-  const { config, sliceType, setPersistentRowSelectionData, setExpanded, setRowSelection } =
-    useSlicerContext()
+  const { config, sliceType, setPersistentRowSelectionData, ...slicer } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
 
   const handleFiltersChange = (newQueryFilters: QueryFilter) => {
@@ -107,14 +106,12 @@ const ProjectOverviewPage: FC = () => {
       // ensure hierarchy is shown
       updateShowHierarchy(true)
     },
-    onExpand: (expanded) => {
+    onExpandFolders: (expanded, selected) => {
       updateExpanded(expanded) // expand table folders
-      setExpanded(expanded) // expand slicer folders
+      slicer.setExpanded(expanded) // expand slicer folders
+      slicer.setRowSelection(selected) // select folders in slicer (actually one folder)
     }, // expand folders
     onSelection: (selectedIds: string[]) => setSelectedCells(new Set(selectedIds)), // select entities
-    onParentSelection: (parentId) => {
-      setRowSelection({ [parentId]: true })
-    },
   })
 
   // select the entity in the table and expand its parent folders

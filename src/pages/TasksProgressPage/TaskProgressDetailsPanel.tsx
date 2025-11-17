@@ -38,16 +38,13 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
       // reset filters
       setQueryFilters({})
     },
-    onExpand: (expanded) => {
-      // open slicer folders
-      slicer.setExpanded(expanded)
+    onExpandFolders: (expanded, selected) => {
+      slicer.setExpanded(expanded) // open slicer folders
+      slicer.setRowSelection(selected) // select parent folder in slicer
     },
     onSelection: (selected, entityType) => {
       dispatch(selectProgress({ ids: selected, type: entityType as 'task' | 'folder' }))
       setOpen(true)
-    },
-    onParentSelection: (parentId) => {
-      slicer.setRowSelection({ [parentId]: true })
     },
   })
 
