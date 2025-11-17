@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, ReactNode } from 'react'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -6,7 +6,20 @@ import clsx from 'clsx'
 import * as Styled from './Menu.styled'
 import { useMenuPosition } from './useMenuPosition'
 
-const MenuContainerV2 = ({
+type AlignType = 'left' | 'right'
+type ThemeType = 'light' | 'dark'
+
+interface MenuContainerProps {
+  id: string | undefined
+  target?: HTMLElement | null
+  targetId?: string
+  align?: AlignType
+  theme?: ThemeType
+  children: ReactNode
+  [key: string]: any
+}
+
+export const MenuContainer: React.FC<MenuContainerProps> = ({
   id,
   target,
   targetId = '',
@@ -23,7 +36,7 @@ const MenuContainerV2 = ({
     setMenuOpen(false)
   }
 
-  const handleNavigate = (path) => {
+  const handleNavigate = (path?: string) => {
     console.log('navigate and close')
     handleClose()
     if (path) navigate(path)
@@ -32,7 +45,7 @@ const MenuContainerV2 = ({
   if (!isOpen) return null
 
   return (
-    <MenuInner2
+    <MenuInner
       {...{
         handleClose,
         handleNavigate,
@@ -47,7 +60,17 @@ const MenuContainerV2 = ({
   )
 }
 
-const MenuInner2 = ({
+interface MenuInnerProps {
+  handleClose: () => void
+  handleNavigate: (path?: string) => void
+  target?: HTMLElement | null
+  targetId?: string
+  align?: AlignType
+  children: ReactNode
+  [key: string]: any
+}
+
+const MenuInner: React.FC<MenuInnerProps> = ({
   handleClose,
   handleNavigate,
   target,
@@ -56,33 +79,36 @@ const MenuInner2 = ({
   children,
   ...props
 }) => {
-  const { position, menuRef } = useMenuPosition(target, targetId)
+  const { position, menuRef } = useMenuPosition(target ?? null, targetId ?? '', align)
 
   // Focus management
   useEffect(() => {
     if (position && menuRef.current) {
-      const first = menuRef.current.querySelectorAll('li, button')[0]
+      const first = menuRef.current.querySelectorAll('li, button')[0] as HTMLElement
       first?.focus()
     }
   }, [position])
 
   // Keyboard handling
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') handleClose()
   }
 
   // Click outside handling
-  const handleOnClick = (e) => {
-    if (e.target.id === 'dialog') handleClose()
+  const handleOnClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+    if ((e.target as HTMLElement).id === 'dialog') handleClose()
   }
 
   // Attach props to children
   const childrenWithProps = React.Children.map(children, (child, i) => {
-    return React.cloneElement(child, {
-      onClose: handleClose,
-      index: i,
-      navigate: handleNavigate,
-    })
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, {
+        onClose: handleClose,
+        index: i,
+        navigate: handleNavigate,
+      } as any)
+    }
+    return child
   })
 
   if (!position) return null
@@ -93,7 +119,7 @@ const MenuInner2 = ({
       onClick={handleOnClick}
       onKeyDown={handleKeyDown}
       {...props}
-      ref={menuRef}
+      ref={menuRef as any}
       id="dialog"
     >
       <Styled.DialogContent id="content" style={position} className={clsx(align)}>
@@ -103,5 +129,3 @@ const MenuInner2 = ({
     document.body,
   )
 }
-
-export default MenuContainerV2

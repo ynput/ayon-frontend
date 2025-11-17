@@ -15,7 +15,7 @@ import RemoveMarkdown from 'remove-markdown'
 const groupMessages = (messages = [], currentUser) => {
   const groups = []
   const visited = new Array(messages.length).fill(false) // Tracks if a message has been grouped
-  
+
   const versionPublishGroups = groupVersionMessages(messages)
   const assigneeGroups = groupAssigneeMessages(messages)
 
@@ -31,7 +31,7 @@ const groupMessages = (messages = [], currentUser) => {
 
     groups.push(folderMessages)
   }
-  
+
   for (const reassignmentGroup of assigneeGroups) {
     if (reassignmentGroup.length === 0) continue
 
@@ -143,8 +143,8 @@ const groupVersionMessages = (messages) => {
       if (folderId === 'no-parent' || folderMessages.length === 0) continue
 
       // Sort messages within the folder group by time (newest first)
-      const sortedMessages = folderMessages.sort((a, b) =>
-        new Date(b.createdAt) - new Date(a.createdAt)
+      const sortedMessages = folderMessages.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       )
 
       folderGroups.push(sortedMessages)
@@ -163,7 +163,7 @@ const groupAssigneeMessages = (messages) => {
 
   // Sort all messages by time to ensure chronological processing
   const allAssigneeMessages = [...removes, ...adds].sort(
-    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
   )
 
   allAssigneeMessages.forEach((msg) => {
@@ -171,7 +171,7 @@ const groupAssigneeMessages = (messages) => {
 
     const entityId = msg.entityId
     const msgTime = new Date(msg.createdAt)
-    
+
     if (!entityTimeWindowGroups.has(entityId)) {
       entityTimeWindowGroups.set(entityId, [])
     }
@@ -207,9 +207,7 @@ const groupAssigneeMessages = (messages) => {
       const removedAssignees = new Set(
         groupRemoves.map((m) => m.activityData?.assignee).filter(Boolean),
       )
-      const addedAssignees = new Set(
-        groupAdds.map((m) => m.activityData?.assignee).filter(Boolean),
-      )
+      const addedAssignees = new Set(groupAdds.map((m) => m.activityData?.assignee).filter(Boolean))
 
       // Calculate net changes
       const netRemoved = new Set(
@@ -332,13 +330,9 @@ const transformGroups = (groups = []) => {
       const netAdded = [...addedAssignees].filter((assignee) => !removedAssignees.has(assignee))
 
       // Build lists of usernames using the lookup map
-      const removedUserNames = netRemoved
-        .map((userId) => userLookup.get(userId))
-        .filter(Boolean)
+      const removedUserNames = netRemoved.map((userId) => userLookup.get(userId)).filter(Boolean)
 
-      const addedUserNames = netAdded
-        .map((userId) => userLookup.get(userId))
-        .filter(Boolean)
+      const addedUserNames = netAdded.map((userId) => userLookup.get(userId)).filter(Boolean)
 
       // Determine a message type based on what we have
       if (removedUserNames.length > 0 && addedUserNames.length > 0) {
@@ -346,17 +340,23 @@ const transformGroups = (groups = []) => {
         activityType = 'assignee.reassign'
         const removedList = removedUserNames.join(', ')
         const addedList = addedUserNames.join(', ')
-        customBody = `${author.attrib.fullName || author.name || ""}: Reassigned ${entityLink} from ${removedList} to ${addedList}`
+        customBody = `${
+          author.attrib.fullName || author.name || ''
+        }: Reassigned ${entityLink} from ${removedList} to ${addedList}`
       } else if (addedUserNames.length > 0) {
         // Multiple adds only
         activityType = 'assignee.add'
         const addedList = addedUserNames.join(', ')
-        customBody = `${author.attrib.fullName || author.name || ""}: Added ${addedList} to ${entityLink}`
+        customBody = `${
+          author.attrib.fullName || author.name || ''
+        }: Added ${addedList} to ${entityLink}`
       } else if (removedUserNames.length > 0) {
         // Multiple removes only
         activityType = 'assignee.remove'
         const removedList = removedUserNames.join(', ')
-        customBody = `${author.attrib.fullName || author.name || ""}: Removed ${removedList} from ${entityLink}`
+        customBody = `${
+          author.attrib.fullName || author.name || ''
+        }: Removed ${removedList} from ${entityLink}`
       }
     }
 
@@ -366,8 +366,8 @@ const transformGroups = (groups = []) => {
     let finalPath = firstMessage.path
 
     // Check if this group contains version.publish or reviewable messages
-    const hasVersionOrReview = group.some(m =>
-      m.activityType === 'version.publish' || m.activityType === 'reviewable'
+    const hasVersionOrReview = group.some(
+      (m) => m.activityType === 'version.publish' || m.activityType === 'reviewable',
     )
 
     if (isMultiple && hasVersionOrReview) {
@@ -380,7 +380,7 @@ const transformGroups = (groups = []) => {
         finalPath = [parentFolder.label || parentFolder.name]
 
         const authorMap = new Map()
-        group.forEach(msg => {
+        group.forEach((msg) => {
           if (msg.author) {
             const authorKey = msg.author.name
             if (!authorMap.has(authorKey)) {
@@ -391,14 +391,14 @@ const transformGroups = (groups = []) => {
 
         const authors = Array.from(authorMap.values())
         const versionCount = group.length
-        const hasReviewable = group.some(m => m.activityType === 'reviewable')
+        const hasReviewable = group.some((m) => m.activityType === 'reviewable')
 
         // Use only the primary author
         const primaryAuthor = authors[0]?.attrib?.fullName || authors[0]?.name
 
         // Collect product names from the group
         const productNames = []
-        group.forEach(msg => {
+        group.forEach((msg) => {
           // Get product name from activityData.context
           const productName = msg.activityData?.context?.productName
           if (productName && !productNames.includes(productName)) {
@@ -456,7 +456,7 @@ const transformGroups = (groups = []) => {
       isMultiple,
       messages: group,
     }
-    
+
     if (customBody) {
       result.body = RemoveMarkdown(customBody)
     }
@@ -466,7 +466,6 @@ const transformGroups = (groups = []) => {
 }
 
 const useGroupMessages = ({ messages, currentUser }) => {
-  console.log(messages)
   const grouped = useMemo(() => {
     // const simpleGroups = messages.map((message) => [message])
     const simpleGroups = groupMessages(messages, currentUser)

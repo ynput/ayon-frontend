@@ -6,10 +6,7 @@ import { useRef } from 'react'
 import { useMenuContext } from '@shared/context'
 import { useColumnSettingsContext } from '../context'
 import { useColumnGroupBy } from '../hooks'
-// @ts-expect-error - non TS file
-import Menu from '../../../../../src/components/Menu/MenuComponents/Menu'
-// @ts-expect-error - non TS file
-import MenuContainer from '../../../../../src/components/Menu/MenuComponents/MenuContainer2'
+import { Menu, MenuContainer } from '@shared/components'
 
 const MenuButton = styled(Button)<{ $isOpen: boolean }>`
   background-color: unset !important;

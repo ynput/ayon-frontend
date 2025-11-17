@@ -274,6 +274,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     const project = searchParams.get('project')
     const type = searchParams.get('type')
     const id = searchParams.get('id')
+    const activity = searchParams.get('activity')
 
     if (project && type && id) {
       const newEntities: Entities = {
@@ -288,6 +289,11 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
       }
 
       setEntities(newEntities)
+
+      // if there is an activity param, open the activity tab
+      if (activity) {
+        setHighlightedActivities([activity])
+      }
     }
   }, [])
 

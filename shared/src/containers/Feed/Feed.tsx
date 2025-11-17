@@ -110,14 +110,14 @@ export const Feed = ({ disabled, readOnly, statuses = [], entityListId }: FeedPr
     disabled: !!highlightedActivities.length,
     isLoading: isLoadingNew,
   })
-
   // try and scroll to highlightedActivities activity
   useScrollToHighlighted({
     feedRef,
     highlighted: highlightedActivities,
-    isLoading: isLoadingNew,
+    isLoading: isLoadingNew || isLoadingNextPage,
     loadNextPage,
     hasNextPage: !!loadNextPage,
+    activities: activitiesData,
   })
 
   // comment mutations here!

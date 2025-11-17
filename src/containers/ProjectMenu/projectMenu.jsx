@@ -1,6 +1,6 @@
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import MenuList from '@components/Menu/MenuComponents/MenuList'
+import { MenuList } from '@shared/components'
 import { useListProjectsQuery, useSetFrontendPreferencesMutation } from '@shared/api'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'

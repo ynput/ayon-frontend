@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
@@ -22,11 +22,14 @@ import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { useFeedContext } from '../../context/FeedContext'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
+import { MenuContainer } from '@shared/components'
+import { useMenuContext } from '@shared/context'
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
+import ActivityCommentMenu from './ActivityCommentMenu'
 
 type Props = {
   activity: any
@@ -67,6 +70,9 @@ const ActivityComment = ({
   const { userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest } =
     useFeedContext()
 
+  const moreRef = useRef<HTMLButtonElement>(null)
+  const { toggleMenuOpen, menuOpen } = useMenuContext()
+
   const categoryData = useMemo(() => {
     return categories.find((cat) => cat.name === activity.activityData?.category) || null
   }, [activity?.activityData?.category, categories])
@@ -88,6 +94,9 @@ const ActivityComment = ({
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
+
+  const menuId = `activity-comment-menu-${activityId}`
+  const isMenuOpen = menuOpen === menuId
 
   const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()
 
@@ -180,6 +189,7 @@ const ActivityComment = ({
           isEditing,
           isHighlighted,
           category: !!categoryData && !isGuest,
+          menuOpen: isMenuOpen,
         })}
         id={activityId}
         $categoryPrimary={categoryData?.color}
@@ -200,23 +210,20 @@ const ActivityComment = ({
           children={undefined}
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
-          {!readOnly && isOwner ? (
-            <Styled.Tools className={'tools'}>
-              {onDelete && (
-                <Styled.ToolButton
-                  icon="delete"
-                  onClick={deleteConfirmation}
-                  tooltip="Delete comment"
-                  variant="text"
-                />
-              )}
-              {handleEditComment && (
-                <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
-              )}
-            </Styled.Tools>
-          ) : (
-            <div className="tools"></div>
-          )}
+          <Styled.Tools className={'tools'}>
+            {!readOnly && isOwner && handleEditComment && (
+              <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
+            )}
+            <Styled.ToolButton
+              icon="more_horiz"
+              ref={moreRef}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleMenuOpen(menuId)
+              }}
+              className={isMenuOpen ? 'active' : ''}
+            />
+          </Styled.Tools>
 
           {!isEditing && !isGuest && categoryData && (
             <CategoryTag
@@ -323,6 +330,24 @@ const ActivityComment = ({
           )}
         </Styled.Body>
       </Styled.Comment>
+
+      <MenuContainer
+        target={moreRef.current}
+        id={menuId}
+        align="left"
+        onClose={(e: any) => {
+          e?.stopPropagation()
+          toggleMenuOpen(false)
+        }}
+      >
+        <ActivityCommentMenu
+          onDelete={isOwner && onDelete ? deleteConfirmation : undefined}
+          onEdit={isOwner && handleEditComment}
+          activityId={activityId}
+          onSelect={() => toggleMenuOpen(false)}
+          projectName={projectName}
+        />
+      </MenuContainer>
     </>
   )
 }
