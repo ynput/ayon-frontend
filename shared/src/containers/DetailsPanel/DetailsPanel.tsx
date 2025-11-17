@@ -1,5 +1,7 @@
 import { Button } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import useDetailsPanelURLSync from './hooks/useDetailsPanelURLSync'
 import * as Styled from './DetailsPanel.styled'
 
 // shared
@@ -9,8 +11,8 @@ import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
 import { extractEntityHierarchyFromParents } from '@shared/util'
 import {
-  Entities,
   ProjectContextProvider,
+  ProjectModelWithProducts,
   useDetailsPanelContext,
   useScopedDetailsPanel,
   useURIContext,
@@ -100,6 +102,7 @@ DetailsPanelProps) => {
     setEntities,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
+  const [searchParams, setSearchParams] = useSearchParams()
   const hasCalledOnOpen = useRef(false)
 
   // Use context entities if available, otherwise use props
@@ -198,7 +201,12 @@ DetailsPanelProps) => {
   useEffect(() => {
     if (isFetchingEntitiesDetails) return
 
-    if (contextEntities?.source === 'uri' && contextEntities?.entities?.length && !!onUriOpen) {
+    if (
+      contextEntities?.source &&
+      ['uri', 'url'].includes(contextEntities.source) &&
+      contextEntities?.entities?.length &&
+      !!onUriOpen
+    ) {
       const uriEntity = entityDetailsData.find(
         (entity) => entity.id === contextEntities.entities[0].id,
       )
@@ -246,14 +254,37 @@ DetailsPanelProps) => {
 
     // unmount cleanup: clear uri
     return () => {
-      setUri(null)
+      setUri('')
     }
   }, [firstEntityData])
+
+  // sync the details panel url (panel) with entity
+  useDetailsPanelURLSync({
+    firstEntityData,
+    firstProject,
+    activeEntityType,
+    entitiesToQuery,
+  })
+
+  const clearSearchUrl = () => {
+    // remove URL params when closing
+    setSearchParams(
+      (prev) => {
+        const newParams = new URLSearchParams(prev)
+        newParams.delete('project')
+        newParams.delete('type')
+        newParams.delete('id')
+        return newParams
+      },
+      { replace: true },
+    )
+  }
 
   const handleClose = () => {
     onClose?.()
     // also remove any entities in context
     setEntities(null)
+    clearSearchUrl()
   }
 
   useEffect(() => {
@@ -430,5 +461,6 @@ export const DetailsPanel = ({
   if (!isOpen && !entities) return null
   if (!entityType && !entities) return null
 
-  return <DetailsPanelInner {...props} entityType={entityType || entities.entityType} />
+  // @ts-expect-error - entityType could be undefined but we check for entities above
+  return <DetailsPanelInner {...props} entityType={entityType || entities?.entityType} />
 }

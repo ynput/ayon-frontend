@@ -1,13 +1,11 @@
 // The URI is a unique AYON ID for entities and settings paths
-// Entity: ayon+entity://project_name//shots/000_logo/000_0010?task=lighting
+// Entity: ayon+entity://project_name/shots/000_logo/000_0010?task=lighting
 // Settings: ayon+settings://maya/ext_mapping/0/name
 
-// The URI is always synced with the url search param "uri"
 // Components can update the URI when changing context, like opening the details panel or navigating to a settings page
 // Components state should not be directly synced to the URI, they should only read the URI on mount to set initial state
 
-import { createContext, useContext, useEffect, ReactNode, FC, useCallback } from 'react'
-import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import { createContext, useContext, useEffect, ReactNode, FC, useCallback, useState } from 'react'
 import { buildEntityUri, parseUri } from '../util'
 import { ResolvedUriModel, useResolveUrisMutation } from '@shared/api'
 
@@ -49,7 +47,7 @@ interface URIContextValue {
   uriType: 'settings' | 'entity' | undefined
   entity?: EntityUri
   settings?: SettingsUri
-  setUri: (uri: string | null | undefined) => void
+  setUri: (uri: string) => void
   setEntityUri: SetEntityUriFunc
   getUriEntities: () => Promise<ResolvedUriModel[]>
 }
@@ -63,7 +61,7 @@ const URIContext = createContext<URIContextValue | undefined>(undefined)
 const URIProvider: FC<URIProviderProps> = ({ children }) => {
   const pathname = location.pathname
 
-  const [uri, setUri] = useQueryParam(URL_PARAM_ID, withDefault(StringParam, ''))
+  const [uri, setUri] = useState('')
 
   // when the scope is outside settings and project, set uri to null
   const scopes = ['projects', 'settings', 'dashboard/tasks']
@@ -71,7 +69,7 @@ const URIProvider: FC<URIProviderProps> = ({ children }) => {
     const matchingScope = scopes.some((scope) => pathname.startsWith(`/${scope}`))
 
     if (!matchingScope) {
-      setUri(null)
+      setUri('')
     }
   }, [pathname, setUri])
 

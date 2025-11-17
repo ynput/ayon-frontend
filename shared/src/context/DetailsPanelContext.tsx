@@ -36,7 +36,7 @@ export type Entities = {
   entityType: DetailsPanelEntityType
   entities: { id: string; projectName: string }[]
   entitySubTypes?: string[]
-  source?: string // 'uri' | 'related'
+  source?: 'uri' | 'url' | 'related' // uri = ayon+entity://..., url = ?project=...&type=...&id=...
 }
 
 export interface OpenStateByScope {
@@ -227,46 +227,69 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const [highlightedActivities, setHighlightedActivities] = useState<string[]>([])
 
   const { uriType, uri, entity, getUriEntities } = useURIContext()
-  // on first load, check if there is a uri and open details panel if there is
+  const [searchParams] = useSearchParams()
+
+  // on first load, check if there is a uri or URL params and open details panel if present
   useEffect(() => {
-    // check uri type is entity
-    if (uriType !== 'entity' || !entity || entity.entityType === 'product') return
+    // Priority 1: Check for 'uri' parameter (ayon+entity://...)
+    if (uriType === 'entity' && entity && entity.entityType !== 'product') {
+      getUriEntities()
+        .then((result) => {
+          if (result.length === 0) return
 
-    getUriEntities()
-      .then((result) => {
-        if (result.length === 0) return
+          const entityUriData = result.find((r) => r.uri === uri)
+          const entityData = entityUriData?.entities?.[0]
 
-        const entityUriData = result.find((r) => r.uri === uri)
-        const entityData = entityUriData?.entities?.[0]
+          if (!entityUriData || !entityData) return
+          const projectName = entityData?.projectName || entity.projectName || ''
+          const id =
+            entityData.representationId ||
+            entityData.versionId ||
+            entityData.productId ||
+            entityData.taskId ||
+            entityData.folderId
 
-        if (!entityUriData || !entityData) return
-        const projectName = entityData?.projectName || entity.projectName || ''
-        const id =
-          entityData.representationId ||
-          entityData.versionId ||
-          entityData.productId ||
-          entityData.taskId ||
-          entityData.folderId
+          if (!projectName || !id) return
 
-        if (!projectName || !id) return
+          const newEntities: Entities = {
+            entityType: entity.entityType as DetailsPanelEntityType,
+            entities: [
+              {
+                id: id,
+                projectName: projectName,
+              },
+            ],
+            source: 'uri',
+          }
 
-        const newEntities: Entities = {
-          entityType: entity.entityType as DetailsPanelEntityType,
-          entities: [
-            {
-              id: id,
-              projectName: projectName,
-            },
-          ],
-          source: 'uri',
-        }
+          setEntities(newEntities)
+        })
+        .catch((err) => {
+          console.warn('Failed to get URI entities:', err)
+        })
+      return
+    }
 
-        setEntities(newEntities)
-      })
-      .catch((err) => {
-        console.warn('Failed to get URI entities:', err)
-      })
-  }, [setEntities])
+    // Priority 2: Check for URL params (project, type, id)
+    const project = searchParams.get('project')
+    const type = searchParams.get('type')
+    const id = searchParams.get('id')
+
+    if (project && type && id) {
+      const newEntities: Entities = {
+        entityType: type as DetailsPanelEntityType,
+        entities: [
+          {
+            id,
+            projectName: project,
+          },
+        ],
+        source: 'url',
+      }
+
+      setEntities(newEntities)
+    }
+  }, [])
 
   const value = {
     // open state for the panel by scope
