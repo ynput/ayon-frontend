@@ -70,6 +70,7 @@ export type BuildFilterOptions = {
     tags?: string[]
     attributes?: Record<string, AttributeDataValue[]>
     assignees?: string[]
+    productTypes?: ProductType[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig

@@ -29,7 +29,11 @@ const enhancedProject = projectsApi.enhanceEndpoints<TagTypes, UpdatedDefinition
   },
 })
 
-export const { useGetProjectQuery, useListProjectsQuery, useGetProjectAnatomyQuery } =
-  enhancedProject
+export const {
+  useGetProjectQuery,
+  useListProjectsQuery,
+  useGetProjectAnatomyQuery,
+  useGetProductTypesQuery,
+} = enhancedProject
 
 export default enhancedProject

@@ -7,13 +7,13 @@ import type { ProjectModel } from '@shared/api'
 import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
-  useProjectDataContext,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/VPSelectionContext'
 import { useCallback } from 'react'
+import { useProjectContext } from '@shared/context'
 
 type VPDetailsPanelProps = {}
 
@@ -21,7 +21,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
-  const { projectName, projectInfo } = useProjectDataContext()
+  const { projectName, ...projectInfo } = useProjectContext()
   const { selectedVersions, setSelectedVersions } = useVersionsSelectionContext()
   const { setSelectedCells, selectedRows } = useSelectionCellsContext()
 

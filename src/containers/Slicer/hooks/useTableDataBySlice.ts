@@ -120,7 +120,7 @@ const useTableDataBySlice = ({
     getProductTypes,
     getAttribute,
     isLoading: isLoadingProject,
-  } = useProjectAnatomySlices({ projectName, scopes: entityTypes, useExtraSlices })
+  } = useProjectAnatomySlices({ scopes: entityTypes, useExtraSlices })
 
   //   Hierarchy
   const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({

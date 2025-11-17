@@ -9,6 +9,7 @@ import {
 } from '../util'
 import { useMemo } from 'react'
 import { VP_INFINITE_QUERY_COUNT } from '@shared/api'
+import { useProjectContext } from '@shared/context'
 
 type Props = {
   rootVersionsMap: VersionsMap
@@ -33,6 +34,8 @@ export const useBuildVersionsTableData = ({
   loadingProductVersionsFinished = [],
   childVersionsErrors = [],
 }: Props): TableRow[] => {
+  const { getProductType } = useProjectContext()
+
   return useMemo(() => {
     if (showProducts) {
       // Build hierarchical data efficiently using products as root
@@ -77,7 +80,7 @@ export const useBuildVersionsTableData = ({
           subRows = [buildEmptyRow(product.id)]
         }
 
-        result.push(buildProductRow(product, subRows))
+        result.push(buildProductRow(product, subRows, getProductType))
       }
 
       // Add next page loading row if there are more pages

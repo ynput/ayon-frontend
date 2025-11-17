@@ -1,4 +1,4 @@
-import { useGetProjectQuery } from '@shared/api'
+import { useProjectContext } from '@shared/context'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useState } from 'react'
 import PerProjectBundleDialog from './PerProjectBundleDialog'
@@ -9,7 +9,7 @@ interface PerProjectBundleConfigProps {
 }
 
 const PerProjectBundleConfig: FC<PerProjectBundleConfigProps> = ({ projectName, variant }) => {
-  const { data: project } = useGetProjectQuery({ projectName })
+  const project = useProjectContext()
   const bundle = project?.data?.bundle
   const bundleSetForVariant = variant && bundle?.[variant]
 
