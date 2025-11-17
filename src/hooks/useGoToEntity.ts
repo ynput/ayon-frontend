@@ -1,121 +1,102 @@
-// selects an entity and expands its parent folders
-// mostly used when opening an entity via URI
-// NOTE: currently only supports tasks, folders, products and versions
+// Hook for navigating to and selecting entities
+// Provides helper functions to expand folder hierarchies and prepare selection data
+// The actual selection/expansion logic is handled by the consuming page
 
-import { getCellId, ROW_SELECTION_COLUMN_ID } from '@shared/containers'
 import { useProjectFoldersContext } from '@shared/context'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 
-type Value = {
-  goToEntity: (
+export type EntityType = 'task' | 'version' | 'product' | 'folder'
+
+export type EntityParents = {
+  folder?: string
+  product?: string
+}
+
+export type GoToEntityData = {
+  entityId: string
+  entityType: EntityType
+  parents: EntityParents
+  expandedFolders: ExpandedState
+  selectedFolders: RowSelectionState
+}
+
+type UseGoToEntityReturn = {
+  getGoToEntityData: (
     entityId: string,
-    entityType: 'task' | 'version' | 'product' | 'folder' | string,
-    parents: {
-      folder?: string
-      product?: string
-    },
-  ) => void
+    entityType: EntityType,
+    parents: EntityParents,
+  ) => GoToEntityData
+  getExpandedFolders: (folderId: string, includeTarget?: boolean) => ExpandedState
+  getSelectedFolders: (folderId: string) => RowSelectionState
 }
 
-type Props = {
-  page: 'overview' | 'progress' | 'products' | 'lists'
-  onViewUpdate?: () => void // do something to update the view before selecting
-  onExpandFolders?: (expanded: ExpandedState, selected: RowSelectionState) => void // callback when folders are expanded and selected (unique for each page)
-  onSelection?: (selectedIds: string[], entityType: string) => void // callback when entity is selected
-  onParentSelection?: (parentId: string) => void // callback when parent entity is selected
-}
-
-// return function to go to the entity
-const useGoToEntity = ({
-  page,
-  onViewUpdate,
-  onExpandFolders,
-  onSelection,
-  onParentSelection,
-}: Props) => {
-  // folders context with folders data with helper function
+/**
+ * Page-agnostic hook for navigating to entities
+ *
+ * This hook provides utilities to calculate folder expansion and selection states
+ * when navigating to an entity. The actual selection logic is left to the consuming page.
+ *
+ */
+const useGoToEntity = (): UseGoToEntityReturn => {
   const { getParentFolderIds } = useProjectFoldersContext()
 
-  const goToEntity = useCallback<Value['goToEntity']>(
-    (entityId, entityType, parents) => {
-      // first if there is a callback to change the view, call it
-      onViewUpdate?.()
+  const getExpandedFolders = useCallback(
+    (folderId: string, includeTarget: boolean = false): ExpandedState => {
+      const parentFolderIds = getParentFolderIds(folderId)
+      const expandingFolderIds = includeTarget ? [...parentFolderIds, folderId] : parentFolderIds
 
-      // helpers function to get expanded folders state
-      const getExpandedFolders = (folderId: string) => {
-        // get all parent folder IDs
-        const parentFolderIds = getParentFolderIds(folderId)
-        const expandingFolderIds =
-          entityType === 'folder' ? parentFolderIds : [...parentFolderIds, folderId]
-        const expandedFolderState = expandingFolderIds.reduce((acc, id) => {
-          acc[id] = true
-          return acc
-        }, {} as Record<string, boolean>)
-        return expandedFolderState
-      }
-
-      // helper function to get selection with row selection cell
-      const getTableSelection = (id: string) => {
-        return [getCellId(id, 'name'), getCellId(id, ROW_SELECTION_COLUMN_ID)]
-      }
-
-      let selectionList: string[] = []
-      let expandedFolders: ExpandedState = {}
-      let selectedFolders: RowSelectionState = {}
-      let folderId: string | undefined = parents.folder
-      let parentId: string | undefined = undefined
-
-      if (['folder', 'task'].includes(entityType) && parents.folder) {
-        // for folders, the parentId is the folder itself
-        folderId = entityType === 'folder' ? entityId : parents.folder
-        parentId = folderId
-
-        // OVERVIEW PAGE
-        if (page === 'overview') {
-          selectionList = getTableSelection(entityId)
-        }
-
-        // TASK PROGRESS PAGE
-        if (page === 'progress') {
-          selectionList = [entityId]
-        }
-
-        // TODO: lists page?
-      }
-
-      // version selection for products page
-      if (entityType === 'version' && page === 'products') {
-        // check we have a product and folder parent
-        if (parents.product && parents.folder) {
-          parentId = parents.product
-          // expand parent product folder
-          expandedFolders = getExpandedFolders(parents.folder)
-          // set selection to version id
-          selectionList = getTableSelection(entityId)
-        }
-      }
-
-      // what folders are this entity in?
-      if (folderId) {
-        expandedFolders = getExpandedFolders(folderId)
-        selectedFolders = { [folderId]: true }
-        onExpandFolders?.(expandedFolders, selectedFolders)
-      }
-
-      // Call onSelection and onExpand at the end once
-      if (selectionList.length) {
-        onSelection?.(selectionList, entityType)
-      }
-
-      if (parentId) {
-        onParentSelection?.(parentId)
-      }
+      return expandingFolderIds.reduce<Record<string, boolean>>((acc, id) => {
+        acc[id] = true
+        return acc
+      }, {}) as ExpandedState
     },
-    [onSelection, getParentFolderIds, onViewUpdate, onExpandFolders],
+    [getParentFolderIds],
   )
 
-  return { goToEntity }
+  const getSelectedFolders = useCallback((folderId: string): RowSelectionState => {
+    return { [folderId]: true }
+  }, [])
+
+  /**
+   * Get all data needed to navigate to an entity
+   * Pages can use this data to implement their own selection logic
+   */
+  const getGoToEntityData = useCallback(
+    (entityId: string, entityType: EntityType, parents: EntityParents): GoToEntityData => {
+      // Determine which folder to expand based on entity type
+      let targetFolderId: string | undefined
+      let expandedFolders: ExpandedState = {}
+      let selectedFolders: RowSelectionState = {}
+
+      if (parents.folder) {
+        // For folders, expand parents but not the folder itself
+        // For tasks, expand all the way to the parent folder
+        targetFolderId = entityType === 'folder' ? parents.folder : parents.folder
+        const includeTarget = entityType !== 'folder'
+        expandedFolders = getExpandedFolders(targetFolderId, includeTarget)
+        selectedFolders = getSelectedFolders(targetFolderId)
+      }
+
+      return {
+        entityId,
+        entityType,
+        parents,
+        expandedFolders,
+        selectedFolders,
+      }
+    },
+    [getExpandedFolders, getSelectedFolders],
+  )
+
+  return useMemo(
+    () => ({
+      getGoToEntityData,
+      getExpandedFolders,
+      getSelectedFolders,
+    }),
+    [getGoToEntityData, getExpandedFolders, getSelectedFolders],
+  )
 }
 
 export default useGoToEntity

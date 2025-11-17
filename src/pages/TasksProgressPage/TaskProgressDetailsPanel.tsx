@@ -32,21 +32,25 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   //   slicer context
   const slicer = useSlicerContext()
 
-  const { goToEntity } = useGoToEntity({
-    page: 'progress',
-    onViewUpdate: () => {
-      // reset filters
-      setQueryFilters({})
-    },
-    onExpandFolders: (expanded, selected) => {
-      slicer.setExpanded(expanded) // open slicer folders
-      slicer.setRowSelection(selected) // select parent folder in slicer
-    },
-    onSelection: (selected, entityType) => {
-      dispatch(selectProgress({ ids: selected, type: entityType as 'task' | 'folder' }))
-      setOpen(true)
-    },
-  })
+  const { getGoToEntityData } = useGoToEntity()
+
+  const handleUriOpen = (entity: any) => {
+    // Get the data needed to navigate to this entity
+    const data = getGoToEntityData(entity.id, entity.entityType, {
+      folder: entity.folder?.id,
+    })
+
+    // Reset filters
+    setQueryFilters({})
+
+    // Expand folders in slicer
+    slicer.setExpanded(data.expandedFolders)
+    slicer.setRowSelection(data.selectedFolders)
+
+    // Select the entity
+    dispatch(selectProgress({ ids: [data.entityId], type: data.entityType as 'task' | 'folder' }))
+    setOpen(true)
+  }
 
   return (
     <>
@@ -65,9 +69,7 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
         scope="progress"
         onClose={() => setOpen(false)}
         onOpenViewer={handleOpenViewer}
-        onUriOpen={(entity) =>
-          goToEntity(entity.id, entity.entityType, { folder: entity.folder?.id })
-        }
+        onUriOpen={handleUriOpen}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
     </>

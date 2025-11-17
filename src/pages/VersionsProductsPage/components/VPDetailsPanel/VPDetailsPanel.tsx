@@ -8,6 +8,7 @@ import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
+  getCellId,
 } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
@@ -80,32 +81,38 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
     }
   }, [selectedRows])
 
-  const { goToEntity } = useGoToEntity({
-    page: 'products',
-    onViewUpdate: () => {
-      // clear all filters
-      onUpdateFilters({})
-      // remove any group by
-      onUpdateGroupBy(undefined)
-    },
-    onExpandFolders: (expanded, selected) => {
-      slicer.setExpanded(expanded) // expand slicer folders
-      slicer.setRowSelection(selected)
-    }, // expand folders
-    onSelection: (selectedIds: string[]) => setSelectedCells(new Set(selectedIds)), // select entities
-    onParentSelection: (parentId: string) => {
-      //  expand the parent product in versions table
-      setProductsExpanded({ [parentId]: true })
-    },
-  })
+  const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
   const handleUriOpen = (entity: DetailsPanelEntityData) => {
     console.debug('URI found, selecting and expanding folders to entity:', entity.name)
-    goToEntity(entity.id, entity.entityType, {
+
+    // Get the data needed to navigate to this entity
+    const data = getGoToEntityData(entity.id, entity.entityType as any, {
       folder: entity.folder?.id,
       product: entity.product?.id,
     })
+
+    // Reset view state
+    onUpdateFilters({})
+    onUpdateGroupBy(undefined)
+
+    // Expand folders in slicer
+    slicer.setExpanded(data.expandedFolders)
+    slicer.setRowSelection(data.selectedFolders)
+
+    // Select the entity in the table
+    setSelectedCells(
+      new Set([
+        getCellId(data.entityId, 'name'),
+        getCellId(data.entityId, ROW_SELECTION_COLUMN_ID),
+      ]),
+    )
+
+    // For versions, expand the parent product
+    if (entity.entityType === 'version' && entity.product?.id) {
+      setProductsExpanded({ [entity.product.id]: true })
+    }
   }
 
   return (

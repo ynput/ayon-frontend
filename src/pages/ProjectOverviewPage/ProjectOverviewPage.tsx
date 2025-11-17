@@ -19,6 +19,8 @@ import { Actions } from '@shared/containers/Actions/Actions'
 import {
   useColumnSettingsContext,
   useSelectionCellsContext,
+  getCellId,
+  ROW_SELECTION_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import { CustomizeButton } from '@shared/components'
@@ -96,28 +98,34 @@ const ProjectOverviewPage: FC = () => {
     expandAndSelectNewFolders(ops, { enableSelect: !stayOpen, enableExpand: true })
   }
 
-  const { goToEntity } = useGoToEntity({
-    page: 'overview',
-    onViewUpdate: () => {
-      // clear all filters
-      setQueryFilters({})
-      // remove any group by
-      updateGroupBy(undefined)
-      // ensure hierarchy is shown
-      updateShowHierarchy(true)
-    },
-    onExpandFolders: (expanded, selected) => {
-      updateExpanded(expanded) // expand table folders
-      slicer.setExpanded(expanded) // expand slicer folders
-      slicer.setRowSelection(selected) // select folders in slicer (actually one folder)
-    }, // expand folders
-    onSelection: (selectedIds: string[]) => setSelectedCells(new Set(selectedIds)), // select entities
-  })
+  const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
   const handleUriOpen = (entity: DetailsPanelEntityData) => {
     console.debug('URI found, selecting and expanding folders to entity:', entity.name)
-    goToEntity(entity.id, entity.entityType, { folder: entity.folder?.id })
+
+    // Get the data needed to navigate to this entity
+    const data = getGoToEntityData(entity.id, entity.entityType as any, {
+      folder: entity.folder?.id,
+    })
+
+    // Reset view state
+    setQueryFilters({})
+    updateGroupBy(undefined)
+    updateShowHierarchy(true)
+
+    // Expand folders in both table and slicer
+    updateExpanded(data.expandedFolders)
+    slicer.setExpanded(data.expandedFolders)
+    slicer.setRowSelection(data.selectedFolders)
+
+    // Select the entity in the table
+    setSelectedCells(
+      new Set([
+        getCellId(data.entityId, 'name'),
+        getCellId(data.entityId, ROW_SELECTION_COLUMN_ID),
+      ]),
+    )
   }
 
   return (
