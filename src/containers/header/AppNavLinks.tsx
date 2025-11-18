@@ -4,25 +4,50 @@ import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
-import { replaceQueryParams } from '@helpers/url'
 import { ayonUrlParam } from '@/constants'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
+import type { ReactNode } from 'react'
 
-const AppNavLinks = ({ links = [], currentModule, projectName }) => {
+export type AccessLevel = 'manager' | 'admin'
+
+export interface NavLinkItem {
+  name?: string
+  path?: string
+  module?: string
+  accessLevels?: AccessLevel[]
+  shortcut?: string
+  node?: ReactNode | 'spacer'
+  tooltip?: string
+  enabled?: boolean
+  startContent?: ReactNode
+  endContent?: ReactNode
+  uriSync?: boolean
+  viewType?: string
+  deprecated?: boolean | string
+  [key: string]: any
+}
+
+interface AppNavLinksProps {
+  links?: NavLinkItem[]
+  currentModule?: string
+  projectName?: string
+}
+
+const AppNavLinks: React.FC<AppNavLinksProps> = ({ links = [], currentModule: _currentModule }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
-  const { module } = useParams()
+  const { module } = useParams<{ module?: string }>()
   const [search] = useSearchParams()
-  const isManager = useSelector((state) => state.user.data.isManager)
-  const isAdmin = useSelector((state) => state.user.data.isAdmin)
-  const uri = useSelector((state) => state.context.uri)
+  const isManager = useSelector((state: any) => state.user.data.isManager)
+  const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
+  const uri = useSelector((state: any) => state.context.uri)
 
-  const appendUri = (path, shouldAddUri = true) => {
+  const appendUri = (path: string | undefined, shouldAddUri = true): string | undefined => {
     if (!path) return path
 
     // Get the base path and existing query parameters
-    const [basePath, queryString] = path.split('?')
+    const [basePath] = path.split('?')
 
     // Only add the uri parameter when shouldAddUri is true and uri exists
     if (shouldAddUri && uri) {
@@ -34,7 +59,7 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
     return newQueryString ? `${basePath}?${newQueryString}` : basePath
   }
 
-  const access = {
+  const access: Record<AccessLevel, boolean> = {
     manager: isManager || isAdmin,
     admin: isAdmin,
   }
@@ -46,7 +71,7 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
       // find the first item that this user has access
       const firstItem = links.find((item) => item.accessLevels?.every((level) => access[level]))
 
-      if (firstItem) {
+      if (firstItem && firstItem.path) {
         navigate(firstItem.path)
       } else {
         // last resort, navigate to home
@@ -54,10 +79,6 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
       }
     }
   }, [module, links, access])
-
-  const activeModule = currentModule || module
-  const currentPageLink = links.find((link) => link.module === activeModule)
-  const currentPageName = currentPageLink?.name
 
   return (
     <Styled.NavBar className="secondary">
@@ -79,8 +100,8 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
               viewType,
               deprecated,
               ...props
-            } = {},
-            idx,
+            }: NavLinkItem = {},
+            idx: number,
           ) => {
             if (!enabled) return null
             // if item has restrictions, check if user has access
@@ -98,11 +119,9 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
               } else return <li key={idx}>{node}</li>
             }
 
-            const isActive = module === currentModule
-
             return (
               <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-                <NavLink to={appendUri(path, uriSync)}>
+                <NavLink to={appendUri(path, uriSync) || ''}>
                   <Button
                     variant="nav"
                     style={{ border: 'none' }}

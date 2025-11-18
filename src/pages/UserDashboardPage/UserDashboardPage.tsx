@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { useListProjectsQuery } from '@shared/api'
@@ -22,6 +22,24 @@ import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
 import { UserDashboardProvider } from './context/UserDashboardContext'
+import { useAppSelector } from '@/features/store'
+import type { ReactNode } from 'react'
+import type { NavLinkItem } from '@containers/header/AppNavLinks'
+
+interface DashboardAddon {
+  name: string
+  title: string
+  version: string
+  settings?: {
+    admin?: boolean
+    manager?: boolean
+  }
+}
+
+interface ProjectInfo {
+  projectNames: Array<{ id: string; name: string }>
+  [key: string]: any
+}
 
 const StyledSplitter = styled(Splitter)`
   height: 100%;
@@ -34,9 +52,9 @@ const StyledSplitter = styled(Splitter)`
   }
 `
 
-const UserDashboardPage = () => {
-  let { module, addonName } = useParams()
-  const user = useSelector((state) => state.user)
+const UserDashboardPage: React.FC = () => {
+  const { module, addonName } = useParams<{ module?: string; addonName?: string }>()
+  const user = useAppSelector((state: any) => state.user)
   const isAdmin = user?.data?.isAdmin
   const isManager = user?.data?.isManager
   const isGuest = user?.data?.isGuest
@@ -47,7 +65,7 @@ const UserDashboardPage = () => {
     //isError: addonsIsError,
   } = useGetDashboardAddonsQuery({})
 
-  const links = [
+  const links: NavLinkItem[] = [
     {
       name: 'Tasks',
       path: '/dashboard/tasks',
@@ -63,7 +81,7 @@ const UserDashboardPage = () => {
     },
   ]
 
-  for (const addon of addonsData) {
+  for (const addon of addonsData as DashboardAddon[]) {
     if (addon?.settings?.admin && !isAdmin) continue
     if (addon?.settings?.manager && !isManager) continue
     links.push({
@@ -81,22 +99,22 @@ const UserDashboardPage = () => {
     ),
   })
 
-  const title = useTitle(addonName || module, links, 'AYON', '')
+  const title = useTitle(addonName || module || '', links, 'AYON', '')
 
-  const addonData = addonsData.find((addon) => addon.name === addonName)
+  const addonData = (addonsData as DashboardAddon[]).find((addon) => addon.name === addonName)
 
   const addonModule = addonData ? (
     <DashboardAddon addonName={addonData.name} addonVersion={addonData.version} />
   ) : null
 
   const navigate = useNavigate()
-  const [showNewProject, setShowNewProject] = useState(false)
+  const [showNewProject, setShowNewProject] = useState<boolean>(false)
 
   //   redux states
   const dispatch = useDispatch()
   //   selected projects
-  const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
-  const setSelectedProjects = (projects) => dispatch(onProjectSelected(projects))
+  const selectedProjects = useAppSelector((state: any) => state.dashboard.selectedProjects)
+  const setSelectedProjects = (projects: string[]) => dispatch(onProjectSelected(projects))
 
   // get all the info required for the projects selected, like status icons and colours
   const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
@@ -109,7 +127,7 @@ const UserDashboardPage = () => {
 
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {
-    const projectsInfoWithProjects = {}
+    const projectsInfoWithProjects: Record<string, ProjectInfo> = {}
     for (const key in projectsInfo) {
       const projectInfo = projectsInfo[key]
       projectsInfoWithProjects[key] = { ...projectInfo, projectNames: [{ id: key, name: key }] }
@@ -121,7 +139,7 @@ const UserDashboardPage = () => {
   const [updateProject] = useUpdateProjectMutation()
   const [deleteProject] = useDeleteProjectMutation()
 
-  const handleDeleteProject = (sel) => {
+  const handleDeleteProject = (sel: string) => {
     confirmDelete({
       label: `Project: ${sel}`,
       accept: async () => {
@@ -131,7 +149,7 @@ const UserDashboardPage = () => {
     })
   }
 
-  const handleActivateProject = async (sel, active) => {
+  const handleActivateProject = async (sel: string, active: boolean) => {
     await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
   }
 
@@ -142,7 +160,7 @@ const UserDashboardPage = () => {
 
   if (!projects.length) return <UserDashboardNoProjects />
 
-  let moduleComponent
+  let moduleComponent: ReactNode
   if (!!addonName && addonModule) {
     moduleComponent = addonModule
   } else {
@@ -203,7 +221,7 @@ const UserDashboardPage = () => {
         </main>
         {showNewProject && (
           <NewProjectDialog
-            onHide={(name) => {
+            onHide={(name?: string) => {
               setShowNewProject(false)
               if (name) navigate(`/manageProjects/anatomy?project=${name}`)
             }}
