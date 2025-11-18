@@ -37,6 +37,44 @@ const getSomeValue = (field: string): SimpleTableRow => ({
   },
 })
 
+export const defaultSliceOptions: SliceTypeField[] = [
+  {
+    label: 'Hierarchy',
+    value: 'hierarchy' as SliceType,
+    icon: 'table_rows',
+  },
+  {
+    label: 'Assignee',
+    value: 'assignees' as SliceType,
+    icon: 'person',
+  },
+  {
+    label: 'Status',
+    value: 'status' as SliceType,
+    icon: 'arrow_circle_right',
+  },
+  {
+    label: 'Task Type',
+    value: 'taskType' as SliceType,
+    icon: getEntityTypeIcon('task'),
+  },
+  {
+    label: 'Folder Type',
+    value: 'folderType' as SliceType,
+    icon: getEntityTypeIcon('folder'),
+  },
+  {
+    label: 'Product Type',
+    value: 'productType' as SliceType,
+    icon: getEntityTypeIcon('product'),
+  },
+  {
+    label: 'Author',
+    value: 'author' as SliceType,
+    icon: 'attribution',
+  },
+]
+
 const useTableDataBySlice = ({
   sliceFields,
   entityTypes = [],
@@ -44,44 +82,6 @@ const useTableDataBySlice = ({
   const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
   const projectName = useAppSelector((state) => state.project.name)
   const { formatAttribute } = useExtraSlices()
-
-  const defaultSliceOptions: SliceTypeField[] = [
-    {
-      label: 'Hierarchy',
-      value: 'hierarchy' as SliceType,
-      icon: 'table_rows',
-    },
-    {
-      label: 'Assignee',
-      value: 'assignees' as SliceType,
-      icon: 'person',
-    },
-    {
-      label: 'Status',
-      value: 'status' as SliceType,
-      icon: 'arrow_circle_right',
-    },
-    {
-      label: 'Task Type',
-      value: 'taskType' as SliceType,
-      icon: getEntityTypeIcon('task'),
-    },
-    {
-      label: 'Folder Type',
-      value: 'taskType' as SliceType,
-      icon: getEntityTypeIcon('folder'),
-    },
-    {
-      label: 'Product Type',
-      value: 'productType' as SliceType,
-      icon: getEntityTypeIcon('product'),
-    },
-    {
-      label: 'Author',
-      value: 'author' as SliceType,
-      icon: 'attribution',
-    },
-  ]
 
   const sliceOptions = sliceFields
     .filter((f) => defaultSliceOptions.some((o) => o.value === f.value))

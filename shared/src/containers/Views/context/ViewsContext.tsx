@@ -1,5 +1,5 @@
 import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { ViewType, viewTypes, WORKING_VIEW_ID } from '../index'
+import { ViewType, WORKING_VIEW_ID } from '../index'
 import {
   GetDefaultViewApiResponse,
   useGetWorkingViewQuery,
@@ -84,16 +84,11 @@ export interface ViewsProviderProps {
 
 export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
-  viewType: viewTypeProp,
+  viewType,
   projectName,
   dispatch,
   debug,
 }) => {
-  // validate viewType
-  const viewType = viewTypes.includes(viewTypeProp as ViewType)
-    ? (viewTypeProp as ViewType)
-    : undefined
-
   let { powerLicense } = usePowerpack()
   if (debug?.powerLicense !== undefined) {
     console.warn('Using debug power license:', debug.powerLicense)

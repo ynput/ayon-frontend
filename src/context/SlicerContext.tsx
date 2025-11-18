@@ -7,7 +7,6 @@ import {
   RefAttributes,
 } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
-import useSlicerReduxSync from '@containers/Slicer/hooks/useSlicerReduxSync'
 import { SelectionData, SliceDataItem, SliceType } from '@shared/containers/Slicer'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useLoadModule } from '@shared/hooks'
@@ -44,7 +43,7 @@ export type UseExtraSlices = () => ExtraSlices
 
 type OnRowSelectionChange = (selection: RowSelectionState, data: SliceMap) => void
 
-interface SlicerContextValue {
+export interface SlicerContextValue {
   rowSelection: RowSelectionState
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
   onRowSelectionChange?: OnRowSelectionChange
@@ -110,11 +109,6 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
 
   const { useExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
-  const { onRowSelectionChange, onExpandedChange } = useSlicerReduxSync({
-    setExpanded,
-    sliceType,
-  })
-
   const getSelectionData = (selection: RowSelectionState, data: SliceMap) => {
     // for each selected row, get the data
     const selectedRows = Object.keys(selection)
@@ -136,22 +130,12 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
 
   //   do something with selection change
   const handleRowSelectionChange: OnRowSelectionChange = (selection, data) => {
-    if (sliceType === 'hierarchy') {
-      // update redux focused folders
-      onRowSelectionChange(selection)
-    }
-
     // get selection data
     const selectionData = getSelectionData(selection, data)
     setRowSelectionData(selectionData)
   }
 
-  const handleExpandedChange = (expanded: ExpandedState) => {
-    if (sliceType === 'hierarchy') {
-      // update redux expanded folders
-      onExpandedChange(expanded)
-    }
-  }
+  const handleExpandedChange = (_expanded: ExpandedState) => {}
 
   const handleSliceTypeChange: OnSliceTypeChange = (
     sliceType,

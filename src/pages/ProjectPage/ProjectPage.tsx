@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
@@ -27,7 +27,7 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import { Views, ViewsProvider, ViewType } from '@shared/containers'
+import { ViewType } from '@shared/containers'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
@@ -35,6 +35,8 @@ import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
+import { WithViews } from '@/hoc/WithViews'
+import { ProjectPageRemote } from './ProjectPageRemote'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -252,46 +254,41 @@ const ProjectPageInner = () => {
   }
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
+    let component = <div>Module Not Found</div>,
+      viewType = activeLink?.viewType
+
+    const foundAddon = addonsData?.find((item) => item.name === addonName)
+    const foundRemotePage = remotePages.find((item) => item.module === module)
+
     if (module === 'overview') {
-      return <ProjectOverviewPage />
-    }
-    if (module === 'tasks') {
-      return <TasksProgressPage />
-    }
-    if (module === 'browser') {
+      component = <ProjectOverviewPage />
+    } else if (module === 'tasks') {
+      component = <TasksProgressPage />
+    } else if (module === 'browser') {
       if (!frontendFlags.includes(BROWSER_FLAG)) {
-        return <Navigate to={`/projects/${projectName}/overview`} />
+        component = <Navigate to={`/projects/${projectName}/overview`} />
       }
-      return <BrowserPage projectName={projectName} />
-    }
-    if (module === 'products') {
-      return <VersionsProductsPage projectName={projectName} />
-    }
-    if (module === 'lists') {
-      return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
-    }
-    if (module === 'reviews') {
-      return (
+      component = <BrowserPage projectName={projectName} />
+    } else if (module === 'products') {
+      component = <VersionsProductsPage projectName={projectName} />
+    } else if (module === 'lists') {
+      component = <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
+    } else if (module === 'reviews') {
+      component = (
         <ProjectReviewsPage
           projectName={projectName}
           isLoadingAccess={isLoadingAddons}
           hasReviewAddon={!!matchedAddons.has('review')}
         />
       )
-    }
-    if (module === 'workfiles') {
-      return <WorkfilesPage />
-    }
-    if (module === 'scheduler') {
-      return <SchedulerPage />
-    }
-    if (module === 'reports') {
-      return <ReportsPage />
-    }
-
-    const foundAddon = addonsData?.find((item) => item.name === addonName)
-    if (foundAddon) {
-      return (
+    } else if (module === 'workfiles') {
+      component = <WorkfilesPage />
+    } else if (module === 'scheduler') {
+      component = <SchedulerPage />
+    } else if (module === 'reports') {
+      component = <ReportsPage projectName={projectName} />
+    } else if (foundAddon) {
+      component = (
         <ProjectAddon
           addonName={addonName}
           addonVersion={foundAddon.version}
@@ -299,26 +296,27 @@ const ProjectPageInner = () => {
           addonTitle={foundAddon.title}
         />
       )
-    }
-
-    const foundRemotePage = remotePages.find((item) => item.module === module)
-    if (foundRemotePage) {
-      const RemotePage = foundRemotePage.component
-      return (
-        <RemotePage
-          router={{
-            ...{ useParams, useNavigate, useLocation, useSearchParams },
-          }}
+    } else if (foundRemotePage) {
+      viewType = foundRemotePage.viewType
+      component = (
+        // this gets wrapped in ViewsProvider for addons to use views
+        <ProjectPageRemote
+          Component={foundRemotePage.component}
+          viewType={foundRemotePage.viewType}
+          slicer={foundRemotePage.slicer}
           projectName={projectName}
+          key={foundRemotePage.id}
         />
       )
+    } else {
+      // Fallback to versions page if no addon matches addonName
+      component = <Navigate to={`/projects/${projectName}/overview`} />
     }
 
-    // Fallback to versions page if no addon matches addonName
-    return <Navigate to={`/projects/${projectName}/overview`} />
+    return { component, viewType }
   }
 
-  const child = getPageByModuleAndAddonData(module, addonName)
+  const page = getPageByModuleAndAddonData(module, addonName)
 
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
     // focus the new version in the versions
@@ -350,14 +348,9 @@ const ProjectPageInner = () => {
       >
         <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
           <SlicerProvider>
-            <ViewsProvider
-              viewType={activeLink?.viewType}
-              projectName={projectName}
-              dispatch={dispatch}
-            >
-              <Views />
-              {child}
-            </ViewsProvider>
+            <WithViews viewType={page.viewType} projectName={projectName}>
+              {page.component}
+            </WithViews>
           </SlicerProvider>
           <NewListFromContext />
         </EntityListsProvider>

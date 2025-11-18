@@ -91,7 +91,7 @@ export type CreateViewApiArg = {
     | ListsViewPostModel
     | ReviewsViewPostModel
     | VersionsViewPostModel
-    | ReportsViewPostModel
+    | GenericViewPostModel
 }
 export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
@@ -99,7 +99,7 @@ export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
-  | ReportsViewModel
+  | GenericViewModel
 export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
@@ -110,7 +110,7 @@ export type GetDefaultViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
-  | ReportsViewModel
+  | GenericViewModel
 export type GetDefaultViewApiArg = {
   viewType: string
   projectName?: string
@@ -127,7 +127,7 @@ export type GetViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
-  | ReportsViewModel
+  | GenericViewModel
 export type GetViewApiArg = {
   viewType: string
   viewId: string
@@ -150,7 +150,7 @@ export type UpdateViewApiArg = {
     | ListsViewPatchModel
     | ReviewsViewPatchModel
     | VersionsViewPatchModel
-    | ReportsViewPatchModel
+    | GenericViewPatchModel
 }
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
@@ -228,6 +228,7 @@ export type OverviewSettings = {
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter
+  sliceType?: string
   columns?: ColumnItemModel[]
 }
 export type OverviewViewPostModel = {
@@ -241,6 +242,7 @@ export type OverviewViewPostModel = {
 }
 export type TaskProgressSettings = {
   filter?: QueryFilter
+  sliceType?: string
   columns?: ColumnItemModel[]
 }
 export type TaskProgressViewPostModel = {
@@ -307,18 +309,14 @@ export type VersionsViewPostModel = {
   working?: boolean
   settings: VersionsSettings
 }
-export type ReportsSettings = {
-  widgets?: object[]
-  dateFormat?: string
-}
-export type ReportsViewPostModel = {
+export type GenericViewPostModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
   /** Human-readable name of the view. */
   label: string
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
-  settings: ReportsSettings
+  settings: object
 }
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */
@@ -415,7 +413,7 @@ export type VersionsViewModel = {
   access: object
   viewType?: 'versions'
 }
-export type ReportsViewModel = {
+export type GenericViewModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
   /** Human-readable name of the view. */
@@ -430,7 +428,7 @@ export type ReportsViewModel = {
   working: boolean
   position: number
   accessLevel: number
-  settings: ReportsSettings
+  settings: object
   access: object
   viewType?: 'reports'
 }
@@ -462,8 +460,8 @@ export type VersionsViewPatchModel = {
   owner?: string
   settings?: VersionsSettings
 }
-export type ReportsViewPatchModel = {
+export type GenericViewPatchModel = {
   label?: string
   owner?: string
-  settings?: ReportsSettings
+  settings?: object
 }
