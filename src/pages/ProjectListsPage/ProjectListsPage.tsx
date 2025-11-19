@@ -1,11 +1,13 @@
 import {
   ProjectDataProvider,
   useDetailsPanelEntityContext,
-  useProjectDataContext,
   useProjectTableContext,
   isEntityRestricted,
+  useSelectionCellsContext,
+  getCellId,
+  ROW_SELECTION_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable'
-import { FC, useMemo, useState } from 'react' // Added useState
+import { FC, useEffect, useMemo, useState } from 'react' // Added useState
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
@@ -20,7 +22,12 @@ import {
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
 import { CustomizeButton } from '@shared/components'
-import { MoveEntityProvider, SettingsPanelProvider, useSettingsPanel } from '@shared/context'
+import {
+  MoveEntityProvider,
+  SettingsPanelProvider,
+  useProjectContext,
+  useSettingsPanel,
+} from '@shared/context'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
   CellEditingProvider,
@@ -63,6 +70,7 @@ import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenVie
 import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { useViewsContext } from '@shared/containers/index.ts'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -106,15 +114,9 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   isReview,
   modules,
 }) => {
-  const {
-    projectName,
-    selectedListId,
-    contextMenuItems,
-    attribFields,
-    columns,
-    onUpdateColumns,
-    ...props
-  } = useListItemsDataContext()
+  const { projectName, ...projectInfo } = useProjectContext()
+  const { selectedListId, contextMenuItems, attribFields, columns, onUpdateColumns, ...props } =
+    useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
@@ -195,7 +197,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
             <ProjectTableProvider
               projectName={projectName}
               attribFields={mergedAttribFields}
-              projectInfo={props.projectInfo}
+              projectInfo={projectInfo}
               users={props.users}
               modules={modules}
               // @ts-ignore
@@ -253,12 +255,19 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const isDeveloperMode = user?.developerMode ?? false
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { projectName, projectInfo } = useProjectDataContext()
+  const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList, listDetailsOpen } = useListsContext()
   const { selectedRows } = useSelectedRowsContext()
-  const { deleteListItemAction } = useListItemsDataContext()
+  const { setSelectedCells } = useSelectionCellsContext()
+  const {
+    deleteListItemAction,
+    listItemsData,
+    isLoadingAll: isLoadingListItems,
+    listItemsFilters,
+    setListItemsFilters,
+  } = useListItemsDataContext()
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
@@ -281,12 +290,43 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const shouldShowEntityDetailsPanel =
     (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
-  const shouldShowDetailsPanel = shouldShowEntityDetailsPanel || shouldShowListDetailsPanel
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
     selectSetting('columns', attrib)
   }
+
+  // Handle URI opening to select list item
+  // We use state and effect because the uri callback can be called before data is loaded
+  const [uriEntityId, setUriEntityId] = useState<null | string>(null)
+  useEffect(() => {
+    if (!uriEntityId) return
+
+    // if there are filters, we need to remove them first
+    if (listItemsFilters.conditions?.length) {
+      setListItemsFilters({})
+      return
+      // now the list items data will reload without filters, and the effect will run again
+    }
+
+    if (isLoadingListItems || !listItemsData.length) return
+
+    setUriEntityId(null)
+    console.debug('URI found, navigating to list item:', uriEntityId)
+
+    // find the list item by entity id
+    const listItem = listItemsData.find((item) => item.entityId === uriEntityId)
+    if (!listItem) {
+      console.warn('List item not found for entity ID:', uriEntityId)
+      return
+    }
+
+    // select the list item in the table
+    // Select the entity in the table
+    setSelectedCells(
+      new Set([getCellId(listItem.id, 'name'), getCellId(listItem.id, ROW_SELECTION_COLUMN_ID)]),
+    )
+  }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
 
   return (
     <main style={{ gap: 4 }}>
@@ -338,7 +378,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
               gutterSize={isPanelOpen && selectedList ? 4 : 0}
             >
               <SplitterPanel size={82}>
-                <Splitter
+                <DetailsPanelSplitter
                   layout="horizontal"
                   stateKey="overview-splitter-details"
                   stateStorage="local"
@@ -353,27 +393,27 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       viewOnly={(selectedList?.accessLevel || 0) < 20}
                     />
                   </SplitterPanel>
-                  {shouldShowDetailsPanel ? (
-                    <SplitterPanel
-                      size={30}
-                      style={{
-                        zIndex: 300,
-                        minWidth: 300,
-                      }}
-                    >
-                      {shouldShowEntityDetailsPanel ? (
-                        <ProjectOverviewDetailsPanel
-                          projectInfo={projectInfo}
-                          projectName={projectName}
-                        />
-                      ) : selectedList ? (
+                  <SplitterPanel
+                    size={30}
+                    style={{
+                      zIndex: 300,
+                      minWidth: 300,
+                    }}
+                    className="details"
+                  >
+                    <ProjectOverviewDetailsPanel
+                      projectInfo={projectInfo}
+                      projectName={projectName}
+                      isOpen={shouldShowEntityDetailsPanel}
+                      onUriOpen={(entity) => setUriEntityId(entity.id)}
+                    />
+                    {selectedList &&
+                      !shouldShowEntityDetailsPanel &&
+                      shouldShowListDetailsPanel && (
                         <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
-                      ) : null}
-                    </SplitterPanel>
-                  ) : (
-                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-                  )}
-                </Splitter>
+                      )}
+                  </SplitterPanel>
+                </DetailsPanelSplitter>
               </SplitterPanel>
               {isPanelOpen && selectedList ? (
                 <SplitterPanel

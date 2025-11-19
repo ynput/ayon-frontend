@@ -270,18 +270,27 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  /** More about the folder */
+  folderAlt?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -290,6 +299,11 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type FolderEdge = {
@@ -373,6 +387,7 @@ export type FolderNodeProductsArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
+  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -514,6 +529,13 @@ export type ProductAttribType = {
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   productGroup?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type ProductBaseType = {
+  __typename?: 'ProductBaseType';
+  name: Scalars['String']['output'];
 };
 
 export type ProductEdge = {
@@ -543,6 +565,7 @@ export type ProductNode = BaseNode & {
   name: Scalars['String']['output'];
   parents: Array<Scalars['String']['output']>;
   path?: Maybe<Scalars['String']['output']>;
+  productBaseType?: Maybe<Scalars['String']['output']>;
   productType: Scalars['String']['output'];
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
@@ -625,6 +648,9 @@ export type ProductsConnection = {
 
 export type ProjectAttribType = {
   __typename?: 'ProjectAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  airtablePush?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -635,6 +661,7 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -686,6 +713,8 @@ export type ProjectNode = {
   name: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   product?: Maybe<ProductNode>;
+  /** List of project's product base types */
+  productBaseTypes: Array<ProductBaseType>;
   /** List of project's product types */
   productTypes: Array<ProductType>;
   /** Return a list of products. */
@@ -815,6 +844,7 @@ export type ProjectNodeProductsArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
+  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1138,18 +1168,26 @@ export type Tag = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  brands?: Maybe<Array<Scalars['String']['output']>>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -1158,6 +1196,11 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  /** More about the task */
+  taskAlt?: Maybe<Scalars['String']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type TaskEdge = {
@@ -1343,12 +1386,15 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
   comment?: Maybe<Scalars['String']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
   families?: Maybe<Array<Scalars['String']['output']>>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
@@ -1365,6 +1411,8 @@ export type VersionAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type VersionEdge = {
@@ -1575,7 +1623,7 @@ export type GetDetailsPanelFolderQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelFolderQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, folder?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, folderType: string, path?: string | null, hasReviewables: boolean, allAttrib: string } | null } };
+export type GetDetailsPanelFolderQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, folder?: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, folderType: string, path?: string | null, parents: Array<string>, hasReviewables: boolean, allAttrib: string } | null } };
 
 export type GetDetailsPanelRepresentationQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1583,7 +1631,7 @@ export type GetDetailsPanelRepresentationQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelRepresentationQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: any, createdAt: any, allAttrib: string, context?: string | null, version: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null } } } | null } };
+export type GetDetailsPanelRepresentationQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: any, createdAt: any, allAttrib: string, context?: string | null, parents: Array<string>, version: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null } } } | null } };
 
 export type GetDetailsPanelTaskQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1591,7 +1639,7 @@ export type GetDetailsPanelTaskQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, folderId: string, thumbnailId?: string | null, hasReviewables: boolean, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null } }> } } | null } };
+export type GetDetailsPanelTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, folderId: string, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null } }> } } | null } };
 
 export type GetDetailsPanelVersionQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1599,7 +1647,7 @@ export type GetDetailsPanelVersionQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, version?: { __typename?: 'VersionNode', id: string, version: number, name: string, author?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, hasReviewables: boolean, allAttrib: string, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null }, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number } }> } } | null } };
+export type GetDetailsPanelVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, version?: { __typename?: 'VersionNode', id: string, version: number, name: string, author?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null }, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number } }> } } | null } };
 
 export type GetProductVersionsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2301,6 +2349,7 @@ export const GetDetailsPanelFolderDocument = `
       thumbnailId
       folderType
       path
+      parents
       hasReviewables
       allAttrib
     }
@@ -2320,6 +2369,7 @@ export const GetDetailsPanelRepresentationDocument = `
       createdAt
       allAttrib
       context
+      parents
       version {
         ...DetailsPanelVersionFragment
         task {
@@ -2358,6 +2408,7 @@ export const GetDetailsPanelTaskDocument = `
       folderId
       thumbnailId
       hasReviewables
+      parents
       folder {
         ...DetailsPanelFolderFragment
       }
@@ -2389,6 +2440,7 @@ export const GetDetailsPanelVersionDocument = `
       createdAt
       thumbnailId
       hasReviewables
+      parents
       product {
         ...DetailsPanelProductFragment
         folder {

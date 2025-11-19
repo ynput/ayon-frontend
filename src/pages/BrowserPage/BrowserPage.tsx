@@ -7,8 +7,9 @@ import Products from './Products/Products'
 import BrowserDetailsPanel from './BrowserDetailsPanel'
 import { useVersionUploadContext } from '@shared/components'
 import { FC } from 'react'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
-const detailsMinWidth = 533
+const detailsMinWidth = 400
 const detailsMaxWidth = '40vw'
 const detailsMaxMaxWidth = 700
 
@@ -32,7 +33,11 @@ const BrowserPage: FC<BrowserPageProps> = () => {
           </Section>
         </SplitterPanel>
         <SplitterPanel size={82}>
-          <Splitter layout="horizontal" style={{ height: '100%' }} stateKey="browser-splitter-2">
+          <DetailsPanelSplitter
+            layout="horizontal"
+            style={{ height: '100%' }}
+            stateKey="browser-splitter-2"
+          >
             <SplitterPanel style={{ minWidth: 500 }}>
               <Products />
             </SplitterPanel>
@@ -42,10 +47,11 @@ const BrowserPage: FC<BrowserPageProps> = () => {
                 minWidth: detailsMinWidth,
                 zIndex: 100,
               }}
+              className="details"
             >
               <BrowserDetailsPanel />
             </SplitterPanel>
-          </Splitter>
+          </DetailsPanelSplitter>
         </SplitterPanel>
       </Splitter>
     </main>

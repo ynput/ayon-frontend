@@ -6,12 +6,14 @@ import { Section } from '@ynput/ayon-react-components'
 // Components
 import { useProjectTableContext, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
+import { useProjectContext } from '@shared/context'
 
 type Props = {}
 
 const ProjectOverviewTable = ({}: Props) => {
+  const { projectName } = useProjectContext()
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
-  const { projectName, showHierarchy, isLoading, fetchNextPage } = useProjectTableContext()
+  const { showHierarchy, isLoading, fetchNextPage } = useProjectTableContext()
 
   const { onOpenNew } = useNewEntityContext()
 

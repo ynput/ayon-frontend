@@ -1,5 +1,5 @@
 import React from 'react'
-import Menu from '../MenuComponents/Menu'
+import { Menu } from '@shared/components'
 import { useFeedback } from '@shared/components'
 
 export const HelpMenu = ({ user, ...props }) => {

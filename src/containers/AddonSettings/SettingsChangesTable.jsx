@@ -5,13 +5,13 @@ import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { Badge, BadgeWrapper } from '@shared/components'
-import { useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 
 const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
   const [expandedKeys, setExpandedKeys] = useState({})
   const [selectedKeys, setSelectedKeys] = useState({})
   const [knownAddonKeys, setKnownAddonKeys] = useState({})
-  const { navigate: navigateToUri } = useURIContext()
+  const { setUri } = useURIContext()
 
   useEffect(() => {
     const newExpandedKeys = {}
@@ -79,7 +79,7 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
       }
       let siteBadge = null
       if (rowData.data.siteName) {
-        siteBadge = <Badge color="site" label={rowData.data.siteName}/>
+        siteBadge = <Badge color="site" label={rowData.data.siteName} />
       }
       return (
         <div style={{ display: 'inline-flex', flexDirecion: 'row' }}>
@@ -151,7 +151,7 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
           uri += `/${change.join('/')}`
           if (_projectName && _projectName !== '_') uri += `?project=${_projectName}`
           if (_siteName && _siteName !== '_') uri += `&site=${_siteName}`
-          navigateToUri(uri)
+          setUri(uri)
           return
         }
       }

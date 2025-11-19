@@ -8,6 +8,7 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
 import { PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
+import { useProjectContext } from '@shared/context'
 
 export type EntityUpdate = {
   rowId: string
@@ -45,13 +46,14 @@ export type OperationWithRowId = OperationModel & { rowId: string; meta?: Record
 
 interface UseUpdateTableDataProps {
   pushHistory?: UseHistoryReturn['pushHistory']
+  removeHistoryEntries?: UseHistoryReturn['removeHistoryEntries']
 }
 
 const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
-  const { pushHistory } = props || {}
+  const { pushHistory, removeHistoryEntries } = props || {}
+  const { projectName } = useProjectContext()
   const {
     getEntityById,
-    projectName,
     getInheritedDependents,
     findInheritedValueFromAncestors,
     findNonInheritedValues,
@@ -82,7 +84,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       const filteredCount = entityUpdates.length - filteredUpdates.length
       if (filteredCount > 0) {
         toast.error(
-          `Cannot change folder type for ${filteredCount} folder${filteredCount > 1 ? 's' : ''} with published versions`,
+          `Cannot change folder type for ${filteredCount} folder${
+            filteredCount > 1 ? 's' : ''
+          } with published versions`,
         )
       }
 
@@ -245,6 +249,10 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       } catch (error: any) {
         console.error('Error updating entities:', error)
         toast.error('Failed to update entities: ' + error?.error)
+        // Remove the failed update from history stack
+        if (pushHistory && pushToHistory && removeHistoryEntries) {
+          removeHistoryEntries(1)
+        }
       }
     },
     [
@@ -253,6 +261,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       getEntityById,
       getInheritedDependents,
       pushHistory,
+      removeHistoryEntries,
     ],
   )
 
@@ -473,6 +482,10 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         })
       } catch (error) {
         toast.error('Failed to update entities')
+        // Remove the failed update from history stack
+        if (pushToHistory && pushHistory && removeHistoryEntries) {
+          removeHistoryEntries(1)
+        }
       }
     },
     [
@@ -481,6 +494,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       getInheritedDependents,
       findInheritedValueFromAncestors,
       pushHistory,
+      removeHistoryEntries,
     ],
   )
 

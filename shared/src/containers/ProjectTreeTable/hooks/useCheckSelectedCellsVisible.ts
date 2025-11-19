@@ -2,7 +2,7 @@
 // If they are not visible, they will be removed from the selection
 // This can happen when the user changes the slicer selection or filters (combined filters changes)
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { CellId, parseCellId } from '../utils'
 import { useProjectTableContext } from '../context'
 
@@ -19,11 +19,30 @@ export const useCheckSelectedCellsVisible = ({
   focusedCellId,
   setFocusedCellId,
 }: CheckSelectedCellsVisibleProps): void => {
-  const { getEntityById } = useProjectTableContext()
+  const { getEntityById, isLoading } = useProjectTableContext()
+  const isMountedRef = useRef(true)
+
+  // Initialize the mounted ref on mount
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   // checks that all of the selected cells are in the tableData
   // if they are not, they will be removed from the selection
   useEffect(() => {
+    if (isLoading) return
+
+    // Skip running on initial mount (within 2 seconds)
+    if (isMountedRef.current) {
+      const timeoutId = setTimeout(() => {
+        isMountedRef.current = false
+      }, 2000)
+      return () => clearTimeout(timeoutId)
+    }
+
     const missingCells = new Set<CellId>()
     for (const cellId of selectedCells) {
       // check if the cell rowId is in
@@ -46,5 +65,5 @@ export const useCheckSelectedCellsVisible = ({
         setFocusedCellId(null)
       }
     }
-  }, [getEntityById, selectedCells, focusedCellId, setSelectedCells, setFocusedCellId])
+  }, [getEntityById, selectedCells, focusedCellId, setSelectedCells, setFocusedCellId, isLoading])
 }

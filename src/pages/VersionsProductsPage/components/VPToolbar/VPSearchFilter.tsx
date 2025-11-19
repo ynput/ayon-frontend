@@ -1,13 +1,13 @@
 import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
-import { useProjectDataContext } from '@shared/containers'
+import { useProjectContext } from '@shared/context'
 import { ScopeWithFilterTypes } from '@shared/components/SearchFilter/useBuildFilterOptions'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 
 interface VPSearchFilterProps {}
 
 const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
-  const { projectInfo, projectName } = useProjectDataContext()
+  const { projectName, ...projectInfo } = useProjectContext()
   const { filters, onUpdateFilters } = useVPViewsContext()
 
   const scopesConfig: ScopeWithFilterTypes[] = [
@@ -25,7 +25,7 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
     },
     {
       scope: 'product',
-      filterTypes: ['status', 'tags', 'productType', 'attributes'],
+      filterTypes: ['status', 'tags', 'attributes'],
     },
     {
       scope: 'task',

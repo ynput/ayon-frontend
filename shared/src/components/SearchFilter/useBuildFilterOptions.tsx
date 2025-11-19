@@ -1,5 +1,9 @@
-import { getAttributeIcon } from '@shared/util'
-import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
+import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import {
+  useGetEntityGroupsQuery,
+  useGetKanbanProjectUsersQuery,
+  useGetProjectsInfoQuery,
+} from '@shared/api'
 import type {
   GetProjectsInfoResponse,
   FolderType,
@@ -9,8 +13,8 @@ import type {
   AttributeModel,
   AttributeEnumItem,
   AttributeData,
+  EntityGroup,
 } from '@shared/api'
-import { productTypes } from '@shared/util'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter } from '@ynput/ayon-react-components'
 import { dateOptions } from './filterDates'
@@ -66,6 +70,7 @@ export type BuildFilterOptions = {
     tags?: string[]
     attributes?: Record<string, AttributeDataValue[]>
     assignees?: string[]
+    productTypes?: ProductType[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
@@ -111,7 +116,22 @@ export const useBuildFilterOptions = ({
       s.filterTypes.includes(type as FilterFieldType),
     ),
   )
-  const anyNeedsAttributes = scopesWithTypes.some((s) => s.filterTypes.includes('attributes'))
+  // find if any search field is in any of the scopesWithTypes
+  const fieldInScopes = (field: FilterFieldType): boolean => {
+    return scopesWithTypes.some((s) => s.filterTypes.includes(field))
+  }
+
+  // get grouping options for productTypes
+  // NOTE: We should revisit this to be used for all attribs and fields
+  const { data: { groups: productTypes = [] } = {} } = useGetEntityGroupsQuery(
+    {
+      entityType: 'product',
+      groupingKey: 'productType',
+      projectName: projectNames[0],
+      empty: true,
+    },
+    { skip: !projectNames?.length || !fieldInScopes('productType') },
+  )
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     {
@@ -158,7 +178,7 @@ export const useBuildFilterOptions = ({
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
-        let subTypes = getSubTypes(projectsInfo, 'task')
+        let subTypes = getSubTypes({ projectsInfo, productTypes }, 'task')
 
         entitySubTypeOption.values?.push(...subTypes)
 
@@ -180,7 +200,7 @@ export const useBuildFilterOptions = ({
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
-        let subTypes = getSubTypes(projectsInfo, 'folder')
+        let subTypes = getSubTypes({ projectsInfo, productTypes }, 'folder')
 
         entitySubTypeOption.values?.push(...subTypes)
 
@@ -202,7 +222,7 @@ export const useBuildFilterOptions = ({
       )
       if (entitySubTypeOption) {
         // get all subTypes for the current scope (entityType)
-        let subTypes = getSubTypes(projectsInfo, 'product')
+        let subTypes = getSubTypes({ projectsInfo, productTypes }, 'product')
         entitySubTypeOption.values?.push(...subTypes)
         options.push(entitySubTypeOption)
       }
@@ -493,15 +513,21 @@ export const useBuildFilterOptions = ({
 //
 //
 //
-const getSubTypes = (projectsInfo: GetProjectsInfoResponse, type: ScopeType): Option[] => {
+const getSubTypes = (
+  {
+    projectsInfo,
+    productTypes,
+  }: { projectsInfo: GetProjectsInfoResponse; productTypes: EntityGroup[] },
+  type: ScopeType,
+): Option[] => {
   const options: Option[] = []
   if (type === 'product') {
-    Object.values(productTypes).forEach(({ icon, name }) => {
+    productTypes.forEach(({ icon, label, value }) => {
       options.push({
-        id: name,
+        id: value,
         type: 'string',
-        label: name,
-        icon: icon,
+        label: label || value,
+        icon: icon || getEntityTypeIcon('product'),
         inverted: false,
         values: [],
         allowsCustomValues: false,

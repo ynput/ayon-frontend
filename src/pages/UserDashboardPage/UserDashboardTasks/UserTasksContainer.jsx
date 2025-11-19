@@ -12,15 +12,15 @@ import { EmptyPlaceholder } from '@shared/components'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '@state/dashboard'
+import { onAssigneesChanged, onTaskSelected } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { getIntersectionFields, getMergedFields } from '../util'
-import { setUri } from '@state/context'
 import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { openViewer } from '@state/viewer'
 import RelatedTasksModule from './RelatedTasks'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -110,22 +110,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task') || []
 
-  // update the uri breadcrumbs when the selected tasks change
-  useEffect(() => {
-    if (selectedTasks.length && !isLoadingTasks) {
-      // first find task
-      const task = tasks.find((t) => t.id === selectedTasks[0])
-      if (task) {
-        // updates the breadcrumbs
-        let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
-        dispatch(setUri(uri))
-        return
-      }
-    }
-    // no tasks in current project or selected tasks NOT in current project
-    dispatch(setUri(null))
-  }, [selectedTasks, isLoadingTasks, tasks])
-
   // add extra fields to tasks like: icons, thumbnailUrl, shortPath
   const transformedTasks = useMemo(
     () => transformKanbanTasks(tasks, { projectsInfo, isLoadingTasks, priorities }),
@@ -201,8 +185,34 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   const { setOpen } = useScopedDetailsPanel('dashboard')
 
+  // when there is a task open in the panel through the uri, try to select the task
+  const handleUri = (entity) => {
+    // check entity is a task
+    if (entity?.entityType !== 'task') return
+    // check entity id is in tasks
+    const task = transformedTasks.find((t) => t.id === entity.id)
+    if (task) {
+      // select the task
+      dispatch(
+        onTaskSelected({
+          ids: [task.id],
+          types: [task.taskType],
+          data: [
+            {
+              id: task.id,
+              projectName: task.projectName,
+              taskType: task.taskType,
+              name: task.name,
+            },
+          ],
+        }),
+      )
+      // open the panel
+      setOpen(true)
+    }
+  }
+
   const handlePanelClose = () => {
-    dispatch(setUri(null))
     setOpen(false)
   }
 
@@ -214,7 +224,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   if (isError) return <EmptyPlaceholder error={error} />
 
   return (
-    <StyledSplitter
+    <DetailsPanelSplitter
       layout="horizontal"
       style={{
         height: '100%',
@@ -226,7 +236,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       }}
       stateKey="user-dashboard-tasks"
       className="dashboard-tasks"
-      gutterSize={selectedTasks.length ? 6 : 0}
+      gutterSize={6}
     >
       <SplitterPanel
         style={{
@@ -261,39 +271,38 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           onOpenViewer={handleOpenViewer}
         />
       </SplitterPanel>
-      {isPanelOpen ? (
-        <SplitterPanel
-          size={1}
-          className={clsx('details-panel-splitter', { dragging: isDragging })}
-          style={{
-            maxWidth: isDragging
-              ? 0
-              : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-            minWidth: isDragging ? 0 : detailsMinWidth,
-          }}
-        >
-          <DetailsPanel
-            onClose={handlePanelClose}
-            entitiesData={selectedTasksData}
-            disabledStatuses={disabledStatuses}
-            tagsOptions={tagsOptions}
-            projectUsers={projectUsers}
-            activeProjectUsers={activeProjectUsers}
-            disabledProjectUsers={disabledProjectUsers}
-            selectedTasksProjects={selectedTasksProjects}
-            projectsInfo={projectsInfo}
-            projectNames={selectedTasksProjects}
-            entityType="task"
-            entitySubTypes={taskTypes}
-            scope="dashboard"
-            onOpenViewer={handleOpenViewer}
-          />
-          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
-        </SplitterPanel>
-      ) : (
-        <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-      )}
-    </StyledSplitter>
+
+      <SplitterPanel
+        size={1}
+        className={clsx('details-panel-splitter', 'details', { dragging: isDragging })}
+        style={{
+          maxWidth: isDragging
+            ? 0
+            : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+          minWidth: isDragging ? 0 : detailsMinWidth,
+        }}
+      >
+        <DetailsPanel
+          isOpen={isPanelOpen}
+          onClose={handlePanelClose}
+          entitiesData={selectedTasksData}
+          disabledStatuses={disabledStatuses}
+          tagsOptions={tagsOptions}
+          projectUsers={projectUsers}
+          activeProjectUsers={activeProjectUsers}
+          disabledProjectUsers={disabledProjectUsers}
+          selectedTasksProjects={selectedTasksProjects}
+          projectsInfo={projectsInfo}
+          projectNames={selectedTasksProjects}
+          entityType="task"
+          entitySubTypes={taskTypes}
+          scope="dashboard"
+          onOpenViewer={handleOpenViewer}
+          onUriOpen={handleUri}
+        />
+        <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
+      </SplitterPanel>
+    </DetailsPanelSplitter>
   )
 }
 

@@ -189,7 +189,13 @@ const UserDashboardKanBan = ({
 
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
-  const keyboardSensor = useSensor(KeyboardSensor)
+  const keyboardSensor = useSensor(KeyboardSensor, {
+    keyboardCodes: {
+      start: ['Enter'],
+      cancel: ['Escape'],
+      end: ['Enter'],
+    },
+  })
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
       distance: 1,
@@ -221,6 +227,11 @@ const UserDashboardKanBan = ({
       const task = tasks.find((t) => t.id === event.active.id)
       setSelectedTasks([event.active.id], [task.taskType], [task])
     }
+  }
+
+  const handleDragCancel = (event) => {
+    dispatch(onDraggingEnd())
+    setActiveDraggingId(null)
   }
 
   const handleDragEnd = async (event) => {
@@ -280,6 +291,7 @@ const UserDashboardKanBan = ({
           <DndContext
             sensors={sensors}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
             onDragStart={handleDragStart}
             autoScroll={false}
           >

@@ -34,12 +34,11 @@ import TrialBanner from '@components/TrialBanner/TrialBanner'
 import { ShortcutsProvider } from '@context/ShortcutsContext'
 import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
-import { URIProvider } from '@context/UriContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider, GlobalProvider } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { MenuProvider } from '@shared/context/MenuContext'
+import { MenuProvider, URIProvider } from '@shared/context'
 
 // containers
 import Header from '@containers/header'
@@ -67,7 +66,7 @@ import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
 
 const App = () => {
-  const user = useAppSelector((state) => state.user)
+  const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
   const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
@@ -185,30 +184,30 @@ const App = () => {
                   <RemoteModulesProvider skip={!user.name}>
                     <PowerpackProvider>
                       <ContextMenuProvider>
-                        <DetailsPanelProvider
-                          {...handlerProps}
-                          user={user}
-                          viewer={viewer}
-                          dispatch={dispatch}
-                          useLocation={useLocation}
-                          useNavigate={useNavigate}
-                          useParams={useParams}
-                          useSearchParams={useSearchParams}
-                        >
-                          <GlobalContextMenu />
-                          <PasteProvider>
-                            <PasteModal />
-                            <BrowserRouter>
-                              <NotificationsProvider>
-                                <URIProvider>
-                                  <ShortcutsProvider>
-                                    <PiPProvider>
-                                      <QueryParamProvider
-                                        adapter={ReactRouter6Adapter}
-                                        options={{
-                                          updateType: 'replaceIn',
-                                        }}
-                                      >
+                        <GlobalContextMenu />
+                        <PasteProvider>
+                          <PasteModal />
+                          <BrowserRouter>
+                            <QueryParamProvider
+                              adapter={ReactRouter6Adapter}
+                              options={{
+                                updateType: 'replaceIn',
+                              }}
+                            >
+                              <URIProvider>
+                                <DetailsPanelProvider
+                                  {...handlerProps}
+                                  user={user}
+                                  viewer={viewer}
+                                  dispatch={dispatch}
+                                  useLocation={useLocation}
+                                  useNavigate={useNavigate}
+                                  useParams={useParams}
+                                  useSearchParams={useSearchParams}
+                                >
+                                  <NotificationsProvider>
+                                    <ShortcutsProvider>
+                                      <PiPProvider>
                                         <Header />
                                         <ShareDialog />
                                         <ViewerDialog />
@@ -216,19 +215,19 @@ const App = () => {
                                         <FileUploadPreviewContainer />
                                         <ReleaseInstallerDialog />
                                         <CompleteProfilePrompt />
-                                        <AppRoutes level={user.uiExposureLevel} />
+                                        <AppRoutes />
                                         <DetailsPanelFloating />
                                         <PowerpackDialog />
                                         <AppRemoteLoader />
                                         <TrialBanner />
-                                      </QueryParamProvider>
-                                    </PiPProvider>
-                                  </ShortcutsProvider>
-                                </URIProvider>
-                              </NotificationsProvider>
-                            </BrowserRouter>
-                          </PasteProvider>
-                        </DetailsPanelProvider>
+                                      </PiPProvider>
+                                    </ShortcutsProvider>
+                                  </NotificationsProvider>
+                                </DetailsPanelProvider>
+                              </URIProvider>
+                            </QueryParamProvider>
+                          </BrowserRouter>
+                        </PasteProvider>
                       </ContextMenuProvider>
                     </PowerpackProvider>
                   </RemoteModulesProvider>

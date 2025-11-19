@@ -148,7 +148,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   )
 
   // when the slice type is not hierarchy we need to get the root folders
-  const rootFolderIds = useRootFolders({ sliceType, projectName })
+  const rootFolderIds = useRootFolders()
 
   const resolveSelectedFolders = (
     rowSelection: RowSelectionState,

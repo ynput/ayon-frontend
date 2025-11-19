@@ -270,18 +270,27 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  /** More about the folder */
+  folderAlt?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -290,6 +299,11 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type FolderEdge = {
@@ -373,6 +387,7 @@ export type FolderNodeProductsArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
+  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -514,6 +529,13 @@ export type ProductAttribType = {
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   productGroup?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type ProductBaseType = {
+  __typename?: 'ProductBaseType';
+  name: Scalars['String']['output'];
 };
 
 export type ProductEdge = {
@@ -543,6 +565,7 @@ export type ProductNode = BaseNode & {
   name: Scalars['String']['output'];
   parents: Array<Scalars['String']['output']>;
   path?: Maybe<Scalars['String']['output']>;
+  productBaseType?: Maybe<Scalars['String']['output']>;
   productType: Scalars['String']['output'];
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
@@ -625,6 +648,9 @@ export type ProductsConnection = {
 
 export type ProjectAttribType = {
   __typename?: 'ProjectAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  airtablePush?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -635,6 +661,7 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -686,6 +713,8 @@ export type ProjectNode = {
   name: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   product?: Maybe<ProductNode>;
+  /** List of project's product base types */
+  productBaseTypes: Array<ProductBaseType>;
   /** List of project's product types */
   productTypes: Array<ProductType>;
   /** Return a list of products. */
@@ -815,6 +844,7 @@ export type ProjectNodeProductsArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   namesCi?: InputMaybe<Array<Scalars['String']['input']>>;
   pathEx?: InputMaybe<Scalars['String']['input']>;
+  productBaseTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   productTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   search?: InputMaybe<Scalars['String']['input']>;
   sortBy?: InputMaybe<Scalars['String']['input']>;
@@ -1138,18 +1168,26 @@ export type Tag = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  brands?: Maybe<Array<Scalars['String']['output']>>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -1158,6 +1196,11 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  /** More about the task */
+  taskAlt?: Maybe<Scalars['String']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type TaskEdge = {
@@ -1343,12 +1386,15 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
   comment?: Maybe<Scalars['String']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
   families?: Maybe<Array<Scalars['String']['output']>>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
@@ -1365,6 +1411,8 @@ export type VersionAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type VersionEdge = {

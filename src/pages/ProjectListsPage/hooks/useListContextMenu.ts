@@ -4,12 +4,11 @@ import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMe
 import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
-import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util'
 import { EntityListFolderModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useProjectContext } from '@shared/context'
 import {
   canEditList,
   canEditAllLists,
@@ -73,7 +72,7 @@ const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
   const isUser = !user.data?.isAdmin && !user.data?.isManager
-  const { projectName } = useProjectDataContext()
+  const { projectName } = useProjectContext()
   const { listsData, listFolders } = useListsDataContext()
   const {
     rowSelection,

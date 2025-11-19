@@ -1,5 +1,5 @@
 import UserMenuHeader from './UserMenuHeader'
-import Menu from '../../MenuComponents/Menu'
+import { Menu } from '@shared/components'
 import { useLogoutMutation } from '@queries/auth/logout'
 
 export const UserMenu = ({ user, ...props }) => {
@@ -31,15 +31,12 @@ export const UserMenu = ({ user, ...props }) => {
     items.push({ id: 'divider' })
   }
 
-
-  items.push(
-    {
-      id: 'signOut',
-      label: 'Sign out',
-      icon: 'logout',
-      onClick: handleLogOut,
-    },
-  )
+  items.push({
+    id: 'signOut',
+    label: 'Sign out',
+    icon: 'logout',
+    onClick: handleLogOut,
+  })
 
   return (
     <>

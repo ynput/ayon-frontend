@@ -513,6 +513,11 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         try {
           const result = await dispatch(operationsEnhanced.endpoints.operations.initiate(arg))
 
+          // Check if the network request itself failed (offline, timeout, etc.)
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
+
           const data = result.data
           // check for any errors in the result
           const uniqueErrors = new Set()

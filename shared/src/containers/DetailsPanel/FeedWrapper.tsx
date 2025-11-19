@@ -12,6 +12,7 @@ interface FeedWrapperProps {
   entityType: string
   disabled: boolean
   readOnly: boolean
+  isSlideOut?: boolean
   statuses: Status[]
   scope: string
   entityListId?: string
