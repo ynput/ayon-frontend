@@ -197,10 +197,7 @@ export const useViewsMutations = ({
         }
 
         if (notify) {
-          const message = hasBaseView
-            ? 'View reset to base view and set as your default'
-            : 'View reset to default settings'
-          toast.success(message)
+          toast.success('View reset to default settings')
         }
 
         return viewId
