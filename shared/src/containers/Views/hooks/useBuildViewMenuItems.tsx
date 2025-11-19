@@ -4,7 +4,11 @@ import {
   UserModel,
   useSetDefaultViewMutation,
   ViewListItemModel,
+  useUpdateViewMutation,
+  viewsQueries,
 } from '@shared/api'
+import { useDispatch } from 'react-redux'
+import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
@@ -60,10 +64,11 @@ const useBuildViewMenuItems = ({
   selectedId,
 }: Props): ViewMenuItem[] => {
   const { powerLicense } = usePowerpack()
-
+  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>()
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
+  const [updateView] = useUpdateViewMutation()
   const [setDefaultView] = useSetDefaultViewMutation()
 
   const extendedViewsList: ViewListItemModelExtended[] = useMemo(
@@ -133,19 +138,47 @@ const useBuildViewMenuItems = ({
         header,
         accept: async () => {
           try {
-            let baseViewId: string
+            // Get settings from the source view
+            let settings = workingView?.settings || {}
 
+            // If sourceViewId is provided (clicking pin on a custom view), fetch that view's settings
+            if (sourceViewId) {
+              const sourceView = viewsList.find((v) => v.id === sourceViewId)
+              const isStudioScope = sourceView?.scope === 'studio'
+
+              const sourceViewPromise = dispatch(
+                viewsQueries.endpoints.getView.initiate({
+                  viewId: sourceViewId,
+                  viewType: viewType as string,
+                  projectName: isStudioScope ? undefined : projectName,
+                })
+              )
+
+              const sourceViewResult = await sourceViewPromise
+
+              if (sourceViewResult.data?.settings) {
+                settings = sourceViewResult.data.settings
+              }
+
+              // Cleanup: unsubscribe if the method exists
+              if ('unsubscribe' in sourceViewPromise && typeof sourceViewPromise.unsubscribe === 'function') {
+                sourceViewPromise.unsubscribe()
+              }
+            }
+
+            // Create or update the base view with the copied settings
             if (existingBaseView) {
-              baseViewId = existingBaseView.id as string
-              // If sourceViewId is provided (from a specific view), save that view's settings to base
-              // Otherwise use the current working view
-              const viewIdToSave = sourceViewId || baseViewId
-              await onSave(viewIdToSave)
+              const baseViewId = existingBaseView.id as string
+              await updateView({
+                viewId: baseViewId,
+                viewType: viewType as string,
+                projectName: projectName,
+                payload: { settings },
+              }).unwrap()
+              toast.success('Base view updated successfully')
             } else {
-              let settings = workingView?.settings || {}
-
               const baseViewPayload = {
-                label:BASE_VIEW_ID,
+                label: BASE_VIEW_ID,
                 visibility: 'public',
                 working: false,
                 settings,
@@ -156,15 +189,16 @@ const useBuildViewMenuItems = ({
                 viewType: viewType as string,
                 projectName: projectName,
               }).unwrap()
+              toast.success('Base view created successfully')
             }
           } catch (error: any) {
-            console.error('Failed to set default view:', error)
-            toast.error(`Failed to set default view: ${error?.message || error}`)
+            console.error('Failed to set base view:', error)
+            toast.error(`Failed to set base view: ${error?.message || error}`)
           }
         },
       })
     },
-    [workingView, viewsList, viewType, projectName, createView, onSave],
+    [workingView, viewsList, viewType, projectName, createView, updateView, dispatch],
   )
 
   // Handler for working view specifically
