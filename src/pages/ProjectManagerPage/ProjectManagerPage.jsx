@@ -24,6 +24,7 @@ import ProjectPermissions from './ProjectPermissions'
 import { isActiveDecider, projectSorter, Module, ModuleList, ModulePath } from './mappers'
 import { replaceQueryParams } from '@helpers/url'
 import HelpButton from '@components/HelpButton/HelpButton'
+import { ProjectContextProvider } from '@shared/context'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -47,7 +48,6 @@ const ProjectManagerPage = () => {
   const dispatch = useDispatch()
 
   console.log('ProjectManagerPage render', { projectName })
-
 
   let { module } = useParams()
 
@@ -190,31 +190,33 @@ const ProjectManagerPage = () => {
   }, [isLoadingUserPermissions, selectedProject, module])
 
   const title = useTitle(module, linksWithProject, selectedProject || 'AYON')
-    
-    return (
+
+  return (
     <>
       <DocumentTitle title={title} />
       <AppNavLinks links={linksWithProject} />
-      {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
-      <ProjectManagerPageContainer
-        selection={selectedProject}
-        onSelect={setSelectedProject}
-        onNoProject={(s) => setSelectedProject(s)}
-        isUser={isUser}
-        onNewProject={() => setShowNewProject(true)}
-        onDeleteProject={handleDeleteProject}
-        onActivateProject={handleActivateProject}
-        customSort={projectSorter({ isLoadingUserPermissions, userPermissions, module })}
-        isActiveCallable={isActiveDecider({ userPermissions, projectName, module })}
-      >
-        {module === Module.anatomy && <ProjectAnatomy />}
-        {module === Module.projectSettings && <ProjectSettings />}
-        {module === Module.siteSettings && <SiteSettings />}
-        {module === Module.projectAccess && <ProjectUserAccess onSelect={setSelectedProject} />}
-        {module === Module.roots && <ProjectRoots userPermissions={userPermissions} />}
-        {module === Module.teams && <TeamsPage />}
-        {module === Module.permissions && <ProjectPermissions />}
-      </ProjectManagerPageContainer>
+      <ProjectContextProvider>
+        {/* container wraps all modules and provides selectedProject, ProjectList comp and Toolbar comp as props */}
+        <ProjectManagerPageContainer
+          selection={selectedProject}
+          onSelect={setSelectedProject}
+          onNoProject={(s) => setSelectedProject(s)}
+          isUser={isUser}
+          onNewProject={() => setShowNewProject(true)}
+          onDeleteProject={handleDeleteProject}
+          onActivateProject={handleActivateProject}
+          customSort={projectSorter({ isLoadingUserPermissions, userPermissions, module })}
+          isActiveCallable={isActiveDecider({ userPermissions, projectName, module })}
+        >
+          {module === Module.anatomy && <ProjectAnatomy />}
+          {module === Module.projectSettings && <ProjectSettings />}
+          {module === Module.siteSettings && <SiteSettings />}
+          {module === Module.projectAccess && <ProjectUserAccess onSelect={setSelectedProject} />}
+          {module === Module.roots && <ProjectRoots userPermissions={userPermissions} />}
+          {module === Module.teams && <TeamsPage />}
+          {module === Module.permissions && <ProjectPermissions />}
+        </ProjectManagerPageContainer>
+      </ProjectContextProvider>
 
       {showNewProject && (
         <NewProjectDialog
