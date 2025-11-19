@@ -100,9 +100,10 @@ DetailsPanelProps) => {
     isGuest,
     entities: contextEntities,
     setEntities,
+    slideOut,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [_searchParams, setSearchParams] = useSearchParams()
   const hasCalledOnOpen = useRef(false)
 
   // Use context entities if available, otherwise use props
@@ -224,6 +225,9 @@ DetailsPanelProps) => {
   const firstProject = activeProjectNames[0]
   const firstProjectInfo = projectsInfo[firstProject] || {}
   const firstEntityData = entityDetailsData[0] || {}
+  // Use the last entity for URI sync
+  const lastEntityData = entityDetailsData[entityDetailsData.length - 1]
+  const lastProject = activeProjectNames[activeProjectNames.length - 1]
 
   // build the full entity path for the first entity
   const [entityPathSegments, entityPathVersions] = useGetEntityPath({
@@ -236,16 +240,16 @@ DetailsPanelProps) => {
   const { setEntityUri, setUri } = useURIContext()
   // sync the uri when entity changes
   useEffect(() => {
-    if (!firstEntityData?.parents) return
-    if (!firstProject) return
+    if (!lastEntityData?.parents) return
+    if (!lastProject) return
     const { folderPath, taskName, versionName, productName } = extractEntityHierarchyFromParents(
-      firstEntityData.parents,
+      lastEntityData.parents,
       activeEntityType,
-      firstEntityData.name,
+      lastEntityData.name,
     )
 
     setEntityUri({
-      projectName: firstProject,
+      projectName: lastProject,
       folderPath: folderPath,
       taskName: taskName,
       productName: productName,
@@ -256,12 +260,12 @@ DetailsPanelProps) => {
     return () => {
       setUri('')
     }
-  }, [firstEntityData])
+  }, [entityDetailsData, activeProjectNames, activeEntityType])
 
   // sync the details panel url (panel) with entity
   useDetailsPanelURLSync({
-    firstEntityData,
-    firstProject,
+    entityData: lastEntityData,
+    project: lastProject,
     activeEntityType,
     entitiesToQuery,
   })
@@ -285,6 +289,7 @@ DetailsPanelProps) => {
     // also remove any entities in context
     setEntities(null)
     clearSearchUrl()
+    closeSlideOut()
   }
 
   useEffect(() => {
@@ -295,10 +300,10 @@ DetailsPanelProps) => {
         const isInputElement =
           ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable
 
-        if (!isInputElement) return
+        if (isInputElement) return
 
         // don't trigger if the viewer is open and panel not in slideout mode
-        if (isSlideOut === false && target.closest('#viewer-dialog')) return
+        if (isSlideOut === false && (target.closest('#viewer-dialog') || !!slideOut)) return
 
         handleClose()
       }
@@ -306,7 +311,7 @@ DetailsPanelProps) => {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleClose, isSlideOut])
+  }, [handleClose, isSlideOut, slideOut])
 
   const { requestPipWindow } = usePiPWindow()
 
