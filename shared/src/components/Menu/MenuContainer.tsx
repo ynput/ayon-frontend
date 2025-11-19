@@ -111,7 +111,7 @@ const MenuInner: React.FC<MenuInnerProps> = ({
     return child
   })
 
-  if (!position) return null
+  const menuPosition = position || { top: 0, left: 0, opacity: 0, visibility: 'hidden' as const }
 
   return createPortal(
     <Styled.Dialog
@@ -119,10 +119,14 @@ const MenuInner: React.FC<MenuInnerProps> = ({
       onClick={handleOnClick}
       onKeyDown={handleKeyDown}
       {...props}
-      ref={menuRef as any}
       id="dialog"
     >
-      <Styled.DialogContent id="content" style={position} className={clsx(align)}>
+      <Styled.DialogContent
+        id="content"
+        style={menuPosition}
+        className={clsx(align)}
+        ref={menuRef as any}
+      >
         {childrenWithProps}
       </Styled.DialogContent>
     </Styled.Dialog>,

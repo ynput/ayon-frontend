@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import MenuItem from './MenuItem'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
@@ -46,8 +46,6 @@ export const MenuList: React.FC<MenuListProps> = ({
   const itemRefs = useRef<{ [key: string]: HTMLElement | null }>({})
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const [top, setTop] = useState<number>((style?.top as number) || 0)
-
   const handleSubMenu = (e: React.MouseEvent, id: string, items: MenuItemType[]) => {
     if (!itemRefs.current[id] || !menuRef.current) return
     onSubMenu?.(e, {
@@ -75,20 +73,9 @@ export const MenuList: React.FC<MenuListProps> = ({
     }
   }, [subMenu])
 
-  // check that the menu is not off the screen
-  useEffect(() => {
-    if (!menuRef.current) return
-    const { top, height } = menuRef.current.getBoundingClientRect()
-    const windowHeight = window.innerHeight
-    if (top + height > windowHeight) {
-      const newTop = windowHeight - height - 60
-      setTop(newTop)
-    }
-  }, [menuRef.current])
-
   return (
     <Styled.MenuWrapper
-      style={{ paddingRight: subMenu ? 16 : 0, ...style, top }}
+      style={{ paddingRight: subMenu ? 16 : 0, ...style }}
       className={subMenu ? 'sub-menu' : 'menu-list'}
       id={id}
       onMouseLeave={handleMouseLeave}
