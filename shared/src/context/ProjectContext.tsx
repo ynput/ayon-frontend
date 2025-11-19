@@ -77,15 +77,17 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
     isUninitialized,
     error,
     refetch: refetchProject,
-  } = useGetProjectQuery({ projectName })
+  } = useGetProjectQuery({ projectName }, { skip: !projectName })
   // PRODUCT TYPES
-  const {
-    data: productTypesData,
-
-    refetch: refetchProductTypes,
-  } = useGetProductTypesQuery({ projectName })
+  const { data: productTypesData, refetch: refetchProductTypes } = useGetProductTypesQuery(
+    { projectName },
+    { skip: !projectName },
+  )
   // ANATOMY
-  const { data: anatomy = {}, refetch: refetchAnatomy } = useGetProjectAnatomyQuery({ projectName })
+  const { data: anatomy = {}, refetch: refetchAnatomy } = useGetProjectAnatomyQuery(
+    { projectName },
+    { skip: !projectName },
+  )
 
   // Shorthands to access project data and type casting
   // (we're referencing nested objects. no need to use useMemo for these)
