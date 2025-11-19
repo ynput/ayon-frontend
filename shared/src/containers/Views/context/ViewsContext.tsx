@@ -214,7 +214,6 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
         setSelectedView,
         setSettingsChanged: setViewSettingsChanged,
         notify: true,
-        baseView: baseView
       })
     } catch (error) {
       console.error('Failed to reset view:', error)
