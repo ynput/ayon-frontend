@@ -19,6 +19,7 @@ export interface ViewItem {
   onResetView?: (e: React.MouseEvent<HTMLButtonElement>) => void // resets working view
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void
   onMakeDefaultView?:(e: React.MouseEvent<HTMLButtonElement>) => void
+  makeDefaultTooltip?: string // tooltip for make default button
 }
 
 export interface ViewMenuItemProps
@@ -41,6 +42,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       onResetView,
       className,
       onMakeDefaultView,
+      makeDefaultTooltip,
       ...props
     },
     ref,
@@ -78,7 +80,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             variant="text"
             className="make_default"
             onClick={onMakeDefaultView}
-            data-tooltip="Make/Update default view"
+            data-tooltip={makeDefaultTooltip || 'Create/Update base view'}
           />
         )}
         {/* Reset button (e.g., for working view) - shows if handler is provided */}

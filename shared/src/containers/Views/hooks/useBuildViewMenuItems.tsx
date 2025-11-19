@@ -120,12 +120,19 @@ const useBuildViewMenuItems = ({
     (sourceViewId?: string) => async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
 
+      const existingBaseView = viewsList.find((view) => view.label === BASE_VIEW_ID)
+      const isUpdate = Boolean(existingBaseView)
+
+      const message = isUpdate
+        ? 'Update the base view for all users in this project?'
+        : 'Create a base view for all users in this project?'
+      const header = isUpdate ? 'Update Base View' : 'Create Base View'
+
       confirmDialog({
-        message: 'Set this view as the base for all users in this project?',
-        header: 'Confirm Base View',
+        message,
+        header,
         accept: async () => {
           try {
-            const existingBaseView = viewsList.find((view) => view.label === BASE_VIEW_ID)
             let baseViewId: string
 
             if (existingBaseView) {
@@ -195,17 +202,20 @@ const useBuildViewMenuItems = ({
     ]
   }, [myViews, sharedViews, allPrivateViews])
 
-  const workingViewItem: ViewMenuItem = useMemo(
-    () => ({
+  const workingViewItem: ViewMenuItem = useMemo(() => {
+    const existingBaseView = viewsList.find((view) => view.label === BASE_VIEW_ID)
+    const makeDefaultTooltip = existingBaseView ? 'Update base view' : 'Create base view'
+
+    return {
       ...workingBaseView,
       onClick: handleWorkingViewChange,
       // expose reset button when handler is provided
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
       onMakeDefaultView: onMakeBaseView,
-    }),
-    [handleWorkingViewChange, onResetWorkingView, onMakeBaseView],
-  )
+      makeDefaultTooltip,
+    }
+  }, [handleWorkingViewChange, onResetWorkingView, onMakeBaseView, viewsList])
 
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
   const viewItems: ViewMenuItem[] = useMemo(() => {
