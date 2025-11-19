@@ -48,6 +48,7 @@ type Props = {
   showOrigin?: boolean
   isHighlighted?: boolean
   readOnly?: boolean
+  isSlideOut?: boolean
   statuses: Status[]
 }
 
@@ -65,6 +66,7 @@ const ActivityComment = ({
   showOrigin,
   isHighlighted,
   readOnly,
+  isSlideOut,
   statuses = [],
 }: Props) => {
   const { userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest } =
@@ -95,7 +97,7 @@ const ActivityComment = ({
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
 
-  const menuId = `activity-comment-menu-${activityId}-${referenceType}`
+  const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
   const isMenuOpen = menuOpen === menuId
 
   const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()

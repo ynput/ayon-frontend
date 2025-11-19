@@ -416,6 +416,7 @@ DetailsPanelProps) => {
               exportAnnotationComposite={exportAnnotationComposite}
               currentTab={currentTab}
               setCurrentTab={setTab}
+              isSlideOut={isSlideOut}
             />
           )}
           {currentTab === 'files' && (

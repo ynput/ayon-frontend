@@ -28,9 +28,16 @@ export type FeedProps = {
   readOnly: boolean
   statuses: Status[]
   entityListId?: string | undefined
+  isSlideOut?: boolean
 }
 
-export const Feed = ({ disabled, readOnly, statuses = [], entityListId }: FeedProps) => {
+export const Feed = ({
+  disabled,
+  readOnly,
+  statuses = [],
+  entityListId,
+  isSlideOut,
+}: FeedProps) => {
   const {
     projectName,
     entities,
@@ -253,6 +260,7 @@ export const Feed = ({ disabled, readOnly, statuses = [], entityListId }: FeedPr
                   isHighlighted={highlightedActivities.includes(activity.activityId)}
                   readOnly={readOnly}
                   statuses={statuses}
+                  isSlideOut={isSlideOut}
                 />
               ))}
           {/* message when no versions published */}
