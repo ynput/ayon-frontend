@@ -1,6 +1,6 @@
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import React, { useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
@@ -8,6 +8,7 @@ import { ayonUrlParam } from '@/constants'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
 import type { ReactNode } from 'react'
+import { useGlobalContext } from '@shared/context'
 
 export type AccessLevel = 'manager' | 'admin'
 
@@ -39,9 +40,10 @@ const AppNavLinks: React.FC<AppNavLinksProps> = ({ links = [], currentModule: _c
   const navigate = useNavigate()
   const { module } = useParams<{ module?: string }>()
   const [search] = useSearchParams()
-  const isManager = useSelector((state: any) => state.user.data.isManager)
-  const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
-  const uri = useSelector((state: any) => state.context.uri)
+  const { user } = useGlobalContext()
+  const isManager = user?.data?.isManager
+  const isAdmin = user?.data?.isAdmin
+  const uri = useAppSelector((state: any) => state.context.uri)
 
   const appendUri = (path: string | undefined, shouldAddUri = true): string | undefined => {
     if (!path) return path

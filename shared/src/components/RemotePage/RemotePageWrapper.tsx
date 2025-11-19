@@ -34,7 +34,6 @@ export interface RemotePageProps {
 
 export interface RemotePageWrapperProps {
   Component: FC<RemotePageProps>
-  viewType?: string
   // project specific
   projectName?: string
   state?: any

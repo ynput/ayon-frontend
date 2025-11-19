@@ -302,7 +302,6 @@ const ProjectPageInner = () => {
         // this gets wrapped in ViewsProvider for addons to use views
         <ProjectPageRemote
           Component={foundRemotePage.component}
-          viewType={foundRemotePage.viewType}
           slicer={foundRemotePage.slicer}
           projectName={projectName}
           key={foundRemotePage.id}

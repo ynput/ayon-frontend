@@ -25,6 +25,11 @@ import { UserDashboardProvider } from './context/UserDashboardContext'
 import { useAppSelector } from '@/features/store'
 import type { ReactNode } from 'react'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
+import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { UserDashboardPageRemote } from './UserDashboardPageRemote'
+import LoadingPage from '@pages/LoadingPage'
+import { WithViews } from '@/hoc/WithViews'
+import { ViewType } from '@shared/containers'
 
 interface DashboardAddon {
   name: string
@@ -39,6 +44,13 @@ interface DashboardAddon {
 interface ProjectInfo {
   projectNames: Array<{ id: string; name: string }>
   [key: string]: any
+}
+
+type PageLink = NavLinkItem & {
+  component?: ReactNode
+  viewType?: ViewType
+  showProjectList?: boolean
+  isMultiSelect?: boolean
 }
 
 const StyledSplitter = styled(Splitter)`
@@ -65,47 +77,11 @@ const UserDashboardPage: React.FC = () => {
     //isError: addonsIsError,
   } = useGetDashboardAddonsQuery({})
 
-  const links: NavLinkItem[] = [
-    {
-      name: 'Tasks',
-      path: '/dashboard/tasks',
-      module: 'tasks',
-      accessLevels: [],
-      shortcut: 'H+H',
-    },
-    {
-      name: 'Overview',
-      path: '/dashboard/overview',
-      module: 'overview',
-      accessLevels: [],
-    },
-  ]
-
-  for (const addon of addonsData as DashboardAddon[]) {
-    if (addon?.settings?.admin && !isAdmin) continue
-    if (addon?.settings?.manager && !isManager) continue
-    links.push({
-      name: addon.title,
-      path: `/dashboard/addon/${addon.name}`,
-      module: addon.name,
-    })
-  }
-  links.push({ node: 'spacer' })
-  links.push({
-    node: (
-      <HelpButton
-        module={addonName || (module === 'overview' ? 'dashboard overview' : module) || 'tasks'}
-      />
-    ),
+  // Load remote Studio pages
+  const { remotePages, isLoading: isLoadingRemotePages } = useLoadRemotePages({
+    moduleKey: 'Studio',
+    skip: false,
   })
-
-  const title = useTitle(addonName || module || '', links, 'AYON', '')
-
-  const addonData = (addonsData as DashboardAddon[]).find((addon) => addon.name === addonName)
-
-  const addonModule = addonData ? (
-    <DashboardAddon addonName={addonData.name} addonVersion={addonData.version} />
-  ) : null
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
@@ -153,71 +129,149 @@ const UserDashboardPage: React.FC = () => {
     await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
   }
 
-  const isProjectsMultiSelect = module === 'tasks'
-  const showProjectList = module === 'tasks' || module === 'overview'
+  // Build pages configuration - single source of truth for navigation and components
+  const pages: PageLink[] = useMemo(
+    () => [
+      {
+        name: 'Tasks',
+        path: '/dashboard/tasks',
+        module: 'tasks',
+        accessLevels: [],
+        shortcut: 'H+H',
+        component: (
+          <UserTasksContainer
+            projectsInfo={projectsInfoWithProjects}
+            isLoadingInfo={isLoadingInfo}
+          />
+        ),
+        // viewType: 'tasks',
+        showProjectList: true,
+        isMultiSelect: true,
+      },
+      {
+        name: 'Dashboard',
+        path: '/dashboard/dashboard',
+        module: 'dashboard',
+        accessLevels: [],
+        component: <ProjectDashboard projectName={selectedProjects[0]} />,
+        showProjectList: true,
+        isMultiSelect: false,
+      },
+      // Add legacy dashboard addons
+      ...(addonsData as DashboardAddon[])
+        .filter((addon) => {
+          if (addon?.settings?.admin && !isAdmin) return false
+          if (addon?.settings?.manager && !isManager) return false
+          return true
+        })
+        .map((addon) => ({
+          name: addon.title,
+          path: `/dashboard/addon/${addon.name}`,
+          module: addon.name,
+          component: <DashboardAddon addonName={addon.name} addonVersion={addon.version} />,
+          showProjectList: false,
+        })),
+      // Add remote Studio pages
+      ...remotePages.map((remote) => {
+        const showProjectList = !!(remote as any).projects
+        return {
+          name: remote.name,
+          path: `/dashboard/${remote.module}`,
+          module: remote.module,
+          component: (
+            <UserDashboardPageRemote
+              Component={remote.component}
+              viewType={remote.viewType}
+              state={showProjectList ? { selectedProjects } : undefined}
+              key={remote.id}
+            />
+          ),
+          viewType: remote.viewType,
+          showProjectList,
+          isMultiSelect: false,
+        }
+      }),
+      { node: 'spacer' },
+      {
+        node: (
+          <HelpButton
+            module={
+              addonName || (module === 'dashboard' ? 'dashboard dashboard' : module) || 'tasks'
+            }
+          />
+        ),
+      },
+    ],
+    [
+      addonsData,
+      remotePages,
+      projectsInfoWithProjects,
+      isLoadingInfo,
+      selectedProjects,
+      isAdmin,
+      isManager,
+      addonName,
+      module,
+    ],
+  )
 
-  if (isLoadingProjects) return null
+  // Find active page based on current module/addonName
+  const activePage = useMemo(() => {
+    if (addonName) {
+      return pages.find((p) => p.module === addonName)
+    }
+    return pages.find((p) => p.module === module) || pages.find((p) => p.module === 'tasks')
+  }, [pages, module, addonName])
+
+  const title = useTitle(addonName || module || '', pages, 'AYON', '')
+
+  // Early returns after all hooks
+  if (isLoadingProjects || isLoadingRemotePages) return <LoadingPage />
 
   if (!projects.length) return <UserDashboardNoProjects />
-
-  let moduleComponent: ReactNode
-  if (!!addonName && addonModule) {
-    moduleComponent = addonModule
-  } else {
-    switch (module) {
-      case 'tasks':
-        moduleComponent = (
-          <UserTasksContainer
-            projectsInfo={projectsInfoWithProjects}
-            isLoadingInfo={isLoadingInfo}
-          />
-        )
-        break
-      case 'overview':
-        moduleComponent = <ProjectDashboard projectName={selectedProjects[0]} />
-        break
-      default:
-        moduleComponent = (
-          <UserTasksContainer
-            projectsInfo={projectsInfoWithProjects}
-            isLoadingInfo={isLoadingInfo}
-          />
-        )
-        break
-    }
-  }
 
   if (isGuest) {
     return <GuestUserPageLocked />
   }
 
+  if (!activePage?.component) return null
+
+  const {
+    component: moduleComponent,
+    showProjectList = false,
+    isMultiSelect = false,
+    viewType,
+  } = activePage
+
   return (
     <>
       <DocumentTitle title={title} />
-      <AppNavLinks links={links} />
+      <AppNavLinks links={pages} />
       <UserDashboardProvider>
         <main>
-          <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-            {showProjectList ? (
-              <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
-                <SplitterPanel size={15}>
-                  <ProjectsList
-                    multiSelect={isProjectsMultiSelect}
-                    selection={selectedProjects}
-                    onSelect={setSelectedProjects}
-                    onNewProject={() => setShowNewProject(true)}
-                    onDeleteProject={handleDeleteProject}
-                    onActivateProject={handleActivateProject}
-                  />
-                </SplitterPanel>
-                <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
-                  {moduleComponent}
-                </SplitterPanel>
-              </StyledSplitter>
-            ) : (
-              moduleComponent
-            )}
-          </Section>
+          <WithViews viewType={viewType}>
+            <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
+              {showProjectList ? (
+                <StyledSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
+                  <SplitterPanel size={15}>
+                    <ProjectsList
+                      multiSelect={isMultiSelect}
+                      selection={selectedProjects}
+                      onSelect={setSelectedProjects}
+                      onNewProject={() => setShowNewProject(true)}
+                      onDeleteProject={handleDeleteProject}
+                      onActivateProject={handleActivateProject}
+                    />
+                  </SplitterPanel>
+                  <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
+                    {moduleComponent}
+                  </SplitterPanel>
+                </StyledSplitter>
+              ) : (
+                moduleComponent
+              )}
+            </Section>
+          </WithViews>
         </main>
         {showNewProject && (
           <NewProjectDialog
