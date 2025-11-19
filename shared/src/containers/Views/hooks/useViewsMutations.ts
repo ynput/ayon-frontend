@@ -149,8 +149,8 @@ export const useViewsMutations = ({
         const hasBaseView = baseView && baseView.settings && Object.keys(baseView.settings).length > 0
         const templateSettings = baseView?.settings ?? {}
 
-        // Determine the view ID to use
-        const viewId = existingWorkingViewId || generateWorkingView().id
+        // Determine the view ID to use - use base view ID or generate new one
+        const viewId: string = baseView?.id as string ?? generateWorkingView().id
 
         // Prepare the working view payload with base view settings
         const workingViewPayload = {
