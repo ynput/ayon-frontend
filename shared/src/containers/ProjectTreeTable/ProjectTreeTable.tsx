@@ -1289,10 +1289,6 @@ const TableCell = ({
 
   const { isEditing, setEditingCellId } = useCellEditing()
 
-  // Track clicks to prevent selection from interfering with double-click
-  const clickTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const lastClickTimeRef = useRef<number>(0)
-
   const borderClasses = getCellBorderClasses(cellId)
 
   const isPinned = cell.column.getIsPinned()
@@ -1358,33 +1354,12 @@ const TableCell = ({
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
-        // Clear any pending selection timer
-        if (clickTimerRef.current) {
-          clearTimeout(clickTimerRef.current)
-          clickTimerRef.current = null
-        }
-
-        const now = Date.now()
-        const timeSinceLastClick = now - lastClickTimeRef.current
-        lastClickTimeRef.current = now
-
-        // If this is potentially a double-click (within 300ms), don't start selection yet
-        // The double-click handler will handle the action
-        if (timeSinceLastClick < 300) {
-          return
-        }
-
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
-
         if (e.shiftKey) {
-          // Shift+click extends selection from anchor cell immediately
+          // Shift+click extends selection from anchor cell
           selectCell(cellId, additive, true) // true for range selection
         } else {
-          // Delay normal selection to allow double-click to be detected
-          clickTimerRef.current = setTimeout(() => {
-            startSelection(cellId, additive)
-            clickTimerRef.current = null
-          }, 200) // 200ms delay to detect double-click
+          startSelection(cellId, additive)
         }
       }}
       onMouseOver={(e) => {
@@ -1403,12 +1378,6 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        // Cancel any pending selection timer
-        if (clickTimerRef.current) {
-          clearTimeout(clickTimerRef.current)
-          clickTimerRef.current = null
-        }
-
         // check if this is a restricted entity - prevent opening details/viewer
         const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
