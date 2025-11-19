@@ -7,7 +7,7 @@ const dashboardSlice = createSlice({
     selectedProjects: getInitialStateLocalStorage('dashboard-selectedProjects', []),
     prefetchedIds: [],
     tasks: {
-      selected: getInitialStateLocalStorage('dashboard-tasks-selected', []),
+      selected: [],
       selectedData: getInitialStateLocalStorage('dashboard-tasks-selectedData', []),
       types: getInitialStateLocalStorage('dashboard-tasks-types', []),
       sortBy: getInitialStateLocalStorage('dashboard-tasks-sortBy', []),
@@ -96,7 +96,6 @@ export const dashboardLocalItems = {
   'dashboard/onTasksGroupByChanged': [{ key: 'dashboard-tasks-groupBy' }],
   'dashboard/onTasksFilterChanged': [{ key: 'dashboard-tasks-filter' }],
   'dashboard/onTaskSelected': [
-    { key: 'dashboard-tasks-selected', payload: 'ids' },
     { key: 'dashboard-tasks-types', payload: 'types' },
     { key: 'dashboard-tasks-selectedData', payload: 'data' },
   ],

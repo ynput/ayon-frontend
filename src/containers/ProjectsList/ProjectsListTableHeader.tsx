@@ -1,5 +1,4 @@
-import Menu from '@components/Menu/MenuComponents/Menu'
-import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import { Menu, MenuContainer } from '@shared/components'
 import ListsSearch from '@pages/ProjectListsPage/components/ListsTable/ListsSearch'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
@@ -135,9 +134,7 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
             id={MENU_ID}
             className={clsx('list-menu', { active: isOpen })}
           />
-          {/* @ts-expect-error - non TS file */}
           <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
-            {/* @ts-expect-error - non TS file */}
             <Menu menu={menuItems} onClose={() => toggleMenu?.(false)} />
           </MenuContainer>
 

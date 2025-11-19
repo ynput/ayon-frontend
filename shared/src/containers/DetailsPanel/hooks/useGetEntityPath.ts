@@ -27,7 +27,7 @@ const useGetEntityPath = ({
     )
 
   const isFetching = useQueryArgumentChangeLoading(
-    { projectName: projectName || '' },
+    { projectName: projectName || '', isLoading },
     isFetchingRaw,
   )
 

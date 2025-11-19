@@ -5,8 +5,7 @@ import { theme } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
 import styled from 'styled-components'
 import ListsSearch from './ListsSearch'
-import Menu from '@components/Menu/MenuComponents/Menu'
-import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import { Menu, MenuContainer, MenuItemType } from '@shared/components'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
@@ -203,7 +202,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const handleSelectAllLists = () => selectAllLists()
 
   // Define all menu items in order (matching right-to-left button order)
-  const menuItems: MenuItemDefinition[] = [
+  const menuItems: MenuItemType[] = [
     {
       id: 'search',
       label: 'Search',
@@ -318,9 +317,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             id={MENU_ID}
             className={clsx('list-menu', { active: isOpen })}
           />
-          {/* @ts-expect-error - non TS file */}
           <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
-            {/* @ts-expect-error - non TS file */}
             <Menu menu={menuItems} onClose={() => toggleMenu?.(false)} />
           </MenuContainer>
 

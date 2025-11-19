@@ -6,6 +6,7 @@ interface UseScrollToHighlightedProps {
   isLoading: boolean
   loadNextPage?: () => Promise<any>
   hasNextPage: boolean
+  activities: any[]
 }
 
 const useScrollToHighlighted = ({
@@ -14,14 +15,18 @@ const useScrollToHighlighted = ({
   isLoading,
   loadNextPage,
   hasNextPage,
+  activities,
 }: UseScrollToHighlightedProps): void => {
   const scrollComplete = useRef<string[]>([])
 
-  const getHighlightedElement = async (reloadCount = 0): Promise<HTMLElement | null> => {
+  const getHighlightedElement = async (
+    feedEl: HTMLElement,
+    reloadCount = 0,
+  ): Promise<HTMLElement | null> => {
     if (!loadNextPage) return null
 
     // find the first li element with classes containing isHighlighted
-    const foundEl = feedRef.current?.querySelector('li.isHighlighted') as HTMLElement | null
+    const foundEl = feedEl.querySelector('li.isHighlighted') as HTMLElement | null
 
     if (foundEl) return foundEl
 
@@ -34,20 +39,20 @@ const useScrollToHighlighted = ({
     // if no highlighted element is found, load more items
     const result = await loadNextPage()
     if (!result) return null
-    const hasNextPage = result.hasNextPage
-    if (!hasNextPage) return null
+    const more = result.hasNextPage
+    if (!more) return null
+
+    // wait a frame to allow DOM to update after new items load
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
 
     // check again for the highlighted element
-    return getHighlightedElement(reloadCount)
+    return getHighlightedElement(feedEl, reloadCount)
   }
 
-  const highlightItems = async (): Promise<void> => {
-    if (!hasNextPage) return
+  const highlightItems = async (feedEl: HTMLElement): Promise<void> => {
     // set the scroll complete flag so we don't scroll again
     // even if some other dependency changes
-    const highlightedElement = await getHighlightedElement()
-
-    scrollComplete.current = highlighted
+    const highlightedElement = await getHighlightedElement(feedEl)
 
     if (!highlightedElement) {
       console.error('No highlighted element found')
@@ -58,7 +63,7 @@ const useScrollToHighlighted = ({
     // get the coordinates of the highlighted element
     const top = highlightedElement.offsetTop
     const height = highlightedElement.offsetHeight
-    const feedHeight = feedRef.current?.offsetHeight || 0
+    const feedHeight = feedEl.offsetHeight || 0
     const padding = 64
 
     const commentTallerThanFeed = height + padding > feedHeight
@@ -68,7 +73,10 @@ const useScrollToHighlighted = ({
     console.log('FOUND: scrolling to highlighted...')
 
     // scroll to the highlighted element
-    feedRef.current?.scrollTo({ top: scrollTop })
+    feedEl.scrollTo({ top: scrollTop })
+
+    // mark scroll as complete only after successful scroll
+    scrollComplete.current = highlighted
   }
 
   useEffect(() => {
@@ -78,8 +86,8 @@ const useScrollToHighlighted = ({
     if (highlighted.every((id) => scrollComplete.current?.includes(id))) return
 
     console.log('trying to scroll to highlighted...')
-    highlightItems()
-  }, [feedRef, highlighted, isLoading, loadNextPage, scrollComplete, hasNextPage])
+    highlightItems(feedRef.current)
+  }, [feedRef, highlighted, activities, isLoading, loadNextPage, scrollComplete, hasNextPage])
 }
 
 export default useScrollToHighlighted

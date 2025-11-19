@@ -3,23 +3,38 @@
 // selecting a product or version will cause this to re-render
 // re-rendering the hierarchy is extremely expensive
 
-import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { FC, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 import { setExpandedFolders } from '@state/context'
+import { useURIContext } from '@shared/context'
 
-const HierarchyExpandFolders = ({ parents = [], isSuccess, focusedFolders, expandedFolders }) => {
-  const uri = useSelector((state) => state.context.uri)
+interface HierarchyExpandFoldersProps {
+  parents?: Record<string, string[] | undefined>
+  isSuccess: boolean
+  focusedFolders?: string[]
+  expandedFolders: Record<string, boolean>
+}
 
+const HierarchyExpandFolders: FC<HierarchyExpandFoldersProps> = ({
+  parents = {},
+  isSuccess,
+  focusedFolders = [],
+  expandedFolders,
+}) => {
   const dispatch = useDispatch()
+  const { uri } = useURIContext()
 
   // when selection changes programmatically, expand the parent folders
   // runs every time the uri changes
   useEffect(() => {
     if (!focusedFolders?.length || !isSuccess) return
 
-    let toExpand = [...Object.keys(expandedFolders)]
+    let toExpand: string[] = [...Object.keys(expandedFolders)]
     for (const id of focusedFolders) {
-      toExpand = toExpand.concat(parents[id])
+      const parentIds = parents[id]
+      if (parentIds) {
+        toExpand = toExpand.concat(parentIds)
+      }
     }
     // de-duplicate toExpand and remove null/undefined
     toExpand = [...new Set(toExpand)]
@@ -28,13 +43,13 @@ const HierarchyExpandFolders = ({ parents = [], isSuccess, focusedFolders, expan
     // abort if there's no change
     if (toExpand.length === Object.keys(expandedFolders).length) return
 
-    //create a map of the expanded folders
-    const newExpandedFolders = {}
+    // create a map of the expanded folders
+    const newExpandedFolders: Record<string, boolean> = {}
     for (const id of toExpand) {
       newExpandedFolders[id] = true
     }
     dispatch(setExpandedFolders(newExpandedFolders))
-  }, [uri, isSuccess])
+  }, [uri, isSuccess, focusedFolders, expandedFolders, parents, dispatch])
 
   return null
 }

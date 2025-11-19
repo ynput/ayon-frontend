@@ -21,6 +21,7 @@ interface ActivityItemProps {
   statuses: Status[]
   projectName: string
   entityType: string
+  isSlideOut?: boolean
   onReferenceClick?: (arg: any) => void
   onFileExpand?: (arg: any) => void
   showOrigin?: boolean
@@ -39,13 +40,17 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
   filter,
   readOnly,
   statuses,
+  isSlideOut,
   ...props
 }) => {
   switch (activity.activityType) {
     case 'comment':
       return (
         // @ts-expect-error
-        <ActivityComment {...{ activity, projectInfo, editProps, readOnly, statuses }} {...props} />
+        <ActivityComment
+          {...{ activity, projectInfo, editProps, readOnly, statuses, isSlideOut }}
+          {...props}
+        />
       )
     case 'status.change':
       return <ActivityStatusChange activity={activity} {...props} />

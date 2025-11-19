@@ -54,16 +54,16 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
 
   // when the taskData changes, clear the entities in the details panel
   useEffect(() => {
-    setEntities(null)
-    return () => {
+    if (isPanelOpen) {
       setEntities(null)
     }
-  }, [taskData])
+  }, [taskData, isPanelOpen])
 
   // use powerpack RelatedTasks module
   return (
     <RelatedTasks
       {...{ isPanelOpen, projectsInfo, priorities, taskData: taskData[0], viewerOpen }}
+      isPanelOpen={isPanelOpen || !!entities}
       selectedTasks={entities?.entities.map((e) => e.id)}
       onSelectTasks={handleSelectRelatedTasks}
       onOpenViewer={handleOpenViewer}

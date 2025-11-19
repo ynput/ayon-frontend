@@ -7,7 +7,16 @@ import { openViewer } from '@state/viewer'
 // shared
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery, useGetProjectsInfoQuery, ProjectModel } from '@shared/api'
-import { setFocusedVersions, setSelectedVersions } from '@state/context'
+import {
+  setFocusedVersions,
+  setSelectedVersions,
+  setFocusedFolders,
+  setFocusedProducts,
+  setFocusedTasks,
+  setFocusedWorkfiles,
+  setFocusedRepresentations,
+  setFocusedType,
+} from '@state/context'
 
 const BrowserDetailsPanel = () => {
   const projectName = useAppSelector((state) => state.project.name) as unknown as string
@@ -29,11 +38,29 @@ const BrowserDetailsPanel = () => {
     dispatch(setSelectedVersions([versionId]))
   }
 
-  if (!entities.length) return null
+  const handleDetailsPanelClose = () => {
+    // Clear selection and focus based on the current entity type
+    if (entityType === 'folder') {
+      dispatch(setFocusedFolders({ ids: [], subTypes: [] }))
+    } else if (entityType === 'product') {
+      dispatch(setFocusedProducts({ ids: [], subTypes: [] }))
+    } else if (entityType === 'task') {
+      dispatch(setFocusedTasks({ ids: [], names: [], subTypes: [] }))
+    } else if (entityType === 'version') {
+      dispatch(setFocusedVersions([]))
+      dispatch(setSelectedVersions({}))
+    } else if (entityType === 'workfile') {
+      dispatch(setFocusedWorkfiles({}))
+    } else if (entityType === 'representation') {
+      dispatch(setFocusedRepresentations({}))
+    }
+    setFocusedType(null)
+  }
 
   return (
     <>
       <DetailsPanel
+        isOpen={!!entities.length}
         entitySubTypes={subTypes}
         entityType={entityType}
         entities={entities}
@@ -46,6 +73,7 @@ const BrowserDetailsPanel = () => {
         scope="project"
         onOpenViewer={handleOpenViewer}
         onEntityFocus={updateFocusedVersion}
+        onClose={handleDetailsPanelClose}
       />
       <DetailsPanelSlideOut
         projectsInfo={projectsInfo as Record<string, ProjectModel>}

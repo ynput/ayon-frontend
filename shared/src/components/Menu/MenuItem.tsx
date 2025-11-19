@@ -5,8 +5,27 @@ import { isArray } from 'lodash'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { usePowerpack } from '@shared/context'
+import { MenuItemType } from './Menu'
 
-const MenuItem = forwardRef(
+export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, 'label'> {
+  label?: string | string[]
+  icon?: string
+  img?: string
+  highlighted?: boolean
+  notification?: boolean
+  selected?: boolean
+  danger?: boolean
+  items?: MenuItemType[]
+  isLink?: string
+  isDev?: boolean
+  shortcut?: string
+  disabled?: boolean
+  powerFeature?: string
+  active?: boolean
+  target?: string
+}
+
+const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
   (
     {
       label,
@@ -49,9 +68,9 @@ const MenuItem = forwardRef(
           className,
         )}
         {...props}
-        label={labelsArray.join(', ')}
+        aria-label={labelsArray.join(', ')}
       >
-        {(icon || isPowerFeature) && <Icon icon={isPowerFeature ? 'bolt' : icon} />}
+        {(icon || isPowerFeature) && <Icon icon={isPowerFeature ? 'bolt' : icon!} />}
         {img && <Styled.Img src={img} alt={`${label} icon`} />}
         {labelsArray.map((label, index) => (
           <span key={index}>{label}</span>

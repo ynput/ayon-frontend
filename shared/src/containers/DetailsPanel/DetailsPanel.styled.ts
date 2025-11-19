@@ -7,6 +7,7 @@ export const Toolbar = styled(ARCToolbar)`
   align-items: flex-start;
   padding: var(--padding-m);
   padding-bottom: 0;
+  height: 40px;
 
   & > * {
     min-width: max-content;
@@ -17,6 +18,11 @@ export const RightTools = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 4px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: var(--padding-m);
+  background-color: var(--md-sys-color-surface-container-low);
 `
 
 export const Panel = styled(ARCPanel)`

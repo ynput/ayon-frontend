@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux'
 import DashboardPanelWrapper from './DashboardPanelWrapper'
 import ProjectLatestRow from './ProjectLatestRow'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
-import { useURIContext } from '@context/UriContext'
 
 const ProjectLatest = ({ projectName }) => {
   // project
@@ -68,33 +67,6 @@ const ProjectLatest = ({ projectName }) => {
     },
   ]
 
-  const { navigate: navigateToUri } = useURIContext()
-
-  const handleEntityClick = (entity = {}) => {
-    const path = entity.type === 'folder' ? `${entity.path}/${entity.name}` : entity.path
-
-    let search = ''
-    if (entity.type !== 'folder') {
-      switch (entity.type) {
-        case 'version':
-          search = `?product=${entity.name}&version=${entity.version}`
-          break
-        case 'product':
-          search = `?product=${entity.name}`
-          break
-        case 'task':
-          search = `?task=${entity.name}`
-          break
-        default:
-          break
-      }
-    }
-
-    const uri = `ayon+entity://${projectName}${path}${search}`
-
-    navigateToUri(uri)
-  }
-
   return (
     <DashboardPanelWrapper
       title="Activity"
@@ -114,7 +86,6 @@ const ProjectLatest = ({ projectName }) => {
             filter={row.filter}
             isProjectLoading={isLoading || isFetching}
             rowIndex={i}
-            onEntityClick={handleEntityClick}
           />
         </Fragment>
       ))}

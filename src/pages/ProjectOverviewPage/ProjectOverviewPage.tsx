@@ -18,8 +18,9 @@ import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   useColumnSettingsContext,
-  useSelectedRowsContext,
-  useDetailsPanelEntityContext,
+  useSelectionCellsContext,
+  getCellId,
+  ROW_SELECTION_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import { CustomizeButton } from '@shared/components'
@@ -29,9 +30,11 @@ import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@state/store'
-import { OperationResponseModel } from '@shared/api'
+import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import useGoToEntity from '../../hooks/useGoToEntity'
 
 const searchFilterTypes: FilterFieldType[] = [
   'attributes',
@@ -44,17 +47,6 @@ const searchFilterTypes: FilterFieldType[] = [
 const ProjectOverviewPage: FC = () => {
   const user = useAppSelector((state) => state.user?.attrib)
   const isDeveloperMode = user?.developerMode ?? false
-  const { selectedRows } = useSelectedRowsContext()
-
-  // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null = null
-  try {
-    const entityContext = useDetailsPanelEntityContext()
-    selectedEntity = entityContext.selectedEntity
-  } catch {
-    // Context not available, that's fine
-    selectedEntity = null
-  }
 
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -67,14 +59,17 @@ const ProjectOverviewPage: FC = () => {
     showHierarchy,
     updateShowHierarchy,
     tasksMap,
+    updateExpanded,
   } = useProjectOverviewContext()
 
-  useColumnSettingsContext()
+  const { updateGroupBy } = useColumnSettingsContext()
 
   const { isPanelOpen } = useSettingsPanel()
+  //   table contexts
+  const { setSelectedCells } = useSelectionCellsContext()
 
   // load slicer remote config
-  const { config, sliceType, setPersistentRowSelectionData } = useSlicerContext()
+  const { config, sliceType, setPersistentRowSelectionData, ...slicer } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
 
   const handleFiltersChange = (newQueryFilters: QueryFilter) => {
@@ -97,13 +92,40 @@ const ProjectOverviewPage: FC = () => {
 
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
 
-  // Check if we should show the details panel
-  const shouldShowDetailsPanel = selectedRows.length > 0 || selectedEntity !== null
-
   // select new entities and expand their parents
   const handleNewEntities = (ops: OperationResponseModel[], stayOpen: boolean) => {
     // expands to newly created folders and selects them
     expandAndSelectNewFolders(ops, { enableSelect: !stayOpen, enableExpand: true })
+  }
+
+  const { getGoToEntityData } = useGoToEntity()
+
+  // select the entity in the table and expand its parent folders
+  const handleUriOpen = (entity: DetailsPanelEntityData) => {
+    console.debug('URI found, selecting and expanding folders to entity:', entity.name)
+
+    // Get the data needed to navigate to this entity
+    const data = getGoToEntityData(entity.id, entity.entityType as any, {
+      folder: entity.folder?.id,
+    })
+
+    // Reset view state
+    setQueryFilters({})
+    updateGroupBy(undefined)
+    updateShowHierarchy(true)
+
+    // Expand folders in both table and slicer
+    updateExpanded(data.expandedFolders)
+    slicer.setExpanded(data.expandedFolders)
+    slicer.setRowSelection(data.selectedFolders)
+
+    // Select the entity in the table
+    setSelectedCells(
+      new Set([
+        getCellId(data.entityId, 'name'),
+        getCellId(data.entityId, ROW_SELECTION_COLUMN_ID),
+      ]),
+    )
   }
 
   return (
@@ -161,33 +183,31 @@ const ProjectOverviewPage: FC = () => {
               gutterSize={!isPanelOpen ? 0 : 4}
             >
               <SplitterPanel size={82}>
-                <Splitter
+                <DetailsPanelSplitter
                   layout="horizontal"
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!shouldShowDetailsPanel ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     <ProjectOverviewTable />
                   </SplitterPanel>
-                  {shouldShowDetailsPanel ? (
-                    <SplitterPanel
-                      size={30}
-                      style={{
-                        zIndex: 300,
-                        minWidth: 300,
-                      }}
-                    >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                      />
-                    </SplitterPanel>
-                  ) : (
-                    <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-                  )}
-                </Splitter>
+
+                  <SplitterPanel
+                    size={30}
+                    style={{
+                      zIndex: 300,
+                      minWidth: 300,
+                    }}
+                    className="details"
+                  >
+                    <ProjectOverviewDetailsPanel
+                      projectInfo={projectInfo}
+                      projectName={projectName}
+                      onUriOpen={handleUriOpen}
+                    />
+                  </SplitterPanel>
+                </DetailsPanelSplitter>
               </SplitterPanel>
               {isPanelOpen ? (
                 <SplitterPanel

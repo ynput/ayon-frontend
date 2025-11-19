@@ -17,6 +17,7 @@ import { useVersionsSelectionContext } from './context/VPSelectionContext'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
 import { EarlyPreview, DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 interface VersionsProductsPageProps {
   projectName: string
@@ -28,7 +29,7 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { isPanelOpen } = useSettingsPanel()
   const { config } = useSlicerContext()
   const { showGrid } = useVPViewsContext()
-  const { showVersionDetails, showVersionsTable } = useVersionsSelectionContext()
+  const { showVersionsTable } = useVersionsSelectionContext()
   const { projectName } = useProjectContext()
 
   // modal dialog state for product and version details
@@ -77,12 +78,11 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
               style={{ width: '100%', height: '100%', overflow: 'hidden' }}
             >
               <SplitterPanel size={82}>
-                <Splitter
+                <DetailsPanelSplitter
                   layout="horizontal"
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!showVersionDetails && !showVersionsTable ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     {showGrid ? (
@@ -98,20 +98,18 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
                   ) : (
                     <SplitterPanel className="hidden"></SplitterPanel>
                   )}
-                  {showVersionDetails ? (
-                    <SplitterPanel
-                      size={30}
-                      style={{
-                        zIndex: 300,
-                        minWidth: 300,
-                      }}
-                    >
-                      <VPDetailsPanel />
-                    </SplitterPanel>
-                  ) : (
-                    <SplitterPanel className="hidden"></SplitterPanel>
-                  )}
-                </Splitter>
+
+                  <SplitterPanel
+                    size={30}
+                    style={{
+                      zIndex: 300,
+                      minWidth: 300,
+                    }}
+                    className="details"
+                  >
+                    <VPDetailsPanel />
+                  </SplitterPanel>
+                </DetailsPanelSplitter>
               </SplitterPanel>
               {isPanelOpen ? (
                 <SplitterPanel

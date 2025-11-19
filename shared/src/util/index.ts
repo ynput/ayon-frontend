@@ -15,6 +15,8 @@ export * from './humanizeFieldName'
 export * from './parseHtmlToPlainTextWithLinks'
 export * from './colorUtils'
 export * from './getGroupByDataType'
+export * from './uriUtils'
+export * from './extractEntityHierarchyFromParents'
 
 import PubSub from './pubsub'
 export { PubSub }

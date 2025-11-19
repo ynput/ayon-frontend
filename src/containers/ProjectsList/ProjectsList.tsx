@@ -9,10 +9,9 @@ import ProjectsListRow from './ProjectsListRow'
 import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
 import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
 import { useMenuContext } from '@shared/context/MenuContext'
-import { useAppDispatch } from '@state/store'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
-import useAyonNavigate from '@hooks/useAyonNavigate'
+import { useNavigate } from 'react-router-dom'
 import { useCreateContextMenu } from '@shared/containers'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
@@ -126,7 +125,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     },
     [onSelect],
   )
-  const dispatch = useAppDispatch()
   const { toggleMenuOpen } = useMenuContext()
   const toggleMenu = (open: boolean = true) => {
     toggleMenuOpen(open ? MENU_ID : false)
@@ -147,21 +145,19 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher()
   const { getDefaultTab } = useProjectDefaultTab()
 
-  const navigate = useAyonNavigate()
+  const navigate = useNavigate()
   const onOpenProject = (project: string) => {
     if ((user?.uiExposureLevel || 0) < 500) return
     handleProjectSelectionDispatches(project)
 
     const defaultTab = getDefaultTab()
     const link = `/projects/${project}/${defaultTab}`
-    // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
-    setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
+    navigate(link)
   }
 
   const onOpenProjectManage = (project: string) => {
     const link = `/manageProjects/anatomy?project=${project}`
-    // I don't like the setTimeout, but it is legacy code and I do not want to break existing stuffs
-    setTimeout(() => dispatch((_, getState) => navigate(getState)(link)), 0)
+    navigate(link)
   }
   const onArchive = (projectName: string, active: boolean) => {
     onActivateProject?.(projectName, active)
