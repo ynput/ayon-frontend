@@ -112,7 +112,7 @@ export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetDefaultViewApiResponse = /** status 200 Successful Response */
+export type GetBaseViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
