@@ -47,6 +47,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
   ) => {
     const { user } = useGlobalContext()
     const isAdmin = user?.data?.isAdmin
+    const isManager  = user?.data?.isManager
     const handleSave = (e: React.MouseEvent<HTMLButtonElement>, requireConfirm: boolean) => {
       // prevent selecting the view when clicking save
       e.stopPropagation()
@@ -71,7 +72,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       >
         {startContent && startContent}
         <span className="label">{label}</span>
-        {onMakeDefaultView && isAdmin && (
+        {onMakeDefaultView && (isAdmin || isManager) && (
           <Styled.ActionButton
             icon="push_pin"
             variant="text"

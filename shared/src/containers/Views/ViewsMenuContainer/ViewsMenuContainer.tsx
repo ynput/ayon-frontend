@@ -9,6 +9,7 @@ import styled from 'styled-components'
 import { usePowerpack } from '@shared/context'
 import * as Styled from '../Views.styled'
 import { VIEWS_DIALOG_CLASS } from '../ViewsDialogContainer/ViewsDialogContainer'
+import { BASE_VIEW_ID } from '@shared/containers/Views/hooks/useBuildViewMenuItems'
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
@@ -99,7 +100,20 @@ export const ViewsMenuContainer: FC = () => {
       {isMenuOpen &&
         createPortal(
           <Styled.ViewsModal style={modalPosition} ref={modalRef} tabIndex={0}>
-            <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
+            <ViewsMenu
+              items={viewMenuItems.filter((i) => {
+                // Keep dividers (string '_divider_')
+                if (typeof i === 'string') return true
+                // Keep section headers (has 'type' property)
+                if (i !== null && typeof i === 'object' && 'type' in i) return true
+                // For ViewItems, filter out __base__
+                if (i !== null && typeof i === 'object' && 'label' in i) {
+                  return i.label !== BASE_VIEW_ID
+                }
+                return true
+              })}
+              selected={selectedViewId}
+            />
             <ViewItem
               label="Create new view"
               id={NEW_VIEW_ID}

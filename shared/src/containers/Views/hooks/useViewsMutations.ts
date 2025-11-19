@@ -107,7 +107,7 @@ export const useViewsMutations = ({
         throw error
       }
     },
-    [createView, viewType, projectName, onUpdate],
+    [updateView, viewType, projectName, onUpdate],
   )
 
   const onDeleteView = useCallback<R['onDeleteView']>(
