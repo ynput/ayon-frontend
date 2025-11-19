@@ -95,7 +95,7 @@ const ActivityComment = ({
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
 
-  const menuId = `activity-comment-menu-${activityId}`
+  const menuId = `activity-comment-menu-${activityId}-${referenceType}`
   const isMenuOpen = menuOpen === menuId
 
   const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()
@@ -210,20 +210,22 @@ const ActivityComment = ({
           children={undefined}
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
-          <Styled.Tools className={'tools'}>
-            {!readOnly && isOwner && handleEditComment && (
-              <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
-            )}
-            <Styled.ToolButton
-              icon="more_horiz"
-              ref={moreRef}
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleMenuOpen(menuId)
-              }}
-              className={isMenuOpen ? 'active' : ''}
-            />
-          </Styled.Tools>
+          {!readOnly && (
+            <Styled.Tools className={'tools'}>
+              {isOwner && handleEditComment && (
+                <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
+              )}
+              <Styled.ToolButton
+                icon="more_horiz"
+                ref={moreRef}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleMenuOpen(menuId)
+                }}
+                className={isMenuOpen ? 'active' : ''}
+              />
+            </Styled.Tools>
+          )}
 
           {!isEditing && !isGuest && categoryData && (
             <CategoryTag
@@ -334,7 +336,7 @@ const ActivityComment = ({
       <MenuContainer
         target={moreRef.current}
         id={menuId}
-        align="left"
+        align="right"
         onClose={(e: any) => {
           e?.stopPropagation()
           toggleMenuOpen(false)
