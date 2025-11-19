@@ -191,7 +191,7 @@ const ProjectPageInner = () => {
         uriSync: true,
       },
       ...remotePages.map((remote) => ({
-        name: remote.name,
+        name: remote.name || remote.module,
         module: remote.module,
         path: `/projects/${projectName}/${remote.module}`,
       })),
@@ -300,12 +300,14 @@ const ProjectPageInner = () => {
       viewType = foundRemotePage.viewType
       component = (
         // this gets wrapped in ViewsProvider for addons to use views
-        <ProjectPageRemote
-          Component={foundRemotePage.component}
-          slicer={foundRemotePage.slicer}
-          projectName={projectName}
-          key={foundRemotePage.id}
-        />
+        <main>
+          <ProjectPageRemote
+            Component={foundRemotePage.component}
+            slicer={foundRemotePage.slicer}
+            projectName={projectName}
+            key={foundRemotePage.id}
+          />
+        </main>
       )
     } else {
       // Fallback to versions page if no addon matches addonName

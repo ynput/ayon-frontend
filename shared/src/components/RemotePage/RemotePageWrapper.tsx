@@ -11,7 +11,7 @@ import {
 import { FC } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 
-type RouterTypes = {
+export type RouterTypes = {
   useParams: typeof useParams
   useNavigate: typeof useNavigate
   useLocation: typeof useLocation

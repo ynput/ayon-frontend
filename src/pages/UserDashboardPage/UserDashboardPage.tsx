@@ -175,7 +175,7 @@ const UserDashboardPage: React.FC = () => {
       ...remotePages.map((remote) => {
         const showProjectList = !!(remote as any).projects
         return {
-          name: remote.name,
+          name: remote.name || remote.module,
           path: `/dashboard/${remote.module}`,
           module: remote.module,
           component: (
@@ -215,6 +215,12 @@ const UserDashboardPage: React.FC = () => {
     ],
   )
 
+  const links: NavLinkItem[] = useMemo(() => {
+    return pages.map(({ isMultiSelect, showProjectList, ...props }) => ({
+      ...props,
+    }))
+  }, [pages])
+
   // Find active page based on current module/addonName
   const activePage = useMemo(() => {
     if (addonName) {
@@ -246,7 +252,7 @@ const UserDashboardPage: React.FC = () => {
   return (
     <>
       <DocumentTitle title={title} />
-      <AppNavLinks links={pages} />
+      <AppNavLinks links={links} />
       <UserDashboardProvider>
         <main>
           <WithViews viewType={viewType}>
