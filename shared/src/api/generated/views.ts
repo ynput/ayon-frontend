@@ -27,17 +27,17 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getDefaultView: build.query<GetDefaultViewApiResponse, GetDefaultViewApiArg>({
+    getBaseView: build.query<GetBaseViewApiResponse, GetBaseViewApiArg>({
       query: (queryArg) => ({
-        url: `/api/views/${queryArg.viewType}/default`,
+        url: `/api/views/${queryArg.viewType}/base`,
         params: {
           project_name: queryArg.projectName,
         },
       }),
     }),
-    getBaseView: build.query<GetBaseViewApiResponse, GetBaseViewApiArg>({
+    getDefaultView: build.query<GetDefaultViewApiResponse, GetDefaultViewApiArg>({
       query: (queryArg) => ({
-        url: `/api/views/${queryArg.viewType}/base`,
+        url: `/api/views/${queryArg.viewType}/default`,
         params: {
           project_name: queryArg.projectName,
         },
@@ -99,41 +99,38 @@ export type CreateViewApiArg = {
     | ListsViewPostModel
     | ReviewsViewPostModel
     | VersionsViewPostModel
-    | ReportsViewPostModel
+    | GenericViewPostModel
 }
-export type GetWorkingViewApiResponse =
-  /** status 200 Successful Response */
+export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
-  | ReportsViewModel
+  | GenericViewModel
 export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetDefaultViewApiResponse =
-  /** status 200 Successful Response */
+export type GetBaseViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
-  | ReportsViewModel
-export type GetDefaultViewApiArg = {
+  | GenericViewModel
+export type GetBaseViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetBaseViewApiResponse =
-/** status 200 Successful Response */
+export type GetDefaultViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
-  | ReportsViewModel
-export type GetBaseViewApiArg = {
+  | GenericViewModel
+export type GetDefaultViewApiArg = {
   viewType: string
   projectName?: string
 }
@@ -143,14 +140,13 @@ export type SetDefaultViewApiArg = {
   projectName?: string
   setDefaultViewRequestModel: SetDefaultViewRequestModel
 }
-export type GetViewApiResponse =
-  /** status 200 Successful Response */
+export type GetViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
   | TaskProgressViewModel
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
-  | ReportsViewModel
+  | GenericViewModel
 export type GetViewApiArg = {
   viewType: string
   viewId: string
@@ -173,7 +169,7 @@ export type UpdateViewApiArg = {
     | ListsViewPatchModel
     | ReviewsViewPatchModel
     | VersionsViewPatchModel
-    | ReportsViewPatchModel
+    | GenericViewPatchModel
 }
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
@@ -251,6 +247,7 @@ export type OverviewSettings = {
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter
+  sliceType?: string
   columns?: ColumnItemModel[]
 }
 export type OverviewViewPostModel = {
@@ -264,6 +261,7 @@ export type OverviewViewPostModel = {
 }
 export type TaskProgressSettings = {
   filter?: QueryFilter
+  sliceType?: string
   columns?: ColumnItemModel[]
 }
 export type TaskProgressViewPostModel = {
@@ -330,18 +328,14 @@ export type VersionsViewPostModel = {
   working?: boolean
   settings: VersionsSettings
 }
-export type ReportsSettings = {
-  widgets?: object[]
-  dateFormat?: string
-}
-export type ReportsViewPostModel = {
+export type GenericViewPostModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
   /** Human-readable name of the view. */
   label: string
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
-  settings: ReportsSettings
+  settings: object
 }
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */
@@ -438,7 +432,7 @@ export type VersionsViewModel = {
   access: object
   viewType?: 'versions'
 }
-export type ReportsViewModel = {
+export type GenericViewModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
   /** Human-readable name of the view. */
@@ -453,7 +447,7 @@ export type ReportsViewModel = {
   working: boolean
   position: number
   accessLevel: number
-  settings: ReportsSettings
+  settings: object
   access: object
   viewType?: 'reports'
 }
@@ -485,8 +479,8 @@ export type VersionsViewPatchModel = {
   owner?: string
   settings?: VersionsSettings
 }
-export type ReportsViewPatchModel = {
+export type GenericViewPatchModel = {
   label?: string
   owner?: string
-  settings?: ReportsSettings
+  settings?: object
 }

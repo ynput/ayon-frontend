@@ -1,8 +1,13 @@
 import {
   CreateViewApiArg,
+  ListsSettings,
+  OverviewSettings,
+  ReviewsSettings,
+  TaskProgressSettings,
   useCreateViewMutation,
   useDeleteViewMutation,
   useUpdateViewMutation,
+  VersionsSettings,
   ViewListItemModel,
   viewsQueries,
 } from '@shared/api'
@@ -12,6 +17,7 @@ import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { ViewData } from '../context/ViewsContext'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
+import { ViewItem } from '@shared/containers/Views/ViewItem/ViewItem'
 
 type Props = {
   viewType?: string
@@ -36,7 +42,7 @@ export type UseViewMutations = {
     setSelectedView?: (id: string) => void
     setSettingsChanged?: (changed: boolean) => void
     notify?: boolean
-    baseViewId?: string
+    baseView?: Partial<ViewData>
   }) => Promise<string>
 }
 type R = UseViewMutations
@@ -130,15 +136,14 @@ export const useViewsMutations = ({
 
   const onResetWorkingView = useCallback<R['onResetWorkingView']>(
     async (args) => {
-      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify, baseViewId } =
+      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify, baseView } =
         args || {}
       if (!viewType) {
         throw new Error('viewType are required for resetting a view')
       }
-      if(baseViewId) return baseViewId
+      const templateSettings = baseView?.settings ?? {}
 
-
-      const freshWorkingView = generateWorkingView({})
+      const freshWorkingView = generateWorkingView(templateSettings)
       if (existingWorkingViewId) {
         freshWorkingView.id = existingWorkingViewId
       }
@@ -170,7 +175,7 @@ export const useViewsMutations = ({
         throw error
       }
     },
-    [createView, viewType, projectName, viewsList, dispatch],
+    [createView, viewType, projectName],
   )
 
   return {
