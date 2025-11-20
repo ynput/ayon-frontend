@@ -213,7 +213,6 @@ const useBuildViewMenuItems = ({
                 viewsQueries.endpoints.getView.initiate({
                   viewId: sourceViewId,
                   viewType: viewType as string,
-                  projectName: undefined
                 })
               )
 
@@ -235,7 +234,6 @@ const useBuildViewMenuItems = ({
               await updateView({
                 viewId: baseViewId,
                 viewType: viewType as string,
-                projectName: undefined,
                 payload: { settings },
               }).unwrap()
               toast.success(`Default view updated successfully for studio`)
@@ -249,7 +247,6 @@ const useBuildViewMenuItems = ({
               await createView({
                 payload: baseViewPayload,
                 viewType: viewType as string,
-                projectName: undefined,
               }).unwrap()
               toast.success(`Default view created successfully for studio`)
             }

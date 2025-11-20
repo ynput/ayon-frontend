@@ -141,17 +141,23 @@ export const useViewsMutations = ({
       try {
         // Priority order: project base view → studio base view → default (empty settings)
 
-        // 1. Try to fetch project base view first
+        // Invalidate base view cache to ensure fresh data
+        dispatch(
+          viewsQueries.util.invalidateTags([
+            { type: 'Views', id: `base-${viewType}-${projectName}` },
+            { type: 'Views', id: `base-${viewType}` }
+          ])
+        )
+
+        // 1. Try to fetch project base view first (force fresh fetch, no subscription)
         const projectBaseViewPromise = dispatch(
-          viewsQueries.endpoints.getBaseView.initiate({ viewType, projectName })
+          viewsQueries.endpoints.getBaseView.initiate(
+            { viewType, projectName },
+            { subscribe: false, forceRefetch: true }
+          )
         )
         const projectBaseViewResult = await projectBaseViewPromise
         const projectBaseView = projectBaseViewResult.data
-
-        // Cleanup project base view query
-        if ('unsubscribe' in projectBaseViewPromise && typeof projectBaseViewPromise.unsubscribe === 'function') {
-          projectBaseViewPromise.unsubscribe()
-        }
 
         let templateSettings = {}
         let baseViewSource = 'default'
@@ -161,17 +167,15 @@ export const useViewsMutations = ({
           templateSettings = projectBaseView.settings
           baseViewSource = 'project'
         } else {
-          // 2. If no project base view, try studio base view
+          // 2. If no project base view, try studio base view (force fresh fetch, no subscription)
           const studioBaseViewPromise = dispatch(
-            viewsQueries.endpoints.getBaseView.initiate({ viewType })
+            viewsQueries.endpoints.getBaseView.initiate(
+              { viewType },
+              { subscribe: false, forceRefetch: true }
+            )
           )
           const studioBaseViewResult = await studioBaseViewPromise
           const studioBaseView = studioBaseViewResult.data
-
-          // Cleanup studio base view query
-          if ('unsubscribe' in studioBaseViewPromise && typeof studioBaseViewPromise.unsubscribe === 'function') {
-            studioBaseViewPromise.unsubscribe()
-          }
 
           // Check if studio base view exists and has settings
           if (studioBaseView && studioBaseView.settings && Object.keys(studioBaseView.settings).length > 0) {
