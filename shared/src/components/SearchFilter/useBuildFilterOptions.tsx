@@ -1,5 +1,6 @@
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import {
+  ProductType,
   useGetEntityGroupsQuery,
   useGetKanbanProjectUsersQuery,
   useGetProjectsInfoQuery,
@@ -41,6 +42,7 @@ export type FilterFieldType =
   | 'tags'
   | 'version'
   | 'hasReviewables'
+  | 'productName'
 type AttributeType =
   | string
   | number
@@ -71,6 +73,7 @@ export type BuildFilterOptions = {
     attributes?: Record<string, AttributeDataValue[]>
     assignees?: string[]
     productTypes?: ProductType[]
+    productNames?: string[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
@@ -225,6 +228,25 @@ export const useBuildFilterOptions = ({
         let subTypes = getSubTypes({ projectsInfo, productTypes }, 'product')
         entitySubTypeOption.values?.push(...subTypes)
         options.push(entitySubTypeOption)
+      }
+    }
+    // PRODUCT NAME
+    // add product name option
+    if (scopeFilterTypes.includes('productName') && currentScope === 'product') {
+      const productNameOption = getOptionRoot('productName', config, scopePrefix, scopeLabel)
+
+      if (productNameOption) {
+        // Populate with product names from data as suggestions (optional since allowsCustomValues: true)
+        data.productNames?.forEach((name) => {
+          if (!productNameOption.values?.some((value) => value.id === name)) {
+            productNameOption.values?.push({
+              id: name,
+              label: name,
+            })
+          }
+        })
+
+        options.push(productNameOption)
       }
     }
 
@@ -657,6 +679,22 @@ const getOptionRoot = (
         allowNoValue: false,
         allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
+      }
+      break
+    case 'productName':
+      rootOption = {
+        id: getRootIdWithPrefix(`name`),
+        type: 'string',
+        label: formatLabelWithScope(`Product Name`),
+        icon: getAttributeIcon('product'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: true,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: false,
+        operatorChangeable: true,
       }
       break
     case 'status':
