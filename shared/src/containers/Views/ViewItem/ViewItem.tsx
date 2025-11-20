@@ -80,7 +80,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             variant="text"
             className="make_default"
             onClick={onMakeDefaultView}
-            data-tooltip={makeDefaultTooltip || 'Create/Update base view'}
+            data-tooltip={makeDefaultTooltip || 'Set as Default'}
           />
         )}
         {/* Reset button (e.g., for working view) - shows if handler is provided */}
@@ -90,7 +90,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             variant="text"
             className="reset"
             onClick={onResetView}
-            data-tooltip="Reset this view to default"
+            data-tooltip="Reset to Default"
             data-shortcut={getPlatformShortcutKey('0', [KeyMode.Shift, KeyMode.Ctrl])}
           />
         )}

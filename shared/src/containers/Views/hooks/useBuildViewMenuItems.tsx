@@ -135,8 +135,8 @@ const useBuildViewMenuItems = ({
 
       // Show a dialog to select scope
       confirmDialog({
-        message: 'Choose the scope for this base view. Click "Project" for this project only, or "Studio" for all projects in the studio.',
-        header: 'Choose Base View Scope',
+        message: 'Choose the scope for this default view. Click "Project" for this project only, or "Studio" for all projects in the studio.',
+        header: 'Choose default view Scope',
         acceptLabel: 'Project',
         rejectLabel: 'Studio',
         accept: async () => {
@@ -180,7 +180,7 @@ const useBuildViewMenuItems = ({
                 projectName: projectName,
                 payload: { settings },
               }).unwrap()
-              toast.success(`Base view updated successfully for project`)
+              toast.success(`Default view updated successfully for project`)
             } else {
               const baseViewPayload = {
                 label: BASE_VIEW_ID,
@@ -193,11 +193,11 @@ const useBuildViewMenuItems = ({
                 viewType: viewType as string,
                 projectName: projectName,
               }).unwrap()
-              toast.success(`Base view created successfully for project`)
+              toast.success(`Default view created successfully for project`)
             }
           } catch (error: any) {
-            console.error('Failed to set base view:', error)
-            toast.error(`Failed to set base view: ${error?.message || error}`)
+            console.error('Failed to set Default view:', error)
+            toast.error(`Failed to set Default view: ${error?.message || error}`)
           }
         },
         reject: async () => {
@@ -238,7 +238,7 @@ const useBuildViewMenuItems = ({
                 projectName: undefined,
                 payload: { settings },
               }).unwrap()
-              toast.success(`Base view updated successfully for studio`)
+              toast.success(`Default view updated successfully for studio`)
             } else {
               const baseViewPayload = {
                 label: BASE_VIEW_ID,
@@ -251,7 +251,7 @@ const useBuildViewMenuItems = ({
                 viewType: viewType as string,
                 projectName: undefined,
               }).unwrap()
-              toast.success(`Base view created successfully for studio`)
+              toast.success(`Default view created successfully for studio`)
             }
           } catch (error: any) {
             console.error('Failed to set base view:', error)
@@ -300,9 +300,6 @@ const useBuildViewMenuItems = ({
   }, [myViews, sharedViews, allPrivateViews])
 
   const workingViewItem: ViewMenuItem = useMemo(() => {
-    const existingBaseView = viewsList.find((view) => view.label === BASE_VIEW_ID)
-    const makeDefaultTooltip = existingBaseView ? 'Update base view' : 'Create base view'
-
     return {
       ...workingBaseView,
       onClick: handleWorkingViewChange,
@@ -310,7 +307,7 @@ const useBuildViewMenuItems = ({
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
       onMakeDefaultView: onMakeBaseView,
-      makeDefaultTooltip,
+      makeDefaultTooltip: 'Set as Default',
     }
   }, [handleWorkingViewChange, onResetWorkingView, onMakeBaseView, viewsList])
 
