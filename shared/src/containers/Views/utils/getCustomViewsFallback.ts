@@ -18,8 +18,7 @@ export type CustomViews = {
 export const getCustomViewsFallback = (props: GetCustomViews): CustomViews => {
   const { viewsList, onEdit, onSelect, onSave, onMakeDefaultView } = props
 
-  const existingBaseView = viewsList.find((view) => view.label === BASE_VIEW_ID)
-  const makeDefaultTooltip = existingBaseView ? 'Update base view' : 'Create base view'
+  const makeDefaultTooltip = 'Set as Default'
 
   // Helper to create view items with common properties
   const createViewItem = (
