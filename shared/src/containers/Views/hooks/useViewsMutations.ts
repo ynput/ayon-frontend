@@ -139,18 +139,50 @@ export const useViewsMutations = ({
       }
 
       try {
-        // First, fetch the base view to get the template settings
-        const baseViewPromise = dispatch(
+        // Priority order: project base view → studio base view → default (empty settings)
+
+        // 1. Try to fetch project base view first
+        const projectBaseViewPromise = dispatch(
           viewsQueries.endpoints.getBaseView.initiate({ viewType, projectName })
         )
+        const projectBaseViewResult = await projectBaseViewPromise
+        const projectBaseView = projectBaseViewResult.data
 
-        const baseViewResult = await baseViewPromise
-        const baseView = baseViewResult.data
-        const hasBaseView = baseView && baseView.settings && Object.keys(baseView.settings).length > 0
-        const templateSettings = baseView?.settings ?? {}
+        // Cleanup project base view query
+        if ('unsubscribe' in projectBaseViewPromise && typeof projectBaseViewPromise.unsubscribe === 'function') {
+          projectBaseViewPromise.unsubscribe()
+        }
 
-        // Determine the view ID to use - use base view ID or generate new one
-        const viewId: string = baseView?.id as string ?? generateWorkingView().id
+        let templateSettings = {}
+        let baseViewSource = 'default'
+
+        // Check if project base view exists and has settings
+        if (projectBaseView && projectBaseView.settings && Object.keys(projectBaseView.settings).length > 0) {
+          templateSettings = projectBaseView.settings
+          baseViewSource = 'project'
+        } else {
+          // 2. If no project base view, try studio base view
+          const studioBaseViewPromise = dispatch(
+            viewsQueries.endpoints.getBaseView.initiate({ viewType })
+          )
+          const studioBaseViewResult = await studioBaseViewPromise
+          const studioBaseView = studioBaseViewResult.data
+
+          // Cleanup studio base view query
+          if ('unsubscribe' in studioBaseViewPromise && typeof studioBaseViewPromise.unsubscribe === 'function') {
+            studioBaseViewPromise.unsubscribe()
+          }
+
+          // Check if studio base view exists and has settings
+          if (studioBaseView && studioBaseView.settings && Object.keys(studioBaseView.settings).length > 0) {
+            templateSettings = studioBaseView.settings
+            baseViewSource = 'studio'
+          }
+          // 3. Otherwise, use default (empty settings) - already initialized above
+        }
+
+        // Determine the view ID to use - use existing working view ID or generate new one
+        const viewId: string = existingWorkingViewId ?? generateWorkingView().id as string
 
         // Prepare the working view payload with base view settings
         const workingViewPayload = {
@@ -183,21 +215,22 @@ export const useViewsMutations = ({
           setDefaultViewRequestModel: { viewId },
         }).unwrap()
 
-        // Cleanup: unsubscribe from the base view query if it has the unsubscribe method
-        if ('unsubscribe' in baseViewPromise && typeof baseViewPromise.unsubscribe === 'function') {
-          baseViewPromise.unsubscribe()
+        // Always switch to the working view after reset
+        if (setSelectedView) {
+          setSelectedView(viewId)
         }
 
-        // If we're not currently on the working view, switch to it and mark settings as changed
-        if (setSelectedView && setSettingsChanged && selectedViewId && existingWorkingViewId) {
-          if (selectedViewId !== existingWorkingViewId) {
-            setSelectedView(viewId)
-            setSettingsChanged(true)
-          }
+        // Mark settings as changed if we had a different view selected
+        if (setSettingsChanged && selectedViewId && selectedViewId !== viewId) {
+          setSettingsChanged(true)
         }
 
         if (notify) {
-          toast.success('View reset to default settings')
+          const message =
+            baseViewSource === 'project' ? 'View reset to project base view' :
+            baseViewSource === 'studio' ? 'View reset to studio base view' :
+            'View reset to default settings'
+          toast.success(message)
         }
 
         return viewId
