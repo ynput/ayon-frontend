@@ -42,7 +42,8 @@ export interface ViewsContextValue {
   viewSettings: ViewSettings | undefined
   workingSettings: ViewSettings | undefined
   workingView: ViewListItemModel | undefined
-  baseView: ViewListItemModel | undefined
+  projectBaseView: ViewListItemModel | undefined
+  studioBaseView: ViewListItemModel | undefined
   editingViewId: string | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
@@ -159,8 +160,14 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
-  const {currentData: baseView} = useGetBaseViewQuery(
+
+  // Fetch both project and studio base views
+  const { currentData: projectBaseView } = useGetBaseViewQuery(
     { projectName: projectName, viewType: viewType as string },
+    { skip: !viewType },
+  )
+  const { currentData: studioBaseView } = useGetBaseViewQuery(
+    { projectName: undefined, viewType: viewType as string },
     { skip: !viewType },
   )
 
@@ -257,7 +264,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     isLoadingEditingViewData,
     viewsList,
     workingView,
-    baseView,
+    projectBaseView,
+    studioBaseView,
     editingViewId,
     viewMenuItems,
     isLoadingViews,

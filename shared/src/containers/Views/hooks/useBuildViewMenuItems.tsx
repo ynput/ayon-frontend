@@ -125,18 +125,23 @@ const useBuildViewMenuItems = ({
     (sourceViewId?: string) => async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
 
-      const existingBaseView = viewsList.find((view) => view.label === BASE_VIEW_ID)
-      const isUpdate = Boolean(existingBaseView)
+      // Get existing base views for both scopes
+      const existingProjectBaseView = viewsList.find(
+        (view) => view.label === BASE_VIEW_ID && view.scope === 'project'
+      )
+      const existingStudioBaseView = viewsList.find(
+        (view) => view.label === BASE_VIEW_ID && view.scope === 'studio'
+      )
 
-      const message = isUpdate
-        ? 'Update the base view for all users in this project?'
-        : 'Create a base view for all users in this project?'
-      const header = isUpdate ? 'Update Base View' : 'Create Base View'
-
+      // Show a dialog to select scope
       confirmDialog({
-        message,
-        header,
+        message: 'Choose the scope for this base view. Click "Project" for this project only, or "Studio" for all projects in the studio.',
+        header: 'Choose Base View Scope',
+        acceptLabel: 'Project',
+        rejectLabel: 'Studio',
         accept: async () => {
+          // Handle project scope selection
+          const existingBase = existingProjectBaseView
           try {
             // Get settings from the source view
             let settings = workingView?.settings || {}
@@ -167,19 +172,18 @@ const useBuildViewMenuItems = ({
             }
 
             // Create or update the base view with the copied settings
-            if (existingBaseView) {
-              const baseViewId = existingBaseView.id as string
+            if (existingBase) {
+              const baseViewId = existingBase.id as string
               await updateView({
                 viewId: baseViewId,
                 viewType: viewType as string,
                 projectName: projectName,
                 payload: { settings },
               }).unwrap()
-              toast.success('Base view updated successfully')
+              toast.success(`Base view updated successfully for project`)
             } else {
               const baseViewPayload = {
                 label: BASE_VIEW_ID,
-                visibility: 'public',
                 working: false,
                 settings,
               } as any
@@ -189,12 +193,71 @@ const useBuildViewMenuItems = ({
                 viewType: viewType as string,
                 projectName: projectName,
               }).unwrap()
-              toast.success('Base view created successfully')
+              toast.success(`Base view created successfully for project`)
             }
           } catch (error: any) {
             console.error('Failed to set base view:', error)
             toast.error(`Failed to set base view: ${error?.message || error}`)
           }
+        },
+        reject: async () => {
+          // Handle studio scope selection
+          const existingBase = existingStudioBaseView
+          try {
+            // Get settings from the source view
+            let settings = workingView?.settings || {}
+
+            // If sourceViewId is provided (clicking pin on a custom view), fetch that view's settings
+            if (sourceViewId) {
+              const sourceViewPromise = dispatch(
+                viewsQueries.endpoints.getView.initiate({
+                  viewId: sourceViewId,
+                  viewType: viewType as string,
+                  projectName: undefined
+                })
+              )
+
+              const sourceViewResult = await sourceViewPromise
+
+              if (sourceViewResult.data?.settings) {
+                settings = sourceViewResult.data.settings
+              }
+
+              // Cleanup: unsubscribe if the method exists
+              if ('unsubscribe' in sourceViewPromise && typeof sourceViewPromise.unsubscribe === 'function') {
+                sourceViewPromise.unsubscribe()
+              }
+            }
+
+            // Create or update the base view with the copied settings
+            if (existingBase) {
+              const baseViewId = existingBase.id as string
+              await updateView({
+                viewId: baseViewId,
+                viewType: viewType as string,
+                projectName: undefined,
+                payload: { settings },
+              }).unwrap()
+              toast.success(`Base view updated successfully for studio`)
+            } else {
+              const baseViewPayload = {
+                label: BASE_VIEW_ID,
+                working: false,
+                settings,
+              } as any
+
+              await createView({
+                payload: baseViewPayload,
+                viewType: viewType as string,
+                projectName: undefined,
+              }).unwrap()
+              toast.success(`Base view created successfully for studio`)
+            }
+          } catch (error: any) {
+            console.error('Failed to set base view:', error)
+            toast.error(`Failed to set base view: ${error?.message || error}`)
+          }
+
         },
       })
     },
