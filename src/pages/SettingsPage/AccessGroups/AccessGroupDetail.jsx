@@ -34,7 +34,9 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     },
     { skip: !accessGroupName },
   )
-  const { data: schema } = useGetAccessGroupSchemaQuery()
+  const { data: schema } = useGetAccessGroupSchemaQuery(
+    projectName ? { projectName } : {},
+  )
 
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: projectName || '_',
