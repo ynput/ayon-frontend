@@ -61,11 +61,12 @@ const convertConditionToFilter = (
 
   // check if the filter is a text search filter
   if (key === SEARCH_FILTER_ID) {
+    const valuesArray = Array.isArray(value) ? value : [value || '']
     const filter: Filter = {
       id: SEARCH_FILTER_ID,
       type: 'string',
       label: '',
-      values: (value as string[]).map((v) => ({ id: v, label: v })),
+      values: valuesArray.map((v) => ({ id: String(v), label: String(v) })),
     }
 
     return filter
