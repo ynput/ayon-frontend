@@ -11,8 +11,13 @@ import {
   useGetShareOptionsQuery,
   ShareOption,
   useGetBaseViewQuery,
+  useCreateViewMutation,
+  useUpdateViewMutation,
+  useDeleteViewMutation,
 } from '@shared/api'
-import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
+import { toast } from 'react-toastify'
+import useBuildViewMenuItems, { BASE_VIEW_ID } from '../hooks/useBuildViewMenuItems'
+import { getScopeTag } from '@shared/api/queries/views/getViews'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { useGlobalContext, usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
@@ -64,6 +69,11 @@ export interface ViewsContextValue {
   onCreateView: UseViewMutations['onCreateView']
   onDeleteView: UseViewMutations['onDeleteView']
   onUpdateView: UseViewMutations['onUpdateView']
+
+  // Base view mutations
+  onCreateBaseView: (isStudioScope: boolean) => Promise<void>
+  onUpdateBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
+  onDeleteBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
 
   // Actions (shared)
   resetWorkingView: () => Promise<void>
@@ -142,13 +152,19 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewType: viewType as ViewType,
   })
 
-  // Fetch views data
-  const { currentData: viewsList = [], isLoading: isLoadingViews } = useListViewsQuery(
+  // Fetch views data and filter out base views
+  const { currentData: viewsListRaw = [], isLoading: isLoadingViews } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
 
-  const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView } = useViewsMutations({
+  // Filter out base views from the list
+  const viewsList = useMemo(
+    () => viewsListRaw.filter((view) => view.label !== BASE_VIEW_ID),
+    [viewsListRaw]
+  )
+
+  const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView} = useViewsMutations({
     viewType,
     projectName,
     viewsList,
@@ -211,6 +227,88 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     sourceSettings: viewSettings,
     onUpdateView: onUpdateView,
   })
+
+  // Base view mutations
+  const [createBaseViewMutation] = useCreateViewMutation()
+  const [updateBaseViewMutation] = useUpdateViewMutation()
+  const [deleteBaseViewMutation] = useDeleteViewMutation()
+
+  const onCreateBaseView = useCallback(
+    async (isStudioScope: boolean) => {
+      try {
+        const settings = workingSettings || {}
+        const baseViewPayload = {
+          label: BASE_VIEW_ID,
+          working: false,
+          settings,
+        } as any
+
+        await createBaseViewMutation({
+          payload: baseViewPayload,
+          viewType: viewType as string,
+          projectName: isStudioScope ? undefined : projectName,
+        }).unwrap()
+
+        const scope = isStudioScope ? 'Studio' : 'Project'
+        toast.success(`${scope} default view created successfully`)
+      } catch (error: any) {
+        const scope = isStudioScope ? 'studio' : 'project'
+        console.error(`Failed to create ${scope} base view:`, error)
+        toast.error(`Failed to create ${scope} base view: ${error?.message || error}`)
+      }
+    },
+    [createBaseViewMutation, viewType, projectName, workingSettings]
+  )
+
+  const onUpdateBaseView = useCallback(
+    async (baseViewId: string, isStudioScope: boolean) => {
+      try {
+        const settings = workingSettings || {}
+        await updateBaseViewMutation({
+          viewId: baseViewId,
+          viewType: viewType as string,
+          projectName: isStudioScope ? undefined : projectName,
+          payload: { settings },
+        }).unwrap()
+
+        const scope = isStudioScope ? 'Studio' : 'Project'
+        toast.success(`${scope} default view updated successfully`)
+      } catch (error: any) {
+        const scope = isStudioScope ? 'studio' : 'project'
+        console.error(`Failed to update ${scope} base view:`, error)
+        toast.error(`Failed to update ${scope} base view: ${error?.message || error}`)
+      }
+    },
+    [updateBaseViewMutation, viewType, projectName, workingSettings]
+  )
+
+  const onDeleteBaseView = useCallback(
+    async (baseViewId: string, isStudioScope: boolean) => {
+      try {
+        await deleteBaseViewMutation({
+          viewId: baseViewId,
+          viewType: viewType as string,
+          projectName: isStudioScope ? undefined : projectName,
+        }).unwrap()
+
+        // Invalidate tags to force refetch - use the same tag format as getBaseView
+        dispatch(
+          viewsQueries.util.invalidateTags([
+            { type: 'view', id: baseViewId },
+            getScopeTag(viewType as string, isStudioScope ? undefined : projectName),
+          ])
+        )
+
+        const scope = isStudioScope ? 'Studio' : 'Project'
+        toast.success(`${scope} default view removed successfully`)
+      } catch (error: any) {
+        const scope = isStudioScope ? 'studio' : 'project'
+        console.error(`Failed to remove ${scope} base view:`, error)
+        toast.error(`Failed to remove ${scope} base view: ${error?.message || error}`)
+      }
+    },
+    [deleteBaseViewMutation, viewType, projectName, dispatch]
+  )
 
   // Reset working view to default (empty) settings
   const resetWorkingView = useCallback(async () => {
@@ -280,6 +378,10 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     onCreateView,
     onUpdateView,
     onDeleteView,
+    // base view mutations
+    onCreateBaseView,
+    onUpdateBaseView,
+    onDeleteBaseView,
     // shared actions
     resetWorkingView,
     // api

@@ -6,10 +6,10 @@ import { ViewsMenu } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { usePowerpack } from '@shared/context'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import * as Styled from '../Views.styled'
 import { VIEWS_DIALOG_CLASS } from '../ViewsDialogContainer/ViewsDialogContainer'
-import { BASE_VIEW_ID } from '@shared/containers/Views/hooks/useBuildViewMenuItems'
+import { BaseViewsTagContainer } from '@shared/containers/Views/ViewsMenuContainer/BaseViewsTags'
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
@@ -34,6 +34,9 @@ export const ViewsMenuContainer: FC = () => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const modalRef = useRef<HTMLDivElement>(null)
 
+  const { user } = useGlobalContext()
+  const isAdmin = user?.data?.isAdmin
+  const isManager = user?.data?.isManager
   // Modal position calculation
   const portalContainer = getViewsPortalContainer(viewType)
   const buttonRect = portalContainer?.getBoundingClientRect()
@@ -100,20 +103,7 @@ export const ViewsMenuContainer: FC = () => {
       {isMenuOpen &&
         createPortal(
           <Styled.ViewsModal style={modalPosition} ref={modalRef} tabIndex={0}>
-            <ViewsMenu
-              items={viewMenuItems.filter((i) => {
-                // Keep dividers (string '_divider_')
-                if (typeof i === 'string') return true
-                // Keep section headers (has 'type' property)
-                if (i !== null && typeof i === 'object' && 'type' in i) return true
-                // For ViewItems, filter out __base__
-                if (i !== null && typeof i === 'object' && 'label' in i) {
-                  return i.label !== BASE_VIEW_ID
-                }
-                return true
-              })}
-              selected={selectedViewId}
-            />
+            <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
             <ViewItem
               label="Create new view"
               id={NEW_VIEW_ID}
@@ -122,6 +112,12 @@ export const ViewsMenuContainer: FC = () => {
               onClick={handleCreateView}
               tabIndex={0}
             />
+            {(isAdmin || isManager) && (
+              <>
+                <Styled.ViewsMenuDivider />
+                <BaseViewsTagContainer />
+              </>
+            )}
           </Styled.ViewsModal>,
           document.body,
         )}

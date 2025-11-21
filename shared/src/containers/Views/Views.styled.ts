@@ -1,5 +1,6 @@
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import { Chip } from 'primereact/chip'
 
 export const ViewsButton = styled(Icon)`
   padding: var(--padding-s);
@@ -39,4 +40,33 @@ export const ViewsModal = styled.div`
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-l);
   box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+`
+export const ViewsMenuDivider = styled.li`
+  height: 1px;
+  background-color: var(--md-sys-color-outline-variant);
+  margin: 4px 0;
+`
+
+export const ViewChip = styled(Chip)`
+  background: transparent;
+  padding: 0 8px;
+  outline: dashed 1px var(--md-sys-color-outline-variant);
+  margin: 0 4px 4px 0;
+  color: var(--md-sys-color-outline);
+  
+  i {
+    color: var(--md-sys-color-outline);
+  }
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-highest-hover);
+    outline: solid 1px var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface);
+
+    /* Change icon color on chip hover */
+    i {
+      color: var(--md-sys-color-on-surface);
+      background: var(--md-sys-color-surface-container-highest-hover); ;
+    }
+  }
 `

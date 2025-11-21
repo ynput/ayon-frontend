@@ -19,7 +19,6 @@ import { useLoadModule } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
 import { CollapsedViewState } from '../context/ViewsContext'
-import { confirmDialog } from 'primereact/confirmdialog'
 
 // constants
 export const WORKING_VIEW_ID = '_working_' as const
@@ -68,7 +67,6 @@ const useBuildViewMenuItems = ({
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
-  const [updateView] = useUpdateViewMutation()
   const [setDefaultView] = useSetDefaultViewMutation()
 
   const extendedViewsList: ViewListItemModelExtended[] = useMemo(
@@ -120,149 +118,6 @@ const useBuildViewMenuItems = ({
       toast.error(error)
     }
   }
-  // Handler to make any view the base view
-  const createMakeBaseViewHandler = useCallback(
-    (sourceViewId?: string) => async (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation()
-
-      // Get existing base views for both scopes
-      const existingProjectBaseView = viewsList.find(
-        (view) => view.label === BASE_VIEW_ID && view.scope === 'project'
-      )
-      const existingStudioBaseView = viewsList.find(
-        (view) => view.label === BASE_VIEW_ID && view.scope === 'studio'
-      )
-
-      // Show a dialog to select scope
-      confirmDialog({
-        message: 'Choose the scope for this default view. Click "Project" for this project only, or "Studio" for all projects in the studio.',
-        header: 'Choose default view Scope',
-        acceptLabel: 'Project',
-        rejectLabel: 'Studio',
-        accept: async () => {
-          // Handle project scope selection
-          const existingBase = existingProjectBaseView
-          try {
-            // Get settings from the source view
-            let settings = workingView?.settings || {}
-
-            // If sourceViewId is provided (clicking pin on a custom view), fetch that view's settings
-            if (sourceViewId) {
-              const sourceView = viewsList.find((v) => v.id === sourceViewId)
-              const isStudioScope = sourceView?.scope === 'studio'
-
-              const sourceViewPromise = dispatch(
-                viewsQueries.endpoints.getView.initiate({
-                  viewId: sourceViewId,
-                  viewType: viewType as string,
-                  projectName: isStudioScope ? undefined : projectName,
-                })
-              )
-
-              const sourceViewResult = await sourceViewPromise
-
-              if (sourceViewResult.data?.settings) {
-                settings = sourceViewResult.data.settings
-              }
-
-              // Cleanup: unsubscribe if the method exists
-              if ('unsubscribe' in sourceViewPromise && typeof sourceViewPromise.unsubscribe === 'function') {
-                sourceViewPromise.unsubscribe()
-              }
-            }
-
-            // Create or update the base view with the copied settings
-            if (existingBase) {
-              const baseViewId = existingBase.id as string
-              await updateView({
-                viewId: baseViewId,
-                viewType: viewType as string,
-                projectName: projectName,
-                payload: { settings },
-              }).unwrap()
-              toast.success(`Default view updated successfully for project`)
-            } else {
-              const baseViewPayload = {
-                label: BASE_VIEW_ID,
-                working: false,
-                settings,
-              } as any
-
-              await createView({
-                payload: baseViewPayload,
-                viewType: viewType as string,
-                projectName: projectName,
-              }).unwrap()
-              toast.success(`Default view created successfully for project`)
-            }
-          } catch (error: any) {
-            console.error('Failed to set Default view:', error)
-            toast.error(`Failed to set Default view: ${error?.message || error}`)
-          }
-        },
-        reject: async () => {
-          // Handle studio scope selection
-          const existingBase = existingStudioBaseView
-          try {
-            // Get settings from the source view
-            let settings = workingView?.settings || {}
-
-            // If sourceViewId is provided (clicking pin on a custom view), fetch that view's settings
-            if (sourceViewId) {
-              const sourceViewPromise = dispatch(
-                viewsQueries.endpoints.getView.initiate({
-                  viewId: sourceViewId,
-                  viewType: viewType as string,
-                })
-              )
-
-              const sourceViewResult = await sourceViewPromise
-
-              if (sourceViewResult.data?.settings) {
-                settings = sourceViewResult.data.settings
-              }
-
-              // Cleanup: unsubscribe if the method exists
-              if ('unsubscribe' in sourceViewPromise && typeof sourceViewPromise.unsubscribe === 'function') {
-                sourceViewPromise.unsubscribe()
-              }
-            }
-
-            // Create or update the base view with the copied settings
-            if (existingBase) {
-              const baseViewId = existingBase.id as string
-              await updateView({
-                viewId: baseViewId,
-                viewType: viewType as string,
-                payload: { settings },
-              }).unwrap()
-              toast.success(`Default view updated successfully for studio`)
-            } else {
-              const baseViewPayload = {
-                label: BASE_VIEW_ID,
-                working: false,
-                settings,
-              } as any
-
-              await createView({
-                payload: baseViewPayload,
-                viewType: viewType as string,
-              }).unwrap()
-              toast.success(`Default view created successfully for studio`)
-            }
-          } catch (error: any) {
-            console.error('Failed to set base view:', error)
-            toast.error(`Failed to set base view: ${error?.message || error}`)
-          }
-
-        },
-      })
-    },
-    [workingView, viewsList, viewType, projectName, createView, updateView, dispatch],
-  )
-
-  // Handler for working view specifically
-  const onMakeBaseView = useCallback(createMakeBaseViewHandler(), [createMakeBaseViewHandler])
 
   const [getCustomViews, { isLoading: isLoadingQueries }] = useLoadModule({
     addon: 'powerpack',
@@ -278,7 +133,6 @@ const useBuildViewMenuItems = ({
     onEdit,
     onSelect,
     onSave: handleEditView,
-    onMakeDefaultView: createMakeBaseViewHandler,
   })
 
   const toggleSection = useCallback(
@@ -303,10 +157,9 @@ const useBuildViewMenuItems = ({
       // expose reset button when handler is provided
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
-      onMakeDefaultView: onMakeBaseView,
       makeDefaultTooltip: 'Set as Default',
     }
-  }, [handleWorkingViewChange, onResetWorkingView, onMakeBaseView, viewsList])
+  }, [handleWorkingViewChange, onResetWorkingView, viewsList])
 
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
   const viewItems: ViewMenuItem[] = useMemo(() => {

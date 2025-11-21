@@ -18,7 +18,6 @@ export interface ViewItem {
   onSave?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void // saves the view settings from selected view
   onResetView?: (e: React.MouseEvent<HTMLButtonElement>) => void // resets working view
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void
-  onMakeDefaultView?:(e: React.MouseEvent<HTMLButtonElement>) => void
   makeDefaultTooltip?: string // tooltip for make default button
 }
 
@@ -41,15 +40,11 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       onSave,
       onResetView,
       className,
-      onMakeDefaultView,
       makeDefaultTooltip,
       ...props
     },
     ref,
   ) => {
-    const { user } = useGlobalContext()
-    const isAdmin = user?.data?.isAdmin
-    const isManager  = user?.data?.isManager
     const handleSave = (e: React.MouseEvent<HTMLButtonElement>, requireConfirm: boolean) => {
       // prevent selecting the view when clicking save
       e.stopPropagation()
@@ -74,15 +69,6 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       >
         {startContent && startContent}
         <span className="label">{label}</span>
-        {onMakeDefaultView && (isAdmin || isManager) && (
-          <Styled.ActionButton
-            icon="push_pin"
-            variant="text"
-            className="make_default"
-            onClick={onMakeDefaultView}
-            data-tooltip={makeDefaultTooltip || 'Set as Default'}
-          />
-        )}
         {/* Reset button (e.g., for working view) - shows if handler is provided */}
         {onResetView && (
           <Styled.ActionButton
