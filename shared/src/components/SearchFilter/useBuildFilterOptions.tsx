@@ -683,10 +683,10 @@ const getOptionRoot = (
       break
     case 'productName':
       rootOption = {
-        id: getRootIdWithPrefix(`name`),
+        id: getRootIdWithPrefix(`productNames`),
         type: 'string',
         label: formatLabelWithScope(`Product Name`),
-        icon: getAttributeIcon('product'),
+        icon: getAttributeIcon('productName', 'string'),
         inverted: false,
         operator: 'OR',
         values: [],

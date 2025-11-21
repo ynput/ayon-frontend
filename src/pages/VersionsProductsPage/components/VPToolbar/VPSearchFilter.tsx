@@ -10,7 +10,7 @@ interface VPSearchFilterProps {}
 const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
   const { projectName, ...projectInfo } = useProjectContext()
   const { filters, onUpdateFilters } = useVPViewsContext()
-  const { productsMap } = useVersionsDataContext()
+  const { productsMap, versionsMap } = useVersionsDataContext()
 
   const scopesConfig: ScopeWithFilterTypes[] = [
     {
@@ -35,16 +35,17 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
     },
   ]
 
-  // Extract product names for filtering
-  const productNames = useMemo(() => {
-    return Array.from(productsMap.values()).map((product) => product.name)
-  }, [productsMap])
-
   const data = useMemo(
     () => ({
-      productNames,
+      productNames: [
+        ...new Set(
+          productsMap.size
+            ? Array.from(productsMap.values()).map((product) => product.name)
+            : Array.from(versionsMap.values()).map((version) => version.product.name),
+        ),
+      ],
     }),
-    [productNames],
+    [productsMap, versionsMap],
   )
 
   return (
@@ -56,6 +57,9 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
       projectNames={[projectName]}
       projectInfo={projectInfo}
       data={data}
+      config={{
+        keys: { productName: 'name' },
+      }}
       enableGlobalSearch={false}
     />
   )
