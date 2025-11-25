@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
+import { useGlobalContext } from '@shared/context'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -22,7 +23,9 @@ const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
-  const isManager = useSelector((state) => state.user.data.isManager)
+  const { user } = useGlobalContext()
+  const { uiExposureLevel: level = 0 } = user || {}
+  const aboveOrEqual700 = level >= 700
 
   const {
     data: addonsData,
@@ -55,10 +58,10 @@ const SettingsPage = () => {
     // Managers don't have access to addons nor bundles, redirecting to root if attempting to access the routes directly
     switch (module) {
       case 'addons':
-        if (isManager) return <Navigate to="/" />
+        if (aboveOrEqual700) return <Navigate to="/" />
         return <AddonsManager />
       case 'bundles':
-        if (isManager) return <Navigate to="/" />
+        if (aboveOrEqual700) return <Navigate to="/" />
         return <Bundles />
       case 'anatomyPresets':
         return <AnatomyPresets />
@@ -79,7 +82,7 @@ const SettingsPage = () => {
       default:
         return <Navigate to="/settings" />
     }
-  }, [module, addonName, addonsData, isManager])
+  }, [module, addonName, addonsData, aboveOrEqual700])
 
   const links = useMemo(() => {
     const adminExtras = [
@@ -150,7 +153,7 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       },
     ]
-    if (!isManager) {
+    if (!aboveOrEqual700) {
       result = [...adminExtras, ...result]
     }
 
@@ -164,17 +167,18 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       })
     }
-      result.push({ node: 'spacer' })
-      
-      const addonTitle = addonName && addonsData
-         ? addonsData.find(addon => addon.name === addonName)?.title
-         : undefined
-      
-      result.push({
-          node: <HelpButton module={addonName || module} pageName={addonTitle} />,
-      })
+    result.push({ node: 'spacer' })
+
+    const addonTitle =
+      addonName && addonsData
+        ? addonsData.find((addon) => addon.name === addonName)?.title
+        : undefined
+
+    result.push({
+      node: <HelpButton module={addonName || module} pageName={addonTitle} />,
+    })
     return result
-  }, [addonsData, isManager])
+  }, [addonsData, aboveOrEqual700])
 
   const title = useTitle(addonName || module, links, '', '')
   const revertedTitle = title === 'Studio settings' ? title : title + ' • Studio settings'
