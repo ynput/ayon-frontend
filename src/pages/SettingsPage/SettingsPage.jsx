@@ -25,7 +25,7 @@ const SettingsPage = () => {
   const { module, addonName } = useParams()
   const { user } = useGlobalContext()
   const { uiExposureLevel: level = 0 } = user || {}
-  const aboveOrEqual700 = level >= 700
+  const isManager = level === 700
 
   const {
     data: addonsData,
@@ -58,10 +58,10 @@ const SettingsPage = () => {
     // Managers don't have access to addons nor bundles, redirecting to root if attempting to access the routes directly
     switch (module) {
       case 'addons':
-        if (aboveOrEqual700) return <Navigate to="/" />
+        if (isManager) return <Navigate to="/" />
         return <AddonsManager />
       case 'bundles':
-        if (aboveOrEqual700) return <Navigate to="/" />
+        if (isManager) return <Navigate to="/" />
         return <Bundles />
       case 'anatomyPresets':
         return <AnatomyPresets />
@@ -82,7 +82,7 @@ const SettingsPage = () => {
       default:
         return <Navigate to="/settings" />
     }
-  }, [module, addonName, addonsData, aboveOrEqual700])
+  }, [module, addonName, addonsData, isManager])
 
   const links = useMemo(() => {
     const adminExtras = [
@@ -153,7 +153,7 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       },
     ]
-    if (!aboveOrEqual700) {
+    if (!isManager) {
       result = [...adminExtras, ...result]
     }
 
@@ -178,7 +178,7 @@ const SettingsPage = () => {
       node: <HelpButton module={addonName || module} pageName={addonTitle} />,
     })
     return result
-  }, [addonsData, aboveOrEqual700])
+  }, [addonsData, isManager])
 
   const title = useTitle(addonName || module, links, '', '')
   const revertedTitle = title === 'Studio settings' ? title : title + ' • Studio settings'
