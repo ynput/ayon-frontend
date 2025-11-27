@@ -18,6 +18,7 @@ import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
 import { EarlyPreview, DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext.tsx'
 
 interface VersionsProductsPageProps {
   projectName: string
@@ -138,6 +139,7 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
         tooltip={`The Products page replaces the old Browser page. Show the browser page again at [/settings/server](/settings/server)`}
         data-tooltip-as="markdown"
       />
+      <NewListFromContext />
     </main>
   )
 }
