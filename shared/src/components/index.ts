@@ -1,3 +1,4 @@
+export * from './AddonLoadingScreen'
 export * from './UserImage'
 export * from './ThumbnailSimple'
 export * from './EmptyPlaceholder'

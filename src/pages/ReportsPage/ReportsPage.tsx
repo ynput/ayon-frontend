@@ -3,13 +3,13 @@ import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
 import { FC, useState, useEffect } from 'react'
 import ReportsFallback from './ReportsFallback'
-import ReportsLoadingScreen from './ReportsLoadingScreen'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { updateViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { ReportsSettings } from '@shared/api'
+import { AddonLoadingScreen } from '@shared/components'
 
 interface ReportsPageProps {}
 
@@ -51,7 +51,7 @@ const ReportsPage: FC<ReportsPageProps> = () => {
   }
 
   if (!isLoaded && showLoading) {
-    return <ReportsLoadingScreen />
+    return <AddonLoadingScreen />
   }
 
   return (
