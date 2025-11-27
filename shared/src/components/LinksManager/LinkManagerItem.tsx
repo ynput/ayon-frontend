@@ -20,35 +20,52 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
   onRemove,
 }) => {
   const entityTypeSupported = detailsPanelEntityTypes.includes(link.entityType as any)
+  const isClickable = entityTypeSupported && !link.isRestricted
 
   return (
     <Styled.LinkItem
       key={link.linkId}
-      onClick={() => entityTypeSupported && onEntityClick?.(link.entityId, link.entityType)}
-      data-tooltip={link.parents.join('/') + '/' + link.label}
+      onClick={() => isClickable && onEntityClick?.(link.entityId, link.entityType)}
+      data-tooltip={
+        link.isRestricted
+          ? ""
+          : link.parents.join('/') + '/' + link.label
+      }
       className={clsx({
-        clickable: entityTypeSupported,
+        clickable: isClickable,
         selected: isSelected,
       })}
+      style={link.isRestricted ? { opacity: 0.5, fontStyle: 'italic' } : undefined}
     >
       {link.icon ? <Icon icon={link.icon} /> : <Icon icon={getEntityTypeIcon(link.entityType)} />}
 
       <span className="title">
-        {link.parents?.map((part, index) => (
-          <Fragment key={index}>
-            <span key={index + '-path'}>{part}</span>
-            <span key={index + '-separator'}>/</span>
-          </Fragment>
-        ))}
-        <span className="label">{link.label}</span>
+        {link.isRestricted ? (
+          <span className="label">
+            You don't have permission to view this link
+          </span>
+        ) : (
+          <>
+            {link.parents?.map((part, index) => (
+              <Fragment key={index}>
+                <span key={index + '-path'}>{part}</span>
+                <span key={index + '-separator'}>/</span>
+              </Fragment>
+            ))}
+            <span className="label">{link.label}</span>
+          </>
+        )}
       </span>
-      <Button
-        icon={'link_off'}
-        variant="text"
-        className="remove"
-        onClick={(e) => onRemove(e, link)}
-        data-tooltip={'Remove link'}
-      />
+      { !link.isRestricted &&
+        <Button
+          icon={'link_off'}
+          variant="text"
+          className="remove"
+          onClick={(e) => onRemove(e, link)}
+          data-tooltip={'Remove link'}
+        />
+      }
+
     </Styled.LinkItem>
   )
 }

@@ -57,7 +57,8 @@ export type EntityLink = Pick<EntityLinkQuery, 'direction' | 'entityType' | 'id'
     label?: string | null
     parents: string[]
     subType: string | undefined
-  }
+  } | null
+  isRestricted?: boolean // flag to indicate if this link is restricted
 }
 
 // Define the result type for the query - simplified without edges wrapper
@@ -127,22 +128,49 @@ const injectedQueries = foldersApi.injectEndpoints({
           ).unwrap()
 
           const newEntities =
-            result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => ({
-              id: node.id,
-              links:
-                node.links.edges
-                  ?.filter((e: EntityLinkQuery | null) => !!e?.node)
-                  ?.map((linkEdge: EntityLinkQuery) => ({
-                    ...linkEdge,
-                    node: {
-                      id: linkEdge.node.id,
-                      name: linkEdge.node.name,
-                      label: formatEntityLabel(linkEdge.node),
-                      parents: linkEdge.node.parents || [],
-                      subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                    },
-                  })) || [], // Flatten the edges structure
-            })) || []
+            result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
+              // Log restricted links
+              const restrictedLinks = node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
+              if (restrictedLinks.length > 0) {
+                console.log(`[RESTRICTED LINKS] Entity ${node.id} (${node.name}) has ${restrictedLinks.length} restricted link(s):`,
+                  restrictedLinks.map((link: any) => ({
+                    linkId: link?.id,
+                    linkType: link?.linkType,
+                    direction: link?.direction,
+                    entityType: link?.entityType,
+                    nodeIsNull: !link?.node
+                  }))
+                )
+              }
+
+              return {
+                id: node.id,
+                links:
+                  node.links.edges
+                    ?.map((linkEdge: EntityLinkQuery | null) => {
+                      if (!linkEdge?.node) {
+                        // Restricted link - node is null
+                        return {
+                          ...linkEdge,
+                          node: null,
+                          isRestricted: true,
+                        } as EntityLink
+                      }
+                      // Normal link
+                      return {
+                        ...linkEdge,
+                        node: {
+                          id: linkEdge.node.id,
+                          name: linkEdge.node.name,
+                          label: formatEntityLabel(linkEdge.node),
+                          parents: linkEdge.node.parents || [],
+                          subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                        },
+                        isRestricted: false,
+                      } as EntityLink
+                    }) || [], // Flatten the edges structure
+              }
+            }) || []
 
           // Return the new entities - the merge function will handle combining with existing cache
           return { data: newEntities }
@@ -192,7 +220,9 @@ const injectedQueries = foldersApi.injectEndpoints({
         result
           ? [
               ...result.flatMap((entity) =>
-                entity.links.map((link) => ({ type: 'link', id: link.node.id })),
+                entity.links
+                  .filter((link) => link.node !== null)
+                  .map((link) => ({ type: 'link', id: link.node!.id })),
               ),
               { type: 'link', id: `${arg.projectName}-${arg.entityType}` },
             ]
@@ -234,22 +264,49 @@ const injectedQueries = foldersApi.injectEndpoints({
             ).unwrap()
 
             const updatedEntities =
-              result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => ({
-                id: node.id,
-                links:
-                  node.links.edges
-                    ?.filter((e: EntityLinkQuery | null) => !!e?.node)
-                    ?.map((linkEdge: EntityLinkQuery) => ({
-                      ...linkEdge,
-                      node: {
-                        id: linkEdge.node.id,
-                        name: linkEdge.node.name,
-                        label: formatEntityLabel(linkEdge.node),
-                        parents: linkEdge.node.parents || [],
-                        subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                      },
-                    })) || [],
-              })) || []
+              result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
+                // Log restricted links (WebSocket update)
+                const restrictedLinks = node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
+                if (restrictedLinks.length > 0) {
+                  console.log(`[RESTRICTED LINKS - WebSocket] Entity ${node.id} (${node.name}) has ${restrictedLinks.length} restricted link(s):`,
+                    restrictedLinks.map((link: any) => ({
+                      linkId: link?.id,
+                      linkType: link?.linkType,
+                      direction: link?.direction,
+                      entityType: link?.entityType,
+                      nodeIsNull: !link?.node
+                    }))
+                  )
+                }
+
+                return {
+                  id: node.id,
+                  links:
+                    node.links.edges
+                      ?.map((linkEdge: EntityLinkQuery | null) => {
+                        if (!linkEdge?.node) {
+                          // Restricted link - node is null
+                          return {
+                            ...linkEdge,
+                            node: null,
+                            isRestricted: true,
+                          } as EntityLink
+                        }
+                        // Normal link
+                        return {
+                          ...linkEdge,
+                          node: {
+                            id: linkEdge.node.id,
+                            name: linkEdge.node.name,
+                            label: formatEntityLabel(linkEdge.node),
+                            parents: linkEdge.node.parents || [],
+                            subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+                          },
+                          isRestricted: false,
+                        } as EntityLink
+                      }) || [],
+                }
+              }) || []
 
             updateCachedData((draft: EntityWithLinks[]) => {
               for (const updatedEntity of updatedEntities) {

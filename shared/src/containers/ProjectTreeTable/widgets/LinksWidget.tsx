@@ -7,6 +7,7 @@ import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityConte
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { Icon } from '@ynput/ayon-react-components'
 
 export const sortEntityLinksByPath = (links: LinkEntity[]) => {
   return [...links].sort((a, b) => {
@@ -110,13 +111,24 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
 
   const sortedLinks = value?.links ? sortEntityLinksByPath(value.links) : []
 
+  // Log restricted links
+  const restrictedLinks = sortedLinks.filter((link) => link.isRestricted)
+  if (restrictedLinks.length > 0) {
+    console.log('[LinksWidget] Restricted links detected:', restrictedLinks)
+  }
+
+  console.log("Value", value)
+
   return (
     <>
       <Chips
         values={
           sortedLinks.map((v) => ({
-            label: v.label,
-            tooltip: v.parents.join('/') + '/' + v.label,
+            label: v.isRestricted ? '' : v.label,
+            tooltip: v.isRestricted
+              ? "You don't have permission to view this link"
+              : v.parents.join('/') + '/' + v.label,
+            icon: v.isRestricted ? <Icon icon="lock" /> : undefined,
           })) || []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
