@@ -72,8 +72,9 @@ export const handleActivityRealtimeUpdates = async (
 
       const projectName = message.project
       const references = message.summary?.references || []
+      const relevantReferenceTypes = ['origin', 'mention', 'relation']
       const entityIds = references
-        .filter((reference) => reference.reference_type === 'origin')
+        .filter((reference) => relevantReferenceTypes.includes(reference.reference_type))
         .map((reference) => reference.entity_id)
 
       // Check if this activity is relevant to the current cache
