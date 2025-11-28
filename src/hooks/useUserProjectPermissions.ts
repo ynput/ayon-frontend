@@ -171,6 +171,17 @@ class UserPermissions {
   projectSettingsAreEnabled(): boolean {
     return this.permissions?.user_level === 'user'
   }
+  canListAllUsers(): boolean {
+    if (this.hasElevatedPrivileges) {
+      return true
+    }
+
+    if (!this.permissions) {
+      return false
+    }
+
+    return this.permissions.studio?.list_all_users || false
+  }
 }
 
 const useUserProjectPermissions = (
