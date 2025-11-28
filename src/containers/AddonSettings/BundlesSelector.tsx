@@ -160,7 +160,7 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
 
   const bundleOptions = useMemo<BundleOption[]>(() => {
     return bundles
-      .filter((b) => devMode || !b?.isDev)
+      .filter((b) => (devMode /* IDK: is this a good idea? && b.activeUser === userName*/) || !b?.isDev)
       .map((bundle) => ({
         label: bundle.name,
         value: bundle.name,
@@ -178,7 +178,7 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
       }
     } 
 
-    return bundleOptions.find((b) => b.value === (selected.projectBundleName || selected.bundleName))
+    return bundleOptions.find((b) => b.value === (selected.projectBundleName || selected.bundleName || selected.variant))
    
   }, [selected, bundleOptions])
 
