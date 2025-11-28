@@ -47,8 +47,6 @@ const VariantSelector = ({
       ? (['production', 'staging', 'dev'] as const)
       : (['production', 'staging'] as const)
 
-
-
   const handleOnChange = (variant: (typeof buttons)[number]) => {
     if (variant === 'dev') {
       // find dev bundle that belongs to the user
@@ -63,7 +61,6 @@ const VariantSelector = ({
     }
   }
 
-  console.log("variant: ", {buttons, variant})
   return (
     <ButtonContainer>
       {buttons.map((variantType) => (

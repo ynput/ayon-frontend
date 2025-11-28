@@ -727,7 +727,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     setCurrentSelection(null)
   }
 
-
   const onUpdateAddonSchema = (addonName, schema) => {
     // TODO: Rewrite this to not rely on `settings` in addon settings list
     // as it requires addon list to load the entire payload, which is not optimal
