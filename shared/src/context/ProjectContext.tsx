@@ -162,24 +162,24 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
     refetch,
   }
 
-  const value = useMemo(
-    () => ({
-      ...emptyProject,
-      ...project,
-      projectName,
-      productTypes: productTypes,
-      anatomy,
-      defaultProductType,
-      isLoading: isLoading || isFetching,
-      isSuccess: isSuccess,
-      isUninitialized,
-      error,
-    }),
-    [project, projectName, isLoading, error],
-  )
-
   return (
-    <ProjectContext.Provider value={{ ...value, ...functions }}>{children}</ProjectContext.Provider>
+    <ProjectContext.Provider
+      value={{
+        ...emptyProject,
+        ...project,
+        projectName,
+        productTypes: productTypes,
+        anatomy,
+        defaultProductType,
+        isLoading: isLoading || isFetching,
+        isSuccess: isSuccess,
+        isUninitialized,
+        error,
+        ...functions,
+      }}
+    >
+      {children}
+    </ProjectContext.Provider>
   )
 }
 
