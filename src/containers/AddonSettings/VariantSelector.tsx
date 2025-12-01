@@ -40,7 +40,7 @@ const VariantSelector = ({
 }: VariantSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const devMode = useAppSelector((state) => state.user.attrib.developerMode)
-  // const userName = useAppSelector((state) => state.user.name)
+  const userName = useAppSelector((state) => state.user.name)
 
   const buttons =
     devMode && showDev
@@ -50,7 +50,7 @@ const VariantSelector = ({
   const handleOnChange = (variant: (typeof buttons)[number]) => {
     if (variant === 'dev') {
       // find dev bundle that belongs to the user
-      const devBundle = bundles.find((bundle) => bundle.isDev)
+      const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
       if (devBundle) {
         setVariant(devBundle.name)
       } else {
@@ -68,7 +68,7 @@ const VariantSelector = ({
           key={variantType}
           label={variantType.charAt(0).toUpperCase() + variantType.slice(1)}
           onClick={() => handleOnChange(variantType)}
-          style={variantType === variant ? VARIANT_STYLES[variantType] : {}}
+          style={(variantType === variant || (variantType === 'dev' && !['production', 'staging'].includes(variant))) ? VARIANT_STYLES[variantType] : {}}
           disabled={disabled}
         />
       ))}
