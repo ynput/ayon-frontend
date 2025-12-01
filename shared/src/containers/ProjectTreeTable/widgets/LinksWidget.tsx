@@ -7,6 +7,7 @@ import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityConte
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { Icon } from '@ynput/ayon-react-components'
 
 export const sortEntityLinksByPath = (links: LinkEntity[]) => {
   return [...links].sort((a, b) => {
@@ -115,8 +116,11 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
       <Chips
         values={
           sortedLinks.map((v) => ({
-            label: v.label,
-            tooltip: v.parents.join('/') + '/' + v.label,
+            label: v.isRestricted ? 'Restricted' : v.label,
+            tooltip: v.isRestricted
+              ? "Access Restricted - Insufficient Permissions to Entity"
+              : v.parents.join('/') + '/' + v.label,
+            icon: v.isRestricted ? "lock": undefined,
           })) || []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
