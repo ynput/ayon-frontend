@@ -47,26 +47,36 @@ export const ViewsMenuDivider = styled.li`
   margin: 4px 0;
 `
 
-export const ViewChip = styled(Chip)`
-  background: transparent;
-  padding: 0 8px;
-  outline: dashed 1px var(--md-sys-color-outline-variant);
+export const ViewChip = styled(Chip)<{ $active?: boolean }>`
+  background: ${({ $active }) => $active ? 'var(--md-sys-color-surface-container-highest-hover)' : 'transparent'};
+  padding: 0 8px 0 4px !important;
+  border: ${({ $active }) =>
+    $active
+      ? '1px solid var(--md-sys-color-on-surface-variant)'
+      : '2px dashed var(--md-sys-color-outline-variant)'};
+
+  // 
   margin: 0 4px 4px 0;
-  color: var(--md-sys-color-outline);
-  
+  color: ${({$active}) => $active ? 'var(--md-sys-color-on-surface)' : 'var(--md-sys-color-outline)'};
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  .p-chip-text {
+    display: flex;
+    align-items: center;
+  }
+
   i {
     color: var(--md-sys-color-outline);
   }
 
   &:hover {
-    background: var(--md-sys-color-surface-container-highest-hover);
-    outline: solid 1px var(--md-sys-color-outline-variant);
-    color: var(--md-sys-color-on-surface);
 
-    /* Change icon color on chip hover */
     i {
       color: var(--md-sys-color-on-surface);
-      background: var(--md-sys-color-surface-container-highest-hover); ;
+      background: var(--md-sys-color-surface-container-highest-hover);
     }
   }
 `

@@ -19,6 +19,21 @@ const ClickableIconWrapper = styled.span`
   color: var(--md-sys-color-outline);
 `
 
+const ScopeIconStyled = styled(Icon)<{ $color?: string }>`
+  border-radius: 50%;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  background-color: ${({ $color }) => $color ? `${$color}20` : 'transparent'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+
+  ${ClickableIconWrapper}:hover & {
+    background-color: ${({ $color }) => $color || 'var(--md-sys-color-surface-container-highest)'};
+  }
+`
+
 export const BaseViewsTagContainer: FC = () => {
   const {
     projectBaseView,
@@ -31,7 +46,6 @@ export const BaseViewsTagContainer: FC = () => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const handleBaseViewAction = async (isStudioScope: boolean) => {
     const existingBase = isStudioScope ? studioBaseView : projectBaseView
-    const scope = isStudioScope ? 'Studio' : 'Project'
 
     if(!isStudioScope && !powerLicense ){
       setPowerpackDialog('sharedViews')
@@ -39,21 +53,16 @@ export const BaseViewsTagContainer: FC = () => {
     }
 
     if (existingBase) {
-      // Show confirm dialog with options to update or remove
       confirmDialog({
-        message: `Choose an action for the ${scope} default view`,
-        header: `Manage ${scope} Default View`,
-        acceptLabel: 'Update',
-        rejectLabel: 'Remove',
+        message: `Do you want to delete default view`,
+        header: `Delete default view`,
+        acceptLabel: 'Delete',
+        rejectLabel: 'Cancel',
         accept: async () => {
-          await onUpdateBaseView(existingBase.id as string, isStudioScope)
-        },
-        reject: async () => {
           await onDeleteBaseView(existingBase.id as string, isStudioScope)
-        },
+        }
       })
     } else {
-      // Create new base view
       await onCreateBaseView(isStudioScope)
     }
   }
@@ -64,12 +73,14 @@ export const BaseViewsTagContainer: FC = () => {
         existingView={!!studioBaseView}
         label={'Studio'}
         onClick={() => handleBaseViewAction(true)}
+        color={'var(--md-sys-color-tertiary)'}
       />
       <ScopeIcon
         existingView={!!projectBaseView}
         label={'Project'}
         onClick={() => handleBaseViewAction(false)}
         poweLicense={powerLicense}
+        color={'orange'}
       />
     </>
   )
@@ -80,6 +91,7 @@ type ScopeIconProps = {
   onClick: () => void
   label: string
   poweLicense?: boolean
+  color?: string
 }
 
 const ScopeIcon: FC<ScopeIconProps> = ({
@@ -87,6 +99,7 @@ const ScopeIcon: FC<ScopeIconProps> = ({
   onClick,
   label,
   poweLicense = undefined,
+  color
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -96,12 +109,13 @@ const ScopeIcon: FC<ScopeIconProps> = ({
   return (
     <Styled.ViewChip
       label={label}
+      $active={existingView}
       icon={
         <ClickableIconWrapper onClick={handleClick}>
           {poweLicense === false ? (
             <PowerIcon icon="bolt" />
           ) : (
-            <Icon icon={existingView ? 'close' : 'add'} />
+            <ScopeIconStyled $color={color} icon={existingView ? 'close' : 'add'} />
           )}
         </ClickableIconWrapper>
       }
