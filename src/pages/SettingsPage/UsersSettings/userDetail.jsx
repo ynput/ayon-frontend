@@ -338,9 +338,8 @@ const UserDetail = ({
         type: toast.TYPE.SUCCESS,
       })
     } catch (error) {
-      console.error(error)
       toast.update(toastId.current, {
-        render: `Error updating ${usersString}.`,
+        render: `Error updating ${usersString}: ${error?.detail}`,
         type: toast.TYPE.ERROR,
       })
     }
