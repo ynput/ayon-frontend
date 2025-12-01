@@ -160,6 +160,10 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}`,
         method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     updateEntityList: build.mutation<UpdateEntityListApiResponse, UpdateEntityListApiArg>({
@@ -293,6 +297,8 @@ export type DeleteEntityListApiResponse = /** status 200 Successful Response */ 
 export type DeleteEntityListApiArg = {
   listId: string
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type UpdateEntityListApiResponse = /** status 200 Successful Response */ any
 export type UpdateEntityListApiArg = {

@@ -13,6 +13,7 @@ import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries
 import { useGetProjectsInfoQuery } from '@shared/api'
 // Components
 import { Button, Spacer } from '@ynput/ayon-react-components'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
 import EnableNotifications from '@components/EnableNotifications'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 // Hooks
@@ -24,6 +25,7 @@ import useInboxRefresh from '../hooks/useInboxRefresh'
 import { useListProjectsQuery } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
@@ -347,7 +349,7 @@ const Inbox = ({ filter }) => {
             icon="done_all"
             onClick={handleClearAll}
             disabled={!messages.length}
-            shortcut={{ children: getPlatformShortcutKey('c', [ KeyMode.Shift]) }}
+            shortcut={{ children: getPlatformShortcutKey('c', [KeyMode.Shift]) }}
           >
             Clear all
           </Button>
@@ -357,69 +359,84 @@ const Inbox = ({ filter }) => {
         </Button>
       </Styled.Tools>
       <Styled.InboxSection direction="row">
-        <Styled.MessagesList
-          ref={listRef}
-          onMouseMove={() => setUsingKeyboard(false)}
-          onKeyDown={handleKeyDown}
-          className={clsx({ isLoading: isLoadingInbox })}
+        <DetailsPanelSplitter
+          layout="horizontal"
+          style={{ width: '100%', height: '100%' }}
+          stateKey="inbox-splitter"
         >
-          {messagesData.map((group) => (
-            <InboxMessage
-              key={group.activityId}
-              path={group.path}
-              type={group.activityType}
-              entityType={group.entityType}
-              entityId={group.entityId}
-              projectName={group.projectName}
-              date={group.date}
-              userName={group.userName}
-              isRead={group.read || group.active}
-              unReadCount={group.unRead}
-              onSelect={handleMessageSelect}
-              isSelected={selected.includes(group.activityId)}
-              disableHover={usingKeyboard}
-              onClear={
-                !selected.length || selected.includes(group.activityId)
-                  ? () => handleClearMessage(group.activityId)
-                  : undefined
-              }
-              clearLabel={isActive ? 'Clear' : 'Unclear'}
-              clearIcon={isActive ? 'done' : 'replay'}
-              id={group.activityId}
-              ids={group.groupIds}
-              messages={group.messages}
-              changes={group.changes}
-              isPlaceholder={group.isPlaceholder}
-              projectsInfo={projectsInfo}
-              isMultiple={group.isMultiple}
-              onContextMenu={handleContextMenu}
-            />
-          ))}
-          {hasPreviousPage && !isLoadingInbox && !!messages.length && (
-            <InView
-              onChange={(inView) => inView && handleLoadMore()}
-              rootMargin={'0px 0px 500px 0px'}
-              root={listRef.current}
+          <SplitterPanel size={60} style={{ minWidth: 300, overflow: 'hidden' }}>
+            <Styled.MessagesList
+              ref={listRef}
+              onMouseMove={() => setUsingKeyboard(false)}
+              onKeyDown={handleKeyDown}
+              className={clsx({ isLoading: isLoadingInbox })}
             >
-              <Styled.LoadMore onClick={handleLoadMore}>
-                {isFetchingInbox ? 'Loading more...' : 'Load more'}
-              </Styled.LoadMore>
-            </InView>
-          )}
-        </Styled.MessagesList>
-        <InboxDetailsPanel
-          messages={messagesData}
-          selected={selected}
-          projectsInfo={projectsInfo}
-          onClose={() => setSelected([])}
-        />
-        {!isLoadingAny && (errorInbox || !messagesData.length) && (
-          <EmptyPlaceholder
-            icon="done_all"
-            message="All caught up! No messages to show."
-            error={errorInbox}
-          />
-        )}
+              {messagesData.map((group) => (
+                <InboxMessage
+                  key={group.activityId}
+                  path={group.path}
+                  type={group.activityType}
+                  entityType={group.entityType}
+                  entityId={group.entityId}
+                  projectName={group.projectName}
+                  date={group.date}
+                  userName={group.userName}
+                  isRead={group.read || group.active}
+                  unReadCount={group.unRead}
+                  onSelect={handleMessageSelect}
+                  isSelected={selected.includes(group.activityId)}
+                  disableHover={usingKeyboard}
+                  onClear={
+                    !selected.length || selected.includes(group.activityId)
+                      ? () => handleClearMessage(group.activityId)
+                      : undefined
+                  }
+                  clearLabel={isActive ? 'Clear' : 'Unclear'}
+                  clearIcon={isActive ? 'done' : 'replay'}
+                  id={group.activityId}
+                  ids={group.groupIds}
+                  messages={group.messages}
+                  changes={group.changes}
+                  isPlaceholder={group.isPlaceholder}
+                  projectsInfo={projectsInfo}
+                  isMultiple={group.isMultiple}
+                  onContextMenu={handleContextMenu}
+                  customBody={group.body}
+                />
+              ))}
+              {hasPreviousPage && !isLoadingInbox && !!messages.length && (
+                <InView
+                  onChange={(inView) => inView && handleLoadMore()}
+                  rootMargin={'0px 0px 500px 0px'}
+                  root={listRef.current}
+                >
+                  <Styled.LoadMore onClick={handleLoadMore}>
+                    {isFetchingInbox ? 'Loading more...' : 'Load more'}
+                  </Styled.LoadMore>
+                </InView>
+              )}
+            </Styled.MessagesList>
+            {!isLoadingAny && (errorInbox || !messagesData.length) && (
+              <EmptyPlaceholder
+                icon="done_all"
+                message="All caught up! No messages to show."
+                error={errorInbox}
+              />
+            )}
+          </SplitterPanel>
+          <SplitterPanel
+            size={40}
+            style={{ minWidth: 300, overflow: 'hidden' }}
+            className="details"
+          >
+            <InboxDetailsPanel
+              messages={messagesData}
+              selected={selected}
+              projectsInfo={projectsInfo}
+              onClose={() => setSelected([])}
+            />
+          </SplitterPanel>
+        </DetailsPanelSplitter>
       </Styled.InboxSection>
     </>
   )

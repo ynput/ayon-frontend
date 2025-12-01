@@ -100,12 +100,15 @@ type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
 export type GetGroupedVersionsListArgs = {
   projectName: string
   groups: { filter: string; count?: number | null; value: string }[]
+  groupFilterKey?: string
+  versionFilter?: string
   productFilter?: string
   taskFilter?: string
   folderIds?: string[]
   desc?: boolean
   sortBy?: string
   featuredOnly?: string[]
+  hasReviewables?: boolean
 }
 
 export type GetGroupedVersionsListResult = {
@@ -447,7 +450,19 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
     // Grouped versions query - fetches versions for multiple group filters
     getGroupedVersionsList: build.query<GetGroupedVersionsListResult, GetGroupedVersionsListArgs>({
       queryFn: async (
-        { projectName, groups, productFilter, taskFilter, folderIds, desc, sortBy, featuredOnly },
+        {
+          projectName,
+          groups,
+          groupFilterKey = 'versionFilter',
+          versionFilter, // most of the time overridden by group filters
+          productFilter,
+          taskFilter,
+          folderIds,
+          desc,
+          sortBy,
+          featuredOnly,
+          hasReviewables,
+        },
         api,
       ) => {
         try {
@@ -457,12 +472,16 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
             const queryParams: GetVersionsQueryVariables = {
               projectName,
-              versionFilter: group.filter,
+              // base filters
               productFilter,
               taskFilter,
+              versionFilter,
+              // specific group filter
+              [groupFilterKey]: group.filter,
               folderIds: folderIds?.length ? folderIds : undefined,
               sortBy: sortBy,
               featuredOnly,
+              hasReviewables,
               // @ts-expect-error - group param used later on
               group: group.value,
             }

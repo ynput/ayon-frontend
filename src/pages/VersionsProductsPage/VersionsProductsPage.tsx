@@ -4,7 +4,7 @@ import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import Slicer from '@containers/Slicer'
 import { useSlicerContext } from '@context/SlicerContext'
-import { useSettingsPanel } from '@shared/context'
+import { useProjectContext, useSettingsPanel } from '@shared/context'
 import VPToolbar from './components/VPToolbar/VPToolbar'
 // TABLES
 import VPTable from './components/VPTable/VPTable'
@@ -17,7 +17,8 @@ import { useVersionsSelectionContext } from './context/VPSelectionContext'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
 import { EarlyPreview, DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'
-import { useProjectDataContext } from '@shared/containers'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext.tsx'
 
 interface VersionsProductsPageProps {
   projectName: string
@@ -29,8 +30,8 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
   const { isPanelOpen } = useSettingsPanel()
   const { config } = useSlicerContext()
   const { showGrid } = useVPViewsContext()
-  const { showVersionDetails, showVersionsTable } = useVersionsSelectionContext()
-  const { projectName } = useProjectDataContext()
+  const { showVersionsTable } = useVersionsSelectionContext()
+  const { projectName } = useProjectContext()
 
   // modal dialog state for product and version details
   const [showDetail, setShowDetail] = useState<false | 'product' | 'version'>(false)
@@ -78,12 +79,11 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
               style={{ width: '100%', height: '100%', overflow: 'hidden' }}
             >
               <SplitterPanel size={82}>
-                <Splitter
+                <DetailsPanelSplitter
                   layout="horizontal"
                   stateKey="overview-splitter-details"
                   stateStorage="local"
                   style={{ width: '100%', height: '100%' }}
-                  gutterSize={!showVersionDetails && !showVersionsTable ? 0 : 4}
                 >
                   <SplitterPanel size={70}>
                     {showGrid ? (
@@ -99,20 +99,18 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
                   ) : (
                     <SplitterPanel className="hidden"></SplitterPanel>
                   )}
-                  {showVersionDetails ? (
-                    <SplitterPanel
-                      size={30}
-                      style={{
-                        zIndex: 300,
-                        minWidth: 300,
-                      }}
-                    >
-                      <VPDetailsPanel />
-                    </SplitterPanel>
-                  ) : (
-                    <SplitterPanel className="hidden"></SplitterPanel>
-                  )}
-                </Splitter>
+
+                  <SplitterPanel
+                    size={30}
+                    style={{
+                      zIndex: 300,
+                      minWidth: 300,
+                    }}
+                    className="details"
+                  >
+                    <VPDetailsPanel />
+                  </SplitterPanel>
+                </DetailsPanelSplitter>
               </SplitterPanel>
               {isPanelOpen ? (
                 <SplitterPanel
@@ -137,7 +135,11 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
         visible={!!showDetail}
         onHide={() => setShowDetail(false)}
       />
-      <EarlyPreview tooltip="The Products page intends to replace the old Browser page. Feedback is greatly appreciated!" />
+      <EarlyPreview
+        tooltip={`The Products page replaces the old Browser page. Show the browser page again at [/settings/server](/settings/server)`}
+        data-tooltip-as="markdown"
+      />
+      <NewListFromContext />
     </main>
   )
 }

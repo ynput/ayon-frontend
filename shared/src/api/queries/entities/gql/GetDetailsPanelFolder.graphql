@@ -13,6 +13,7 @@ query GetDetailsPanelFolder($projectName: String!, $entityId: String!) {
       thumbnailId
       folderType
       path
+      parents
       hasReviewables
       allAttrib
     }

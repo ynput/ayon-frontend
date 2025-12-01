@@ -266,17 +266,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     return <>Error</>
   }
 
-  // updates the URI on focus change
-  const onFocus = (event) => {
-    const id = extractIdFromClassList(event.target.classList)
-    if (!id) return
-    const node = tasksData.find((s) => s.key === id)?.data
-    if (!node) return
-    let uri = `ayon+entity://${projectName}/${node.folderPath}`
-    uri += `?task=${node.name}`
-    dispatch(setUri(uri))
-  }
-
   const handleDeselect = (e) => {
     const tableRefElement = tableRef.current?.getElement()
 
@@ -333,7 +322,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             pt={{
               root: {
                 onKeyDown: handleKeyDown,
-                onFocus: onFocus,
                 onClick: handleDeselect,
               },
             }}

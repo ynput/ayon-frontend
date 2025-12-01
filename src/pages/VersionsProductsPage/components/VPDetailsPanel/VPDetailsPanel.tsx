@@ -3,17 +3,22 @@
 
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
-import type { ProjectModel } from '@shared/api'
+import type { DetailsPanelEntityData, ProjectModel } from '@shared/api'
 import {
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
-  useProjectDataContext,
   useSelectionCellsContext,
+  getCellId,
 } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/VPSelectionContext'
 import { useCallback } from 'react'
+import { useProjectContext } from '@shared/context'
+import useGoToEntity from '@hooks/useGoToEntity'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
+import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
+import { useSlicerContext } from '@context/SlicerContext'
 
 type VPDetailsPanelProps = {}
 
@@ -21,9 +26,13 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
 
-  const { projectName, projectInfo } = useProjectDataContext()
-  const { selectedVersions, setSelectedVersions } = useVersionsSelectionContext()
+  const { projectName, ...projectInfo } = useProjectContext()
+  const { selectedVersions, setSelectedVersions, showVersionDetails } =
+    useVersionsSelectionContext()
   const { setSelectedCells, selectedRows } = useSelectionCellsContext()
+  const { onUpdateGroupBy, onUpdateFilters } = useVPViewsContext()
+  const { setExpanded: setProductsExpanded } = useVersionsDataContext()
+  const slicer = useSlicerContext()
 
   const { data: users = [] } = useGetUsersAssigneeQuery(
     { names: undefined, projectName },
@@ -72,9 +81,44 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
     }
   }, [selectedRows])
 
+  const { getGoToEntityData } = useGoToEntity()
+
+  // select the entity in the table and expand its parent folders
+  const handleUriOpen = (entity: DetailsPanelEntityData) => {
+    console.debug('URI found, selecting and expanding folders to entity:', entity.name)
+
+    // Get the data needed to navigate to this entity
+    const data = getGoToEntityData(entity.id, entity.entityType as any, {
+      folder: entity.folder?.id,
+      product: entity.product?.id,
+    })
+
+    // Reset view state
+    onUpdateFilters({})
+    onUpdateGroupBy(undefined)
+
+    // Expand folders in slicer
+    slicer.setExpanded(data.expandedFolders)
+    slicer.setRowSelection(data.selectedFolders)
+
+    // Select the entity in the table
+    setSelectedCells(
+      new Set([
+        getCellId(data.entityId, 'name'),
+        getCellId(data.entityId, ROW_SELECTION_COLUMN_ID),
+      ]),
+    )
+
+    // For versions, expand the parent product
+    if (entity.entityType === 'version' && entity.product?.id) {
+      setProductsExpanded({ [entity.product.id]: true })
+    }
+  }
+
   return (
     <>
       <DetailsPanel
+        isOpen={showVersionDetails}
         entityType={'version'}
         entities={entities}
         projectsInfo={projectsInfo}
@@ -87,6 +131,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
         onClose={handleClose}
         onOpenViewer={handleOpenViewer}
         onOpen={handleDetailsOpen}
+        onUriOpen={handleUriOpen}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
     </>

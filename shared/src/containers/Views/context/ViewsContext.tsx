@@ -2,7 +2,6 @@ import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallbac
 import { ViewType, viewTypes, WORKING_VIEW_ID } from '../index'
 import {
   GetDefaultViewApiResponse,
-  useGetCurrentUserQuery,
   useGetWorkingViewQuery,
   useGetViewQuery,
   useListViewsQuery,
@@ -14,7 +13,7 @@ import {
 } from '@shared/api'
 import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
-import { usePowerpack } from '@shared/context'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
@@ -68,7 +67,7 @@ export interface ViewsContextValue {
 
   // api
   api: typeof viewsQueries
-  dispatch: any
+  dispatch: any // dispatch is used to dispatch api mutations in pp like the share one.
 }
 
 const ViewsContext = createContext<ViewsContextValue | null>(null)
@@ -101,7 +100,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     powerLicense = debug.powerLicense
   }
 
-  const { data: currentUser } = useGetCurrentUserQuery()
+  const { user: currentUser } = useGlobalContext()
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)

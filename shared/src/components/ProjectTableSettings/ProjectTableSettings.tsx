@@ -7,7 +7,7 @@ import {
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
-import { SettingHighlightedId, useSettingsPanel } from '@shared/context'
+import { SettingHighlightedId, useProjectContext, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
 import { SizeSlider } from '@shared/components'
@@ -59,7 +59,8 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   order,
   scope,
 }) => {
-  const { attribFields, projectInfo, scopes } = useProjectTableContext()
+  const { ...projectInfo } = useProjectContext()
+  const { attribFields, scopes } = useProjectTableContext()
   const {
     columnVisibility,
     rowHeight = 34,
@@ -152,7 +153,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
 
   const groupBySettings = useGroupBySettings({ scope })
 
-  const defaultSettings: SettingConfig[] = [
+  const defaultSettings: (SettingConfig | undefined | null)[] = [
     {
       id: 'columns',
       title: 'Columns',
@@ -173,10 +174,10 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
         />
       ),
     },
-  ]
+  ].filter(Boolean)
 
   settings.forEach(
     (setting) => !hiddenSettings.includes(setting.id as any) && defaultSettings.push(setting),
   )
-  return <SettingsPanel settings={defaultSettings} order={order} />
+  return <SettingsPanel settings={defaultSettings as SettingConfig[]} order={order} />
 }

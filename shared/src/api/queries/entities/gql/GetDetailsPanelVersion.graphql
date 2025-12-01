@@ -15,6 +15,7 @@ query GetDetailsPanelVersion($projectName: String!, $entityId: String!) {
       createdAt
       thumbnailId
       hasReviewables
+      parents
       product {
         ...DetailsPanelProductFragment
         folder {

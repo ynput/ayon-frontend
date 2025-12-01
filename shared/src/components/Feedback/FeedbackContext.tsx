@@ -1,11 +1,6 @@
-import { cloneDeep } from 'lodash'
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react'
-import {
-  useGetCurrentUserQuery,
-  useGetFeedbackVerificationQuery,
-  useGetSiteInfoQuery,
-  useGetYnputCloudInfoQuery,
-} from '@shared/api'
+import { useGetFeedbackVerificationQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
 export type FeedbackContextType = {
   loaded: boolean
@@ -32,14 +27,11 @@ type FeedbackProviderProps = {
 
 export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) => {
   const [scriptLoaded, setScriptLoaded] = useState(false)
-
-  const { data: user } = useGetCurrentUserQuery()
-  const { data: siteInfo } = useGetSiteInfoQuery({ full: true }, { skip: !user?.name })
-  const { data: connect } = useGetYnputCloudInfoQuery(undefined, { skip: !user?.name })
+  const { siteInfo, user, cloudInfo } = useGlobalContext()
   const { data: verification, isLoading: isLoadingVerification } = useGetFeedbackVerificationQuery(
-    undefined,
+    {},
     {
-      skip: !user?.name || !connect,
+      skip: !user?.name || !cloudInfo,
     },
   )
 
@@ -68,29 +60,15 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const frontendVersion = siteInfo?.version?.split('+')[1] || 'unknown'
 
   const identifyUser = () => {
-    if (!user?.name || !verification) return
-    const verificationData = cloneDeep(verification)
-    // delete any undefined/null properties
-    const cleanObject = (obj: any) => {
-      Object.keys(obj).forEach((key) => {
-        if (obj[key] && typeof obj[key] === 'object') {
-          cleanObject(obj[key])
-        } else if (obj[key] === undefined || obj[key] === null) {
-          delete obj[key]
-        }
-      })
-    }
-
-    cleanObject(verificationData)
+    if (!user?.name || !verification?.available) return
 
     const identifyData = {
-      ...verificationData,
-      email: verificationData.email || user?.attrib?.email,
+      ...verification.data,
       customFields: {
         origin: window.location.origin,
         serverVersion: serverVersion,
         frontendVersion: frontendVersion,
-        instanceId: connect?.instanceId,
+        instanceId: cloudInfo?.instanceId,
       },
     }
 
@@ -115,16 +93,13 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     const win = window as any
     if (typeof win.Featurebase === 'function') {
       console.log('Initializing Featurebase messenger widget')
-      if (!verification?.email && !user?.attrib?.email)
-        return console.warn('No email provided for Featurebase messenger widget')
+      if (!verification?.available)
+        return console.warn('messenger verification not available, skipping messenger init')
       win.Featurebase(
         'boot',
         {
-          appId: '67b76a31b8a7a2f3181da4ba',
-          email: verification?.email || user?.attrib?.email,
           theme: 'dark',
-          userId: verification?.userId, // user ID from verification
-          userHash: verification?.userHash, // generated user hash token
+          ...verification?.data,
         },
         (err: any) => {
           // Callback function. Called when identify completed.
@@ -259,7 +234,7 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   // verify user
   useEffect(() => {
     // check if we can identify the user
-    if (!user?.name || !connect || !verification || !scriptLoaded) return
+    if (!user?.name || !cloudInfo || !verification || !scriptLoaded) return
     // if we are already identified, do not identify again
     if (identified) return
     // Identify the user
@@ -267,8 +242,8 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     setIdentified(true)
   }, [
     user?.name,
-    connect?.instanceId,
-    verification?.userHash,
+    cloudInfo?.instanceId,
+    verification?.available,
     scriptLoaded,
     window.location.pathname,
     identified,

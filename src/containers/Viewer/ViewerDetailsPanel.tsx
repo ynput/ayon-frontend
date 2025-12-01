@@ -39,6 +39,7 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName, noVersions }: Props)
     >
       {!!versionIds.length && (
         <DetailsPanel
+          isOpen
           entities={entities}
           tagsOptions={projectInfo?.tags || []}
           projectUsers={users}

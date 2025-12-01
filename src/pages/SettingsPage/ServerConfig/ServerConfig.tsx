@@ -69,6 +69,7 @@ const ServerConfig = () => {
           login_background: originalData?.customization?.login_background || '',
           studio_logo: originalData?.customization?.studio_logo || '',
           motd: originalData?.customization?.motd || '',
+          frontend_flags: originalData?.customization?.frontend_flags || [],
         },
       })
     }

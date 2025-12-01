@@ -5,12 +5,10 @@ import {
   ContextMenuItemConstructors,
   TableCellContextData,
   useColumnSettingsContext,
-  useProjectDataContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
-import { useMoveEntityContext } from '@shared/context'
-import { useGetFolderListQuery } from '@shared/api'
+import { useMoveEntityContext, useProjectFoldersContext } from '@shared/context'
 
 type OverviewContextMenuProps = {}
 
@@ -21,12 +19,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
-  // Get project context for folder version data
-  const { projectName } = useProjectDataContext()
-  const { data: { folders = [] } = {} } = useGetFolderListQuery(
-    { projectName: projectName || '', attrib: true },
-    { skip: !projectName },
-  )
+  const { folders } = useProjectFoldersContext()
 
   // right click on a group header to un group the tasks
   const unGroupTasksItem: ContextMenuItemConstructor = useCallback(

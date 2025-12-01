@@ -19,20 +19,20 @@ const ErrorPage = lazy(() => import('@pages/ErrorPage'))
 import { useLoadRemotePages } from '../remote/useLoadRemotePages'
 
 import LoadingPage from '@pages/LoadingPage'
-import { RemoteAddon } from '@shared/context'
+import { RemoteAddon, useGlobalContext } from '@shared/context'
 import { toast } from 'react-toastify'
 
-interface AppRoutesProps {
-  level: number
-}
+interface AppRoutesProps {}
 
-const AppRoutes: FC<AppRoutesProps> = ({ level }) => {
+const AppRoutes: FC<AppRoutesProps> = () => {
+  const { user } = useGlobalContext()
+  const { uiExposureLevel: level = 0 } = user || {}
   // dynamically import routes
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     moduleKey: 'Route',
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
 
-  if (isLoadingModules) {
+  if (isLoadingModules || !user) {
     return <LoadingPage />
   }
 
@@ -62,7 +62,11 @@ const AppRoutes: FC<AppRoutesProps> = ({ level }) => {
       <Route
         path={'/projects/:projectName'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }
@@ -70,7 +74,11 @@ const AppRoutes: FC<AppRoutesProps> = ({ level }) => {
       <Route
         path={'/projects/:projectName/:module/*'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }
@@ -78,7 +86,11 @@ const AppRoutes: FC<AppRoutesProps> = ({ level }) => {
       <Route
         path={'/projects/:projectName/addon/:addonName'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }

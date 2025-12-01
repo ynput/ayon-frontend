@@ -1,5 +1,4 @@
 import {
-  useGetFolderListQuery,
   useGetGroupedTasksListQuery,
   useGetOverviewTasksByFoldersQuery,
   useGetQueryTasksFoldersQuery,
@@ -25,7 +24,7 @@ import { isGroupId } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
-import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { useProjectFoldersContext } from '@shared/context'
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -70,20 +69,11 @@ export const useFetchOverviewData = ({
   const { getGroupQueries, isLoading: isLoadingModules } = modules
 
   const {
-    data: { folders = [] } = {},
-    isLoading,
-    isFetching: isFetchingFoldersRaw,
+    folders,
+    isLoading: isLoadingFolders,
     isUninitialized: isUninitializedFolders,
     refetch: refetchFolders,
-  } = useGetFolderListQuery(
-    { projectName: projectName || '', attrib: true },
-    { skip: !projectName },
-  )
-
-  const isFetchingFolders = useQueryArgumentChangeLoading(
-    { projectName: projectName || '' },
-    isFetchingFoldersRaw,
-  )
+  } = useProjectFoldersContext()
 
   // console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
@@ -454,8 +444,7 @@ export const useFetchOverviewData = ({
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     isLoadingAll:
-      isLoading ||
-      isFetchingFolders ||
+      isLoadingFolders ||
       isLoadingTasksList ||
       isFetchingTasksFolders ||
       isFetchingGroups ||

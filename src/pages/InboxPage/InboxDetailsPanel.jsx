@@ -23,11 +23,10 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, on
 
   const projectInfo = projectsInfo[projectName] || {}
 
-  if (!selected.length) return null
-
   return (
-    <div className="inbox-details-panel">
+    <>
       <DetailsPanel
+        isOpen={!!selected.length}
         entities={[{ id: entityId, projectName, entityType: entityType }]}
         tagsOptions={projectInfo.tags || []}
         projectUsers={users}
@@ -49,7 +48,7 @@ const InboxDetailsPanel = ({ messages = [], selected = [], projectsInfo = {}, on
         onOpenViewer={handleOpenViewer}
       />
       <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="inbox" />
-    </div>
+    </>
   )
 }
 

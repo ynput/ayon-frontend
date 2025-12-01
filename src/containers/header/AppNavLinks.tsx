@@ -1,40 +1,46 @@
 import { Button, Spacer } from '@ynput/ayon-react-components'
-import React, { useEffect } from 'react'
+import { FC, ReactNode, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
-import { replaceQueryParams } from '@helpers/url'
-import { ayonUrlParam } from '@/constants'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
+import { useURIContext } from '@shared/context'
 
-const AppNavLinks = ({ links = [], currentModule, projectName }) => {
+interface NavLinkItem {
+  name: string
+  path: string
+  module: string
+  node?: ReactNode | 'spacer'
+  shortcut?: string
+  tooltip?: string
+  accessLevels?: string[]
+  enabled?: boolean
+  startContent?: ReactNode
+  endContent?: ReactNode
+  uriSync?: boolean
+  viewType?: string
+  deprecated?: string | boolean
+  [key: string]: unknown
+}
+
+interface AppNavLinksProps {
+  links?: NavLinkItem[]
+  currentModule?: string
+  projectName?: string
+}
+
+const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
-  const { module } = useParams()
-  const [search] = useSearchParams()
-  const isManager = useSelector((state) => state.user.data.isManager)
-  const isAdmin = useSelector((state) => state.user.data.isAdmin)
-  const uri = useSelector((state) => state.context.uri)
+  const { module } = useParams<{ module?: string }>()
+  useSearchParams()
+  const isManager = useSelector((state: any) => state.user.data.isManager)
+  const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
+  useURIContext()
 
-  const appendUri = (path, shouldAddUri = true) => {
-    if (!path) return path
-
-    // Get the base path and existing query parameters
-    const [basePath, queryString] = path.split('?')
-
-    // Only add the uri parameter when shouldAddUri is true and uri exists
-    if (shouldAddUri && uri) {
-      search.set(ayonUrlParam, encodeURIComponent(uri))
-    }
-
-    // Rebuild the URL with all parameters
-    const newQueryString = search.toString()
-    return newQueryString ? `${basePath}?${newQueryString}` : basePath
-  }
-
-  const access = {
+  const access: Record<string, boolean> = {
     manager: isManager || isAdmin,
     admin: isAdmin,
   }
@@ -55,10 +61,6 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
     }
   }, [module, links, access])
 
-  const activeModule = currentModule || module
-  const currentPageLink = links.find((link) => link.module === activeModule)
-  const currentPageName = currentPageLink?.name
-
   return (
     <Styled.NavBar className="secondary">
       <ul>
@@ -75,11 +77,11 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
               startContent,
               endContent,
               uriSync,
-              module,
+              module: itemModule,
               viewType,
               deprecated,
               ...props
-            } = {},
+            }: Partial<NavLinkItem> = {},
             idx,
           ) => {
             if (!enabled) return null
@@ -98,11 +100,9 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
               } else return <li key={idx}>{node}</li>
             }
 
-            const isActive = module === currentModule
-
             return (
               <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-                <NavLink to={appendUri(path, uriSync)}>
+                <NavLink to={path!}>
                   <Button
                     variant="nav"
                     style={{ border: 'none' }}
@@ -111,7 +111,7 @@ const AppNavLinks = ({ links = [], currentModule, projectName }) => {
                   >
                     {startContent && startContent}
                     {name}
-                    {viewType && <Styled.Views id={getViewsPortalId(viewType)} />}
+                    {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
                     {deprecated && (
                       <LegacyBadge
                         tooltip={typeof deprecated === 'string' ? deprecated : undefined}

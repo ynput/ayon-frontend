@@ -15,16 +15,16 @@ import { ViewerProvider } from '@context/ViewerContext'
 // shared
 import { useGetViewerReviewablesQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
-import { productTypes } from '@shared/util'
 import { getGroupedReviewables } from '@shared/components'
-import { useDetailsPanelContext } from '@shared/context'
+import { useScopedDetailsPanel } from '@shared/context'
+import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
 
 interface ViewerProps {
   onClose?: () => void
   canOpenInNew?: boolean
 }
 
-const Viewer = ({ onClose }: ViewerProps) => {
+const ViewerBody = ({ onClose }: ViewerProps) => {
   const {
     productId,
     taskId,
@@ -37,6 +37,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     selectedProductId,
   } = useAppSelector((state) => state.viewer)
 
+  const project = useProjectContext()
   const dispatch = useAppDispatch()
 
   // new query: returns all reviewables for a product
@@ -57,8 +58,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
     return Array.from(uniqueProductIds)
   }, [allVersionsAndReviewables])
 
-  type ProductTypeKey = keyof typeof productTypes
-
   const productOptions = useMemo(() => {
     return [...uniqueProducts]
       .map((id) => {
@@ -66,9 +65,8 @@ const Viewer = ({ onClose }: ViewerProps) => {
         return {
           value: id,
           label: product?.productName || 'Unknown product',
-          icon:
-            (product?.productType && productTypes[product.productType as ProductTypeKey]?.icon) ||
-            'inventory_2',
+          icon: product?.productType && project.getProductType(product.productType).icon,
+          color: product?.productType && project.getProductType(product.productType).color,
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -216,13 +214,13 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
-  const { setTab } = useDetailsPanelContext()
+  const { setTab } = useScopedDetailsPanel('review')
 
   const handleUploadAction =
     (toggleNativeFileUpload = false) =>
     () => {
       // switch to files tab
-      setTab('review', 'files')
+      setTab('files')
       // open the file dialog
       if (toggleNativeFileUpload) {
         dispatch(toggleUpload(true))
@@ -249,12 +247,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
 
   const reviewables = selectedVersion?.reviewables || []
 
-  const { optimized, unoptimized } = useMemo(
-    () => getGroupedReviewables(reviewables as any),
-    [reviewables],
-  )
-
-  const shownOptions = [...optimized, ...unoptimized]
+  const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
@@ -278,6 +271,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
               tooltip="Select a product to view its versions reviewables"
               shortcut={''}
               valueIcon={selectedProduct?.icon || ''}
+              valueColor={selectedProduct?.color}
             />
           )}
         </Styled.PlayerToolbar>
@@ -298,7 +292,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
         </Styled.FullScreenWrapper>
         <Styled.RightToolBar style={{ zIndex: 1100 }}>
           <ReviewablesSelector
-            reviewables={shownOptions}
+            reviewables={playable}
             selected={reviewableIds}
             onChange={handleReviewableChange}
             onUpload={handleUploadAction(true)}
@@ -313,6 +307,21 @@ const Viewer = ({ onClose }: ViewerProps) => {
         />
       </Styled.Container>
     </ViewerProvider>
+  )
+}
+
+const Viewer = ({ onClose }: ViewerProps) => {
+  const { projectName } = useAppSelector((state) => state.viewer)
+
+  if (!projectName) {
+    console.error('No project name provided to Viewer')
+    return null
+  }
+
+  return (
+    <ProjectContextProvider projectName={projectName}>
+      <ViewerBody onClose={onClose} />
+    </ProjectContextProvider>
   )
 }
 

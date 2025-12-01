@@ -1,5 +1,4 @@
-import { useMemo, useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useMemo, useEffect, useState, FC } from 'react'
 import { Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
@@ -8,20 +7,59 @@ import { Column } from 'primereact/column'
 import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { useURIContext } from '@shared/context'
 
-const SettingsAddonList = ({
+interface Addon {
+  name: string
+  title: string
+  version: string
+  hasSiteSettings?: boolean
+  hasProjectSiteSettings?: boolean
+  hasProjectSettings?: boolean
+  isBroken?: boolean
+  hasSettings?: boolean
+  key?: string
+  variant?: string
+  hasProjectSiteOverrides?: boolean
+  hasProjectOverrides?: boolean
+  hasStudioOverrides?: boolean
+}
+
+interface AddonFocusEvent {
+  addonName: string
+  addonVersion: string
+  siteId?: string
+  path?: string[]
+}
+
+interface SettingsAddonListProps {
+  selectedAddons: Addon[]
+  setSelectedAddons: (addons: Addon[]) => void
+  setBundleName?: (name: string | null) => void
+  onContextMenu?: (event: any) => void
+  variant?: 'production' | 'staging'
+  bundleName?: string | null
+  projectBundleName?: string | null
+  siteSettings?: boolean
+  onAddonFocus?: (event: AddonFocusEvent) => void
+  changedAddonKeys?: string[] | null
+  projectName?: string
+  siteId?: string
+}
+
+const SettingsAddonList: FC<SettingsAddonListProps> = ({
   selectedAddons,
   setSelectedAddons,
   setBundleName,
   onContextMenu,
-  variant = 'production', // 'production' or 'staging'
+  variant = 'production',
   bundleName = null,
   projectBundleName = null,
-  siteSettings = false, // 'settings' or 'site' - show addons with settings or site settings
-  onAddonFocus = () => {}, // Triggered when selection is changed by ayon+settings:// uri change
-  changedAddonKeys = null, // List of addon keys that have changed
-  projectName, // used for changed addons
-  siteId, // used for changed addons
+  siteSettings = false,
+  onAddonFocus = () => {},
+  changedAddonKeys = null,
+  projectName,
+  siteId,
 }) => {
   const { data, isLoading, isError } = useGetAddonSettingsListQuery({
     projectName,
@@ -30,15 +68,14 @@ const SettingsAddonList = ({
     bundleName,
     projectBundleName,
   })
-  const uriChanged = useSelector((state) => state.context.uriChanged)
 
-  const [preferredSelection, setPreferredSelection] = useState([])
+  const [preferredSelection, setPreferredSelection] = useState<Addon[]>([])
 
   // Filter addons by variant
   // add 'version' property to each addon
   const addons = useMemo(() => {
     if (isLoading) return []
-    let result = []
+    let result: Addon[] = []
     for (const addon of data?.addons || []) {
       if (siteSettings) {
         if (!projectName && !addon.hasSiteSettings)
@@ -69,7 +106,7 @@ const SettingsAddonList = ({
 
   useEffect(() => {
     // Maintain selection when addons are changed due to variant change
-    const newSelection = []
+    const newSelection: Addon[] = []
     for (const addon of addons) {
       if (selectedAddons.find((a) => a.name === addon.name)) {
         newSelection.push(addon)
@@ -78,23 +115,19 @@ const SettingsAddonList = ({
       }
     }
     setSelectedAddons(newSelection)
-  }, [addons])
-
+  }, [addons, preferredSelection])
 
   useEffect(() => {
     if (!setBundleName) return
     setBundleName(data?.bundleName || null)
   }, [data?.bundleName])
 
+  const { uriType, settings } = useURIContext()
 
   useEffect(() => {
-    const url = new URL(window.location.href)
-    const addonName = url.searchParams.get('addonName')
-    const addonVersion = url.searchParams.get('addonVersion')
-
-    // additional properties received from ayon+settings:// uri
-    const siteId = url.searchParams.get('site') || undefined
-    const path = url.searchParams.get('settingsPath')?.split('|') || undefined
+    // check uri is valid and type settings, settings object is valid
+    if (uriType !== 'settings' || !settings || selectedAddons.length) return
+    const { addonName, addonVersion, site, settingsPath } = settings
 
     if (addonName) {
       const addon = addons.find(
@@ -105,14 +138,14 @@ const SettingsAddonList = ({
         onAddonFocus({
           addonName,
           addonVersion: addon.version,
-          siteId,
-          path,
+          siteId: site,
+          path: settingsPath,
         })
       }
     }
-  }, [addons, uriChanged])
+  }, [uriType, settings, selectedAddons, setSelectedAddons, onAddonFocus])
 
-  const onSelectionChange = (e) => {
+  const onSelectionChange = (e: any) => {
     // if e.value is an array [], just set the selection
 
     if (Array.isArray(e.value) && e.value?.length) {
@@ -128,9 +161,9 @@ const SettingsAddonList = ({
     }
   }
 
-  const rowDataClassNameFormatter = (rowData) => {
+  const rowDataClassNameFormatter = (rowData: Addon) => {
     return clsx({
-      changed: changedAddonKeys && changedAddonKeys.includes(rowData.key),
+      changed: changedAddonKeys && rowData.key && changedAddonKeys.includes(rowData.key),
       'broken-addon-row': rowData.isBroken,
       'changed-site': rowData.hasProjectSiteOverrides,
       'changed-project': rowData.hasProjectOverrides,
@@ -143,7 +176,7 @@ const SettingsAddonList = ({
 
   if (isError) tableData = []
 
-  const formatVersion = (rowData) => {
+  const formatVersion = (rowData: Addon) => {
     let v = rowData.version
     if ((data?.inheritedAddons || []).includes(rowData.name)) v = `${v} (Inherited)`
     return v
@@ -155,7 +188,7 @@ const SettingsAddonList = ({
         <DataTable
           value={tableData}
           selectionMode="multiple"
-          scrollable="true"
+          scrollable={true}
           scrollHeight="flex"
           selection={selectedAddons}
           onSelectionChange={onSelectionChange}

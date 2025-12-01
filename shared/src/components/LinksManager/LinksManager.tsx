@@ -15,6 +15,7 @@ export type LinkEntity = {
   parents: string[]
   entityType: string
   icon: string
+  isRestricted?: boolean // flag to indicate if this link is restricted (node is null from API)
 }
 
 export interface LinksManagerProps {

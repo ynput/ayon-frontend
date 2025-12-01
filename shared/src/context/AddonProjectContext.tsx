@@ -1,9 +1,10 @@
 // NOT USED IN AYON-FRONTEND, ONLY IN ADDONS
 
-import { ProjectModel, useGetCurrentUserQuery, useGetProjectQuery, UserModel } from '@shared/api'
+import { ProjectModel, useGetProjectQuery, UserModel } from '@shared/api'
 import { createContext, FC, useContext } from 'react'
 import router from 'react-router-dom'
 import type { toast } from 'react-toastify'
+import { useGlobalContext } from './GlobalContext'
 
 type ToastFunc = typeof toast
 
@@ -29,7 +30,7 @@ export interface RemoteAddonProjectProps {
 }
 
 // types for props passed to the provider
-export interface AddonProjectContextProps extends RemoteAddonProjectProps {
+export interface AddonProjectContextValue extends RemoteAddonProjectProps {
   children: React.ReactNode
 }
 
@@ -48,15 +49,15 @@ export const AddonProjectProvider = ({
   // utils
   toast,
   ...props
-}: AddonProjectContextProps) => {
+}: AddonProjectContextValue) => {
   // get current project data
   const { data: project } = useGetProjectQuery(
     { projectName: projectName as string },
     { skip: !projectName },
   )
 
-  // get current user data
-  const { data: user } = useGetCurrentUserQuery()
+  const { user } = useGlobalContext()
+
   return (
     <AddonProjectContext.Provider
       value={{

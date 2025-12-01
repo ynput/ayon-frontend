@@ -40,11 +40,15 @@ export const Message = styled.li`
   }
 
   border: 1px solid transparent;
-  border-top-color: var(--md-sys-color-outline-variant);
+
+  &:not(:first-child) {
+    border-top-color: var(--md-sys-color-outline-variant);
+  }
 
   /* last child margin */
   &:last-child {
     margin-bottom: 32px;
+    border-radius: 0 0 var(--border-radius-m) var(--border-radius-m);
   }
 
   &.isSelected:not(.placeholder) {

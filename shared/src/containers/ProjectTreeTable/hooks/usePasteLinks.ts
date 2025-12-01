@@ -11,6 +11,7 @@ import { getEntityId } from '@shared/util'
 import { PasteMethod } from '../context'
 import { useCellEditing } from '@shared/containers'
 import { toast } from 'react-toastify'
+import { useProjectContext } from '@shared/context'
 
 /**
  * Represents a link update operation for table links
@@ -45,7 +46,8 @@ interface usePasteLinksProps {
 }
 
 const usePasteLinks = (props?: usePasteLinksProps) => {
-  const { getEntityById, projectName: contextProjectName } = useProjectTableContext()
+  const { projectName: contextProjectName } = useProjectContext()
+  const { getEntityById } = useProjectTableContext()
   const projectName = props?.projectName || contextProjectName
   const { history } = useCellEditing()
 

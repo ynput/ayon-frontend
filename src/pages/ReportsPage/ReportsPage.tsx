@@ -1,17 +1,21 @@
 import { useLoadModule } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useAppSelector } from '@state/store'
-import { FC } from 'react'
+import { FC, useState, useEffect } from 'react'
 import ReportsFallback from './ReportsFallback'
 import Slicer from '@containers/Slicer'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section } from '@ynput/ayon-react-components'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { updateViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
+import { ReportsSettings } from '@shared/api'
+import { AddonLoadingScreen } from '@shared/components'
 
 interface ReportsPageProps {}
 
-const ReportsPage: FC<ReportsPageProps> = ({}) => {
+const ReportsPage: FC<ReportsPageProps> = () => {
   const projectName = (useAppSelector((state) => state.project.name) as null | string) || ''
+  const [showLoading, setShowLoading] = useState(false)
 
   const {
     config,
@@ -22,6 +26,9 @@ const ReportsPage: FC<ReportsPageProps> = ({}) => {
   } = useSlicerContext()
   const overviewSliceFields = config?.overview?.fields
 
+  const viewsContext = useViewsContext()
+  const { onCreateView } = useViewUpdateHelper()
+
   const [Reports, { isLoaded, outdated }] = useLoadModule({
     addon: 'reports',
     remote: 'reports',
@@ -30,12 +37,21 @@ const ReportsPage: FC<ReportsPageProps> = ({}) => {
     minVersion: '0.1.0-dev',
   })
 
+  useEffect(() => {
+    if (!isLoaded) {
+      const timer = setTimeout(() => setShowLoading(true), 200)
+      return () => clearTimeout(timer)
+    } else {
+      setShowLoading(false)
+    }
+  }, [isLoaded])
+
   if (outdated) {
     return <div>Report requires Report addon 0.1.0 or higher</div>
   }
 
-  if (!isLoaded) {
-    return <div>Loading...</div>
+  if (!isLoaded && showLoading) {
+    return <AddonLoadingScreen />
   }
 
   return (
@@ -60,6 +76,12 @@ const ReportsPage: FC<ReportsPageProps> = ({}) => {
               type: sliceType,
               persistentRowSelectionData,
               setPersistentRowSelectionData,
+            }}
+            views={{
+              ...viewsContext,
+              settings: viewsContext.viewSettings as ReportsSettings,
+              updateViewSettings: (...args) =>
+                updateViewSettings(...args, viewsContext, onCreateView),
             }}
           />
         </SplitterPanel>

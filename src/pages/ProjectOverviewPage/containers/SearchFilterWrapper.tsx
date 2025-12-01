@@ -7,10 +7,9 @@ import {
   SearchFilterProps,
   SEARCH_FILTER_ID,
 } from '@ynput/ayon-react-components'
-import type { ProjectModel } from '@shared/api'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
-import { usePowerpack } from '@shared/context'
+import { ProjectModelWithProducts, usePowerpack } from '@shared/context'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
@@ -21,17 +20,19 @@ import {
 interface SearchFilterWrapperProps
   extends Omit<BuildFilterOptions, 'scope' | 'scopes' | 'data' | 'power'>,
     Omit<SearchFilterProps, 'options' | 'onFinish' | 'filters' | 'onChange'> {
-  projectInfo?: ProjectModel
+  projectInfo?: ProjectModelWithProducts
   tasksMap?: TaskNodeMap
   scope?: BuildFilterOptions['scope']
   scopes?: ScopeWithFilterTypes[]
   queryFilters?: QueryFilter
   onChange?: (queryFilters: QueryFilter) => void
+  data: BuildFilterOptions['data']
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   queryFilters,
   onChange,
+  data: customData,
   filterTypes,
   projectNames,
   disabledFilters,
@@ -59,6 +60,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const data: BuildFilterOptions['data'] = {
     assignees: allAssignees,
     tags: projectInfo?.tags?.map((t) => t.name) || [],
+    productTypes: projectInfo?.productTypes,
+    ...customData
     // TODO: find a way of getting all attribute values when all tasks are not loaded
   }
 

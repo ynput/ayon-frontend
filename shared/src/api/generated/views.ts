@@ -91,6 +91,7 @@ export type CreateViewApiArg = {
     | ListsViewPostModel
     | ReviewsViewPostModel
     | VersionsViewPostModel
+    | ReportsViewPostModel
 }
 export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | OverviewViewModel
@@ -98,6 +99,7 @@ export type GetWorkingViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
+  | ReportsViewModel
 export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
@@ -108,6 +110,7 @@ export type GetDefaultViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
+  | ReportsViewModel
 export type GetDefaultViewApiArg = {
   viewType: string
   projectName?: string
@@ -124,6 +127,7 @@ export type GetViewApiResponse = /** status 200 Successful Response */
   | ListsViewModel
   | ReviewsViewModel
   | VersionsViewModel
+  | ReportsViewModel
 export type GetViewApiArg = {
   viewType: string
   viewId: string
@@ -146,6 +150,7 @@ export type UpdateViewApiArg = {
     | ListsViewPatchModel
     | ReviewsViewPatchModel
     | VersionsViewPatchModel
+    | ReportsViewPatchModel
 }
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
@@ -302,6 +307,19 @@ export type VersionsViewPostModel = {
   working?: boolean
   settings: VersionsSettings
 }
+export type ReportsSettings = {
+  widgets?: object[]
+  dateFormat?: string
+}
+export type ReportsViewPostModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
+  settings: ReportsSettings
+}
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */
   id?: string
@@ -397,6 +415,25 @@ export type VersionsViewModel = {
   access: object
   viewType?: 'versions'
 }
+export type ReportsViewModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Determines whether the view is only available for the given project or for all projects (studio). */
+  scope: 'project' | 'studio'
+  /** Name of the user who created the view. Owners have full control over the view,  */
+  owner: string
+  /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
+  visibility: 'public' | 'private'
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  accessLevel: number
+  settings: ReportsSettings
+  access: object
+  viewType?: 'reports'
+}
 export type SetDefaultViewRequestModel = {
   viewId: string
 }
@@ -424,4 +461,9 @@ export type VersionsViewPatchModel = {
   label?: string
   owner?: string
   settings?: VersionsSettings
+}
+export type ReportsViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: ReportsSettings
 }

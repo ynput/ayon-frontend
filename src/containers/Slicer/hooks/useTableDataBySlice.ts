@@ -96,7 +96,6 @@ const useTableDataBySlice = ({
 
   const showAttributes = sliceFields.some((field) => field.value === 'attributes')
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
-    skip: !showAttributes,
     entityTypes,
   })
 
@@ -121,7 +120,7 @@ const useTableDataBySlice = ({
     getProductTypes,
     getAttribute,
     isLoading: isLoadingProject,
-  } = useProjectAnatomySlices({ projectName, scopes: entityTypes, useExtraSlices })
+  } = useProjectAnatomySlices({ scopes: entityTypes, useExtraSlices })
 
   //   Hierarchy
   const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({

@@ -812,7 +812,7 @@ const buildTreeTableColumns = ({
           // Check if the link type is excluded
           if (!isIncluded(link.linkType) || !isIncluded('link')) return false
           // Check if inputType and outputType are in scopes
-          if (!scopes.includes(link.inputType) || !scopes.includes(link.outputType)) return false
+          if (!scopes.includes(link.inputType) && !scopes.includes(link.outputType)) return false
           return true
         })
         .flatMap((link) => {

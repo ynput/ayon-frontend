@@ -127,7 +127,7 @@ const injectedApi = gqlApi.injectEndpoints({
           throw new Error(res.errors[0].message)
         }
 
-        return res?.data?.users.edges.map((e: any) => ({
+        return res?.data?.users.edges.filter((e:any) => e.node.name !== 'CloudServiceWorker').map((e: any) => ({
           ...e.node,
           self: e.node.name === selfName,
           avatarUrl: `/api/users/${e.node.name}/avatar`,

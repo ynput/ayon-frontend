@@ -1,6 +1,6 @@
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { FC, useRef, useState, useLayoutEffect, HTMLAttributes } from 'react'
+import React, { FC, useRef, useState, useLayoutEffect, HTMLAttributes } from 'react'
 import styled from 'styled-components'
 
 const ChipsContainer = styled.div`
@@ -19,6 +19,10 @@ const Chip = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
 
   flex-shrink: 0;
   min-width: auto;
@@ -65,6 +69,7 @@ const AddIcon = styled(Icon)`
 export type ChipValue = {
   label: string
   tooltip: string
+  icon?: string
 }
 
 interface ChipsProps {
@@ -173,7 +178,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
             pt?.chip?.className,
           )}
         >
-          {chip.label}
+          {chip?.icon && <Icon icon={chip.icon}/>}  {chip.label}
         </Chip>
       ))}
       {hiddenCount > 0 && (

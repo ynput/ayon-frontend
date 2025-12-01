@@ -34,6 +34,7 @@ import useCreateEntityShortcuts from '@hooks/useCreateEntityShortcuts'
 import { useSlicerContext } from '@context/SlicerContext'
 import NewEntityForm, { InputLabel, InputsContainer } from '@components/NewEntity/NewEntityForm.tsx'
 import { toast } from 'react-toastify'
+import { useProjectContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`
   .body {
@@ -94,6 +95,7 @@ export interface NewEntityProps {
 }
 
 const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
+  const { ...projectInfo } = useProjectContext()
   const {
     entityType,
     setEntityType,
@@ -113,7 +115,7 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
     rowSelectionData: slicerSelectionData,
     sliceType,
   } = useSlicerContext()
-  const { getEntityById, projectInfo } = useProjectTableContext()
+  const { getEntityById } = useProjectTableContext()
 
   const [selectedFolderIds, selectedEntitiesLabels] = React.useMemo(() => {
     const selectedRowIds = Array.from(
@@ -204,11 +206,10 @@ const NewEntity: React.FC<NewEntityProps> = ({ disabled, onNewEntities }) => {
       const typeOption = typeOptions.find((option) => option.name === value)
 
       if (typeOption) {
-        const labelMatchesOldType =
-          entityForm.label === oldTypeOption?.shortName || entityForm.label === oldTypeOption?.name
+        const labelMatchesOldType = entityForm.label === oldTypeOption?.name
 
         if (labelMatchesOldType) {
-          newState.label = typeOption.shortName || typeOption.name
+          newState.label = typeOption.name
 
           // Only update name if it matches what the current label would generate
           const expectedNameFromLabel = parseAndFormatName(entityForm.label, config)
@@ -505,5 +506,5 @@ export const generateLabel = (
 
   if (!typeOption) return ''
 
-  return type === 'folder' ? typeOption.shortName || typeOption.name : typeOption.name
+  return typeOption.name
 }
