@@ -13,7 +13,7 @@ export interface ViewItem {
   isSelected?: boolean
   isEditable?: boolean
   isSaveable?: boolean // can this be saved from working view (shows little save button)
-  highlighted?: 'save' | 'edit' // highlights a button
+  highlighted?: 'save' | 'edit' | 'reset' // highlights a button
   onEdit?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void
   onSave?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void // saves the view settings from selected view
   onResetView?: (e: React.MouseEvent<HTMLButtonElement>) => void // resets working view
@@ -74,7 +74,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
           <Styled.ActionButton
             icon="restart_alt"
             variant="text"
-            className="reset"
+            className={clsx('reset', { active: highlighted === 'reset' })}
             onClick={onResetView}
             data-tooltip="Reset to Default"
             data-shortcut={getPlatformShortcutKey('0', [KeyMode.Shift, KeyMode.Ctrl])}

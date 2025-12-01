@@ -5,6 +5,8 @@ import { useViewsContext } from '@shared/containers'
 import styled from 'styled-components'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { usePowerpack } from '@shared/context'
+import { SectionHeader } from '@shared/containers/Views/ViewsMenu/SectionHeader'
+import { useLocalStorage } from '@shared/hooks'
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
@@ -28,13 +30,9 @@ const ScopeIconStyled = styled(Icon)<{ $color?: string }>`
   justify-content: center;
   width: 20px;
   height: 20px;
-
-  ${ClickableIconWrapper}:hover & {
-    background-color: ${({ $color }) => $color || 'var(--md-sys-color-surface-container-highest)'};
-  }
 `
 
-export const BaseViewsTagContainer: FC = () => {
+const BaseViewsTagContainer: FC = () => {
   const {
     projectBaseView,
     studioBaseView,
@@ -44,6 +42,8 @@ export const BaseViewsTagContainer: FC = () => {
   } = useViewsContext()
 
   const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const [collapsed, setCollapsed] = useLocalStorage('collapsed-default-view', false)
+
   const handleBaseViewAction = async (isStudioScope: boolean) => {
     const existingBase = isStudioScope ? studioBaseView : projectBaseView
 
@@ -54,9 +54,9 @@ export const BaseViewsTagContainer: FC = () => {
 
     if (existingBase) {
       confirmDialog({
-        message: `Do you want to delete default view`,
-        header: `Delete default view`,
-        acceptLabel: 'Delete',
+        message: `Are you sure you want to remove this default view?`,
+        header: `Remove Default View`,
+        acceptLabel: 'Remove',
         rejectLabel: 'Cancel',
         accept: async () => {
           await onDeleteBaseView(existingBase.id as string, isStudioScope)
@@ -69,22 +69,34 @@ export const BaseViewsTagContainer: FC = () => {
 
   return (
     <>
-      <ScopeIcon
-        existingView={!!studioBaseView}
-        label={'Studio'}
-        onClick={() => handleBaseViewAction(true)}
-        color={'var(--md-sys-color-tertiary)'}
+      <SectionHeader
+        onClick={() => setCollapsed(!collapsed)}
+        collapsed={collapsed}
+        id="default-views"
+        title="Default views"
+        style={{marginBottom: '10px'}}
       />
-      <ScopeIcon
-        existingView={!!projectBaseView}
-        label={'Project'}
-        onClick={() => handleBaseViewAction(false)}
-        poweLicense={powerLicense}
-        color={'orange'}
-      />
+      {!collapsed && (
+        <>
+          <ScopeIcon
+            existingView={!!studioBaseView}
+            label={'Studio'}
+            onClick={() => handleBaseViewAction(true)}
+            color={'var(--md-sys-color-tertiary)'}
+          />
+          <ScopeIcon
+            existingView={!!projectBaseView}
+            label={'Project'}
+            onClick={() => handleBaseViewAction(false)}
+            poweLicense={powerLicense}
+            color={'orange'}
+          />
+        </>
+      )}
     </>
   )
 }
+export default BaseViewsTagContainer
 
 type ScopeIconProps = {
   existingView: boolean
@@ -110,8 +122,10 @@ const ScopeIcon: FC<ScopeIconProps> = ({
     <Styled.ViewChip
       label={label}
       $active={existingView}
+      $color={color}
+      onClick={handleClick}
       icon={
-        <ClickableIconWrapper onClick={handleClick}>
+        <ClickableIconWrapper >
           {poweLicense === false ? (
             <PowerIcon icon="bolt" />
           ) : (

@@ -47,17 +47,15 @@ export const ViewsMenuDivider = styled.li`
   margin: 4px 0;
 `
 
-export const ViewChip = styled(Chip)<{ $active?: boolean }>`
-  background: ${({ $active }) => $active ? 'var(--md-sys-color-surface-container-highest-hover)' : 'transparent'};
+export const ViewChip = styled(Chip)<{ $active?: boolean; $color?: string }>`
+  background: ${({ $active }) =>
+    $active ? 'var(--md-sys-color-surface-container-highest-hover)' : 'transparent'};
   padding: 0 8px 0 4px !important;
-  border: ${({ $active }) =>
-    $active
-      ? '1px solid var(--md-sys-color-on-surface-variant)'
-      : '2px dashed var(--md-sys-color-outline-variant)'};
-
-  // 
-  margin: 0 4px 4px 0;
-  color: ${({$active}) => $active ? 'var(--md-sys-color-on-surface)' : 'var(--md-sys-color-outline)'};
+  outline: ${({ $active }) =>
+    $active ? '1px solid transparent' : '1px dashed var(--md-sys-color-outline)'};
+  margin: 0 8px 4px 0;
+  color: ${({ $active }) =>
+    $active ? 'var(--md-sys-color-on-surface)' : 'var(--md-sys-color-outline)'};
   user-select: none;
   display: inline-flex;
   align-items: center;
@@ -68,15 +66,12 @@ export const ViewChip = styled(Chip)<{ $active?: boolean }>`
     align-items: center;
   }
 
-  i {
+  .icon {
     color: var(--md-sys-color-outline);
   }
 
-  &:hover {
-
-    i {
-      color: var(--md-sys-color-on-surface);
-      background: var(--md-sys-color-surface-container-highest-hover);
-    }
+  &:hover .icon {
+    color: var(--md-sys-color-on-surface);
+    background-color: ${({ $color }) => $color || 'var(--md-sys-color-surface-container-highest)'};
   }
 `

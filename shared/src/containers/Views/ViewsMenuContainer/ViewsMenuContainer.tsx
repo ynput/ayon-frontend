@@ -9,7 +9,8 @@ import styled from 'styled-components'
 import { useGlobalContext, usePowerpack } from '@shared/context'
 import * as Styled from '../Views.styled'
 import { VIEWS_DIALOG_CLASS } from '../ViewsDialogContainer/ViewsDialogContainer'
-import { BaseViewsTagContainer } from '@shared/containers/Views/ViewsMenuContainer/BaseViewsTags'
+import BaseViewsTagContainer from '@shared/containers/Views/ViewsMenuContainer/BaseViewsTags'
+import { SectionHeader } from '../ViewsMenu/SectionHeader'
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
@@ -115,6 +116,7 @@ export const ViewsMenuContainer: FC = () => {
             {(isAdmin || isManager) && (
               <>
                 <Styled.ViewsMenuDivider />
+
                 <BaseViewsTagContainer />
               </>
             )}
