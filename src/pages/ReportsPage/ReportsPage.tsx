@@ -10,6 +10,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from 'react-rout
 import { updateViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { ReportsSettings } from '@shared/api'
 import { AddonLoadingScreen } from '@shared/components'
+import { toast } from 'react-toastify'
 
 interface ReportsPageProps {}
 
@@ -83,6 +84,7 @@ const ReportsPage: FC<ReportsPageProps> = () => {
               updateViewSettings: (...args) =>
                 updateViewSettings(...args, viewsContext, onCreateView),
             }}
+            toast={toast}
           />
         </SplitterPanel>
       </Splitter>
