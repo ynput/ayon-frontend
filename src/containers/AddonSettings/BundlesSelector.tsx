@@ -12,6 +12,8 @@ interface BundleOption {
   label: string
   value: string
   isDevMine?: boolean // Indicates if the bundle is a dev bundle owned by the current user
+  isProduction?: boolean
+  isStaging?: boolean
   type: BundleType
   createdAt?: string
 }
@@ -156,7 +158,7 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
   const userName = useAppSelector((state) => state.user.name)
   const devMode = useAppSelector((state) => state.user.attrib.developerMode)
 
-  console.log("selected bundle: ", selected)
+  console.debug("selected bundle: ", selected)
 
   const bundleOptions = useMemo<BundleOption[]>(() => {
     return bundles
@@ -165,6 +167,8 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
         label: bundle.name,
         value: bundle.name,
         isDevMine: bundle.isDev && bundle.activeUser === userName,
+        isProduction: bundle.isProduction,
+        isStaging: bundle.isStaging,
         type: getBundleType(bundle),
         createdAt: bundle.createdAt,
       }))
@@ -173,9 +177,10 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
 
   const selectedBundle = useMemo(() => {
     if (!(selected.bundleName || selected.projectBundleName)) {
-      if (selected.variant === 'production' || selected.variant === 'staging') {
-        return bundleOptions.find((b) => b.type === selected.variant)
-      }
+      if (selected.variant === 'production')
+        return bundleOptions.find((b) => b.isProduction) 
+      if (selected.variant === 'staging')
+        return bundleOptions.find((b) => b.isStaging)
     } 
 
     return bundleOptions.find((b) => b.value === (selected.projectBundleName || selected.bundleName || selected.variant))
