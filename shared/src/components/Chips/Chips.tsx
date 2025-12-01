@@ -20,6 +20,10 @@ const Chip = styled.div`
   text-overflow: ellipsis;
   cursor: pointer;
 
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
   flex-shrink: 0;
   min-width: auto;
   &.last {
@@ -65,7 +69,7 @@ const AddIcon = styled(Icon)`
 export type ChipValue = {
   label: string
   tooltip: string
-  icon?: React.ReactElement
+  icon?: string
 }
 
 interface ChipsProps {
@@ -174,7 +178,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
             pt?.chip?.className,
           )}
         >
-          {chip?.icon}  {chip.label}
+          {chip?.icon && <Icon icon={chip.icon}/>}  {chip.label}
         </Chip>
       ))}
       {hiddenCount > 0 && (

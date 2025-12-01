@@ -265,19 +265,6 @@ const injectedQueries = foldersApi.injectEndpoints({
 
             const updatedEntities =
               result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
-                // Log restricted links (WebSocket update)
-                const restrictedLinks = node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
-                if (restrictedLinks.length > 0) {
-                  console.log(`[RESTRICTED LINKS - WebSocket] Entity ${node.id} (${node.name}) has ${restrictedLinks.length} restricted link(s):`,
-                    restrictedLinks.map((link: any) => ({
-                      linkId: link?.id,
-                      linkType: link?.linkType,
-                      direction: link?.direction,
-                      entityType: link?.entityType,
-                      nodeIsNull: !link?.node
-                    }))
-                  )
-                }
 
                 return {
                   id: node.id,

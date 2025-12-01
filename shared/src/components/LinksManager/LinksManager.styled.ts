@@ -75,6 +75,11 @@ export const LinkItem = styled.li`
     }
   }
 
+  &.restricted {
+    opacity: 0.5;
+    font-style: italic;
+  }
+
   &.selected {
     background-color: var(--md-sys-color-primary-container);
     &,

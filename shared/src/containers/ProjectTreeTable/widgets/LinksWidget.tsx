@@ -111,24 +111,16 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
 
   const sortedLinks = value?.links ? sortEntityLinksByPath(value.links) : []
 
-  // Log restricted links
-  const restrictedLinks = sortedLinks.filter((link) => link.isRestricted)
-  if (restrictedLinks.length > 0) {
-    console.log('[LinksWidget] Restricted links detected:', restrictedLinks)
-  }
-
-  console.log("Value", value)
-
   return (
     <>
       <Chips
         values={
           sortedLinks.map((v) => ({
-            label: v.isRestricted ? '' : v.label,
+            label: v.isRestricted ? 'Restricted' : v.label,
             tooltip: v.isRestricted
-              ? "You don't have permission to view this link"
+              ? "Access Restricted - Insufficient Permissions to Entity"
               : v.parents.join('/') + '/' + v.label,
-            icon: v.isRestricted ? <Icon icon="lock" /> : undefined,
+            icon: v.isRestricted ? "lock": undefined,
           })) || []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}

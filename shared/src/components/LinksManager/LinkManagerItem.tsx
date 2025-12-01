@@ -28,21 +28,21 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
       onClick={() => isClickable && onEntityClick?.(link.entityId, link.entityType)}
       data-tooltip={
         link.isRestricted
-          ? ""
+          ? "Access Restricted - Insufficient Permissions to Entity"
           : link.parents.join('/') + '/' + link.label
       }
       className={clsx({
         clickable: isClickable,
         selected: isSelected,
+        restricted: link.isRestricted,
       })}
-      style={link.isRestricted ? { opacity: 0.5, fontStyle: 'italic' } : undefined}
     >
       {link.icon ? <Icon icon={link.icon} /> : <Icon icon={getEntityTypeIcon(link.entityType)} />}
 
       <span className="title">
         {link.isRestricted ? (
           <span className="label">
-            You don't have permission to view this link
+            Access Restricted
           </span>
         ) : (
           <>
