@@ -85,7 +85,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   // once user is loaded, set assignees to user
   useEffect(() => {
     if (!assigneesState) {
-      dispatch(onAssigneesChanged([user.name]))
+      dispatch(onAssigneesChanged({ assignees: [user.name], filter: 'me' }))
     }
   }, [user.name])
 
@@ -103,7 +103,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     error,
   } = useGetKanbanQuery(
     { assignees: assignees, projects: selectedProjects },
-    { skip: !assignees.length || !selectedProjects?.length },
+    { skip: !selectedProjects?.length }
   )
 
   // get priority attribute so we know the colors and icons for each priority
