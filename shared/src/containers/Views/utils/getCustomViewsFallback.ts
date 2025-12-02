@@ -6,7 +6,6 @@ export type GetCustomViews = {
   onEdit: (viewId: string) => void
   onSelect: (viewId: string) => void
   onSave: (viewId: string) => void
-  onMakeDefaultView?: (viewId: string) => (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>
 }
 
 export type CustomViews = {
@@ -16,9 +15,7 @@ export type CustomViews = {
 }
 
 export const getCustomViewsFallback = (props: GetCustomViews): CustomViews => {
-  const { viewsList, onEdit, onSelect, onSave, onMakeDefaultView } = props
-
-  const makeDefaultTooltip = 'Set as Default'
+  const { viewsList, onEdit, onSelect, onSave } = props
 
   // Helper to create view items with common properties
   const createViewItem = (
@@ -30,8 +27,6 @@ export const getCustomViewsFallback = (props: GetCustomViews): CustomViews => {
     isSelected: false,
     highlighted: view.highlighted,
     onClick: () => onSelect(view.id as string),
-    onMakeDefaultView: onMakeDefaultView?.(view.id as string),
-    makeDefaultTooltip,
     ...overrides,
   })
 

@@ -224,9 +224,9 @@ export const useViewsMutations = ({
           setSelectedView(viewId)
         }
 
-        // Mark settings as changed if we had a different view selected
-        if (setSettingsChanged && selectedViewId && selectedViewId !== viewId) {
-          setSettingsChanged(true)
+        // Clear settings changed flag when resetting (don't prompt to save previous view)
+        if (setSettingsChanged) {
+          setSettingsChanged(false)
         }
 
         if (notify) {

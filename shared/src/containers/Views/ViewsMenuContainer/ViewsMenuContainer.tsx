@@ -58,8 +58,9 @@ export const ViewsMenuContainer: FC = () => {
         .querySelector('.' + VIEWS_DIALOG_CLASS)
         ?.contains(target)
       const clickInsideDropdown = document.querySelector('.options')?.contains(target)
+      const clickInsideConfirmDialog = document.querySelector('.p-confirm-dialog')?.contains(target)
 
-      if (!clickInsideMenu && !clickInsideEditDialog && !clickInsideDropdown && isMenuOpen) {
+      if (!clickInsideMenu && !clickInsideEditDialog && !clickInsideDropdown && !clickInsideConfirmDialog && isMenuOpen) {
         setIsMenuOpen(false)
       }
     }
@@ -105,6 +106,12 @@ export const ViewsMenuContainer: FC = () => {
         createPortal(
           <Styled.ViewsModal style={modalPosition} ref={modalRef} tabIndex={0}>
             <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
+            {(isAdmin || isManager) && (
+              <>
+                <BaseViewsTagContainer />
+                <Styled.ViewsMenuDivider />
+              </>
+            )}
             <ViewItem
               label="Create new view"
               id={NEW_VIEW_ID}
@@ -113,13 +120,6 @@ export const ViewsMenuContainer: FC = () => {
               onClick={handleCreateView}
               tabIndex={0}
             />
-            {(isAdmin || isManager) && (
-              <>
-                <Styled.ViewsMenuDivider />
-
-                <BaseViewsTagContainer />
-              </>
-            )}
           </Styled.ViewsModal>,
           document.body,
         )}

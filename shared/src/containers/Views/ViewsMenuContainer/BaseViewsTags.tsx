@@ -1,43 +1,17 @@
 import { FC } from 'react'
 import * as Styled from '@shared/containers/Views/Views.styled'
-import { Icon } from '@ynput/ayon-react-components'
 import { useViewsContext } from '@shared/containers'
-import styled from 'styled-components'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { usePowerpack } from '@shared/context'
 import { SectionHeader } from '@shared/containers/Views/ViewsMenu/SectionHeader'
 import { useLocalStorage } from '@shared/hooks'
 
-const PowerIcon = styled(Icon)`
-  color: var(--md-sys-color-tertiary);
-  font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-`
-
-const ClickableIconWrapper = styled.span`
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  transition: color 0.2s ease;
-  color: var(--md-sys-color-outline);
-`
-
-const ScopeIconStyled = styled(Icon)<{ $color?: string }>`
-  border-radius: 50%;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
-  background-color: ${({ $color }) => $color ? `${$color}20` : 'transparent'};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-`
 
 const BaseViewsTagContainer: FC = () => {
   const {
     projectBaseView,
     studioBaseView,
     onCreateBaseView,
-    onUpdateBaseView,
     onDeleteBaseView,
   } = useViewsContext()
 
@@ -82,14 +56,12 @@ const BaseViewsTagContainer: FC = () => {
             existingView={!!studioBaseView}
             label={'Studio'}
             onClick={() => handleBaseViewAction(true)}
-            color={'var(--md-sys-color-tertiary)'}
           />
           <ScopeIcon
             existingView={!!projectBaseView}
             label={'Project'}
             onClick={() => handleBaseViewAction(false)}
             poweLicense={powerLicense}
-            color={'orange'}
           />
         </>
       )}
@@ -103,7 +75,6 @@ type ScopeIconProps = {
   onClick: () => void
   label: string
   poweLicense?: boolean
-  color?: string
 }
 
 const ScopeIcon: FC<ScopeIconProps> = ({
@@ -111,7 +82,6 @@ const ScopeIcon: FC<ScopeIconProps> = ({
   onClick,
   label,
   poweLicense = undefined,
-  color
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -119,20 +89,11 @@ const ScopeIcon: FC<ScopeIconProps> = ({
   }
 
   return (
-    <Styled.ViewChip
+    <Styled.ViewButton
       label={label}
       $active={existingView}
-      $color={color}
       onClick={handleClick}
-      icon={
-        <ClickableIconWrapper >
-          {poweLicense === false ? (
-            <PowerIcon icon="bolt" />
-          ) : (
-            <ScopeIconStyled $color={color} icon={existingView ? 'close' : 'add'} />
-          )}
-        </ClickableIconWrapper>
-      }
+      icon={ poweLicense === false ? "bolt":  existingView ? 'close' : 'add'}
     />
   )
 }

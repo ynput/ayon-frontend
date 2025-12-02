@@ -26,7 +26,7 @@ export const NEW_VIEW_ID = '_new_view_' as const
 export const BASE_VIEW_ID = '__base__' as const
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
-  highlighted?: 'save' | 'edit' | 'reset'
+  highlighted?: 'save' | 'edit'
 }
 
 type Props = {
@@ -157,10 +157,8 @@ const useBuildViewMenuItems = ({
       // expose reset button when handler is provided
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
-      highlighted: 'reset',
-      makeDefaultTooltip: 'Set as Default',
     }
-  }, [handleWorkingViewChange, onResetWorkingView, viewsList])
+  }, [handleWorkingViewChange, onResetWorkingView])
 
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
   const viewItems: ViewMenuItem[] = useMemo(() => {

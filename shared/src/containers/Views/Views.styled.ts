@@ -1,5 +1,5 @@
-import { Icon } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
+import styled, { css } from 'styled-components'
 import { Chip } from 'primereact/chip'
 
 export const ViewsButton = styled(Icon)`
@@ -47,31 +47,31 @@ export const ViewsMenuDivider = styled.li`
   margin: 4px 0;
 `
 
-export const ViewChip = styled(Chip)<{ $active?: boolean; $color?: string }>`
-  background: ${({ $active }) =>
-    $active ? 'var(--md-sys-color-surface-container-highest-hover)' : 'transparent'};
+export const ViewButton = styled(Button)<{ $active?: boolean }>`
   padding: 0 8px 0 4px !important;
-  outline: ${({ $active }) =>
-    $active ? '1px solid transparent' : '1px dashed var(--md-sys-color-outline)'};
+  outline: 1px dashed var(--md-sys-color-outline);
   margin: 0 8px 4px 0;
-  color: ${({ $active }) =>
-    $active ? 'var(--md-sys-color-on-surface)' : 'var(--md-sys-color-outline)'};
   user-select: none;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-
-  .p-chip-text {
-    display: flex;
-    align-items: center;
+  border-radius: 999px;
+  background-color:  var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-outline);
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+    
   }
 
-  .icon {
-    color: var(--md-sys-color-outline);
-  }
+  ${({ $active }) =>
+    $active &&
+    css`
+      background: var(--md-sys-color-surface-container-highest);
+      outline: 1px solid var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface);
 
-  &:hover .icon {
-    color: var(--md-sys-color-on-surface);
-    background-color: ${({ $color }) => $color || 'var(--md-sys-color-surface-container-highest)'};
-  }
+      &:hover {
+        background-color: var(--md-sys-color-surface-container-highest-hover);
+      }
+    `}
 `

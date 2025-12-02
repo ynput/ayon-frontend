@@ -3,7 +3,6 @@ import * as Styled from './ViewItem.styled'
 import clsx from 'clsx'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { confirmDialog } from 'primereact/confirmdialog'
-import { useGlobalContext } from '@shared/context'
 
 export interface ViewItem {
   id: string
@@ -13,12 +12,11 @@ export interface ViewItem {
   isSelected?: boolean
   isEditable?: boolean
   isSaveable?: boolean // can this be saved from working view (shows little save button)
-  highlighted?: 'save' | 'edit' | 'reset' // highlights a button
+  highlighted?: 'save' | 'edit' // highlights a button
   onEdit?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void
   onSave?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void // saves the view settings from selected view
   onResetView?: (e: React.MouseEvent<HTMLButtonElement>) => void // resets working view
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void
-  makeDefaultTooltip?: string // tooltip for make default button
 }
 
 export interface ViewMenuItemProps
@@ -40,7 +38,6 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       onSave,
       onResetView,
       className,
-      makeDefaultTooltip,
       ...props
     },
     ref,
@@ -74,7 +71,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
           <Styled.ActionButton
             icon="restart_alt"
             variant="text"
-            className={clsx('reset', { active: highlighted === 'reset' })}
+            className="reset"
             onClick={onResetView}
             data-tooltip="Reset to Default"
             data-shortcut={getPlatformShortcutKey('0', [KeyMode.Shift, KeyMode.Ctrl])}
