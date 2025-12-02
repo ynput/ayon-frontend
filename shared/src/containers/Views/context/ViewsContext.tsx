@@ -243,11 +243,18 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
           settings,
         } as any
 
-        await createBaseViewMutation({
+        const result = await createBaseViewMutation({
           payload: baseViewPayload,
           viewType: viewType as string,
           projectName: isStudioScope ? undefined : projectName,
         }).unwrap()
+
+        dispatch(
+          viewsQueries.util.invalidateTags([
+            { type: 'view', id: result.id },
+            getScopeTag(viewType as string, isStudioScope ? undefined : projectName),
+          ])
+        )
 
         const scope = isStudioScope ? 'Studio' : 'Project'
         toast.success(`${scope} default view created successfully`)
@@ -257,7 +264,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
         toast.error(`Failed to create ${scope} base view: ${error?.message || error}`)
       }
     },
-    [createBaseViewMutation, viewType, projectName, workingSettings]
+    [createBaseViewMutation, viewType, projectName, workingSettings, dispatch]
   )
 
   const onUpdateBaseView = useCallback(
@@ -271,6 +278,13 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
           payload: { settings },
         }).unwrap()
 
+        dispatch(
+          viewsQueries.util.invalidateTags([
+            { type: 'view', id: baseViewId },
+            getScopeTag(viewType as string, isStudioScope ? undefined : projectName),
+          ])
+        )
+
         const scope = isStudioScope ? 'Studio' : 'Project'
         toast.success(`${scope} default view updated successfully`)
       } catch (error: any) {
@@ -279,7 +293,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
         toast.error(`Failed to update ${scope} base view: ${error?.message || error}`)
       }
     },
-    [updateBaseViewMutation, viewType, projectName, workingSettings]
+    [updateBaseViewMutation, viewType, projectName, workingSettings, dispatch]
   )
 
   const onDeleteBaseView = useCallback(
