@@ -7,8 +7,8 @@ import {
   useGetServerConfigQuery,
   useGetServerConfigOverridesQuery,
   useGetServerConfigSchemaQuery,
-} from '@queries/config/getConfig'
-import { useSetServerConfigMutation } from '@queries/config/updateConfig'
+  useSetServerConfigMutation,
+} from '@shared/api'
 import { ServerConfigModel } from '@shared/api'
 import styled from 'styled-components'
 import { toast } from 'react-toastify'
