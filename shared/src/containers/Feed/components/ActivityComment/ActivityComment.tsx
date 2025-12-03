@@ -75,8 +75,26 @@ const ActivityComment = ({
   const moreRef = useRef<HTMLButtonElement>(null)
   const { toggleMenuOpen, menuOpen } = useMenuContext()
 
-  const categoryData = useMemo(() => {
-    return categories.find((cat) => cat.name === activity.activityData?.category) || null
+  const { categoryData, categoryNotFound } = useMemo(() => {
+    let categoryNotFound = false
+    if (activity.activityData?.category) {
+      const foundCategory = categories.find((cat) => cat.name === activity.activityData?.category)
+      if (!foundCategory) {
+        categoryNotFound = true
+      }
+      return {
+        categoryData: foundCategory || {
+          name: activity.activityData?.category,
+          color: '#c5c5c5',
+        },
+        categoryNotFound,
+      }
+    } else {
+      return {
+        categoryData: null,
+        categoryNotFound,
+      }
+    }
   }, [activity?.activityData?.category, categories])
   // Compute blended background color for category
   const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
@@ -183,6 +201,7 @@ const ActivityComment = ({
     [onGoToFrame],
   )
 
+  console.log(categoryNotFound)
   return (
     <>
       <Styled.Comment
@@ -238,6 +257,10 @@ const ActivityComment = ({
                 left: -4,
               }}
               isCompact
+              data-tooltip={
+                categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
+              }
+              data-tooltip-delay={0}
             />
           )}
 
