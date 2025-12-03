@@ -42,7 +42,7 @@ const BaseViewsTagContainer: FC = () => {
   }
 
   return (
-    <>
+    <Styled.BaseViewsContainer>
       <SectionHeader
         onClick={() => setCollapsed(!collapsed)}
         collapsed={collapsed}
@@ -65,7 +65,7 @@ const BaseViewsTagContainer: FC = () => {
           />
         </>
       )}
-    </>
+    </Styled.BaseViewsContainer>
   )
 }
 export default BaseViewsTagContainer

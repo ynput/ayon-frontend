@@ -47,6 +47,9 @@ export const ViewsMenuDivider = styled.li`
   margin: 4px 0;
 `
 
+export const BaseViewsContainer = styled.div`
+  margin-left: 6px;
+`
 export const ViewButton = styled(Button)`
   padding: 0 8px 0 4px !important;
   outline: 1px dashed var(--md-sys-color-outline);
@@ -60,7 +63,7 @@ export const ViewButton = styled(Button)`
   color: var(--md-sys-color-outline);
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
-    
+
   }
 
   &.active {
