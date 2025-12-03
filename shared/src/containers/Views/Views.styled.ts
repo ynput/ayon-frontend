@@ -1,5 +1,5 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { Chip } from 'primereact/chip'
 
 export const ViewsButton = styled(Icon)`
@@ -47,7 +47,7 @@ export const ViewsMenuDivider = styled.li`
   margin: 4px 0;
 `
 
-export const ViewButton = styled(Button)<{ $active?: boolean }>`
+export const ViewButton = styled(Button)`
   padding: 0 8px 0 4px !important;
   outline: 1px dashed var(--md-sys-color-outline);
   margin: 0 8px 4px 0;
@@ -63,15 +63,13 @@ export const ViewButton = styled(Button)<{ $active?: boolean }>`
     
   }
 
-  ${({ $active }) =>
-    $active &&
-    css`
-      background: var(--md-sys-color-surface-container-highest);
-      outline: 1px solid var(--md-sys-color-surface-container-highest);
-      color: var(--md-sys-color-on-surface);
+  &.active {
+    background: var(--md-sys-color-surface-container-highest);
+    outline: 1px solid var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
 
-      &:hover {
-        background-color: var(--md-sys-color-surface-container-highest-hover);
-      }
-    `}
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+  }
 `

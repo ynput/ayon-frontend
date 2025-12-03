@@ -63,7 +63,6 @@ const useBuildViewMenuItems = ({
   selectedId,
 }: Props): ViewMenuItem[] => {
   const { powerLicense } = usePowerpack()
-  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>()
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
@@ -184,9 +183,6 @@ const useBuildViewMenuItems = ({
         if (selectedItem) result.push(selectedItem)
       }
     })
-
-    // Add a closing divider after all sections (only if sections exist)
-    if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
 
     return result
   }, [workingViewItem, sections, collapsed, toggleSection, selectedId])

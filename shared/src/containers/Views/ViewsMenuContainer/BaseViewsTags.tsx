@@ -91,7 +91,7 @@ const ScopeIcon: FC<ScopeIconProps> = ({
   return (
     <Styled.ViewButton
       label={label}
-      $active={existingView}
+      className={existingView ? 'active' : ''}
       onClick={handleClick}
       icon={ poweLicense === false ? "bolt":  existingView ? 'close' : 'add'}
     />
