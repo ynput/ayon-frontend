@@ -34,7 +34,7 @@ const getPathnameLabel = (pathname: string): string => {
 }
 
 const uri2crumbs = (uri: string = '', pathname: string): string[] => {
-  const [scope, pathAndQuery = ''] = uri.split('://')
+  const [scope, pathAndQuery = ''] = (uri || '').split('://')
   const [path, query] = pathAndQuery.split('?')
   const crumbs: string[] = path.split('/').filter(Boolean)
 
