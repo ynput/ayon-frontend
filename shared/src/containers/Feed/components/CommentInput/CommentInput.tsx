@@ -92,7 +92,7 @@ const CommentInput: FC<CommentInputProps> = ({
   } = useFeedContext()
 
   const { hasLicense, onPowerFeature, user } = useDetailsPanelContext()
-  const isUser = !user?.data?.isAdmin && !user?.data?.isManager
+  const isAdmin = user?.data?.isAdmin
 
   const project = useProjectContext()
 
@@ -661,7 +661,7 @@ const CommentInput: FC<CommentInputProps> = ({
                   isCompact={isEditing}
                   hasPowerpack={hasLicense}
                   onPowerFeature={onPowerFeature}
-                  isHidden={isCategoryHidden(categoryOptions, { isGuest, isUser })}
+                  isHidden={isCategoryHidden(categoryOptions, { isGuest, isAdmin })}
                   style={{
                     position: isEditing ? 'relative' : 'absolute',
                     left: 4,
