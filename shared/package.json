@@ -111,11 +111,11 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.27.0",
-    "@module-federation/enhanced": "^0.13.1",
-    "@module-federation/vite": "^1.2.7",
+    "@module-federation/enhanced": "^0.21.6",
+    "@module-federation/vite": "^1.9.2",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.8.3",
-    "vite": "^6.2.6",
+    "vite": "7.2.6",
     "vite-plugin-dts": "^4.5.3",
     "vite-plugin-linter": "^3.0.1"
   },
