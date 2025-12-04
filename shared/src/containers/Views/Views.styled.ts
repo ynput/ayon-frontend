@@ -58,11 +58,11 @@ export const ViewButton = styled(Button)`
   align-items: center;
   gap: 4px;
   border-radius: 999px;
-  background-color:  var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-container-high);
   color: var(--md-sys-color-outline);
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
-
+    color: var(--md-sys-color-on-surface);
   }
 
   &.active {
@@ -72,6 +72,7 @@ export const ViewButton = styled(Button)`
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);
+      outline: 1px solid var(--md-sys-color-surface-container-highest-hover);
     }
   }
 
