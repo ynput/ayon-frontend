@@ -88,20 +88,21 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
 
           // Only perform optimistic update if cache is initialized (even if data is null)
           if (currentBaseView !== undefined) {
-            const newBaseView: ViewListItemModel = {
+            const newBaseView = {
               ...payload,
               working: false,
               scope: arg.projectName ? 'project' : 'studio',
               visibility: 'private',
               owner: user,
               accessLevel: 30,
+              position: 0,
             }
 
             baseViewPatch = dispatch(
               getViewsApi.util.updateQueryData(
                 'getBaseView',
                 { viewType: arg.viewType, projectName: arg.projectName },
-                () => newBaseView, // Replace the entire cache with the new base view
+                () => newBaseView as any,
               ),
             )
           } else {
