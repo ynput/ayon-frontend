@@ -77,6 +77,41 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           )
         }
 
+        // Also update the getBaseView cache if this is a base view
+        let baseViewPatch
+        if (payload.label === '__base__') {
+          // Check if the getBaseView cache exists before updating
+          const currentBaseView = getViewsApi.endpoints.getBaseView.select({
+            viewType: arg.viewType,
+            projectName: arg.projectName,
+          })(state)
+
+          // Only perform optimistic update if cache is initialized (even if data is null)
+          if (currentBaseView !== undefined) {
+            const newBaseView = {
+              ...payload,
+              working: false,
+              scope: arg.projectName ? 'project' : 'studio',
+              visibility: 'private',
+              owner: user,
+              accessLevel: 30,
+              position: 0,
+            }
+
+            baseViewPatch = dispatch(
+              getViewsApi.util.updateQueryData(
+                'getBaseView',
+                { viewType: arg.viewType, projectName: arg.projectName },
+                () => newBaseView as any,
+              ),
+            )
+          } else {
+            // No cache exists yet, optimistic update will be skipped
+            // The invalidation tags will handle the refetch
+            console.log('Skipping optimistic update for getBaseView - cache does not exist yet')
+          }
+        }
+
         try {
           await queryFulfilled
         } catch (error) {
@@ -84,6 +119,9 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           patch.undo()
           if (workingViewPatch) {
             workingViewPatch.undo()
+          }
+          if (baseViewPatch) {
+            baseViewPatch.undo()
           }
           console.error('Failed to create view:', error)
         }
@@ -103,20 +141,54 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       ],
     },
     deleteView: {
-      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+      onQueryStarted: async (arg, { dispatch, queryFulfilled, getState }) => {
         const { viewId, projectName, viewType } = arg
+        const state = getState()
+
         // Optimistically remove the view from the list
-        const patch = dispatch(
-          getViewsApi.util.updateQueryData('listViews', { viewType, projectName }, (draft) => {
-            return draft.filter((view) => view.id !== viewId)
-          }),
+        const patches: any[] = []
+
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData('listViews', { viewType, projectName }, (draft) => {
+              return draft.filter((view) => view.id !== viewId)
+            }),
+          ),
         )
+
+        // Check both project and studio level for base and default views
+        const scopesToCheck = [
+          { projectName },
+          { projectName: undefined }, // studio level
+        ]
+        const queriesToCheck = ['getBaseView', 'getDefaultView'] as const
+
+        for (const scope of scopesToCheck) {
+          for (const queryName of queriesToCheck) {
+            const currentView = getViewsApi.endpoints[queryName].select({
+              viewType,
+              projectName: scope.projectName,
+            })(state)
+
+            if (currentView?.isSuccess && currentView.data?.id === viewId) {
+              patches.push(
+                dispatch(
+                  getViewsApi.util.updateQueryData(
+                    queryName,
+                    { viewType, projectName: scope.projectName },
+                    () => null as any,
+                  ),
+                ),
+              )
+            }
+          }
+        }
 
         try {
           await queryFulfilled
         } catch (error) {
-          // If the query failed, we need to roll back the optimistic update
-          patch.undo()
+          // If the query failed, roll back all optimistic updates
+          patches.forEach((patch) => patch.undo())
           console.error('Failed to delete view:', error)
         }
       },
@@ -125,6 +197,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       invalidatesTags: (_r, _e, { viewType, projectName, viewId }) => [
         { type: 'view', id: viewId },
         getScopeTag(viewType, projectName),
+        getScopeTag(viewType, undefined),
       ],
     },
     setDefaultView: {

@@ -64,7 +64,6 @@ const useUpdateListItems = ({ updateEntities }: Props) => {
             // check if the field is an entity attributes or custom attribute
             const isCustom = !entityAttribFields.includes(key)
             if (isCustom) {
-              listItemUpdate.ownAttrib = [...(listItemUpdate.ownAttrib || []), key]
             } else {
               entityUpdate['ownAttrib'] = [...(entityUpdate['ownAttrib'] || []), key]
             }

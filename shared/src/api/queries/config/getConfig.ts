@@ -1,4 +1,4 @@
-import { configurationApi } from '@shared/api'
+import { configurationApi } from '@shared/api/generated'
 
 const getConfigApi = configurationApi.enhanceEndpoints({
   endpoints: {

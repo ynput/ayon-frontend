@@ -9,12 +9,14 @@ import { getEntityTypeIcon } from '@shared/util'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
   onSubmit: ((listId: string) => Promise<any> | undefined) | undefined
+  onCreateEmpty?: () => void
   submitLoading?: boolean
 }
 
 const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
   onClose,
   onSubmit,
+  onCreateEmpty,
   submitLoading,
   ...props
 }) => {
@@ -59,6 +61,10 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
     },
     [onSubmit],
   )
+  const handleCreateEmptyReviewList = useCallback(() => {
+    // Switch to label input dialog
+    onCreateEmpty?.()
+  }, [onCreateEmpty])
 
   const isLoading = isLoadingLists
 
@@ -76,6 +82,18 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
         }}
         onScroll={handleScroll}
       >
+        <ListRow
+          id={''}
+          value={'Create empty review session'}
+          icon="add_box"
+          count={''}
+          style={{
+            padding: 6,
+            opacity: submitLoading ? 0 : 1,
+          }}
+          onClick={handleCreateEmptyReviewList}
+          tabIndex={0}
+        />
         {isLoading
           ? Array.from({ length: 10 }).map((_, index) => (
               <ListRow

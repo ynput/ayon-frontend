@@ -39,16 +39,18 @@ export const ViewItem = styled.li`
         background-color: var(--md-sys-color-primary-container-hover);
       }
     }
+    .reset {
+      &:hover {
+        background-color: var(--md-sys-color-primary-container-hover);
+      }
+    }
   }
-
   /* hide save button by default */
-  .save,
-  .reset {
+  .save {
     display: none;
   }
   &:hover {
-    .save,
-    .reset {
+    .save {
       display: flex;
     }
   }
@@ -62,13 +64,14 @@ export const ActionButton = styled(Button)`
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
   &.active {
-    background-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-
     display: flex !important;
+    &:not(.reset) {
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
 
-    &:hover {
-      background-color: var(--md-sys-color-primary-hover);
+      &:hover {
+        background-color: var(--md-sys-color-primary-hover);
+      }
     }
   }
 `
