@@ -24,40 +24,14 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
     closeNewList()
   }
 
-  if (isReview && newList) {
-    const handleCreateEmpty = () => {
-      // Switch to label input dialog
-      setShowLabelInput(true)
-    }
-
-    // Show label input dialog for empty review session
-    if (showLabelInput) {
-      return (
-        <NewListDialog
-          isOpen={true}
-          onClose={handleClose}
-          form={newList}
-          onChange={setNewList}
-          onSubmit={createNewList}
-          submitLoading={isCreatingList}
-          dialogTitle="Create New Review Session"
-          labels={{
-            listLabel: 'Review session name',
-            createButton: 'Create review session',
-            cancelButton: 'Cancel',
-          }}
-          hidden={['entityType']}
-        />
-      )
-    }
-
-    // Show list selection dialog
+  // Show list selection dialog for review sessions (unless showing label input)
+  if (isReview && newList && !showLabelInput) {
     return (
       <NewReviewSessionDialog
         isOpen={true}
         onClose={handleClose}
         onSubmit={(id) => createReviewSessionList?.(id, { showToast: true })}
-        onCreateEmpty={handleCreateEmpty}
+        onCreateEmpty={() => setShowLabelInput(true)}
         submitLoading={isCreatingList}
         header="Select a version list to create a review session"
         size="md"
@@ -68,7 +42,7 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
   return (
     <NewListDialog
       isOpen={!!newList}
-      onClose={closeNewList}
+      onClose={showLabelInput ? handleClose : closeNewList}
       form={newList}
       onChange={setNewList}
       onSubmit={createNewList}
