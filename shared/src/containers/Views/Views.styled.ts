@@ -73,6 +73,15 @@ export const ViewButton = styled(Button)`
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);
       outline: 1px solid var(--md-sys-color-surface-container-highest-hover);
+      /* icon hover shows as button */
+      .icon {
+        background-color: var(--md-sys-color-surface-container-high);
+        border-radius: 10px;
+        /* hover icon */
+        &:hover {
+          background-color: var(--md-sys-color-surface-container-high-hover);
+        }
+      }
     }
   }
 

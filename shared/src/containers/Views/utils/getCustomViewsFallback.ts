@@ -1,5 +1,5 @@
 import { ViewItem } from '../ViewItem/ViewItem'
-import { ViewListItemModelExtended, BASE_VIEW_ID } from '../hooks/useBuildViewMenuItems'
+import { ViewListItemModelExtended } from '../hooks/useBuildViewMenuItems'
 
 export type GetCustomViews = {
   viewsList: ViewListItemModelExtended[]
