@@ -23,13 +23,14 @@ const BaseViewsTagContainer: FC = () => {
   const handleBaseViewAction = async (isStudioScope: boolean, remove?: boolean) => {
     const existingBase = isStudioScope ? studioBaseView : projectBaseView
 
-    if (!isStudioScope && !powerLicense) {
+    const disabled = !isStudioScope && powerLicense === false
+    if (disabled && !remove) {
       setPowerpackDialog('sharedViews')
       return
     }
 
     if (existingBase) {
-      if (remove) {
+      if (remove || disabled) {
         // remove button clicked, ask to remove the base view
         confirmDialog({
           message: `Are you sure you want to remove this default view?`,
@@ -42,6 +43,7 @@ const BaseViewsTagContainer: FC = () => {
         })
       } else {
         // set the working view to the existing base view
+        // @ts-expect-error settings exists
         onUpdateWorkingView({ settings: existingBase.settings }, { selectView: true })
       }
     } else {
