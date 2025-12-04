@@ -39,13 +39,23 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
     )
   }
 
+  const handleSubmit = async () => {
+    try {
+      await createNewList()
+      setShowLabelInput(false)
+    } catch (error) {
+      // Error handling is already done in createNewList
+      throw error
+    }
+  }
+
   return (
     <NewListDialog
       isOpen={!!newList}
-      onClose={showLabelInput ? handleClose : closeNewList}
+      onClose={handleClose}
       form={newList}
       onChange={setNewList}
-      onSubmit={createNewList}
+      onSubmit={handleSubmit}
       submitLoading={isCreatingList}
       dialogTitle={isReview ? 'Create New Review Session' : 'Create New List'}
       labels={{
