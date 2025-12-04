@@ -1,6 +1,5 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { Chip } from 'primereact/chip'
 
 export const ViewsButton = styled(Icon)`
   padding: var(--padding-s);
@@ -73,6 +72,13 @@ export const ViewButton = styled(Button)`
 
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+  }
+
+  &.powerpack-locked {
+    .icon {
+      color: var(--md-sys-color-tertiary);
+      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
     }
   }
 `

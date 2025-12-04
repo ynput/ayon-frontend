@@ -42,7 +42,7 @@ const BaseViewsTagContainer: FC = () => {
   }
 
   return (
-    <Styled.BaseViewsContainer>
+    <>
       <SectionHeader
         onClick={() => setCollapsed(!collapsed)}
         collapsed={collapsed}
@@ -51,7 +51,7 @@ const BaseViewsTagContainer: FC = () => {
         style={{marginBottom: '10px'}}
       />
       {!collapsed && (
-        <>
+        <Styled.BaseViewsContainer>
           <ScopeIcon
             existingView={!!studioBaseView}
             label={'Studio'}
@@ -61,11 +61,11 @@ const BaseViewsTagContainer: FC = () => {
             existingView={!!projectBaseView}
             label={'Project'}
             onClick={() => handleBaseViewAction(false)}
-            poweLicense={powerLicense}
+            powerLicense={powerLicense}
           />
-        </>
+        </Styled.BaseViewsContainer>
       )}
-    </Styled.BaseViewsContainer>
+    </>
   )
 }
 export default BaseViewsTagContainer
@@ -74,26 +74,28 @@ type ScopeIconProps = {
   existingView: boolean
   onClick: () => void
   label: string
-  poweLicense?: boolean
+  powerLicense?: boolean
 }
 
 const ScopeIcon: FC<ScopeIconProps> = ({
   existingView,
   onClick,
   label,
-  poweLicense = undefined,
+  powerLicense = undefined,
 }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     onClick()
   }
 
+  const className = powerLicense === false ? 'powerpack-locked' : existingView ? 'active' : ''
+
   return (
     <Styled.ViewButton
       label={label}
-      className={existingView ? 'active' : ''}
+      className={className}
       onClick={handleClick}
-      icon={ poweLicense === false ? "bolt":  existingView ? 'close' : 'add'}
+      icon={powerLicense === false ? "bolt" : existingView ? 'close' : 'add'}
     />
   )
 }

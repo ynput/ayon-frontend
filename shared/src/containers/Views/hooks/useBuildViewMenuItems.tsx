@@ -2,13 +2,8 @@ import {
   GetWorkingViewApiResponse,
   useCreateViewMutation,
   UserModel,
-  useSetDefaultViewMutation,
   ViewListItemModel,
-  useUpdateViewMutation,
-  viewsQueries,
 } from '@shared/api'
-import { useDispatch } from 'react-redux'
-import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
@@ -66,7 +61,6 @@ const useBuildViewMenuItems = ({
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
-  const [setDefaultView] = useSetDefaultViewMutation()
 
   const extendedViewsList: ViewListItemModelExtended[] = useMemo(
     () =>
@@ -163,8 +157,8 @@ const useBuildViewMenuItems = ({
   const viewItems: ViewMenuItem[] = useMemo(() => {
     const result: ViewMenuItem[] = [workingViewItem]
 
-    // Add divider only if any section exists
-    const visibleSections = sections.filter((s) => (s.items?.length || 0) > 0)
+    // Add divider only if any section exists and powerpack is available
+    const visibleSections = sections.filter((s) => powerLicense && (s.items?.length || 0) > 0)
     if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
 
     visibleSections.forEach((section) => {
@@ -185,7 +179,7 @@ const useBuildViewMenuItems = ({
     })
 
     return result
-  }, [workingViewItem, sections, collapsed, toggleSection, selectedId])
+  }, [workingViewItem, sections, collapsed, toggleSection, selectedId, powerLicense])
 
   return viewItems
 }

@@ -77,6 +77,40 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           )
         }
 
+        // Also update the getBaseView cache if this is a base view
+        let baseViewPatch
+        if (payload.label === '__base__') {
+          // Check if the getBaseView cache exists before updating
+          const currentBaseView = getViewsApi.endpoints.getBaseView.select({
+            viewType: arg.viewType,
+            projectName: arg.projectName,
+          })(state)
+
+          // Only perform optimistic update if cache is initialized (even if data is null)
+          if (currentBaseView !== undefined) {
+            const newBaseView: ViewListItemModel = {
+              ...payload,
+              working: false,
+              scope: arg.projectName ? 'project' : 'studio',
+              visibility: 'private',
+              owner: user,
+              accessLevel: 30,
+            }
+
+            baseViewPatch = dispatch(
+              getViewsApi.util.updateQueryData(
+                'getBaseView',
+                { viewType: arg.viewType, projectName: arg.projectName },
+                () => newBaseView, // Replace the entire cache with the new base view
+              ),
+            )
+          } else {
+            // No cache exists yet, optimistic update will be skipped
+            // The invalidation tags will handle the refetch
+            console.log('Skipping optimistic update for getBaseView - cache does not exist yet')
+          }
+        }
+
         try {
           await queryFulfilled
         } catch (error) {
@@ -84,6 +118,9 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           patch.undo()
           if (workingViewPatch) {
             workingViewPatch.undo()
+          }
+          if (baseViewPatch) {
+            baseViewPatch.undo()
           }
           console.error('Failed to create view:', error)
         }

@@ -35,8 +35,7 @@ export const ViewsMenuContainer: FC = () => {
   const modalRef = useRef<HTMLDivElement>(null)
 
   const { user } = useGlobalContext()
-  const isAdmin = user?.data?.isAdmin
-  const isManager = user?.data?.isManager
+  const isAdmin = user?.uiExposureLevel >= 700
   // Modal position calculation
   const portalContainer = getViewsPortalContainer(viewType)
   const buttonRect = portalContainer?.getBoundingClientRect()
@@ -105,7 +104,7 @@ export const ViewsMenuContainer: FC = () => {
         createPortal(
           <Styled.ViewsModal style={modalPosition} ref={modalRef} tabIndex={0}>
             <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
-            {(isAdmin || isManager) && (
+            {(isAdmin) && (
               <>
                 <BaseViewsTagContainer />
                 <Styled.ViewsMenuDivider />
