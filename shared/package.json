@@ -98,16 +98,16 @@
   "peerDependencies": {
     "@dnd-kit/core": "^6.0.8",
     "@dnd-kit/sortable": "^8.0.0",
-    "@reduxjs/toolkit": "^2.6.1",
+    "@reduxjs/toolkit": "^2.7.0",
     "@rtk-query/graphql-request-base-query": "^2.3.1",
-    "@tanstack/react-table": "^8.21.2",
-    "@ynput/ayon-react-components": "^1.15.3",
+    "@tanstack/react-table": "^8.21.3",
+    "@ynput/ayon-react-components": "^1.15.10",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.5.3",
+    "react-router-dom": "^6.3.0",
     "react-toastify": "^9.0.3",
-    "styled-components": "^6.1.14"
+    "styled-components": "6.1.14"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.27.0",
@@ -121,11 +121,11 @@
   },
   "dependencies": {
     "@tanstack/match-sorter-utils": "^8.19.4",
-    "@tanstack/react-virtual": "^3.13.6",
-    "axios": "^1.9.0",
+    "@tanstack/react-virtual": "^3.13.4",
+    "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "custom-protocol-check": "^1.4.0",
-    "date-fns": "^4.1.0",
+    "date-fns": "^3.6.0",
     "lodash": "^4.17.21",
     "primeicons": "^7.0.0",
     "primereact": "9.6.2",
@@ -133,13 +133,13 @@
     "quill-magic-url": "^4.2.0",
     "react-markdown": "^10.1.0",
     "react-quill-ayon": "^2.0.2",
-    "react-toastify": "^11.0.5",
-    "remark-directive": "^4.0.0",
+    "react-toastify": "^9.0.3",
+    "remark-directive": "^3.0.0",
     "remark-directive-rehype": "^0.4.2",
-    "remark-emoji": "^5.0.1",
-    "remark-gfm": "^4.0.1",
-    "short-uuid": "^5.2.0",
-    "turndown": "^7.2.0",
-    "uuid": "^11.1.0"
+    "remark-emoji": "^4.0.1",
+    "remark-gfm": "^4.0.0",
+    "short-uuid": "^4.2.0",
+    "turndown": "^7.1.2",
+    "uuid": "^9.0.0"
   }
 }
