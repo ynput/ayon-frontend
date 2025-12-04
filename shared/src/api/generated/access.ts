@@ -2,7 +2,10 @@ import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroupSchema: build.query<GetAccessGroupSchemaApiResponse, GetAccessGroupSchemaApiArg>({
-      query: () => ({ url: `/api/accessGroups/_schema` }),
+      query: (queryArg) => ({ 
+        url: `/api/accessGroups/_schema`, 
+        params: { project_name: queryArg.projectName } 
+      }),
     }),
     getAccessGroups: build.query<GetAccessGroupsApiResponse, GetAccessGroupsApiArg>({
       query: (queryArg) => ({ url: `/api/accessGroups/${queryArg.projectName}` }),
@@ -41,7 +44,9 @@ const injectedRtkApi = api.injectEndpoints({
 })
 export { injectedRtkApi as api }
 export type GetAccessGroupSchemaApiResponse = /** status 200 Successful Response */ any
-export type GetAccessGroupSchemaApiArg = void
+export type GetAccessGroupSchemaApiArg = {
+  projectName?: string
+} 
 export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ AccessGroupObject[]
 export type GetAccessGroupsApiArg = {
   projectName: string
