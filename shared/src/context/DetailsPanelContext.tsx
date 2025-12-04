@@ -93,8 +93,6 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   tabsByScope: TabStateByScope
   getTabForScope: (scope: string) => DetailsPanelTab
   setTabByScope: (tabs: TabStateByScope) => void
-  currentScope: string
-  setCurrentScope: (scope: string) => void
 
   // Slide out state
   slideOut: null | SlideOut
@@ -155,8 +153,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
   const [feedAnnotations, setFeedAnnotations] = useState<SavedAnnotationMetadata[]>([])
 
-  // Track the current active scope (set by useScopedDetailsPanel)
-  const [currentScope, setCurrentScope] = useState<string>('overview')
 
 
   //  get the current open state for a specific scope
@@ -187,8 +183,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
   // Use localStorage to persist tab preferences by scope
   const [tabsByScope, setTabByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
-  console.log('currentScope', currentScope)
-  console.log('tabsByScope', tabsByScope)
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
@@ -237,7 +231,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
   const { uriType, uri, entity, getUriEntities } = useURIContext()
   const [searchParams] = useSearchParams()
-  const location = useLocation()
 
 
   // on first load, check if there is a uri or URL params and open details panel if present
@@ -278,7 +271,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
           // Use currentScope (from useScopedDetailsPanel) instead of URL-derived scope
           setTabByScope({
             ...tabsByScope,
-            [currentScope]: 'activity',
+        'overview': 'activity',
           })
         })
         .catch((err) => {
@@ -310,7 +303,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
       // Always open the activity tab when opening from URL
       setTabByScope({
         ...tabsByScope,
-        [currentScope]: 'activity',
+        'overview': 'activity',
       })
 
       // if there is an activity param, highlight that specific activity
@@ -330,8 +323,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     tabsByScope,
     getTabForScope,
     setTabByScope,
-    currentScope,
-    setCurrentScope,
     // slide out state
     slideOut,
     openSlideOut,
@@ -369,7 +360,7 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
 
 // Add a specialized hook for using a panel in a specific scope
 export const useScopedDetailsPanel = (scope: string) => {
-  const { getOpenForScope, setPanelOpen, getTabForScope, setCurrentScope } = useDetailsPanelContext()
+  const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
   const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
     'details/tabs-by-scope',
     {},
@@ -377,10 +368,6 @@ export const useScopedDetailsPanel = (scope: string) => {
 
   const [tab, setTab] = useState<DetailsPanelTab>(() => tabsByScope[scope] ?? getTabForScope(scope))
 
-  // Register this scope as the current active scope
-  useEffect(() => {
-    setCurrentScope(scope)
-  }, [scope, setCurrentScope])
 
   // Keep localStorage and local state in sync
   const updateTab = useCallback(
