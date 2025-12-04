@@ -35,7 +35,7 @@ export const ViewsMenuContainer: FC = () => {
   const modalRef = useRef<HTMLDivElement>(null)
 
   const { user } = useGlobalContext()
-  const isAdmin = user?.uiExposureLevel >= 700
+  const isAdmin = (user?.uiExposureLevel || 0) >= 700
   // Modal position calculation
   const portalContainer = getViewsPortalContainer(viewType)
   const buttonRect = portalContainer?.getBoundingClientRect()
@@ -58,7 +58,13 @@ export const ViewsMenuContainer: FC = () => {
       const clickInsideDropdown = document.querySelector('.options')?.contains(target)
       const clickInsideConfirmDialog = document.querySelector('.p-confirm-dialog')?.contains(target)
 
-      if (!clickInsideMenu && !clickInsideEditDialog && !clickInsideDropdown && !clickInsideConfirmDialog && isMenuOpen) {
+      if (
+        !clickInsideMenu &&
+        !clickInsideEditDialog &&
+        !clickInsideDropdown &&
+        !clickInsideConfirmDialog &&
+        isMenuOpen
+      ) {
         setIsMenuOpen(false)
       }
     }
@@ -104,7 +110,7 @@ export const ViewsMenuContainer: FC = () => {
         createPortal(
           <Styled.ViewsModal style={modalPosition} ref={modalRef} tabIndex={0}>
             <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
-            {(isAdmin) && (
+            {isAdmin && (
               <>
                 <BaseViewsTagContainer />
                 <Styled.ViewsMenuDivider />
