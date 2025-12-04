@@ -35,7 +35,7 @@ export const ViewsMenuContainer: FC = () => {
   const modalRef = useRef<HTMLDivElement>(null)
 
   const { user } = useGlobalContext()
-  const isAdmin = (user?.uiExposureLevel || 0) >= 700
+  const isAdmin = (user?.uiExposureLevel || 0) >= 900
   // Modal position calculation
   const portalContainer = getViewsPortalContainer(viewType)
   const buttonRect = portalContainer?.getBoundingClientRect()
