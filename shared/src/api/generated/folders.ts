@@ -183,6 +183,10 @@ export type FolderModel = {
   status?: string
   /** Tags assigned to the the folder */
   tags?: string[]
+  /** Who created the folder */
+  createdBy?: string
+  /** Who last updated the folder */
+  updatedBy?: string
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -207,6 +211,10 @@ export type FolderPatchModel = {
   status?: string
   /** Tags assigned to the the folder */
   tags?: string[]
+  /** Who created the folder */
+  createdBy?: string
+  /** Who last updated the folder */
+  updatedBy?: string
   attrib?: FolderAttribModel
   data?: Record<string, any>
   /** Whether the folder is active */
@@ -252,6 +260,10 @@ export type FolderPostModel = {
   status?: string
   /** Tags assigned to the the folder */
   tags?: string[]
+  /** Who created the folder */
+  createdBy?: string
+  /** Who last updated the folder */
+  updatedBy?: string
   attrib?: FolderAttribModel
   data?: Record<string, any>
   /** Whether the folder is active */

@@ -170,6 +170,10 @@ export type TaskModel = {
   status?: string
   /** Tags assigned to the the task */
   tags?: string[]
+  /** Who created the task */
+  createdBy?: string
+  /** Who last updated the task */
+  updatedBy?: string
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -196,6 +200,10 @@ export type TaskPatchModel = {
   status?: string
   /** Tags assigned to the the task */
   tags?: string[]
+  /** Who created the task */
+  createdBy?: string
+  /** Who last updated the task */
+  updatedBy?: string
   attrib?: TaskAttribModel
   data?: Record<string, any>
   /** Whether the task is active */
@@ -220,6 +228,10 @@ export type TaskPostModel = {
   status?: string
   /** Tags assigned to the the task */
   tags?: string[]
+  /** Who created the task */
+  createdBy?: string
+  /** Who last updated the task */
+  updatedBy?: string
   attrib?: TaskAttribModel
   data?: Record<string, any>
   /** Whether the task is active */

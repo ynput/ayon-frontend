@@ -169,6 +169,10 @@ export type RepresentationModel = {
   status?: string
   /** Tags assigned to the the representation */
   tags?: string[]
+  /** Who created the representation */
+  createdBy?: string
+  /** Who last updated the representation */
+  updatedBy?: string
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -187,6 +191,10 @@ export type RepresentationPatchModel = {
   status?: string
   /** Tags assigned to the the representation */
   tags?: string[]
+  /** Who created the representation */
+  createdBy?: string
+  /** Who last updated the representation */
+  updatedBy?: string
   attrib?: RepresentationAttribModel
   data?: Record<string, any>
   /** Whether the representation is active */
@@ -211,6 +219,10 @@ export type RepresentationPostModel = {
   status?: string
   /** Tags assigned to the the representation */
   tags?: string[]
+  /** Who created the representation */
+  createdBy?: string
+  /** Who last updated the representation */
+  updatedBy?: string
   attrib?: RepresentationAttribModel
   data?: Record<string, any>
   /** Whether the representation is active */
