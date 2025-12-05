@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
@@ -9,8 +9,7 @@ import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from './types'
-import { useCreateContextMenu } from '@shared/containers'
-import useSectionMenuItems from '@containers/Slicer/hooks/useSectionMenuItems.tsx'
+import useSlicerMenuItems from '@containers/Slicer/hooks/useSlicerMenuItems.tsx'
 
 interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -43,70 +42,14 @@ const Slicer: FC<SlicerProps> = ({
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
-  const [ctxMenuShow] = useCreateContextMenu()
-
-  const handleExpand = useCallback(
-    (selectedIds: string[]) => {
-      const currentExpanded = expanded || {}
-      const newExpanded = { ...(currentExpanded as Record<string, boolean>) }
-      selectedIds.forEach((id) => {
-        newExpanded[id] = true
-      })
-      setExpanded(newExpanded)
-    },
-    [expanded, setExpanded],
-  )
-
-  const handleCollapse = useCallback(
-    (selectedIds: string[]) => {
-      const currentExpanded = expanded || {}
-      const newExpanded = { ...(currentExpanded as Record<string, boolean>) }
-      selectedIds.forEach((id) => {
-        delete newExpanded[id]
-      })
-      setExpanded(newExpanded)
-    },
-    [expanded, setExpanded],
-  )
-
-  const handleDelete = useCallback(
-    (selectedIds: string[]) => {
-      console.log('Delete selected items:', selectedIds)
-      // Add your delete logic here
-    },
-    [],
-  )
-
-  const buildMenuItems = useSectionMenuItems({
-    onDelete: handleDelete,
-    onExpand: handleExpand,
-    onCollapse: handleCollapse,
+  // Context menu hook handles all menu logic
+  const { openContext } = useSlicerMenuItems({
+    expanded,
+    setExpanded,
+    rowSelection,
+    setRowSelection,
+    tableData: sliceTableData,
   })
-
-  const menuItems = buildMenuItems(rowSelection, {
-    command: true,
-    dividers: false,
-    // hidden: {
-    //   'add-project': true,
-    //   search: true,
-    //   'select-all': true,
-    // },
-  })
-  console.log(rowSelection)
-  const openContext = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-
-
-      if (!menuItems) return
-      // contextMenuItems is already an array of menu items, pass it directly
-
-      ctxMenuShow(e, menuItems)
-    },
-    [ctxMenuShow, menuItems],
-  )
-
 
   const handleSelectionChange = (s: RowSelectionState) => {
     setRowSelection(s)
