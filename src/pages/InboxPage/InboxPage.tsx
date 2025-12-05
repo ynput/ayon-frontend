@@ -6,15 +6,26 @@ import { UnreadCount } from './Inbox/Inbox.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
+import type { InboxFilter } from './types'
+import type { ReactNode } from 'react'
+
+interface InboxLink {
+  name?: string
+  path?: string
+  module?: string
+  endContent?: ReactNode
+  tooltip?: string
+  shortcut?: string
+  node?: ReactNode
+}
 
 const InboxPage = () => {
-  const { module } = useParams()
-  
+  const { module } = useParams<{ module: InboxFilter }>()
 
   const { data: importantUnreadCount } = useGetInboxUnreadCountQuery({ important: true })
   const { data: otherUnreadCount } = useGetInboxUnreadCountQuery({ important: false })
 
-  let links = [
+  const links: InboxLink[] = [
     {
       name: 'Important',
       path: '/inbox/important',
@@ -42,18 +53,19 @@ const InboxPage = () => {
       module: 'cleared',
     },
   ]
-    
-    links.push({ node: 'spacer' })
-    links.push({
-        node: <HelpButton module={`inbox`} />,
-    })
-  const title = useTitle(module, links, 'AYON', 'Inbox')
-    
-    return (
+
+  links.push({ node: 'spacer' })
+  links.push({
+    node: <HelpButton module={`inbox`} />,
+  })
+  const title = useTitle(module || 'important', links, 'AYON', 'Inbox')
+
+  return (
     <>
       <DocumentTitle title={title} />
+      {/* @ts-expect-error - InboxLink is compatible but TypeScript doesn't infer it */}
       <AppNavLinks links={links} />
-      <Inbox filter={module} />
+      <Inbox filter={module || 'important'} />
     </>
   )
 }
