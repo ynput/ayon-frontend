@@ -449,7 +449,7 @@ const Inbox = ({ filter }: InboxProps) => {
           </SplitterPanel>
           <SplitterPanel
             size={40}
-            style={{ minWidth: 300, overflow: 'hidden' }}
+            style={{ minWidth: 300, overflow: 'visible' }}
             className="details"
           >
             <InboxDetailsPanel
