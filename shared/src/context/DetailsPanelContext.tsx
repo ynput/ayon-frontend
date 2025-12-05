@@ -213,6 +213,11 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     }
   }, [])
 
+  // close slide out whenever the page changes
+  useEffect(() => {
+    closeSlideOut()
+  }, [useLocation().pathname])
+
   const [pip, setPip] = useState<DetailsPanelPip | null>(null)
 
   const openPip = useCallback((pip: DetailsPanelPip) => {
