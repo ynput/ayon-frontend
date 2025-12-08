@@ -222,21 +222,50 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
       const clipboardText = await getSelectionData(selected, { fullRow })
-      if (!clipboardText) {
-        return
+      if (!clipboardText) return
+
+      let copySucceeded = false
+
+      // modern Clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(clipboardText)
+
+          // IMPORTANT: Verify the write actually worked by reading back
+          // Modern API sometimes reports success but doesn't actually write to clipboard
+          const readBack = await navigator.clipboard.readText()
+          if (readBack === clipboardText) {
+            console.log('Copied to clipboard (modern API)')
+            copySucceeded = true
+          } else {
+            console.warn('Modern Clipboard API write verification failed, falling back')
+          }
+        } catch (error: any) {
+          console.warn('Modern Clipboard API failed:', error.message)
+        }
       }
-      if (!navigator.clipboard) {
-        clipboardError('Clipboard API not supported in this browser.')
-        return
-      }
-      if (!window.isSecureContext) {
-        clipboardError('Clipboard operations require a secure HTTPS context.')
-        return
-      }
-      try {
-        await navigator.clipboard.writeText(clipboardText)
-      } catch (error: any) {
-        clipboardError(`Failed to copy to clipboard: ${error.message}`)
+
+      // Fallback to deprecated execCommand
+      if (!copySucceeded) {
+        try {
+          const textarea = document.createElement('textarea')
+          textarea.value = clipboardText
+          textarea.style.position = 'fixed'
+          textarea.style.opacity = '0'
+          document.body.appendChild(textarea)
+          textarea.select()
+
+          const execSuccess = document.execCommand('copy')
+          document.body.removeChild(textarea)
+
+          if (execSuccess) {
+            console.log('Copied to clipboard (legacy fallback)')
+          } else {
+            clipboardError('Failed to copy to clipboard.')
+          }
+        } catch (error: any) {
+          clipboardError(`Failed to copy to clipboard: ${error.message}`)
+        }
       }
     },
     [selectedCells, entitiesMap, gridMap],
@@ -690,7 +719,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     const handleKeyDown = async (e: KeyboardEvent) => {
       // Copy functionality (Ctrl+C or Command+C)
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        copyToClipboard()
+        await copyToClipboard()
       }
 
       // Paste functionality (Ctrl+V or Command+V)
