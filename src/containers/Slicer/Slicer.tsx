@@ -10,6 +10,8 @@ import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from './types'
 import useSlicerMenuItems from '@containers/Slicer/hooks/useSlicerMenuItems.tsx'
+import { RenameForm } from '@shared/components/RenameForm'
+import { Dialog } from '@ynput/ayon-react-components'
 
 interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -17,11 +19,7 @@ interface SlicerProps {
   persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
 }
 
-const Slicer: FC<SlicerProps> = ({
-  sliceFields = [],
-  entityTypes = ['task'],
-  persistFieldId,
-}) => {
+const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], persistFieldId, }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
     SlicerDropdown,
@@ -43,7 +41,7 @@ const Slicer: FC<SlicerProps> = ({
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
   // Context menu hook handles all menu logic
-  const { openContext } = useSlicerMenuItems({
+  const { openContext, renameDialog, handleSubmitRename, handleCancelRename } = useSlicerMenuItems({
     expanded,
     setExpanded,
     rowSelection,
@@ -109,6 +107,34 @@ const Slicer: FC<SlicerProps> = ({
           }}
         />
       </SimpleTableProvider>
+
+      {/*{renameDialog && (*/}
+      {/*  <Dialog*/}
+      {/*    isOpen={!!renameDialog}*/}
+      {/*    onClose={handleCancelRename}*/}
+      {/*    header={`Rename ${renameDialog.entityType}`}*/}
+      {/*    style={{ minWidth: 400 }}*/}
+      {/*  >*/}
+      {/*    <RenameForm*/}
+      {/*      cellId={`rename-${renameDialog.entityId}`}*/}
+      {/*      entityType={renameDialog.entityType}*/}
+      {/*      initialName={renameDialog.currentName}*/}
+      {/*      initialLabel={renameDialog.currentLabel}*/}
+      {/*      onClose={handleCancelRename}*/}
+      {/*      valueData={{*/}
+      {/*        name: renameDialog.currentName,*/}
+      {/*        label: renameDialog.currentLabel,*/}
+      {/*        meta: {*/}
+      {/*          updateEntities: async ({ field, value }: { field: string; value: string }) => {*/}
+      {/*            await handleSubmitRename(field as 'name' | 'label', value)*/}
+      {/*          },*/}
+      {/*        },*/}
+      {/*        entityRowId: renameDialog.entityId,*/}
+      {/*        hasVersions: false,*/}
+      {/*      }}*/}
+      {/*    />*/}
+      {/*  </Dialog>*/}
+      {/*)}*/}
     </Container>
   )
 }
