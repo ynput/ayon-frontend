@@ -10,8 +10,7 @@ import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from './types'
 import useSlicerMenuItems from '@containers/Slicer/hooks/useSlicerMenuItems.tsx'
-import { RenameForm } from '@shared/components/RenameForm'
-import { Dialog } from '@ynput/ayon-react-components'
+import Shortcuts from '@containers/Shortcuts'
 
 interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -19,7 +18,7 @@ interface SlicerProps {
   persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
 }
 
-const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], persistFieldId, }) => {
+const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], persistFieldId }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
     SlicerDropdown,
@@ -40,8 +39,8 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
-  // Context menu hook handles all menu logic
-  const { openContext, renameDialog, handleSubmitRename, handleCancelRename } = useSlicerMenuItems({
+  // Context menu hook handles all menu logic and keyboard shortcuts
+  const { openContext, handleRowClick, shortcuts } = useSlicerMenuItems({
     expanded,
     setExpanded,
     rowSelection,
@@ -67,6 +66,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
 
   return (
     <Container>
+      <Shortcuts shortcuts={shortcuts} />
       <Header>
         <SlicerDropdown
           options={sliceOptions || []}
@@ -103,38 +103,11 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
           pt={{
             row: {
               onContextMenu: openContext,
-            },
+              onClickCapture: handleRowClick,
+            }
           }}
         />
       </SimpleTableProvider>
-
-      {/*{renameDialog && (*/}
-      {/*  <Dialog*/}
-      {/*    isOpen={!!renameDialog}*/}
-      {/*    onClose={handleCancelRename}*/}
-      {/*    header={`Rename ${renameDialog.entityType}`}*/}
-      {/*    style={{ minWidth: 400 }}*/}
-      {/*  >*/}
-      {/*    <RenameForm*/}
-      {/*      cellId={`rename-${renameDialog.entityId}`}*/}
-      {/*      entityType={renameDialog.entityType}*/}
-      {/*      initialName={renameDialog.currentName}*/}
-      {/*      initialLabel={renameDialog.currentLabel}*/}
-      {/*      onClose={handleCancelRename}*/}
-      {/*      valueData={{*/}
-      {/*        name: renameDialog.currentName,*/}
-      {/*        label: renameDialog.currentLabel,*/}
-      {/*        meta: {*/}
-      {/*          updateEntities: async ({ field, value }: { field: string; value: string }) => {*/}
-      {/*            await handleSubmitRename(field as 'name' | 'label', value)*/}
-      {/*          },*/}
-      {/*        },*/}
-      {/*        entityRowId: renameDialog.entityId,*/}
-      {/*        hasVersions: false,*/}
-      {/*      }}*/}
-      {/*    />*/}
-      {/*  </Dialog>*/}
-      {/*)}*/}
     </Container>
   )
 }

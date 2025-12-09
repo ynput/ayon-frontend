@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useCreateContextMenu } from '@shared/containers'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useMoveEntityContext, useProjectFoldersContext, useDetailsPanelContext } from '@shared/context'
 import { useUpdateOverviewEntitiesMutation } from '@shared/api'
-import { confirmDelete } from '@shared/util'
+import { confirmDelete, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { toast } from 'react-toastify'
 import { useAppSelector } from '@state/store'
 import { copyToClipboard } from '@shared/util'
@@ -17,13 +17,6 @@ type UseSlicerMenuItemsProps = {
   setRowSelection: (selection: RowSelectionState) => void
   tableData: SimpleTableRow[]
 }
-
-type RenameDialogState = {
-  entityId: string
-  entityType: 'folder' | 'task'
-  currentName: string
-  currentLabel: string
-} | null
 
 const useSlicerMenuItems = ({
   expanded,
@@ -38,7 +31,6 @@ const useSlicerMenuItems = ({
   const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
   const projectName = useAppSelector((state) => state.project.name)
   const { setEntities, setPanelOpen } = useDetailsPanelContext()
-  const [renameDialog, setRenameDialog] = useState<RenameDialogState>(null)
 
   const mapSubTypeToEntityType = useCallback((subType: string | null | undefined): 'folder' | 'task' | null => {
     if (subType === 'Folder' || subType === 'Asset') {
@@ -309,75 +301,36 @@ const useSlicerMenuItems = ({
     [projectName, tableData, findRowById, mapSubTypeToEntityType, setEntities, setPanelOpen],
   )
 
-  const handleRename = useCallback(
-    (selectedIds: string[]) => {
-      if (!projectName) {
-        toast.error('No project selected')
-        return
-      }
+  // Handle alt+click for expand/collapse
+  const handleRowClick = useCallback(
+    (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
+      if (event.altKey) {
+        event.preventDefault()
+        event.stopPropagation()
 
-      if (selectedIds.length !== 1) {
-        toast.error('Please select only one entity to rename')
-        return
-      }
+        // Get the row ID from the event target
+        const rowId = event.currentTarget.id
+        if (!rowId) return
 
-      const row = findRowById(tableData, selectedIds[0])
-      if (!row || !row.data?.id) {
-        toast.error('Entity not found')
-        return
-      }
+        // Check if this row is in the current selection
+        const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
+        const isInSelection = selectedIds.includes(rowId)
 
-      const entityType = mapSubTypeToEntityType(row.data?.subType)
-      if (!entityType) {
-        toast.error('Cannot rename this entity type')
-        return
-      }
+        // If the clicked row is in the selection, use all selected rows, otherwise just the clicked row
+        const idsToToggle = isInSelection ? selectedIds : [rowId]
 
-      setRenameDialog({
-        entityId: row.data.id,
-        entityType,
-        currentName: row.data?.name || row.name || '',
-        currentLabel: row.data?.label || row.label || '',
-      })
-    },
-    [projectName, tableData, findRowById, mapSubTypeToEntityType],
-  )
+        // Check if the clicked row is expanded
+        const isExpanded = expanded && (expanded as Record<string, boolean>)[rowId]
 
-  const handleSubmitRename = useCallback(
-    async (field: 'name' | 'label', value: string) => {
-      if (!renameDialog || !projectName) return
-
-      try {
-        const operation = {
-          entityType: renameDialog.entityType,
-          type: 'update' as const,
-          entityId: renameDialog.entityId,
-          data: { [field]: value.trim() },
+        if (isExpanded) {
+          handleCollapse(idsToToggle)
+        } else {
+          handleExpand(idsToToggle)
         }
-
-        await updateOverviewEntities({
-          projectName,
-          operationsRequestModel: { operations: [operation] },
-        }).unwrap()
-
-        // Update the rename dialog state to reflect the change
-        setRenameDialog({
-          ...renameDialog,
-          [field === 'name' ? 'currentName' : 'currentLabel']: value,
-        })
-      } catch (error: any) {
-        const message = error?.error || error?.data?.detail || `Failed to update ${field}`
-        console.error(`Failed to update ${field}:`, error)
-        toast.error(message)
-        throw error
       }
     },
-    [renameDialog, projectName, updateOverviewEntities],
+    [rowSelection, expanded, handleExpand, handleCollapse],
   )
-
-  const handleCancelRename = useCallback(() => {
-    setRenameDialog(null)
-  }, [])
 
   const openContext = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
@@ -403,8 +356,9 @@ const useSlicerMenuItems = ({
         {
           label: 'Copy',
           icon: 'content_copy',
-          command: copy,
+          command: () => copy(selectedIds),
           hidden: !hasSelection,
+          shortcut: getPlatformShortcutKey('c', [KeyMode.Ctrl]),
         },
         {
           label: 'Details',
@@ -412,12 +366,6 @@ const useSlicerMenuItems = ({
           command: () => handleOpenDetailsPanel(selectedIds),
           hidden: !hasSelection,
         },
-        // {
-        //   label: 'Rename',
-        //   icon: 'titlecase',
-        //   command: () => handleRename(selectedIds),
-        //   hidden: multipleSelected || !hasSelection,
-        // },
         {
           label: 'Move',
           icon: 'drive_file_move',
@@ -429,12 +377,14 @@ const useSlicerMenuItems = ({
           icon: 'unfold_more',
           command: () => handleExpand(selectedIds),
           hidden: multipleSelected || !hasSelection,
+          shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
         },
         {
           label: 'Collapse All',
           icon: 'unfold_less',
           command: () => handleCollapse(selectedIds),
           hidden: multipleSelected || !hasSelection,
+          shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
         },
         {
           label: 'Delete',
@@ -447,14 +397,30 @@ const useSlicerMenuItems = ({
 
       ctxMenuShow(e, menuItems)
     },
-    [ctxMenuShow, rowSelection, setRowSelection, handleExpand, handleCollapse, handleDelete, handleMove, handleOpenDetailsPanel, handleRename, copy],
+    [ctxMenuShow, rowSelection, setRowSelection, handleExpand, handleCollapse, handleDelete, handleMove, handleOpenDetailsPanel, copy],
   )
+
+  // Keyboard shortcuts
+  const shortcuts = useMemo<Array<{ key: string; action: () => void }>>(() => {
+    const getSelectedIds = () => Object.keys(rowSelection).filter((id) => rowSelection[id])
+
+    return [
+      {
+        key: 'ctrl+c',
+        action: () => {
+          const selectedIds = getSelectedIds()
+          if (selectedIds.length > 0) {
+            copy(selectedIds)
+          }
+        },
+      },
+    ]
+  }, [rowSelection, copy])
 
   return {
     openContext,
-    renameDialog,
-    handleSubmitRename,
-    handleCancelRename,
+    handleRowClick,
+    shortcuts,
   }
 }
 
