@@ -1,10 +1,25 @@
-import { useState } from 'react'
+import { useState, RefObject, KeyboardEvent, Dispatch, SetStateAction } from 'react'
+import type { GroupedMessage } from '../types'
 
-const useKeydown = ({ messages, onChange, selected, listRef }) => {
+interface UseKeydownProps {
+  messages: GroupedMessage[]
+  onChange: (id: string, ids?: string[]) => void
+  selected: string[]
+  listRef: RefObject<HTMLUListElement | null>
+}
+
+type UseKeydownReturn = [(e: KeyboardEvent) => void, [boolean, Dispatch<SetStateAction<boolean>>]]
+
+const useKeydown = ({
+  messages,
+  onChange,
+  selected,
+  listRef,
+}: UseKeydownProps): UseKeydownReturn => {
   // is the user using the keyboard for navigation
   const [usingKeyboard, setUsingKeyboard] = useState(false)
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: KeyboardEvent): void => {
     // if there are no messages, do nothing
     if (!messages.length) return
     const key = e.key
@@ -13,7 +28,7 @@ const useKeydown = ({ messages, onChange, selected, listRef }) => {
     const isUsingKeyboard = ['ArrowDown', 'ArrowUp', 'Tab'].includes(key)
     if (isUsingKeyboard) setUsingKeyboard(true)
 
-    let newSelected = null
+    let newSelected: string | null = null
     // if arrow down, select next task
     // if arrow down, select next task
     if (key === 'ArrowDown' || (key === 'Tab' && !e.shiftKey)) {
@@ -23,8 +38,8 @@ const useKeydown = ({ messages, onChange, selected, listRef }) => {
       // if the next index is out of bounds, do nothing
       if (nextIndex >= messages.length) {
         if (key === 'Tab') {
-          // clear selected
-          onChange([])
+          // clear selected - signal with empty string
+          newSelected = ''
         }
         // not calling preventDefault here will allow the browser to focus the next element
         return
@@ -41,8 +56,8 @@ const useKeydown = ({ messages, onChange, selected, listRef }) => {
       // if the previous index is out of bounds, do nothing
       if (previousIndex < 0) {
         if (key === 'Tab') {
-          // clear selected
-          onChange([])
+          // clear selected - signal with empty string
+          newSelected = ''
         }
         // not calling preventDefault here will allow the browser to focus the previous element
         return
@@ -57,12 +72,12 @@ const useKeydown = ({ messages, onChange, selected, listRef }) => {
       onChange(newSelected)
 
       // set new focus to the selected task
-      const listEl = listRef.current?.querySelector(`#message-${newSelected}`)
+      const listEl = listRef.current?.querySelector(`#message-${newSelected}`) as HTMLElement | null
       if (listEl) listEl.focus()
     }
   }
 
-  return [handleKeyDown, [usingKeyboard, setUsingKeyboard]]
+  return [handleKeyDown, [usingKeyboard, setUsingKeyboard]] as UseKeydownReturn
 }
 
 export default useKeydown

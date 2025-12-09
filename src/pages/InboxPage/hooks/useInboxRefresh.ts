@@ -1,7 +1,22 @@
 import { useEffect, useState } from 'react'
 import api from '@shared/api'
+import type { AppDispatch } from '@state/store'
 
-const useInboxRefresh = ({ isFetching, refetch, dispatch }) => {
+interface UseInboxRefreshProps {
+  isFetching: boolean
+  refetch: () => void
+  dispatch: AppDispatch
+}
+
+interface UseInboxRefreshReturn {
+  isRefreshing: boolean
+}
+
+const useInboxRefresh = ({
+  isFetching,
+  refetch,
+  dispatch,
+}: UseInboxRefreshProps): [() => void, UseInboxRefreshReturn] => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   useEffect(() => {
     if (isRefreshing && !isFetching) {
@@ -10,7 +25,7 @@ const useInboxRefresh = ({ isFetching, refetch, dispatch }) => {
     }
   }, [isFetching, isRefreshing])
 
-  const handleRefresh = () => {
+  const handleRefresh = (): void => {
     console.log('refetching inbox...')
     setIsRefreshing(true)
     refetch()

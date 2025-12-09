@@ -1,9 +1,9 @@
 import InboxMessage from '../InboxMessage/InboxMessage'
 import * as Styled from './Inbox.styled'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, MouseEvent, KeyboardEvent } from 'react'
 import clsx from 'clsx'
 import InboxDetailsPanel from '../InboxDetailsPanel'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import Shortcuts from '@containers/Shortcuts'
 import { InView } from 'react-intersection-observer'
 import { toast } from 'react-toastify'
@@ -13,7 +13,7 @@ import { useGetInboxMessagesQuery, useLazyGetInboxMessagesQuery } from '@queries
 import { useGetProjectsInfoQuery } from '@shared/api'
 // Components
 import { Button, Spacer } from '@ynput/ayon-react-components'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { SplitterPanel } from 'primereact/splitter'
 import EnableNotifications from '@components/EnableNotifications'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 // Hooks
@@ -26,8 +26,18 @@ import { useListProjectsQuery } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import { useAppSelector } from '@state/store'
+// Types
+import type {
+  InboxFilter,
+  InboxFilterArgs,
+  GroupedMessage,
+  PlaceholderMessage,
+  InboxContextMenuItem,
+} from '../types'
+import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 
-const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
+const placeholderMessages: PlaceholderMessage[] = Array.from({ length: 100 }, (_, i) => ({
   activityId: `placeholder-${i}`,
   folderName: 'Loading...',
   thumbnail: { icon: 'folder' },
@@ -35,23 +45,27 @@ const placeholderMessages = Array.from({ length: 100 }, (_, i) => ({
   isPlaceholder: true,
 }))
 
-const filters = {
+const filters: Record<InboxFilter, InboxFilterArgs> = {
   important: { active: true, important: true },
   other: { active: true, important: false },
   cleared: { active: false, important: null },
 }
 
-const Inbox = ({ filter }) => {
+interface InboxProps {
+  filter: InboxFilter
+}
+
+const Inbox = ({ filter }: InboxProps) => {
   const dispatch = useDispatch()
   const { setHighlightedActivities } = useDetailsPanelContext()
 
   // get all project names
   const { data: projects = [] } = useListProjectsQuery({})
 
-  const user = useSelector((state) => state.user.name)
+  const user = useAppSelector((state) => state.user.name)
 
   const last = 100
-  const filterArgs = filters[filter] || {}
+  const filterArgs = filters[filter] || filters.important
   const isActive = filterArgs.active
   const isImportant = filterArgs.important
 
@@ -87,14 +101,14 @@ const Inbox = ({ filter }) => {
   const handleUpdateMessages = useUpdateInboxMessage({
     last,
     isActive,
-    isImportant,
+    isImportant: isImportant ?? false,
   })
 
   //   now sort the messages by createdAt using the compare function
   const messagesSortedByDate = useMemo(
     () =>
       [...messages].sort((a, b) =>
-        isActive ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : messages,
+        isActive ? compareAsc(new Date(b.createdAt), new Date(a.createdAt)) : 0,
       ),
     [messages, isActive],
   )
@@ -104,9 +118,9 @@ const Inbox = ({ filter }) => {
 
   // single select only allow but multi select is possible
   // it always seems to become multi select so i'll just support it from the start
-  const [selected, setSelected] = useState([])
+  const [selected, setSelected] = useState<string[]>([])
 
-  const listRef = useRef(null)
+  const listRef = useRef<HTMLUListElement>(null)
 
   // when tab changes, focus the first message and clear selected
   // we do this so that keyboard navigation works right away
@@ -114,10 +128,11 @@ const Inbox = ({ filter }) => {
     setSelected([])
     if (!listRef.current || isLoadingInbox) return
 
-    listRef.current?.firstElementChild?.focus()
+    const firstChild = listRef.current?.firstElementChild as HTMLElement | null
+    firstChild?.focus()
   }, [listRef, isLoadingInbox, filter])
 
-  const handleToggleReadMessage = (id) => {
+  const handleToggleReadMessage = (id: string): void => {
     // get all the messages in the group
     const group = groupedMessages.find((m) => m.activityId === id)
     // if no group is found, return
@@ -137,7 +152,7 @@ const Inbox = ({ filter }) => {
     )
   }
 
-  const handleMessageSelect = async (id, ids = []) => {
+  const handleMessageSelect = async (id: string, ids: string[] = []): Promise<void> => {
     if (id.includes('placeholder')) return
     // if the message is already selected, deselect it
     let newSelection = []
@@ -166,7 +181,7 @@ const Inbox = ({ filter }) => {
     }
 
     const idsToMarkAsRead = unReadMessages.map((m) => m.referenceId)
-    if (idsToMarkAsRead.length > 0) {
+    if (idsToMarkAsRead.length > 0 && message) {
       handleUpdateMessages(idsToMarkAsRead, 'read', message.projectName, false, false)
     }
   }
@@ -185,7 +200,12 @@ const Inbox = ({ filter }) => {
     listRef,
   })
 
-  const clearMessages = async (id, messagesToClear = [], projectName, allMessages) => {
+  const clearMessages = async (
+    id: string | null,
+    messagesToClear: InboxMessageType[] = [],
+    projectName: string,
+    allMessages?: boolean,
+  ): Promise<void> => {
     if (selected.length) {
       // select next message in the list
       const selectedMessageIndex = groupedMessages.findIndex((m) => m.activityId === id)
@@ -194,23 +214,22 @@ const Inbox = ({ filter }) => {
       else setSelected([])
     } else setSelected([])
 
-    const idsToClear = allMessages ? undefined : messagesToClear.map((m) => m.referenceId)
+    const idsToClear = allMessages ? [] : messagesToClear.map((m) => m.referenceId)
     const isRead = messagesToClear.every((m) => m.read)
     const status = isActive ? 'inactive' : 'unread'
 
     handleUpdateMessages(idsToClear, status, projectName, true, isRead, allMessages)
   }
 
-  const handleClearMessage = (id) => {
+  const handleClearMessage = (id: string): void => {
     // find the group message with id
     const group = groupedMessages.find((g) => g.activityId === id)
-    const projectName = group?.projectName
     if (!group) return
 
-    clearMessages(id, group.messages, projectName)
+    clearMessages(id, group.messages, group.projectName)
   }
 
-  const handleClearAll = async () => {
+  const handleClearAll = async (): Promise<void> => {
     let promises = []
     // for all projects, clear all messages
     for (const project of projects) {
@@ -228,12 +247,15 @@ const Inbox = ({ filter }) => {
 
   const isLoadingAny = isLoadingInbox || isLoadingInfo || isRefreshing
 
-  const messagesData = isLoadingAny ? placeholderMessages : groupedMessages
+  // Cast placeholder messages to satisfy GroupedMessage shape for rendering
+  const messagesData = isLoadingAny
+    ? (placeholderMessages as unknown as GroupedMessage[])
+    : groupedMessages
 
-  const getHoveredMessageId = (e, closest = '') => {
+  const getHoveredMessageId = (e: MouseEvent | KeyboardEvent, closest = ''): string | null => {
     // get the message list item
-    const target = e.target.closest('.inbox-message' + closest)
-    if (!target) return
+    const target = (e.target as HTMLElement).closest('.inbox-message' + closest)
+    if (!target) return null
     // check target has id 'message-{id}` and extract the id
     const [type, id] = target.id.split('-')
     if (type !== 'message' || !id) return null
@@ -241,14 +263,14 @@ const Inbox = ({ filter }) => {
     return id
   }
 
-  const handleReadShortcut = (e) => {
+  const handleReadShortcut = (e: MouseEvent | KeyboardEvent): void => {
     const id = getHoveredMessageId(e)
     if (!id) return
 
     handleToggleReadMessage(id)
   }
 
-  const handleClearShortcut = (e) => {
+  const handleClearShortcut = (e: MouseEvent | KeyboardEvent): void => {
     const id = getHoveredMessageId(e, '.clearable')
     if (!id) return
 
@@ -262,11 +284,11 @@ const Inbox = ({ filter }) => {
     }
   }
 
-  const contextMenu = (id) => {
+  const contextMenu = (id: string): InboxContextMenuItem[] => {
     // find the group message with id
     const group = groupedMessages.find((g) => g.activityId === id)
 
-    if (!group) return [{ label: 'No message selected', disabled: true }]
+    if (!group) return []
     const referenceIds = group.messages.map((m) => m.referenceId)
     const isRead = group.read
 
@@ -298,9 +320,9 @@ const Inbox = ({ filter }) => {
 
   const [ctxMenuShow] = useCreateContextMenu([])
 
-  const handleContextMenu = (e) => {
+  const handleContextMenu = (e: MouseEvent<HTMLLIElement>): void => {
     // get id from the target
-    const target = e.target.closest('li')
+    const target = (e.target as HTMLElement).closest('li')
     const id = target?.id.split('-')[1]
 
     if (!id) return
@@ -334,11 +356,12 @@ const Inbox = ({ filter }) => {
         action: refreshInbox,
       },
     ],
-    [messagesData, selected],
+    [handleClearShortcut, handleClearAll, handleReadShortcut, isActive, refreshInbox],
   )
 
   return (
     <>
+      {/* @ts-expect-error - Shortcuts component has complex typing */}
       <Shortcuts shortcuts={shortcuts} deps={[messagesData, selected]} />
       <Styled.Tools>
         {/* <InputText placeholder="Search..." /> */}
@@ -376,8 +399,8 @@ const Inbox = ({ filter }) => {
                   key={group.activityId}
                   path={group.path}
                   type={group.activityType}
-                  entityType={group.entityType}
-                  entityId={group.entityId}
+                  entityType={group.entityType ?? undefined}
+                  entityId={group.entityId ?? undefined}
                   projectName={group.projectName}
                   date={group.date}
                   userName={group.userName}
@@ -426,7 +449,7 @@ const Inbox = ({ filter }) => {
           </SplitterPanel>
           <SplitterPanel
             size={40}
-            style={{ minWidth: 300, overflow: 'hidden' }}
+            style={{ minWidth: 300, overflow: 'visible' }}
             className="details"
           >
             <InboxDetailsPanel

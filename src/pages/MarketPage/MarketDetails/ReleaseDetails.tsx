@@ -58,7 +58,9 @@ const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps)
                 </a>
               </Styled.ErrorCard>
             )}
-            <ReactMarkdown className={clsx({ loading: isLoading })}>{description}</ReactMarkdown>
+            <div className={clsx({ loading: isLoading })}>
+              <ReactMarkdown>{description}</ReactMarkdown>
+            </div>
             <Styled.ReleaseAddons>
               {addons?.map((addon) => (
                 <Styled.ReleaseAddonLink

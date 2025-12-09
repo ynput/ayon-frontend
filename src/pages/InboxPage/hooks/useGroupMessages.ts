@@ -1,19 +1,16 @@
-// const groupedMessage = {
-//     date: date,
-//     title: string,
-//     subTitle: string,
-//     img: string,
-//     isMultiple: boolean,
-//     items: [{message}],
-//     changes: [string],
-// }
-
 import { isSameDay, parseISO } from 'date-fns'
 import { useMemo } from 'react'
 import RemoveMarkdown from 'remove-markdown'
+import type { InboxMessage } from '@/services/inbox/inboxTransform'
+import type { GroupedMessage, ActivityData, MessageAuthor } from '../types'
 
-const groupMessages = (messages = [], currentUser) => {
-  const groups = []
+interface UseGroupMessagesProps {
+  messages: InboxMessage[]
+  currentUser: string
+}
+
+const groupMessages = (messages: InboxMessage[] = [], currentUser: string): InboxMessage[][] => {
+  const groups: InboxMessage[][] = []
   const visited = new Array(messages.length).fill(false) // Tracks if a message has been grouped
 
   const versionPublishGroups = groupVersionMessages(messages)
@@ -68,8 +65,10 @@ const groupMessages = (messages = [], currentUser) => {
       let isSameAssignee = true
       // for assignee change, check if the user is currentUser
       if (message.activityType.includes('assignee')) {
-        const assigneeIsMe = message?.activityData?.assignee === currentUser
-        const nextAssigneeIsMe = nextMessage?.activityData?.assignee === currentUser
+        const msgActivityData = message.activityData as ActivityData | undefined
+        const nextMsgActivityData = nextMessage.activityData as ActivityData | undefined
+        const assigneeIsMe = msgActivityData?.assignee === currentUser
+        const nextAssigneeIsMe = nextMsgActivityData?.assignee === currentUser
         // if they don't match, don't group
         if (assigneeIsMe !== nextAssigneeIsMe) {
           isSameAssignee = false
@@ -89,15 +88,15 @@ const groupMessages = (messages = [], currentUser) => {
 
   // Sort all groups by their most recent message date (newest first)
   groups.sort((a, b) => {
-    const dateA = new Date(a[0].createdAt)
-    const dateB = new Date(b[0].createdAt)
+    const dateA = new Date(a[0].createdAt).getTime()
+    const dateB = new Date(b[0].createdAt).getTime()
     return dateB - dateA
   })
 
   return groups // Return the list of grouped messages
 }
 
-const groupVersionMessages = (messages) => {
+const groupVersionMessages = (messages: InboxMessage[]): InboxMessage[][] => {
   const groupedByType = Object.groupBy(messages, (m) => m.activityType)
 
   // Handle both version.publish and reviewable messages
@@ -113,7 +112,7 @@ const groupVersionMessages = (messages) => {
   // Group by time (5-minute windows)
   const groupedByTime = Object.groupBy(messagesToGroup, (m) => {
     const date = parseISO(m.createdAt)
-    if (isNaN(date)) return 'invalid-date'
+    if (isNaN(date.getTime())) return 'invalid-date'
 
     // Round down to nearest 5 minutes and reset seconds/milliseconds
     const rounded = new Date(date)
@@ -122,29 +121,30 @@ const groupVersionMessages = (messages) => {
   })
 
   // Group by parent folder within each time window
-  const folderGroups = []
+  const folderGroups: InboxMessage[][] = []
 
   // Sort time windows chronologically (newest first to match inbox order)
   const sortedTimeEntries = Object.entries(groupedByTime)
     .filter(([key]) => key !== 'invalid-date')
-    .sort(([timeA], [timeB]) => new Date(timeB) - new Date(timeA))
+    .sort(([timeA], [timeB]) => new Date(timeB).getTime() - new Date(timeA).getTime())
 
   for (const [, timeGroup] of sortedTimeEntries) {
-    if (timeGroup.length === 0) continue
+    if (!timeGroup || timeGroup.length === 0) continue
 
     // Group by parent folder within this time window
     const groupedByFolder = Object.groupBy(timeGroup, (m) => {
-      const parentFolder = m.activityData?.parents?.[0]
+      const activityData = m.activityData as ActivityData | undefined
+      const parentFolder = activityData?.parents?.[0]
       return parentFolder?.id || 'no-parent'
     })
 
     // Add each folder group to the result
     for (const [folderId, folderMessages] of Object.entries(groupedByFolder)) {
-      if (folderId === 'no-parent' || folderMessages.length === 0) continue
+      if (folderId === 'no-parent' || !folderMessages || folderMessages.length === 0) continue
 
       // Sort messages within the folder group by time (newest first)
       const sortedMessages = folderMessages.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
 
       folderGroups.push(sortedMessages)
@@ -153,17 +153,17 @@ const groupVersionMessages = (messages) => {
 
   return folderGroups
 }
-const groupAssigneeMessages = (messages) => {
+const groupAssigneeMessages = (messages: InboxMessage[]): InboxMessage[][] => {
   const removes = messages.filter((m) => m.activityType === 'assignee.remove')
   const adds = messages.filter((m) => m.activityType === 'assignee.add')
-  const groups = []
-  const used = new Set()
+  const groups: InboxMessage[][] = []
+  const used = new Set<string>()
 
-  const entityTimeWindowGroups = new Map()
+  const entityTimeWindowGroups = new Map<string | null | undefined, InboxMessage[][]>()
 
   // Sort all messages by time to ensure chronological processing
   const allAssigneeMessages = [...removes, ...adds].sort(
-    (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   )
 
   allAssigneeMessages.forEach((msg) => {
@@ -177,12 +177,13 @@ const groupAssigneeMessages = (messages) => {
     }
 
     const timeWindowGroups = entityTimeWindowGroups.get(entityId)
+    if (!timeWindowGroups) return
 
     // Check if this message belongs to an existing time window group
     let addedToGroup = false
     for (const timeWindowGroup of timeWindowGroups) {
       const groupTime = new Date(timeWindowGroup[0].createdAt)
-      const timeDiff = Math.abs(msgTime - groupTime)
+      const timeDiff = Math.abs(msgTime.getTime() - groupTime.getTime())
 
       // Strictly less than 5 seconds to avoid edge cases
       if (timeDiff < 5000) {
@@ -205,9 +206,15 @@ const groupAssigneeMessages = (messages) => {
 
       // Collect all removed and added assignees
       const removedAssignees = new Set(
-        groupRemoves.map((m) => m.activityData?.assignee).filter(Boolean),
+        groupRemoves
+          .map((m) => (m.activityData as ActivityData | undefined)?.assignee)
+          .filter((a): a is string => Boolean(a)),
       )
-      const addedAssignees = new Set(groupAdds.map((m) => m.activityData?.assignee).filter(Boolean))
+      const addedAssignees = new Set(
+        groupAdds
+          .map((m) => (m.activityData as ActivityData | undefined)?.assignee)
+          .filter((a): a is string => Boolean(a)),
+      )
 
       // Calculate net changes
       const netRemoved = new Set(
@@ -231,7 +238,9 @@ const groupAssigneeMessages = (messages) => {
 
         if (isMultipleAddsOnly || isMultipleRemovesOnly || isReassignment) {
           // This group should be shown as a combined message
-          const sortedGroup = group.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+          const sortedGroup = group.sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          )
           groups.push(sortedGroup)
         }
         // Mark all messages as used regardless of whether they were grouped
@@ -247,12 +256,13 @@ const groupAssigneeMessages = (messages) => {
   return groups
 }
 
-const getChangedValues = (messages = []) => {
+const getChangedValues = (messages: InboxMessage[] = []): string[] => {
   const reversedMessages = messages.slice().reverse()
-  const uniqueValues = []
+  const uniqueValues: string[] = []
 
   for (const message of reversedMessages) {
-    const oldValue = message.activityData.oldValue
+    const msgActivityData = message.activityData as ActivityData | undefined
+    const oldValue = msgActivityData?.oldValue
     if (oldValue !== undefined && uniqueValues.includes(oldValue)) {
       const index = uniqueValues.indexOf(oldValue)
       uniqueValues.splice(index, 1)
@@ -262,7 +272,8 @@ const getChangedValues = (messages = []) => {
     }
   }
 
-  const firstNewValue = messages[0]?.activityData.newValue
+  const firstMsgActivityData = messages[0]?.activityData as ActivityData | undefined
+  const firstNewValue = firstMsgActivityData?.newValue
   if (firstNewValue !== undefined) {
     if (uniqueValues.includes(firstNewValue)) {
       const index = uniqueValues.indexOf(firstNewValue)
@@ -274,10 +285,13 @@ const getChangedValues = (messages = []) => {
   return uniqueValues
 }
 
-const transformGroups = (groups = []) => {
+const transformGroups = (groups: InboxMessage[][] = []): GroupedMessage[] => {
   return groups.map((group) => {
-    const firstMessage = group[0] || {}
-    const lastMessage = group[group.length - 1] || {}
+    const firstMessage = group[0]
+    const lastMessage = group[group.length - 1]
+    if (!firstMessage || !lastMessage) {
+      throw new Error('Invalid group: missing first or last message')
+    }
     const isMultiple = group.length > 1
     const img = firstMessage.thumbnail.icon
     const date = firstMessage.createdAt
@@ -285,7 +299,10 @@ const transformGroups = (groups = []) => {
     const read = group.every((m) => m.read)
     const unReadCount = group.filter((m) => !m.read).length
 
-    let { activityType, projectName, author = {}, entityId, entityType, origin } = firstMessage
+    let activityType = firstMessage.activityType
+    const { projectName, entityId, entityType, origin } = firstMessage
+    const author = firstMessage.author as MessageAuthor | undefined
+    const activityData = firstMessage.activityData as ActivityData | undefined
 
     const { activityId } = lastMessage
 
@@ -298,12 +315,13 @@ const transformGroups = (groups = []) => {
 
     if (hasAssigneeChanges && isMultiple) {
       // Build a user lookup map from messages (user ID -> full name)
-      const userLookup = new Map()
+      const userLookup = new Map<string, string>()
 
       // Collect user info from all assignee messages in the group
       const allAssigneeMessages = [...removeMessages, ...addMessages]
       allAssigneeMessages.forEach((msg) => {
-        const userId = msg.activityData?.assignee
+        const msgActivityData = msg.activityData as ActivityData | undefined
+        const userId = msgActivityData?.assignee
         if (userId && !userLookup.has(userId)) {
           // Try to extract full name from message body as fallback
           const nameMatch = msg.body?.match(/\[([^\]]+)\]\(user:.*?\)/)
@@ -318,11 +336,15 @@ const transformGroups = (groups = []) => {
       const entityLink = entityLinkMatch ? entityLinkMatch[1] : ''
 
       // Collect all removed and added assignees (user IDs)
-      const removedAssignees = new Set(
-        removeMessages.map((m) => m.activityData?.assignee).filter(Boolean),
+      const removedAssignees = new Set<string>(
+        removeMessages
+          .map((m) => (m.activityData as ActivityData | undefined)?.assignee)
+          .filter((a): a is string => Boolean(a)),
       )
-      const addedAssignees = new Set(
-        addMessages.map((m) => m.activityData?.assignee).filter(Boolean),
+      const addedAssignees = new Set<string>(
+        addMessages
+          .map((m) => (m.activityData as ActivityData | undefined)?.assignee)
+          .filter((a): a is string => Boolean(a)),
       )
 
       // Calculate net changes
@@ -341,21 +363,21 @@ const transformGroups = (groups = []) => {
         const removedList = removedUserNames.join(', ')
         const addedList = addedUserNames.join(', ')
         customBody = `${
-          author.attrib.fullName || author.name || ''
+          author?.attrib?.fullName || author?.name || ''
         }: Reassigned ${entityLink} from ${removedList} to ${addedList}`
       } else if (addedUserNames.length > 0) {
         // Multiple adds only
         activityType = 'assignee.add'
         const addedList = addedUserNames.join(', ')
         customBody = `${
-          author.attrib.fullName || author.name || ''
+          author?.attrib?.fullName || author?.name || ''
         }: Added ${addedList} to ${entityLink}`
       } else if (removedUserNames.length > 0) {
         // Multiple removes only
         activityType = 'assignee.remove'
         const removedList = removedUserNames.join(', ')
         customBody = `${
-          author.attrib.fullName || author.name || ''
+          author?.attrib?.fullName || author?.name || ''
         }: Removed ${removedList} from ${entityLink}`
       }
     }
@@ -372,19 +394,20 @@ const transformGroups = (groups = []) => {
 
     if (isMultiple && hasVersionOrReview) {
       // Use the parent folder (first item in parents array) as the entity
-      const parentFolder = firstMessage.activityData?.parents?.[0]
+      const parentFolder = activityData?.parents?.[0]
       if (parentFolder) {
         finalEntityId = parentFolder.id
         finalEntityType = parentFolder.type
         // Show only the parent folder in the path
         finalPath = [parentFolder.label || parentFolder.name]
 
-        const authorMap = new Map()
+        const authorMap = new Map<string, MessageAuthor>()
         group.forEach((msg) => {
-          if (msg.author) {
-            const authorKey = msg.author.name
+          const msgAuthor = msg.author as MessageAuthor | undefined
+          if (msgAuthor?.name) {
+            const authorKey = msgAuthor.name
             if (!authorMap.has(authorKey)) {
-              authorMap.set(authorKey, msg.author)
+              authorMap.set(authorKey, msgAuthor)
             }
           }
         })
@@ -397,10 +420,11 @@ const transformGroups = (groups = []) => {
         const primaryAuthor = authors[0]?.attrib?.fullName || authors[0]?.name
 
         // Collect product names from the group
-        const productNames = []
+        const productNames: string[] = []
         group.forEach((msg) => {
           // Get product name from activityData.context
-          const productName = msg.activityData?.context?.productName
+          const msgActivityData = msg.activityData as ActivityData | undefined
+          const productName = msgActivityData?.context?.productName
           if (productName && !productNames.includes(productName)) {
             productNames.push(productName)
           }
@@ -438,7 +462,7 @@ const transformGroups = (groups = []) => {
       }
     }
 
-    const result = {
+    const result: GroupedMessage = {
       activityId: activityId,
       groupIds: group.map((m) => m.activityId),
       activityType: activityType,
@@ -465,7 +489,7 @@ const transformGroups = (groups = []) => {
   })
 }
 
-const useGroupMessages = ({ messages, currentUser }) => {
+const useGroupMessages = ({ messages, currentUser }: UseGroupMessagesProps): GroupedMessage[] => {
   const grouped = useMemo(() => {
     // const simpleGroups = messages.map((message) => [message])
     const simpleGroups = groupMessages(messages, currentUser)

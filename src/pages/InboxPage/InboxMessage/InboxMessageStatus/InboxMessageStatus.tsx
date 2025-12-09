@@ -1,8 +1,13 @@
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './InboxMessageStatus.styled'
 import { Fragment } from 'react'
+import type { InboxStatusChange } from '../../types'
 
-const InboxMessageStatus = ({ statuses = [] }) => {
+interface InboxMessageStatusProps {
+  statuses?: InboxStatusChange[]
+}
+
+const InboxMessageStatus = ({ statuses = [] }: InboxMessageStatusProps) => {
   return (
     <Styled.MessageStatus>
       {statuses.map(({ icon = 'fiber_manual_record', color, name }, index) => (
