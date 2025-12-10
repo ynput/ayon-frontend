@@ -1711,6 +1711,7 @@ export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
+  folderFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
 }>;
 
@@ -1722,6 +1723,7 @@ export type GetTasksListQueryVariables = Exact<{
   folderIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   taskIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
+  folderFilter?: InputMaybe<Scalars['String']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -2576,10 +2578,15 @@ export const GetListsItemsForReviewSessionDocument = `
 }
     `;
 export const GetTasksByParentDocument = `
-    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $search: String) {
+    query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $parentIds, filter: $filter, search: $search) {
+    tasks(
+      folderIds: $parentIds
+      filter: $filter
+      folderFilter: $folderFilter
+      search: $search
+    ) {
       edges {
         node {
           ...TaskPropsFragment
@@ -2590,11 +2597,12 @@ export const GetTasksByParentDocument = `
 }
     ${TaskPropsFragmentFragmentDoc}`;
 export const GetTasksListDocument = `
-    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
+    query GetTasksList($projectName: String!, $folderIds: [String!], $taskIds: [String!], $filter: String, $folderFilter: String, $search: String, $after: String, $first: Int, $before: String, $last: Int, $sortBy: String) {
   project(name: $projectName) {
     name
     tasks(
       filter: $filter
+      folderFilter: $folderFilter
       search: $search
       folderIds: $folderIds
       after: $after

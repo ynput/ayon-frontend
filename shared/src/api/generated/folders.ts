@@ -49,6 +49,13 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    searchFolders: build.mutation<SearchFoldersApiResponse, SearchFoldersApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/folders/search`,
+        method: 'POST',
+        body: queryArg.folderSearchRequest,
+      }),
+    }),
     getFolderHierarchy: build.query<GetFolderHierarchyApiResponse, GetFolderHierarchyApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/hierarchy`,
@@ -117,6 +124,11 @@ export type CreateFolderApiArg = {
   'x-sender'?: string
   'x-sender-type'?: string
   folderPostModel: FolderPostModel
+}
+export type SearchFoldersApiResponse = /** status 200 Successful Response */ FolderSearchResponse
+export type SearchFoldersApiArg = {
+  projectName: string
+  folderSearchRequest: FolderSearchRequest
 }
 export type GetFolderHierarchyApiResponse =
   /** status 200 Successful Response */ HierarchyResponseModel
@@ -268,6 +280,51 @@ export type FolderPostModel = {
   data?: Record<string, any>
   /** Whether the folder is active */
   active?: boolean
+}
+export type FolderSearchResponse = {
+  /** List of folder ids containing tasks matching the query */
+  folderIds?: string[]
+}
+export type QueryCondition = {
+  /** Path to the key separated by slashes */
+  key: string
+  /** Value to compare against */
+  value?: string | number | number | boolean | string[] | number[] | number[]
+  /** Comparison operator */
+  operator?:
+    | 'eq'
+    | 'like'
+    | 'lt'
+    | 'gt'
+    | 'lte'
+    | 'gte'
+    | 'ne'
+    | 'isnull'
+    | 'notnull'
+    | 'in'
+    | 'notin'
+    | 'includes'
+    | 'excludes'
+    | 'includesall'
+    | 'excludesall'
+    | 'includesany'
+    | 'excludesany'
+}
+export type QueryFilter = {
+  /** List of conditions to be evaluated */
+  conditions?: (QueryCondition | QueryFilter)[]
+  /** Operator to use when joining conditions */
+  operator?: 'and' | 'or'
+}
+export type FolderSearchRequest = {
+  /** Filter object used to resolve the tasks */
+  taskFilter?: QueryFilter
+  /** 'fulltext' search used to resolve the tasks */
+  taskSearch?: string
+  /** Filter object used to resolve the folders */
+  folderFilter?: QueryFilter
+  /** 'fulltext' search used to resolve the folders */
+  folderSearch?: string
 }
 export type HierarchyFolderModel = {
   /** Folder ID */
