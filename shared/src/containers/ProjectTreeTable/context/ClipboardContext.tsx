@@ -690,27 +690,17 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     const handleKeyDown = async (e: KeyboardEvent) => {
       // Copy functionality (Ctrl+C or Command+C)
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        // Check if user has text selected elsewhere or focus is in an input/textarea/contentEditable
+
         const activeEl = document.activeElement as HTMLElement | null
-        const selection = window.getSelection()
-        const hasTextSelection = selection && selection.toString().length > 0
 
-        // Skip table copy if:
-        // 1. There's a text selection (user is selecting text to copy)
-        // 2. Focus is in an input, textarea, or content-editable element
-        if (
-          hasTextSelection ||
-          (activeEl &&
-            (activeEl.tagName === 'INPUT' ||
-              activeEl.tagName === 'TEXTAREA' ||
-              activeEl.isContentEditable))
-        ) {
-          // Allow default browser copy behavior
-          return
-        }
+        // Check if the active element is part of the table (td, th, table elements)
+        const isTableFocused =
+          activeEl?.closest('table') !== null ||
+          activeEl?.closest('.table-container') !== null ||
+          activeEl?.tagName === 'TD' ||
+          activeEl?.tagName === 'TH'
 
-        // Only copy from table if there are selected cells and no text selection
-        if (selectedCells.size > 0) {
+        if (isTableFocused && selectedCells.size > 0) {
           copyToClipboard()
         }
       }
