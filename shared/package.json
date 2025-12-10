@@ -122,6 +122,7 @@
   "dependencies": {
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-virtual": "^3.13.4",
+    "@ynput/ayon-react-components": "^1.15.14",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "custom-protocol-check": "^1.4.0",

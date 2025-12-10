@@ -39,7 +39,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.4",
     "@uiw/react-textarea-code-editor": "^2.1.9",
-    "@ynput/ayon-react-components": "^1.15.11",
+    "@ynput/ayon-react-components": "^1.15.14",
     "axios": "^1.13.2",
     "chart.js": "^4.2.0",
     "clsx": "^2.1.1",

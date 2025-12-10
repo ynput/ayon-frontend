@@ -1179,10 +1179,10 @@
   resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.5.25.tgz#21edcff133a5a04f72c4e4c6142260963fe5afbe"
   integrity sha512-AbOPdQQnAnzs58H2FrrDxYj/TJfmeS2jdfEEhgiKINy+bnOANmVizIEgq1r+C5zsbs6l1CCQxtcj71rwNQ4jWg==
 
-"@ynput/ayon-react-components@^1.15.11":
-  version "1.15.11"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.15.11.tgz#64b8e4bb6e3943389883fa443bab1431397595b7"
-  integrity sha512-uuKVDDfeDqSahI2JKz86kY/wJujTskDToVb5utYZhxQ5yHX5Aa0DZL/UhnVbsWfqvUHq1l27b1toBu3OpUkpNQ==
+"@ynput/ayon-react-components@^1.15.14":
+  version "1.15.14"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.15.14.tgz#e2d21b6e8dad488e48991847db844298d5d7794f"
+  integrity sha512-ECSRSwa/gaR11CO4AVEb17xeAsFebI3+iS0mQqbAr4QAng2JNj2LKLZu5aa0TSoRlpTKSaBGpwVta6W9cVkbTA==
   dependencies:
     short-uuid "^5.2.0"
 
