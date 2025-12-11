@@ -1,16 +1,15 @@
 import React, {
   createContext,
-  useContext,
-  useCallback,
   ReactNode,
-  useState,
+  useCallback,
+  useContext,
   useEffect,
+  useState,
 } from 'react'
 import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
+import { DetailsPanelEntityType } from '@shared/api'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useGlobalContext } from './GlobalContext'
@@ -129,12 +128,12 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 }
 
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
-                                                                            children,
-                                                                            defaultTab = 'activity',
-                                                                            hasLicense: hasLicenseProp,
-                                                                            debug = {},
-                                                                            ...forwardedProps
-                                                                          }) => {
+  children,
+  defaultTab = 'activity',
+  hasLicense: hasLicenseProp,
+  debug = {},
+  ...forwardedProps
+}) => {
   // get current user
   const { user: currentUser } = useGlobalContext()
   const isDeveloperMode =
