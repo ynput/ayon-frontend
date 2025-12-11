@@ -1,15 +1,16 @@
 import React, {
   createContext,
-  ReactNode,
-  useCallback,
   useContext,
-  useEffect,
+  useCallback,
+  ReactNode,
   useState,
+  useEffect,
 } from 'react'
 import { useLocalStorage } from '@shared/hooks'
-import type { UserModel } from '@shared/api'
 import { DetailsPanelEntityType } from '@shared/api'
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import type { UserModel } from '@shared/api'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useGlobalContext } from './GlobalContext'
@@ -128,12 +129,12 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 }
 
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
-  children,
-  defaultTab = 'activity',
-  hasLicense: hasLicenseProp,
-  debug = {},
-  ...forwardedProps
-}) => {
+                                                                            children,
+                                                                            defaultTab = 'activity',
+                                                                            hasLicense: hasLicenseProp,
+                                                                            debug = {},
+                                                                            ...forwardedProps
+                                                                          }) => {
   // get current user
   const { user: currentUser } = useGlobalContext()
   const isDeveloperMode =
@@ -212,6 +213,11 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     }
   }, [])
 
+  // close slide out whenever the page changes
+  useEffect(() => {
+    closeSlideOut()
+  }, [useLocation().pathname])
+
   const [pip, setPip] = useState<DetailsPanelPip | null>(null)
 
   const openPip = useCallback((pip: DetailsPanelPip) => {
@@ -262,11 +268,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
           }
 
           setEntities(newEntities)
-
-          setTabByScope({
-            ...tabsByScope,
-            overview: 'activity',
-          })
         })
         .catch((err) => {
           console.warn('Failed to get URI entities:', err)
@@ -294,15 +295,14 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
       setEntities(newEntities)
 
-      // Always open the activity tab when opening from URL
-      setTabByScope({
-        ...tabsByScope,
-        overview: 'activity',
-      })
+      // if there is an activity param, open the activity tab
 
-      // if there is an activity param, highlight that specific activity
       if (activity) {
         setHighlightedActivities([activity])
+        setTabByScope({
+          ...tabsByScope,
+          overview: 'activity',
+        })
       }
     }
   }, [])
