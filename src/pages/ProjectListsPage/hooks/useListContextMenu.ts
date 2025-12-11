@@ -1,7 +1,6 @@
-import { RowSelectionState } from '@tanstack/react-table'
 import { useListsContext } from '../context'
-import { CommandEvent, useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { useCallback } from 'react'
+import { CommandEvent, ContextMenuItemType } from '@shared/containers/ContextMenu'
+import { useMemo } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
 import { useListsDataContext } from '../context/ListsDataContext'
@@ -71,12 +70,10 @@ const wouldCreateCircularDependency = (
 const useListContextMenu = () => {
   const user = useAppSelector((state) => state.user)
   const developerMode = user?.attrib.developerMode
-  const isUser = !user.data?.isAdmin && !user.data?.isManager
   const { projectName } = useProjectContext()
   const { listsData, listFolders } = useListsDataContext()
   const {
     rowSelection,
-    setRowSelection,
     openRenameList,
     setListDetailsOpen,
     deleteLists,
@@ -101,39 +98,18 @@ const useListContextMenu = () => {
   }
 
   const { clearListItems } = useClearListItems({ projectName })
-  // create the ref and model
-  const [ctxMenuShow] = useCreateContextMenu()
 
-  const handleCreateReviewSessionList: (listId: string) => void = useCallback(
-    async (listId) => {
-      await createReviewSessionList?.(listId, {
-        showToast: true,
-        navigateOnSuccess: true,
-      })
-    },
-    [createReviewSessionList, projectName],
-  )
-
-  const openContext = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-
-      let newSelection: RowSelectionState = { ...rowSelection }
-      // if we are selecting a row outside of the selection (or none), set the selection to the row
-      if (!newSelection[e.currentTarget.id]) {
-        newSelection = { [e.currentTarget.id]: true }
-        setRowSelection(newSelection)
-      }
-      const newSelectedRows = Object.entries(newSelection)
-        .filter(([_k, v]) => v)
-        .map(([k]) => k)
-      const newSelectedLists = listsData.filter((list) =>
-        newSelectedRows.some((selected) => list?.id === selected),
-      )
-      const selectedList = newSelectedLists[0]
-      const firstSelectedRow = Object.keys(newSelection)[0]
-      const multipleSelected = Object.keys(newSelection).length > 1
+  // Build menu items based on current selection
+  const menuItems: ContextMenuItemType[] = useMemo(() => {
+    const newSelectedRows = Object.entries(rowSelection)
+      .filter(([_k, v]) => v)
+      .map(([k]) => k)
+    const newSelectedLists = listsData.filter((list) =>
+      newSelectedRows.some((selected) => list?.id === selected),
+    )
+    const selectedList = newSelectedLists[0]
+    const firstSelectedRow = Object.keys(rowSelection)[0]
+    const multipleSelected = Object.keys(rowSelection).length > 1
 
       // Check if the first selected row is a folder
       const selectedFolderId = parseListFolderRowId(firstSelectedRow)
@@ -319,7 +295,12 @@ const useListContextMenu = () => {
         {
           label: 'Create review',
           icon: 'subscriptions',
-          command: () => handleCreateReviewSessionList(selectedList.id),
+          command: async () => {
+            await createReviewSessionList?.(selectedList.id, {
+              showToast: true,
+              navigateOnSuccess: true,
+            })
+          },
           disabled: multipleSelected || !allSelectedRowsAreLists,
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
@@ -373,7 +354,7 @@ const useListContextMenu = () => {
           label: 'Select all lists',
           icon: 'checklist',
           hidden: !selectedFolderIds.length, // hide if no folders selected per spec
-          command: () => selectAllLists({ rowIds: Object.keys(newSelection) }),
+          command: () => selectAllLists({ rowIds: Object.keys(rowSelection) }),
         },
         {
           label: 'Details',
@@ -406,7 +387,7 @@ const useListContextMenu = () => {
               onDeleteListFolders(folderIds)
             } else if (allSelectedRowsAreLists) {
               // Delete lists
-              deleteLists(Object.keys(newSelection), { force: forceDelete })
+              deleteLists(Object.keys(rowSelection), { force: forceDelete })
             }
           },
           // Hide if not lists/folders OR user doesn't have delete permission
@@ -417,36 +398,31 @@ const useListContextMenu = () => {
         },
       ]
 
-      ctxMenuShow(e, menuItems)
-    },
-    [
-      ctxMenuShow,
-      rowSelection,
-      listsData,
-      listFolders,
-      setRowSelection,
-      openRenameList,
-      setListDetailsOpen,
-      deleteLists,
-      createReviewSessionList,
-      onPutListsInFolder,
-      onRemoveListsFromFolder,
-      onOpenFolderList,
-      onDeleteListFolders,
-      onPutFoldersInFolder,
-      onRemoveFoldersFromFolder,
-      isUser,
-      developerMode,
-      handleCreateReviewSessionList,
-      clearListItems,
-      isReview,
-      powerLicense,
-    ],
-  )
+    return menuItems
+  }, [
+    rowSelection,
+    listsData,
+    listFolders,
+    openRenameList,
+    setListDetailsOpen,
+    deleteLists,
+    createReviewSessionList,
+    onPutListsInFolder,
+    onRemoveListsFromFolder,
+    onOpenFolderList,
+    openNewList,
+    onDeleteListFolders,
+    onPutFoldersInFolder,
+    onRemoveFoldersFromFolder,
+    selectAllLists,
+    developerMode,
+    clearListItems,
+    isReview,
+    powerLicense,
+    userPermissions,
+  ])
 
-  return {
-    openContext,
-  }
+  return { menuItems }
 }
 
 export default useListContextMenu

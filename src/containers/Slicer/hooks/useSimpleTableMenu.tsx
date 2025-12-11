@@ -4,7 +4,7 @@ import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
-type UseSlicerMenuItemsProps = {
+type UseSimpleTableMenuProps = {
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
   rowSelection: RowSelectionState
@@ -12,13 +12,13 @@ type UseSlicerMenuItemsProps = {
   tableData: SimpleTableRow[]
 }
 
-const useSlicerMenuItems = ({
+const useSimpleTableMenu = ({
   expanded,
   setExpanded,
   rowSelection,
   setRowSelection,
   tableData,
-}: UseSlicerMenuItemsProps) => {
+}: UseSimpleTableMenuProps) => {
   const [ctxMenuShow] = useCreateContextMenu()
 
   const getAllDescendantIds = useCallback((rowId: string, data: SimpleTableRow[]): string[] => {
@@ -175,4 +175,4 @@ const useSlicerMenuItems = ({
   }
 }
 
-export default useSlicerMenuItems
+export default useSimpleTableMenu

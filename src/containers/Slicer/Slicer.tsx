@@ -9,7 +9,7 @@ import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from './types'
-import useSlicerMenuItems from '@containers/Slicer/hooks/useSlicerMenuItems'
+import useSimpleTableMenu from '@containers/Slicer/hooks/useSimpleTableMenu'
 
 interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -39,7 +39,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
   // Context menu hook handles all menu logic and keyboard shortcuts
-  const { openContext, handleRowClick } = useSlicerMenuItems({
+  const { handleRowClick } = useSimpleTableMenu({
     expanded,
     setExpanded,
     rowSelection,
@@ -90,6 +90,7 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
           setExpanded,
           onExpandedChange,
           data: sliceMap,
+          menuItems:['expand-collapse']
         }}
       >
         <SimpleTable
@@ -100,7 +101,6 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
           globalFilter={globalFilter}
           pt={{
             row: {
-              onContextMenu: openContext,
               onClickCapture: handleRowClick,
             },
           }}
