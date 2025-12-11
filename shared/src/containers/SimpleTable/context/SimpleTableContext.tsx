@@ -112,7 +112,7 @@ export const SimpleTableProvider = ({ children, menuItems: inputMenuItems, ...pr
       const items: ContextMenuItemType[] = []
       const hasSelection = selectedIds.length > 0
       const multipleSelected = selectedIds.length > 1
-console.log('computeMenuItems', inputMenuItems)
+
       // Process each menu item
       inputMenuItems.forEach((item) => {
         if (typeof item === 'string') {
@@ -172,20 +172,16 @@ console.log('computeMenuItems', inputMenuItems)
     (e: React.MouseEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      console.log('onContextMenu event:', e)
-      console.log('e.currentTarget:', e.currentTarget)
-      console.log('e.currentTarget.id:', e.currentTarget.id)
+
 
       // Get the clicked row ID from the event target
       const clickedRowId = e.currentTarget.id
-      console.log('clickedRowId:', clickedRowId)
-      console.log('rowSelection:', rowSelection)
 
       // Determine the effective selection (current or the clicked row if not selected)
       let effectiveSelection = rowSelection
       if (clickedRowId && !rowSelection[clickedRowId]) {
         effectiveSelection = { [clickedRowId]: true }
-        console.log('Updated effectiveSelection:', effectiveSelection)
+
         // Update the actual selection
         if (setRowSelection) {
           setRowSelection(effectiveSelection)
@@ -194,14 +190,12 @@ console.log('computeMenuItems', inputMenuItems)
 
       // Compute menu items based on effective selection
       const effectiveSelectedIds = Object.keys(effectiveSelection).filter((id) => effectiveSelection[id])
-      console.log('effectiveSelectedIds:', effectiveSelectedIds)
+
       const menuItemsToShow = computeMenuItems(effectiveSelectedIds)
-      console.log('menuItemsToShow:', menuItemsToShow)
+
       // Show context menu
       if (menuItemsToShow.length > 0) {
         ctxMenuShow(e, menuItemsToShow)
-      } else {
-        console.warn('No menu items to show!')
       }
     },
     [ctxMenuShow, rowSelection, setRowSelection, computeMenuItems],
