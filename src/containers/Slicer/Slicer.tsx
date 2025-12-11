@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react'
-import SimpleTable, { Container, Header, useSimpleTableContext } from '@shared/containers/SimpleTable'
+import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
@@ -14,32 +14,6 @@ interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
-}
-
-// Inner component that has access to SimpleTableContext
-const SlicerTable: FC<{
-  sliceTableData: any
-  isExpandable: boolean
-  isLoadingSliceTableData: boolean
-  sliceType: string
-  globalFilter: string
-}> = ({ sliceTableData, isExpandable, isLoadingSliceTableData, sliceType, globalFilter }) => {
-  const { handleAltClick } = useSimpleTableContext()
-
-  return (
-    <SimpleTable
-      data={sliceTableData}
-      isExpandable={isExpandable}
-      isLoading={isLoadingSliceTableData}
-      forceUpdateTable={sliceType}
-      globalFilter={globalFilter}
-      pt={{
-        row: {
-          onClickCapture: handleAltClick,
-        },
-      }}
-    />
-  )
 }
 
 const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], persistFieldId }) => {
@@ -110,11 +84,11 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
           menuItems:['expand-collapse']
         }}
       >
-        <SlicerTable
-          sliceTableData={sliceTableData}
+        <SimpleTable
+          data={sliceTableData}
           isExpandable={isExpandable}
-          isLoadingSliceTableData={isLoadingSliceTableData}
-          sliceType={sliceType}
+          isLoading={isLoadingSliceTableData}
+          forceUpdateTable={sliceType}
           globalFilter={globalFilter}
         />
       </SimpleTableProvider>
