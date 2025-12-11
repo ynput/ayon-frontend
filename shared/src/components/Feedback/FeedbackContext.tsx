@@ -203,7 +203,6 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
   const initializeSurveyWidget = (): boolean => {
     const win = window as any
     if (typeof win.Featurebase === 'function') {
-      console.log('Initializing survey widget', verification?.data)
       win.Featurebase(
         'initialize_survey_widget',
         {
