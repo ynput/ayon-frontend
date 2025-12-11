@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react'
-import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
+import SimpleTable, { Container, Header, useSimpleTableContext } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from './hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
@@ -9,12 +9,37 @@ import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from './types'
-import useSimpleTableMenu from '@containers/Slicer/hooks/useSimpleTableMenu'
 
 interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
+}
+
+// Inner component that has access to SimpleTableContext
+const SlicerTable: FC<{
+  sliceTableData: any
+  isExpandable: boolean
+  isLoadingSliceTableData: boolean
+  sliceType: string
+  globalFilter: string
+}> = ({ sliceTableData, isExpandable, isLoadingSliceTableData, sliceType, globalFilter }) => {
+  const { handleAltClick } = useSimpleTableContext()
+
+  return (
+    <SimpleTable
+      data={sliceTableData}
+      isExpandable={isExpandable}
+      isLoading={isLoadingSliceTableData}
+      forceUpdateTable={sliceType}
+      globalFilter={globalFilter}
+      pt={{
+        row: {
+          onClickCapture: handleAltClick,
+        },
+      }}
+    />
+  )
 }
 
 const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], persistFieldId }) => {
@@ -38,14 +63,6 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
-  // Context menu hook handles all menu logic and keyboard shortcuts
-  const { handleRowClick } = useSimpleTableMenu({
-    expanded,
-    setExpanded,
-    rowSelection,
-    setRowSelection,
-    tableData: sliceTableData,
-  })
 
   const handleSelectionChange = (s: RowSelectionState) => {
     setRowSelection(s)
@@ -93,17 +110,12 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
           menuItems:['expand-collapse']
         }}
       >
-        <SimpleTable
-          data={sliceTableData}
+        <SlicerTable
+          sliceTableData={sliceTableData}
           isExpandable={isExpandable}
-          isLoading={isLoadingSliceTableData}
-          forceUpdateTable={sliceType}
+          isLoadingSliceTableData={isLoadingSliceTableData}
+          sliceType={sliceType}
           globalFilter={globalFilter}
-          pt={{
-            row: {
-              onClickCapture: handleRowClick,
-            },
-          }}
         />
       </SimpleTableProvider>
     </Container>
