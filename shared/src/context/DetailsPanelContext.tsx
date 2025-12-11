@@ -1,16 +1,15 @@
 import React, {
   createContext,
-  useContext,
-  useCallback,
   ReactNode,
-  useState,
+  useCallback,
+  useContext,
   useEffect,
+  useState,
 } from 'react'
 import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType } from '@shared/api'
 import type { UserModel } from '@shared/api'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
+import { DetailsPanelEntityType } from '@shared/api'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useGlobalContext } from './GlobalContext'
@@ -179,7 +178,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
+  const [tabsByScope, setTabByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
@@ -296,8 +295,13 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
       setEntities(newEntities)
 
       // if there is an activity param, open the activity tab
+
       if (activity) {
         setHighlightedActivities([activity])
+        setTabByScope({
+          ...tabsByScope,
+          overview: 'activity',
+        })
       }
     }
   }, [])
