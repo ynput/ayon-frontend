@@ -2,12 +2,12 @@ import {
   gqlApi,
   GetTasksByParentQuery,
   GetTasksListQuery,
-  tasksApi,
-  QueryTasksFoldersApiArg,
+  foldersApi,
+  SearchFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
 import { PubSub } from '@shared/util'
-import { EditorTaskNode, TableGroupBy } from '@shared/containers/ProjectTreeTable'
+import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -74,6 +74,7 @@ export type GetTasksListResult = {
 export type GetTasksListArgs = {
   projectName: string
   filter?: string
+  folderFilter?: string
   search?: string
   folderIds?: string[]
   desc?: boolean
@@ -88,6 +89,7 @@ export type GetGroupedTasksListArgs = {
   projectName: string
   groups: { filter: string; count: number; value: string }[]
   search?: string
+  folderFilter?: string
   folderIds?: string[]
   desc?: boolean
   sortBy?: string
@@ -129,9 +131,9 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 })
 
 // REST FOLDERS API
-const foldersApiEnhanced = tasksApi.enhanceEndpoints({
+const foldersApiEnhanced = foldersApi.enhanceEndpoints({
   endpoints: {
-    queryTasksFolders: {},
+    searchFolders: {},
   },
 })
 
@@ -146,9 +148,18 @@ const injectedApi = enhancedApi.injectEndpoints({
     // This also solves the pagination issue of getting all tasks in one query, splitting it up in multiple queries to avoid pagination limits
     getOverviewTasksByFolders: build.query<
       EditorTaskNode[],
-      { projectName: string; parentIds: string[]; filter?: string; search?: string }
+      {
+        projectName: string
+        parentIds: string[]
+        filter?: string
+        folderFilter?: string
+        search?: string
+      }
     >({
-      async queryFn({ projectName, parentIds, filter, search }, { dispatch, forced }) {
+      async queryFn(
+        { projectName, parentIds, filter, folderFilter, search },
+        { dispatch, forced },
+      ) {
         try {
           // Process parent IDs in sequential batches
           const BATCH_SIZE = 20 // Process x parentIds at a time
@@ -167,6 +178,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                       projectName,
                       parentIds: [parentId],
                       filter,
+                      folderFilter,
                       search,
                     },
                     { forceRefetch: forced },
@@ -281,15 +293,15 @@ const injectedApi = enhancedApi.injectEndpoints({
         if (token) PubSub.unsubscribe(token)
       },
     }),
-    // queryTasksFolders is a post so it's a bit annoying to consume
+    // searchFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook
-    getQueryTasksFolders: build.query<string[], QueryTasksFoldersApiArg>({
-      async queryFn({ projectName, tasksFoldersQuery }, { dispatch }) {
+    getSearchFolders: build.query<string[], SearchFoldersApiArg>({
+      async queryFn({ projectName, folderSearchRequest }, { dispatch }) {
         try {
           const result = await dispatch(
-            foldersApiEnhanced.endpoints.queryTasksFolders.initiate({
+            foldersApiEnhanced.endpoints.searchFolders.initiate({
               projectName,
-              tasksFoldersQuery,
+              folderSearchRequest,
             }),
           )
 
@@ -328,13 +340,14 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, filter, search, folderIds, sortBy, desc } = queryArg
+          const { projectName, filter, folderFilter, search, folderIds, sortBy, desc } = queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetTasksList
           const queryParams: any = {
             projectName,
             filter,
+            folderFilter,
             search,
             folderIds,
           }
@@ -480,7 +493,10 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
-      queryFn: async ({ projectName, groups, search, folderIds, desc, sortBy }, api) => {
+      queryFn: async (
+        { projectName, groups, search, folderFilter, folderIds, desc, sortBy },
+        api,
+      ) => {
         try {
           let promises = []
           for (const group of groups) {
@@ -489,6 +505,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             const queryParams: GetTasksListQueryVariables = {
               projectName,
               filter: group.filter,
+              folderFilter, // Passed but not yet supported by backend
               search,
               folderIds,
               sortBy: sortBy,
@@ -550,7 +567,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 
 export const {
   useGetOverviewTasksByFoldersQuery,
-  useGetQueryTasksFoldersQuery,
+  useGetSearchFoldersQuery,
   useGetTasksListQuery,
   useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,

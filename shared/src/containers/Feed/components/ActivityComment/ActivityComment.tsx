@@ -201,7 +201,6 @@ const ActivityComment = ({
     [onGoToFrame],
   )
 
-  console.log(categoryNotFound)
   return (
     <>
       <Styled.Comment

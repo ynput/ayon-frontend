@@ -2,9 +2,11 @@ import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroupSchema: build.query<GetAccessGroupSchemaApiResponse, GetAccessGroupSchemaApiArg>({
-      query: (queryArg) => ({ 
-        url: `/api/accessGroups/_schema`, 
-        params: { project_name: queryArg.projectName } 
+      query: (queryArg) => ({
+        url: `/api/accessGroups/_schema`,
+        params: {
+          project_name: queryArg.projectName,
+        },
       }),
     }),
     getAccessGroups: build.query<GetAccessGroupsApiResponse, GetAccessGroupsApiArg>({
@@ -46,7 +48,7 @@ export { injectedRtkApi as api }
 export type GetAccessGroupSchemaApiResponse = /** status 200 Successful Response */ any
 export type GetAccessGroupSchemaApiArg = {
   projectName?: string
-} 
+}
 export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ AccessGroupObject[]
 export type GetAccessGroupsApiArg = {
   projectName: string
@@ -79,12 +81,6 @@ export type GetShareOptionsApiResponse = /** status 200 Successful Response */ S
 export type GetShareOptionsApiArg = {
   projectName?: string
 }
-export type AccessGroupObject = {
-  /** Name of the access group */
-  name: string
-  /** Whether the access group is project level */
-  isProjectLevel: boolean
-}
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
@@ -92,6 +88,12 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type AccessGroupObject = {
+  /** Name of the access group */
+  name: string
+  /** Whether the access group is project level */
+  isProjectLevel: boolean
 }
 export type StudioManagementPermissions = {
   /** Allow users to create new projects */
@@ -125,6 +127,14 @@ export type AttributeWriteAccessList = {
   attributes?: string[]
   fields?: string[]
 }
+export type ActionsAccessList = {
+  enabled?: boolean
+  actions?: string[]
+}
+export type EntityLinksAccessList = {
+  enabled?: boolean
+  link_types?: string[]
+}
 export type EndpointsAccessList = {
   enabled?: boolean
   endpoints?: string[]
@@ -150,6 +160,10 @@ export type Permissions = {
   attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
   attrib_write?: AttributeWriteAccessList
+  /** Whitelist actions a user can perform */
+  actions?: ActionsAccessList
+  /** Whitelist link types a user can create between entities */
+  links?: EntityLinksAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
   advanced?: ProjectAdvancedPermissions
