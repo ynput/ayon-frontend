@@ -211,6 +211,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         style={{ color: option?.color, ...style }}
         {...props}
         ref={ref}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {option?.icon && (
           <Icon
