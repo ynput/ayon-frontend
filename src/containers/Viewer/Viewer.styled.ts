@@ -3,17 +3,27 @@ import styled from 'styled-components'
 
 export const Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  grid-template-rows: auto minmax(0, 1fr);
+  //grid-template-columns: 1fr auto auto;
+  //grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
-
   height: 100%;
   width: 100%;
   gap: var(--base-gap-small);
-
+  &:not(.minimized) {
+    grid-template-columns:1fr auto auto  ;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
   .close {
     width: fit-content;
-    justify-self: end;
+  }
+  .details {
+    width: fit-content;
+  }
+  
+  /* Layout when minimized - 3 columns with toolbar */
+  &.minimized {
+    display: flex;
+    flex-direction: column;
   }
 
   /* when there is related panel, details panel height full */
@@ -21,6 +31,19 @@ export const Container = styled.div`
     .viewer-details-panel {
       grid-row: span 2;
     }
+  }
+`
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  justify-self: end;
+  align-self: flex-end;
+
+  /* When standalone (not minimized), position at top-right */
+  &.standalone {
+    justify-self: end;
   }
 `
 
@@ -82,4 +105,7 @@ export const EmptyPlaceholderWrapper = styled.div`
 export const RightToolBar = styled.div`
   display: flex;
   flex-direction: column;
+`
+export const RightContainer = styled.div`
+  display: flex;
 `

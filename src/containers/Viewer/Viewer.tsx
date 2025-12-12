@@ -18,6 +18,7 @@ import type { GetReviewablesResponse } from '@shared/api'
 import { getGroupedReviewables } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
+import { useLocalStorage } from '@shared/hooks'
 
 interface ViewerProps {
   onClose?: () => void
@@ -25,6 +26,8 @@ interface ViewerProps {
 }
 
 const ViewerBody = ({ onClose }: ViewerProps) => {
+
+  const [minimizedWindow, setMinimizedWindow] = useLocalStorage('viewer-minimized-window', false)
   const {
     productId,
     taskId,
@@ -253,14 +256,16 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   return (
     <ViewerProvider selectedVersionId={selectedVersion?.id}>
-      <Styled.Container className="grid">
+      <Styled.Container className={minimizedWindow? 'grid ':'grid minimized'}>
         <Styled.PlayerToolbar>
-          <VersionSelectorTool
-            versions={versionsAndReviewables}
-            selected={versionIds[0]}
-            onChange={handleVersionChange}
-          />
-          {hasMultipleProducts && (
+          {minimizedWindow && (
+            <VersionSelectorTool
+              versions={versionsAndReviewables}
+              selected={versionIds[0]}
+              onChange={handleVersionChange}
+            />
+          )}
+          {hasMultipleProducts && minimizedWindow && (
             <ReviewVersionDropdown
               options={productOptions}
               placeholder="Select a product"
@@ -275,7 +280,12 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             />
           )}
         </Styled.PlayerToolbar>
-        {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+        <Styled.ButtonGroup>
+          <Button className="details" onClick={() => setMinimizedWindow(!minimizedWindow)}>
+            Details
+          </Button>
+          {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+        </Styled.ButtonGroup>
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
           <ViewerComponent
             projectName={projectName}
@@ -290,21 +300,25 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             onUpload={handleUploadAction}
           />
         </Styled.FullScreenWrapper>
-        <Styled.RightToolBar style={{ zIndex: 1100 }}>
-          <ReviewablesSelector
-            reviewables={playable}
-            selected={reviewableIds}
-            onChange={handleReviewableChange}
-            onUpload={handleUploadAction(true)}
+        {minimizedWindow && (
+          <Styled.RightToolBar style={{ zIndex: 1100 }}>
+            <ReviewablesSelector
+              reviewables={playable}
+              selected={reviewableIds}
+              onChange={handleReviewableChange}
+              onUpload={handleUploadAction(true)}
+              projectName={projectName}
+            />
+            <div id="annotation-tools" style={{ position: 'relative' }}></div>
+          </Styled.RightToolBar>
+        )}
+        {minimizedWindow && (
+          <ViewerDetailsPanel
+            versionIds={versionIds}
             projectName={projectName}
+            noVersions={noVersions}
           />
-          <div id="annotation-tools" style={{ position: 'relative' }}></div>
-        </Styled.RightToolBar>
-        <ViewerDetailsPanel
-          versionIds={versionIds}
-          projectName={projectName}
-          noVersions={noVersions}
-        />
+        )}
       </Styled.Container>
     </ViewerProvider>
   )
