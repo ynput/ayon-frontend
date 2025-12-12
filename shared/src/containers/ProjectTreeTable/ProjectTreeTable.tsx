@@ -1331,28 +1331,28 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check if this is a restricted entity - prevent editing
-        const isRestricted = isEntityRestricted(cell.row.original.entityType)
-
-        // if we are clicking on an edit trigger, we need to start editing
-        if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
-          if (!isCellSelected(cellId)) {
-            // if the cell is not selected, select it and deselect all others
-            selectCell(cellId, false, false)
-            focusCell(cellId)
-          }
-          // skip if restricted
-          if (isRestricted) return
-          setEditingCellId(cellId)
-
-          return
-        }
-
         // check we are not clicking in a dropdown
         if (target.closest('.options')) return
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
+
+        // check if this is a restricted entity - prevent editing
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
+        // if clicking on an edit trigger, start editing
+        if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
+          // Select the cell first if not already selected
+          if (!isCellSelected(cellId)) {
+            selectCell(cellId, false, false)
+            focusCell(cellId)
+          }
+          setEditingCellId(cellId)
+          return
+        }
+
+        // close any open editor when clicking a different cell
+        setEditingCellId(null)
 
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
         if (e.shiftKey) {
@@ -1381,13 +1381,15 @@ const TableCell = ({
         // check if this is a restricted entity - prevent opening details/viewer
         const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
+        // do nothing for restricted entities
+        if (isRestricted) return
+
+        // do nothing for groups
+        if (isGroup) return
+
         // row selection on name column double click
-        if (
-          cell.column.id === 'name' &&
-          !(e.target as HTMLElement).closest('.expander') &&
-          !isGroup &&
-          !isRestricted
-        ) {
+        // making sure it's not the expander that was clicked
+        if (cell.column.id === 'name' && !(e.target as HTMLElement).closest('.expander')) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
           const additive = e.metaKey || e.ctrlKey
@@ -1396,12 +1398,10 @@ const TableCell = ({
           if (!isCellSelected(rowSelectionCellId)) {
             selectCell(rowSelectionCellId, additive, false)
           }
-          if (!isCellSelected(cellId)) {
-            selectCell(cellId, true, false) // additive=true to keep row-selection
-          }
+          selectCell(cellId, true, false) // additive=true to keep row-selection
         }
         // open the viewer on thumbnail double click
-        if (cell.column.id === 'thumbnail' && !isRestricted) {
+        else if (cell.column.id === 'thumbnail') {
           if (onOpenPlayer) {
             const entity = getEntityById(cell.row.original.entityId || cell.row.id)
             if (entity) {
@@ -1409,6 +1409,10 @@ const TableCell = ({
               onOpenPlayer(targetIds, { quickView: true })
             }
           }
+        }
+        // Double click on editable cell triggers edit mode
+        else {
+          setEditingCellId(cellId)
         }
       }}
       onContextMenu={(e) => {
