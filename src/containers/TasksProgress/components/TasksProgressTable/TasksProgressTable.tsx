@@ -221,7 +221,7 @@ export const TasksProgressTable = ({
       },
       buildAddToListMenu([
         ...buildHierarchicalMenuItems(
-          tasksLists.data,
+          tasksLists,
           selectedEntities,
           () => false, // no icon needed
         ),
