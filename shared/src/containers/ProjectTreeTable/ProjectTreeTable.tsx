@@ -1287,7 +1287,7 @@ const TableCell = ({
 
   const { isRowSelected } = useSelectedRowsContext()
 
-  const { isEditing, setEditingCellId } = useCellEditing()
+  const { isEditing, setEditingCellId, editingCellId } = useCellEditing()
 
   const borderClasses = getCellBorderClasses(cellId)
 
@@ -1351,8 +1351,13 @@ const TableCell = ({
           return
         }
 
-        // close any open editor when clicking a different cell
-        setEditingCellId(null)
+        // if cell is already selected, do nothing
+        if (isCellSelected(cellId)) return
+
+        // if editing close editor if selecting different cell
+        if (!!editingCellId && !isCellSelected(cellId)) {
+          setEditingCellId(null)
+        }
 
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
         if (e.shiftKey) {
@@ -1378,6 +1383,7 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        console.log('DBL CLICK')
         // check if this is a restricted entity - prevent opening details/viewer
         const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
