@@ -115,19 +115,6 @@ export const CellWidget: FC<EditorCellProps> = ({
   const isCurrentCellEditing = isEditing(cellId)
   const isCurrentCellFocused = isCellFocused(cellId)
 
-  const handleDoubleClick = useCallback(() => {
-    if (isPlaceholder || isReadOnly) return
-    setEditingCellId(cellId)
-  }, [cellId, setEditingCellId, isPlaceholder])
-
-  const handleSingleClick = () => {
-    // clicking a cell that is not editing will close the editor on this cell
-    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1324
-    if (!isCurrentCellEditing) {
-      setEditingCellId(null)
-    }
-  }
-
   const moveToNextRow = () => {
     const rowIndex = gridMap.rowIdToIndex.get(rowId)
     if (rowIndex === undefined) return
@@ -305,8 +292,6 @@ export const CellWidget: FC<EditorCellProps> = ({
         editable: !isReadOnly,
       })}
       ref={ref}
-      onDoubleClick={handleDoubleClick}
-      onClick={handleSingleClick}
       id={cellId}
       data-tooltip={
         tooltip ||

@@ -700,17 +700,17 @@ export const ProjectTreeTable = ({
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
                           return (
-                            <Styled.TableCell
+                            <Styled.TD
                               key={`overlay-drag-${cell.id}`}
                               style={{ ...cellStyleBase, justifyContent: 'center' }}
                               className={clsx(cell.column.id)}
                             >
                               <Icon icon="drag_handle" /> {/* Static icon */}
-                            </Styled.TableCell>
+                            </Styled.TD>
                           )
                         }
                         return (
-                          <TableCellMemo
+                          <TD
                             cell={cell}
                             cellId={`overlay-${getCellId(overlayRowInstance.id, cell.column.id)}`}
                             rowId={overlayRowInstance.id}
@@ -1198,7 +1198,7 @@ const TableBodyRow = ({
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
-            <Styled.TableCell
+            <Styled.TD
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
@@ -1226,11 +1226,11 @@ const TableBodyRow = ({
                 attributes={sortable?.attributes}
                 listeners={sortable?.listeners}
               />
-            </Styled.TableCell>
+            </Styled.TD>
           )
         }
         return (
-          <TableCellMemo
+          <TD
             cell={cell}
             cellId={cellId}
             rowId={row.id}
@@ -1260,7 +1260,7 @@ interface TableCellProps {
   rowHeight?: number
 }
 
-const TableCell = ({
+const TD = ({
   cell,
   rowId,
   cellId,
@@ -1287,7 +1287,7 @@ const TableCell = ({
 
   const { isRowSelected } = useSelectedRowsContext()
 
-  const { isEditing, setEditingCellId } = useCellEditing()
+  const { isEditing, setEditingCellId, editingCellId } = useCellEditing()
 
   const borderClasses = getCellBorderClasses(cellId)
 
@@ -1298,7 +1298,7 @@ const TableCell = ({
   const isMultipleSelected = selectedCells.size > 1
 
   return (
-    <Styled.TableCell
+    <Styled.TD
       {...props}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
@@ -1328,31 +1328,40 @@ const TableCell = ({
 
         const target = e.target as HTMLElement
 
+        // setTimeout(() => {
+        //   target.focus()
+        // }, 100) // ensure focus after any other events
+
         // check we are not clicking on expander
         if (target.closest('.expander')) return
-
-        // check if this is a restricted entity - prevent editing
-        const isRestricted = isEntityRestricted(cell.row.original.entityType)
-
-        // if we are clicking on an edit trigger, we need to start editing
-        if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
-          if (!isCellSelected(cellId)) {
-            // if the cell is not selected, select it and deselect all others
-            selectCell(cellId, false, false)
-            focusCell(cellId)
-          }
-          // skip if restricted
-          if (isRestricted) return
-          setEditingCellId(cellId)
-
-          return
-        }
 
         // check we are not clicking in a dropdown
         if (target.closest('.options')) return
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
+
+        // check if this is a restricted entity - prevent editing
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
+        // if clicking on an edit trigger, start editing
+        if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
+          // Select the cell first if not already selected
+          if (!isCellSelected(cellId)) {
+            selectCell(cellId, false, false)
+            focusCell(cellId)
+          }
+          setEditingCellId(cellId)
+          return
+        }
+
+        // if cell is already selected, do nothing
+        if (isCellSelected(cellId)) return
+
+        // if editing close editor if selecting different cell
+        if (!!editingCellId && !isCellSelected(cellId)) {
+          setEditingCellId(null)
+        }
 
         const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
         if (e.shiftKey) {
@@ -1361,6 +1370,9 @@ const TableCell = ({
         } else {
           startSelection(cellId, additive)
         }
+
+        // Prevent default browser behavior to ensure focus stays on the cell
+        e.preventDefault()
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
@@ -1378,16 +1390,19 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
+        console.log('DBL CLICK')
         // check if this is a restricted entity - prevent opening details/viewer
         const isRestricted = isEntityRestricted(cell.row.original.entityType)
 
+        // do nothing for restricted entities
+        if (isRestricted) return
+
+        // do nothing for groups
+        if (isGroup) return
+
         // row selection on name column double click
-        if (
-          cell.column.id === 'name' &&
-          !(e.target as HTMLElement).closest('.expander') &&
-          !isGroup &&
-          !isRestricted
-        ) {
+        // making sure it's not the expander that was clicked
+        if (cell.column.id === 'name' && !(e.target as HTMLElement).closest('.expander')) {
           // select the row by selecting the row-selection cell
           const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
           const additive = e.metaKey || e.ctrlKey
@@ -1396,12 +1411,10 @@ const TableCell = ({
           if (!isCellSelected(rowSelectionCellId)) {
             selectCell(rowSelectionCellId, additive, false)
           }
-          if (!isCellSelected(cellId)) {
-            selectCell(cellId, true, false) // additive=true to keep row-selection
-          }
+          selectCell(cellId, true, false) // additive=true to keep row-selection
         }
         // open the viewer on thumbnail double click
-        if (cell.column.id === 'thumbnail' && !isRestricted) {
+        else if (cell.column.id === 'thumbnail') {
           if (onOpenPlayer) {
             const entity = getEntityById(cell.row.original.entityId || cell.row.id)
             if (entity) {
@@ -1409,6 +1422,10 @@ const TableCell = ({
               onOpenPlayer(targetIds, { quickView: true })
             }
           }
+        }
+        // Double click on editable cell triggers edit mode
+        else {
+          setEditingCellId(cellId)
         }
       }}
       onContextMenu={(e) => {
@@ -1418,10 +1435,11 @@ const TableCell = ({
           selectCell(cellId, false, false)
         }
       }}
+      onKeyDown={() => {
+        // keyboard events are handled in useKeyboardNavigation hook
+      }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </Styled.TableCell>
+    </Styled.TD>
   )
 }
-
-const TableCellMemo = memo(TableCell)
