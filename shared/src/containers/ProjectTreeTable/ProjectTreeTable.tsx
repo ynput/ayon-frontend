@@ -700,17 +700,17 @@ export const ProjectTreeTable = ({
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
                           return (
-                            <Styled.TableCell
+                            <Styled.TD
                               key={`overlay-drag-${cell.id}`}
                               style={{ ...cellStyleBase, justifyContent: 'center' }}
                               className={clsx(cell.column.id)}
                             >
                               <Icon icon="drag_handle" /> {/* Static icon */}
-                            </Styled.TableCell>
+                            </Styled.TD>
                           )
                         }
                         return (
-                          <TableCellMemo
+                          <TD
                             cell={cell}
                             cellId={`overlay-${getCellId(overlayRowInstance.id, cell.column.id)}`}
                             rowId={overlayRowInstance.id}
@@ -1198,7 +1198,7 @@ const TableBodyRow = ({
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
-            <Styled.TableCell
+            <Styled.TD
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
@@ -1226,11 +1226,11 @@ const TableBodyRow = ({
                 attributes={sortable?.attributes}
                 listeners={sortable?.listeners}
               />
-            </Styled.TableCell>
+            </Styled.TD>
           )
         }
         return (
-          <TableCellMemo
+          <TD
             cell={cell}
             cellId={cellId}
             rowId={row.id}
@@ -1260,7 +1260,7 @@ interface TableCellProps {
   rowHeight?: number
 }
 
-const TableCell = ({
+const TD = ({
   cell,
   rowId,
   cellId,
@@ -1298,7 +1298,7 @@ const TableCell = ({
   const isMultipleSelected = selectedCells.size > 1
 
   return (
-    <Styled.TableCell
+    <Styled.TD
       {...props}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
@@ -1327,6 +1327,10 @@ const TableCell = ({
         if (e.button !== 0) return
 
         const target = e.target as HTMLElement
+
+        // setTimeout(() => {
+        //   target.focus()
+        // }, 100) // ensure focus after any other events
 
         // check we are not clicking on expander
         if (target.closest('.expander')) return
@@ -1366,6 +1370,9 @@ const TableCell = ({
         } else {
           startSelection(cellId, additive)
         }
+
+        // Prevent default browser behavior to ensure focus stays on the cell
+        e.preventDefault()
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
@@ -1428,10 +1435,11 @@ const TableCell = ({
           selectCell(cellId, false, false)
         }
       }}
+      onKeyDown={() => {
+        // keyboard events are handled in useKeyboardNavigation hook
+      }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </Styled.TableCell>
+    </Styled.TD>
   )
 }
-
-const TableCellMemo = memo(TableCell)
