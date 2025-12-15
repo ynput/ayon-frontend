@@ -105,27 +105,6 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         ? newValue
         : newValue.filter((v) => options.find((o) => o.value === v))
 
-      // Check if value actually changed before triggering onChange
-      const hasChanged = (() => {
-        if (type?.includes('list')) {
-          // For multi-select, compare arrays
-          const currentValues = valueAsStrings.sort()
-          const newValues = (Array.isArray(filteredValue) ? filteredValue : [filteredValue]).sort()
-          return JSON.stringify(currentValues) !== JSON.stringify(newValues)
-        } else {
-          // For single-select, compare single value
-          const currentValue = valueAsStrings[0]
-          const newSingleValue = Array.isArray(filteredValue) ? filteredValue[0] : filteredValue
-          return currentValue !== newSingleValue
-        }
-      })()
-
-      if (!hasChanged) {
-        // Value hasn't changed, just close the dropdown without saving
-        onCancelEdit?.()
-        return
-      }
-
       if (type?.includes('list')) {
         onChange(filteredValue, 'Click')
       } else {

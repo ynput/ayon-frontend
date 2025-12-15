@@ -134,7 +134,7 @@ export const CellWidget: FC<EditorCellProps> = ({
     if (key === 'Enter') {
       moveToNextRow()
       onChange?.(newValue, key)
-    } else if (key === 'Click' && newValue !== value) {
+    } else if (key === 'Click' && newValue != value) {
       onChange?.(newValue, key)
     }
   }
