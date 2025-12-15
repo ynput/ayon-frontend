@@ -268,6 +268,7 @@ const ActivityComment = ({
               initValue={body}
               initFiles={files}
               initCategory={categoryData?.name}
+              data={activity.activityData}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
