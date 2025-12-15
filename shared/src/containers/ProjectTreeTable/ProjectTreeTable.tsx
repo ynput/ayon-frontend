@@ -1328,10 +1328,6 @@ const TD = ({
 
         const target = e.target as HTMLElement
 
-        // setTimeout(() => {
-        //   target.focus()
-        // }, 100) // ensure focus after any other events
-
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
@@ -1358,21 +1354,34 @@ const TD = ({
         // if cell is already selected, do nothing
         if (isCellSelected(cellId)) return
 
-        // if editing close editor if selecting different cell
-        if (!!editingCellId && !isCellSelected(cellId)) {
-          setEditingCellId(null)
+        // If there's an active edit on a different cell, blur it first to save changes
+        if (editingCellId && editingCellId !== cellId) {
+          // Find the currently editing input and blur it
+          const editingInput = document.querySelector(`#${editingCellId} input, #${editingCellId} [role="textbox"]`) as HTMLElement
+          if (editingInput) {
+            editingInput.blur()
+            // Wait a tick for the blur event to process and save
+            setTimeout(() => {
+              proceedWithSelection()
+            }, 0)
+            return
+          }
         }
 
-        const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
-        if (e.shiftKey) {
-          // Shift+click extends selection from anchor cell
-          selectCell(cellId, additive, true) // true for range selection
-        } else {
-          startSelection(cellId, additive)
-        }
+        proceedWithSelection()
 
-        // Prevent default browser behavior to ensure focus stays on the cell
-        e.preventDefault()
+        function proceedWithSelection() {
+          const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
+          if (e.shiftKey) {
+            // Shift+click extends selection from anchor cell
+            selectCell(cellId, additive, true) // true for range selection
+          } else {
+            startSelection(cellId, additive)
+          }
+
+          // Prevent default browser behavior to ensure focus stays on the cell
+          e.preventDefault()
+        }
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
