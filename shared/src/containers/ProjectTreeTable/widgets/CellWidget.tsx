@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef, FC } from 'react'
+import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -131,9 +131,10 @@ export const CellWidget: FC<EditorCellProps> = ({
     setEditingCellId(null)
     if (isReadOnly) return
     // move to the next cell row
-    key === 'Enter' && moveToNextRow()
-    // make change if the value is different or if the key is 'Enter'
-    if (newValue !== value || key === 'Enter') {
+    if (key === 'Enter') {
+      moveToNextRow()
+      onChange?.(newValue, key)
+    } else if (key === 'Click' && newValue != value) {
       onChange?.(newValue, key)
     }
   }
