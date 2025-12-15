@@ -12,7 +12,6 @@ import { DetailsPanelEntityType } from '@shared/api'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
-import { useGlobalContext } from './GlobalContext'
 import { useURIContext } from './UriContext'
 
 export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
@@ -134,13 +133,12 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   debug = {},
   ...forwardedProps
 }) => {
-  // get current user
-  const { user: currentUser } = useGlobalContext()
+  const user = forwardedProps.user
   const isDeveloperMode =
     'isDeveloperMode' in debug
       ? (debug.isDeveloperMode as boolean)
-      : currentUser?.attrib?.developerMode ?? false
-  const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : currentUser?.data?.isGuest
+      : user?.attrib?.developerMode ?? false
+  const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : user?.data?.isGuest
 
   // get license from powerpack or forwarded down from props
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -215,7 +213,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   // close slide out whenever the page changes
   useEffect(() => {
     closeSlideOut()
-  }, [useLocation().pathname])
+  }, [forwardedProps.useLocation().pathname])
 
   const [pip, setPip] = useState<DetailsPanelPip | null>(null)
 
@@ -231,7 +229,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const [highlightedActivities, setHighlightedActivities] = useState<string[]>([])
 
   const { uriType, uri, entity, getUriEntities } = useURIContext()
-  const [searchParams] = useSearchParams()
+  const [searchParams] = forwardedProps.useSearchParams()
 
   // on first load, check if there is a uri or URL params and open details panel if present
   useEffect(() => {
