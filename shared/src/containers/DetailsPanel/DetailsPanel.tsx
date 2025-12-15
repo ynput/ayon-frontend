@@ -1,6 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
 import React, { useEffect, useMemo, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import useDetailsPanelURLSync from './hooks/useDetailsPanelURLSync'
 import * as Styled from './DetailsPanel.styled'
 
@@ -101,6 +100,7 @@ DetailsPanelProps) => {
     entities: contextEntities,
     setEntities,
     slideOut,
+    useSearchParams,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
   const [_searchParams, setSearchParams] = useSearchParams()

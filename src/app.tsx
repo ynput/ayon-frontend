@@ -178,16 +178,16 @@ const App = () => {
         <Favicon />
         <Suspense fallback={<LoadingPage />}>
           <GlobalProvider>
-            <MenuProvider>
-              <FeedbackProvider>
-                <RestartProvider>
-                  <RemoteModulesProvider skip={!user.name}>
-                    <PowerpackProvider>
-                      <ContextMenuProvider>
-                        <GlobalContextMenu />
-                        <PasteProvider>
-                          <PasteModal />
-                          <BrowserRouter>
+            <FeedbackProvider>
+              <RestartProvider>
+                <RemoteModulesProvider skip={!user.name}>
+                  <PowerpackProvider>
+                    <ContextMenuProvider>
+                      <GlobalContextMenu />
+                      <PasteProvider>
+                        <PasteModal />
+                        <BrowserRouter>
+                          <MenuProvider useNavigate={useNavigate}>
                             <QueryParamProvider
                               adapter={ReactRouter6Adapter}
                               options={{
@@ -226,14 +226,14 @@ const App = () => {
                                 </DetailsPanelProvider>
                               </URIProvider>
                             </QueryParamProvider>
-                          </BrowserRouter>
-                        </PasteProvider>
-                      </ContextMenuProvider>
-                    </PowerpackProvider>
-                  </RemoteModulesProvider>
-                </RestartProvider>
-              </FeedbackProvider>
-            </MenuProvider>
+                          </MenuProvider>
+                        </BrowserRouter>
+                      </PasteProvider>
+                    </ContextMenuProvider>
+                  </PowerpackProvider>
+                </RemoteModulesProvider>
+              </RestartProvider>
+            </FeedbackProvider>
           </GlobalProvider>
         </Suspense>
       </>

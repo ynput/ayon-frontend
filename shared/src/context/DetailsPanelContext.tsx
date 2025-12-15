@@ -343,7 +343,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 export const useDetailsPanelContext = (): DetailsPanelContextType => {
   const context = useContext(DetailsPanelContext)
   if (context === undefined) {
-    throw new Error('useDetailsPanel must be used within a DetailsProvider')
+    throw new Error('useDetailsPanel must be used within a DetailsPanelProvider')
   }
   return context
 }
