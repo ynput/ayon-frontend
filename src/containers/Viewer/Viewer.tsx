@@ -13,12 +13,13 @@ import * as Styled from './Viewer.styled'
 import { ViewerProvider } from '@context/ViewerContext'
 
 // shared
-import { useGetViewerReviewablesQuery } from '@shared/api'
+import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
 import { getGroupedReviewables } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
 import { useLocalStorage } from '@shared/hooks'
+import { extractEntityHierarchyFromParents } from '@shared/util'
 
 interface ViewerProps {
   onClose?: () => void
@@ -153,6 +154,35 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     () => versionsAndReviewables.find((v) => v.id === versionIds[0]),
     [versionIds, versionsAndReviewables],
   )
+
+  // Fetch version details to get folder path and task name
+  const { data: versionDetails = [] } = useGetEntitiesDetailsPanelQuery(
+    {
+      entityType: 'version',
+      entities: versionIds[0] && projectName ? [{ id: versionIds[0], projectName }] : [],
+    },
+    { skip: !versionIds[0] || !projectName },
+  )
+
+  const versionPath = useMemo(() => {
+    if (!versionDetails.length || !selectedVersion) return ''
+    const versionData = versionDetails[0]
+    const { folderPath } = extractEntityHierarchyFromParents(
+      versionData.parents || [],
+      'version',
+      selectedVersion.name,
+    )
+    // Split the path and get the last two items (parent folder and task)
+    const pathParts = folderPath.split('/').filter(Boolean)
+    const task = pathParts.pop() || '' // Last item is task
+    const parentFolder = pathParts.pop() || '' // Second-to-last is parent folder
+
+    if (parentFolder && task) {
+      return `/${parentFolder}/${task}`
+    }
+    return `/${parentFolder || task}`
+  }, [versionDetails, selectedVersion])
+
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
     if ((!versionIds.length || !selectedVersion) && !isFetchingReviewables) {
@@ -256,36 +286,58 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   return (
     <ViewerProvider selectedVersionId={selectedVersion?.id}>
-      <Styled.Container className={minimizedWindow? 'grid ':'grid minimized'}>
-        <Styled.PlayerToolbar>
-          {minimizedWindow && (
-            <VersionSelectorTool
-              versions={versionsAndReviewables}
-              selected={versionIds[0]}
-              onChange={handleVersionChange}
-            />
-          )}
-          {hasMultipleProducts && minimizedWindow && (
-            <ReviewVersionDropdown
-              options={productOptions}
-              placeholder="Select a product"
-              prefix="Product: "
-              value={selectedProductId}
-              onChange={handleProductChange}
-              valueProps={{ className: 'product-dropdown' }}
-              tooltip="Select a product to view its versions reviewables"
-              shortcut={''}
-              valueIcon={selectedProduct?.icon || ''}
-              valueColor={selectedProduct?.color}
-            />
-          )}
-        </Styled.PlayerToolbar>
-        <Styled.ButtonGroup>
-          <Button className="details" onClick={() => setMinimizedWindow(!minimizedWindow)}>
-            Details
-          </Button>
-          {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
-        </Styled.ButtonGroup>
+      <Styled.Container className={minimizedWindow ? 'grid ' : 'grid minimized'}>
+        {minimizedWindow && (
+          <Styled.PlayerToolbar>
+            <>
+              <VersionSelectorTool
+                versions={versionsAndReviewables}
+                selected={versionIds[0]}
+                onChange={handleVersionChange}
+              />
+              {hasMultipleProducts && (
+                <ReviewVersionDropdown
+                  options={productOptions}
+                  placeholder="Select a product"
+                  prefix="Product: "
+                  value={selectedProductId}
+                  onChange={handleProductChange}
+                  valueProps={{ className: 'product-dropdown' }}
+                  tooltip="Select a product to view its versions reviewables"
+                  shortcut={''}
+                  valueIcon={selectedProduct?.icon || ''}
+                  valueColor={selectedProduct?.color}
+                />
+              )}
+            </>
+          </Styled.PlayerToolbar>
+        )}
+        {!minimizedWindow ? (
+          <Styled.MinimizedToolbar>
+            {versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
+            <Styled.ButtonGroup>
+              <Button
+                icon={'order_play'}
+                className={'details active'}
+                onClick={() => setMinimizedWindow(!minimizedWindow)}
+              >
+                Details
+              </Button>
+              {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+            </Styled.ButtonGroup>
+          </Styled.MinimizedToolbar>
+        ) : (
+          <Styled.ButtonGroup>
+            <Button
+              icon={'order_play'}
+              className={'details'}
+              onClick={() => setMinimizedWindow(!minimizedWindow)}
+            >
+              Details
+            </Button>
+            {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+          </Styled.ButtonGroup>
+        )}
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
           <ViewerComponent
             projectName={projectName}

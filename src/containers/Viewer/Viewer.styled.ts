@@ -3,8 +3,6 @@ import styled from 'styled-components'
 
 export const Container = styled.div`
   display: grid;
-  //grid-template-columns: 1fr auto auto;
-  //grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
   height: 100%;
   width: 100%;
@@ -18,12 +16,20 @@ export const Container = styled.div`
   }
   .details {
     width: fit-content;
+
+    &.active {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
   }
   
   /* Layout when minimized - 3 columns with toolbar */
   &.minimized {
     display: flex;
     flex-direction: column;
+    
+    .related-tasks, .trackbar-row, .controls-row {
+      display: none;
+    }
   }
 
   /* when there is related panel, details panel height full */
@@ -34,6 +40,21 @@ export const Container = styled.div`
   }
 `
 
+export const MinimizedToolbar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+`
+
+export const PathDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--border-radius-m);
+`
 export const ButtonGroup = styled.div`
   display: flex;
   align-items: center;
@@ -44,6 +65,11 @@ export const ButtonGroup = styled.div`
   /* When standalone (not minimized), position at top-right */
   &.standalone {
     justify-self: end;
+  }
+
+  .details.active {
+    background-color: var(--md-sys-color-primary-container) !important;
+    color: var(--md-sys-color-on-primary-container) !important;
   }
 `
 

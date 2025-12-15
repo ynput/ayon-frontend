@@ -371,7 +371,7 @@ DetailsPanelProps) => {
               onClick={handleOpenPip}
             />
 
-            {(onClose || entities) && (
+            {(onClose) && (
               <Button
                 icon="close"
                 variant={'text'}
