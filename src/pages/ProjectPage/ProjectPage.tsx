@@ -180,7 +180,7 @@ const ProjectPageInner = () => {
         name: 'Scheduler',
         path: `/projects/${projectName}/scheduler`,
         module: 'scheduler',
-        enabled: matchedAddons?.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
+        enabled: matchedAddons?.get('planner') === '1.0.1-dev', // for dev purposes, remove when planner is released out of beta
       },
       {
         name: 'Reports',
