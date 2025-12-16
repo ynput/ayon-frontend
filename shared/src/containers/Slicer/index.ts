@@ -1,3 +1,10 @@
+// SLICER COMPONENT
+export * from './components/Slicer'
+// SLICER CONTEXT
+export * from './context/SlicerContext'
+// SLICER TYPES
 export * from './types'
-export * from './createFilterFromSlicer'
-export * from './useFiltersWithHierarchy'
+// SLICER HOOKS
+export * from './hooks'
+// SLICER UTILS
+export * from './util'

@@ -1,4 +1,3 @@
-import { useAppSelector } from '@state/store'
 import { useEffect, useMemo, useState } from 'react'
 import { useHierarchyTable } from '@shared/hooks'
 import useUsersTable from './useUsersTable'
@@ -6,9 +5,10 @@ import useProjectAnatomySlices from './useProjectAnatomySlices'
 import { Slice, SliceData, SliceTypeField, TableData } from '../types'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { SliceType } from '@shared/containers/Slicer'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '../context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { useProjectContext } from '@shared/context'
 
 interface TableDataBySliceProps {
   sliceFields: SliceTypeField[]
@@ -80,7 +80,7 @@ const useTableDataBySlice = ({
   entityTypes = [],
 }: TableDataBySliceProps): TableData => {
   const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
-  const projectName = useAppSelector((state) => state.project.name)
+  const { projectName } = useProjectContext()
   const { formatAttribute } = useExtraSlices()
 
   const sliceOptions = sliceFields

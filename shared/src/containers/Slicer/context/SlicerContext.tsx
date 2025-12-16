@@ -13,9 +13,9 @@ import { useLoadModule } from '@shared/hooks'
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import SlicerDropdownFallback, {
   SlicerDropdownFallbackProps,
-} from '@containers/Slicer/SlicerDropdownFallback'
+} from '../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { SliceMap, SliceTypeField } from '@containers/Slicer/types'
+import { SliceMap, SliceTypeField } from '../types'
 import { usePowerpack } from '@shared/context'
 
 export type OnSliceTypeChange = (
