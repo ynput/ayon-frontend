@@ -8,10 +8,10 @@ import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
 import { useURIContext } from '@shared/context'
 
-interface NavLinkItem {
-  name: string
-  path: string
-  module: string
+export interface NavLinkItem {
+  name?: string
+  path?: string
+  module?: string
   node?: ReactNode | 'spacer'
   shortcut?: string
   tooltip?: string

@@ -16,7 +16,7 @@ import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
 import { selectProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
-import AppNavLinks from '@containers/header/AppNavLinks'
+import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@shared/containers/Slicer'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
@@ -32,7 +32,6 @@ import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import { ViewType } from '@shared/containers'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
@@ -44,17 +43,6 @@ import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from './ProjectPageRemote'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
-
-type NavLink = {
-  name?: string
-  path?: string
-  module?: string
-  viewType?: ViewType
-  uriSync?: boolean
-  enabled?: boolean
-  node?: React.ReactNode
-  deprecated?: boolean | string
-}
 
 const ProjectContextInfo = () => {
   /**
@@ -133,7 +121,7 @@ const ProjectPageInner = () => {
   }
 
   // get remote project module pages
-  const links: NavLink[] = useMemo(
+  const links: NavLinkItem[] = useMemo(
     () => [
       {
         name: 'Overview',
