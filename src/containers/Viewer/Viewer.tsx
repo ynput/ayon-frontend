@@ -1,5 +1,5 @@
 import { compareDesc } from 'date-fns'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useFullScreenHandle } from 'react-full-screen'
 import { Button } from '@ynput/ayon-react-components'
@@ -19,7 +19,6 @@ import { getGroupedReviewables } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
 import { useLocalStorage } from '@shared/hooks'
-import { extractEntityHierarchyFromParents } from '@shared/util'
 
 interface ViewerProps {
   onClose?: () => void
@@ -154,60 +153,62 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     [versionIds, versionsAndReviewables],
   )
 
-  // Fetch version details to get folder path and task name
-  const { data: versionDetails = [] } = useGetEntitiesDetailsPanelQuery(
+  // Determine entity type and ID for the query
+  const { entityType, entityId } = useMemo(() => {
+    if (folderId && !taskId && !productId) {
+      return { entityType: 'folder' as const, entityId: folderId }
+    } else if (taskId && !productId) {
+      return { entityType: 'task' as const, entityId: taskId }
+    } else if (versionIds[0]) {
+      return { entityType: 'version' as const, entityId: versionIds[0] }
+    }
+    return { entityType: null, entityId: null }
+  }, [folderId, taskId, productId, versionIds])
+
+  // Fetch entity details to get folder path
+  const { data: entityDetails = [] } = useGetEntitiesDetailsPanelQuery(
     {
-      entityType: 'version',
-      entities: versionIds[0] && projectName ? [{ id: versionIds[0], projectName }] : [],
+      entityType: entityType!,
+      entities: entityId && projectName ? [{ id: entityId, projectName }] : [],
     },
-    { skip: !versionIds[0] || !projectName },
+    { skip: !entityId || !projectName || !entityType },
   )
 
   const versionPath = useMemo(() => {
-    if (!versionDetails.length || !selectedVersion) return ''
-    const versionData = versionDetails[0]
-    const { folderPath } = extractEntityHierarchyFromParents(
-      versionData.parents || [],
-      'version',
-      selectedVersion.name,
-    )
+    if (!entityDetails.length) return ''
+    const entityData = entityDetails[0]
+    const parents = entityData.parents || []
+    const lastParent = parents[parents.length - 1] || ''
 
-    // Determine entity type based on what IDs are set
-    const isFolder = folderId && !taskId && !productId
-    const isTask = taskId && !productId
-    const isVersion = productId // Version requires a product
+    const buildPath = (parent: string, label: string) =>
+      parent && label ? `${parent} / ${label}` : label
 
-    // Split the path to get parent folder
-    const pathParts = folderPath.split('/').filter(Boolean)
-
-    if (isFolder) {
-      // Folder - {folder parent} / {folder_label}
-      const folderLabel = pathParts.pop() || ''
-      const folderParent = pathParts.pop() || ''
-      return folderParent && folderLabel ? `${folderParent} / ${folderLabel}` : folderLabel
-    } else if (isTask) {
-      // Task - {folder parent} / {task_label}
-      const taskLabel = pathParts.pop() || ''
-      const folderParent = pathParts.pop() || ''
-      return folderParent && taskLabel ? `${folderParent} / ${taskLabel}` : taskLabel
-    } else if (isVersion) {
-      // Version - {folder parent} / {product_name} / {version}
-      pathParts.pop() // Remove version name
-      pathParts.pop() // Remove task name
-      const folderParent = pathParts.pop() || ''
-      const productName = selectedVersion.productName || ''
-      const versionName = selectedVersion.name || ''
-
-      if (folderParent && productName && versionName) {
-        return `${folderParent} / ${productName} / ${versionName}`
-      } else if (productName && versionName) {
-        return `${productName} / ${versionName}`
+    switch (entityData.entityType) {
+      case 'folder': {
+        // Folder - {folder parent} / {folder_label}
+        const folderLabel = entityData.folder?.label || entityData.folder?.name || ''
+        return buildPath(lastParent, folderLabel)
       }
-      return versionName
-    }
+      case 'task': {
+        // Task - {folder parent} / {task_label}
+        const taskLabel = entityData.task?.label || entityData.task?.name || ''
+        return buildPath(lastParent, taskLabel)
+      }
+      case 'version': {
+        // Version - {folder parent} / {product_name} / {version}
+        const folderParent = parents[0] || ''
+        const productName = entityData.product?.name || selectedVersion?.productName || ''
+        const versionName = entityData.version?.name || selectedVersion?.name || ''
 
-    return ''
-  }, [versionDetails, selectedVersion, folderId, taskId, productId])
+        if (folderParent && productName && versionName) {
+          return `${folderParent} / ${productName} / ${versionName}`
+        }
+        return productName && versionName ? `${productName} / ${versionName}` : versionName
+      }
+      default:
+        return ''
+    }
+  }, [entityDetails, selectedVersion])
 
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
@@ -304,6 +305,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     }
   }
 
+  const toggleMinimized = useCallback(() => {
+    setMinimizedWindow(!minimizedWindow)
+  }, [minimizedWindow, setMinimizedWindow])
+
   // Handle keyboard shortcut for toggling minimized window (C key)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -312,7 +317,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
       // Toggle minimized window on 'c' key
       if (e.key === 'c') {
-        setMinimizedWindow(!minimizedWindow)
+        toggleMinimized()
       }
     }
 
@@ -321,7 +326,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [minimizedWindow, setMinimizedWindow])
+  }, [toggleMinimized])
 
   const reviewables = selectedVersion?.reviewables || []
 
@@ -357,38 +362,38 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             </>
           </Styled.PlayerToolbar>
         )}
-        {!minimizedWindow ? (
-          <Styled.MinimizedToolbar>
-            {versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
+
+          <Styled.MinimizedToolbar className={minimizedWindow ? 'minimized' : ''}>
+            {!minimizedWindow && versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
             <Styled.ButtonGroup>
               <Button
                 icon={'dock_to_left'}
-                className={'details'}
-                data-tooltip={'Toggle to hide all'}
+                className={minimizedWindow ? 'details' : 'details active'}
+                data-tooltip={minimizedWindow ? 'Toggle to show details' : 'Toggle to hide all'}
                 data-tooltip-position="bottom"
                 data-shortcut={'C'}
-                onClick={() => setMinimizedWindow(!minimizedWindow)}
+                onClick={toggleMinimized}
               >
                 Details
               </Button>
               {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
             </Styled.ButtonGroup>
           </Styled.MinimizedToolbar>
-        ) : (
-          <Styled.ButtonGroup>
-            <Button
-              icon={'dock_to_left'}
-              className={'details active'}
-              data-tooltip={'Toggle to show details'}
-              data-tooltip-position="bottom"
-              data-shortcut={'C'}
-              onClick={() => setMinimizedWindow(!minimizedWindow)}
-            >
-              Details
-            </Button>
-            {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
-          </Styled.ButtonGroup>
-        )}
+
+          {/*<Styled.ButtonGroup>*/}
+          {/*  <Button*/}
+          {/*    icon={'dock_to_left'}*/}
+          {/*    className={'details active'}*/}
+          {/*    data-tooltip={'Toggle to show details'}*/}
+          {/*    data-tooltip-position="bottom"*/}
+          {/*    data-shortcut={'C'}*/}
+          {/*    onClick={toggleMinimized}*/}
+          {/*  >*/}
+          {/*    Details*/}
+          {/*  </Button>*/}
+          {/*  {onClose && <Button onClick={onClose} icon={'close'} className="close" />}*/}
+          {/*</Styled.ButtonGroup>*/}
+
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
           <ViewerComponent
             projectName={projectName}

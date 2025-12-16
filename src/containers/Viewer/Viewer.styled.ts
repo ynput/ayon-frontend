@@ -45,6 +45,11 @@ export const MinimizedToolbar = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
+
+  /* When minimized (no PathDisplay), push ButtonGroup to the right */
+  &.minimized {
+    justify-content: flex-end;
+  }
 `
 
 export const PathDisplay = styled.div`
@@ -54,6 +59,7 @@ export const PathDisplay = styled.div`
   color: var(--md-sys-color-on-surface);
   background-color: var(--md-sys-color-surface-container);
   border-radius: var(--border-radius-m);
+  padding: var(--padding-s) var(--padding-m);
 `
 export const ButtonGroup = styled.div`
   display: flex;
