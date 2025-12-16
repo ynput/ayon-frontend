@@ -27,7 +27,7 @@ import {
 import { createFilterFromSlicer, useOverviewViewSettings } from '@shared/containers'
 
 // Local context and hooks
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'

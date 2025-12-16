@@ -1,9 +1,7 @@
 // a hoc component that helps to wrap remote project pages
 // set up slicer
 
-import Slicer from '@containers/Slicer'
-import { defaultSliceOptions } from '@containers/Slicer/hooks/useTableDataBySlice'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext, Slicer, defaultSliceOptions } from '@shared/containers/Slicer'
 import { RemotePageWrapper, RemotePageWrapperProps } from '@shared/components'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'

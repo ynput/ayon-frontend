@@ -1,4 +1,4 @@
-import { SlicerContextValue } from '@context/SlicerContext'
+import { SlicerContextValue } from '@shared/containers/Slicer'
 import { RemoteAddonProjectProps } from '@shared/context'
 import { FC } from 'react'
 
