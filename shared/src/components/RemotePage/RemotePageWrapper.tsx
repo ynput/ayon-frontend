@@ -10,6 +10,7 @@ import {
 } from '@shared/containers'
 import { FC } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 export type RouterTypes = {
   useParams: typeof useParams
@@ -56,6 +57,7 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
         updateViewSettings: (...args) => updateViewSettings(...args, views, onCreateView),
       }}
       state={state}
+      toast={toast}
     />
   )
 }
