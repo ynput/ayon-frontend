@@ -1067,6 +1067,18 @@
             "deprecationReason": null
           },
           {
+            "name": "createdBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": null,
             "args": [],
@@ -1259,6 +1271,18 @@
                 "name": "DateTime",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "updatedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3038,6 +3062,18 @@
             "deprecationReason": null
           },
           {
+            "name": "createdBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "data",
             "description": null,
             "args": [],
@@ -3595,6 +3631,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "productBaseTypes",
+                "description": "List of base types",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "productTypes",
                 "description": "List of product types to filter by",
                 "type": {
@@ -3628,7 +3684,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, path, productType, folderName, createdAt, updatedAt, tags",
+                "description": "Sort by one of name, path, productType, productBaseType, folderName, status, createdAt, updatedAt, createdBy, updatedBy, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -3900,6 +3956,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter tasks by queryfilter on folders",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of parent folder IDs to filter by",
                 "type": {
@@ -4013,7 +4081,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt, taskType, assignees",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -4171,6 +4239,18 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "updatedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -4190,6 +4270,18 @@
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "color",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "icon",
             "description": null,
@@ -5227,6 +5319,34 @@
       },
       {
         "kind": "OBJECT",
+        "name": "ProductBaseType",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "ProductEdge",
         "description": null,
         "isOneOf": null,
@@ -5448,6 +5568,18 @@
                 "name": "DateTime",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "createdBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -5719,6 +5851,18 @@
             "deprecationReason": null
           },
           {
+            "name": "productBaseType",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "productType",
             "description": null,
             "args": [],
@@ -5818,6 +5962,18 @@
                 "name": "DateTime",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "updatedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -6124,7 +6280,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName, folderName",
+                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7268,7 +7424,7 @@
               },
               {
                 "name": "filter",
-                "description": "Filter tasks using QueryFilter",
+                "description": "Filter folders using QueryFilter",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7500,7 +7656,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, createdAt, updatedAt, folderType",
+                "description": "Sort by one of name, createdAt, updatedAt, createdBy, updatedBy, folderType",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7545,6 +7701,18 @@
                       "ofType": null
                     }
                   }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "taskFilter",
+                "description": "Fitler folders by tasks",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
                 },
                 "defaultValue": "null",
                 "isDeprecated": false,
@@ -7661,6 +7829,30 @@
               "kind": "OBJECT",
               "name": "ProductNode",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "productBaseTypes",
+            "description": "List of project's product base types",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "ProductBaseType",
+                    "ofType": null
+                  }
+                }
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -7886,6 +8078,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "productBaseTypes",
+                "description": "List of base types",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "productTypes",
                 "description": "List of product types to filter by",
                 "type": {
@@ -7919,7 +8131,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, path, productType, folderName, createdAt, updatedAt, tags",
+                "description": "Sort by one of name, path, productType, productBaseType, folderName, status, createdAt, updatedAt, createdBy, updatedBy, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8483,6 +8695,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "folderFilter",
+                "description": "Filter tasks by queryfilter on folders",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "folderIds",
                 "description": "List of parent folder IDs to filter by",
                 "type": {
@@ -8596,7 +8820,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, status, createdAt, updatedAt, taskType, assignees",
+                "description": "Sort by one of name, taskType, assignees, status, createdAt, updatedAt, createdBy, updatedBy",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -9058,7 +9282,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName, folderName",
+                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -10696,6 +10920,18 @@
             "deprecationReason": null
           },
           {
+            "name": "createdBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "data",
             "description": null,
             "args": [],
@@ -11004,6 +11240,18 @@
                 "name": "DateTime",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "updatedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -11683,6 +11931,18 @@
             "deprecationReason": null
           },
           {
+            "name": "createdBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "data",
             "description": null,
             "args": [],
@@ -12084,6 +12344,18 @@
             "deprecationReason": null
           },
           {
+            "name": "updatedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "versions",
             "description": "Return a list of versions.",
             "args": [
@@ -12361,7 +12633,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, tags, path, productType, productName, folderName",
+                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -13902,6 +14174,18 @@
             "deprecationReason": null
           },
           {
+            "name": "createdBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "data",
             "description": null,
             "args": [],
@@ -14511,6 +14795,18 @@
                 "name": "DateTime",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "updatedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -16252,6 +16548,15 @@
             "deprecationReason": null
           }
         ]
+      },
+      {
+        "name": "oneOf",
+        "description": "Indicates an Input Object is a OneOf Input Object.",
+        "isRepeatable": false,
+        "locations": [
+          "INPUT_OBJECT"
+        ],
+        "args": []
       },
       {
         "name": "skip",

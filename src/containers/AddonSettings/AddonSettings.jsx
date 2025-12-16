@@ -48,6 +48,7 @@ import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
 import PerProjectBundleConfig from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
+import { useLocalStorage } from '@shared/hooks'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -116,7 +117,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const userName = useSelector((state) => state.user.name)
 
-  const [selectedBundle, setSelectedBundle] = useState(() => {
+  const [selectedBundle, setSelectedBundle] = useLocalStorage('variant-type', () => {
     // If in developer mode, try to find the user's dev bundle
     if (developerMode) {
       const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
@@ -191,7 +192,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     } else {
       // Switch back to production when leaving developer mode
       setSelectedBundle({
-        variant: 'production',
+        variant: selectedBundle.variant || 'production',
         bundleName: null,
         projectBundleName: undefined,
       })
@@ -725,7 +726,6 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
-
 
   const onUpdateAddonSchema = (addonName, schema) => {
     // TODO: Rewrite this to not rely on `settings` in addon settings list

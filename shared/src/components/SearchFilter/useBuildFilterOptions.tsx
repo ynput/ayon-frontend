@@ -1,5 +1,6 @@
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import {
+  ProductType,
   useGetEntityGroupsQuery,
   useGetKanbanProjectUsersQuery,
   useGetProjectsInfoQuery,
@@ -16,7 +17,7 @@ import type {
   EntityGroup,
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
-import { Icon, Option, Filter } from '@ynput/ayon-react-components'
+import { Icon, Option, Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { dateOptions } from './filterDates'
 import { isEmpty } from 'lodash'
 import { SliceFilter } from '@shared/containers'
@@ -41,6 +42,8 @@ export type FilterFieldType =
   | 'tags'
   | 'version'
   | 'hasReviewables'
+  | 'productName'
+  | 'name'
 type AttributeType =
   | string
   | number
@@ -71,6 +74,7 @@ export type BuildFilterOptions = {
     attributes?: Record<string, AttributeDataValue[]>
     assignees?: string[]
     productTypes?: ProductType[]
+    productNames?: string[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
@@ -227,6 +231,25 @@ export const useBuildFilterOptions = ({
         options.push(entitySubTypeOption)
       }
     }
+    // PRODUCT NAME
+    // add product name option
+    if (scopeFilterTypes.includes('productName') && currentScope === 'product') {
+      const productNameOption = getOptionRoot('productName', config, scopePrefix, scopeLabel)
+
+      if (productNameOption) {
+        // Populate with product names from data as suggestions (optional since allowsCustomValues: true)
+        data.productNames?.forEach((name) => {
+          if (!productNameOption.values?.some((value) => value.id === name)) {
+            productNameOption.values?.push({
+              id: name,
+              label: name,
+            })
+          }
+        })
+
+        options.push(productNameOption)
+      }
+    }
 
     // STATUS
     // add status option
@@ -375,6 +398,16 @@ export const useBuildFilterOptions = ({
         })
 
         options.push(versionOption)
+      }
+    }
+
+    // NAME
+    // add name filter for custom string input
+    if (scopeFilterTypes.includes('name')) {
+      const nameOption = getOptionRoot('name', config, scopePrefix, scopeLabel)
+
+      if (nameOption) {
+        options.push(nameOption)
       }
     }
 
@@ -659,6 +692,22 @@ const getOptionRoot = (
         operatorChangeable: false,
       }
       break
+    case 'productName':
+      rootOption = {
+        id: getRootIdWithPrefix(`productNames`),
+        type: 'string',
+        label: formatLabelWithScope(`Product Name`),
+        icon: getAttributeIcon('productName', 'string'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: true,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: false,
+        operatorChangeable: true,
+      }
+      break
     case 'status':
       rootOption = {
         id: getRootIdWithPrefix('status'),
@@ -729,6 +778,22 @@ const getOptionRoot = (
         type: 'string',
         label: formatLabelWithScope('Version'),
         icon: getAttributeIcon('version'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: true,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: false,
+        operatorChangeable: false,
+      }
+      break
+    case 'name':
+      rootOption = {
+        id: getRootIdWithPrefix('name'),
+        type: 'string',
+        label: formatLabelWithScope('Name'),
+        icon: 'text_fields',
         inverted: false,
         operator: 'OR',
         values: [],
@@ -979,6 +1044,17 @@ export const splitFiltersByScope = (
           if (mappedScope && targetFilters[mappedScope]) {
             // Found in the map, add to mapped scope
             targetFilters[mappedScope].conditions?.push(condition)
+          } else if (
+            condition.key === SEARCH_FILTER_ID ||
+            condition.key === 'name' ||
+            condition.key?.endsWith('_name')
+          ) {
+            // Global search and name filters should be added to all scopes
+            scopes.forEach((scopeName) => {
+              if (targetFilters[scopeName]) {
+                targetFilters[scopeName].conditions?.push(condition)
+              }
+            })
           } else {
             // Not in map, add to unscoped
             targetFilters['unscoped']?.conditions?.push(condition)

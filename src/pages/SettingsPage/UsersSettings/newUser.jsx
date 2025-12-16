@@ -131,6 +131,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         width: '90vw',
         maxWidth: 700,
       }}
+      enableBackdropClose={false}
       header={'Create New User'}
       onClose={handleClose}
       footer={

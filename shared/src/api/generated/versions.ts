@@ -159,6 +159,10 @@ export type VersionModel = {
   status?: string
   /** Tags assigned to the the version */
   tags?: string[]
+  /** Who created the version */
+  createdBy?: string
+  /** Who last updated the version */
+  updatedBy?: string
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -176,6 +180,10 @@ export type VersionPatchModel = {
   status?: string
   /** Tags assigned to the the version */
   tags?: string[]
+  /** Who created the version */
+  createdBy?: string
+  /** Who last updated the version */
+  updatedBy?: string
   attrib?: VersionAttribModel
   data?: Record<string, any>
   /** Whether the version is active */
@@ -199,6 +207,10 @@ export type VersionPostModel = {
   status?: string
   /** Tags assigned to the the version */
   tags?: string[]
+  /** Who created the version */
+  createdBy?: string
+  /** Who last updated the version */
+  updatedBy?: string
   attrib?: VersionAttribModel
   data?: Record<string, any>
   /** Whether the version is active */

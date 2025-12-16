@@ -46,10 +46,11 @@ export type OperationWithRowId = OperationModel & { rowId: string; meta?: Record
 
 interface UseUpdateTableDataProps {
   pushHistory?: UseHistoryReturn['pushHistory']
+  removeHistoryEntries?: UseHistoryReturn['removeHistoryEntries']
 }
 
 const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
-  const { pushHistory } = props || {}
+  const { pushHistory, removeHistoryEntries } = props || {}
   const { projectName } = useProjectContext()
   const {
     getEntityById,
@@ -248,6 +249,10 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       } catch (error: any) {
         console.error('Error updating entities:', error)
         toast.error('Failed to update entities: ' + error?.error)
+        // Remove the failed update from history stack
+        if (pushHistory && pushToHistory && removeHistoryEntries) {
+          removeHistoryEntries(1)
+        }
       }
     },
     [
@@ -256,6 +261,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       getEntityById,
       getInheritedDependents,
       pushHistory,
+      removeHistoryEntries,
     ],
   )
 
@@ -476,6 +482,10 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         })
       } catch (error) {
         toast.error('Failed to update entities')
+        // Remove the failed update from history stack
+        if (pushToHistory && pushHistory && removeHistoryEntries) {
+          removeHistoryEntries(1)
+        }
       }
     },
     [
@@ -484,6 +494,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       getInheritedDependents,
       findInheritedValueFromAncestors,
       pushHistory,
+      removeHistoryEntries,
     ],
   )
 

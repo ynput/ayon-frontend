@@ -34,12 +34,11 @@ import TrialBanner from '@components/TrialBanner/TrialBanner'
 import { ShortcutsProvider } from '@context/ShortcutsContext'
 import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
-import { URIProvider } from '@context/UriContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
 import { RemoteModulesProvider, DetailsPanelProvider, GlobalProvider } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { MenuProvider } from '@shared/context/MenuContext'
+import { MenuProvider, URIProvider } from '@shared/context'
 
 // containers
 import Header from '@containers/header'
@@ -179,36 +178,36 @@ const App = () => {
         <Favicon />
         <Suspense fallback={<LoadingPage />}>
           <GlobalProvider>
-            <MenuProvider>
-              <FeedbackProvider>
-                <RestartProvider>
-                  <RemoteModulesProvider skip={!user.name}>
-                    <PowerpackProvider>
-                      <ContextMenuProvider>
-                        <DetailsPanelProvider
-                          {...handlerProps}
-                          user={user}
-                          viewer={viewer}
-                          dispatch={dispatch}
-                          useLocation={useLocation}
-                          useNavigate={useNavigate}
-                          useParams={useParams}
-                          useSearchParams={useSearchParams}
-                        >
-                          <GlobalContextMenu />
-                          <PasteProvider>
-                            <PasteModal />
-                            <BrowserRouter>
-                              <NotificationsProvider>
-                                <URIProvider>
-                                  <ShortcutsProvider>
-                                    <PiPProvider>
-                                      <QueryParamProvider
-                                        adapter={ReactRouter6Adapter}
-                                        options={{
-                                          updateType: 'replaceIn',
-                                        }}
-                                      >
+            <FeedbackProvider>
+              <RestartProvider>
+                <RemoteModulesProvider skip={!user.name}>
+                  <PowerpackProvider>
+                    <ContextMenuProvider>
+                      <GlobalContextMenu />
+                      <PasteProvider>
+                        <PasteModal />
+                        <BrowserRouter>
+                          <MenuProvider useNavigate={useNavigate}>
+                            <QueryParamProvider
+                              adapter={ReactRouter6Adapter}
+                              options={{
+                                updateType: 'replaceIn',
+                              }}
+                            >
+                              <URIProvider>
+                                <DetailsPanelProvider
+                                  {...handlerProps}
+                                  user={user}
+                                  viewer={viewer}
+                                  dispatch={dispatch}
+                                  useLocation={useLocation}
+                                  useNavigate={useNavigate}
+                                  useParams={useParams}
+                                  useSearchParams={useSearchParams}
+                                >
+                                  <NotificationsProvider>
+                                    <ShortcutsProvider>
+                                      <PiPProvider>
                                         <Header />
                                         <ShareDialog />
                                         <ViewerDialog />
@@ -221,20 +220,20 @@ const App = () => {
                                         <PowerpackDialog />
                                         <AppRemoteLoader />
                                         <TrialBanner />
-                                      </QueryParamProvider>
-                                    </PiPProvider>
-                                  </ShortcutsProvider>
-                                </URIProvider>
-                              </NotificationsProvider>
-                            </BrowserRouter>
-                          </PasteProvider>
-                        </DetailsPanelProvider>
-                      </ContextMenuProvider>
-                    </PowerpackProvider>
-                  </RemoteModulesProvider>
-                </RestartProvider>
-              </FeedbackProvider>
-            </MenuProvider>
+                                      </PiPProvider>
+                                    </ShortcutsProvider>
+                                  </NotificationsProvider>
+                                </DetailsPanelProvider>
+                              </URIProvider>
+                            </QueryParamProvider>
+                          </MenuProvider>
+                        </BrowserRouter>
+                      </PasteProvider>
+                    </ContextMenuProvider>
+                  </PowerpackProvider>
+                </RemoteModulesProvider>
+              </RestartProvider>
+            </FeedbackProvider>
           </GlobalProvider>
         </Suspense>
       </>

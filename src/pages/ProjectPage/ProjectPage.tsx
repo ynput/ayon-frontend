@@ -22,7 +22,12 @@ import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
-import { RemoteAddonProject, useGlobalContext, useProjectContext } from '@shared/context'
+import {
+  ProjectFoldersContextProvider,
+  RemoteAddonProject,
+  useGlobalContext,
+  useProjectContext,
+} from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
@@ -369,7 +374,9 @@ const ProjectPage = () => {
 
   return (
     <ProjectContextProvider projectName={projectName}>
-      <ProjectPageInner />
+      <ProjectFoldersContextProvider projectName={projectName}>
+        <ProjectPageInner />
+      </ProjectFoldersContextProvider>
     </ProjectContextProvider>
   )
 }

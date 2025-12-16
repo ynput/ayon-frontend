@@ -19,6 +19,7 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
   onOpenViewer,
 }) => {
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
+  const viewerTaskId = useAppSelector((state) => state.viewer.taskId)
   const taskData = useAppSelector((state) => state.dashboard.tasks.selectedData)
   const { entities, setEntities, setPanelOpen } = useDetailsPanelContext()
   const { RelatedTasks } = useUserDashboardContext()
@@ -54,17 +55,23 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
 
   // when the taskData changes, clear the entities in the details panel
   useEffect(() => {
-    setEntities(null)
-    return () => {
+    if (isPanelOpen) {
       setEntities(null)
     }
-  }, [taskData])
+  }, [taskData, isPanelOpen])
+
+  // check if we can show in the viewer dialog
+  const viewerNotATask = viewerOpen && !viewerTaskId
+  if (viewerNotATask) return null
+
+  const selectedIds = viewerOpen ? [viewerTaskId!] : entities?.entities.map((e) => e.id) || []
 
   // use powerpack RelatedTasks module
   return (
     <RelatedTasks
       {...{ isPanelOpen, projectsInfo, priorities, taskData: taskData[0], viewerOpen }}
-      selectedTasks={entities?.entities.map((e) => e.id)}
+      isPanelOpen={isPanelOpen || !!entities}
+      selectedTasks={selectedIds}
       onSelectTasks={handleSelectRelatedTasks}
       onOpenViewer={handleOpenViewer}
     />

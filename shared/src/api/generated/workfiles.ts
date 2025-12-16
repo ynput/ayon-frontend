@@ -128,7 +128,9 @@ export type WorkfileModel = {
   /** ID of the parent task */
   taskId: string
   thumbnailId?: string
+  /** Who created the workfile */
   createdBy?: string
+  /** Who last updated the workfile */
   updatedBy?: string
   attrib?: WorkfileAttribModel
   data?: Record<string, any>
@@ -150,7 +152,9 @@ export type WorkfilePatchModel = {
   /** ID of the parent task */
   taskId?: string
   thumbnailId?: string
+  /** Who created the workfile */
   createdBy?: string
+  /** Who last updated the workfile */
   updatedBy?: string
   /** Status of the workfile */
   status?: string
@@ -173,7 +177,9 @@ export type WorkfilePostModel = {
   /** ID of the parent task */
   taskId: string
   thumbnailId?: string
+  /** Who created the workfile */
   createdBy?: string
+  /** Who last updated the workfile */
   updatedBy?: string
   /** Status of the workfile */
   status?: string

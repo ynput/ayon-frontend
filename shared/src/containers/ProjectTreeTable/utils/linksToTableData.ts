@@ -27,7 +27,35 @@ export const linksToTableData = (
   anatomy: Anatomy,
 ): LinksTableData =>
   links?.reduce((acc, edge) => {
-    const { linkType, direction, entityType: linkEntityType, id, node } = edge
+    const { linkType, direction, entityType: linkEntityType, id, node, isRestricted } = edge
+
+    // Handle restricted links (node is null)
+    if (isRestricted || !node) {
+      const entityData: LinkEntity = {
+        label: '',
+        parents: [],
+        linkId: id,
+        entityId: '',
+        entityType: linkEntityType,
+        icon: getEntityIcon(linkEntityType, undefined, anatomy),
+        isRestricted: true,
+      }
+
+      const linkTypeName = linkTypeToLinkName(linkType, entityType, linkEntityType, direction)
+      const tableId = getLinkKey({ name: linkTypeName }, direction)
+
+      if (!acc[tableId]) {
+        acc[tableId] = []
+      }
+
+      if (!acc[tableId].includes(entityData)) {
+        acc[tableId].push(entityData)
+      }
+
+      return acc
+    }
+
+    // Handle normal links
     const entityData: LinkEntity = {
       label: node.label || node.name,
       parents: node.parents,

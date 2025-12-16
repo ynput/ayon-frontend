@@ -10,12 +10,14 @@ import {
   viewsQueries,
   useGetShareOptionsQuery,
   ShareOption,
+  useGetBaseViewQuery,
 } from '@shared/api'
-import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
+import useBuildViewMenuItems, { BASE_VIEW_ID } from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { useGlobalContext, usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
 import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
+import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
 import { useLocalStorage } from '@shared/hooks'
@@ -39,14 +41,22 @@ export interface ViewsContextValue {
   // Views data
   viewsList: ViewListItemModel[]
   viewSettings: ViewSettings | undefined
+  // Working view
   workingSettings: ViewSettings | undefined
   workingView: ViewListItemModel | undefined
+  isViewWorking: boolean
+  onUpdateWorkingView: (
+    payload: Partial<ViewData>,
+    options?: { selectView?: boolean },
+  ) => Promise<void>
+  // base views
+  projectBaseView: ViewListItemModel | undefined
+  studioBaseView: ViewListItemModel | undefined
   editingViewId: string | undefined
   viewMenuItems: ViewMenuItem[]
   editingViewData?: ViewData
   isLoadingEditingViewData: boolean
   isLoadingViews: boolean
-  isViewWorking: boolean
 
   // Data
   shareOptions?: ShareOption[] // available users to share with (undefined means loading)
@@ -61,6 +71,11 @@ export interface ViewsContextValue {
   onCreateView: UseViewMutations['onCreateView']
   onDeleteView: UseViewMutations['onDeleteView']
   onUpdateView: UseViewMutations['onUpdateView']
+
+  // Base view mutations
+  onCreateBaseView: (isStudioScope: boolean) => Promise<void>
+  onUpdateBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
+  onDeleteBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
 
   // Actions (shared)
   resetWorkingView: () => Promise<void>
@@ -118,12 +133,6 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     }
   }
 
-  const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView } = useViewsMutations({
-    viewType,
-    projectName,
-    onCreate: handleOnViewCreated,
-  })
-
   // when editing the view, get all users that can be shared to that view
   const { data: shareOptions } = useGetShareOptionsQuery(
     { projectName },
@@ -140,15 +149,38 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewType: viewType as ViewType,
   })
 
-  // Fetch views data
-  const { currentData: viewsList = [], isLoading: isLoadingViews } = useListViewsQuery(
+  // Fetch views data and filter out base views
+  const { currentData: viewsListRaw = [], isLoading: isLoadingViews } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
 
+  // Filter out base views from the list
+  const viewsList = useMemo(
+    () => viewsListRaw.filter((view) => view.label !== BASE_VIEW_ID),
+    [viewsListRaw],
+  )
+
+  const { onCreateView, onDeleteView, onUpdateView, onResetWorkingView } = useViewsMutations({
+    viewType,
+    projectName,
+    viewsList,
+    onCreate: handleOnViewCreated,
+  })
+
   //   always get your working view
   const { currentData: workingView } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
+    { skip: !viewType },
+  )
+
+  // Fetch both project and studio base views
+  const { currentData: projectBaseView } = useGetBaseViewQuery(
+    { projectName: projectName, viewType: viewType as string },
+    { skip: !viewType },
+  )
+  const { currentData: studioBaseView } = useGetBaseViewQuery(
+    { projectName: undefined, viewType: viewType as string },
     { skip: !viewType },
   )
 
@@ -193,6 +225,28 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     onUpdateView: onUpdateView,
   })
 
+  // Base view mutations
+  const { onCreateBaseView, onUpdateBaseView, onDeleteBaseView } = useBaseViewMutations({
+    viewType: viewType as string,
+    projectName,
+    workingSettings,
+    dispatch,
+  })
+
+  const onUpdateWorkingView = useCallback(
+    async (payload: Partial<ViewData>, { selectView }: { selectView?: boolean } = {}) => {
+      if (!workingView?.id) {
+        console.error('No working view to update')
+        return
+      }
+      await onUpdateView(workingView.id, payload, !projectName)
+      if (selectView) {
+        setSelectedView(workingView.id)
+      }
+    },
+    [onUpdateView, workingView],
+  )
+
   // Reset working view to default (empty) settings
   const resetWorkingView = useCallback(async () => {
     try {
@@ -220,7 +274,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     selectedId: selectedView?.id,
     collapsed: collapsedSections,
     setCollapsed: setCollapsedSections,
-    onResetWorkingView,
+    onResetWorkingView: resetWorkingView,
     onSelect: (viewId) => {
       setSelectedView(viewId)
       // reset the settings changed state when switching views
@@ -240,15 +294,24 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     currentUser,
     selectedView,
     viewSettings,
-    workingSettings,
     editingViewData,
     isLoadingEditingViewData,
     viewsList,
+    // Working view
+    workingSettings,
     workingView,
+    isViewWorking,
+    onUpdateWorkingView,
+    // base views
+    projectBaseView,
+    studioBaseView,
+    // base view mutations
+    onCreateBaseView,
+    onUpdateBaseView,
+    onDeleteBaseView,
     editingViewId,
     viewMenuItems,
     isLoadingViews,
-    isViewWorking,
     // data
     shareOptions,
     setIsMenuOpen,

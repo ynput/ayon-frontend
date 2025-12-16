@@ -6,7 +6,7 @@ import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
 import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
-import { useURIContext } from '@context/UriContext'
+import { useURIContext } from '@shared/context'
 import { getTaskRoute } from '@helpers/routes'
 import { useScopedDetailsPanel } from '@shared/context'
 
@@ -30,8 +30,8 @@ const ListGroup = ({
   containerRef,
 }) => {
   const dispatch = useDispatch()
-  const { navigate: navigateToUri } = useURIContext()
-  const openInBrowser = (task) => navigateToUri(getTaskRoute(task))
+  const { setUri } = useURIContext()
+  const openInBrowser = (task) => setUri(getTaskRoute(task))
   const column = groups[id] || {}
 
   const { setOpen } = useScopedDetailsPanel('dashboard')

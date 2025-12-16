@@ -73,7 +73,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             variant="text"
             className="reset"
             onClick={onResetView}
-            data-tooltip="Reset this view to default"
+            data-tooltip="Reset to Default"
             data-shortcut={getPlatformShortcutKey('0', [KeyMode.Shift, KeyMode.Ctrl])}
           />
         )}

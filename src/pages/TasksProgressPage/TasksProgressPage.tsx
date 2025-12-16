@@ -10,6 +10,7 @@ import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
 import { useSlicerContext } from '@context/SlicerContext'
 import { useProjectContext, useScopedDetailsPanel } from '@shared/context'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const TasksProgressPage: FC = () => {
   const projectName = useAppSelector((state: any) => state.project.name) as string
@@ -36,11 +37,7 @@ const TasksProgressPage: FC = () => {
           </Section>
         </SplitterPanel>
         <SplitterPanel size={90} style={{ overflow: 'hidden' }}>
-          <Splitter
-            layout="horizontal"
-            style={{ height: '100%', overflow: 'hidden' }}
-            pt={{ gutter: { style: { width: detailsOpen ? 4 : 0 } } }}
-          >
+          <DetailsPanelSplitter layout="horizontal" style={{ height: '100%', overflow: 'hidden' }}>
             <SplitterPanel size={60} style={{ overflow: 'hidden' }}>
               <TasksProgress
                 taskStatuses={taskStatuses}
@@ -51,21 +48,19 @@ const TasksProgressPage: FC = () => {
                 projectName={projectName}
               />
             </SplitterPanel>
-            {detailsOpen ? (
-              <SplitterPanel
-                size={20}
-                style={{
-                  minWidth: 300,
-                  maxWidth: 800,
-                  zIndex: 500,
-                }}
-              >
-                <TaskProgressDetailsPanel projectInfo={projectInfo} projectName={projectName} />
-              </SplitterPanel>
-            ) : (
-              <SplitterPanel size={0} style={{ maxWidth: 0 }}></SplitterPanel>
-            )}
-          </Splitter>
+
+            <SplitterPanel
+              size={20}
+              style={{
+                minWidth: 300,
+                maxWidth: 800,
+                zIndex: 500,
+              }}
+              className="details"
+            >
+              <TaskProgressDetailsPanel projectInfo={projectInfo} projectName={projectName} />
+            </SplitterPanel>
+          </DetailsPanelSplitter>
         </SplitterPanel>
       </Splitter>
     </main>

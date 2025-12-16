@@ -1,8 +1,8 @@
 import { useLoadModule } from '@shared/hooks'
 import { FC, useState, useEffect } from 'react'
 import ReportsFallback from './ReportsFallback'
-import ReportsLoadingScreen from './ReportsLoadingScreen'
 import { ProjectPageRemote } from '@pages/ProjectPage/ProjectPageRemote'
+import { AddonLoadingScreen } from '@shared/components'
 
 interface ReportsPageProps {
   projectName: string
@@ -33,14 +33,13 @@ const ReportsPage: FC<ReportsPageProps> = ({ projectName }) => {
   }
 
   if (!isLoaded && showLoading) {
-    return <ReportsLoadingScreen />
+    return <AddonLoadingScreen />
   }
 
   return (
     <ProjectPageRemote
       key={'reports'}
       Component={Reports}
-      viewType="reports"
       projectName={projectName}
       slicer={{ fields: ['hierarchy', 'assignees', 'status', 'taskType'] }}
     />

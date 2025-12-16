@@ -17,7 +17,7 @@ import { api } from '@shared/api'
 
 // Middleware
 import localStorageMiddleware from './middleware/localStorageMiddleware'
-import searchParamsMiddleware, { updateUrlOnUriChange } from './middleware/searchParamsMiddleware'
+import searchParamsMiddleware from './middleware/searchParamsMiddleware'
 
 const store = configureStore({
   reducer: {
@@ -41,8 +41,7 @@ const store = configureStore({
           ...releaseInstallerLocalItems,
         }),
       )
-      .concat(searchParamsMiddleware({ ...viewerSearchParams }))
-      .concat(updateUrlOnUriChange()),
+      .concat(searchParamsMiddleware({ ...viewerSearchParams })),
 })
 setupListeners(store.dispatch)
 

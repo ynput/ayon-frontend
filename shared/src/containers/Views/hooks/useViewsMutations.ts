@@ -3,8 +3,13 @@ import {
   useCreateViewMutation,
   useDeleteViewMutation,
   useUpdateViewMutation,
+  useSetDefaultViewMutation,
+  ViewListItemModel,
+  viewsQueries,
 } from '@shared/api'
 import { useCallback } from 'react'
+import { useDispatch } from 'react-redux'
+import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import { ViewData } from '../context/ViewsContext'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
@@ -12,6 +17,7 @@ import { toast } from 'react-toastify'
 type Props = {
   viewType?: string
   projectName?: string
+  viewsList?: ViewListItemModel[]
   onCreate?: (view: ViewData) => void
   onUpdate?: (view: ViewData) => void
   onDelete?: (viewId: string) => void
@@ -38,14 +44,18 @@ type R = UseViewMutations
 export const useViewsMutations = ({
   viewType,
   projectName,
+  viewsList,
   onCreate,
   onDelete,
   onUpdate,
 }: Props): UseViewMutations => {
   // forward mutations to the dialog
+  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>()
   const [createView] = useCreateViewMutation()
   const [deleteView] = useDeleteViewMutation()
   const [updateView] = useUpdateViewMutation()
+  const [setDefaultView] = useSetDefaultViewMutation()
+
 
   const onCreateView = useCallback<R['onCreateView']>(
     async (payload, isStudioScope) => {
@@ -93,7 +103,7 @@ export const useViewsMutations = ({
         throw error
       }
     },
-    [createView, viewType, projectName, onUpdate],
+    [updateView, viewType, projectName, onUpdate],
   )
 
   const onDeleteView = useCallback<R['onDeleteView']>(
@@ -128,39 +138,113 @@ export const useViewsMutations = ({
         throw new Error('viewType are required for resetting a view')
       }
 
-      const freshWorkingView = generateWorkingView({})
-      if (existingWorkingViewId) {
-        freshWorkingView.id = existingWorkingViewId
-      }
-
       try {
-        await createView({
+        // Priority order: project base view → studio base view → default (empty settings)
+
+        // Invalidate base view cache to ensure fresh data
+        dispatch(
+          viewsQueries.util.invalidateTags([
+            { type: 'Views', id: `base-${viewType}-${projectName}` },
+            { type: 'Views', id: `base-${viewType}` }
+          ])
+        )
+
+        // 1. Try to fetch project base view first (force fresh fetch, no subscription)
+        const projectBaseViewPromise = dispatch(
+          viewsQueries.endpoints.getBaseView.initiate(
+            { viewType, projectName },
+            { subscribe: false, forceRefetch: true }
+          )
+        )
+        const projectBaseViewResult = await projectBaseViewPromise
+        const projectBaseView = projectBaseViewResult.data
+
+        let templateSettings = {}
+        let baseViewSource = 'default'
+
+        // Check if project base view exists and has settings
+        if (projectBaseView && projectBaseView.settings && Object.keys(projectBaseView.settings).length > 0) {
+          templateSettings = projectBaseView.settings
+          baseViewSource = 'project'
+        } else {
+          // 2. If no project base view, try studio base view (force fresh fetch, no subscription)
+          const studioBaseViewPromise = dispatch(
+            viewsQueries.endpoints.getBaseView.initiate(
+              { viewType },
+              { subscribe: false, forceRefetch: true }
+            )
+          )
+          const studioBaseViewResult = await studioBaseViewPromise
+          const studioBaseView = studioBaseViewResult.data
+
+          // Check if studio base view exists and has settings
+          if (studioBaseView && studioBaseView.settings && Object.keys(studioBaseView.settings).length > 0) {
+            templateSettings = studioBaseView.settings
+            baseViewSource = 'studio'
+          }
+          // 3. Otherwise, use default (empty settings) - already initialized above
+        }
+
+        // Determine the view ID to use - use existing working view ID or generate new one
+        const viewId: string = existingWorkingViewId ?? generateWorkingView().id as string
+
+        // Prepare the working view payload with base view settings
+        const workingViewPayload = {
+          id: viewId,
+          label: 'Working',
+          working: true,
+          settings: templateSettings,
+        }
+
+        // Update existing working view or create a new one
+        if (existingWorkingViewId) {
+          await updateView({
+            viewId: existingWorkingViewId,
+            viewType,
+            projectName,
+            payload: { settings: templateSettings },
+          }).unwrap()
+        } else {
+          await createView({
+            viewType,
+            projectName,
+            payload: workingViewPayload,
+          }).unwrap()
+        }
+
+        // Set this working view as the user's default view
+        await setDefaultView({
           viewType,
           projectName,
-          payload: freshWorkingView,
+          setDefaultViewRequestModel: { viewId },
         }).unwrap()
-        const newId = freshWorkingView.id as string
 
-        // If we're not currently on the working view, switch to it and mark settings as changed
-        if (setSelectedView && setSettingsChanged && selectedViewId && existingWorkingViewId) {
-          if (selectedViewId !== existingWorkingViewId) {
-            setSelectedView(newId)
-            setSettingsChanged(true)
-          }
+        // Always switch to the working view after reset
+        if (setSelectedView) {
+          setSelectedView(viewId)
+        }
+
+        // Clear settings changed flag when resetting (don't prompt to save previous view)
+        if (setSettingsChanged) {
+          setSettingsChanged(false)
         }
 
         if (notify) {
-          toast.success('View reset to default settings')
+          const message =
+            baseViewSource === 'project' ? 'View reset to project base view' :
+            baseViewSource === 'studio' ? 'View reset to studio base view' :
+            'View reset to default settings'
+          toast.success(message)
         }
 
-        return newId
+        return viewId
       } catch (error) {
         console.error('Failed to reset working view:', error)
         if (notify) toast.error('Failed to reset view to default')
         throw error
       }
     },
-    [createView, viewType, projectName],
+    [createView, updateView, setDefaultView, viewType, projectName, dispatch],
   )
 
   return {

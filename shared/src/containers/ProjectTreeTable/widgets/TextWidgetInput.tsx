@@ -40,25 +40,27 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
 
     // Helper function to validate and convert value based on type
     const validateAndConvertValue = (inputValue?: string): any => {
+      // convert inputValue to string for consistent processing
+      const inputStr =
+        inputValue !== undefined && inputValue !== null ? String(inputValue).trim() : ''
       if (!inputValue) return ''
 
-      const trimmedValue = inputValue.trim()
-
       // Handle empty values
-      if (trimmedValue === '') {
+      if (inputStr === '') {
         return type === 'string' ? '' : null
       }
 
       switch (type) {
         case 'integer':
-          const intValue = parseInt(trimmedValue, 10)
+          const intValue = parseInt(inputStr, 10)
           return isNaN(intValue) ? null : intValue
         case 'float':
-          const floatValue = parseFloat(trimmedValue)
+          const floatValue = parseFloat(inputStr)
           return isNaN(floatValue) ? null : floatValue
         case 'string':
+          return inputStr
         default:
-          return inputValue
+          return inputStr
       }
     }
 
@@ -97,11 +99,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
         e.preventDefault()
         const validatedValue = validateAndConvertValue(value)
 
-        if (!hasValueChanged(validatedValue)) {
-          onCancel?.()
-          return
-        }
-
+        // Always trigger onChange on Enter, even if value hasn't changed
         if (type === 'string' || validatedValue !== null) {
           onChange(validatedValue, 'Enter')
         } else {

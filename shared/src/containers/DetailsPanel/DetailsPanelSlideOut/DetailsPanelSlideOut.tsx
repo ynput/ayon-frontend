@@ -27,6 +27,7 @@ export const DetailsPanelSlideOut = ({ projectsInfo, scope }: DetailsPanelSlideO
   return (
     <Styled.SlideOut>
       <DetailsPanel
+        isOpen
         entityType={entityType}
         entitySubTypes={[]}
         entities={[{ id: entityId, projectName }]}

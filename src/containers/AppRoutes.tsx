@@ -59,10 +59,27 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route path="/dashboard/addon/:addonName" element={<UserDashboardPage />} />
       <Route path="/manageProjects" element={<ProjectManagerPage />} />
       <Route path="/manageProjects/:module" element={<ProjectManagerPage />} />
+      {/* Allow reviews route for all levels */}
+      <Route
+        path={'/projects/:projectName/reviews/:sessionId'}
+        element={
+          <ProtectedRoute
+            isAllowed={level > 0}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
+          >
+            <ProjectPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path={'/projects/:projectName'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }
@@ -70,7 +87,11 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route
         path={'/projects/:projectName/:module/*'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }
@@ -78,7 +99,11 @@ const AppRoutes: FC<AppRoutesProps> = () => {
       <Route
         path={'/projects/:projectName/addon/:addonName'}
         element={
-          <ProtectedRoute isAllowed={level >= 500} redirectPath="/">
+          <ProtectedRoute
+            isAllowed={level >= 500}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity']}
+          >
             <ProjectPage />
           </ProtectedRoute>
         }

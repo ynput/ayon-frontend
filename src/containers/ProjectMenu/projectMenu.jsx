@@ -1,6 +1,6 @@
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import MenuList from '@components/Menu/MenuComponents/MenuList'
+import { MenuList } from '@shared/components'
 import { useListProjectsQuery, useSetFrontendPreferencesMutation } from '@shared/api'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
@@ -10,14 +10,13 @@ import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/ShortcutsContext'
 import clsx from 'clsx'
-import useAyonNavigate from '@hooks/useAyonNavigate'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
-  const navigate = useAyonNavigate()
+  const navigate = useNavigate()
   const dispatch = useDispatch()
   const location = useLocation()
   const menuRef = useRef(null)
@@ -124,13 +123,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
           {
             label: 'Project Settings',
             icon: 'settings_applications',
-            command: () =>
-              setTimeout(
-                dispatch((_, getState) =>
-                  navigate(getState)(`/manageProjects/anatomy?project=${projectName}`),
-                ),
-                0,
-              ),
+            command: () => navigate(`/manageProjects/anatomy?project=${projectName}`),
           },
         ],
       )
@@ -141,12 +134,9 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   const handleEditClick = (e, projectName) => {
     e.stopPropagation()
-    setTimeout(
-      dispatch((_, getState) =>
-        navigate(getState)(`/manageProjects/anatomy?project=${projectName}`),
-      ),
-      0,
-    )
+
+    navigate(`/manageProjects/anatomy?project=${projectName}`)
+
     onHide()
   }
 
@@ -224,7 +214,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       ? `/projects/${projectName}/${currentModule || defaultTab}`
       : `/projects/${projectName}/${defaultTab}`
 
-    dispatch((_, getState) => navigate(getState)(link))
+    navigate(link)
   }
 
   const handleSearchClick = (e) => {

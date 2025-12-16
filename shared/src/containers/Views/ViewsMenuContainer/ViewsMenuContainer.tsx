@@ -6,9 +6,10 @@ import { ViewsMenu } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { usePowerpack } from '@shared/context'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import * as Styled from '../Views.styled'
 import { VIEWS_DIALOG_CLASS } from '../ViewsDialogContainer/ViewsDialogContainer'
+import BaseViewsTagContainer from '@shared/containers/Views/ViewsMenuContainer/BaseViewsTags'
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
@@ -33,6 +34,8 @@ export const ViewsMenuContainer: FC = () => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const modalRef = useRef<HTMLDivElement>(null)
 
+  const { user } = useGlobalContext()
+  const isAdmin = (user?.uiExposureLevel || 0) >= 900
   // Modal position calculation
   const portalContainer = getViewsPortalContainer(viewType)
   const buttonRect = portalContainer?.getBoundingClientRect()
@@ -53,8 +56,15 @@ export const ViewsMenuContainer: FC = () => {
         .querySelector('.' + VIEWS_DIALOG_CLASS)
         ?.contains(target)
       const clickInsideDropdown = document.querySelector('.options')?.contains(target)
+      const clickInsideConfirmDialog = document.querySelector('.p-confirm-dialog')?.contains(target)
 
-      if (!clickInsideMenu && !clickInsideEditDialog && !clickInsideDropdown && isMenuOpen) {
+      if (
+        !clickInsideMenu &&
+        !clickInsideEditDialog &&
+        !clickInsideDropdown &&
+        !clickInsideConfirmDialog &&
+        isMenuOpen
+      ) {
         setIsMenuOpen(false)
       }
     }
@@ -100,6 +110,12 @@ export const ViewsMenuContainer: FC = () => {
         createPortal(
           <Styled.ViewsModal style={modalPosition} ref={modalRef} tabIndex={0}>
             <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
+            {isAdmin && (
+              <>
+                <BaseViewsTagContainer />
+                <Styled.ViewsMenuDivider />
+              </>
+            )}
             <ViewItem
               label="Create new view"
               id={NEW_VIEW_ID}

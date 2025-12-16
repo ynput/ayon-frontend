@@ -3,7 +3,6 @@ import { useAppSelector } from '@state/store'
 import styled from 'styled-components'
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import { toast } from 'react-toastify'
-import { useMemo } from 'react'
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -41,34 +40,17 @@ const VariantSelector = ({
 }: VariantSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const devMode = useAppSelector((state) => state.user.attrib.developerMode)
-  // const userName = useAppSelector((state) => state.user.name)
+  const userName = useAppSelector((state) => state.user.name)
 
   const buttons =
     devMode && showDev
       ? (['production', 'staging', 'dev'] as const)
       : (['production', 'staging'] as const)
 
-  const selectedBundle = useMemo(() => {
-    if (variant === 'production') {
-      return bundles.find((b) => b.isProduction)
-    } else if (variant === 'staging') {
-      return bundles.find((b) => b.isStaging)
-    }
-    return bundles.find((b) => b.name === variant)
-  }, [variant, bundles])
-
-  // resolve which buttons is selected
-  const selectedType = useMemo(() => {
-    if (selectedBundle?.isProduction) return 'production'
-    if (selectedBundle?.isStaging) return 'staging'
-    if (selectedBundle?.isDev) return 'dev'
-    return undefined
-  }, [selectedBundle])
-
   const handleOnChange = (variant: (typeof buttons)[number]) => {
     if (variant === 'dev') {
       // find dev bundle that belongs to the user
-      const devBundle = bundles.find((bundle) => bundle.isDev)
+      const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
       if (devBundle) {
         setVariant(devBundle.name)
       } else {
@@ -86,7 +68,7 @@ const VariantSelector = ({
           key={variantType}
           label={variantType.charAt(0).toUpperCase() + variantType.slice(1)}
           onClick={() => handleOnChange(variantType)}
-          style={variantType === selectedType ? VARIANT_STYLES[variantType] : {}}
+          style={(variantType === variant || (variantType === 'dev' && !['production', 'staging'].includes(variant))) ? VARIANT_STYLES[variantType] : {}}
           disabled={disabled}
         />
       ))}

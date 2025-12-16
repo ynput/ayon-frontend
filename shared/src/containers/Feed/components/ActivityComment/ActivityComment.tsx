@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import emoji from 'remark-emoji'
 import remarkGfm from 'remark-gfm'
@@ -22,11 +22,14 @@ import ActivityStatus from '../ActivityStatus/ActivityStatus'
 import { useFeedContext } from '../../context/FeedContext'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
+import { MenuContainer } from '@shared/components'
+import { useMenuContext } from '@shared/context'
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
 import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
+import ActivityCommentMenu from './ActivityCommentMenu'
 
 type Props = {
   activity: any
@@ -45,6 +48,7 @@ type Props = {
   showOrigin?: boolean
   isHighlighted?: boolean
   readOnly?: boolean
+  isSlideOut?: boolean
   statuses: Status[]
 }
 
@@ -62,13 +66,35 @@ const ActivityComment = ({
   showOrigin,
   isHighlighted,
   readOnly,
+  isSlideOut,
   statuses = [],
 }: Props) => {
   const { userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest } =
     useFeedContext()
 
-  const categoryData = useMemo(() => {
-    return categories.find((cat) => cat.name === activity.activityData?.category) || null
+  const moreRef = useRef<HTMLButtonElement>(null)
+  const { toggleMenuOpen, menuOpen } = useMenuContext()
+
+  const { categoryData, categoryNotFound } = useMemo(() => {
+    let categoryNotFound = false
+    if (activity.activityData?.category) {
+      const foundCategory = categories.find((cat) => cat.name === activity.activityData?.category)
+      if (!foundCategory) {
+        categoryNotFound = true
+      }
+      return {
+        categoryData: foundCategory || {
+          name: activity.activityData?.category,
+          color: '#c5c5c5',
+        },
+        categoryNotFound,
+      }
+    } else {
+      return {
+        categoryData: null,
+        categoryNotFound,
+      }
+    }
   }, [activity?.activityData?.category, categories])
   // Compute blended background color for category
   const blendedCategoryColor = useBlendedCategoryColor(categoryData?.color)
@@ -88,6 +114,9 @@ const ActivityComment = ({
   } = activity
   if (!authorName) authorName = author?.name || ''
   if (!authorFullName) authorFullName = author?.fullName || authorName
+
+  const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
+  const isMenuOpen = menuOpen === menuId
 
   const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()
 
@@ -180,6 +209,7 @@ const ActivityComment = ({
           isEditing,
           isHighlighted,
           category: !!categoryData && !isGuest,
+          menuOpen: isMenuOpen,
         })}
         id={activityId}
         $categoryPrimary={categoryData?.color}
@@ -200,22 +230,21 @@ const ActivityComment = ({
           children={undefined}
         />
         <Styled.Body className={clsx('comment-body', { isEditing })}>
-          {!readOnly && isOwner ? (
+          {!readOnly && (
             <Styled.Tools className={'tools'}>
-              {onDelete && (
-                <Styled.ToolButton
-                  icon="delete"
-                  onClick={deleteConfirmation}
-                  tooltip="Delete comment"
-                  variant="text"
-                />
-              )}
-              {handleEditComment && (
+              {isOwner && handleEditComment && (
                 <Styled.ToolButton icon="edit_square" onClick={handleEditComment} variant="text" />
               )}
+              <Styled.ToolButton
+                icon="more_horiz"
+                ref={moreRef}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleMenuOpen(menuId)
+                }}
+                className={isMenuOpen ? 'active' : ''}
+              />
             </Styled.Tools>
-          ) : (
-            <div className="tools"></div>
           )}
 
           {!isEditing && !isGuest && categoryData && (
@@ -227,6 +256,10 @@ const ActivityComment = ({
                 left: -4,
               }}
               isCompact
+              data-tooltip={
+                categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
+              }
+              data-tooltip-delay={0}
             />
           )}
 
@@ -235,6 +268,7 @@ const ActivityComment = ({
               initValue={body}
               initFiles={files}
               initCategory={categoryData?.name}
+              data={activity.activityData}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
@@ -323,6 +357,24 @@ const ActivityComment = ({
           )}
         </Styled.Body>
       </Styled.Comment>
+
+      <MenuContainer
+        target={moreRef.current}
+        id={menuId}
+        align="right"
+        onClose={(e: any) => {
+          e?.stopPropagation()
+          toggleMenuOpen(false)
+        }}
+      >
+        <ActivityCommentMenu
+          onDelete={isOwner && onDelete ? deleteConfirmation : undefined}
+          onEdit={isOwner && handleEditComment}
+          activityId={activityId}
+          onSelect={() => toggleMenuOpen(false)}
+          projectName={projectName}
+        />
+      </MenuContainer>
     </>
   )
 }

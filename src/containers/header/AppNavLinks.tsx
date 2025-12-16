@@ -1,32 +1,28 @@
 import { Button, Spacer } from '@ynput/ayon-react-components'
-import React, { useEffect } from 'react'
-import { useAppSelector } from '@state/store'
+import { FC, ReactNode, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
-import { ayonUrlParam } from '@/constants'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
-import type { ReactNode } from 'react'
-import { useGlobalContext } from '@shared/context'
+import { useURIContext } from '@shared/context'
 
-export type AccessLevel = 'manager' | 'admin'
-
-export interface NavLinkItem {
-  name?: string
-  path?: string
-  module?: string
-  accessLevels?: AccessLevel[]
-  shortcut?: string
+interface NavLinkItem {
+  name: string
+  path: string
+  module: string
   node?: ReactNode | 'spacer'
+  shortcut?: string
   tooltip?: string
+  accessLevels?: string[]
   enabled?: boolean
   startContent?: ReactNode
   endContent?: ReactNode
   uriSync?: boolean
   viewType?: string
-  deprecated?: boolean | string
-  [key: string]: any
+  deprecated?: string | boolean
+  [key: string]: unknown
 }
 
 interface AppNavLinksProps {
@@ -35,33 +31,16 @@ interface AppNavLinksProps {
   projectName?: string
 }
 
-const AppNavLinks: React.FC<AppNavLinksProps> = ({ links = [], currentModule: _currentModule }) => {
+const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams<{ module?: string }>()
-  const [search] = useSearchParams()
-  const { user } = useGlobalContext()
-  const isManager = user?.data?.isManager
-  const isAdmin = user?.data?.isAdmin
-  const uri = useAppSelector((state: any) => state.context.uri)
+  useSearchParams()
+  const isManager = useSelector((state: any) => state.user.data.isManager)
+  const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
+  useURIContext()
 
-  const appendUri = (path: string | undefined, shouldAddUri = true): string | undefined => {
-    if (!path) return path
-
-    // Get the base path and existing query parameters
-    const [basePath] = path.split('?')
-
-    // Only add the uri parameter when shouldAddUri is true and uri exists
-    if (shouldAddUri && uri) {
-      search.set(ayonUrlParam, encodeURIComponent(uri))
-    }
-
-    // Rebuild the URL with all parameters
-    const newQueryString = search.toString()
-    return newQueryString ? `${basePath}?${newQueryString}` : basePath
-  }
-
-  const access: Record<AccessLevel, boolean> = {
+  const access: Record<string, boolean> = {
     manager: isManager || isAdmin,
     admin: isAdmin,
   }
@@ -98,12 +77,12 @@ const AppNavLinks: React.FC<AppNavLinksProps> = ({ links = [], currentModule: _c
               startContent,
               endContent,
               uriSync,
-              module,
+              module: itemModule,
               viewType,
               deprecated,
               ...props
-            }: NavLinkItem = {},
-            idx: number,
+            }: Partial<NavLinkItem> = {},
+            idx,
           ) => {
             if (!enabled) return null
             // if item has restrictions, check if user has access
@@ -123,7 +102,7 @@ const AppNavLinks: React.FC<AppNavLinksProps> = ({ links = [], currentModule: _c
 
             return (
               <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-                <NavLink to={appendUri(path, uriSync) || ''}>
+                <NavLink to={path!}>
                   <Button
                     variant="nav"
                     style={{ border: 'none' }}
@@ -132,7 +111,7 @@ const AppNavLinks: React.FC<AppNavLinksProps> = ({ links = [], currentModule: _c
                   >
                     {startContent && startContent}
                     {name}
-                    {viewType && <Styled.Views id={getViewsPortalId(viewType)} />}
+                    {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
                     {deprecated && (
                       <LegacyBadge
                         tooltip={typeof deprecated === 'string' ? deprecated : undefined}
