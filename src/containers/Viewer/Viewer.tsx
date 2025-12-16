@@ -134,7 +134,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
       }
     }
   }, [allVersionsAndReviewables, selectedProductId])
-
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
     if (hasMultipleProducts && !selectedProductId && !isFetchingReviewables) {
@@ -172,16 +171,43 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
       'version',
       selectedVersion.name,
     )
-    // Split the path and get the last two items (parent folder and task)
-    const pathParts = folderPath.split('/').filter(Boolean)
-    const task = pathParts.pop() || '' // Last item is task
-    const parentFolder = pathParts.pop() || '' // Second-to-last is parent folder
 
-    if (parentFolder && task) {
-      return `/${parentFolder}/${task}`
+    // Determine entity type based on what IDs are set
+    const isFolder = folderId && !taskId && !productId
+    const isTask = taskId && !productId
+    const isVersion = productId // Version requires a product
+
+    // Split the path to get parent folder
+    const pathParts = folderPath.split('/').filter(Boolean)
+
+    if (isFolder) {
+      // Folder - {folder parent} / {folder_label}
+      const folderLabel = pathParts.pop() || ''
+      const folderParent = pathParts.pop() || ''
+      return folderParent && folderLabel ? `${folderParent} / ${folderLabel}` : folderLabel
+    } else if (isTask) {
+      // Task - {folder parent} / {task_label}
+      const taskLabel = pathParts.pop() || ''
+      const folderParent = pathParts.pop() || ''
+      return folderParent && taskLabel ? `${folderParent} / ${taskLabel}` : taskLabel
+    } else if (isVersion) {
+      // Version - {folder parent} / {product_name} / {version}
+      pathParts.pop() // Remove version name
+      pathParts.pop() // Remove task name
+      const folderParent = pathParts.pop() || ''
+      const productName = selectedVersion.productName || ''
+      const versionName = selectedVersion.name || ''
+
+      if (folderParent && productName && versionName) {
+        return `${folderParent} / ${productName} / ${versionName}`
+      } else if (productName && versionName) {
+        return `${productName} / ${versionName}`
+      }
+      return versionName
     }
-    return `/${parentFolder || task}`
-  }, [versionDetails, selectedVersion])
+
+    return ''
+  }, [versionDetails, selectedVersion, folderId, taskId, productId])
 
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
@@ -278,6 +304,25 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     }
   }
 
+  // Handle keyboard shortcut for toggling minimized window (C key)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // abort if modifier keys are pressed
+      if (e.ctrlKey || e.altKey || e.metaKey) return
+
+      // Toggle minimized window on 'c' key
+      if (e.key === 'c') {
+        setMinimizedWindow(!minimizedWindow)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [minimizedWindow, setMinimizedWindow])
+
   const reviewables = selectedVersion?.reviewables || []
 
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
@@ -317,8 +362,11 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             {versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
             <Styled.ButtonGroup>
               <Button
-                icon={'order_play'}
-                className={'details active'}
+                icon={'dock_to_left'}
+                className={'details'}
+                data-tooltip={'Toggle to hide all'}
+                data-tooltip-position="bottom"
+                data-shortcut={'C'}
                 onClick={() => setMinimizedWindow(!minimizedWindow)}
               >
                 Details
@@ -329,8 +377,11 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
         ) : (
           <Styled.ButtonGroup>
             <Button
-              icon={'order_play'}
-              className={'details'}
+              icon={'dock_to_left'}
+              className={'details active'}
+              data-tooltip={'Toggle to show details'}
+              data-tooltip-position="bottom"
+              data-shortcut={'C'}
               onClick={() => setMinimizedWindow(!minimizedWindow)}
             >
               Details

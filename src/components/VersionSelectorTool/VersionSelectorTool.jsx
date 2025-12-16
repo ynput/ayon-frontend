@@ -22,6 +22,7 @@ const NavButton = ({
     id={`${className}-${id}`}
     onClick={() => onClick(id)}
     data-tooltip={`${upperFirst(className)} version`}
+    data-tooltip-position="bottom"
     data-shortcut={shortcut?.children}
     shortcut={shortcut}
     {...props}

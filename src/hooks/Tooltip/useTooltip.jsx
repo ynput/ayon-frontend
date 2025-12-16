@@ -43,7 +43,7 @@ const useTooltip = () => {
     setHasOverflow(overflow)
   }, [tooltip?.tooltip])
 
-  const getTooltipPos = (target, ref) => {
+  const getTooltipPos = (target, ref, position) => {
     if (!target || !ref.current) return
     const tooltipRect = ref.current?.getBoundingClientRect()
     const tooltipWidth = tooltipRect.width
@@ -51,8 +51,13 @@ const useTooltip = () => {
 
     // set tooltip left position
     const tooltipLeft = target.x - tooltipWidth / 2
-    // set tooltip top position
-    const tooltipTop = target.y - tooltipHeight - 0
+    // set tooltip top position based on position parameter
+    let tooltipTop
+    if (position === 'bottom') {
+      tooltipTop = target.y + 25
+    } else {
+      tooltipTop = target.y - tooltipHeight
+    }
 
     // make sure tooltip is not outside of viewport
     if (tooltipLeft < 0) {
@@ -86,7 +91,7 @@ const useTooltip = () => {
     // new tooltip is set, but it's ref hasn't updated yet
     if (id !== tooltipRef.current?.id) return
 
-    const newTooltipPos = getTooltipPos(tooltip?.target, tooltipRef)
+    const newTooltipPos = getTooltipPos(tooltip?.target, tooltipRef, tooltip?.position)
 
     if (isActive && isEqual(tooltip?.pos, newTooltipPos)) return
     // update state
@@ -154,7 +159,7 @@ const useTooltip = () => {
       // find center top position of target element
       const targetRect = target.getBoundingClientRect()
 
-      let targetCenter 
+      let targetCenter
       // target top will also be tooltip bottom
       let targetTop = targetRect.top
 
@@ -185,6 +190,7 @@ const useTooltip = () => {
         hide: false,
         as: asData || 'div',
         clickable: clickable,
+        position: tooltipPosition,
       }
 
       // check if tooltip is already set to same value

@@ -41,7 +41,7 @@ const ReviewVersionDropdown = ({
       activateKeys={['Enter']}
       {...props}
       valueTemplate={(value, selected, isOpen) => (
-        <div data-tooltip={tooltip} data-shortcut={shortcut} style={{ height: '100%' }}>
+        <div data-tooltip={tooltip} data-tooltip-position="bottom" data-shortcut={shortcut} style={{ height: '100%' }}>
           <Styled.VersionValueTemplate
             value={selected || value}
             isOpen={isOpen}
