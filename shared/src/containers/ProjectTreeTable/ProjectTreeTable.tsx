@@ -64,7 +64,7 @@ import { useProjectDataContext } from '@shared/containers'
 // Utility function imports
 import { getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
-import { isEntityRestricted } from './utils/restrictedEntity'
+import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
@@ -1357,7 +1357,9 @@ const TD = ({
         // If there's an active edit on a different cell, blur it first to save changes
         if (editingCellId && editingCellId !== cellId) {
           // Find the currently editing input and blur it
-          const editingInput = document.querySelector(`#${editingCellId} input, #${editingCellId} [role="textbox"]`) as HTMLElement
+          const editingInput = document.querySelector(
+            `#${editingCellId} input, #${editingCellId} [role="textbox"]`,
+          ) as HTMLElement
           if (editingInput) {
             editingInput.blur()
             // Wait a tick for the blur event to process and save
@@ -1399,7 +1401,9 @@ const TD = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        console.log('DBL CLICK')
+        const isReadOnly = isTargetReadOnly(e)
+        if (isReadOnly) return
+
         // check if this is a restricted entity - prevent opening details/viewer
         const isRestricted = isEntityRestricted(cell.row.original.entityType)
 

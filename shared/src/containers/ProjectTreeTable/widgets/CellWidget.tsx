@@ -21,6 +21,7 @@ import { useProjectContext } from '@shared/context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
 import { NameWidgetData } from '@shared/components/RenameForm'
+import { READ_ONLY } from '../utils'
 
 const Cell = styled.div`
   position: absolute;
@@ -289,7 +290,7 @@ export const CellWidget: FC<EditorCellProps> = ({
       {...props}
       className={clsx(props.className, {
         inherited: isInherited && !isCurrentCellEditing,
-        readonly: isReadOnly,
+        [READ_ONLY]: isReadOnly,
         editable: !isReadOnly,
       })}
       ref={ref}
