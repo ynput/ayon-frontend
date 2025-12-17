@@ -176,38 +176,15 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   const versionPath = useMemo(() => {
     if (!entityDetails.length) return ''
-    const entityData = entityDetails[0]
-    const parents = entityData.parents || []
-    const lastParent = parents[parents.length - 1] || ''
 
-    const buildPath = (parent: string, label: string) =>
-      parent && label ? `${parent} / ${label}` : label
+    const { parents = [], folder, task, version } = entityDetails[0]
+    const lastParent = parents[parents.length - 1]
 
-    switch (entityData.entityType) {
-      case 'folder': {
-        // Folder - {folder parent} / {folder_label}
-        const folderLabel = entityData.folder?.label || entityData.folder?.name || ''
-        return buildPath(lastParent, folderLabel)
-      }
-      case 'task': {
-        // Task - {folder parent} / {task_label}
-        const taskLabel = entityData.task?.label || entityData.task?.name || ''
-        return buildPath(lastParent, taskLabel)
-      }
-      case 'version': {
-        // Version - {folder parent} / {product_name} / {version}
-        const folderParent = parents[0] || ''
-        const productName = entityData.product?.name || selectedVersion?.productName || ''
-        const versionName = entityData.version?.name || selectedVersion?.name || ''
+    const entity = folder || task
+    const label = entity?.label || entity?.name
+    const versionName = version?.name || selectedVersion?.name
 
-        if (folderParent && productName && versionName) {
-          return `${folderParent} / ${productName} / ${versionName}`
-        }
-        return productName && versionName ? `${productName} / ${versionName}` : versionName
-      }
-      default:
-        return ''
-    }
+    return [lastParent, label, versionName].filter(Boolean).join(' / ')
   }, [entityDetails, selectedVersion])
 
   // if no versionIds are provided, select the last version and update the state
