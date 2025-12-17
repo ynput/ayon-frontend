@@ -165,13 +165,6 @@ const ProjectPageInner = () => {
         viewType: 'reviews',
       },
       {
-        name: 'Scheduler',
-        path: `/projects/${projectName}/scheduler`,
-        module: 'scheduler',
-        enabled: matchedAddons?.get('planner') === '1.0.1-dev', // for dev purposes, remove when planner is released out of beta
-        viewType: 'scheduler',
-      },
-      {
         name: 'Reports',
         path: `/projects/${projectName}/reports`,
         module: 'reports',
