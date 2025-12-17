@@ -24,7 +24,12 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
-import { createFilterFromSlicer, useOverviewViewSettings } from '@shared/containers'
+import {
+  createFilterFromSlicer,
+  useOverviewViewSettings,
+  useViewsContext,
+  useViewUpdateHelper,
+} from '@shared/containers'
 
 // Local context and hooks
 import { useSlicerContext } from '@shared/containers/Slicer'
@@ -69,12 +74,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     setExpanded,
   })
 
+  // view context and update helper
+  const { viewSettings } = useViewsContext()
+  const { updateViewSettings } = useViewUpdateHelper()
+
   const {
     showHierarchy,
     onUpdateHierarchy: updateShowHierarchy,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
-  } = useOverviewViewSettings()
+  } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
   // GET GROUPING
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({

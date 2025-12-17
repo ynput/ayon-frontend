@@ -36,31 +36,16 @@ type Return = {
   onUpdateColumns: (columns: ColumnsConfig, allColumnIds?: string[]) => void
 }
 
-type Props =
-  | {
-      viewSettings?: OverviewSettings
-      updateViewSettings?: UpdateViewSettingsFn
-    }
-  | undefined
+type Props = {
+  viewSettings: OverviewSettings | undefined
+  updateViewSettings: UpdateViewSettingsFn
+}
 
-export const useOverviewViewSettings = ({
-  viewSettings: viewSettingsProp,
-  updateViewSettings: updateViewSettingsProp,
-}: Props = {}): Return => {
-  // this views context is per page/project
-  const { viewSettings: viewSettingsContext } = useViewsContext()
-  // use the prop if provided, otherwise fall back to context
-  const viewSettings = viewSettingsProp || viewSettingsContext
-
+export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Props): Return => {
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
-
-  // Get view update helper
-  const { updateViewSettings: updateViewSettingsUtil } = useViewUpdateHelper()
-  // use the prop if provided, otherwise fall back to util
-  const updateViewSettings = updateViewSettingsProp || updateViewSettingsUtil
 
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings

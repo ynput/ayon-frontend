@@ -11,7 +11,6 @@ import ProjectAddon from '../ProjectAddon'
 import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
-import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
 
 import { selectProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
@@ -271,8 +270,6 @@ const ProjectPageInner = () => {
       )
     } else if (module === 'workfiles') {
       component = <WorkfilesPage />
-    } else if (module === 'scheduler') {
-      component = <SchedulerPage />
     } else if (module === 'reports') {
       component = <ReportsPage projectName={projectName} />
     } else if (foundAddon) {
