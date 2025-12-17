@@ -8,7 +8,11 @@ import { useLocalStorage } from '@shared/hooks'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 
-const BaseViewsTagContainer: FC = () => {
+type BaseViewsTagContainerProps = {
+  projectName?: string | undefined
+}
+
+const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) => {
   const {
     projectBaseView,
     studioBaseView,
@@ -68,12 +72,14 @@ const BaseViewsTagContainer: FC = () => {
             label={'Studio'}
             onClick={(r) => handleBaseViewAction(true, r)}
           />
-          <ScopeIcon
-            existingView={!!projectBaseView}
-            label={'Project'}
-            onClick={(r) => handleBaseViewAction(false, r)}
-            powerLicense={powerLicense}
-          />
+          {projectName && (
+            <ScopeIcon
+              existingView={!!projectBaseView}
+              label={'Project'}
+              onClick={(r) => handleBaseViewAction(false, r)}
+              powerLicense={powerLicense}
+            />
+          )}
         </Styled.BaseViewsContainer>
       )}
     </>
