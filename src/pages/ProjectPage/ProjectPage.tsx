@@ -169,6 +169,7 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/scheduler`,
         module: 'scheduler',
         enabled: matchedAddons?.get('planner') === '1.0.1-dev', // for dev purposes, remove when planner is released out of beta
+        viewType: 'scheduler',
       },
       {
         name: 'Reports',
@@ -187,6 +188,7 @@ const ProjectPageInner = () => {
         name: remote.name || remote.module,
         module: remote.module,
         path: `/projects/${projectName}/${remote.module}`,
+        viewType: remote.viewType,
       })),
       ...addonsData
         .filter((addon) => {
