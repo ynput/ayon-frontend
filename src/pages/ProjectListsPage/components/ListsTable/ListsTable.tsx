@@ -85,8 +85,6 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     )
   }, [])
 
-  console.log(listsTableData)
-
   return (
     <>
       <SimpleTableProvider

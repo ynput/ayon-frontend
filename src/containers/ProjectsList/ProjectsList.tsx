@@ -15,6 +15,9 @@ import { useNavigate } from 'react-router-dom'
 import { useCreateContextMenu } from '@shared/containers'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
+import ProjectFolderFormDialog from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
+import { useState } from 'react'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
@@ -46,6 +49,13 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   // Show archived state (stored in local storage)
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
+
+  // Folder dialog state
+  const [folderDialogOpen, setFolderDialogOpen] = useState(false)
+  const [folderDialogData, setFolderDialogData] = useState<Partial<FolderFormData> | undefined>(
+    undefined,
+  )
+  const [folderDialogId, setFolderDialogId] = useState<string | undefined>(undefined)
 
   const {
     data = [],
@@ -184,6 +194,22 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setShowArchived(!showArchived)
   }
 
+  // Folder dialog handlers
+  const handleOpenFolderDialog = useCallback(
+    (data?: Partial<FolderFormData>, folderId?: string) => {
+      setFolderDialogData(data)
+      setFolderDialogId(folderId)
+      setFolderDialogOpen(true)
+    },
+    [],
+  )
+
+  const handleCloseFolderDialog = useCallback(() => {
+    setFolderDialogOpen(false)
+    setFolderDialogData(undefined)
+    setFolderDialogId(undefined)
+  }, [])
+
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
@@ -205,6 +231,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onOpen: onOpenProject,
     onManage: onOpenProjectManage,
     onShowArchivedToggle,
+    onCreateFolder: () => handleOpenFolderDialog(),
   })
 
   // attach context menu
@@ -241,57 +268,66 @@ const ProjectsList: FC<ProjectsListProps> = ({
   )
 
   return (
-    <SimpleTableProvider
-      {...{
-        rowSelection,
-        onRowSelectionChange: setRowSelection,
-        rowPinning: { top: rowPinning },
-        onRowPinningChange,
-      }}
-    >
-      <Container
-        {...pt?.container}
-        style={{ height: '100%', minWidth: 50, ...pt?.container?.style }}
+    <>
+      <SimpleTableProvider
+        {...{
+          rowSelection,
+          onRowSelectionChange: setRowSelection,
+          rowPinning: { top: rowPinning },
+          onRowPinningChange,
+        }}
       >
-        <ProjectsListTableHeader
-          title={'Projects'}
-          search={clientSearch}
-          onSearch={setClientSearch}
-          // project creation
-          showAddProject={canCreateProject}
-          onNewProject={onNewProject}
-          menuItems={buildMenuItems(selection)}
-          toggleMenu={toggleMenu}
-          onSelectAll={toggleSelectAll}
-          hiddenButtons={!multiSelect ? ['select-all'] : []}
-        />
-        <SimpleTable
-          data={listsTableData}
-          globalFilter={clientSearch ?? undefined}
-          isExpandable={false}
-          isLoading={isLoading}
-          isMultiSelect={multiSelect}
-          error={error ? (error as string) : undefined}
-          enableClickToDeselect={false}
-          meta={{
-            handleRowContext,
-          }}
+        <Container
+          {...pt?.container}
+          style={{ height: '100%', minWidth: 50, ...pt?.container?.style }}
         >
-          {(props, row, table) => (
-            <ProjectsListRow
-              {...props}
-              id={row.id}
-              onContextMenu={table.options.meta?.handleRowContext}
-              code={row.original.data.code}
-              isPinned={row.getIsPinned() === 'top'}
-              onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
-              isInActive={row.original.data.active === false}
-              onDoubleClick={() => onOpenProject(row.original.name)}
-            />
-          )}
-        </SimpleTable>
-      </Container>
-    </SimpleTableProvider>
+          <ProjectsListTableHeader
+            title={'Projects'}
+            search={clientSearch}
+            onSearch={setClientSearch}
+            // project creation
+            showAddProject={canCreateProject}
+            onNewProject={onNewProject}
+            menuItems={buildMenuItems(selection)}
+            toggleMenu={toggleMenu}
+            onSelectAll={toggleSelectAll}
+            hiddenButtons={!multiSelect ? ['select-all'] : []}
+          />
+          <SimpleTable
+            data={listsTableData}
+            globalFilter={clientSearch ?? undefined}
+            isExpandable={false}
+            isLoading={isLoading}
+            isMultiSelect={multiSelect}
+            error={error ? (error as string) : undefined}
+            enableClickToDeselect={false}
+            meta={{
+              handleRowContext,
+            }}
+          >
+            {(props, row, table) => (
+              <ProjectsListRow
+                {...props}
+                id={row.id}
+                onContextMenu={table.options.meta?.handleRowContext}
+                code={row.original.data.code}
+                isPinned={row.getIsPinned() === 'top'}
+                onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
+                isInActive={row.original.data.active === false}
+                onDoubleClick={() => onOpenProject(row.original.name)}
+              />
+            )}
+          </SimpleTable>
+        </Container>
+      </SimpleTableProvider>
+      <ProjectFolderFormDialog
+        isOpen={folderDialogOpen}
+        onClose={handleCloseFolderDialog}
+        initial={folderDialogData}
+        folderId={folderDialogId}
+        projectNames={selection}
+      />
+    </>
   )
 }
 

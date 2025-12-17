@@ -12,6 +12,7 @@ type Hidden = {
   'archive-project'?: boolean
   'delete-project'?: boolean
   'show-archived'?: boolean
+  'create-folder'?: boolean
 }
 
 interface MenuItemProps {
@@ -30,6 +31,7 @@ interface MenuItemProps {
   onArchive?: (projectName: string, active: boolean) => void
   onDelete?: (projectName: string) => void
   onShowArchivedToggle?: () => void
+  onCreateFolder?: () => void
 }
 
 type BuildMenuItems = (
@@ -64,6 +66,7 @@ const useProjectsListMenuItems = ({
   onArchive,
   onDelete,
   onShowArchivedToggle,
+  onCreateFolder,
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
@@ -121,6 +124,12 @@ const useProjectsListMenuItems = ({
           label: 'Add new project',
           icon: 'add',
           [command ? 'command' : 'onClick']: onNewProject,
+        },
+        {
+          id: 'create-folder',
+          label: 'Create folder',
+          icon: 'create_new_folder',
+          [command ? 'command' : 'onClick']: onCreateFolder,
         },
         { id: 'divider' },
         {

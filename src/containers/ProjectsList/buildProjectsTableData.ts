@@ -109,7 +109,7 @@ const buildProjectsTableData = (
     id: project.name,
     name: project.name,
     label: project.name,
-    parents,
+    ...(parents.length > 0 && { parents }),
     inactive: !project.active,
     subRows: [],
     data: {
