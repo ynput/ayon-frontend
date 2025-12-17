@@ -62,6 +62,7 @@ type FilterConfig = {
   enableRelativeValues?: boolean
   prefixes?: Partial<Record<FilterFieldType, string>> // strings that will be prepended to the id of the option
   keys?: Partial<Record<FilterFieldType, string>> // replaces the default keys for the filter
+  fallbackScope?: ScopeType // used when no scope is provided
 }
 
 export type BuildFilterOptions = {
@@ -1010,6 +1011,9 @@ export const splitFiltersByScope = (
       // Remove scope prefix
       const cleanId = id.substring(`${scopeMatch}_`.length)
       return { scope: scopeMatch, cleanId }
+    } else if (config?.fallbackScope) {
+      // fallback to a default scope if provided in config
+      return { scope: config.fallbackScope, cleanId: id }
     }
 
     // If no scope prefix, return null scope (shouldn't happen in multi-scope scenario)

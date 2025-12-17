@@ -88,12 +88,17 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   // Separate the combined filters into task and folder filters
   const { task: taskFilter = EMPTY_FILTER, folder: folderFilter = EMPTY_FILTER } = useMemo(() => {
-    return splitFiltersByScope(queryFilters, ['task', 'folder'], undefined, {
-      // Map filter IDs that don't have scope prefix to their scope
-      taskType: 'task',
-      assignees: 'task',
-      folderType: 'folder',
-    })
+    return splitFiltersByScope(
+      queryFilters,
+      ['task', 'folder'],
+      { fallbackScope: 'task' },
+      {
+        // Map filter IDs that don't have scope prefix to their scope
+        taskType: 'task',
+        assignees: 'task',
+        folderType: 'folder',
+      },
+    )
   }, [queryFilters])
 
   // Separate slicer filters into different types
