@@ -80,6 +80,26 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectTeams: build.query<GetProjectTeamsApiResponse, GetProjectTeamsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/dashboard/users` }),
     }),
+    getProjectFolders: build.query<GetProjectFoldersApiResponse, GetProjectFoldersApiArg>({
+      query: () => ({ url: `/api/projectFolders` }),
+    }),
+    createProjectFolder: build.mutation<CreateProjectFolderApiResponse, CreateProjectFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projectFolders`,
+        method: 'POST',
+        body: queryArg.projectFolderPostModel,
+      }),
+    }),
+    deleteProjectFolder: build.mutation<DeleteProjectFolderApiResponse, DeleteProjectFolderApiArg>({
+      query: (queryArg) => ({ url: `/api/projectFolders/${queryArg.folderId}`, method: 'DELETE' }),
+    }),
+    updateProjectFolder: build.mutation<UpdateProjectFolderApiResponse, UpdateProjectFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projectFolders/${queryArg.folderId}`,
+        method: 'PATCH',
+        body: queryArg.projectFolderPatchModel,
+      }),
+    }),
     getProjectAnatomy: build.query<GetProjectAnatomyApiResponse, GetProjectAnatomyApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/anatomy` }),
     }),
@@ -299,6 +319,22 @@ export type GetProjectTeamsApiResponse =
   /** status 200 Successful Response */ ProjectTeamsResponseModel
 export type GetProjectTeamsApiArg = {
   projectName: string
+}
+export type GetProjectFoldersApiResponse =
+  /** status 200 Successful Response */ ProjectFoldersResponseModel
+export type GetProjectFoldersApiArg = void
+export type CreateProjectFolderApiResponse = /** status 200 Successful Response */ EntityIdResponse
+export type CreateProjectFolderApiArg = {
+  projectFolderPostModel: ProjectFolderPostModel
+}
+export type DeleteProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type DeleteProjectFolderApiArg = {
+  folderId: string
+}
+export type UpdateProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type UpdateProjectFolderApiArg = {
+  folderId: string
+  projectFolderPatchModel: ProjectFolderPatchModel
 }
 export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ Anatomy
 export type GetProjectAnatomyApiArg = {

@@ -68,10 +68,11 @@ const StyledPin = styled(Icon)`
 `
 
 interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
-  code: string // used when the width is too small to show the full name
+  code?: string // used when the width is too small to show the full name
   isInActive?: boolean
   isPinned?: boolean
   onPinToggle?: () => void
+  data?: any // row data object
 }
 
 const ProjectsListRow: FC<ProjectsListRowProps> = ({
@@ -80,20 +81,27 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
   isInActive,
   onPinToggle,
   className,
+  data,
   ...props
 }) => {
+  // Check if this is a folder row
+  const isFolder = data?.isFolder || data?.isGroupRow
+
   return (
     <StyledTableRow
       {...props}
+      data={data}
       style={{ paddingRight: 2 }}
       className={clsx(className, { inactive: isInActive })}
-      startContent={<span className="project-code">{code}</span>}
+      startContent={!isFolder && code ? <span className="project-code">{code}</span> : undefined}
       endContent={
-        <StyledPin
-          icon="push_pin"
-          className={clsx('pin', { active: isPinned })}
-          onClick={onPinToggle}
-        />
+        !isFolder ? (
+          <StyledPin
+            icon="push_pin"
+            className={clsx('pin', { active: isPinned })}
+            onClick={onPinToggle}
+          />
+        ) : undefined
       }
     />
   )
