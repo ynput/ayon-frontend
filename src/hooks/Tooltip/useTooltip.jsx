@@ -54,7 +54,7 @@ const useTooltip = () => {
     // set tooltip top position based on position parameter
     let tooltipTop
     if (position === 'bottom') {
-      tooltipTop = target.y + 25
+      tooltipTop = target.y + 35
     } else {
       tooltipTop = target.y - tooltipHeight
     }

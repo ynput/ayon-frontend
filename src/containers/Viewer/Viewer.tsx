@@ -368,7 +368,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             <Styled.ButtonGroup>
               <Button
                 icon={'dock_to_left'}
-                className={minimizedWindow ? 'details' : 'details active'}
+                className={minimizedWindow ? 'details active' : 'details'}
                 data-tooltip={minimizedWindow ? 'Toggle to show details' : 'Toggle to hide all'}
                 data-tooltip-position="bottom"
                 data-shortcut={'C'}
