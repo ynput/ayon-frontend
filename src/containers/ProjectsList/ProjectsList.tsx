@@ -3,6 +3,7 @@ import {
   useDeleteProjectFolderMutation,
   useGetProjectFoldersQuery,
   useListProjectsQuery,
+  useUpdateProjectFolderMutation,
 } from '@shared/api'
 import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
@@ -226,6 +227,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setFolderDialogId(undefined)
   }, [])
   const [assignProjectsToFolder] = useAssignProjectsToFolderMutation()
+  const [assignFolderToFolder] = useUpdateProjectFolderMutation()
   const [deleteProjectFolder] = useDeleteProjectFolderMutation()
   const getErrorMessage = (error: unknown, prefix: string): string => {
     const errorString = error instanceof Error ? error.message : String(error)
@@ -249,6 +251,19 @@ const ProjectsList: FC<ProjectsListProps> = ({
     },
     [assignProjectsToFolder],
   )
+  const onPutFolderInFolder = useCallback(
+    async (folderId:string, parentId:string)=>{
+      try {
+          await assignFolderToFolder({
+            folderId,
+            projectFolderPatchModel:{
+              parentId
+            }
+          })
+      } catch (error:any){
+
+      }
+    }, [assignFolderToFolder])
   const onRemoveProjectsFromFolder = useCallback(
     async  (projectNames: string[]) =>{
       try {
@@ -297,6 +312,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onShowArchivedToggle,
     onCreateFolder: () => handleOpenFolderDialog(),
     onPutProjectsInFolder,
+    onPutFolderInFolder,
     onRemoveProjectsFromFolder,
     onDeleteFolder,
     powerLicense

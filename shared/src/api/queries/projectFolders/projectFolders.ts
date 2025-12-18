@@ -1,4 +1,4 @@
-import { projectFoldersApi, ProjectFoldersResponseModel } from '@shared/api/generated'
+import { projectFoldersApi, ProjectFoldersResponseModel, projectsApi } from '@shared/api/generated'
 
 const PROJECT_FOLDER_LIST_TAG = { type: 'projectFolder' as const, id: 'LIST' }
 
@@ -35,14 +35,18 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
       async onQueryStarted({ projectFolderPostModel }, { dispatch, queryFulfilled }) {
         // Optimistically add the new folder to the cache
         const patchResult = dispatch(
-          enhancedProjectFoldersApi.util.updateQueryData('getProjectFolders', undefined, (draft) => {
-            // Create the optimistic folder with a temporary ID if none provided
-            const newFolder = {
-              ...projectFolderPostModel,
-              id: projectFolderPostModel.id || getEntityId(),
-            }
-            draft.push(newFolder)
-          }),
+          enhancedProjectFoldersApi.util.updateQueryData(
+            'getProjectFolders',
+            undefined,
+            (draft) => {
+              // Create the optimistic folder with a temporary ID if none provided
+              const newFolder = {
+                ...projectFolderPostModel,
+                id: projectFolderPostModel.id || getEntityId(),
+              }
+              draft.push(newFolder)
+            },
+          ),
         )
 
         try {
@@ -59,12 +63,16 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
       async onQueryStarted({ folderId }, { dispatch, queryFulfilled }) {
         // Optimistically remove the folder from the cache
         const patchResult = dispatch(
-          enhancedProjectFoldersApi.util.updateQueryData('getProjectFolders', undefined, (draft) => {
-            const folderIndex = draft.findIndex((folder) => folder.id === folderId)
-            if (folderIndex !== -1) {
-              draft.splice(folderIndex, 1)
-            }
-          }),
+          enhancedProjectFoldersApi.util.updateQueryData(
+            'getProjectFolders',
+            undefined,
+            (draft) => {
+              const folderIndex = draft.findIndex((folder) => folder.id === folderId)
+              if (folderIndex !== -1) {
+                draft.splice(folderIndex, 1)
+              }
+            },
+          ),
         )
 
         try {
@@ -81,27 +89,28 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
       ],
     },
     updateProjectFolder: {
-      async onQueryStarted(
-        { folderId, projectFolderPatchModel },
-        { dispatch, queryFulfilled },
-      ) {
+      async onQueryStarted({ folderId, projectFolderPatchModel }, { dispatch, queryFulfilled }) {
         // Optimistically update the folder in the cache
         const patchResult = dispatch(
-          enhancedProjectFoldersApi.util.updateQueryData('getProjectFolders', undefined, (draft) => {
-            const folderIndex = draft.findIndex((folder) => folder.id === folderId)
-            if (folderIndex !== -1) {
-              const folder = draft[folderIndex]
-              // Update the folder with the patch data
-              Object.assign(folder, {
-                ...folder,
-                ...projectFolderPatchModel,
-                data: {
-                  ...folder.data,
-                  ...projectFolderPatchModel.data,
-                },
-              })
-            }
-          }),
+          enhancedProjectFoldersApi.util.updateQueryData(
+            'getProjectFolders',
+            undefined,
+            (draft) => {
+              const folderIndex = draft.findIndex((folder) => folder.id === folderId)
+              if (folderIndex !== -1) {
+                const folder = draft[folderIndex]
+                // Update the folder with the patch data
+                Object.assign(folder, {
+                  ...folder,
+                  ...projectFolderPatchModel,
+                  data: {
+                    ...folder.data,
+                    ...projectFolderPatchModel.data,
+                  },
+                })
+              }
+            },
+          ),
         )
 
         try {
@@ -114,9 +123,60 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
       transformErrorResponse,
       invalidatesTags: (_r, _e, arg) => [{ type: 'projectFolder', id: arg.folderId }],
     },
+
     assignProjectsToFolder: {
+      async onQueryStarted({ assignProjectRequest }, { dispatch, queryFulfilled }) {
+        const { projectNames, folderId } = assignProjectRequest
+
+        console.log('🔄 Optimistic update starting:', { projectNames, folderId })
+
+        // Import enhancedProject from the getProject.ts file!
+        const enhancedProject = await import('../project/getProject').then((m) => m.default)
+
+        // Patch BOTH possible cache entries - draft is the ARRAY itself, not an object
+        const patches = [
+          dispatch(
+            enhancedProject.util.updateQueryData(
+              'listProjects',
+              { active: true },
+              (draft: any[]) => {
+                console.log('📦 Patching active=true cache, projects:', draft?.length)
+                // draft IS the array, not { projects: [] }
+                draft.forEach((project: any) => {
+                  if (projectNames.includes(project.name)) {
+                    console.log('✅ Updating project:', project.name, 'folder:', folderId)
+                    project.projectFolder = folderId || undefined
+                  }
+                })
+              },
+            ),
+          ),
+          dispatch(
+            enhancedProject.util.updateQueryData(
+              'listProjects',
+              { active: undefined },
+              (draft: any[]) => {
+                console.log('📦 Patching active=undefined cache, projects:', draft?.length)
+                draft.forEach((project: any) => {
+                  if (projectNames.includes(project.name)) {
+                    console.log('✅ Updating project:', project.name, 'folder:', folderId)
+                    project.projectFolder = folderId || undefined
+                  }
+                })
+              },
+            ),
+          ),
+        ]
+
+        try {
+          await queryFulfilled
+          console.log('✅ Mutation succeeded')
+        } catch (error) {
+          console.error('❌ Mutation failed, undoing patches:', error)
+          patches.forEach((patch) => patch.undo())
+        }
+      },
       transformErrorResponse,
-      invalidatesTags: [{ type: 'project', id: 'LIST' }],
     },
   },
 })

@@ -39,7 +39,7 @@ interface MenuItemProps {
   powerLicense?: boolean
   onCreateFolder?: () => void
   onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
-  onPutFoldersInFolder?: (folderIds: string[], projectFolderId?: string) => Promise<void>
+  onPutFolderInFolder?: (folderId: string, projectFolderId: string) => Promise<void>
   onRemoveFoldersFromFolder?: (folderIds: string[]) => Promise<void>
   onRemoveProjectsFromFolder?: (projectNames: string[]) => Promise<void>
   onDeleteFolder?: (folderId: string) => void
@@ -109,7 +109,7 @@ const useProjectsListMenuItems = ({
   powerLicense,
   onCreateFolder,
   onPutProjectsInFolder,
-  onPutFoldersInFolder,
+  onPutFolderInFolder,
   onRemoveFoldersFromFolder,
   onRemoveProjectsFromFolder,
   onDeleteFolder,
@@ -228,7 +228,7 @@ const useProjectsListMenuItems = ({
             label: folder.label,
             icon: folder.data?.icon || FOLDER_ICON,
             command: allSelectedRowsAreFolders
-              ? () => onPutFoldersInFolder?.(selectedFolderIds, folder.id)
+              ? () => onPutFolderInFolder?.(selectedFolderId as string, folder.id)
               : () =>
                 onPutProjectsInFolder?.(
                   newSelectedProjects.map((p) => p.name),
@@ -439,7 +439,7 @@ const useProjectsListMenuItems = ({
       powerLicense,
       onCreateFolder,
       onPutProjectsInFolder,
-      onPutFoldersInFolder,
+      onPutFolderInFolder,
       onRemoveFoldersFromFolder,
       onRemoveProjectsFromFolder,
       handlePin,
