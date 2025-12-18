@@ -177,14 +177,12 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   const versionPath = useMemo(() => {
     if (!entityDetails.length) return ''
 
-    const { parents = [], folder, task, version } = entityDetails[0]
-    const lastParent = parents[parents.length - 1]
-
+    const { folder, task, version } = entityDetails[0]
     const entity = folder || task
     const label = entity?.label || entity?.name
     const versionName = version?.name || selectedVersion?.name
 
-    return [lastParent, label, versionName].filter(Boolean).join(' / ')
+    return [ label, versionName].filter(Boolean).join(' / ')
   }, [entityDetails, selectedVersion])
 
   // if no versionIds are provided, select the last version and update the state
