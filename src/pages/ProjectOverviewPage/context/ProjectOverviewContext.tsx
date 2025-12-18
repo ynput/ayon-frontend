@@ -118,19 +118,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const combinedTaskFilter = useQueryFilters({
     queryFilters: taskFilter,
     sliceFilter: slicerTaskFilter,
-    config: { searchKey: 'name' },
   })
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
     sliceFilter: slicerFolderFilter,
-    config: { searchKey: 'name' },
   })
 
   // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
     sliceFilter,
-    config: { searchKey: 'name' },
   })
 
   const selectedFolders = useSelectedFolders({

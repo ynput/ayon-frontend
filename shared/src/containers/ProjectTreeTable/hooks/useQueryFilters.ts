@@ -7,9 +7,6 @@ import { QueryFilter, QueryCondition } from '../types/operations'
 interface UseQueryFiltersProps {
   queryFilters: QueryFilter
   sliceFilter?: Filter | null
-  config?: {
-    searchKey?: string
-  }
 }
 
 interface QueryFiltersResult {
@@ -23,7 +20,6 @@ interface QueryFiltersResult {
 export const useQueryFilters = ({
   queryFilters,
   sliceFilter,
-  config: { searchKey } = {},
 }: UseQueryFiltersProps): QueryFiltersResult => {
   return useMemo(() => {
     let combinedQueryFilter = queryFilters
@@ -65,25 +61,13 @@ export const useQueryFilters = ({
         }
 
         // Extract name filter (can be scoped like 'task_name' or 'folder_name' or just 'name')
-        if (
-          (searchKey && queryCondition.key === searchKey) ||
-          queryCondition.key?.endsWith('_' + 'searchKey')
-        ) {
+        if (queryCondition.key === 'name' || queryCondition.key?.endsWith('_name')) {
           const val = queryCondition.value
           // Name filters use 'like' operator with wildcards, extract the actual search term
           if (val !== undefined && val !== null) {
-            if (Array.isArray(val)) {
-              val.forEach((v) => {
-                const searchTerm = String(v).replace(/%/g, '').trim()
-                if (searchTerm) {
-                  searchValues.push(searchTerm)
-                }
-              })
-            } else {
-              const searchTerm = String(val).replace(/%/g, '').trim()
-              if (searchTerm) {
-                searchValues.push(searchTerm)
-              }
+            const searchTerm = String(val).replace(/%/g, '').trim()
+            if (searchTerm) {
+              searchValues.push(searchTerm)
             }
           }
           return false // remove name condition
