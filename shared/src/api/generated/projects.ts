@@ -547,6 +547,37 @@ export type ProjectTeamsResponseModel = {
     [key: string]: number
   }
 }
+export type ProjectFolderData = {
+  /** Hex color code */
+  color?: string
+  /** Icon name */
+  icon?: string
+}
+export type ProjectFolderModel = {
+  id: string
+  label: string
+  parentId?: string
+  position?: number
+  data?: ProjectFolderData
+}
+export type ProjectFoldersResponseModel = {
+  folders?: ProjectFolderModel[]
+}
+export type EntityIdResponse = {
+  /** Entity ID */
+  id: string
+}
+export type ProjectFolderPostModel = {
+  id?: string
+  label: string
+  parentId?: string
+  data?: ProjectFolderData
+}
+export type ProjectFolderPatchModel = {
+  label?: string
+  parentId?: string
+  data?: ProjectFolderData
+}
 export type EntityNaming = {
   /** How to capitalize the entity names */
   capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
@@ -699,7 +730,10 @@ export type ProjectBundleModel = {
 export type ListProjectsItemModel = {
   name: string
   code: string
-  active: boolean
+  active?: boolean
+  library?: boolean
+  pinned?: boolean
+  projectFolder?: string
   createdAt: string
   updatedAt: string
 }

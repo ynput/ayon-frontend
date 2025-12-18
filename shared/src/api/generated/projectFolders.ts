@@ -112,6 +112,6 @@ export type ProjectFolderOrderModel = {
   order: string[]
 }
 export type AssignProjectRequest = {
-  folderId?: string | null
+  folderId?: string
   projectNames: string[]
 }

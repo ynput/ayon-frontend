@@ -14,32 +14,15 @@ export const parseProjectFolderRowId = (rowId: string) => {
 }
 
 const buildProjectsTableData = (
-  projects: ListProjectsItemModel[],
+  projects: ListProjectsItemModel[] = [],
   folders: ProjectFolderModel[] = [],
   showEmptyFolders: boolean = true,
 ): SimpleTableRow[] => {
   // If no folders, return simple project list
-  if (!folders || folders.length === 0) {
-    return projects.map((project) => ({
-      id: project.name,
-      name: project.name,
-      label: project.name,
-      data: {
-        id: project.name,
-        active: project.active,
-        code: project.code || project.name,
-      },
-      subRows: [],
-    }))
-  }
-
-  // Create lookup maps
   const foldersMap = new Map<string, ProjectFolderModel>()
   for (const folder of folders) {
     foldersMap.set(String(folder.id), folder)
   }
-
-  // Build hierarchical folder structure
   interface FolderNode {
     id: string
     folder: ProjectFolderModel
@@ -47,7 +30,6 @@ const buildProjectsTableData = (
     projects: ListProjectsItemModel[]
     hasAnyProjects: boolean
   }
-
   const folderNodes = new Map<string, FolderNode>()
   const rootFolderIds = new Set<string>()
 

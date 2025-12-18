@@ -1,4 +1,4 @@
-import { useListProjectsQuery } from '@shared/api'
+import { useGetProjectFoldersQuery, useListProjectsQuery } from '@shared/api'
 import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo } from 'react'
@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCreateContextMenu } from '@shared/containers'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
-import ProjectFolderFormDialog from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
 import { useState } from 'react'
 
@@ -62,6 +62,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
     isLoading,
     error,
   } = useListProjectsQuery({ active: showArchived ? undefined : true })
+  const {
+    data: folders,
+  } = useGetProjectFoldersQuery()
 
   // transformations
   // sort projects by active pinned, active, inactive (active=false) and then alphabetically
@@ -112,7 +115,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     user?.data?.isManager
 
   // format data for the table, pass pinned projects for sorting
-  const listsTableData = useMemo(() => buildProjectsTableData(projects), [projects, rowPinning])
+  const listsTableData = useMemo(() => buildProjectsTableData(projects, folders), [projects, rowPinning])
 
   // state
   // search state
