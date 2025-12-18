@@ -45,6 +45,7 @@ type Params = {
   sorting: SortingState
   groupBy: TableGroupBy | undefined
   taskGroups: EntityGroup[]
+  taskGroupsCount?: number // override for number of items per group
   expanded: ExpandedState
   showHierarchy: boolean
   attribFields: ProjectTableAttribute[]
@@ -59,6 +60,7 @@ export const useFetchOverviewData = ({
   sorting,
   groupBy,
   taskGroups = [],
+  taskGroupsCount,
   expanded,
   showHierarchy,
   attribFields,
@@ -355,6 +357,7 @@ export const useFetchOverviewData = ({
       search: taskFilters.search,
       folderFilter: folderFilters.filterString,
       folderIds: tasksFolderIdsParams,
+      groupCount: taskGroupsCount,
     },
     {
       skip: !groupBy || !groupQueries.length || isLoadingModules,
