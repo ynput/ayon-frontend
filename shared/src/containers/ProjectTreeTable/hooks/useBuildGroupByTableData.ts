@@ -276,7 +276,7 @@ const useBuildGroupByTableData = ({
     })
 
     // filter out empty groups
-    const nonEmptyGroups = groupsList.filter((group) => group.subRows && group.subRows.length > 0)
+    const nonEmptyGroups = groupsList.filter((group) => group.group?.count && group.group.count > 0)
 
     return showEmpty ? groupsList : nonEmptyGroups
   }

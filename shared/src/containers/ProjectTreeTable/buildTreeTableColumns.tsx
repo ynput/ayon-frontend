@@ -269,7 +269,7 @@ const buildTreeTableColumns = ({
                 color={row.original.group.color}
                 count={row.original.group.count}
                 isExpanded={row.getIsExpanded()}
-                isEmpty={row.subRows.length === 0 && !row.original.metaType}
+                isEmpty={row.original.group.count === 0}
                 toggleExpanded={row.getToggleExpandedHandler()}
               />
             ) : (
