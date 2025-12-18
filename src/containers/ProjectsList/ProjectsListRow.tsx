@@ -82,6 +82,11 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
   onPinToggle,
   className,
   data,
+  depth,
+  isTableExpandable,
+  isRowExpandable,
+  isRowExpanded,
+  onExpandClick,
   ...props
 }) => {
   // Check if this is a folder row
@@ -90,7 +95,11 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
   return (
     <StyledTableRow
       {...props}
-      data={data}
+      depth={depth}
+      isTableExpandable={isTableExpandable}
+      isRowExpandable={isRowExpandable}
+      isRowExpanded={isRowExpanded}
+      onExpandClick={onExpandClick}
       style={{ paddingRight: 2 }}
       className={clsx(className, { inactive: isInActive })}
       startContent={!isFolder && code ? <span className="project-code">{code}</span> : undefined}

@@ -17,6 +17,7 @@ const buildProjectsTableData = (
   projects: ListProjectsItemModel[] = [],
   folders: ProjectFolderModel[] = [],
   showEmptyFolders: boolean = true,
+  powerLicense: boolean = false,
 ): SimpleTableRow[] => {
   // If no folders, return simple project list
   const foldersMap = new Map<string, ProjectFolderModel>()
@@ -63,8 +64,14 @@ const buildProjectsTableData = (
 
   for (const project of projects) {
     // TODO: Once backend supports projectFolderId, use it here
-    // For now, all projects go to root
-    rootProjects.push(project)
+    const projectFolderId = project.projectFolder
+    if (powerLicense && projectFolderId && foldersMap.has(projectFolderId)) {
+      const folderNode = folderNodes.get(projectFolderId)!
+      folderNode.projects.push(project)
+      folderNode.hasAnyProjects = true
+    }else {
+      rootProjects.push(project)
+    }
   }
 
   // Mark all parent folders that contain projects
@@ -86,12 +93,10 @@ const buildProjectsTableData = (
   // Helper function to create project table row
   const createProjectRow = (
     project: ListProjectsItemModel,
-    parents: string[] = [],
   ): SimpleTableRow => ({
     id: project.name,
     name: project.name,
     label: project.name,
-    ...(parents.length > 0 && { parents }),
     inactive: !project.active,
     subRows: [],
     data: {
@@ -179,7 +184,7 @@ const buildProjectsTableData = (
 
       // Add projects to this folder
       for (const project of node.projects) {
-        folderRow.subRows.push(createProjectRow(project, [...parentPath, node.folder.label]))
+        folderRow.subRows.push(createProjectRow(project))
       }
 
       // Get child folders and sort them

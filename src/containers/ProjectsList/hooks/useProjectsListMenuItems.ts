@@ -1,11 +1,9 @@
 import { useCallback } from 'react'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
-import { EntityListFolderModel, ProjectFolderModel } from '@shared/api'
+import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
 import { FOLDER_ICON, FOLDER_ICON_REMOVE } from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
-
-type Project = { name: string; active: boolean }
 
 type Hidden = {
   search?: boolean
@@ -23,7 +21,7 @@ type Hidden = {
 
 interface MenuItemProps {
   hidden?: Hidden
-  projects: Project[]
+  projects: ListProjectsItemModel[]
   folders: ProjectFolderModel[]
   onNewProject?: () => void
   pinned: string[]
@@ -47,7 +45,7 @@ interface MenuItemProps {
 }
 
 type MenuItem = {
-  id?: string
+  id: string
   label?: string
   icon?: string
   onClick?: () => void
@@ -125,13 +123,13 @@ const useProjectsListMenuItems = ({
     }
   }
 
-  const handleArchive = (singleProject: Project | undefined, selection: string[]) => {
+  const handleArchive = (singleProject: ListProjectsItemModel | undefined, selection: string[]) => {
     if (selection.length === 1 && singleProject) {
       onArchive?.(singleProject.name, !singleProject.active)
     }
   }
 
-  const handleDelete = (singleProject: Project | undefined, selection: string[]) => {
+  const handleDelete = (singleProject: ListProjectsItemModel | undefined, selection: string[]) => {
     if (selection.length === 1 && singleProject?.active === false) {
       onDelete?.(singleProject.name)
     }

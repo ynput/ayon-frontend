@@ -4,7 +4,7 @@ import {
   useListProjectsQuery,
 } from '@shared/api'
 import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
-import { RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo } from 'react'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import buildProjectsTableData from './buildProjectsTableData'
@@ -52,8 +52,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   // GET USER PREFERENCES (moved to hook)
   const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
   const {powerLicense} = usePowerpack()
-  console.log(powerLicense)
-
+  const [expanded, setExpanded] = useState<ExpandedState>({})
   // Show archived state (stored in local storage)
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
 
@@ -73,7 +72,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     data: folders,
   } = useGetProjectFoldersQuery()
 
-  console.log('Project folders:', folders)
 
   // transformations
   // sort projects by active pinned, active, inactive (active=false) and then alphabetically
@@ -124,7 +122,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
     user?.data?.isManager
 
   // format data for the table, pass pinned projects for sorting
-  const listsTableData = useMemo(() => buildProjectsTableData(projects, folders), [projects, folders])
+  const listsTableData = useMemo(
+    () => buildProjectsTableData(projects, folders, true, powerLicense),
+    [projects, folders, powerLicense],
+  )
 
   // state
   // search state
@@ -169,7 +170,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   const navigate = useNavigate()
   const onOpenProject = (project: string) => {
+    console.log('project name', project)
     if ((user?.uiExposureLevel || 0) < 500) return
+
     handleProjectSelectionDispatches(project)
 
     const defaultTab = getDefaultTab()
@@ -244,7 +247,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     },
     [assignProjectsToFolder],
   )
-
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
@@ -313,6 +315,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
           onRowSelectionChange: setRowSelection,
           rowPinning: { top: rowPinning },
           onRowPinningChange,
+          expanded,
+          setExpanded
         }}
       >
         <Container
@@ -334,7 +338,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
           <SimpleTable
             data={listsTableData}
             globalFilter={clientSearch ?? undefined}
-            isExpandable={false}
+            isExpandable={listsTableData.some((row)=> row.subRows && row.subRows.length >0)}
             isLoading={isLoading}
             isMultiSelect={multiSelect}
             error={error ? (error as string) : undefined}
@@ -353,6 +357,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
                 onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
                 isInActive={row.original.data.active === false}
                 onDoubleClick={() => onOpenProject(row.original.name)}
+                isTableExpandable={props.isTableExpandable}
+                isRowExpandable={row.getCanExpand()}
+                isRowExpanded={row.getIsExpanded()}
+                onExpandClick={row.getToggleExpandedHandler()}
               />
             )}
           </SimpleTable>
