@@ -42,6 +42,7 @@ interface MenuItemProps {
   onPutFoldersInFolder?: (folderIds: string[], projectFolderId?: string) => Promise<void>
   onRemoveFoldersFromFolder?: (folderIds: string[]) => Promise<void>
   onRemoveProjectsFromFolder?: (projectNames: string[]) => Promise<void>
+  onDeleteFolder?: (folderId: string) => void
 }
 
 type MenuItem = {
@@ -111,6 +112,7 @@ const useProjectsListMenuItems = ({
   onPutFoldersInFolder,
   onRemoveFoldersFromFolder,
   onRemoveProjectsFromFolder,
+  onDeleteFolder,
 
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
@@ -132,6 +134,14 @@ const useProjectsListMenuItems = ({
   const handleDelete = (singleProject: ListProjectsItemModel | undefined, selection: string[]) => {
     if (selection.length === 1 && singleProject?.active === false) {
       onDelete?.(singleProject.name)
+    }
+  }
+  const handleDeleteFolder = (selection: string[]) => {
+    if (selection.length === 1) {
+      const folderId = parseProjectFolderRowId(selection[0])
+      if (folderId) {
+        onDeleteFolder?.(folderId)
+      }
     }
   }
 
@@ -173,6 +183,7 @@ const useProjectsListMenuItems = ({
       const firstSelectedRow = selection[0]
       const selectedFolderId = parseProjectFolderRowId(firstSelectedRow)
       const isSelectedRowFolder = !!selectedFolderId
+      console.log(isSelectedRowFolder)
       const selectedFolder = isSelectedRowFolder
         ? folders.find((f) => f.id === selectedFolderId)
         : null
@@ -223,9 +234,9 @@ const useProjectsListMenuItems = ({
                   newSelectedProjects.map((p) => p.name),
                   folder.id,
                 ),
-            // disabled:
-            //   allSelectedRowsAreFolders &&
-            //   wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
+            disabled:
+              allSelectedRowsAreFolders &&
+              wouldCreateCircularDependency(selectedFolderId!, folder.id, folders),
             ...(hasChildren && { items: childItems }),
           })
         }
@@ -346,14 +357,14 @@ const useProjectsListMenuItems = ({
           label: 'Open',
           icon: 'open_in_new',
           [command ? 'command' : 'onClick']: () => singleProject && onOpen?.(singleProject?.name),
-          hidden: userLevel < 500,
+          hidden: userLevel < 500 || isSelectedRowFolder,
         },
         {
           id: 'manage-projects',
           label: 'Manage',
           icon: 'settings',
           [command ? 'command' : 'onClick']: () => singleProject && onManage?.(singleProject.name),
-          hidden: userLevel < 500,
+          hidden: userLevel < 500 || isSelectedRowFolder,
         },
         {
           id: 'show-archived',
@@ -371,6 +382,7 @@ const useProjectsListMenuItems = ({
           icon: 'push_pin',
           [command ? 'command' : 'onClick']: () => handlePin(allPinned, selection),
           disabled: selection.length === 0,
+          hidden: isSelectedRowFolder
         },
         {
           id: 'archive-project',
@@ -378,14 +390,24 @@ const useProjectsListMenuItems = ({
           icon: 'archive',
           [command ? 'command' : 'onClick']: () => handleArchive(singleProject, selection),
           disabled: selection.length !== 1,
+          hidden: isSelectedRowFolder
         },
         {
           id: 'delete-project',
           label: `${singleActive ? 'Deactivate to delete' : 'Delete'}`,
           icon: 'delete',
-          [command ? 'command' : 'onClick']: () => handleDelete(singleProject, selection),
+          [command ? 'command' : 'onClick']: () =>  handleDelete(singleProject, selection),
           disabled: selection.length !== 1 || singleActive,
           danger: true,
+          hidden: isSelectedRowFolder
+        },
+        {
+          id: 'delete-folder',
+          label: 'Delete folder',
+          icon: 'delete',
+          [command ? 'command' : 'onClick']: () =>  handleDeleteFolder(selection),
+          danger: true,
+          hidden: !isSelectedRowFolder
         },
       ]
 
@@ -423,6 +445,8 @@ const useProjectsListMenuItems = ({
       handlePin,
       handleArchive,
       handleDelete,
+      handleDeleteFolder,
+      onDeleteFolder,
       wouldCreateCircularDependency,
     ],
   )

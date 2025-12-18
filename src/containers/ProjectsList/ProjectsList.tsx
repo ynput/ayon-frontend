@@ -1,5 +1,6 @@
 import {
   useAssignProjectsToFolderMutation,
+  useDeleteProjectFolderMutation,
   useGetProjectFoldersQuery,
   useListProjectsQuery,
 } from '@shared/api'
@@ -225,6 +226,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setFolderDialogId(undefined)
   }, [])
   const [assignProjectsToFolder] = useAssignProjectsToFolderMutation()
+  const [deleteProjectFolder] = useDeleteProjectFolderMutation()
   const getErrorMessage = (error: unknown, prefix: string): string => {
     const errorString = error instanceof Error ? error.message : String(error)
     const errorMessage = `${prefix}: ${errorString}`
@@ -247,6 +249,30 @@ const ProjectsList: FC<ProjectsListProps> = ({
     },
     [assignProjectsToFolder],
   )
+  const onRemoveProjectsFromFolder = useCallback(
+    async  (projectNames: string[]) =>{
+      try {
+        await assignProjectsToFolder({
+          assignProjectRequest: {
+            folderId:null,
+            projectNames: projectNames,
+          },
+        }).unwrap()
+      } catch (error: any) {
+        throw getErrorMessage(error, 'Failed to assign projects to folder')
+      }
+
+
+  },[assignProjectsToFolder])
+  const onDeleteFolder = useCallback( async (folderId:string) =>{
+      try {
+        await deleteProjectFolder({
+          folderId: folderId
+        })
+      } catch (error: any){
+        throw getErrorMessage(error, 'Failed to remove folder')
+      }
+  }, [deleteProjectFolder])
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
@@ -265,12 +291,14 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onPin: (pinned) => onRowPinningChange({ top: pinned }),
     onSelectAll: toggleSelectAll,
     onArchive,
-    onDelete: onDeleteProject,
+    onDelete:  onDeleteProject ,
     onOpen: onOpenProject,
     onManage: onOpenProjectManage,
     onShowArchivedToggle,
     onCreateFolder: () => handleOpenFolderDialog(),
     onPutProjectsInFolder,
+    onRemoveProjectsFromFolder,
+    onDeleteFolder,
     powerLicense
   })
 
@@ -356,7 +384,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
                 isPinned={row.getIsPinned() === 'top'}
                 onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
                 isInActive={row.original.data.active === false}
-                onDoubleClick={() => onOpenProject(row.original.name)}
+                onDoubleClick={() =>  row.original.data?.isFolder
+                  ? undefined
+                  : () => onOpenProject(row.original.name)  }
                 isTableExpandable={props.isTableExpandable}
                 isRowExpandable={row.getCanExpand()}
                 isRowExpanded={row.getIsExpanded()}

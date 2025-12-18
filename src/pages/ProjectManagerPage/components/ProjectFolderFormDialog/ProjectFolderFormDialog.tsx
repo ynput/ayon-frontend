@@ -67,7 +67,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
 
     const label = folderForm.label.trim()
     const { color, icon, parentId } = folderForm
-
+    handleClose()
     try {
       if (mode === 'edit' && folderId) {
         await updateFolder({
@@ -89,7 +89,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
         }).unwrap()
         toast.success('Project folder created successfully')
       }
-      handleClose()
+
     } catch (error) {
       console.error(`Failed to ${mode} folder:`, error)
       const errorMessage =

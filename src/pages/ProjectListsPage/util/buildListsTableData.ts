@@ -250,6 +250,7 @@ export const buildListsTableData = (
   const rootListRows = sortedRootLists.map((list) => createListRow(list))
 
   // Combine in the specified order: folder hierarchy first, then root lists
+  console.log(folderRows)
   return [...folderRows, ...rootListRows]
 }
 
