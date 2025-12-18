@@ -1,4 +1,8 @@
-import { useGetProjectFoldersQuery, useListProjectsQuery } from '@shared/api'
+import {
+  useAssignProjectsToFolderMutation,
+  useGetProjectFoldersQuery,
+  useListProjectsQuery,
+} from '@shared/api'
 import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo } from 'react'
@@ -18,7 +22,8 @@ import { useLocalStorage } from '@shared/hooks'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
 import { useState } from 'react'
-
+import { toast } from 'react-toastify'
+import { usePowerpack } from '@shared/context'
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
 interface ProjectsListProps {
@@ -46,6 +51,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
 }) => {
   // GET USER PREFERENCES (moved to hook)
   const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
+  const {powerLicense} = usePowerpack()
+  console.log(powerLicense)
 
   // Show archived state (stored in local storage)
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
@@ -65,6 +72,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const {
     data: folders,
   } = useGetProjectFoldersQuery()
+
+  console.log('Project folders:', folders)
 
   // transformations
   // sort projects by active pinned, active, inactive (active=false) and then alphabetically
@@ -115,7 +124,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     user?.data?.isManager
 
   // format data for the table, pass pinned projects for sorting
-  const listsTableData = useMemo(() => buildProjectsTableData(projects, folders), [projects, rowPinning])
+  const listsTableData = useMemo(() => buildProjectsTableData(projects, folders), [projects, folders])
 
   // state
   // search state
@@ -212,6 +221,29 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setFolderDialogData(undefined)
     setFolderDialogId(undefined)
   }, [])
+  const [assignProjectsToFolder] = useAssignProjectsToFolderMutation()
+  const getErrorMessage = (error: unknown, prefix: string): string => {
+    const errorString = error instanceof Error ? error.message : String(error)
+    const errorMessage = `${prefix}: ${errorString}`
+    console.error(errorMessage)
+    toast.error(errorMessage)
+    return errorMessage
+  }
+  const onPutProjectsInFolder = useCallback(
+    async (projectNames: string[], projectFolderId?: string) => {
+      try {
+        await assignProjectsToFolder({
+          assignProjectRequest: {
+            folderId: projectFolderId,
+            projectNames: projectNames,
+          },
+        }).unwrap()
+      } catch (error: any) {
+        throw getErrorMessage(error, 'Failed to assign projects to folder')
+      }
+    },
+    [assignProjectsToFolder],
+  )
 
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
@@ -221,6 +253,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
       'archive-project': !user?.data?.isAdmin && !user?.data?.isManager,
     },
     projects: projects,
+    folders: folders || [],
     multiSelect,
     pinned: rowPinning,
     showArchived,
@@ -235,6 +268,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onManage: onOpenProjectManage,
     onShowArchivedToggle,
     onCreateFolder: () => handleOpenFolderDialog(),
+    onPutProjectsInFolder,
+    powerLicense
   })
 
   // attach context menu
@@ -267,7 +302,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
       ctxMenuShow(e, menuItems)
     },
-    [ctxMenuShow, buildMenuItems, selection],
+    [ctxMenuShow, buildMenuItems, selection, onSelect],
   )
 
   return (

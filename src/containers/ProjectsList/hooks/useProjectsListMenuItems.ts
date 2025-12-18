@@ -1,4 +1,9 @@
 import { useCallback } from 'react'
+import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
+import { EntityListFolderModel, ProjectFolderModel } from '@shared/api'
+import { FOLDER_ICON, FOLDER_ICON_REMOVE } from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
 
 type Project = { name: string; active: boolean }
 
@@ -13,11 +18,13 @@ type Hidden = {
   'delete-project'?: boolean
   'show-archived'?: boolean
   'create-folder'?: boolean
+  'move-project'?: boolean
 }
 
 interface MenuItemProps {
   hidden?: Hidden
   projects: Project[]
+  folders: ProjectFolderModel[]
   onNewProject?: () => void
   pinned: string[]
   multiSelect?: boolean
@@ -31,14 +38,16 @@ interface MenuItemProps {
   onArchive?: (projectName: string, active: boolean) => void
   onDelete?: (projectName: string) => void
   onShowArchivedToggle?: () => void
+  powerLicense?: boolean
   onCreateFolder?: () => void
+  onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
+  onPutFoldersInFolder?: (folderIds: string[], projectFolderId?: string) => Promise<void>
+  onRemoveFoldersFromFolder?: (folderIds: string[]) => Promise<void>
+  onRemoveProjectsFromFolder?: (projectNames: string[]) => Promise<void>
 }
 
-type BuildMenuItems = (
-  selection: string[],
-  config?: { command?: boolean; dividers?: boolean; hidden?: Hidden }, // Added dividers to config for flexibility,
-) => {
-  id: string
+type MenuItem = {
+  id?: string
   label?: string
   icon?: string
   onClick?: () => void
@@ -48,11 +57,43 @@ type BuildMenuItems = (
   danger?: boolean
   selected?: boolean
   active?: boolean
-}[]
+  hidden?: boolean
+  items?: any[]
+  separator?: boolean
+  shortcut?: string
+}
+
+type BuildMenuItems = (
+  selection: string[],
+  config?: { command?: boolean; dividers?: boolean; hidden?: Hidden },
+) => MenuItem[]
+
+const buildProjectFolderHierarchy = (folders: ProjectFolderModel[]) => {
+  const folderMap = new Map<string, ProjectFolderModel & { children: ProjectFolderModel[] }>()
+  const rootFolders: (ProjectFolderModel & { children: ProjectFolderModel[] })[] = []
+
+  // Create nodes for all folders
+  for (const folder of folders) {
+    folderMap.set(folder.id, { ...folder, children: [] })
+  }
+
+  // Build parent-child relationships
+  for (const folder of folders) {
+    const folderNode = folderMap.get(folder.id)!
+    if (folder.parentId && folderMap.has(folder.parentId)) {
+      folderMap.get(folder.parentId)!.children.push(folderNode)
+    } else {
+      rootFolders.push(folderNode)
+    }
+  }
+
+  return { folderMap, rootFolders }
+}
 
 const useProjectsListMenuItems = ({
   hidden = {},
   projects,
+  folders,
   pinned,
   multiSelect,
   showArchived = false,
@@ -66,7 +107,13 @@ const useProjectsListMenuItems = ({
   onArchive,
   onDelete,
   onShowArchivedToggle,
+  powerLicense,
   onCreateFolder,
+  onPutProjectsInFolder,
+  onPutFoldersInFolder,
+  onRemoveFoldersFromFolder,
+  onRemoveProjectsFromFolder,
+
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
@@ -97,6 +144,26 @@ const useProjectsListMenuItems = ({
     return hidden[itemId] !== true && hiddenScoped[itemId] !== true
   }
 
+  const wouldCreateCircularDependency = (
+    folderId: string,
+    targetParentId: string,
+    folders: EntityListFolderModel[],
+  ): boolean => {
+    if (folderId === targetParentId) return true
+
+    const folderMap = new Map(folders.map((f) => [f.id, f]))
+
+    // Check if targetParentId is a descendant of folderId
+    const isDescendant = (currentId: string, ancestorId: string): boolean => {
+      const current = folderMap.get(currentId)
+      if (!current || !current.parentId) return false
+      if (current.parentId === ancestorId) return true
+      return isDescendant(current.parentId, ancestorId)
+    }
+
+    return isDescendant(targetParentId, folderId)
+  }
+
   const buildMenuItems = useCallback<BuildMenuItems>(
     (selection, config) => {
       const { command, dividers = true, hidden = {} } = config || {}
@@ -105,7 +172,150 @@ const useProjectsListMenuItems = ({
       const singleProject =
         selection.length === 1 ? projects.find((p) => p.name === selection[0]) : undefined
       const singleActive = singleProject ? singleProject.active : false
-      const allItems = [
+      const firstSelectedRow = selection[0]
+      const selectedFolderId = parseProjectFolderRowId(firstSelectedRow)
+      const isSelectedRowFolder = !!selectedFolderId
+      const selectedFolder = isSelectedRowFolder
+        ? folders.find((f) => f.id === selectedFolderId)
+        : null
+
+      const newSelectedRows = selection
+
+      const newSelectedProjects = projects.filter((project) =>
+        newSelectedRows.includes(project.name),
+      )
+      const selectedFolderIds = newSelectedRows
+        .map((id) => parseListFolderRowId(id))
+        .filter((id): id is string => !!id)
+      const allSelectedRowsAreProjects = newSelectedRows.every((selected) =>
+        newSelectedProjects.some((project) => project?.name === selected),
+      )
+
+      const allSelectedRowsAreFolders = selection.every((selected) =>
+        parseListFolderRowId(selected),
+      )
+      // Create recursive folder submenu
+      const createFolderHierarchy = (
+        folders: (ProjectFolderModel & { children: ProjectFolderModel[] })[],
+        excludeFolderId?: string,
+        depth = 0,
+      ): any[] => {
+        const items: any[] = []
+
+        for (const folder of folders) {
+          if (folder.id === excludeFolderId) continue
+
+          const hasChildren = folder.children.length > 0
+          const childItems = hasChildren
+            ? createFolderHierarchy(
+              folder.children as (ProjectFolderModel & {
+                children: ProjectFolderModel[]
+              })[],
+              excludeFolderId,
+              depth + 1,
+            )
+            : []
+          items.push({
+            label: folder.label,
+            icon: folder.data?.icon || FOLDER_ICON,
+            command: allSelectedRowsAreFolders
+              ? () => onPutFoldersInFolder?.(selectedFolderIds, folder.id)
+              : () =>
+                onPutProjectsInFolder?.(
+                  newSelectedProjects.map((p) => p.name),
+                  folder.id,
+                ),
+            // disabled:
+            //   allSelectedRowsAreFolders &&
+            //   wouldCreateCircularDependency(selectedFolderId!, folder.id, listFolders),
+            ...(hasChildren && { items: childItems }),
+          })
+        }
+
+        return items
+      }
+      const createFolderFolderSubmenu = () => {
+        if (!allSelectedRowsAreFolders || !selectedFolder) {
+          return []
+        }
+
+        const submenuItems: any[] = []
+
+        // Show available parent folders (excluding self and its descendants) first
+        const availableParents = folders.filter(
+          (folder) =>
+            folder.id !== selectedFolderId &&
+            !wouldCreateCircularDependency(selectedFolderId!, folder.id, folders as any),
+        )
+
+        if (availableParents.length > 0) {
+          const { rootFolders } = buildProjectFolderHierarchy(availableParents)
+          const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
+          submenuItems.push(...hierarchyItems)
+        }
+
+        // Show "Unset parent" (make root) at bottom if folder has a parent
+        if (selectedFolder.parentId) {
+          if (submenuItems.length > 0) submenuItems.push({ separator: true })
+          submenuItems.push({
+            label: 'Make root folder',
+            icon: FOLDER_ICON_REMOVE,
+            command: () => onRemoveFoldersFromFolder?.(selectedFolderIds),
+            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
+          })
+        }
+
+        return submenuItems
+      }
+      const createProjectFolderSubmenu = () => {
+        if (!allSelectedRowsAreProjects || newSelectedProjects.length === 0) {
+          return []
+        }
+
+        const submenuItems: any[] = []
+        const selectedProjectNames = newSelectedProjects.map((project) => project.name)
+
+        // Add hierarchy items first (available destination folders)
+        if (folders.length > 0) {
+          const { rootFolders } = buildProjectFolderHierarchy(folders)
+          const hierarchyItems = createFolderHierarchy(rootFolders)
+          submenuItems.push(...hierarchyItems)
+        }
+
+        // For multiple selections, show "Unset folder" if any project has a folder
+        // For single selection, show "Unset folder" only if that project has a folder
+        const hasAnyFolder = newSelectedProjects.some((project) => project.name)
+        if (hasAnyFolder) {
+          if (submenuItems.length > 0) submenuItems.push({ separator: true })
+          submenuItems.push({
+            label: 'Unset folder',
+            icon: FOLDER_ICON_REMOVE,
+            command: () => {
+              onRemoveProjectsFromFolder?.(selectedProjectNames)
+            },
+            shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
+          })
+        }
+
+        return submenuItems
+      }
+
+      const projectFolderSubmenu = createProjectFolderSubmenu()
+      const folderFolderSubmenu = createFolderFolderSubmenu()
+
+      const moveMenuItem: MenuItem | null = powerLicense ? {
+        id: 'move-project',
+        label: allSelectedRowsAreFolders ? 'Move folder' : 'Move project',
+        icon: FOLDER_ICON,
+        items: allSelectedRowsAreProjects ? projectFolderSubmenu : folderFolderSubmenu,
+        disabled: !allSelectedRowsAreProjects && !allSelectedRowsAreFolders,
+        hidden:
+          (!allSelectedRowsAreProjects && !allSelectedRowsAreFolders) ||
+          (allSelectedRowsAreProjects && projectFolderSubmenu.length === 0) ||
+          (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0)
+      } : null
+
+      const allItems: MenuItem[] = [
         {
           id: 'search',
           label: 'Search',
@@ -131,6 +341,7 @@ const useProjectsListMenuItems = ({
           icon: 'create_new_folder',
           [command ? 'command' : 'onClick']: onCreateFolder,
         },
+        ...(moveMenuItem ? [moveMenuItem] : []),
         { id: 'divider' },
         {
           id: 'open-project',
@@ -175,15 +386,14 @@ const useProjectsListMenuItems = ({
           label: `${singleActive ? 'Deactivate to delete' : 'Delete'}`,
           icon: 'delete',
           [command ? 'command' : 'onClick']: () => handleDelete(singleProject, selection),
-          disabled: selection.length !== 1 || singleActive !== false,
+          disabled: selection.length !== 1 || singleActive,
           danger: true,
         },
       ]
 
       return allItems.filter((item) => {
         if (item.id === 'divider') {
-          if (!dividers) return false
-          return true
+          return dividers
         }
         return isMenuItemEnabled(item.id as keyof NonNullable<MenuItemProps['hidden']>, hidden)
       })
@@ -198,6 +408,7 @@ const useProjectsListMenuItems = ({
       onSearch,
       pinned,
       projects,
+      folders,
       multiSelect,
       showArchived,
       userLevel,
@@ -205,6 +416,16 @@ const useProjectsListMenuItems = ({
       onArchive,
       onDelete,
       onShowArchivedToggle,
+      powerLicense,
+      onCreateFolder,
+      onPutProjectsInFolder,
+      onPutFoldersInFolder,
+      onRemoveFoldersFromFolder,
+      onRemoveProjectsFromFolder,
+      handlePin,
+      handleArchive,
+      handleDelete,
+      wouldCreateCircularDependency,
     ],
   )
 
