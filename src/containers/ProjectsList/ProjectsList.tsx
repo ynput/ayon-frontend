@@ -213,7 +213,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   // Folder dialog handlers
   const handleOpenFolderDialog = useCallback(
-    (data?: Partial<FolderFormData>, folderId?: string) => {
+    (data?: Partial<FolderFormData>, folderId?:string) => {
       setFolderDialogData(data)
       setFolderDialogId(folderId)
       setFolderDialogOpen(true)
@@ -288,6 +288,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
         throw getErrorMessage(error, 'Failed to remove folder')
       }
   }, [deleteProjectFolder])
+  const onEditFolder = useCallback( async(folderId:string, folderData: any) => {
+    handleOpenFolderDialog(folderData, folderId )
+  },[])
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
@@ -310,12 +313,13 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onOpen: onOpenProject,
     onManage: onOpenProjectManage,
     onShowArchivedToggle,
-    onCreateFolder: () => handleOpenFolderDialog(),
+    onCreateFolder: ({folderId, projectNames}) => handleOpenFolderDialog({parentId: folderId, projectNames}),
     onPutProjectsInFolder,
     onPutFolderInFolder,
     onRemoveProjectsFromFolder,
     onDeleteFolder,
-    powerLicense
+    powerLicense,
+    onEditFolder
   })
 
   // attach context menu
@@ -418,6 +422,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         initial={folderDialogData}
         folderId={folderDialogId}
         projectNames={selection}
+        onPutProjectsInFolder={onPutProjectsInFolder}
       />
     </>
   )

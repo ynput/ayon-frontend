@@ -63,7 +63,6 @@ const buildProjectsTableData = (
   const rootProjects: ListProjectsItemModel[] = []
 
   for (const project of projects) {
-    // TODO: Once backend supports projectFolderId, use it here
     const projectFolderId = project.projectFolder
     if (powerLicense && projectFolderId && foldersMap.has(projectFolderId)) {
       const folderNode = folderNodes.get(projectFolderId)!
@@ -165,6 +164,7 @@ const buildProjectsTableData = (
         name: node.folder.label,
         label: node.folder.label,
         icon: node.folder.data?.icon || FOLDER_ICON,
+        iconColor: node.folder.data?.color,
         iconFilled: true,
         subRows: [],
         data: {

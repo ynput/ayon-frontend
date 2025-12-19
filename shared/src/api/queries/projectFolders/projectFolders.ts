@@ -1,4 +1,5 @@
-import { projectFoldersApi, ProjectFoldersResponseModel, projectsApi } from '@shared/api/generated'
+import { projectFoldersApi, ProjectFoldersResponseModel } from '@shared/api/generated'
+import enhancedProject from '../project/getProject'
 
 const PROJECT_FOLDER_LIST_TAG = { type: 'projectFolder' as const, id: 'LIST' }
 
@@ -128,51 +129,32 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
       async onQueryStarted({ assignProjectRequest }, { dispatch, queryFulfilled }) {
         const { projectNames, folderId } = assignProjectRequest
 
-        console.log('🔄 Optimistic update starting:', { projectNames, folderId })
-
-        // Import enhancedProject from the getProject.ts file!
-        const enhancedProject = await import('../project/getProject').then((m) => m.default)
-
-        // Patch BOTH possible cache entries - draft is the ARRAY itself, not an object
+        // Optimistically update both possible cache entries
         const patches = [
           dispatch(
-            enhancedProject.util.updateQueryData(
-              'listProjects',
-              { active: true },
-              (draft: any[]) => {
-                console.log('📦 Patching active=true cache, projects:', draft?.length)
-                // draft IS the array, not { projects: [] }
-                draft.forEach((project: any) => {
-                  if (projectNames.includes(project.name)) {
-                    console.log('✅ Updating project:', project.name, 'folder:', folderId)
-                    project.projectFolder = folderId || undefined
-                  }
-                })
-              },
-            ),
+            enhancedProject.util.updateQueryData('listProjects', { active: true }, (draft) => {
+              draft.forEach((project) => {
+                if (projectNames.includes(project.name)) {
+                  project.projectFolder = folderId || undefined
+                }
+              })
+            }),
           ),
           dispatch(
-            enhancedProject.util.updateQueryData(
-              'listProjects',
-              { active: undefined },
-              (draft: any[]) => {
-                console.log('📦 Patching active=undefined cache, projects:', draft?.length)
-                draft.forEach((project: any) => {
-                  if (projectNames.includes(project.name)) {
-                    console.log('✅ Updating project:', project.name, 'folder:', folderId)
-                    project.projectFolder = folderId || undefined
-                  }
-                })
-              },
-            ),
+            enhancedProject.util.updateQueryData('listProjects', { active: undefined }, (draft) => {
+              draft.forEach((project) => {
+                if (projectNames.includes(project.name)) {
+                  project.projectFolder = folderId || undefined
+                }
+              })
+            }),
           ),
         ]
 
         try {
           await queryFulfilled
-          console.log('✅ Mutation succeeded')
-        } catch (error) {
-          console.error('❌ Mutation failed, undoing patches:', error)
+        } catch {
+          // Undo optimistic updates if mutation fails
           patches.forEach((patch) => patch.undo())
         }
       },

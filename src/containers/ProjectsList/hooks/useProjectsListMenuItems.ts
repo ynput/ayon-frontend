@@ -37,12 +37,14 @@ interface MenuItemProps {
   onDelete?: (projectName: string) => void
   onShowArchivedToggle?: () => void
   powerLicense?: boolean
-  onCreateFolder?: () => void
+  onCreateFolder?: ({folderId, projectNames}:{folderId?:string, projectNames?:string[]}) => void
   onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
   onPutFolderInFolder?: (folderId: string, projectFolderId: string) => Promise<void>
   onRemoveFoldersFromFolder?: (folderIds: string[]) => Promise<void>
   onRemoveProjectsFromFolder?: (projectNames: string[]) => Promise<void>
   onDeleteFolder?: (folderId: string) => void
+  onRenameFolder?: (folderId: string) => void
+  onEditFolder?: (folderId: string) => void
 }
 
 type MenuItem = {
@@ -113,6 +115,8 @@ const useProjectsListMenuItems = ({
   onRemoveFoldersFromFolder,
   onRemoveProjectsFromFolder,
   onDeleteFolder,
+  onEditFolder,
+  onRenameFolder,
 
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
@@ -183,7 +187,7 @@ const useProjectsListMenuItems = ({
       const firstSelectedRow = selection[0]
       const selectedFolderId = parseProjectFolderRowId(firstSelectedRow)
       const isSelectedRowFolder = !!selectedFolderId
-      console.log(isSelectedRowFolder)
+      const isSelectedProject = !!singleProject
       const selectedFolder = isSelectedRowFolder
         ? folders.find((f) => f.id === selectedFolderId)
         : null
@@ -346,9 +350,23 @@ const useProjectsListMenuItems = ({
         },
         {
           id: 'create-folder',
-          label: 'Create folder',
+          label: isSelectedRowFolder? 'Create subfolder': 'Create folder',
           icon: 'create_new_folder',
-          [command ? 'command' : 'onClick']: onCreateFolder,
+          [command ? 'command' : 'onClick']: isSelectedRowFolder? ()=> onCreateFolder?.({folderId: selectedFolder?.id})  : isSelectedProject ? () =>onCreateFolder?.({projectNames:newSelectedProjects.map((project)=> project.name)}) : onCreateFolder,
+        },
+        {
+          id: 'rename-folder',
+          label: 'Rename',
+          icon: 'create_new_folder',
+          [command ? 'command' : 'onClick']: onRenameFolder,
+          hidden: !isSelectedRowFolder
+        },
+        {
+          id: 'edit-folder',
+          label: 'Edit folder',
+          icon: '',
+          [command ? 'command' : 'onClick']: onEditFolder,
+          hidden: !isSelectedRowFolder
         },
         ...(moveMenuItem ? [moveMenuItem] : []),
         { id: 'divider' },
@@ -448,6 +466,8 @@ const useProjectsListMenuItems = ({
       handleDeleteFolder,
       onDeleteFolder,
       wouldCreateCircularDependency,
+      onRenameFolder,
+      onEditFolder
     ],
   )
 

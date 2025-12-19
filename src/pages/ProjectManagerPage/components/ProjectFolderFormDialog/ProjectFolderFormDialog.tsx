@@ -8,7 +8,8 @@ import {
 import { toast } from 'react-toastify'
 
 export interface FolderFormData extends ProjectFolderFormData {
-  id?: string // if id is present, it's edit mode
+ parentId?: string
+  projectNames?: string[]
 }
 
 interface ProjectFolderFormDialogProps {
@@ -17,6 +18,7 @@ interface ProjectFolderFormDialogProps {
   initial?: Partial<FolderFormData>
   folderId?: string
   projectNames?: string[]
+  onPutProjectsInFolder?: ( projectNames: string[], folderId: string,) => void
 }
 
 export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
@@ -25,6 +27,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
   initial,
   folderId,
   projectNames = [],
+  onPutProjectsInFolder
 }) => {
   const [createFolder] = useCreateProjectFolderMutation()
   const [updateFolder] = useUpdateProjectFolderMutation()
@@ -69,17 +72,27 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
     const { color, icon, parentId } = folderForm
     handleClose()
     try {
-      if (mode === 'edit' && folderId) {
-        await updateFolder({
-          folderId,
-          projectFolderPatchModel: {
-            label,
-            parentId: parentId,
-            data: { color, icon },
+      if (!!initial?.parentId) {
+        console.log('created subfolder')
+        await createFolder({
+          projectFolderPostModel: {
+            label: label,
+            data: { icon, color },
+            parentId:parentId,
           },
         }).unwrap()
         toast.success('Project folder updated successfully')
-      } else {
+      } else if(!!initial?.projectNames){
+        const folder = await createFolder({
+          projectFolderPostModel: {
+            label: label,
+            data: { icon, color },
+          },
+        }).unwrap()
+        onPutProjectsInFolder?.(initial.projectNames, folder.id)
+        toast.success('Project folder created successfully')
+
+      } else if(mode==='create') {
         await createFolder({
           projectFolderPostModel: {
             label: label,
