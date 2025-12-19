@@ -436,11 +436,12 @@ const ProjectsList: FC<ProjectsListProps> = ({
           <SimpleTable
             data={listsTableData}
             globalFilter={clientSearch ?? undefined}
-            isExpandable={listsTableData.some((row)=> row.subRows && row.subRows.length >0)}
+            isExpandable={true}
             isLoading={isLoading}
             isMultiSelect={multiSelect}
             error={error ? (error as string) : undefined}
             enableClickToDeselect={false}
+            enableNonFolderIndent={true}
             meta={{
               handleRowContext,
               renamingFolder,
@@ -467,6 +468,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
                 isRenaming={row.id === table.options.meta?.renamingFolder}
                 onSubmitRename={(v) => table.options.meta?.onSubmitRenameFolder?.(v)}
                 onCancelRename={table.options.meta?.closeRenameFolder}
+                count={row.original.data.count}
               />
             )}
           </SimpleTable>

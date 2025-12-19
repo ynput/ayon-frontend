@@ -67,6 +67,10 @@ const StyledPin = styled(Icon)`
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
 `
+const StyledProjectCount = styled.span`
+  color: var(--md-sys-color-outline);
+  padding-right: 4px;
+`
 
 interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
   code?: string // used when the width is too small to show the full name
@@ -77,6 +81,7 @@ interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
   isRenaming?: boolean
   onSubmitRename?: (name: string) => void
   onCancelRename?: () => void
+  count?: number
 }
 
 const ProjectsListRow: FC<ProjectsListRowProps> = ({
@@ -94,6 +99,7 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
   isRenaming,
   onSubmitRename,
   onCancelRename,
+  count,
   ...props
 }) => {
   // Check if this is a folder row using the canonical folder ID parser
@@ -104,7 +110,7 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
     return (
       <InputText
         autoFocus
-        style={{ flex: 1 }}
+        style={{ flex: 1, marginLeft: 20 }}
         onChange={(e) => setRenameValue(e.target.value)}
         value={renameValue}
         onKeyDown={(e) => {
@@ -137,13 +143,14 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
       className={clsx(className, { inactive: isInActive })}
       startContent={!isFolder && code ? <span className="project-code">{code}</span> : undefined}
       endContent={
+
         !isFolder ? (
           <StyledPin
             icon="push_pin"
             className={clsx('pin', { active: isPinned })}
             onClick={onPinToggle}
           />
-        ) : undefined
+        ) :  <StyledProjectCount>{count}</StyledProjectCount>
       }
     />
   )
