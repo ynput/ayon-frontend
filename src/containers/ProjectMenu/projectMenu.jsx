@@ -1,6 +1,5 @@
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import { MenuList } from '@shared/components'
 import {
   useGetProjectFoldersQuery,
   useListProjectsQuery,
@@ -8,18 +7,16 @@ import {
 } from '@shared/api'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useLocalStorage } from '@shared/hooks'
-import ProjectButton from '@components/ProjectButton/ProjectButton'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context/ShortcutsContext'
-import clsx from 'clsx'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocation, useNavigate } from 'react-router-dom'
-import buildProjectsTableData from '@containers/ProjectsList/buildProjectsTableData'
-import { powerpackFeatures } from '@shared/context'
+import buildProjectsTableData, { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import { usePowerpack } from '@shared/context'
+import ProjectsTable from '@containers/ProjectsList/ProjectsTable'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
@@ -61,7 +58,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     useSelector((state) => state.user?.data?.frontendPreferences?.pinnedProjects) || []
   // merge pinned from user and local storage
   const pinned = [...new Set([...pinnedState, ...oldPinned])]
-  const {powerLicense} = powerpackFeatures
+  const { powerLicense } = usePowerpack()
 
   const { data: projects = [] } = useListProjectsQuery({ active: true })
   const { data: folders = [] } = useGetProjectFoldersQuery({active: true})
@@ -69,9 +66,33 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     () => buildProjectsTableData(projects, folders, true, powerLicense),
     [projects, folders, powerLicense],
   )
-  const [showContext] = useCreateContextMenu([])
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher([])
   const { getDefaultTab } = useProjectDefaultTab()
+
+  // Auto-expand all folders in the tree
+  const autoExpandedState = useMemo(() => {
+    const expandAll = (nodes) => {
+      const expanded = {}
+      nodes.forEach((node) => {
+        if (node.data?.isFolder) {
+          expanded[node.id] = true
+          if (node.subRows && node.subRows.length > 0) {
+            Object.assign(expanded, expandAll(node.subRows))
+          }
+        }
+      })
+      return expanded
+    }
+    return expandAll(projectTree)
+  }, [projectTree])
+
+  // Table state for readonly table
+  const [expanded, setExpanded] = useState({})
+
+  const rowSelection = useMemo(
+    () => ({ [projectSelected]: true }),
+    [projectSelected],
+  )
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
@@ -100,126 +121,47 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     }
   }
 
-  const handlePinChange = (projectName, e) => {
-    e.stopPropagation()
-    const newPinned = [...pinned]
-    if (pinned.includes(projectName)) {
-      // remove from pinned
-      newPinned.splice(newPinned.indexOf(projectName), 1)
-    } else {
-      // add to pinned
-      newPinned.push(projectName)
-    }
+  // Filter projects by search and track which folders should be expanded
+  const { filteredProjectTree, foldersToExpand } = useMemo(() => {
+    if (!search) return { filteredProjectTree: projectTree, foldersToExpand: new Set() }
 
-    // update user preferences
-    updatePinned(newPinned)
-  }
+    const foldersToExpand = new Set()
 
-  const buildContextMenu = (projectName) => {
-    const isPinned = pinned.includes(projectName)
-    const pinnedDisabled = pinned.length >= 5 && !isPinned
-
-    const userItems = [
-      {
-        label: pinnedDisabled ? 'Max 5 pinned' : `${isPinned ? 'Unpin' : 'Pin'} Project`,
-        icon: 'push_pin',
-        command: (e) => handlePinChange(projectName, e),
-        disabled: pinnedDisabled,
-      },
-    ]
-
-    if (!isUser) {
-      userItems.push(
-        ...[
-          {
-            label: 'Project Settings',
-            icon: 'settings_applications',
-            command: () => navigate(`/manageProjects/anatomy?project=${projectName}`),
-          },
-        ],
-      )
-    }
-
-    return userItems
-  }
-
-  const handleEditClick = (e, projectName) => {
-    e.stopPropagation()
-
-    navigate(`/manageProjects/anatomy?project=${projectName}`)
-
-    onHide()
-  }
-  const buildMenuItems = (nodes) => {
-    if (!Array.isArray(nodes)) {
-      console.warn('buildMenuItems called with:', nodes)
-      return []
-    }
-    
-    return nodes.map((node) => {
-      // FOLDER
-      if (node.data?.isFolder) {
-        return {
-          id: `folder-${node.data.id}`, // use real folder id
-          label: node.label,
-          icon: node.icon ?? 'folder',
-          children: buildMenuItems(node.subRows ?? []),
+    const filterNodes = (nodes) => {
+      return nodes.reduce((acc, node) => {
+        if (node.data?.isFolder) {
+          const filteredChildren = filterNodes(node.subRows || [])
+          if (filteredChildren.length > 0) {
+            // Mark this folder for expansion since it has matching children
+            foldersToExpand.add(node.id)
+            acc.push({ ...node, subRows: filteredChildren })
+          }
+        } else if (node.name?.toLowerCase().includes(search.toLowerCase())) {
+          acc.push(node)
         }
-      }
-      
-      // PROJECT
-      return {
-        id: node.name,
-        label: node.name,
-        pinned: pinned.includes(node.name),
-        node: (
-          <ProjectButton
-            label={node.name}
-            code={node.data?.code}
-            highlighted={projectSelected === node.name}
-            onClick={() => onProjectSelect(node.name)}
-            onPin={(e) => handlePinChange(node.name, e)}
-            onContextMenu={(e) => showContext(e, buildContextMenu(node.name))}
-            id={node.name}
-          />
-        ),
-      }
-    })
-  }
-  
-  const menuItems = useMemo(() => {
-    console.log('projectTree', projectTree)
-    return buildMenuItems(projectTree)
-  }, [projectTree, pinned, projectSelected])
+        return acc
+      }, [])
+    }
 
-  // sort  by pinned, then alphabetically
-  const sortedMenuItems = useMemo(() => {
-    return menuItems.sort((a, b) => {
-      if (a.pinned && !b.pinned) return -1
-      if (!a.pinned && b.pinned) return 1
-      if (a.label.toLowerCase() < b.label.toLowerCase()) return -1
-      if (a.label.toLowerCase() > b.label.toLowerCase()) return 1
-      return 0
-    })
-  }, [menuItems])
+    return {
+      filteredProjectTree: filterNodes(projectTree),
+      foldersToExpand
+    }
+  }, [projectTree, search])
 
-  // after the last pinned item, insert a divider
-  const dividerIndex = useMemo(() => {
-    return sortedMenuItems.findIndex((item) => !item.pinned)
-  }, [sortedMenuItems])
-
-  // now we have a divider index, we can insert a divider
-  const menuItemsWithDivider = useMemo(() => {
-    const items = [...sortedMenuItems]
-    if (pinned.length !== items.length) items.splice(dividerIndex, 0, { id: 'divider' })
-    return items
-  }, [sortedMenuItems, dividerIndex])
-
-  const filteredMenuItems = useMemo(() => {
-    return menuItemsWithDivider.filter((item) => {
-      return !search || item?.label?.toLowerCase().includes(search.toLowerCase())
-    })
-  }, [menuItems, search])
+  // Update expanded state when search results change
+  useEffect(() => {
+    if (search && foldersToExpand.size > 0) {
+      const expandedState = {}
+      foldersToExpand.forEach(folderId => {
+        expandedState[folderId] = true
+      })
+      setExpanded(expandedState)
+    } else if (!search) {
+      // When not searching, auto-expand all folders
+      setExpanded(autoExpandedState)
+    }
+  }, [search, foldersToExpand, autoExpandedState])
 
   const handleHide = () => {
     onHide()
@@ -245,6 +187,18 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       : `/projects/${projectName}/${defaultTab}`
 
     navigate(link)
+  }
+
+  const handleRowSelectionChange = (newSelection) => {
+    const selectedIds = Object.keys(newSelection).filter((id) => newSelection[id])
+    if (selectedIds.length > 0) {
+      const selectedId = selectedIds[0]
+      // Check if the selected item is a folder - if so, don't navigate
+      const isFolder = parseProjectFolderRowId(selectedId)
+      if (!isFolder) {
+        onProjectSelect(selectedId)
+      }
+    }
   }
 
   const handleSearchClick = (e) => {
@@ -365,7 +319,19 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
           <Styled.All>
             <h3>Projects</h3>
-            <MenuList items={filteredMenuItems} handleClick={(e, onClick) => onClick()} level={0} />
+            <ProjectsTable
+              data={filteredProjectTree}
+              isLoading={false}
+              rowSelection={rowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              rowPinning={pinned}
+              expanded={expanded}
+              setExpanded={setExpanded}
+              multiSelect={false}
+              readonly={true}
+              selection={projectSelected ? [projectSelected] : []}
+              containerClassName="menu-list"
+            />
           </Styled.All>
         </Section>
       </Styled.ProjectSidebar>

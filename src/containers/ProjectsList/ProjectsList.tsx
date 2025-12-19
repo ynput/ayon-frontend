@@ -2,13 +2,11 @@ import {
   useGetProjectFoldersQuery,
   useListProjectsQuery,
 } from '@shared/api'
-import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo } from 'react'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import buildProjectsTableData from './buildProjectsTableData'
-import ProjectsListTableHeader, { MENU_ID } from './ProjectsListTableHeader'
-import ProjectsListRow from './ProjectsListRow'
+import { MENU_ID } from './ProjectsListTableHeader'
 import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
 import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
 import { useProjectFolderActions } from './hooks/useProjectFolderActions'
@@ -16,13 +14,13 @@ import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
 import { useNavigate } from 'react-router-dom'
-import { useCreateContextMenu } from '@shared/containers'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
 import { useState } from 'react'
 import { usePowerpack } from '@shared/context'
+import ProjectsTable from './ProjectsTable'
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
 interface ProjectsListProps {
@@ -272,108 +270,37 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onRenameFolder,
   })
 
-  // attach context menu
-  // create the ref and model
-  const [ctxMenuShow] = useCreateContextMenu()
-
-  const handleRowContext = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      e.preventDefault()
-      e.stopPropagation()
-
-      let newSelection: string[] = [...selection]
-      // if we are selecting a row outside of the selection (or none), set the selection to the row
-      if (!newSelection.includes(e.currentTarget.id)) {
-        newSelection = [e.currentTarget.id]
-        onSelect(newSelection)
-      }
-      const newSelectedRows = newSelection
-
-      // build menu items based on selection
-      const menuItems = buildMenuItems(newSelectedRows, {
-        command: true,
-        dividers: false,
-        hidden: {
-          'add-project': true,
-          search: true,
-          'select-all': true,
-        },
-      })
-
-      ctxMenuShow(e, menuItems)
-    },
-    [ctxMenuShow, buildMenuItems, selection, onSelect],
-  )
-
   return (
     <>
-      <SimpleTableProvider
-        {...{
-          rowSelection,
-          onRowSelectionChange: setRowSelection,
-          rowPinning: { top: rowPinning },
-          onRowPinningChange,
-          expanded,
-          setExpanded
-        }}
-      >
-        <Container
-          {...pt?.container}
-          style={{ height: '100%', minWidth: 50, ...pt?.container?.style }}
-        >
-          <ProjectsListTableHeader
-            title={'Projects'}
-            search={clientSearch}
-            onSearch={setClientSearch}
-            // project creation
-            showAddProject={canCreateProject}
-            onNewProject={onNewProject}
-            menuItems={buildMenuItems(selection)}
-            toggleMenu={toggleMenu}
-            onSelectAll={toggleSelectAll}
-            hiddenButtons={!multiSelect ? ['select-all'] : []}
-          />
-          <SimpleTable
-            data={listsTableData}
-            globalFilter={clientSearch ?? undefined}
-            isExpandable={true}
-            isLoading={isLoading}
-            isMultiSelect={multiSelect}
-            error={error ? (error as string) : undefined}
-            enableClickToDeselect={false}
-            enableNonFolderIndent={true}
-            meta={{
-              handleRowContext,
-              renamingFolder,
-              onSubmitRenameFolder,
-              closeRenameFolder,
-            }}
-          >
-            {(props, row, table) => (
-              <ProjectsListRow
-                {...props}
-                id={row.id}
-                onContextMenu={table.options.meta?.handleRowContext}
-                code={row.original.data.code}
-                isPinned={row.getIsPinned() === 'top'}
-                onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
-                inactive={row.original.data.active === false}
-                onDoubleClick={() =>  row.original.data?.isFolder
-                  ? undefined
-                  : () => onOpenProject(row.original.name)  }
-                isTableExpandable={props.isTableExpandable}
-                isRowExpandable={row.getCanExpand()}
-                isRowExpanded={row.getIsExpanded()}
-                onExpandClick={row.getToggleExpandedHandler()}
-                isRenaming={row.id === table.options.meta?.renamingFolder}
-                onSubmitRename={(v) => table.options.meta?.onSubmitRenameFolder?.(v)}
-                onCancelRename={table.options.meta?.closeRenameFolder}
-                count={row.original.data.count}
-              />
-            )}
-          </SimpleTable>
-        </Container>
-      </SimpleTableProvider>
+      <ProjectsTable
+        data={listsTableData}
+        isLoading={isLoading}
+        error={error ? (error as string) : undefined}
+        search={clientSearch}
+        onSearch={setClientSearch}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        rowPinning={rowPinning}
+        onRowPinningChange={onRowPinningChange}
+        expanded={expanded}
+        setExpanded={setExpanded}
+        multiSelect={multiSelect}
+        readonly={false}
+        buildMenuItems={buildMenuItems}
+        selection={selection}
+        onSelect={onSelect}
+        onOpenProject={onOpenProject}
+        title="Projects"
+        showAddProject={canCreateProject}
+        onNewProject={onNewProject}
+        toggleMenu={toggleMenu}
+        onSelectAll={toggleSelectAll}
+        hiddenButtons={!multiSelect ? ['select-all'] : []}
+        renamingFolder={renamingFolder}
+        onSubmitRenameFolder={onSubmitRenameFolder}
+        closeRenameFolder={closeRenameFolder}
+        pt={pt}
+      />
       <ProjectFolderFormDialog
         isOpen={folderDialogOpen}
         onClose={handleCloseFolderDialog}
