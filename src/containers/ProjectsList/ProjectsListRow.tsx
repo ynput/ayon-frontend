@@ -2,10 +2,11 @@ import {
   SimpleTableCellTemplate,
   SimpleTableCellTemplateProps,
 } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, InputText } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import styled from 'styled-components'
+import { parseProjectFolderRowId } from './buildProjectsTableData'
 
 const StyledTableRow = styled(SimpleTableCellTemplate)`
   /* on hover - show pin */
@@ -73,6 +74,9 @@ interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
   isPinned?: boolean
   onPinToggle?: () => void
   data?: any // row data object
+  isRenaming?: boolean
+  onSubmitRename?: (name: string) => void
+  onCancelRename?: () => void
 }
 
 const ProjectsListRow: FC<ProjectsListRowProps> = ({
@@ -87,10 +91,39 @@ const ProjectsListRow: FC<ProjectsListRowProps> = ({
   isRowExpandable,
   isRowExpanded,
   onExpandClick,
+  isRenaming,
+  onSubmitRename,
+  onCancelRename,
   ...props
 }) => {
-  // Check if this is a folder row
-  const isFolder = data?.isFolder || data?.isGroupRow
+  // Check if this is a folder row using the canonical folder ID parser
+  const isFolder = !!parseProjectFolderRowId(props.id || '')
+  const [renameValue, setRenameValue] = useState(props.value || '')
+
+  if (isFolder && isRenaming) {
+    return (
+      <InputText
+        autoFocus
+        style={{ flex: 1 }}
+        onChange={(e) => setRenameValue(e.target.value)}
+        value={renameValue}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            onSubmitRename?.(renameValue)
+          }
+          if (e.key === 'Escape') {
+            onCancelRename?.()
+          }
+        }}
+        onBlur={() => {
+          onCancelRename?.()
+        }}
+        onFocus={(e) => {
+          e.target.select()
+        }}
+      />
+    )
+  }
 
   return (
     <StyledTableRow

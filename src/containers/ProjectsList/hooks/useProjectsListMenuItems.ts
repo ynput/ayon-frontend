@@ -358,14 +358,14 @@ const useProjectsListMenuItems = ({
           id: 'rename-folder',
           label: 'Rename',
           icon: 'create_new_folder',
-          [command ? 'command' : 'onClick']: onRenameFolder,
+          [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
           hidden: !isSelectedRowFolder
         },
         {
           id: 'edit-folder',
           label: 'Edit folder',
           icon: '',
-          [command ? 'command' : 'onClick']: onEditFolder,
+          [command ? 'command' : 'onClick']: () => onEditFolder?.(selectedFolderId as string),
           hidden: !isSelectedRowFolder
         },
         ...(moveMenuItem ? [moveMenuItem] : []),

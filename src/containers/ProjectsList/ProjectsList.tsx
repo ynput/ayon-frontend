@@ -65,6 +65,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
   )
   const [folderDialogId, setFolderDialogId] = useState<string | undefined>(undefined)
 
+  // Folder renaming state
+  const [renamingFolder, setRenamingFolder] = useState<string | null>(null)
+
   const {
     data = [],
     isLoading,
@@ -229,6 +232,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const [assignProjectsToFolder] = useAssignProjectsToFolderMutation()
   const [assignFolderToFolder] = useUpdateProjectFolderMutation()
   const [deleteProjectFolder] = useDeleteProjectFolderMutation()
+  const [updateProject] = useUpdateProjectFolderMutation()
   const getErrorMessage = (error: unknown, prefix: string): string => {
     const errorString = error instanceof Error ? error.message : String(error)
     const errorMessage = `${prefix}: ${errorString}`
@@ -288,9 +292,54 @@ const ProjectsList: FC<ProjectsListProps> = ({
         throw getErrorMessage(error, 'Failed to remove folder')
       }
   }, [deleteProjectFolder])
-  const onEditFolder = useCallback( async(folderId:string, folderData: any) => {
-    handleOpenFolderDialog(folderData, folderId )
-  },[])
+  const onEditFolder = useCallback((folderId:string) => {
+    const folder = folders?.find((f) => f.id === folderId)
+    if (folder) {
+      handleOpenFolderDialog({ label: folder.label, ...folder.data }, folderId)
+    }
+  }, [folders, handleOpenFolderDialog])
+
+  // Rename folder handlers
+  const openRenameFolder = useCallback((rowId: string) => {
+    setRenamingFolder(rowId)
+    onSelect([rowId])
+  }, [onSelect])
+
+  const closeRenameFolder = useCallback(() => {
+    setRenamingFolder(null)
+  }, [])
+
+  const onSubmitRenameFolder = useCallback(
+    async (newLabel: string) => {
+      if (!renamingFolder) return
+
+      try {
+        // Parse the folder ID from the row ID
+        const folderId = renamingFolder.replace('folder-', '')
+
+        await updateProject({
+          folderId,
+          projectFolderPatchModel: {
+            label: newLabel,
+          },
+        }).unwrap()
+
+        closeRenameFolder()
+      } catch (error: any) {
+        getErrorMessage(error, 'Failed to rename folder')
+      }
+    },
+    [renamingFolder, updateProject, closeRenameFolder],
+  )
+
+  const onRenameFolder = useCallback(
+    (folderId: string) => {
+      // The row ID has format "folder-{id}"
+      const rowId = `folder-${folderId}`
+      openRenameFolder(rowId)
+    },
+    [openRenameFolder],
+  )
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
@@ -319,7 +368,8 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onRemoveProjectsFromFolder,
     onDeleteFolder,
     powerLicense,
-    onEditFolder
+    onEditFolder,
+    onRenameFolder,
   })
 
   // attach context menu
@@ -393,6 +443,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
             enableClickToDeselect={false}
             meta={{
               handleRowContext,
+              renamingFolder,
+              onSubmitRenameFolder,
+              closeRenameFolder,
             }}
           >
             {(props, row, table) => (
@@ -411,6 +464,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
                 isRowExpandable={row.getCanExpand()}
                 isRowExpanded={row.getIsExpanded()}
                 onExpandClick={row.getToggleExpandedHandler()}
+                isRenaming={row.id === table.options.meta?.renamingFolder}
+                onSubmitRename={(v) => table.options.meta?.onSubmitRenameFolder?.(v)}
+                onCancelRename={table.options.meta?.closeRenameFolder}
               />
             )}
           </SimpleTable>
