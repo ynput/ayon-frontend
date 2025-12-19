@@ -175,7 +175,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   const navigate = useNavigate()
   const onOpenProject = (project: string) => {
-    console.log('project name', project)
     if ((user?.uiExposureLevel || 0) < 500) return
 
     handleProjectSelectionDispatches(project)
@@ -232,7 +231,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const [assignProjectsToFolder] = useAssignProjectsToFolderMutation()
   const [assignFolderToFolder] = useUpdateProjectFolderMutation()
   const [deleteProjectFolder] = useDeleteProjectFolderMutation()
-  const [updateProject] = useUpdateProjectFolderMutation()
+  const [updateProjectFolder] = useUpdateProjectFolderMutation()
   const getErrorMessage = (error: unknown, prefix: string): string => {
     const errorString = error instanceof Error ? error.message : String(error)
     const errorMessage = `${prefix}: ${errorString}`
@@ -256,12 +255,12 @@ const ProjectsList: FC<ProjectsListProps> = ({
     [assignProjectsToFolder],
   )
   const onPutFolderInFolder = useCallback(
-    async (folderId:string, parentId:string)=>{
+    async (folderId:string, parentId?:string)=>{
       try {
           await assignFolderToFolder({
             folderId,
             projectFolderPatchModel:{
-              parentId
+              parentId: parentId || null
             }
           })
       } catch (error:any){
@@ -317,7 +316,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         // Parse the folder ID from the row ID
         const folderId = renamingFolder.replace('folder-', '')
 
-        await updateProject({
+        await updateProjectFolder({
           folderId,
           projectFolderPatchModel: {
             label: newLabel,
@@ -329,7 +328,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         getErrorMessage(error, 'Failed to rename folder')
       }
     },
-    [renamingFolder, updateProject, closeRenameFolder],
+    [renamingFolder, updateProjectFolder, closeRenameFolder],
   )
 
   const onRenameFolder = useCallback(
@@ -457,7 +456,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
                 code={row.original.data.code}
                 isPinned={row.getIsPinned() === 'top'}
                 onPinToggle={() => row.pin(row.getIsPinned() === 'top' ? false : 'top')}
-                isInActive={row.original.data.active === false}
+                inactive={row.original.data.active === false}
                 onDoubleClick={() =>  row.original.data?.isFolder
                   ? undefined
                   : () => onOpenProject(row.original.name)  }

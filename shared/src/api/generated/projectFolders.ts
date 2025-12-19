@@ -105,7 +105,7 @@ export type ProjectFolderPostModel = {
 }
 export type ProjectFolderPatchModel = {
   label?: string
-  parentId?: string
+  parentId?: string | null
   data?: ProjectFolderData
 }
 export type ProjectFolderOrderModel = {

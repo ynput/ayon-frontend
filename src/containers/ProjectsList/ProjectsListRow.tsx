@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './ProjectsListRow.styled'
-import { Icon, InputText, Spacer } from '@ynput/ayon-react-components'
+import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { RowExpander } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
 import { parseProjectFolderRowId } from './buildProjectsTableData'
@@ -25,8 +25,7 @@ export interface ProjectsListRowProps extends React.HTMLAttributes<HTMLDivElemen
   onExpandClick?: () => void
   onPinToggle?: () => void
   pt?: {
-    value?: React.HTMLAttributes<HTMLSpanElement>
-    input?: React.HTMLAttributes<HTMLInputElement> & { value?: string }
+    icon?: Partial<IconProps>| undefined;
   }
 }
 
@@ -98,7 +97,6 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
         {isRenaming && isFolder ? (
           <InputText
             autoFocus
-            {...pt?.input}
             style={{ flex: 1 }}
             onChange={(e) => setRenameValue(e.target.value)}
             value={renameValue}
@@ -118,7 +116,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
             }}
           />
         ) : (
-          <span className={clsx('value', pt?.value?.className)} {...pt?.value}>
+          <span className={clsx('value')}>
             {value}
           </span>
         )}

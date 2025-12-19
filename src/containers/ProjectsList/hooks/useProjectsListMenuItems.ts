@@ -39,8 +39,7 @@ interface MenuItemProps {
   powerLicense?: boolean
   onCreateFolder?: ({folderId, projectNames}:{folderId?:string, projectNames?:string[]}) => void
   onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
-  onPutFolderInFolder?: (folderId: string, projectFolderId: string) => Promise<void>
-  onRemoveFoldersFromFolder?: (folderIds: string[]) => Promise<void>
+  onPutFolderInFolder?: (folderId: string, projectFolderId?: string) => Promise<void>
   onRemoveProjectsFromFolder?: (projectNames: string[]) => Promise<void>
   onDeleteFolder?: (folderId: string) => void
   onRenameFolder?: (folderId: string) => void
@@ -112,7 +111,6 @@ const useProjectsListMenuItems = ({
   onCreateFolder,
   onPutProjectsInFolder,
   onPutFolderInFolder,
-  onRemoveFoldersFromFolder,
   onRemoveProjectsFromFolder,
   onDeleteFolder,
   onEditFolder,
@@ -197,9 +195,6 @@ const useProjectsListMenuItems = ({
       const newSelectedProjects = projects.filter((project) =>
         newSelectedRows.includes(project.name),
       )
-      const selectedFolderIds = newSelectedRows
-        .map((id) => parseListFolderRowId(id))
-        .filter((id): id is string => !!id)
       const allSelectedRowsAreProjects = newSelectedRows.every((selected) =>
         newSelectedProjects.some((project) => project?.name === selected),
       )
@@ -273,7 +268,7 @@ const useProjectsListMenuItems = ({
           submenuItems.push({
             label: 'Make root folder',
             icon: FOLDER_ICON_REMOVE,
-            command: () => onRemoveFoldersFromFolder?.(selectedFolderIds),
+            command: () => onPutFolderInFolder?.(selectedFolder.id),
             shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
           })
         }
@@ -458,7 +453,6 @@ const useProjectsListMenuItems = ({
       onCreateFolder,
       onPutProjectsInFolder,
       onPutFolderInFolder,
-      onRemoveFoldersFromFolder,
       onRemoveProjectsFromFolder,
       handlePin,
       handleArchive,
