@@ -690,19 +690,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     const handleKeyDown = async (e: KeyboardEvent) => {
       // Copy functionality (Ctrl+C or Command+C)
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-
-        const activeEl = document.activeElement as HTMLElement | null
-
-        // Check if the active element is part of the table (td, th, table elements)
-        const isTableFocused =
-          activeEl?.closest('table') !== null ||
-          activeEl?.closest('.table-container') !== null ||
-          activeEl?.tagName === 'TD' ||
-          activeEl?.tagName === 'TH'
-
-        if (isTableFocused && selectedCells.size > 0) {
-          copyToClipboard()
-        }
+        copyToClipboard()
       }
 
       // Paste functionality (Ctrl+V or Command+V)

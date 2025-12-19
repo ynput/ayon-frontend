@@ -14,6 +14,11 @@ import { getGroupByDataType } from '@shared/util'
 import { useMemo } from 'react'
 import { useVPViewsContext } from '../context/VPViewsContext'
 import { QueryArguments } from '../context/VPDataContext'
+import {
+  isGroupId,
+  GROUP_BY_ID,
+} from '@shared/containers/ProjectTreeTable/hooks/useBuildGroupByTableData'
+import { ExpandedState } from '@tanstack/react-table'
 
 type Props = {
   projectName: string
@@ -21,6 +26,7 @@ type Props = {
   taskFilters: QueryFilter
   modules: ProjectTableModulesType
   versionArguments: QueryArguments
+  expanded: ExpandedState
 }
 
 const useVersionsGroupBy = ({
@@ -29,6 +35,7 @@ const useVersionsGroupBy = ({
   taskFilters,
   modules,
   versionArguments,
+  expanded,
 }: Props) => {
   const { attribFields } = useProjectDataContext()
   const { getGroupQueries, isLoading: isLoadingModules } = modules
@@ -57,18 +64,41 @@ const useVersionsGroupBy = ({
   // we do this by building a list of groups with filters for that group
   const groupByDataType = getGroupByDataType(groupBy, attribFields)
 
-  // get group queries from powerpack
+  // get expanded group values from the expanded state
+  // group IDs are formatted as `_GROUP_<value>` so we extract the values
+  const expandedGroupValues = useMemo(() => {
+    return Object.entries(expanded)
+      .filter(([, isExpanded]) => isExpanded)
+      .filter(([id]) => isGroupId(id))
+      .map(([id]) => id.slice(GROUP_BY_ID.length))
+  }, [expanded])
+
+  // get group queries from powerpack, filtered to only include expanded groups
   const groupFilters: GetGroupedVersionsListArgs['groups'] = useMemo(() => {
-    return groupBy && groups.length
-      ? getGroupQueries?.({
-          groups,
-          taskGroups: groups, // deprecated, but keep for backward compatibility
-          filters: groupById === 'taskType' ? taskFilters : versionFilters,
-          groupBy,
-          groupPageCounts,
-        }) ?? []
-      : []
-  }, [groupBy, groups, groupPageCounts, groupByDataType, versionFilters, getGroupQueries])
+    if (!groupBy || !groups.length) return []
+
+    const allGroupFilters =
+      getGroupQueries?.({
+        groups,
+        taskGroups: groups, // deprecated, but keep for backward compatibility
+        filters: groupById === 'taskType' ? taskFilters : versionFilters,
+        groupBy,
+        groupPageCounts,
+      }) ?? []
+
+    // Only fetch versions for groups that are expanded
+    return allGroupFilters.filter((group) => expandedGroupValues.includes(group.value))
+  }, [
+    groupBy,
+    groups,
+    groupPageCounts,
+    groupByDataType,
+    versionFilters,
+    getGroupQueries,
+    expandedGroupValues,
+    groupById,
+    taskFilters,
+  ])
 
   const queryArgs = {
     groups: groupFilters, // special groups argument that also include version filters

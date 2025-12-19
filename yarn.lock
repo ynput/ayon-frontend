@@ -2001,10 +2001,10 @@
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
-"@reduxjs/toolkit@^2.7.0":
-  version "2.11.1"
-  resolved "https://registry.yarnpkg.com/@reduxjs/toolkit/-/toolkit-2.11.1.tgz#69553cb3f7d60582c7a96682c381a38de98de9f4"
-  integrity sha512-HjhlEREguAyBTGNzRlGNiDHGQ2EjLSPWwdhhpoEqHYy8hWak3Dp6/fU72OfqVsiMb8S6rbfPsWUF24fxpilrVA==
+"@reduxjs/toolkit@^2.11.2":
+  version "2.11.2"
+  resolved "https://registry.yarnpkg.com/@reduxjs/toolkit/-/toolkit-2.11.2.tgz#582225acea567329ca6848583e7dd72580d38e82"
+  integrity sha512-Kd6kAHTA6/nUpp8mySPqj3en3dm0tdMIgbttnQ1xFMVpufoj+ADi8pXLBsd4xzTRHQa7t/Jv8W5UnCuW4kuWMQ==
   dependencies:
     "@standard-schema/spec" "^1.0.0"
     "@standard-schema/utils" "^0.3.0"
@@ -2174,7 +2174,7 @@
   resolved "https://registry.yarnpkg.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.53.3.tgz#38ae84f4c04226c1d56a3b17296ef1e0460ecdfe"
   integrity sha512-UhTd8u31dXadv0MopwGgNOBpUVROFKWVQgAg5N1ESyCz8AuBcMqm4AuTjrwgQKGDfoFuz02EuMRHQIw/frmYKQ==
 
-"@rtk-query/codegen-openapi@^2.1.0":
+"@rtk-query/codegen-openapi@^2.2.0":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@rtk-query/codegen-openapi/-/codegen-openapi-2.2.0.tgz#5b72c00c4a0635909d642e0fce5fb87a24b1b000"
   integrity sha512-HZAXpoSl11PLbJq96T9OC8Fi+EcYxVDixE/FJwD7vItfwYRMqrMBrtvtIkRqQqrK5Dch7TyRZKPTGw4Exd/BVA==
@@ -2188,7 +2188,7 @@
     swagger2openapi "^7.0.4"
     typescript "^5.8.2"
 
-"@rtk-query/graphql-request-base-query@^2.3.1":
+"@rtk-query/graphql-request-base-query@^2.3.2":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@rtk-query/graphql-request-base-query/-/graphql-request-base-query-2.3.2.tgz#974757c62b0c7e6b2a5dbedbf7ea9ab50312b1f3"
   integrity sha512-UJ6Rnpu0VYTDTSlpqHAMnuZFax8VUAT1/zpotwcBbn1fanQXnSU/ik6FPGo5yyp/apMzsZpo3H0ZqaLdQ0ysow==

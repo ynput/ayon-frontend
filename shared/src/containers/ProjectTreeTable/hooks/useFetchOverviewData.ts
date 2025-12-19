@@ -14,7 +14,7 @@ import { determineLoadingTaskFolders } from '../utils/loadingUtils'
 import { LoadingTasks } from '../types'
 import { TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
-import { isGroupId } from '../hooks/useBuildGroupByTableData'
+import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
@@ -330,22 +330,42 @@ export const useFetchOverviewData = ({
   // we do this by building a list of groups with filters for that group
   const groupByDataType = getGroupByDataType(groupBy, attribFields)
 
-  // get group queries from powerpack
+  // get expanded group values from the expanded state
+  // group IDs are formatted as `_GROUP_<value>` so we extract the values
+  const expandedGroupValues = useMemo(() => {
+    return Object.entries(expanded)
+      .filter(([, isExpanded]) => isExpanded)
+      .filter(([id]) => isGroupId(id))
+      .map(([id]) => id.slice(GROUP_BY_ID.length))
+  }, [expanded])
+
+  // get group queries from powerpack, filtered to only include expanded groups
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
-    return groupBy
-      ? getGroupQueries?.({
-          groups: taskGroups,
-          taskGroups, // deprecated, but keep for backward compatibility
-          filters: taskFilters.filter,
-          groupBy,
-          groupPageCounts,
-        }) ?? []
-      : []
-  }, [groupBy, taskGroups, groupPageCounts, groupByDataType, taskFilters.filter, getGroupQueries])
+    if (!groupBy) return []
+
+    const allGroupQueries =
+      getGroupQueries?.({
+        groups: taskGroups,
+        taskGroups, // deprecated, but keep for backward compatibility
+        filters: taskFilters.filter,
+        groupBy,
+        groupPageCounts,
+      }) ?? []
+
+    // Only fetch tasks for groups that are expanded
+    return allGroupQueries.filter((group) => expandedGroupValues.includes(group.value))
+  }, [
+    groupBy,
+    taskGroups,
+    groupPageCounts,
+    groupByDataType,
+    taskFilters.filter,
+    getGroupQueries,
+    expandedGroupValues,
+  ])
 
   const {
     data: { tasks: groupTasks = [] } = {},
-    isFetching: isFetchingGroups,
     isUninitialized: isUninitializedGroupedTasks,
     refetch: refetchGroupedTasks,
   } = useGetGroupedTasksListQuery(
@@ -459,11 +479,7 @@ export const useFetchOverviewData = ({
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     isLoadingAll:
-      isLoadingFolders ||
-      isLoadingTasksList ||
-      isFetchingTasksFolders ||
-      isFetchingGroups ||
-      isLoadingModules, // these all show a full loading state
+      isLoadingFolders || isLoadingTasksList || isFetchingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,

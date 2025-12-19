@@ -97,12 +97,17 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   // Separate the combined filters into task and folder filters
   const { task: taskFilter = EMPTY_FILTER, folder: folderFilter = EMPTY_FILTER } = useMemo(() => {
-    return splitFiltersByScope(queryFilters, ['task', 'folder'], undefined, {
-      // Map filter IDs that don't have scope prefix to their scope
-      taskType: 'task',
-      assignees: 'task',
-      folderType: 'folder',
-    })
+    return splitFiltersByScope(
+      queryFilters,
+      ['task', 'folder'],
+      { fallbackScope: 'task' },
+      {
+        // Map filter IDs that don't have scope prefix to their scope
+        taskType: 'task',
+        assignees: 'task',
+        folderType: 'folder',
+      },
+    )
   }, [queryFilters])
 
   // Separate slicer filters into different types
@@ -122,16 +127,19 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const combinedTaskFilter = useQueryFilters({
     queryFilters: taskFilter,
     sliceFilter: slicerTaskFilter,
+    config: { searchKey: 'name' },
   })
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
     sliceFilter: slicerFolderFilter,
+    config: { searchKey: 'name' },
   })
 
   // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
     sliceFilter,
+    config: { searchKey: 'name' },
   })
 
   const selectedFolders = useSelectedFolders({
