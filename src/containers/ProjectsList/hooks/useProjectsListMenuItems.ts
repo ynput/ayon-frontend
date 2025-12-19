@@ -352,14 +352,14 @@ const useProjectsListMenuItems = ({
         {
           id: 'rename-folder',
           label: 'Rename',
-          icon: 'create_new_folder',
+          icon: 'edit',
           [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
           hidden: !isSelectedRowFolder
         },
         {
           id: 'edit-folder',
           label: 'Edit folder',
-          icon: '',
+          icon: 'folder_managed',
           [command ? 'command' : 'onClick']: () => onEditFolder?.(selectedFolderId as string),
           hidden: !isSelectedRowFolder
         },
@@ -416,7 +416,7 @@ const useProjectsListMenuItems = ({
         },
         {
           id: 'delete-folder',
-          label: 'Delete folder',
+          label: 'Delete (only folder)',
           icon: 'delete',
           [command ? 'command' : 'onClick']: () =>  handleDeleteFolder(selection),
           danger: true,
