@@ -154,18 +154,19 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   )
 
   // Determine entity type and ID for the query
+  // Always prioritize version if available, as we need it to get the product name
   const { entityType, entityId } = useMemo(() => {
-    if (folderId && !taskId && !productId) {
-      return { entityType: 'folder' as const, entityId: folderId }
+    if (versionIds[0]) {
+      return { entityType: 'version' as const, entityId: versionIds[0] }
     } else if (taskId && !productId) {
       return { entityType: 'task' as const, entityId: taskId }
-    } else if (versionIds[0]) {
-      return { entityType: 'version' as const, entityId: versionIds[0] }
+    } else if (folderId && !taskId && !productId) {
+      return { entityType: 'folder' as const, entityId: folderId }
     }
     return { entityType: null, entityId: null }
   }, [folderId, taskId, productId, versionIds])
 
-  // Fetch entity details to get folder path
+  // Fetch entity details to get folder, product, and version information
   const { data: entityDetails = [] } = useGetEntitiesDetailsPanelQuery(
     {
       entityType: entityType!,
@@ -175,15 +176,20 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   )
 
   const versionPath = useMemo(() => {
-    if (!entityDetails.length) return ''
+    if (!entityDetails[0]) return ''
 
-    const { folder, product, version } = entityDetails[0]
-    const folderLabel = folder?.label || folder?.name
-    const productName = product?.name
-    const versionName = version?.name || selectedVersion?.name
+    const entity = entityDetails[0]
 
+    // Get the immediate parent folder (last folder in the hierarchy)
+    const folderLabel = entity.folder?.label || entity.folder?.name || ''
+
+    // Get product and version names separately
+    const productName = entity.product?.name || ''
+    const versionName = entity.name || ''
+
+    // Build path: folder / product / version
     return [folderLabel, productName, versionName].filter(Boolean).join(' / ')
-  }, [entityDetails, selectedVersion])
+  }, [entityDetails])
 
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
@@ -354,20 +360,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
               {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
             </Styled.ButtonGroup>
           </Styled.MinimizedToolbar>
-
-          {/*<Styled.ButtonGroup>*/}
-          {/*  <Button*/}
-          {/*    icon={'dock_to_left'}*/}
-          {/*    className={'details active'}*/}
-          {/*    data-tooltip={'Toggle to show details'}*/}
-          {/*    data-tooltip-position="bottom"*/}
-          {/*    data-shortcut={'C'}*/}
-          {/*    onClick={toggleMinimized}*/}
-          {/*  >*/}
-          {/*    Details*/}
-          {/*  </Button>*/}
-          {/*  {onClose && <Button onClick={onClose} icon={'close'} className="close" />}*/}
-          {/*</Styled.ButtonGroup>*/}
 
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
           <ViewerComponent
