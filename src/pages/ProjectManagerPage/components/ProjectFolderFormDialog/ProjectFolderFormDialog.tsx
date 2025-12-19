@@ -91,7 +91,6 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
         }).unwrap()
         onPutProjectsInFolder?.(initial.projectNames, folder.id)
         toast.success('Project folder created successfully')
-
       } else if(mode==='create') {
         await createFolder({
           projectFolderPostModel: {
@@ -101,6 +100,14 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
           },
         }).unwrap()
         toast.success('Project folder created successfully')
+      }else if(mode === 'edit' && folderId){
+        await updateFolder({
+          folderId,
+          projectFolderPatchModel:{
+            label,
+            data: {icon, color}
+          }
+        })
       }
 
     } catch (error) {
