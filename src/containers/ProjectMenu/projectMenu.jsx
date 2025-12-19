@@ -1,7 +1,11 @@
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { MenuList } from '@shared/components'
-import { useListProjectsQuery, useSetFrontendPreferencesMutation } from '@shared/api'
+import {
+  useGetProjectFoldersQuery,
+  useListProjectsQuery,
+  useSetFrontendPreferencesMutation,
+} from '@shared/api'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
@@ -14,6 +18,8 @@ import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocation, useNavigate } from 'react-router-dom'
+import buildProjectsTableData from '@containers/ProjectsList/buildProjectsTableData'
+import { powerpackFeatures } from '@shared/context'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
@@ -55,9 +61,14 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     useSelector((state) => state.user?.data?.frontendPreferences?.pinnedProjects) || []
   // merge pinned from user and local storage
   const pinned = [...new Set([...pinnedState, ...oldPinned])]
+  const {powerLicense} = powerpackFeatures
 
   const { data: projects = [] } = useListProjectsQuery({ active: true })
-
+  const { data: folders = [] } = useGetProjectFoldersQuery({active: true})
+  const projectTree = useMemo(
+    () => buildProjectsTableData(projects, folders, true, powerLicense),
+    [projects, folders, powerLicense],
+  )
   const [showContext] = useCreateContextMenu([])
   const [handleProjectSelectionDispatches] = useProjectSelectDispatcher([])
   const { getDefaultTab } = useProjectDefaultTab()
@@ -139,28 +150,47 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
     onHide()
   }
-
+  const buildMenuItems = (nodes) => {
+    if (!Array.isArray(nodes)) {
+      console.warn('buildMenuItems called with:', nodes)
+      return []
+    }
+    
+    return nodes.map((node) => {
+      // FOLDER
+      if (node.data?.isFolder) {
+        return {
+          id: `folder-${node.data.id}`, // use real folder id
+          label: node.label,
+          icon: node.icon ?? 'folder',
+          children: buildMenuItems(node.subRows ?? []),
+        }
+      }
+      
+      // PROJECT
+      return {
+        id: node.name,
+        label: node.name,
+        pinned: pinned.includes(node.name),
+        node: (
+          <ProjectButton
+            label={node.name}
+            code={node.data?.code}
+            highlighted={projectSelected === node.name}
+            onClick={() => onProjectSelect(node.name)}
+            onPin={(e) => handlePinChange(node.name, e)}
+            onContextMenu={(e) => showContext(e, buildContextMenu(node.name))}
+            id={node.name}
+          />
+        ),
+      }
+    })
+  }
+  
   const menuItems = useMemo(() => {
-    return projects.map((project) => ({
-      id: project.name,
-      label: project.name,
-      pinned: pinned.includes(project.name),
-      node: (
-        <ProjectButton
-          label={project.name}
-          code={project.code}
-          className={clsx('project-item', { pinned: pinned.includes(project.name) })}
-          highlighted={projectSelected === project.name}
-          onPin={(e) => handlePinChange(project.name, e)}
-          onEdit={!isUser && ((e) => handleEditClick(e, project.name))}
-          onClick={() => onProjectSelect(project.name)}
-          onContextMenu={(e) => showContext(e, buildContextMenu(project.name))}
-          id={project.name}
-          key={project.name}
-        />
-      ),
-    }))
-  }, [projects, projectSelected, search, pinned])
+    console.log('projectTree', projectTree)
+    return buildMenuItems(projectTree)
+  }, [projectTree, pinned, projectSelected])
 
   // sort  by pinned, then alphabetically
   const sortedMenuItems = useMemo(() => {
