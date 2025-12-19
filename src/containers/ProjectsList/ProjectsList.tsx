@@ -1,9 +1,6 @@
 import {
-  useAssignProjectsToFolderMutation,
-  useDeleteProjectFolderMutation,
   useGetProjectFoldersQuery,
   useListProjectsQuery,
-  useUpdateProjectFolderMutation,
 } from '@shared/api'
 import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
@@ -14,6 +11,7 @@ import ProjectsListTableHeader, { MENU_ID } from './ProjectsListTableHeader'
 import ProjectsListRow from './ProjectsListRow'
 import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
 import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
+import { useProjectFolderActions } from './hooks/useProjectFolderActions'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
@@ -24,7 +22,6 @@ import { useLocalStorage } from '@shared/hooks'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
 import { useState } from 'react'
-import { toast } from 'react-toastify'
 import { usePowerpack } from '@shared/context'
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
@@ -64,9 +61,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     undefined,
   )
   const [folderDialogId, setFolderDialogId] = useState<string | undefined>(undefined)
-
-  // Folder renaming state
-  const [renamingFolder, setRenamingFolder] = useState<string | null>(null)
 
   const {
     data = [],
@@ -228,117 +222,24 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setFolderDialogData(undefined)
     setFolderDialogId(undefined)
   }, [])
-  const [assignProjectsToFolder] = useAssignProjectsToFolderMutation()
-  const [assignFolderToFolder] = useUpdateProjectFolderMutation()
-  const [deleteProjectFolder] = useDeleteProjectFolderMutation()
-  const [updateProjectFolder] = useUpdateProjectFolderMutation()
-  const getErrorMessage = (error: unknown, prefix: string): string => {
-    const errorString = error instanceof Error ? error.message : String(error)
-    const errorMessage = `${prefix}: ${errorString}`
-    console.error(errorMessage)
-    toast.error(errorMessage)
-    return errorMessage
-  }
-  const onPutProjectsInFolder = useCallback(
-    async (projectNames: string[], projectFolderId?: string) => {
-      try {
-        await assignProjectsToFolder({
-          assignProjectRequest: {
-            folderId: projectFolderId,
-            projectNames: projectNames,
-          },
-        }).unwrap()
-      } catch (error: any) {
-        throw getErrorMessage(error, 'Failed to assign projects to folder')
-      }
-    },
-    [assignProjectsToFolder],
-  )
-  const onPutFolderInFolder = useCallback(
-    async (folderId:string, parentId?:string)=>{
-      try {
-          await assignFolderToFolder({
-            folderId,
-            projectFolderPatchModel:{
-              parentId: parentId || null
-            }
-          })
-      } catch (error:any){
 
-      }
-    }, [assignFolderToFolder])
-  const onRemoveProjectsFromFolder = useCallback(
-    async  (projectNames: string[]) =>{
-      try {
-        await assignProjectsToFolder({
-          assignProjectRequest: {
-            folderId:null,
-            projectNames: projectNames,
-          },
-        }).unwrap()
-      } catch (error: any) {
-        throw getErrorMessage(error, 'Failed to assign projects to folder')
-      }
+  // Use project folder actions hook
+  const {
+    onPutProjectsInFolder,
+    onPutFolderInFolder,
+    onRemoveProjectsFromFolder,
+    onDeleteFolder,
+    onEditFolder,
+    onRenameFolder,
+    renamingFolder,
+    onSubmitRenameFolder,
+    closeRenameFolder,
+  } = useProjectFolderActions({
+    folders,
+    onSelect,
+    handleOpenFolderDialog,
+  })
 
-
-  },[assignProjectsToFolder])
-  const onDeleteFolder = useCallback( async (folderId:string) =>{
-      try {
-        await deleteProjectFolder({
-          folderId: folderId
-        })
-      } catch (error: any){
-        throw getErrorMessage(error, 'Failed to remove folder')
-      }
-  }, [deleteProjectFolder])
-  const onEditFolder = useCallback((folderId:string) => {
-    const folder = folders?.find((f) => f.id === folderId)
-    if (folder) {
-      handleOpenFolderDialog({ label: folder.label, ...folder.data }, folderId)
-    }
-  }, [folders, handleOpenFolderDialog])
-
-  // Rename folder handlers
-  const openRenameFolder = useCallback((rowId: string) => {
-    setRenamingFolder(rowId)
-    onSelect([rowId])
-  }, [onSelect])
-
-  const closeRenameFolder = useCallback(() => {
-    setRenamingFolder(null)
-  }, [])
-
-  const onSubmitRenameFolder = useCallback(
-    async (newLabel: string) => {
-      if (!renamingFolder) return
-
-      try {
-        // Parse the folder ID from the row ID
-        const folderId = renamingFolder.replace('folder-', '')
-
-        await updateProjectFolder({
-          folderId,
-          projectFolderPatchModel: {
-            label: newLabel,
-          },
-        }).unwrap()
-
-        closeRenameFolder()
-      } catch (error: any) {
-        getErrorMessage(error, 'Failed to rename folder')
-      }
-    },
-    [renamingFolder, updateProjectFolder, closeRenameFolder],
-  )
-
-  const onRenameFolder = useCallback(
-    (folderId: string) => {
-      // The row ID has format "folder-{id}"
-      const rowId = `folder-${folderId}`
-      openRenameFolder(rowId)
-    },
-    [openRenameFolder],
-  )
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
