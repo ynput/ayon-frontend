@@ -77,53 +77,37 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           )
         }
 
-        // Also update the getBaseView cache if this is a base view
-        let baseViewPatch
+        let baseViewPatchApplied = false
+
         if (payload.label === '__base__') {
-          // Check if the getBaseView cache exists before updating
-          const currentBaseView = getViewsApi.endpoints.getBaseView.select({
-            viewType: arg.viewType,
-            projectName: arg.projectName,
-          })(state)
-
-          // Only perform optimistic update if cache is initialized (even if data is null)
-          if (currentBaseView !== undefined) {
-            const newBaseView = {
-              ...payload,
-              working: false,
-              scope: arg.projectName ? 'project' : 'studio',
-              visibility: 'private',
-              owner: user,
-              accessLevel: 30,
-              position: 0,
-            }
-
-            baseViewPatch = dispatch(
-              getViewsApi.util.updateQueryData(
-                'getBaseView',
-                { viewType: arg.viewType, projectName: arg.projectName },
-                () => newBaseView as any,
-              ),
-            )
-          } else {
-            // No cache exists yet, optimistic update will be skipped
-            // The invalidation tags will handle the refetch
-            console.log('Skipping optimistic update for getBaseView - cache does not exist yet')
+          const newBaseView = {
+            id: `optimistic-base-${Date.now()}`,
+            ...payload,
+            working: false,
+            scope: arg.projectName ? 'project' : 'studio',
+            visibility: 'private',
+            owner: user,
+            accessLevel: 30,
+            position: 0,
           }
+
+          dispatch(
+            getViewsApi.util.upsertQueryData(
+              'getBaseView',
+              { viewType: arg.viewType, projectName: arg.projectName },
+              newBaseView as any,
+            ),
+          )
+
+          baseViewPatchApplied = true
         }
 
         try {
           await queryFulfilled
         } catch (error) {
-          // If the query failed, we need to roll back the optimistic updates
           patch.undo()
-          if (workingViewPatch) {
-            workingViewPatch.undo()
-          }
-          if (baseViewPatch) {
-            baseViewPatch.undo()
-          }
-          console.error('Failed to create view:', error)
+          if (workingViewPatch) workingViewPatch.undo()
+          // ❌ no undo for base view
         }
       },
       transformErrorResponse: (error: any) => error.data?.detail,
