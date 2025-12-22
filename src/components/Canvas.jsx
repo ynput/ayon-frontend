@@ -37,7 +37,7 @@ const Canvas = forwardRef(({style, onDraw, ...props}, ref) => {
 
     return () => resizeObserver.unobserve(parentElement);
 
-  }, [ref]);
+  }, [ref, onDraw]);
 
 
   return (

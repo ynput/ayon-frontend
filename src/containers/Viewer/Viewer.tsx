@@ -1,5 +1,5 @@
 import { compareDesc } from 'date-fns'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useFullScreenHandle } from 'react-full-screen'
 import { Button } from '@ynput/ayon-react-components'
@@ -13,11 +13,12 @@ import * as Styled from './Viewer.styled'
 import { ViewerProvider } from '@context/ViewerContext'
 
 // shared
-import { useGetViewerReviewablesQuery } from '@shared/api'
+import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
 import { getGroupedReviewables } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
+import { useLocalStorage } from '@shared/hooks'
 
 interface ViewerProps {
   onClose?: () => void
@@ -25,6 +26,8 @@ interface ViewerProps {
 }
 
 const ViewerBody = ({ onClose }: ViewerProps) => {
+
+  const [minimizedWindow, setMinimizedWindow] = useLocalStorage('viewer-minimized-window', false)
   const {
     productId,
     taskId,
@@ -130,7 +133,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
       }
     }
   }, [allVersionsAndReviewables, selectedProductId])
-
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
     if (hasMultipleProducts && !selectedProductId && !isFetchingReviewables) {
@@ -150,6 +152,45 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     () => versionsAndReviewables.find((v) => v.id === versionIds[0]),
     [versionIds, versionsAndReviewables],
   )
+
+  // Determine entity type and ID for the query
+  // Always prioritize version if available, as we need it to get the product name
+  const { entityType, entityId } = useMemo(() => {
+    if (versionIds[0]) {
+      return { entityType: 'version' as const, entityId: versionIds[0] }
+    } else if (taskId && !productId) {
+      return { entityType: 'task' as const, entityId: taskId }
+    } else if (folderId && !taskId && !productId) {
+      return { entityType: 'folder' as const, entityId: folderId }
+    }
+    return { entityType: null, entityId: null }
+  }, [folderId, taskId, productId, versionIds])
+
+  // Fetch entity details to get folder, product, and version information
+  const { data: entityDetails = [] } = useGetEntitiesDetailsPanelQuery(
+    {
+      entityType: entityType!,
+      entities: entityId && projectName ? [{ id: entityId, projectName }] : [],
+    },
+    { skip: !entityId || !projectName || !entityType },
+  )
+
+  const versionPath = useMemo(() => {
+    if (!entityDetails[0]) return ''
+
+    const entity = entityDetails[0]
+
+    // Get the immediate parent folder (last folder in the hierarchy)
+    const folderLabel = entity.folder?.label || entity.folder?.name || ''
+
+    // Get product and version names separately
+    const productName = entity.product?.name || ''
+    const versionName = entity.name || ''
+
+    // Build path: folder / product / version
+    return [folderLabel, productName, versionName].filter(Boolean).join(' / ')
+  }, [entityDetails])
+
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
     if ((!versionIds.length || !selectedVersion) && !isFetchingReviewables) {
@@ -245,6 +286,29 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     }
   }
 
+  const toggleMinimized = useCallback(() => {
+    setMinimizedWindow(!minimizedWindow)
+  }, [minimizedWindow, setMinimizedWindow])
+
+  // Handle keyboard shortcut for toggling minimized window (C key)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // abort if modifier keys are pressed
+      if (e.ctrlKey || e.altKey || e.metaKey) return
+
+      // Toggle minimized window on 'c' key
+      if (e.key === 'c') {
+        toggleMinimized()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [toggleMinimized])
+
   const reviewables = selectedVersion?.reviewables || []
 
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
@@ -253,29 +317,50 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   return (
     <ViewerProvider selectedVersionId={selectedVersion?.id}>
-      <Styled.Container className="grid">
-        <Styled.PlayerToolbar>
-          <VersionSelectorTool
-            versions={versionsAndReviewables}
-            selected={versionIds[0]}
-            onChange={handleVersionChange}
-          />
-          {hasMultipleProducts && (
-            <ReviewVersionDropdown
-              options={productOptions}
-              placeholder="Select a product"
-              prefix="Product: "
-              value={selectedProductId}
-              onChange={handleProductChange}
-              valueProps={{ className: 'product-dropdown' }}
-              tooltip="Select a product to view its versions reviewables"
-              shortcut={''}
-              valueIcon={selectedProduct?.icon || ''}
-              valueColor={selectedProduct?.color}
-            />
-          )}
-        </Styled.PlayerToolbar>
-        {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+      <Styled.Container className={minimizedWindow ? 'grid ' : 'grid minimized'}>
+        {minimizedWindow && (
+          <Styled.PlayerToolbar>
+            <>
+              <VersionSelectorTool
+                versions={versionsAndReviewables}
+                selected={versionIds[0]}
+                onChange={handleVersionChange}
+              />
+              {hasMultipleProducts && (
+                <ReviewVersionDropdown
+                  options={productOptions}
+                  placeholder="Select a product"
+                  prefix="Product: "
+                  value={selectedProductId}
+                  onChange={handleProductChange}
+                  valueProps={{ className: 'product-dropdown' }}
+                  tooltip="Select a product to view its versions reviewables"
+                  shortcut={''}
+                  valueIcon={selectedProduct?.icon || ''}
+                  valueColor={selectedProduct?.color}
+                />
+              )}
+            </>
+          </Styled.PlayerToolbar>
+        )}
+
+          <Styled.MinimizedToolbar className={minimizedWindow ? 'minimized' : ''}>
+            {!minimizedWindow && versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
+            <Styled.ButtonGroup>
+              <Button
+                icon={'dock_to_left'}
+                className={minimizedWindow ? 'details active' : 'details'}
+                data-tooltip={minimizedWindow ? 'Toggle to show details' : 'Toggle to hide all'}
+                data-tooltip-position="bottom"
+                data-shortcut={'C'}
+                onClick={toggleMinimized}
+              >
+                Details
+              </Button>
+              {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+            </Styled.ButtonGroup>
+          </Styled.MinimizedToolbar>
+
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
           <ViewerComponent
             projectName={projectName}
@@ -290,21 +375,25 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             onUpload={handleUploadAction}
           />
         </Styled.FullScreenWrapper>
-        <Styled.RightToolBar style={{ zIndex: 1100 }}>
-          <ReviewablesSelector
-            reviewables={playable}
-            selected={reviewableIds}
-            onChange={handleReviewableChange}
-            onUpload={handleUploadAction(true)}
+        {minimizedWindow && (
+          <Styled.RightToolBar style={{ zIndex: 1100 }}>
+            <ReviewablesSelector
+              reviewables={playable}
+              selected={reviewableIds}
+              onChange={handleReviewableChange}
+              onUpload={handleUploadAction(true)}
+              projectName={projectName}
+            />
+            <div id="annotation-tools" style={{ position: 'relative' }}></div>
+          </Styled.RightToolBar>
+        )}
+        {minimizedWindow && (
+          <ViewerDetailsPanel
+            versionIds={versionIds}
             projectName={projectName}
+            noVersions={noVersions}
           />
-          <div id="annotation-tools" style={{ position: 'relative' }}></div>
-        </Styled.RightToolBar>
-        <ViewerDetailsPanel
-          versionIds={versionIds}
-          projectName={projectName}
-          noVersions={noVersions}
-        />
+        )}
       </Styled.Container>
     </ViewerProvider>
   )
