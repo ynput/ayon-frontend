@@ -589,6 +589,7 @@ export type FolderType = {
   name: string
   original_name?: string
   shortName?: string
+  color?: string
   icon?: string
 }
 export type TaskType = {

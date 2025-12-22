@@ -1,5 +1,5 @@
 // React imports
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
@@ -30,6 +30,7 @@ import { createFilterFromSlicer, useOverviewViewSettings } from '@shared/contain
 import { useSlicerContext } from '@context/SlicerContext'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
+import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextType | undefined>(undefined)
 
@@ -82,10 +83,54 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     entityType: 'task',
   })
 
-  // Use the shared hook to handle filter logic
+  // Stable default filter to prevent unnecessary re-renders
+  const EMPTY_FILTER = useMemo(() => ({ conditions: [] }), [])
+
+  // Separate the combined filters into task and folder filters
+  const { task: taskFilter = EMPTY_FILTER, folder: folderFilter = EMPTY_FILTER } = useMemo(() => {
+    return splitFiltersByScope(
+      queryFilters,
+      ['task', 'folder'],
+      { fallbackScope: 'task' },
+      {
+        // Map filter IDs that don't have scope prefix to their scope
+        taskType: 'task',
+        assignees: 'task',
+        folderType: 'folder',
+      },
+    )
+  }, [queryFilters])
+
+  // Separate slicer filters into different types
+  const {
+    task: [slicerTaskFilter],
+    folder: [slicerFolderFilter],
+  } = useMemo(() => {
+    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, ['task', 'folder'], {
+      status: 'task', // status defaults to task for overview
+      taskType: 'task',
+      assignees: 'task',
+      folderType: 'folder',
+    })
+  }, [sliceFilter])
+
+  // Combine slicer filters with task/folder filters
+  const combinedTaskFilter = useQueryFilters({
+    queryFilters: taskFilter,
+    sliceFilter: slicerTaskFilter,
+    config: { searchKey: 'name' },
+  })
+  const combinedFolderFilter = useQueryFilters({
+    queryFilters: folderFilter,
+    sliceFilter: slicerFolderFilter,
+    config: { searchKey: 'name' },
+  })
+
+  // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
     sliceFilter,
+    config: { searchKey: 'name' },
   })
 
   const selectedFolders = useSelectedFolders({
@@ -107,10 +152,15 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
-    queryFilters: {
-      filter: queryFiltersResult.filter,
-      filterString: queryFiltersResult.filterString,
-      search: queryFiltersResult.search,
+    taskFilters: {
+      filter: combinedTaskFilter.filter,
+      filterString: combinedTaskFilter.filterString,
+      search: combinedTaskFilter.search,
+    },
+    folderFilters: {
+      filter: combinedFolderFilter.filter,
+      filterString: combinedFolderFilter.filterString,
+      search: combinedFolderFilter.search,
     },
     expanded,
     sorting: sorting,
@@ -145,11 +195,22 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         fetchNextPage,
         reloadTableData,
         taskGroups,
-        // query filters
+        // Separate task and folder filters
+        taskFilters: {
+          filter: combinedTaskFilter.filter,
+          filterString: combinedTaskFilter.filterString,
+          search: combinedTaskFilter.search,
+        },
+        folderFilters: {
+          filter: combinedFolderFilter.filter,
+          filterString: combinedFolderFilter.filterString,
+          search: combinedFolderFilter.search,
+        },
+        // Backward compatibility for ProjectTableProvider (uses taskFilters)
         queryFilters: {
-          filter: queryFiltersResult.filter,
-          filterString: queryFiltersResult.filterString,
-          search: queryFiltersResult.search,
+          filter: combinedTaskFilter.filter,
+          filterString: combinedTaskFilter.filterString,
+          search: combinedTaskFilter.search,
         },
         setQueryFilters,
         // Additional filter contexts for dual filtering system

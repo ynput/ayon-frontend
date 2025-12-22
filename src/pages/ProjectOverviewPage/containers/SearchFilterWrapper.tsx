@@ -61,7 +61,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     assignees: allAssignees,
     tags: projectInfo?.tags?.map((t) => t.name) || [],
     productTypes: projectInfo?.productTypes,
-    ...customData
+    ...customData,
     // TODO: find a way of getting all attribute values when all tasks are not loaded
   }
 

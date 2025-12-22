@@ -99,11 +99,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
         e.preventDefault()
         const validatedValue = validateAndConvertValue(value)
 
-        if (!hasValueChanged(validatedValue)) {
-          onCancel?.()
-          return
-        }
-
+        // Always trigger onChange on Enter, even if value hasn't changed
         if (type === 'string' || validatedValue !== null) {
           onChange(validatedValue, 'Enter')
         } else {

@@ -22,7 +22,9 @@ export default function useKeyboardNavigation() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (!target?.closest('table')) {
+      // is target inside table or not body?
+      // NOTE: we must check for body because there is a bug that means the active element goes to body not the table td
+      if (!target?.closest('table') && !target.closest('body')) {
         return
       }
 
@@ -133,7 +135,11 @@ export default function useKeyboardNavigation() {
             const entity = getEntityById(rowId)
             // Check if entity is restricted - prevent opening details panel
             const isRestricted = entity && isEntityRestricted(entity.entityType)
-            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task') && !isRestricted) {
+            if (
+              entity &&
+              (entity.entityType === 'folder' || entity.entityType === 'task') &&
+              !isRestricted
+            ) {
               setSelectedEntity({
                 entityId: rowId,
                 entityType: entity.entityType,

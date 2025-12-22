@@ -39,7 +39,13 @@ export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(
       <StyledCheckbox
         {...props}
         checked={value}
-        onChange={(e) => onChange((e.target as HTMLInputElement).checked)}
+        onChange={(e) => {
+          const newValue = (e.target as HTMLInputElement).checked
+          // For checkboxes, every click is a value change, but we check anyway for consistency
+          if (newValue !== value) {
+            onChange(newValue, 'Click')
+          }
+        }}
         ref={ref}
         type="checkbox"
         disabled={isReadOnly}

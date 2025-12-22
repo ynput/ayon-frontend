@@ -12,7 +12,7 @@ import Slicer from '@containers/Slicer'
 import { Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { FilterFieldType } from '@shared/components'
+import { ScopeWithFilterTypes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -36,12 +36,16 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 
-const searchFilterTypes: FilterFieldType[] = [
-  'attributes',
-  'status',
-  'assignees',
-  'tags',
-  'taskType',
+// Configure scope-specific filter types for the search filter
+const scopesConfig: ScopeWithFilterTypes[] = [
+  {
+    scope: 'task',
+    filterTypes: ['status', 'tags', 'taskType', 'assignees', 'attributes', 'name'],
+  },
+  {
+    scope: 'folder',
+    filterTypes: ['status', 'tags', 'folderType', 'attributes', 'name'],
+  },
 ]
 
 const ProjectOverviewPage: FC = () => {
@@ -149,12 +153,12 @@ const ProjectOverviewPage: FC = () => {
               <SearchFilterWrapper
                 queryFilters={displayFilters}
                 onChange={handleFiltersChange}
-                filterTypes={searchFilterTypes}
-                scope="task"
+                scopes={scopesConfig}
                 projectNames={projectName ? [projectName] : []}
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
                 disabledFilters={sliceType ? [sliceType] : []}
+                data={{}}
               />
               <ReloadButton />
               <SwitchButton

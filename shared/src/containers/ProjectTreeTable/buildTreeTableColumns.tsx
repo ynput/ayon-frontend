@@ -22,7 +22,7 @@ import { LinkWidgetData } from './widgets/LinksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
-import { isEntityRestricted } from './utils/restrictedEntity'
+import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { ColumnsConfig, getColumnDisplayConfig } from './types/columnConfig'
 import { upperFirst } from 'lodash'
 
@@ -269,7 +269,7 @@ const buildTreeTableColumns = ({
                 color={row.original.group.color}
                 count={row.original.group.count}
                 isExpanded={row.getIsExpanded()}
-                isEmpty={row.subRows.length === 0 && !row.original.metaType}
+                isEmpty={row.original.group.count === 0}
                 toggleExpanded={row.getToggleExpandedHandler()}
               />
             ) : (
@@ -391,7 +391,7 @@ const buildTreeTableColumns = ({
         return (
           <TableCellContent
             id={cellId}
-            className={clsx('entityType', type, { loading: row.original.isLoading })}
+            className={clsx('entityType', READ_ONLY, type, { loading: row.original.isLoading })}
             tabIndex={0}
           >
             <Icon icon={getEntityTypeIcon(type)} /> {upperFirst(value)}

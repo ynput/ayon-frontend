@@ -184,7 +184,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
       },
       buildAddToListMenu([
         ...buildHierarchicalMenuItems(
-          tasksLists.data,
+          tasksLists,
           selectedEntities,
           () => false, // icons optional - hide for compactness
         ),

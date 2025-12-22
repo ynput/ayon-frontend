@@ -100,10 +100,11 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     const isMultiSelect = !!type?.includes('list')
 
-    const handleChange = (value: string[]) => {
+    const handleChange = (newValue: string[]) => {
       let filteredValue: string | string[] = enableCustomValues
-        ? value
-        : value.filter((v) => options.find((o) => o.value === v))
+        ? newValue
+        : newValue.filter((v) => options.find((o) => o.value === v))
+
       if (type?.includes('list')) {
         onChange(filteredValue, 'Click')
       } else {

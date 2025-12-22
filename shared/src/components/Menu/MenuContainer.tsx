@@ -1,6 +1,5 @@
 import React, { useEffect, ReactNode } from 'react'
 import { useMenuContext } from '@shared/context/MenuContext'
-import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import * as Styled from './Menu.styled'
@@ -28,8 +27,7 @@ export const MenuContainer: React.FC<MenuContainerProps> = ({
   children,
   ...props
 }) => {
-  const navigate = useNavigate()
-  const { menuOpen, setMenuOpen } = useMenuContext()
+  const { menuOpen, setMenuOpen, navigate } = useMenuContext()
   const isOpen = menuOpen === id
 
   const handleClose = () => {
@@ -39,7 +37,11 @@ export const MenuContainer: React.FC<MenuContainerProps> = ({
   const handleNavigate = (path?: string) => {
     console.log('navigate and close')
     handleClose()
-    if (path) navigate(path)
+    if (!navigate && path) {
+      console.log('navigate not found')
+    } else if (navigate && path) {
+      navigate(path)
+    }
   }
 
   if (!isOpen) return null
