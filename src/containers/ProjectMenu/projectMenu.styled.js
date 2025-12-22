@@ -47,6 +47,12 @@ export const ProjectSidebar = styled(Sidebar)`
       border-radius: 0;
       top: 0 !important;
       height: 100%;
+      background: transparent !important;
+
+      /* Make sure table inside is also transparent */
+      table {
+        background: transparent !important;
+      }
     }
   }
 
