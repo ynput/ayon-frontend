@@ -207,6 +207,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
     onRowSelectionChange,
     rowPinning,
     onRowPinningChange,
+    onContextMenu
   } = useSimpleTableContext()
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
@@ -587,6 +588,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
                   key={row.id}
                   id={row.id}
                   {...pt?.row}
+                  onContextMenu={onContextMenu}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                     ...pt?.row?.style, // custom styles to be passed

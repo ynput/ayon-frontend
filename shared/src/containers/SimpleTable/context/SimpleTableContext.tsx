@@ -1,6 +1,19 @@
-import { ExpandedState, RowPinningState, RowSelectionState, Table } from '@tanstack/react-table'
-import { createContext, useContext, ReactNode } from 'react'
+import { ExpandedState, RowPinningState, RowSelectionState } from '@tanstack/react-table'
+import { createContext, ReactNode, useCallback, useContext } from 'react'
+import { ContextMenuItemType, useCreateContextMenu } from '@shared/containers'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
+type DefaultMenuItem = 'expand-collapse'
+
+// Simplified context menu item constructor for SimpleTable
+export type SimpleTableContextMenuItemConstructor = (
+  e: React.MouseEvent<HTMLElement>,
+  clickedRow: any,
+  selectedRows: any[],
+  meta: {
+    selectedRows: string[]
+  },
+) => ContextMenuItemType | ContextMenuItemType[] | undefined
 interface SimpleTableContextValue {
   // forwarded from props
   expanded?: ExpandedState
@@ -12,6 +25,9 @@ interface SimpleTableContextValue {
   rowPinning?: RowPinningState
   onRowPinningChange?: (rowPinning: RowPinningState) => void
   data?: any
+  menuItems: (SimpleTableContextMenuItemConstructor | string)[]
+  onContextMenu?: (e: React.MouseEvent<HTMLElement>) => void
+  handleAltClick?: (e: React.MouseEvent<HTMLElement>) => void
 }
 
 const SimpleTableContext = createContext<SimpleTableContextValue | undefined>(undefined)
@@ -27,10 +43,196 @@ interface SimpleTableProviderProps {
   rowPinning?: SimpleTableContextValue['rowPinning']
   onRowPinningChange?: SimpleTableContextValue['onRowPinningChange']
   data?: SimpleTableContextValue['data']
+  menuItems?: SimpleTableContextValue['menuItems']
 }
+const getAllDescendantIds = (rowId: string, data: any): string[] => {
+  const descendantIds: string[] = []
 
-export const SimpleTableProvider = ({ children, ...props }: SimpleTableProviderProps) => {
-  return <SimpleTableContext.Provider value={{ ...props }}>{children}</SimpleTableContext.Provider>
+  // If data is a Map, get the row directly
+  const row = data instanceof Map ? data.get(rowId) : null
+
+  if (!row) return descendantIds
+
+  const collectDescendants = (children: any[]): void => {
+    for (const child of children) {
+      descendantIds.push(child.id)
+      if (child.subRows && child.subRows.length > 0) {
+        collectDescendants(child.subRows)
+      }
+    }
+  }
+
+  if (row.subRows && row.subRows.length > 0) {
+    collectDescendants(row.subRows)
+  }
+
+  return descendantIds
+}
+export const SimpleTableProvider = ({
+  children,
+  menuItems: inputMenuItems,
+  ...props
+}: SimpleTableProviderProps) => {
+  const { expanded, setExpanded, rowSelection } = props
+  const tableData = props.data // Map of row data
+
+  // Context menu hook
+  const [cellContextMenuShow] = useCreateContextMenu([])
+
+  const toggleExpandAll = useCallback(
+    (rowIds: string[], expandAll: boolean | undefined) => {
+      const expandedState = typeof expanded === 'object' ? expanded : {}
+      const newExpandedState = { ...expandedState }
+
+      rowIds.forEach((rowId) => {
+        // Get all children of the rowId using tableData
+        const childIds = getAllDescendantIds(rowId, tableData)
+        const isExpanded = expandedState[rowId] || false
+
+        if (expandAll !== undefined ? !expandAll : isExpanded) {
+          // Collapse all children
+          newExpandedState[rowId] = false
+          childIds.forEach((id) => {
+            newExpandedState[id] = false
+          })
+        } else {
+          // Expand all children
+          newExpandedState[rowId] = true
+          childIds.forEach((id) => {
+            newExpandedState[id] = true
+          })
+        }
+      })
+
+      setExpanded?.(newExpandedState)
+    },
+    [expanded, setExpanded, tableData],
+  )
+
+  const expandCollapseChildrenItems: SimpleTableContextMenuItemConstructor = (
+    e,
+    clickedRow,
+    selectedRows,
+    meta,
+  ) => {
+    // Check if the row has children (subRows)
+    const hasChildren = clickedRow.subRows && clickedRow.subRows.length > 0
+
+    return [
+      {
+        label: 'Expand children',
+        icon: 'expand_less',
+        command: () => toggleExpandAll(meta.selectedRows, true),
+        hidden: !hasChildren,
+        shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
+      },
+      {
+        label: 'Collapse children',
+        icon: 'collapse_all',
+        command: () => toggleExpandAll(meta.selectedRows, false),
+        hidden: !hasChildren,
+        shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
+      },
+    ]
+  }
+
+  const builtInMenuItems: Record<DefaultMenuItem, SimpleTableContextMenuItemConstructor> = {
+    ['expand-collapse']: expandCollapseChildrenItems,
+  }
+
+  // Context menu handler
+  const onContextMenu = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      const target = e.target as HTMLElement
+      e.preventDefault()
+      e.stopPropagation()
+      const tdEl = target.closest('td')
+      const rowId = tdEl?.parentElement?.id
+
+      if (!rowId || !tableData) return
+
+      // Get clicked row data from Map
+      const clickedRowData = tableData.get(rowId)
+      if (!clickedRowData) return
+
+      // Get selected rows IDs and data
+      let selectedRowsIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
+
+      // If no rows are selected, use the clicked row
+      if (selectedRowsIds.length === 0) {
+        selectedRowsIds = [rowId]
+      }
+
+      const selectedRowsData = selectedRowsIds
+        .map((id) => tableData.get(id))
+        .filter(Boolean)
+
+      // Remove duplicates based on id
+      const filteredSelectedRowsData = [
+        ...new Map(selectedRowsData.map((row: any) => [row.id, row])).values(),
+      ]
+
+      const constructedMenuItems = inputMenuItems?.flatMap((constructor) =>
+        typeof constructor === 'function'
+          ? constructor(e, clickedRowData, filteredSelectedRowsData, {
+              selectedRows: selectedRowsIds,
+            })
+          : constructor in builtInMenuItems
+          ? builtInMenuItems[constructor as DefaultMenuItem](
+              e,
+              clickedRowData,
+              filteredSelectedRowsData,
+              {
+                selectedRows: selectedRowsIds,
+              },
+            )
+          : [],
+      )
+
+      cellContextMenuShow(e, constructedMenuItems)
+    },
+    [inputMenuItems, rowSelection, builtInMenuItems, cellContextMenuShow, tableData],
+  )
+
+  const handleAltClick = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      if (e.altKey) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        // Get the row ID from the event target
+        const rowId = e.currentTarget.id
+        if (!rowId) return
+
+        // Check if this row is in the current selection
+        const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
+        const isInSelection = selectedIds.includes(rowId)
+
+        // If the clicked row is in the selection, use all selected rows, otherwise just the clicked row
+        const idsToToggle = isInSelection ? selectedIds : [rowId]
+
+        // Check if the clicked row is expanded
+        const isExpanded = expanded && (expanded as Record<string, boolean>)[rowId]
+
+        toggleExpandAll(idsToToggle, !isExpanded)
+      }
+    },
+    [rowSelection, expanded, toggleExpandAll],
+  )
+
+  return (
+    <SimpleTableContext.Provider
+      value={{
+        ...props,
+        rowSelection,
+        menuItems: inputMenuItems || [],
+        onContextMenu,
+        handleAltClick,
+      }}
+    >
+      {children}
+    </SimpleTableContext.Provider>
+  )
 }
 
 export const useSimpleTableContext = () => {
