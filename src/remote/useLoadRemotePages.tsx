@@ -5,11 +5,15 @@ import LoadingPage from '@pages/LoadingPage'
 
 interface ProjectRemoteLoaderProps {
   fallbacks?: Map<string, any>
-  moduleKey: 'Project' | 'Route'
+  moduleKey: 'Studio' | 'Project' | 'Route'
   skip?: boolean
 }
 
-export const useLoadRemotePages = ({ fallbacks, moduleKey, skip = false }: ProjectRemoteLoaderProps) => {
+export const useLoadRemotePages = ({
+  fallbacks,
+  moduleKey,
+  skip = false,
+}: ProjectRemoteLoaderProps) => {
   const { modules, remotesInitialized } = useRemoteModules()
 
   const pageModules = useMemo<ModuleSpec<any>[]>(() => {

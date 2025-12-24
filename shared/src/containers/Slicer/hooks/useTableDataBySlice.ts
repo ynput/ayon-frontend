@@ -1,4 +1,3 @@
-import { useAppSelector } from '@state/store'
 import { useEffect, useMemo, useState } from 'react'
 import { useHierarchyTable } from '@shared/hooks'
 import useUsersTable from './useUsersTable'
@@ -6,9 +5,10 @@ import useProjectAnatomySlices from './useProjectAnatomySlices'
 import { Slice, SliceData, SliceTypeField, TableData } from '../types'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { SliceType } from '@shared/containers/Slicer'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '../context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { useProjectContext } from '@shared/context'
 
 interface TableDataBySliceProps {
   sliceFields: SliceTypeField[]
@@ -37,51 +37,51 @@ const getSomeValue = (field: string): SimpleTableRow => ({
   },
 })
 
+export const defaultSliceOptions: SliceTypeField[] = [
+  {
+    label: 'Hierarchy',
+    value: 'hierarchy' as SliceType,
+    icon: 'table_rows',
+  },
+  {
+    label: 'Assignee',
+    value: 'assignees' as SliceType,
+    icon: 'person',
+  },
+  {
+    label: 'Status',
+    value: 'status' as SliceType,
+    icon: 'arrow_circle_right',
+  },
+  {
+    label: 'Task Type',
+    value: 'taskType' as SliceType,
+    icon: getEntityTypeIcon('task'),
+  },
+  {
+    label: 'Folder Type',
+    value: 'folderType' as SliceType,
+    icon: getEntityTypeIcon('folder'),
+  },
+  {
+    label: 'Product Type',
+    value: 'productType' as SliceType,
+    icon: getEntityTypeIcon('product'),
+  },
+  {
+    label: 'Author',
+    value: 'author' as SliceType,
+    icon: 'attribution',
+  },
+]
+
 const useTableDataBySlice = ({
   sliceFields,
   entityTypes = [],
 }: TableDataBySliceProps): TableData => {
   const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
-  const projectName = useAppSelector((state) => state.project.name)
+  const { projectName } = useProjectContext()
   const { formatAttribute } = useExtraSlices()
-
-  const defaultSliceOptions: SliceTypeField[] = [
-    {
-      label: 'Hierarchy',
-      value: 'hierarchy' as SliceType,
-      icon: 'table_rows',
-    },
-    {
-      label: 'Assignee',
-      value: 'assignees' as SliceType,
-      icon: 'person',
-    },
-    {
-      label: 'Status',
-      value: 'status' as SliceType,
-      icon: 'arrow_circle_right',
-    },
-    {
-      label: 'Task Type',
-      value: 'taskType' as SliceType,
-      icon: getEntityTypeIcon('task'),
-    },
-    {
-      label: 'Folder Type',
-      value: 'taskType' as SliceType,
-      icon: getEntityTypeIcon('folder'),
-    },
-    {
-      label: 'Product Type',
-      value: 'productType' as SliceType,
-      icon: getEntityTypeIcon('product'),
-    },
-    {
-      label: 'Author',
-      value: 'author' as SliceType,
-      icon: 'attribution',
-    },
-  ]
 
   const sliceOptions = sliceFields
     .filter((f) => defaultSliceOptions.some((o) => o.value === f.value))

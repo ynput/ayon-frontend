@@ -8,7 +8,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         const { payload } = arg
         const state = getState()
         // @ts-expect-error - user is not typed in the state
-        const user = state.user.name
+        const user = state.user?.name
 
         // Optimistically update the view list
         const patch = dispatch(

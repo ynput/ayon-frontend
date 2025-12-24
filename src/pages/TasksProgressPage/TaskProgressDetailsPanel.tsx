@@ -8,7 +8,7 @@ import { $Any } from '@types'
 import { openViewer } from '@state/viewer'
 import { useScopedDetailsPanel } from '@shared/context'
 import useGoToEntity from '@hooks/useGoToEntity'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import { selectProgress } from '@state/progress'
 
 type TaskProgressDetailsPanelProps = {

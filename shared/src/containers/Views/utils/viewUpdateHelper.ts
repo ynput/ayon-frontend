@@ -23,7 +23,7 @@ export type UpdateViewSettingsFn = (
   updatedSettings: any,
   localStateSetter: (value: any) => void,
   newLocalValue: any,
-  options?: UpdateOptions,
+  options: UpdateOptions,
 ) => Promise<void>
 
 export const updateViewSettings = async (
@@ -35,6 +35,11 @@ export const updateViewSettings = async (
   onCreateView: (payload: CreateViewApiArg) => Promise<EntityIdResponse>,
 ): Promise<void> => {
   try {
+    // check the correct number of arguments are provided
+    if (!onCreateView) {
+      throw 'Insufficient arguments provided to updateViewSettings'
+    }
+
     const {
       viewSettings,
       viewType,
@@ -45,7 +50,6 @@ export const updateViewSettings = async (
       onSettingsChanged,
     } = viewContext
     if (!viewType) throw 'No view type provided for updating view settings'
-    if (!projectName) throw 'No project name provided for updating view settings'
 
     // Immediately update local state for fast UI response
     localStateSetter(newLocalValue)

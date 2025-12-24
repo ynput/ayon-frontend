@@ -42,4 +42,4 @@ export const viewTypes = [
   'reviews',
   'reports',
 ] as const
-export type ViewType = (typeof viewTypes)[number]
+export type ViewType = (typeof viewTypes)[number] | string

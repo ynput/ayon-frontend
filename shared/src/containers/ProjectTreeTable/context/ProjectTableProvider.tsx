@@ -83,8 +83,6 @@ export interface ProjectTableProviderProps {
   reloadTableData: () => void
 
   // Filters
-  filters: Filter[]
-  setFilters: (filters: Filter[]) => void
   queryFilters: {
     filter: QueryFilter | undefined
     filterString?: string
@@ -148,8 +146,6 @@ export const ProjectTableProvider = ({
   scopes,
   groups,
   groupRowFunc,
-  filters,
-  setFilters,
   queryFilters,
   updateShowHierarchy,
   toggleExpanded,
@@ -323,9 +319,6 @@ export const ProjectTableProvider = ({
         fetchNextPage,
         reloadTableData,
         groups,
-        // filters
-        filters,
-        setFilters,
         queryFilters,
         // hierarchy
         showHierarchy,

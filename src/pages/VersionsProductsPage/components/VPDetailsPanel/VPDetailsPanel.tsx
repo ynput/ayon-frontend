@@ -18,7 +18,7 @@ import { useProjectContext } from '@shared/context'
 import useGoToEntity from '@hooks/useGoToEntity'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 
 type VPDetailsPanelProps = {}
 

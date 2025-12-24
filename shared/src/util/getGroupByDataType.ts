@@ -22,7 +22,7 @@ export const getGroupByDataType = (
   groupBy: TableGroupBy | undefined,
   attribFields: (ProjectTableAttribute | AttributeModel)[],
 ): DataType => {
-  if (!groupBy?.id) return 'string'
+  if (!groupBy?.id || typeof groupBy.id !== 'string') return 'string'
 
   const groupById = groupBy.id
 

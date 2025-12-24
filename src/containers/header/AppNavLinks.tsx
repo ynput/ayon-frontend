@@ -8,10 +8,10 @@ import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
 import { useURIContext } from '@shared/context'
 
-interface NavLinkItem {
-  name: string
-  path: string
-  module: string
+export interface NavLinkItem {
+  name?: string
+  path?: string
+  module?: string
   node?: ReactNode | 'spacer'
   shortcut?: string
   tooltip?: string
@@ -52,7 +52,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
       // find the first item that this user has access
       const firstItem = links.find((item) => item.accessLevels?.every((level) => access[level]))
 
-      if (firstItem) {
+      if (firstItem && firstItem.path) {
         navigate(firstItem.path)
       } else {
         // last resort, navigate to home

@@ -2,11 +2,13 @@
 
 import { ProjectModel, useGetProjectQuery, UserModel } from '@shared/api'
 import { createContext, FC, useContext } from 'react'
-import router from 'react-router-dom'
 import type { toast } from 'react-toastify'
 import { useGlobalContext } from './GlobalContext'
+import { RemotePageProps } from '@shared/components'
 
 type ToastFunc = typeof toast
+
+export interface RemoteAddonProjectProps extends RemotePageProps {}
 
 export type RemoteAddonProjectComponent = FC<RemoteAddonProjectProps>
 export type RemoteAddonProject = {
@@ -14,19 +16,8 @@ export type RemoteAddonProject = {
   component: RemoteAddonProjectComponent
   name: string
   module: string
-}
-
-export type RouterTypes = {
-  useParams: typeof router.useParams
-  useNavigate: typeof router.useNavigate
-  useLocation: typeof router.useLocation
-  useSearchParams: typeof router.useSearchParams
-}
-
-export interface RemoteAddonProjectProps {
-  projectName: string
-  router: RouterTypes
-  toast?: any
+  viewType?: string // if the addon is using views
+  slicer?: { fields: string[] }
 }
 
 // types for props passed to the provider

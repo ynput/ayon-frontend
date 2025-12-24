@@ -1,4 +1,4 @@
-import { UseExtraSlices } from '@context/SlicerContext'
+import { UseExtraSlices } from '@shared/containers/Slicer'
 import { useProjectContext } from '@shared/context'
 import { AttributeModel } from '@shared/api'
 

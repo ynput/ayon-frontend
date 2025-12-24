@@ -36,8 +36,6 @@ export interface ProjectTableContextType {
   groups: ProjectTableProviderProps['groups']
 
   // Filters
-  filters: ProjectTableProviderProps['filters']
-  setFilters: ProjectTableProviderProps['setFilters']
   queryFilters: ProjectTableProviderProps['queryFilters']
 
   // Hierarchy

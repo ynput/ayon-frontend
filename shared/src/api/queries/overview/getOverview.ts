@@ -93,6 +93,7 @@ export type GetGroupedTasksListArgs = {
   folderIds?: string[]
   desc?: boolean
   sortBy?: string
+  groupCount?: number // optional override for all groups
 }
 
 // Define the page param type for infinite query
@@ -494,13 +495,14 @@ const injectedApi = enhancedApi.injectEndpoints({
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
       queryFn: async (
-        { projectName, groups, search, folderFilter, folderIds, desc, sortBy },
+        { projectName, groups, search, folderFilter, folderIds, desc, sortBy, groupCount },
         api,
       ) => {
         try {
           let promises = []
           for (const group of groups) {
-            const count = group.count || 500
+            // Determine count for this group - use argument override, else group count, else default
+            const count = groupCount || group.count || 500
 
             const queryParams: GetTasksListQueryVariables = {
               projectName,

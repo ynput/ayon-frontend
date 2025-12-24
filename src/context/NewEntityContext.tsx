@@ -13,7 +13,7 @@ import {
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
 import { parseAndFormatName } from '@shared/util'
-import { useSlicerContext } from './SlicerContext'
+import { useSlicerContext } from '../../shared/src/containers/Slicer/context/SlicerContext'
 import { isEmpty } from 'lodash'
 import { useProjectContext } from '@shared/context'
 

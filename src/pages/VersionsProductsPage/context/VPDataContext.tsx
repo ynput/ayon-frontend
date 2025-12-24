@@ -39,7 +39,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
