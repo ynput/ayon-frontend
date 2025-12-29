@@ -16,7 +16,7 @@ import {
   convertColumnConfigToTanstackStates,
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
-import { UpdateViewSettingsFn, useViewUpdateHelper } from '../../utils/viewUpdateHelper'
+import { UpdateViewSettingsFn } from '../../utils/viewUpdateHelper'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
