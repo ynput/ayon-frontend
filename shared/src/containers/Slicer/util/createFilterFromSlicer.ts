@@ -1,6 +1,6 @@
-import { AttributeModel } from '../ProjectTreeTable'
-import { ProjectTableAttribute } from '../ProjectTreeTable/hooks/useAttributesList'
-import { SelectionData, SliceDataItem, SliceFilter, SliceType } from './types'
+import { AttributeModel } from '../../ProjectTreeTable'
+import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
+import { SelectionData, SliceDataItem, SliceFilter, SliceType } from '../types'
 
 interface FilterMapping {
   id: string

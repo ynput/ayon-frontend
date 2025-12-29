@@ -146,7 +146,7 @@ export const useLoadModules = <T extends any[]>(
         console.error('Error loading modules', error)
         setIsLoading(false)
       })
-  }, [skip, modules, JSON.stringify(moduleSpecs)])
+  }, [skip, modules, JSON.stringify(moduleSpecs), results])
 
   // Helper function to initialize results
   function initializeResults(specs: ModuleSpec<T[number]>[]): ModuleResult<T[number]>[] {

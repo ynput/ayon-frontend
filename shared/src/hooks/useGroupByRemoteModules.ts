@@ -3,11 +3,12 @@ import { GroupSettingsFallback } from '../containers/ProjectTreeTable/components
 import { EntityGroup, QueryFilter } from '@shared/api'
 import { TableGroupBy } from '../containers/ProjectTreeTable/context'
 import { usePowerpack } from '@shared/context'
+import { Filter } from '@ynput/ayon-react-components'
 
 type GetGroupQueriesParams = {
   groups: EntityGroup[]
   taskGroups?: EntityGroup[] // deprecated, but keep for backward compatibility
-  filters: QueryFilter | undefined
+  filters: QueryFilter | Filter[] | undefined
   groupBy: TableGroupBy
   groupPageCounts: Record<string, number>
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type { MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { InputSwitch } from '@ynput/ayon-react-components'
 import { UserImage } from '@shared/components'
@@ -27,6 +28,12 @@ const FlexWrapper = styled.div`
   gap: var(--base-gap-small);
 `
 
+const FlexWrapperEnd = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  justify-content: end;
+`
+
 const DeveloperSwitch = styled.div`
   display: flex;
   align-items: center;
@@ -36,28 +43,33 @@ const DeveloperSwitch = styled.div`
   margin: 4px 0;
   cursor: pointer;
   z-index: 10;
-
   transition: background-color 0.2s;
-
-  background-color: ${({ $isChecked }) =>
-    $isChecked
-      ? 'var(--color-hl-developer-container)'
-      : 'var(--md-sys-color-surface-container-highest)'};
+  background-color: var(--md-sys-color-surface-container-highest);
 
   & > span {
-    color: ${({ $isChecked }) => ($isChecked ? 'var(--color-hl-developer)' : 'inherit')};
     user-select: none;
   }
 
   &:hover {
-    background-color: ${({ $isChecked }) =>
-      $isChecked
-        ? 'var(--color-hl-developer-container-hover)'
-        : 'var(--md-sys-color-surface-container-highest-hover)'};
+    background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+
+  &.active {
+    background-color: var(--color-hl-developer-container);
+
+    & > span {
+      color: var(--color-hl-developer);
+    }
+
+    &:hover {
+      background-color: var(--color-hl-developer-container-hover);
+    }
   }
 `
 
 const StyledSwitch = styled(InputSwitch)`
+  pointer-events: none;
+
   .switch-body input:checked + .slider {
     background-color: var(--color-hl-developer);
     border-color: var(--color-hl-developer);
@@ -69,14 +81,22 @@ const StyledSwitch = styled(InputSwitch)`
       }
     }
   }
-  pointer-events: none;
 `
 
-const Header = () => {
+const ProjectsButton = styled(HeaderButton)`
+  align-items: center;
+  display: flex;
+`
+
+const UserButton = styled(HeaderButton)`
+  padding: 6px;
+`
+
+const Header: React.FC = () => {
   const dispatch = useAppDispatch()
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
-  const handleToggleMenu = (menu) => toggleMenuOpen(menu)
-  const handleSetMenu = (menu) => setMenuOpen(menu)
+  const handleToggleMenu = (menu: string | false) => toggleMenuOpen(menu)
+  const handleSetMenu = (menu: string | false) => setMenuOpen(menu)
   const location = useLocation()
   const navigate = useNavigate()
   // get user from redux store
@@ -87,13 +107,13 @@ const Header = () => {
   const { isSnoozing } = useRestart()
 
   // Get developer states
-  const isDeveloper = user?.data?.isDeveloper
+  const isDeveloper = (user?.data as any)?.isDeveloper
   const developerMode = user?.attrib.developerMode
 
   // BUTTON REFS used to attach menu to buttons
-  const helpButtonRef = useRef(null)
-  const userButtonRef = useRef(null)
-  const appButtonRef = useRef(null)
+  const helpButtonRef = useRef<HTMLButtonElement>(null)
+  const userButtonRef = useRef<HTMLButtonElement>(null)
+  const appButtonRef = useRef<HTMLButtonElement>(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -102,7 +122,7 @@ const Header = () => {
       const searchParams = new URLSearchParams(location.search)
 
       // set localStorage to true
-      localStorage.setItem('appMenuOpen', true)
+      localStorage.setItem('appMenuOpen', 'true')
       // then remove 'appMenu' from pathname
       const newPathname = location.pathname.replace('/appMenu', '')
 
@@ -116,9 +136,9 @@ const Header = () => {
     }
   }, [location.pathname, localStorage])
 
-  const handleNavClick = (e) => {
+  const handleNavClick = (e: MouseEvent<HTMLElement>) => {
     // if target us nav, then close menu
-    if (e.target.tagName === 'NAV') handleSetMenu(false)
+    if ((e.target as HTMLElement).tagName === 'NAV') handleSetMenu(false)
   }
 
   // UPDATE USER DATA
@@ -139,7 +159,8 @@ const Header = () => {
       // if the request fails, revert the switch
     } catch (error) {
       console.error(error)
-      toast.error('Unable to update developer mode: ' + error.details)
+      const errorMessage = (error as any)?.details || 'Unknown error'
+      toast.error('Unable to update developer mode: ' + errorMessage)
       // reset switch on error
       dispatch(toggleDevMode(developerMode))
     }
@@ -163,15 +184,11 @@ const Header = () => {
         </Link>
 
         {user.uiExposureLevel >= 500 && (
-          <HeaderButton
+          <ProjectsButton
             icon="event_list"
             label="Projects"
             variant="nav"
             onClick={() => handleToggleMenu('project')}
-            style={{
-              alignItems: 'center',
-              display: 'flex',
-            }}
           />
         )}
 
@@ -179,11 +196,14 @@ const Header = () => {
       </FlexWrapper>
 
       <Breadcrumbs />
-      <FlexWrapper style={{ justifyContent: 'end' }} id="header-menu-right">
+      <FlexWrapperEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
         {isDeveloper && (
-          <DeveloperSwitch $isChecked={developerMode} onClick={handleDeveloperMode}>
+          <DeveloperSwitch
+            className={clsx({ active: developerMode })}
+            onClick={handleDeveloperMode}
+          >
             <span>Developer Mode</span>
             <StyledSwitch checked={developerMode} readOnly />
           </DeveloperSwitch>
@@ -226,21 +246,20 @@ const Header = () => {
         {/* App icon and menu ^^^ */}
 
         {/* User icon and menu vvv */}
-        <HeaderButton
+        <UserButton
           className={clsx({ active: menuOpen === 'user' })}
           onClick={() => handleToggleMenu('user')}
           aria-label="User menu"
           ref={userButtonRef}
           variant="nav"
-          style={{ padding: 6 }}
         >
           <UserImage size={26} name={user?.name} imageKey={avatarKey} />
-        </HeaderButton>
+        </UserButton>
         <MenuContainer id="user" target={userButtonRef.current}>
           <UserMenu user={user} />
         </MenuContainer>
         {/* User icon and menu ^^^ */}
-      </FlexWrapper>
+      </FlexWrapperEnd>
     </nav>
   )
 }

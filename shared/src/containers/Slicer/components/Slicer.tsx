@@ -1,22 +1,26 @@
 import { FC, useEffect, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
-import useTableDataBySlice from './hooks/useTableDataBySlice'
+import useTableDataBySlice from '../hooks/useTableDataBySlice'
 import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { SliceType } from '@shared/containers/Slicer'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable'
-import { useSlicerContext } from '@context/SlicerContext'
 import { RowSelectionState } from '@tanstack/react-table'
-import { SliceTypeField } from './types'
+import { SliceTypeField } from '../types'
+import { useSlicerContext } from '../context/SlicerContext'
 
-interface SlicerProps {
+export interface SlicerProps {
   sliceFields: SliceTypeField[]
   entityTypes?: string[] // entity types
   persistFieldId?: SliceType // when changing slice type, leavePersistentSlice the selected field
 }
 
-const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], persistFieldId }) => {
+export const Slicer: FC<SlicerProps> = ({
+  sliceFields = [],
+  entityTypes = ['task'],
+  persistFieldId,
+}) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const {
     SlicerDropdown,
@@ -93,5 +97,3 @@ const Slicer: FC<SlicerProps> = ({ sliceFields = [], entityTypes = ['task'], per
     </Container>
   )
 }
-
-export default Slicer
