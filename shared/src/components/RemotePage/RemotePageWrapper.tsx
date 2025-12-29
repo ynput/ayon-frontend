@@ -21,6 +21,7 @@ export type RouterTypes = {
 
 interface ViewsWithReportsSettings extends ViewsContextValue {
   viewSettings: GenericViewModel['settings'] | undefined
+  settings: GenericViewModel['settings'] | undefined // for backwards compatibility (reports)
   updateViewSettings: UpdateViewSettingsFn
 }
 
@@ -44,6 +45,7 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
   Component,
   projectName,
   state,
+  ...props
 }) => {
   const views = useViewsContext()
   const { onCreateView } = useViewUpdateHelper()
@@ -54,10 +56,12 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
       projectName={projectName}
       views={{
         ...views,
+        settings: views.viewSettings,
         updateViewSettings: (...args) => updateViewSettings(...args, views, onCreateView),
       }}
       state={state}
       toast={toast}
+      {...props}
     />
   )
 }

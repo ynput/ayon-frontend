@@ -3,6 +3,7 @@ import { FC, useState, useEffect } from 'react'
 import ReportsFallback from './ReportsFallback'
 import { ProjectPageRemote } from '@pages/ProjectPage/ProjectPageRemote'
 import { AddonLoadingScreen } from '@shared/components'
+import { useSlicerContext } from '@shared/containers'
 
 interface ReportsPageProps {
   projectName: string
@@ -18,6 +19,9 @@ const ReportsPage: FC<ReportsPageProps> = ({ projectName }) => {
     fallback: ReportsFallback,
     minVersion: '0.1.0-dev',
   })
+
+  const { sliceType, persistentRowSelectionData, setPersistentRowSelectionData, rowSelectionData } =
+    useSlicerContext()
 
   useEffect(() => {
     if (!isLoaded) {
@@ -42,6 +46,14 @@ const ReportsPage: FC<ReportsPageProps> = ({ projectName }) => {
       Component={Reports}
       projectName={projectName}
       slicer={{ fields: ['hierarchy', 'assignees', 'status', 'taskType'] }}
+      addonProps={{
+        slicer: {
+          selection: rowSelectionData,
+          type: sliceType,
+          persistentRowSelectionData,
+          setPersistentRowSelectionData,
+        },
+      }}
     />
   )
 }
