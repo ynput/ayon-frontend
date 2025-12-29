@@ -8,6 +8,7 @@ export interface ProjectFoldersContextValue {
   folders: FolderListItem[]
   getFolderById: (id: string) => FolderListItem | undefined
   getParentFolderIds: (folderId: string) => string[]
+  getChildFolderIds: (folderIds: string[], includeSelf?: boolean) => string[]
   isLoading: boolean
   isFetching: boolean
   isSuccess: boolean
@@ -78,11 +79,34 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
     [folderMap],
   )
 
+  // function to get all child folder IDs recursively for a given folder IDs
+  const getChildFolderIds = useMemo(
+    () =>
+      (folderIds: string[], includeSelf = false): string[] => {
+        const childIds: string[] = includeSelf ? [...folderIds] : []
+        const queue: string[] = [...folderIds]
+
+        while (queue.length > 0) {
+          const currentId = queue.shift()!
+          for (const folder of folders) {
+            if (folder.parentId === currentId) {
+              childIds.push(folder.id)
+              queue.push(folder.id)
+            }
+          }
+        }
+
+        return childIds
+      },
+    [folders],
+  )
+
   const value = useMemo(
     () => ({
       folders: folders,
       getFolderById,
       getParentFolderIds,
+      getChildFolderIds,
       isLoading: isLoadingFolders, // first time and when args change
       isFetching, // any background fetching
       isSuccess,
@@ -94,6 +118,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
       folders,
       getFolderById,
       getParentFolderIds,
+      getChildFolderIds,
       isLoadingFolders,
       isFetching,
       isSuccess,
