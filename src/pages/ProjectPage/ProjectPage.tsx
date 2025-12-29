@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
@@ -74,7 +74,20 @@ const ProjectPageInner = () => {
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
-  const { module = '', addonName } = useParams()
+  const { pathname } = useLocation()
+  const params = useParams()
+  const { addonName } = params
+  let { module = '' } = params
+
+  // if module is not in params, try to get it from the path
+  // this happens for routes like /projects/:projectName/reviews/:sessionId
+  if (!module) {
+    const pathParts = pathname.split('/')
+    if (pathParts[1] === 'projects' && pathParts[3]) {
+      module = pathParts[3]
+    }
+  }
+
   const dispatch = useAppDispatch()
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
@@ -295,6 +308,7 @@ const ProjectPageInner = () => {
         </main>
       )
     } else {
+      console.log('addon not found, redirecting to overview')
       // Fallback to versions page if no addon matches addonName
       component = <Navigate to={`/projects/${projectName}/overview`} />
     }

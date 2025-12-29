@@ -5,6 +5,7 @@ export type RemoteAddonComponent = FC<RemoteAddonProps>
 export type RemoteAddon = {
   id: string
   component: RemoteAddonComponent
+  path: string
   module: string
   viewType?: string // if the addon is using views
   slicer?: { fields: string[] }
