@@ -17,6 +17,7 @@ const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) 
     projectBaseView,
     studioBaseView,
     onCreateBaseView,
+    onUpdateBaseView,
     onDeleteBaseView,
     onUpdateWorkingView,
   } = useViewsContext()
@@ -46,9 +47,8 @@ const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) 
           },
         })
       } else {
-        // set the working view to the existing base view
-        // @ts-expect-error settings exists
-        onUpdateWorkingView({ settings: existingBase.settings }, { selectView: true })
+        // update the existing base view with current working settings
+        await onUpdateBaseView(existingBase.id as string, isStudioScope)
       }
     } else {
       // create new base view
