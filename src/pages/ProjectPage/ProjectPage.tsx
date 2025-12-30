@@ -237,24 +237,8 @@ const ProjectPageInner = () => {
     trackCurrentTab(tab, isAddon)
   }, [tab, isAddon, trackCurrentTab])
 
-  //
-  // Render page
-  //
-
-  if (isLoading || !projectName || addonsLoading || isLoadingModules) {
-    return <LoadingPage />
-  }
-
-  // error
-  if (error) {
-    setTimeout(() => {
-      navigate('/')
-    }, 1500)
-    return <div className="page">Project Not Found, Redirecting...</div>
-  }
-
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
-    let component = <div>Module Not Found</div>,
+    let component: JSX.Element | null = <div>Module Not Found</div>,
       viewType = activeLink?.viewType
 
     const foundAddon = addonsData?.find((item) => item.name === addonName)
@@ -310,7 +294,7 @@ const ProjectPageInner = () => {
     } else {
       console.log('addon not found, redirecting to overview')
       // Fallback to versions page if no addon matches addonName
-      component = <Navigate to={`/projects/${projectName}/overview`} />
+      component = null
     }
 
     return { component, viewType }
@@ -321,6 +305,33 @@ const ProjectPageInner = () => {
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
     // focus the new version in the versions
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
+  }
+
+  // loading
+  const loadingAll = isLoading || !projectName || addonsLoading || isLoadingModules
+
+  // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
+  useEffect(() => {
+    let timeoutId: any
+    if (!loadingAll && !page.component) {
+      timeoutId = setTimeout(() => {
+        navigate(`/projects/${projectName}/overview`)
+      }, 5000)
+    }
+
+    return () => clearTimeout(timeoutId)
+  }, [loadingAll, page.component, navigate, projectName])
+
+  if (loadingAll) {
+    return <LoadingPage />
+  }
+
+  // error
+  if (error) {
+    setTimeout(() => {
+      navigate('/')
+    }, 1500)
+    return <div className="page">Project Not Found, Redirecting...</div>
   }
 
   if (uiExposureLevel >= 500) {

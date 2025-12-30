@@ -14,7 +14,7 @@ export const useLoadRemotePages = ({
   moduleKey,
   skip = false,
 }: ProjectRemoteLoaderProps) => {
-  const { modules, remotesInitialized } = useRemoteModules()
+  const { modules, remotesInitialized, isLoading: isLoadingRemotes } = useRemoteModules()
 
   const pageModules = useMemo<ModuleSpec<any>[]>(() => {
     const pageModules: ModuleSpec<any>[] = []
@@ -41,7 +41,7 @@ export const useLoadRemotePages = ({
   const { modules: modulesData, isLoading: isLoadingModulePages } = useLoadModules(
     pageModules,
     modules,
-    !remotesInitialized || skip,
+    skip,
   )
 
   const loadedPages = useMemo(() => {
@@ -68,5 +68,5 @@ export const useLoadRemotePages = ({
     return [...modulesPages, ...fallbackPages]
   }, [modulesData, fallbacks, remotesInitialized, isLoadingModulePages, modules])
 
-  return { remotePages: loadedPages, isLoading: isLoadingModulePages }
+  return { remotePages: loadedPages, isLoading: isLoadingModulePages || isLoadingRemotes }
 }
