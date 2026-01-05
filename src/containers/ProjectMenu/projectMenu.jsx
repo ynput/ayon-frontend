@@ -5,7 +5,7 @@ import {
   useListProjectsQuery,
   useSetFrontendPreferencesMutation,
 } from '@shared/api'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import { useLocalStorage } from '@shared/hooks'
 import { createPortal } from 'react-dom'
@@ -41,7 +41,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       // clear search
       setSearch('')
     }
-  }, [isOpen])
+  }, [isOpen, setAllowed])
 
   useEffect(() => {
     if (menuRef.current && isOpen) {
@@ -156,22 +156,32 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       foldersToExpand.forEach(folderId => {
         expandedState[folderId] = true
       })
-      setExpanded(expandedState)
+      setExpanded(prev => {
+        // Only update if keys are different
+        const prevKeys = Object.keys(prev).sort().join(',')
+        const newKeys = Object.keys(expandedState).sort().join(',')
+        return prevKeys !== newKeys ? expandedState : prev
+      })
     } else if (!search) {
       // When not searching, auto-expand all folders
-      setExpanded(autoExpandedState)
+      setExpanded(prev => {
+        // Only update if keys are different
+        const prevKeys = Object.keys(prev).sort().join(',')
+        const newKeys = Object.keys(autoExpandedState).sort().join(',')
+        return prevKeys !== newKeys ? autoExpandedState : prev
+      })
     }
   }, [search, foldersToExpand, autoExpandedState])
 
-  const handleHide = () => {
+  const handleHide = useCallback(() => {
     onHide()
     // close search if it was open
     setSearchOpen(false)
     // clear search
     setSearch('')
-  }
+  }, [onHide])
 
-  const onProjectSelect = (projectName) => {
+  const onProjectSelect = useCallback((projectName) => {
     handleHide()
 
     handleProjectSelectionDispatches(projectName)
@@ -187,7 +197,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       : `/projects/${projectName}/${defaultTab}`
 
     navigate(link)
-  }
+  }, [handleHide, handleProjectSelectionDispatches, getDefaultTab, location.pathname, navigate])
 
   const handleRowSelectionChange = (newSelection) => {
     const selectedIds = Object.keys(newSelection).filter((id) => newSelection[id])
@@ -205,19 +215,19 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     e.stopPropagation()
     setSearchOpen(true)
   }
-  const focusElement = (element) => {
+  const focusElement = useCallback((element) => {
     if (element) {
       element.focus()
     }
-  }
+  }, [])
 
-  const getSibling = (element, direction) => {
+  const getSibling = useCallback((element, direction) => {
     const sibling =
       direction === 'next' ? element.nextElementSibling : element.previousElementSibling
     return sibling?.tagName === 'HR' ? getSibling(sibling, direction) : sibling
-  }
+  }, [])
 
-  const handleArrowKeys = (e) => {
+  const handleArrowKeys = useCallback((e) => {
     const { key, shiftKey } = e
     const direction = key === 'ArrowUp' || (key === 'Tab' && shiftKey) ? 'prev' : 'next'
     const edgeElement = direction === 'next' ? 'firstChild' : 'lastChild'
@@ -230,14 +240,14 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         const sibling = getSibling(focused, direction)
         focusElement(sibling || focused.parentElement[edgeElement])
       } else {
-        const edgeItem = menuRef.current.getElement()?.querySelector(`.project-item`)
+        const edgeItem = menuRef.current?.getElement()?.querySelector(`.project-item`)
         focusElement(edgeItem)
       }
     }
-  }
+  }, [getSibling, focusElement])
 
   // if we start typing, open the search automatically
-  const handleKeyPress = (e) => {
+  const handleKeyPress = useCallback((e) => {
     //  open search on letter
     if (e.key?.length === 1 && !searchOpen) {
       setSearchOpen(true)
@@ -261,11 +271,11 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       if (id) {
         // select project
         onProjectSelect(id)
-      } else if (searchOpen && search.length > 0 && filteredMenuItems.length > 0) {
+      } else if (searchOpen && search.length > 0 && filteredProjectTree.length > 0) {
         // select top result
-        const topResult = filteredMenuItems[0]
-        if (topResult) {
-          onProjectSelect(topResult.label)
+        const topResult = filteredProjectTree[0]
+        if (topResult && !topResult.data?.isFolder) {
+          onProjectSelect(topResult.name)
         }
       }
     } else if (e.key === 'Backspace') {
@@ -274,7 +284,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         focusElement(searchRef.current)
       }
     } else handleArrowKeys(e)
-  }
+  }, [searchOpen, search, filteredProjectTree, handleHide, onProjectSelect, handleArrowKeys])
   // Add event listeners
   useEffect(() => {
     if (isOpen) {

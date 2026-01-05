@@ -84,7 +84,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
-          enableNonFolderIndent={true}
+          enableNonFolderIndent={false}
         />
         {!isFolder && code && <span className="project-code">{code}</span>}
         {icon && (
