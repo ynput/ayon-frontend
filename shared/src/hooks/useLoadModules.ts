@@ -44,6 +44,7 @@ export const useLoadModules = <T extends any[]>(
   // Reset and reinitialize when moduleSpecs change
   useEffect(() => {
     if (skip) return
+    console.log('resetting processedModules')
     // Reset the processed modules tracker
     processedModules.current = new Set()
 
@@ -76,19 +77,33 @@ export const useLoadModules = <T extends any[]>(
       return
     }
 
+    // If all results are unloaded, reset processedModules to ensure we attempt loading
+    // This handles the case where the component remounts with the same moduleSpecs
+    const allUnloaded = results.every((result) => !result[1].isLoaded)
+    if (allUnloaded && processedModules.current.size > 0) {
+      console.log('resetting processedModules - results were reset')
+      processedModules.current = new Set()
+    }
+
     console.log('loading modules')
 
     const promises: Promise<void>[] = []
     moduleSpecs.forEach((spec, index) => {
       const { addon, remote, module, fallback, minVersion } = spec
 
-      if (!addon || !remote || !module) return
+      if (!addon || !remote || !module) {
+        console.log('Invalid module spec', spec)
+        return
+      }
 
       // Create a unique key for this module
       const moduleKey = `${addon}/${remote}/${module}`
 
       // Skip if already processed
-      if (processedModules.current.has(moduleKey)) return
+      if (processedModules.current.has(moduleKey)) {
+        console.log('skipping already processed module', moduleKey)
+        return
+      }
 
       // Check if this module is already loaded in our results
       if (results[index]?.[1]?.isLoaded) {
