@@ -46,7 +46,7 @@ const useTransformActivities = (
   // 1. add status icons and data for status change activities
   const activitiesWithIcons = useMemo(
     () => getStatusActivityIcon(activities, projectInfo),
-    [activities],
+    [activities, projectInfo],
   )
 
   // 1,5. add any extra meta data to the activities
@@ -60,7 +60,7 @@ const useTransformActivities = (
   // 2. versions should not have relations shown (comments posted on parent task)
   const activitiesWithoutRelations = useMemo(
     () => filterOutRelations(activitiesWithMeta, ['version'], entityType),
-    [activitiesWithMeta, projectInfo],
+    [activitiesWithMeta, entityType],
   )
 
   // 3. sort createdAt oldest first (because we are using flex: column-reverse)

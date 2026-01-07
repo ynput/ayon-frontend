@@ -272,18 +272,27 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  /** More about the folder */
+  folderAlt?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -292,6 +301,11 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type FolderEdge = {
@@ -521,6 +535,8 @@ export type ProductAttribType = {
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   productGroup?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type ProductBaseType = {
@@ -640,6 +656,9 @@ export type ProductsConnection = {
 
 export type ProjectAttribType = {
   __typename?: 'ProjectAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  airtablePush?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -650,6 +669,7 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -707,6 +727,7 @@ export type ProjectNode = {
   productTypes: Array<ProductType>;
   /** Return a list of products. */
   products: ProductsConnection;
+  projectFolder?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   representation?: Maybe<RepresentationNode>;
@@ -1160,18 +1181,26 @@ export type Tag = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  brands?: Maybe<Array<Scalars['String']['output']>>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -1180,6 +1209,11 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  /** More about the task */
+  taskAlt?: Maybe<Scalars['String']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type TaskEdge = {
@@ -1367,12 +1401,15 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
   comment?: Maybe<Scalars['String']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
   families?: Maybe<Array<Scalars['String']['output']>>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
@@ -1389,6 +1426,9 @@ export type VersionAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+  weather?: Maybe<Scalars['String']['output']>;
 };
 
 export type VersionEdge = {
@@ -1609,14 +1649,7 @@ export type GetFoldersLinksQueryVariables = Exact<{
 }>;
 
 
-export type GetFoldersLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetFoldersLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null }> } } }> } } };
 
 export type GetProductsLinksQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1624,14 +1657,7 @@ export type GetProductsLinksQueryVariables = Exact<{
 }>;
 
 
-export type GetProductsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', edges: Array<{ __typename?: 'ProductEdge', node: { __typename?: 'ProductNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetProductsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', edges: Array<{ __typename?: 'ProductEdge', node: { __typename?: 'ProductNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null }> } } }> } } };
 
 export type GetTasksLinksQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1639,14 +1665,7 @@ export type GetTasksLinksQueryVariables = Exact<{
 }>;
 
 
-export type GetTasksLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetTasksLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null }> } } }> } } };
 
 export type GetVersionsLinksQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1654,14 +1673,7 @@ export type GetVersionsLinksQueryVariables = Exact<{
 }>;
 
 
-export type GetVersionsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetVersionsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null }> } } }> } } };
 
 export type GetWorkfilesLinksQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1669,14 +1681,7 @@ export type GetWorkfilesLinksQueryVariables = Exact<{
 }>;
 
 
-export type GetWorkfilesLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', workfiles: { __typename?: 'WorkfilesConnection', edges: Array<{ __typename?: 'WorkfileEdge', node: { __typename?: 'WorkfileNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetWorkfilesLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', workfiles: { __typename?: 'WorkfilesConnection', edges: Array<{ __typename?: 'WorkfileEdge', node: { __typename?: 'WorkfileNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null }> } } }> } } };
 
 export type GetRepresentationsLinksQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1684,14 +1689,7 @@ export type GetRepresentationsLinksQueryVariables = Exact<{
 }>;
 
 
-export type GetRepresentationsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-                | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
-                | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetRepresentationsLinksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, links: { __typename?: 'LinksConnection', edges: Array<{ __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null }> } } }> } } };
 
 export type GetSearchedFoldersQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1770,14 +1768,7 @@ export type GetSearchedWorkfilesQueryVariables = Exact<{
 
 export type GetSearchedWorkfilesQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, workfiles: { __typename?: 'WorkfilesConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'WorkfileEdge', cursor?: string | null, node: { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } }> } } };
 
-export type OverviewEntityLinkFragmentFragment = { __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?:
-    | { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-    | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
-    | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
-    | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-    | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
-    | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
-   | null };
+export type OverviewEntityLinkFragmentFragment = { __typename?: 'LinkEdge', id: string, direction: string, linkType: string, entityType: string, node?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> } | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> } | null };
 
 type OverviewEntityLinkNodeFragment_FolderNode_Fragment = { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string };
 
@@ -1791,14 +1782,7 @@ type OverviewEntityLinkNodeFragment_VersionNode_Fragment = { __typename: 'Versio
 
 type OverviewEntityLinkNodeFragment_WorkfileNode_Fragment = { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> };
 
-export type OverviewEntityLinkNodeFragmentFragment =
-  | OverviewEntityLinkNodeFragment_FolderNode_Fragment
-  | OverviewEntityLinkNodeFragment_ProductNode_Fragment
-  | OverviewEntityLinkNodeFragment_RepresentationNode_Fragment
-  | OverviewEntityLinkNodeFragment_TaskNode_Fragment
-  | OverviewEntityLinkNodeFragment_VersionNode_Fragment
-  | OverviewEntityLinkNodeFragment_WorkfileNode_Fragment
-;
+export type OverviewEntityLinkNodeFragmentFragment = OverviewEntityLinkNodeFragment_FolderNode_Fragment | OverviewEntityLinkNodeFragment_ProductNode_Fragment | OverviewEntityLinkNodeFragment_RepresentationNode_Fragment | OverviewEntityLinkNodeFragment_TaskNode_Fragment | OverviewEntityLinkNodeFragment_VersionNode_Fragment | OverviewEntityLinkNodeFragment_WorkfileNode_Fragment;
 
 export const OverviewEntityLinkNodeFragmentFragmentDoc = `
     fragment OverviewEntityLinkNodeFragment on BaseNode {

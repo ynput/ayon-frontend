@@ -1,7 +1,7 @@
 query GetActivitiesById($projectName: String!, $entityIds: [String!]!, $activityIds: [String!]) {
   project(name: $projectName) {
     name
-    activities(entityIds: $entityIds, activityIds: $activityIds) {
+    activities(entityIds: $entityIds, activityIds: $activityIds, referenceTypes: ["origin"]) {
       pageInfo {
         hasPreviousPage
         hasNextPage

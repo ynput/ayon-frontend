@@ -272,18 +272,27 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
+  /** More about the folder */
+  folderAlt?: Maybe<Scalars['String']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -292,6 +301,11 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type FolderEdge = {
@@ -521,6 +535,8 @@ export type ProductAttribType = {
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
   productGroup?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type ProductBaseType = {
@@ -640,6 +656,9 @@ export type ProductsConnection = {
 
 export type ProjectAttribType = {
   __typename?: 'ProjectAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  airtablePush?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -650,6 +669,7 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
@@ -707,6 +727,7 @@ export type ProjectNode = {
   productTypes: Array<ProductType>;
   /** Return a list of products. */
   products: ProductsConnection;
+  projectFolder?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   representation?: Maybe<RepresentationNode>;
@@ -1160,18 +1181,26 @@ export type Tag = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  brands?: Maybe<Array<Scalars['String']['output']>>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
+  days?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
+  duration?: Maybe<Scalars['Float']['output']>;
   /** Deadline date and time */
   endDate?: Maybe<Scalars['DateTime']['output']>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  greenscreen?: Maybe<Scalars['Boolean']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  isItHard?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -1180,6 +1209,11 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Will it be used by lens studio */
+  targetLensStudio?: Maybe<Scalars['Boolean']['output']>;
+  /** More about the task */
+  taskAlt?: Maybe<Scalars['String']['output']>;
+  vendor?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type TaskEdge = {
@@ -1367,12 +1401,15 @@ export type UsersConnection = {
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
   comment?: Maybe<Scalars['String']['output']>;
   /** Textual description of the entity */
   description?: Maybe<Scalars['String']['output']>;
+  dopNotes?: Maybe<Scalars['String']['output']>;
   families?: Maybe<Array<Scalars['String']['output']>>;
   /** Frame rate */
   fps?: Maybe<Scalars['Float']['output']>;
@@ -1389,6 +1426,9 @@ export type VersionAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   site?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
+  /** 3D Library tags for products and versions */
+  tags3d?: Maybe<Array<Scalars['String']['output']>>;
+  weather?: Maybe<Scalars['String']['output']>;
 };
 
 export type VersionEdge = {
@@ -1657,14 +1697,7 @@ export type GetListItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?:
-                | { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string }
-                | { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }
-                | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
-                | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }
-                | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null }
-                | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
-               | null }> } } }> } } };
+export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', entityLists: { __typename?: 'EntityListsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListEdge', node: { __typename?: 'EntityListNode', id: string, active: boolean, items: { __typename?: 'EntityListItemsConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, edges: Array<{ __typename?: 'EntityListItemEdge', id: string, entityId: string, entityType: string, allAttrib: string, position: number, ownItemAttrib: Array<string>, node?: { __typename?: 'FolderNode', label?: string | null, status: string, tags: Array<string>, folderType: string, path?: string | null, ownAttrib: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folderId: string } | { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> } | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } } | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null } | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> } | null }> } } }> } } };
 
 export type GetListsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1698,14 +1731,7 @@ type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', statu
 
 type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
 
-export type ListItemFragmentFragment =
-  | ListItemFragment_FolderNode_Fragment
-  | ListItemFragment_ProductNode_Fragment
-  | ListItemFragment_RepresentationNode_Fragment
-  | ListItemFragment_TaskNode_Fragment
-  | ListItemFragment_VersionNode_Fragment
-  | ListItemFragment_WorkfileNode_Fragment
-;
+export type ListItemFragmentFragment = ListItemFragment_FolderNode_Fragment | ListItemFragment_ProductNode_Fragment | ListItemFragment_RepresentationNode_Fragment | ListItemFragment_TaskNode_Fragment | ListItemFragment_VersionNode_Fragment | ListItemFragment_WorkfileNode_Fragment;
 
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2246,7 +2272,11 @@ export const GetActivitiesByIdDocument = `
     query GetActivitiesById($projectName: String!, $entityIds: [String!]!, $activityIds: [String!]) {
   project(name: $projectName) {
     name
-    activities(entityIds: $entityIds, activityIds: $activityIds) {
+    activities(
+      entityIds: $entityIds
+      activityIds: $activityIds
+      referenceTypes: ["origin"]
+    ) {
       pageInfo {
         hasPreviousPage
         hasNextPage
