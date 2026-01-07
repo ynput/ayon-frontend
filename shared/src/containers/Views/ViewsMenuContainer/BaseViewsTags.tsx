@@ -13,9 +13,8 @@ const BaseViewsTagContainer: FC = () => {
     projectBaseView,
     studioBaseView,
     onCreateBaseView,
-    onUpdateBaseView,
     onDeleteBaseView,
-    onUpdateWorkingView,
+    onLoadBaseView,
   } = useViewsContext()
 
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -43,8 +42,8 @@ const BaseViewsTagContainer: FC = () => {
           },
         })
       } else {
-        // update the existing base view with current working settings
-        await onUpdateBaseView(existingBase.id as string, isStudioScope)
+        // load the base view settings into working view
+        await onLoadBaseView(isStudioScope)
       }
     } else {
       // create new base view

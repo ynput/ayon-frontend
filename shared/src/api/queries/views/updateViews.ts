@@ -1,5 +1,6 @@
 import { ViewListItemModel } from '@shared/api/generated'
 import { getScopeTag, getViewsApi } from './getViews'
+import { v4 as uuidv4 } from 'uuid'
 
 const updateViewsApi = getViewsApi.enhanceEndpoints({
   endpoints: {
@@ -81,7 +82,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
 
         if (payload.label === '__base__') {
           const newBaseView = {
-            id: `optimistic-base-${Date.now()}`,
+            id: uuidv4(),
             ...payload,
             working: false,
             scope: arg.projectName ? 'project' : 'studio',
