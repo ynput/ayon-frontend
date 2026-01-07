@@ -5,7 +5,7 @@ import {
 import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo } from 'react'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import buildProjectsTableData from './buildProjectsTableData'
+import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjectsTableData'
 import { MENU_ID } from './ProjectsListTableHeader'
 import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
 import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
@@ -21,6 +21,7 @@ import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFold
 import { useState } from 'react'
 import { usePowerpack } from '@shared/context'
 import ProjectsTable from './ProjectsTable'
+import ProjectsShortcuts from './ProjectsShortcuts'
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
 interface ProjectsListProps {
@@ -221,6 +222,40 @@ const ProjectsList: FC<ProjectsListProps> = ({
     setFolderDialogId(undefined)
   }, [])
 
+  // Post-creation callbacks for folder state management
+  const handleFolderCreated = useCallback(
+    (folderId: string, hadProjects: boolean) => {
+      const folderRowId = buildProjectFolderRowId(folderId)
+      if (hadProjects) {
+        // Projects were added to folder, expand it to show them
+        setExpanded((prev) => ({
+          ...(typeof prev === 'object' ? prev : {}),
+          [folderRowId]: true,
+        }))
+      } else {
+        // Empty folder created, select it for further action
+        onSelect([folderRowId])
+      }
+    },
+    [setExpanded, onSelect]
+  )
+
+  const handleFoldersCreated = useCallback(
+    (parentFolderIds: string[], areExpanding: boolean) => {
+      if (areExpanding) {
+        // Expand parent folders to show new subfolders
+        setExpanded((prev) => {
+          const newExpanded = typeof prev === 'object' ? { ...prev } : {}
+          parentFolderIds.forEach((id) => {
+            newExpanded[buildProjectFolderRowId(id)] = true
+          })
+          return newExpanded
+        })
+      }
+    },
+    [setExpanded]
+  )
+
   // Use project folder actions hook
   const {
     onPutProjectsInFolder,
@@ -308,6 +343,16 @@ const ProjectsList: FC<ProjectsListProps> = ({
         folderId={folderDialogId}
         projectNames={selection}
         onPutProjectsInFolder={onPutProjectsInFolder}
+        rowSelection={rowSelection}
+        folders={folders || []}
+        onFolderCreated={handleFolderCreated}
+        onFoldersCreated={handleFoldersCreated}
+      />
+      <ProjectsShortcuts
+        rowSelection={rowSelection}
+        folders={folders || []}
+        onOpenFolderDialog={handleOpenFolderDialog}
+        onRenameFolder={onRenameFolder}
       />
     </>
   )

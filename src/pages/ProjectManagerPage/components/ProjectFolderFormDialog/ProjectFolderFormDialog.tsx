@@ -1,4 +1,4 @@
-import { FC, useState, useCallback, useEffect } from 'react'
+import { FC, useState, useCallback, useEffect, useMemo } from 'react'
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
 import { ProjectFolderForm, ProjectFolderFormData } from './ProjectFolderForm'
 import {
@@ -6,6 +6,9 @@ import {
   useUpdateProjectFolderMutation,
 } from '@shared/api/queries/projectFolders'
 import { toast } from 'react-toastify'
+import { RowSelectionState } from '@tanstack/react-table'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import { ProjectFolderModel } from '@shared/api'
 
 export interface FolderFormData extends ProjectFolderFormData {
  parentId?: string
@@ -18,7 +21,11 @@ interface ProjectFolderFormDialogProps {
   initial?: Partial<FolderFormData>
   folderId?: string
   projectNames?: string[]
-  onPutProjectsInFolder?: ( projectNames: string[], folderId: string,) => void
+  onPutProjectsInFolder?: (projectNames: string[], folderId: string) => void
+  rowSelection?: RowSelectionState
+  folders?: ProjectFolderModel[]
+  onFolderCreated?: (folderId: string, hadProjects: boolean) => void
+  onFoldersCreated?: (parentFolderIds: string[], areExpanding: boolean) => void
 }
 
 export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
@@ -26,13 +33,47 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
   onClose,
   initial,
   folderId,
-  projectNames = [],
-  onPutProjectsInFolder
+  onPutProjectsInFolder,
+  rowSelection = {},
+  folders = [],
+  onFolderCreated,
+  onFoldersCreated,
 }) => {
   const [createFolder] = useCreateProjectFolderMutation()
   const [updateFolder] = useUpdateProjectFolderMutation()
 
   const mode = folderId ? 'edit' : 'create'
+
+  // Analyze selection context when creating folders
+  const { projectNamesToAdd, parentIdsToCreateIn, foldersToCreateIn, projectCount } = useMemo(() => {
+    if (mode !== 'create') {
+      return { projectNamesToAdd: [], parentIdsToCreateIn: [], foldersToCreateIn: [], projectCount: 0 }
+    }
+
+    // Parse selection to separate projects from folders
+    const selectedProjectNames = Object.keys(rowSelection).filter(
+      (rowId) => !parseProjectFolderRowId(rowId)
+    )
+    const selectedFolderIds = Object.keys(rowSelection)
+      .map((rowId) => parseProjectFolderRowId(rowId))
+      .filter((id): id is string => !!id)
+
+    // Determine context: if folders are selected, create subfolders
+    // Otherwise if projects are selected, put them in the new folder
+    const projectNamesToAdd = selectedFolderIds.length === 0 ? selectedProjectNames : []
+    const parentIdsToCreateIn = selectedFolderIds.length > 0 ? selectedFolderIds : []
+
+    const foldersToCreateIn = parentIdsToCreateIn
+      .map((id) => folders?.find((f) => f.id === id))
+      .filter((f): f is ProjectFolderModel => !!f)
+
+    return {
+      projectNamesToAdd,
+      parentIdsToCreateIn,
+      foldersToCreateIn,
+      projectCount: projectNamesToAdd.length,
+    }
+  }, [mode, rowSelection, folders])
 
   const initFolderForm: FolderFormData = {
     label: '',
@@ -70,46 +111,96 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
 
     const label = folderForm.label.trim()
     const { color, icon, parentId } = folderForm
-    handleClose()
+
     try {
-      if (!!initial?.parentId) {
-        console.log('created subfolder')
-        await createFolder({
-          projectFolderPostModel: {
-            label: label,
+      if (mode === 'edit' && folderId) {
+        await updateFolder({
+          folderId,
+          projectFolderPatchModel: {
+            label,
             data: { icon, color },
-            parentId:parentId,
           },
         }).unwrap()
         toast.success('Project folder updated successfully')
-      } else if(!!initial?.projectNames){
-        const folder = await createFolder({
-          projectFolderPostModel: {
-            label: label,
-            data: { icon, color },
-          },
-        }).unwrap()
-        onPutProjectsInFolder?.(initial.projectNames, folder.id)
-        toast.success('Project folder created successfully')
-      } else if(mode==='create') {
-        await createFolder({
-          projectFolderPostModel: {
-            label: label,
-            data: { icon, color },
-            parentId,
-          },
-        }).unwrap()
-        toast.success('Project folder created successfully')
-      }else if(mode === 'edit' && folderId){
-        await updateFolder({
-          folderId,
-          projectFolderPatchModel:{
-            label,
-            data: {icon, color}
-          }
-        })
-      }
+        handleClose()
+      } else if (mode === 'create') {
+        handleClose()
 
+        // Create new folder - handle different scenarios
+        if (parentIdsToCreateIn.length > 0) {
+
+          onFoldersCreated?.(parentIdsToCreateIn, true)
+
+          Promise.all(
+            parentIdsToCreateIn.map((parentId) =>
+              createFolder({
+                projectFolderPostModel: {
+                  label,
+                  data: { icon, color },
+                  parentId,
+                },
+              }).unwrap()
+            )
+          )
+            .then(() => {
+              toast.success(
+                parentIdsToCreateIn.length === 1
+                  ? 'Subfolder created successfully'
+                  : `${parentIdsToCreateIn.length} subfolders created successfully`
+              )
+            })
+            .catch((error) => {
+              console.error('Failed to create subfolders:', error)
+              const errorMessage =
+                (error as any)?.data?.detail || 'Failed to create subfolders. Please try again.'
+              toast.error(errorMessage)
+            })
+        } else if (projectNamesToAdd.length > 0) {
+          // Scenario 2: Create folder and assign selected projects to it
+          createFolder({
+            projectFolderPostModel: {
+              label,
+              data: { icon, color },
+            },
+          })
+            .unwrap()
+            .then((folder) => {
+              // Optimistically expand folder to show projects
+              onFolderCreated?.(folder.id, true)
+              return onPutProjectsInFolder?.(projectNamesToAdd, folder.id)
+            })
+            .then(() => {
+              toast.success('Project folder created successfully')
+            })
+            .catch((error) => {
+              console.error('Failed to create folder:', error)
+              const errorMessage =
+                (error as any)?.data?.detail || 'Failed to create folder. Please try again.'
+              toast.error(errorMessage)
+            })
+        } else {
+          // Scenario 3: Simple folder creation at root level
+          createFolder({
+            projectFolderPostModel: {
+              label,
+              data: { icon, color },
+              parentId,
+            },
+          })
+            .unwrap()
+            .then((folder) => {
+              // Optimistically select the new empty folder
+              onFolderCreated?.(folder.id, false)
+              toast.success('Project folder created successfully')
+            })
+            .catch((error) => {
+              console.error('Failed to create folder:', error)
+              const errorMessage =
+                (error as any)?.data?.detail || 'Failed to create folder. Please try again.'
+              toast.error(errorMessage)
+            })
+        }
+      }
     } catch (error) {
       console.error(`Failed to ${mode} folder:`, error)
       const errorMessage =
@@ -119,7 +210,18 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
     } finally {
       setIsSaving(false)
     }
-  }, [folderForm, mode, folderId, createFolder, updateFolder])
+  }, [
+    folderForm,
+    mode,
+    folderId,
+    createFolder,
+    updateFolder,
+    parentIdsToCreateIn,
+    projectNamesToAdd,
+    onPutProjectsInFolder,
+    onFolderCreated,
+    onFoldersCreated,
+  ])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -149,8 +251,15 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
     if (mode === 'edit') {
       return `Edit Folder${initial?.label ? `: ${initial.label}` : ''}`
     }
-    if (projectNames.length > 1) {
-      return `Create Folder for ${projectNames.length} Projects`
+    if (foldersToCreateIn.length > 0) {
+      if (foldersToCreateIn.length > 2) {
+        return `Create Folder in ${foldersToCreateIn.length} locations`
+      }
+      const folderNames = foldersToCreateIn.map((f) => f?.label).join(', ')
+      return `Create Folder in: ${folderNames}`
+    }
+    if (projectCount > 1) {
+      return `Create Folder for ${projectCount} Projects`
     }
     return 'Create Folder'
   }
@@ -181,9 +290,9 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
         </>
       }
     >
-      {mode === 'create' && projectNames.length > 1 && (
+      {mode === 'create' && projectCount > 1 && (
         <p style={{ margin: '0 0 16px 0', color: 'var(--color-text-dim)', fontSize: '14px' }}>
-          This folder will be assigned to {projectNames.length} selected projects.
+          This folder will be assigned to {projectCount} selected projects.
         </p>
       )}
       <ProjectFolderForm data={folderForm} onChange={handleFieldChange} autoFocus={true} />
