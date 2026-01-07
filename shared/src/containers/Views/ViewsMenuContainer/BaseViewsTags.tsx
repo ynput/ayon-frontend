@@ -18,7 +18,7 @@ const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) 
     studioBaseView,
     onCreateBaseView,
     onDeleteBaseView,
-    onUpdateWorkingView,
+    onLoadBaseView,
   } = useViewsContext()
 
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -46,9 +46,8 @@ const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) 
           },
         })
       } else {
-        // set the working view to the existing base view
-        // @ts-expect-error settings exists
-        onUpdateWorkingView({ settings: existingBase.settings }, { selectView: true })
+        // load the base view settings into working view
+        await onLoadBaseView(isStudioScope)
       }
     } else {
       // create new base view

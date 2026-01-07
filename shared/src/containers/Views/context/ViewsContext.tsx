@@ -76,6 +76,7 @@ export interface ViewsContextValue {
   onCreateBaseView: (isStudioScope: boolean) => Promise<void>
   onUpdateBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
   onDeleteBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
+  onLoadBaseView: (isStudioScope: boolean) => Promise<void>
 
   // Actions (shared)
   resetWorkingView: () => Promise<void>
@@ -226,10 +227,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   // Base view mutations
-  const { onCreateBaseView, onUpdateBaseView, onDeleteBaseView } = useBaseViewMutations({
+  const { onCreateBaseView, onUpdateBaseView, onDeleteBaseView, onLoadBaseView } = useBaseViewMutations({
     viewType: viewType as string,
     projectName,
     workingSettings,
+    workingView,
     dispatch,
   })
 
@@ -309,6 +311,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     onCreateBaseView,
     onUpdateBaseView,
     onDeleteBaseView,
+    onLoadBaseView,
     editingViewId,
     viewMenuItems,
     isLoadingViews,
