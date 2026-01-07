@@ -707,6 +707,7 @@ export type ProjectNode = {
   productTypes: Array<ProductType>;
   /** Return a list of products. */
   products: ProductsConnection;
+  projectFolder?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   representation?: Maybe<RepresentationNode>;
@@ -2246,7 +2247,11 @@ export const GetActivitiesByIdDocument = `
     query GetActivitiesById($projectName: String!, $entityIds: [String!]!, $activityIds: [String!]) {
   project(name: $projectName) {
     name
-    activities(entityIds: $entityIds, activityIds: $activityIds) {
+    activities(
+      entityIds: $entityIds
+      activityIds: $activityIds
+      referenceTypes: ["origin"]
+    ) {
       pageInfo {
         hasPreviousPage
         hasNextPage

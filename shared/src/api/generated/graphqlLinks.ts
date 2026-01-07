@@ -707,6 +707,7 @@ export type ProjectNode = {
   productTypes: Array<ProductType>;
   /** Return a list of products. */
   products: ProductsConnection;
+  projectFolder?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   representation?: Maybe<RepresentationNode>;
