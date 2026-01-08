@@ -76,8 +76,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
         id={id}
         style={{
           ...props.style,
-          marginLeft: `calc(${depth*2}rem + 4px)`,
-          paddingLeft: `calc(${depth * 0.25}rem + 4px)`,
+          paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
         }}
       >
         <RowExpander
@@ -85,7 +84,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
-          enableNonFolderIndent={false}
+          enableNonFolderIndent={true}
         />
         {!isFolder && code && <span className="project-code">{code}</span>}
         {icon && (
