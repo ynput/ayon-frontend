@@ -75,7 +75,8 @@ export const LinkItem = styled.li`
     }
   }
 
-  &.restricted {
+  &.restricted,
+  &.unknown {
     opacity: 0.5;
     font-style: italic;
   }
