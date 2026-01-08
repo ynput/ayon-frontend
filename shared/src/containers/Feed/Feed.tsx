@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
@@ -128,13 +128,30 @@ export const Feed = ({
   })
 
   // comment mutations here!
-  const { submitComment, updateComment, deleteComment, isSaving } = useCommentMutations({
+  const {
+    submitComment: submitCommentMutation,
+    updateComment,
+    deleteComment,
+    isSaving,
+  } = useCommentMutations({
     projectName,
     entityType: entityType,
     entities,
     filter: currentTab,
     entityListId,
   })
+
+  // wrap submitComment to scroll to bottom
+  const submitComment = useCallback(
+    async (value: string, files: any[] = [], data: any = {}) => {
+      await submitCommentMutation(value, files, data)
+      // scroll to bottom (scrollTop 0 is bottom because of column-reverse)
+      if (feedRef.current) {
+        ;(feedRef.current as any).scrollTo({ top: 0 })
+      }
+    },
+    [submitCommentMutation, feedRef],
+  )
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
   // Then update comment with new body
