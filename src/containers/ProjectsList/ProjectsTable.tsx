@@ -138,7 +138,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
         <SimpleTable
           data={data}
           globalFilter={search ?? undefined}
-          isExpandable={true}
+          isExpandable={data.some((row) => row.subRows.length > 0)}
           isLoading={!!isLoading}
           isMultiSelect={multiSelect}
           error={error}
