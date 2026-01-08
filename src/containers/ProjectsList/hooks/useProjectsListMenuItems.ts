@@ -347,12 +347,14 @@ const useProjectsListMenuItems = ({
           id: 'create-folder',
           label: isSelectedRowFolder? 'Create subfolder': 'Create folder',
           icon: 'create_new_folder',
+          shortcut: 'F',
           [command ? 'command' : 'onClick']: isSelectedRowFolder? ()=> onCreateFolder?.({folderId: selectedFolder?.id})  : isSelectedProject ? () =>onCreateFolder?.({projectNames:newSelectedProjects.map((project)=> project.name)}) : onCreateFolder,
         },
         {
           id: 'rename-folder',
           label: 'Rename',
           icon: 'edit',
+          shortcut: 'R',
           [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
           hidden: !isSelectedRowFolder
         },

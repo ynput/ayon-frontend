@@ -76,7 +76,8 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
         id={id}
         style={{
           ...props.style,
-          paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
+          marginLeft: `calc(${depth*2}rem + 4px)`,
+          paddingLeft: `calc(${depth * 0.25}rem + 4px)`,
         }}
       >
         <RowExpander
