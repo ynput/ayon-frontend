@@ -8,7 +8,7 @@ export const Container = styled.div`
   width: 100%;
   gap: var(--base-gap-small);
   &:not(.minimized) {
-    grid-template-columns:1fr auto auto  ;
+    grid-template-columns: 1fr auto auto;
     grid-template-rows: auto minmax(0, 1fr);
   }
   .close {
@@ -21,13 +21,15 @@ export const Container = styled.div`
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
-  
+
   /* Layout when minimized - 3 columns with toolbar */
   &.minimized {
     display: flex;
     flex-direction: column;
-    
-    .related-tasks, .trackbar-row, .controls-row {
+
+    .related-tasks,
+    .trackbar-row,
+    .controls-row {
       display: none;
     }
   }
@@ -71,11 +73,6 @@ export const ButtonGroup = styled.div`
   /* When standalone (not minimized), position at top-right */
   &.standalone {
     justify-self: end;
-  }
-
-  .details.active {
-    background-color: var(--md-sys-color-primary-container) !important;
-    color: var(--md-sys-color-on-primary-container) !important;
   }
 `
 

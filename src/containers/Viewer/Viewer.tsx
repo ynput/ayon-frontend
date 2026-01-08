@@ -26,8 +26,7 @@ interface ViewerProps {
 }
 
 const ViewerBody = ({ onClose }: ViewerProps) => {
-
-  const [minimizedWindow, setMinimizedWindow] = useLocalStorage('viewer-minimized-window', false)
+  const [theater, setTheater] = useLocalStorage('viewer-theater-mode', false)
   const {
     productId,
     taskId,
@@ -286,19 +285,41 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     }
   }
 
-  const toggleMinimized = useCallback(() => {
-    setMinimizedWindow(!minimizedWindow)
-  }, [minimizedWindow, setMinimizedWindow])
+  const toggleTheater = useCallback(() => {
+    setTheater(!theater)
+  }, [theater, setTheater])
 
-  // Handle keyboard shortcut for toggling minimized window (C key)
+  const cycleViewMode = useCallback(() => {
+    if (fullscreen) {
+      // Cycle: Fullscreen -> Default
+      dispatch(toggleFullscreen({ fullscreen: false }))
+      setTheater(false)
+    } else if (theater) {
+      // Cycle: Theater -> Fullscreen
+      setTheater(false)
+      dispatch(toggleFullscreen({ fullscreen: true }))
+    } else {
+      // Cycle: Default -> Theater
+      setTheater(true)
+    }
+  }, [fullscreen, theater, dispatch, setTheater])
+
+  // Handle keyboard shortcut for view mode cycle (F key)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // abort if modifier keys are pressed
       if (e.ctrlKey || e.altKey || e.metaKey) return
 
-      // Toggle minimized window on 'c' key
-      if (e.key === 'c') {
-        toggleMinimized()
+      // check shortcut isn't inside an input field
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return
+
+      // check shortcut isn't inside a contenteditable element
+      if ((e.target as HTMLElement).isContentEditable) return
+
+      // Cycle view mode on 'f' key
+      if (e.key.toLowerCase() === 'f') {
+        console.log('cycle mode')
+        cycleViewMode()
       }
     }
 
@@ -307,7 +328,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [toggleMinimized])
+  }, [cycleViewMode])
 
   const reviewables = selectedVersion?.reviewables || []
 
@@ -317,8 +338,8 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   return (
     <ViewerProvider selectedVersionId={selectedVersion?.id}>
-      <Styled.Container className={minimizedWindow ? 'grid ' : 'grid minimized'}>
-        {minimizedWindow && (
+      <Styled.Container className={theater ? 'grid minimized' : 'grid'}>
+        {!theater && (
           <Styled.PlayerToolbar>
             <>
               <VersionSelectorTool
@@ -344,22 +365,22 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           </Styled.PlayerToolbar>
         )}
 
-          <Styled.MinimizedToolbar className={minimizedWindow ? 'minimized' : ''}>
-            {!minimizedWindow && versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
-            <Styled.ButtonGroup>
-              <Button
-                icon={'dock_to_left'}
-                className={minimizedWindow ? 'details active' : 'details'}
-                data-tooltip={minimizedWindow ? 'Toggle to show details' : 'Toggle to hide all'}
-                data-tooltip-position="bottom"
-                data-shortcut={'C'}
-                onClick={toggleMinimized}
-              >
-                Details
-              </Button>
-              {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
-            </Styled.ButtonGroup>
-          </Styled.MinimizedToolbar>
+        <Styled.MinimizedToolbar className={theater ? '' : 'minimized'}>
+          {theater && versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
+          <Styled.ButtonGroup>
+            <Button
+              icon={'aspect_ratio'}
+              data-tooltip={'Hide surrounding panels to maximize viewer size'}
+              data-tooltip-position="bottom"
+              data-shortcut={'F'}
+              onClick={toggleTheater}
+              selected={theater}
+            >
+              Theater
+            </Button>
+            {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+          </Styled.ButtonGroup>
+        </Styled.MinimizedToolbar>
 
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
           <ViewerComponent
@@ -375,19 +396,19 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             onUpload={handleUploadAction}
           />
         </Styled.FullScreenWrapper>
-        {minimizedWindow && (
+        {!theater && (
           <Styled.RightToolBar style={{ zIndex: 1100 }}>
             <ReviewablesSelector
               reviewables={playable}
               selected={reviewableIds}
               onChange={handleReviewableChange}
-              onUpload={handleUploadAction(true)}
               projectName={projectName}
+              onUpload={handleUploadAction(true)}
             />
             <div id="annotation-tools" style={{ position: 'relative' }}></div>
           </Styled.RightToolBar>
         )}
-        {minimizedWindow && (
+        {!theater && (
           <ViewerDetailsPanel
             versionIds={versionIds}
             projectName={projectName}

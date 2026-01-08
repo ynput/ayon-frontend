@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import VideoPlayer from '@containers/VideoPlayer'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { Button } from '@ynput/ayon-react-components'
-import { ReviewableResponse } from '@queries/review/types'
+import { ReviewableResponse } from '@shared/api'
 
 interface ViewerPlayerProps {
   projectName: string

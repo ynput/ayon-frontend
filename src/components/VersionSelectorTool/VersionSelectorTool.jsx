@@ -108,7 +108,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!latestVersion}
         beforeContent={'Latest - '}
-        data-shortcut={'F'}
+        data-shortcut={'R'}
         selected={selected === latestVersion?.id}
       />
       <NavButton
