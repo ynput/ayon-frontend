@@ -187,7 +187,7 @@ export type FolderModel = {
   path?: string
   hasVersions?: boolean
   attrib?: FolderAttribModel
-  data?: Record<string, any>
+  data?: object
   /** Whether the folder is active */
   active?: boolean
   ownAttrib?: string[]
@@ -228,7 +228,7 @@ export type FolderPatchModel = {
   /** Who last updated the folder */
   updatedBy?: string
   attrib?: FolderAttribModel
-  data?: Record<string, any>
+  data?: object
   /** Whether the folder is active */
   active?: boolean
 }
@@ -277,7 +277,7 @@ export type FolderPostModel = {
   /** Who last updated the folder */
   updatedBy?: string
   attrib?: FolderAttribModel
-  data?: Record<string, any>
+  data?: object
   /** Whether the folder is active */
   active?: boolean
 }

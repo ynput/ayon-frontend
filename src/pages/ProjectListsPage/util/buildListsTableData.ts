@@ -121,7 +121,7 @@ export const buildListsTableData = (
     id: list.id,
     name: list.label,
     label: list.label,
-    parents,
+    ...(parents.length > 0 && { parents }),
     icon: getListIcon(list),
     inactive: !list.active,
     subRows: [],
@@ -197,7 +197,7 @@ export const buildListsTableData = (
         id: buildListFolderRowId(node.id),
         name: node.folder.label,
         label: node.folder.label,
-        parents: parentPath,
+        ...(parentPath.length > 0 && { parents: parentPath }),
         icon: node.folder.data?.icon || FOLDER_ICON,
         iconFilled: true,
         subRows: [],
@@ -250,6 +250,7 @@ export const buildListsTableData = (
   const rootListRows = sortedRootLists.map((list) => createListRow(list))
 
   // Combine in the specified order: folder hierarchy first, then root lists
+  console.log(folderRows)
   return [...folderRows, ...rootListRows]
 }
 

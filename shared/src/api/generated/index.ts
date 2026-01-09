@@ -276,6 +276,10 @@ export type {
   GetProjectFileInfoApiResponse,
 } from './projects'
 
+// projectFolders
+export * from './projectFolders'
+export { api as projectFoldersApi } from './projectFolders'
+
 // reviewables
 export * from './reviewables'
 export { api as reviewablesApi } from './reviewables'
