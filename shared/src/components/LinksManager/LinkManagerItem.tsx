@@ -42,7 +42,11 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
         unknown: link.isRestricted && isManager,
       })}
     >
-      {link.icon ? <Icon icon={link.icon} /> : <Icon icon={getEntityTypeIcon(link.entityType)} />}
+      {link.icon ? (
+        <Icon icon={link.icon} style={{ color: link.color || undefined }} />
+      ) : (
+        <Icon icon={getEntityTypeIcon(link.entityType)} />
+      )}
 
       <span className="title">
         {link.isRestricted ? (

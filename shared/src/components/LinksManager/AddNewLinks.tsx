@@ -5,7 +5,7 @@ import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
 import { useProjectContext } from '@shared/context'
-import { getEntityIcon } from '@shared/containers'
+import { getEntityIcon, getEntityColor } from '@shared/containers'
 
 export type LinkSearchType = 'search' | 'picker' | null
 
@@ -128,7 +128,12 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
                   tabIndex={0}
                   {...getItemProps(flatIndex)}
                 >
-                  <Icon icon={getEntityIcon(entity.entityType, entity.subType, anatomyForIcons)} />
+                  <Icon
+                    icon={getEntityIcon(entity.entityType, entity.subType, anatomyForIcons)}
+                    style={{
+                      color: getEntityColor(entity.entityType, entity.subType, anatomyForIcons) || undefined
+                    }}
+                  />
                   <span className="label">
                     {entity.parents?.map((part, index) => (
                       <Fragment key={index}>
