@@ -200,6 +200,8 @@ export default function useBuildProjectDataTable({
         taskTypes: project?.taskTypes || [],
       })
 
+      const folderTypeData = getEntityTypeData('folder', folder.folderType)
+
       // Create row with minimal required properties
       const row: TableRow = {
         id: folderId,
@@ -208,8 +210,8 @@ export default function useBuildProjectDataTable({
         folderId: folderId || null, // root folders have no folderId
         name: folder.name || '',
         label: folder.label || folder.name || '',
-        icon: getEntityTypeData('folder', folder.folderType)?.icon || null,
-        color: null,
+        icon: folderTypeData?.icon || null,
+        color: folderTypeData?.color || null,
         img: null,
         subRows: [],
         status: folder.status,
