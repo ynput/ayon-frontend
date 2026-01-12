@@ -310,6 +310,7 @@ const useListContextMenu = () => {
           command: () => openRenameList(firstSelectedRow),
           // Disable for multi-select
           disabled: multipleSelected,
+          shortcut: 'R',
           // Hide if not a list/folder OR user doesn't have edit permission
           hidden:
             (!allSelectedRowsAreLists && !isSelectedRowFolder) ||

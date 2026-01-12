@@ -263,7 +263,7 @@ const useProjectsListMenuItems = ({
           submenuItems.push(...hierarchyItems)
         }
 
-        // Show "Unset parent" (make root) at bottom if folder has a parent
+
         if (selectedFolder.parentId) {
           if (submenuItems.length > 0) submenuItems.push({ id: 'divider', separator: true })
           submenuItems.push({
@@ -340,35 +340,6 @@ const useProjectsListMenuItems = ({
           [command ? 'command' : 'onClick']: onSelectAll,
           hidden: multiSelect !== true,
         },
-        {
-          id: 'add-project',
-          label: 'Add new project',
-          icon: 'add',
-          [command ? 'command' : 'onClick']: onNewProject,
-        },
-        {
-          id: 'create-folder',
-          label: isSelectedRowFolder? 'Create subfolder': 'Create folder',
-          icon: 'create_new_folder',
-          shortcut: 'F',
-          [command ? 'command' : 'onClick']: isSelectedRowFolder? ()=> onCreateFolder?.({folderId: selectedFolder?.id})  : isSelectedProject ? () =>onCreateFolder?.({projectNames:newSelectedProjects.map((project)=> project.name)}) : onCreateFolder,
-        },
-        {
-          id: 'rename-folder',
-          label: 'Rename',
-          icon: 'edit',
-          shortcut: 'R',
-          [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
-          hidden: !isSelectedRowFolder
-        },
-        {
-          id: 'edit-folder',
-          label: 'Edit folder',
-          icon: 'folder_managed',
-          [command ? 'command' : 'onClick']: () => onEditFolder?.(selectedFolderId as string),
-          hidden: !isSelectedRowFolder
-        },
-        ...(moveMenuItem ? [moveMenuItem] : []),
         { id: 'divider' },
         {
           id: 'open-project',
@@ -393,7 +364,6 @@ const useProjectsListMenuItems = ({
           active: showArchived,
           hidden: command || userLevel < 500, // hide on context menu
         },
-        { id: 'divider', label: '', hidden: userLevel < 500 },
         {
           id: 'pin-project',
           label: allPinned ? 'Unpin' : 'Pin',
@@ -402,6 +372,37 @@ const useProjectsListMenuItems = ({
           disabled: selection.length === 0,
           hidden: isSelectedRowFolder
         },
+        {
+          id: 'rename-folder',
+          label: 'Rename',
+          icon: 'edit',
+          shortcut: 'R',
+          [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
+          hidden: !isSelectedRowFolder
+        }, {
+          id: 'edit-folder',
+          label: 'Edit folder',
+          icon: 'folder_managed',
+          [command ? 'command' : 'onClick']: () => onEditFolder?.(selectedFolderId as string),
+          hidden: !isSelectedRowFolder
+        },
+        { id: 'divider' },
+        {
+          id: 'add-project',
+          label: 'Add new project',
+          icon: 'add',
+          [command ? 'command' : 'onClick']: onNewProject,
+        },
+        {
+          id: 'create-folder',
+          label: isSelectedRowFolder? 'Create subfolder': 'Create folder',
+          icon: 'create_new_folder',
+          shortcut: 'F',
+          [command ? 'command' : 'onClick']: isSelectedRowFolder? ()=> onCreateFolder?.({folderId: selectedFolder?.id})  : isSelectedProject ? () =>onCreateFolder?.({projectNames:newSelectedProjects.map((project)=> project.name)}) : onCreateFolder,
+        },
+
+        ...(moveMenuItem ? [moveMenuItem] : []),
+        { id: 'divider' },
         {
           id: 'archive-project',
           label: `${singleActive ? 'Deactivate' : 'Activate'}`,
