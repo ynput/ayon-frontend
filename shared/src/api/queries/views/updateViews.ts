@@ -133,7 +133,72 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
     },
     updateView: {
       onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
-        console.log('updating view...', arg)
+        const { viewId, payload, viewType, projectName } = arg
+
+        const patches: any[] = []
+
+        // 1. Update listViews
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData('listViews', { viewType, projectName }, (draft) => {
+              const view = draft.find((v) => v.id === viewId)
+              if (view) {
+                Object.assign(view, payload)
+              }
+            }),
+          ),
+        )
+
+        // 2. Update getWorkingView
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData(
+              'getWorkingView',
+              { viewType, projectName },
+              (draft) => {
+                if (draft?.id === viewId) {
+                  Object.assign(draft, payload)
+                }
+              },
+            ),
+          ),
+        )
+
+        // 3. Update getDefaultView
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData(
+              'getDefaultView',
+              { viewType, projectName },
+              (draft) => {
+                if (draft?.id === viewId) {
+                  Object.assign(draft, payload)
+                }
+              },
+            ),
+          ),
+        )
+
+        // 4. Update getView
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData(
+              'getView',
+              { viewType, viewId, projectName },
+              (draft) => {
+                if (draft) {
+                  Object.assign(draft, payload)
+                }
+              },
+            ),
+          ),
+        )
+
+        try {
+          await queryFulfilled
+        } catch (error) {
+          patches.forEach((patch) => patch.undo())
+        }
       },
       transformErrorResponse: (error: any) => error.data?.detail,
       invalidatesTags: (_r, _e, { viewType, projectName, viewId, payload }) => {
