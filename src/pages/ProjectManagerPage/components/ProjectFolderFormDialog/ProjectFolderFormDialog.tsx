@@ -118,7 +118,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
           folderId,
           projectFolderPatchModel: {
             label,
-            data: { icon, color },
+            data: { icon: icon|| "", color: color || "" },
           },
         }).unwrap()
         toast.success('Project folder updated successfully')
