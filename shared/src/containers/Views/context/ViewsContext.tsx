@@ -157,8 +157,13 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   )
 
   // Filter out base views from the list
+  // Filter out studio working view if in project scope
   const viewsList = useMemo(
-    () => viewsListRaw.filter((view) => view.label !== BASE_VIEW_ID),
+    () =>
+      viewsListRaw.filter(
+        (view) =>
+          view.label !== BASE_VIEW_ID && !(projectName && view.working && view.scope === 'studio'),
+      ),
     [viewsListRaw],
   )
 
@@ -227,13 +232,14 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   // Base view mutations
-  const { onCreateBaseView, onUpdateBaseView, onDeleteBaseView, onLoadBaseView } = useBaseViewMutations({
-    viewType: viewType as string,
-    projectName,
-    workingSettings,
-    workingView,
-    dispatch,
-  })
+  const { onCreateBaseView, onUpdateBaseView, onDeleteBaseView, onLoadBaseView } =
+    useBaseViewMutations({
+      viewType: viewType as string,
+      projectName,
+      workingSettings,
+      workingView,
+      dispatch,
+    })
 
   const onUpdateWorkingView = useCallback(
     async (payload: Partial<ViewData>, { selectView }: { selectView?: boolean } = {}) => {
