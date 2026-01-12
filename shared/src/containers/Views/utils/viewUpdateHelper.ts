@@ -8,7 +8,12 @@
  * - Working view management
  */
 
-import { CreateViewApiArg, EntityIdResponse, useCreateViewMutation } from '@shared/api'
+import {
+  CreateViewApiArg,
+  EntityIdResponse,
+  useCreateViewMutation,
+  useUpdateViewMutation,
+} from '@shared/api'
 import { generateWorkingView } from './generateWorkingView'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
@@ -32,7 +37,7 @@ export const updateViewSettings = async (
   newLocalValue: any,
   options: UpdateOptions = {},
   viewContext: ViewsContextValue,
-  onCreateView: (payload: CreateViewApiArg) => Promise<EntityIdResponse>,
+  onApplyViewChanges: (arg: any, viewId?: string) => Promise<EntityIdResponse | void>,
 ): Promise<void> => {
   const {
     viewSettings,
@@ -60,17 +65,24 @@ export const updateViewSettings = async (
     const newWorkingView = generateWorkingView(newSettings)
 
     // Ensure the payload uses the consistent ID if we already have a working view
-    if (workingView?.id) {
-      newWorkingView.id = workingView.id
+    const viewId = workingView?.id
+    if (viewId) {
+      newWorkingView.id = viewId
     }
     const newWorkingViewId = newWorkingView.id
 
     // Make API call in background
-    const promise = onCreateView({
-      payload: newWorkingView,
-      viewType: viewType,
-      projectName: projectName,
-    })
+    // only include the fields that are updating (just settings)
+    const payload = viewId ? { settings: newSettings } : newWorkingView
+
+    const promise = onApplyViewChanges(
+      {
+        payload,
+        viewType: viewType,
+        projectName: projectName,
+      },
+      viewId,
+    )
 
     // if not already on the working view: set that the settings have been changed to show the little blue save button and switch to the working view
     if (!wasWorking) {
@@ -108,18 +120,41 @@ export const updateViewSettings = async (
 
 export const useViewUpdateHelper = () => {
   const [createView] = useCreateViewMutation()
+  const [updateView] = useUpdateViewMutation()
 
   const viewContext = useViewsContext()
 
-  const onCreateView = useCallback(
-    async (payload: CreateViewApiArg) => await createView(payload).unwrap(),
-    [createView],
+  const onApplyViewChanges = useCallback(
+    async (arg: any, viewId?: string) => {
+      if (viewId) {
+        // Filter the payload to only include valid patch fields
+        // and ideally only include fields that are actually being updated.
+        // Expecting the caller to provide only the fields they want to update in the payload.
+        const patchPayload: any = {}
+        const patchFields = ['label', 'owner', 'settings']
+        patchFields.forEach((key) => {
+          if (arg.payload[key] !== undefined) {
+            patchPayload[key] = arg.payload[key]
+          }
+        })
+
+        return await updateView({
+          viewType: arg.viewType,
+          projectName: arg.projectName,
+          viewId,
+          payload: patchPayload,
+        }).unwrap()
+      } else {
+        return await createView(arg).unwrap()
+      }
+    },
+    [createView, updateView],
   )
 
   const updateViewSettingsHandler = useCallback<UpdateViewSettingsFn>(
-    async (...args) => await updateViewSettings(...args, viewContext, onCreateView),
-    [viewContext],
+    async (...args) => await updateViewSettings(...args, viewContext, onApplyViewChanges),
+    [viewContext, onApplyViewChanges],
   )
 
-  return { updateViewSettings: updateViewSettingsHandler, onCreateView }
+  return { updateViewSettings: updateViewSettingsHandler, onCreateView: onApplyViewChanges }
 }
