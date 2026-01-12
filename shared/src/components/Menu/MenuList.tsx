@@ -48,15 +48,59 @@ export const MenuList: React.FC<MenuListProps> = ({
 
   const handleSubMenu = (e: React.MouseEvent, id: string, items: MenuItemType[]) => {
     if (!itemRefs.current[id] || !menuRef.current) return
-    onSubMenu?.(e, {
-      id,
-      style: {
-        top: itemRefs.current[id]!.offsetTop + ((style?.top as number) || 0) - 4,
-        left: menuRef.current.getBoundingClientRect().width + ((style?.left as number) || 0) - 12,
-      },
-      items,
-      level: level,
-    })
+
+    // Find DialogContent - the actual positioning context for all submenus
+    const dialogContent = menuRef.current.closest('[id="content"]') as HTMLElement | null
+    // Find Section - used to account for gap offset
+    const section = dialogContent?.querySelector('section') as HTMLElement | null
+
+    if (dialogContent && section) {
+      const itemRect = itemRefs.current[id]!.getBoundingClientRect()
+      const dialogRect = dialogContent.getBoundingClientRect()
+      const sectionRect = section.getBoundingClientRect()
+
+      // Calculate the gap/offset between DialogContent and Section
+      // This accounts for any flex gap or other spacing
+      const gapOffset = sectionRect.top - dialogRect.top
+
+      console.log('Submenu calculation:', {
+        itemTop: itemRect.top,
+        itemBottom: itemRect.bottom,
+        itemHeight: itemRect.height,
+        dialogTop: dialogRect.top,
+        sectionTop: sectionRect.top,
+        gapOffset: gapOffset,
+        calculated: itemRect.top - dialogRect.top - 4,
+        calculatedWithGap: itemRect.top - sectionRect.top - 4,
+        level: level,
+        isSubMenu: subMenu,
+        parentStyleTop: style?.top,
+        oldMethod: itemRefs.current[id]!.offsetTop + ((style?.top as number) || 0) - 4
+      })
+
+      onSubMenu?.(e, {
+        id,
+        style: {
+          // Calculate relative to Section - removed -4 offset to test alignment
+          top: itemRect.top - sectionRect.top,
+          left: menuRef.current.getBoundingClientRect().width + ((style?.left as number) || 0) - 12,
+        },
+        items,
+        level: level,
+      })
+    } else {
+      // Fallback to old calculation if DialogContent not found
+      console.log('DialogContent not found, using fallback')
+      onSubMenu?.(e, {
+        id,
+        style: {
+          top: itemRefs.current[id]!.offsetTop + ((style?.top as number) || 0) - 4,
+          left: menuRef.current.getBoundingClientRect().width + ((style?.left as number) || 0) - 12,
+        },
+        items,
+        level: level,
+      })
+    }
   }
 
   const handleMouseLeave = (e: React.MouseEvent) => {
@@ -91,7 +135,7 @@ export const MenuList: React.FC<MenuListProps> = ({
               return item.node
             }
 
-            if (item?.id === 'divider') return <hr key={i} />
+            if (item?.id === 'divider' || item?.separator ) return <hr key={i} />
 
             const {
               label,

@@ -226,7 +226,7 @@ const useProjectsListMenuItems = ({
           items.push({
             label: folder.label,
             icon: folder.data?.icon || FOLDER_ICON,
-            command: allSelectedRowsAreFolders
+            [command ? 'command' : 'onClick']: allSelectedRowsAreFolders
               ? () => onPutFolderInFolder?.(selectedFolderId as string, folder.id)
               : () =>
                 onPutProjectsInFolder?.(
@@ -268,7 +268,7 @@ const useProjectsListMenuItems = ({
           submenuItems.push({
             label: 'Make root folder',
             icon: FOLDER_ICON_REMOVE,
-            command: () => onPutFolderInFolder?.(selectedFolder.id),
+            [command ? 'command' : 'onClick']: () => onPutFolderInFolder?.(selectedFolder.id),
             shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
           })
         }
@@ -294,11 +294,11 @@ const useProjectsListMenuItems = ({
         // For single selection, show "Unset folder" only if that project has a folder
         const hasAnyFolder = newSelectedProjects.some((project) => project.name)
         if (hasAnyFolder) {
-          if (submenuItems.length > 0) submenuItems.push({ separator: true })
+          if (submenuItems.length > 0)  submenuItems.push({ separator: true })
           submenuItems.push({
             label: 'Unset folder',
             icon: FOLDER_ICON_REMOVE,
-            command: () => {
+            [command ? 'command' : 'onClick']: () => {
               onRemoveProjectsFromFolder?.(selectedProjectNames)
             },
             shortcut: getPlatformShortcutKey('f', [KeyMode.Shift, KeyMode.Alt]),
