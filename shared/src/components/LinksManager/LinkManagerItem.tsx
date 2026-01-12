@@ -59,7 +59,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
                 <span key={index + '-separator'}>/</span>
               </Fragment>
             ))}
-            <span className="label">{link.label}</span>
+            <span className="label" style={{ color: link.color || undefined }}>{link.label}</span>
           </>
         )}
       </span>

@@ -52,6 +52,17 @@ export const useGetEntityPickerData = ({
 
   // Get project data
   const project = useProjectContext()
+
+  // Build complete anatomy object with all types
+  const anatomy = useMemo(
+    () => ({
+      folderTypes: project?.folderTypes || [],
+      taskTypes: project?.taskTypes || [],
+      productTypes: project?.productTypes || [],
+    }),
+    [project?.folderTypes, project?.taskTypes, project?.productTypes],
+  )
+
   // convert flat list to table rows for the table
   const {
     data: hierarchTable,
@@ -103,7 +114,7 @@ export const useGetEntityPickerData = ({
     search.task,
     !entityDependencies.includes('task'),
     getParentIds(entityHierarchies['task'][entityHierarchies['task'].length - 2], foldersData),
-    project?.taskTypes,
+    anatomy,
   )
   const product = useGetEntityTypeData(
     projectName,
@@ -114,7 +125,7 @@ export const useGetEntityPickerData = ({
       entityHierarchies['product'][entityHierarchies['product'].length - 2],
       folder.data,
     ),
-    project?.productTypes,
+    anatomy,
   )
   const version = useGetEntityTypeData(
     projectName,
@@ -125,6 +136,7 @@ export const useGetEntityPickerData = ({
       entityHierarchies['version'][entityHierarchies['version'].length - 2],
       product.data,
     ),
+    anatomy,
   )
   const representation = useGetEntityTypeData(
     projectName,
@@ -135,6 +147,7 @@ export const useGetEntityPickerData = ({
       entityHierarchies['representation'][entityHierarchies['representation'].length - 2],
       version.data,
     ),
+    anatomy,
   )
   const workfile = useGetEntityTypeData(
     projectName,
@@ -145,6 +158,7 @@ export const useGetEntityPickerData = ({
       entityHierarchies['workfile'][entityHierarchies['workfile'].length - 2],
       task.data,
     ),
+    anatomy,
   )
 
   return {
@@ -157,13 +171,19 @@ export const useGetEntityPickerData = ({
   }
 }
 
+type Anatomy = {
+  folderTypes: EntityAnatomy[]
+  productTypes: EntityAnatomy[]
+  taskTypes: EntityAnatomy[]
+}
+
 const useGetEntityTypeData = (
   projectName: string,
   entityType: PickerEntityType,
   search: string | undefined,
   skip: boolean,
   parentIds?: string[],
-  anatomies?: EntityAnatomy[],
+  anatomy?: Anatomy,
 ) => {
   const { data, isFetching, hasNextPage, fetchNextPage, isFetchingNextPage, error } =
     useGetSearchedEntitiesLinksInfiniteQuery(
@@ -186,8 +206,8 @@ const useGetEntityTypeData = (
 
   //   convert to table rows
   const table = useMemo(
-    () => buildEntityPickerTableData(entities, anatomies),
-    [entities, anatomies],
+    () => buildEntityPickerTableData(entities, anatomy),
+    [entities, anatomy],
   )
 
   return {

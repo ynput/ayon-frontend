@@ -17,12 +17,18 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     return folderType?.icon || 'folder'
   }
 
+  const getFolderColor = (type: string) => {
+    const folderType = folderTypes.find((folderType) => folderType.name === type)
+    return folderType?.color
+  }
+
   const folderToTableRow = (folder: FolderListItem): Omit<SimpleTableRow, 'subRows'> => ({
     id: folder.id,
     parentId: folder.parentId,
     name: folder.name,
     label: folder.label || folder.name,
     icon: getFolderIcon(folder.folderType),
+    iconColor: getFolderColor(folder.folderType),
     img: null,
     data: {
       id: folder.id,
