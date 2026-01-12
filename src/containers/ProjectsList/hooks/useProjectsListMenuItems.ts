@@ -224,6 +224,7 @@ const useProjectsListMenuItems = ({
             )
             : []
           items.push({
+            id: folder.id,
             label: folder.label,
             icon: folder.data?.icon || FOLDER_ICON,
             [command ? 'command' : 'onClick']: allSelectedRowsAreFolders
@@ -264,8 +265,9 @@ const useProjectsListMenuItems = ({
 
         // Show "Unset parent" (make root) at bottom if folder has a parent
         if (selectedFolder.parentId) {
-          if (submenuItems.length > 0) submenuItems.push({ separator: true })
+          if (submenuItems.length > 0) submenuItems.push({ id: 'divider', separator: true })
           submenuItems.push({
+            id: 'make-root-folder',
             label: 'Make root folder',
             icon: FOLDER_ICON_REMOVE,
             [command ? 'command' : 'onClick']: () => onPutFolderInFolder?.(selectedFolder.id),
@@ -294,8 +296,9 @@ const useProjectsListMenuItems = ({
         // For single selection, show "Unset folder" only if that project has a folder
         const hasAnyFolder = newSelectedProjects.some((project) => project.name)
         if (hasAnyFolder) {
-          if (submenuItems.length > 0)  submenuItems.push({ separator: true })
+          if (submenuItems.length > 0)  submenuItems.push({ id: 'divider', separator: true })
           submenuItems.push({
+            id: 'unset-folder',
             label: 'Unset folder',
             icon: FOLDER_ICON_REMOVE,
             [command ? 'command' : 'onClick']: () => {
