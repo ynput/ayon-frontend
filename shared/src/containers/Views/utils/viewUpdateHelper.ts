@@ -34,23 +34,22 @@ export const updateViewSettings = async (
   viewContext: ViewsContextValue,
   onCreateView: (payload: CreateViewApiArg) => Promise<EntityIdResponse>,
 ): Promise<void> => {
+  const {
+    viewSettings,
+    viewType,
+    projectName,
+    selectedView,
+    setSelectedView,
+    workingView,
+    onSettingsChanged,
+  } = viewContext
+
+  if (!viewType) throw new Error('No view type provided for updating view settings')
+
+  const previousSelectedViewId = selectedView?.id
+  const wasWorking = selectedView?.working
+
   try {
-    // check the correct number of arguments are provided
-    if (!onCreateView) {
-      throw 'Insufficient arguments provided to updateViewSettings'
-    }
-
-    const {
-      viewSettings,
-      viewType,
-      projectName,
-      selectedView,
-      setSelectedView,
-      workingView,
-      onSettingsChanged,
-    } = viewContext
-    if (!viewType) throw 'No view type provided for updating view settings'
-
     // Immediately update local state for fast UI response
     localStateSetter(newLocalValue)
 
@@ -59,8 +58,12 @@ export const updateViewSettings = async (
 
     // always update the working view no matter what
     const newWorkingView = generateWorkingView(newSettings)
-    // only use the generated ID if there is no working view already
-    const newWorkingViewId = workingView?.id || newWorkingView.id
+
+    // Ensure the payload uses the consistent ID if we already have a working view
+    if (workingView?.id) {
+      newWorkingView.id = workingView.id
+    }
+    const newWorkingViewId = newWorkingView.id
 
     // Make API call in background
     const promise = onCreateView({
@@ -69,12 +72,13 @@ export const updateViewSettings = async (
       projectName: projectName,
     })
 
-    // if not working: set that the settings have been changed to show the little blue save button
-    if (selectedView && !selectedView.working) {
-      onSettingsChanged(true)
+    // if not already on the working view: set that the settings have been changed to show the little blue save button and switch to the working view
+    if (!wasWorking) {
+      if (selectedView) {
+        onSettingsChanged(true)
+      }
+      setSelectedView(newWorkingViewId as string)
     }
-    // Always switch to the working view after updating anything
-    setSelectedView(newWorkingViewId as string)
 
     await promise
 
@@ -87,6 +91,15 @@ export const updateViewSettings = async (
   } catch (error) {
     // Revert local state on error
     localStateSetter(null)
+
+    if (previousSelectedViewId) {
+      setSelectedView(previousSelectedViewId)
+    }
+
+    if (selectedView && !wasWorking) {
+      onSettingsChanged(false)
+    }
+
     console.error(error)
     const errorMsg = options.errorMessage || `Failed to update view settings: ${error}`
     toast.error(errorMsg)
