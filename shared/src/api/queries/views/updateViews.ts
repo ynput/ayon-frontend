@@ -78,7 +78,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           )
         }
 
-        let baseViewPatchApplied = false
+        let baseViewPatch
 
         if (payload.label === '__base__') {
           const newBaseView = {
@@ -92,15 +92,28 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
             position: 0,
           }
 
-          dispatch(
-            getViewsApi.util.upsertQueryData(
+          baseViewPatch = dispatch(
+            getViewsApi.util.updateQueryData(
               'getBaseView',
               { viewType: arg.viewType, projectName: arg.projectName },
-              newBaseView as any,
+              (draft) => {
+                if (draft) {
+                  Object.assign(draft, newBaseView)
+                }
+              },
             ),
           )
 
-          baseViewPatchApplied = true
+          // If the cache wasn't updated (because it didn't exist), upsert it
+          if (!baseViewPatch?.patches?.length) {
+            dispatch(
+              getViewsApi.util.upsertQueryData(
+                'getBaseView',
+                { viewType: arg.viewType, projectName: arg.projectName },
+                newBaseView as any,
+              ),
+            )
+          }
         }
 
         try {
@@ -108,7 +121,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         } catch (error) {
           patch.undo()
           if (workingViewPatch) workingViewPatch.undo()
-          // ❌ no undo for base view
+          if (baseViewPatch) baseViewPatch.undo()
         }
       },
       transformErrorResponse: (error: any) => error.data?.detail,
@@ -119,11 +132,31 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       ],
     },
     updateView: {
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        console.log('updating view...', arg)
+      },
       transformErrorResponse: (error: any) => error.data?.detail,
-      invalidatesTags: (_r, _e, { viewType, projectName, viewId }) => [
-        { type: 'view', id: viewId },
-        getScopeTag(viewType, projectName),
-      ],
+      invalidatesTags: (_r, _e, { viewType, projectName, viewId, payload }) => {
+        const tags: any[] = [{ type: 'view', id: viewId }]
+
+        // Only invalidate the full list if metadata fields (like label) have changed
+        const metadataFields = [
+          'label',
+          'owner',
+          'position',
+          'visibility',
+          'scope',
+          'accessLevel',
+          'working',
+        ]
+        const hasMetadataChanges = Object.keys(payload).some((key) => metadataFields.includes(key))
+
+        if (hasMetadataChanges) {
+          tags.push(getScopeTag(viewType, projectName))
+        }
+
+        return tags
+      },
     },
     deleteView: {
       onQueryStarted: async (arg, { dispatch, queryFulfilled, getState }) => {
