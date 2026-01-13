@@ -55,11 +55,11 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
 
   // Folder dialog state
-  const [folderDialogOpen, setFolderDialogOpen] = useState(false)
-  const [folderDialogData, setFolderDialogData] = useState<Partial<FolderFormData> | undefined>(
-    undefined,
-  )
-  const [folderDialogId, setFolderDialogId] = useState<string | undefined>(undefined)
+  const [folderDialogState, setFolderDialogState] = useState<{
+    isOpen: boolean
+    folderId?: string
+    initial?: Partial<FolderFormData>
+  }>({ isOpen: false })
 
   const {
     data = [],
@@ -208,18 +208,18 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   // Folder dialog handlers
   const handleOpenFolderDialog = useCallback(
-    (data?: Partial<FolderFormData>, folderId?:string) => {
-      setFolderDialogData(data)
-      setFolderDialogId(folderId)
-      setFolderDialogOpen(true)
+    (data?: Partial<FolderFormData>, folderId?: string) => {
+      setFolderDialogState({
+        isOpen: true,
+        folderId,
+        initial: data,
+      })
     },
     [],
   )
 
   const handleCloseFolderDialog = useCallback(() => {
-    setFolderDialogOpen(false)
-    setFolderDialogData(undefined)
-    setFolderDialogId(undefined)
+    setFolderDialogState({ isOpen: false })
   }, [])
 
   // Post-creation callbacks for folder state management
@@ -337,10 +337,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
         pt={pt}
       />
       <ProjectFolderFormDialog
-        isOpen={folderDialogOpen}
+        isOpen={folderDialogState.isOpen}
         onClose={handleCloseFolderDialog}
-        initial={folderDialogData}
-        folderId={folderDialogId}
+        initial={folderDialogState.initial}
+        folderId={folderDialogState.folderId}
         projectNames={selection}
         onPutProjectsInFolder={onPutProjectsInFolder}
         rowSelection={rowSelection}

@@ -1,5 +1,9 @@
 import { ListProjectsItemModel, ProjectFolderModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import {
+  buildHierarchicalTableRows,
+  HierarchicalFolderNode,
+} from '@shared/util'
 
 const FOLDER_ICON = 'folder'
 export const PROJECT_FOLDER_ROW_ID_PREFIX = 'folder'
@@ -24,13 +28,8 @@ const buildProjectsTableData = (
   for (const folder of folders) {
     foldersMap.set(String(folder.id), folder)
   }
-  interface FolderNode {
-    id: string
-    folder: ProjectFolderModel
-    children: Map<string, FolderNode>
-    projects: ListProjectsItemModel[]
-    hasAnyProjects: boolean
-  }
+
+  type FolderNode = HierarchicalFolderNode<ProjectFolderModel, ListProjectsItemModel>
   const folderNodes = new Map<string, FolderNode>()
   const rootFolderIds = new Set<string>()
 
@@ -40,8 +39,8 @@ const buildProjectsTableData = (
       id: folder.id,
       folder,
       children: new Map(),
-      projects: [],
-      hasAnyProjects: false,
+      items: [],
+      hasAnyItems: false,
     })
 
     // Track root folders (those without parentId)
@@ -66,21 +65,21 @@ const buildProjectsTableData = (
     const projectFolderId = project.projectFolder
     if (powerLicense && projectFolderId && foldersMap.has(projectFolderId)) {
       const folderNode = folderNodes.get(projectFolderId)!
-      folderNode.projects.push(project)
-      folderNode.hasAnyProjects = true
-    }else {
+      folderNode.items.push(project)
+      folderNode.hasAnyItems = true
+    } else {
       rootProjects.push(project)
     }
   }
 
   // Mark all parent folders that contain projects
   for (const node of folderNodes.values()) {
-    if (node.hasAnyProjects) {
+    if (node.hasAnyItems) {
       let currentFolder = node.folder
       while (currentFolder.parentId) {
         const parentNode = folderNodes.get(currentFolder.parentId)
         if (parentNode) {
-          parentNode.hasAnyProjects = true
+          parentNode.hasAnyItems = true
           currentFolder = parentNode.folder
         } else {
           break
@@ -117,98 +116,21 @@ const buildProjectsTableData = (
     })
   }
 
-  // Build table rows iteratively using depth-first traversal
-  const buildTableRowsIteratively = (): SimpleTableRow[] => {
-    const result: SimpleTableRow[] = []
-
-    // Get root folders and sort them
-    const rootNodes = Array.from(folderNodes.values()).filter(
-      (node) => rootFolderIds.has(node.id) && (showEmptyFolders || node.hasAnyProjects),
-    )
-    const sortedRootNodes = sortFolderNodes(rootNodes)
-
-    // Stack for iterative depth-first traversal
-    type StackItem = {
-      node: FolderNode
-      targetArray: SimpleTableRow[]
-      isProcessed: boolean
-      parentPath: string[]
-    }
-
-    const stack: StackItem[] = []
-
-    // Add root nodes to stack in reverse order
-    for (let i = sortedRootNodes.length - 1; i >= 0; i--) {
-      stack.push({
-        node: sortedRootNodes[i],
-        targetArray: result,
-        isProcessed: false,
-        parentPath: [],
-      })
-    }
-
-    while (stack.length > 0) {
-      const item = stack[stack.length - 1]
-
-      if (item.isProcessed) {
-        stack.pop()
-        continue
-      }
-
-      item.isProcessed = true
-      const { node, targetArray, parentPath } = item
-
-      // Create folder row (don't include parents to avoid showing "/" separator)
-      const folderRow: SimpleTableRow = {
-        id: buildProjectFolderRowId(node.id),
-        name: node.folder.label,
-        label: node.folder.label,
-        icon: node.folder.data?.icon || FOLDER_ICON,
-        iconColor: node.folder.data?.color,
-        iconFilled: true,
-        subRows: [],
-        data: {
-          id: node.id,
-          isGroupRow: true,
-          count:
-            node.projects.length +
-            Array.from(node.children.values()).reduce((acc, child) => acc + child.projects.length, 0),
-          type: node.id,
-          isFolder: true,
-          color: node.folder.data?.color,
-        },
-      }
-
-      // Add to target array
-      targetArray.push(folderRow)
-
-      // Add projects to this folder
-      for (const project of node.projects) {
-        folderRow.subRows.push(createProjectRow(project))
-      }
-
-      // Get child folders and sort them
-      const childNodes = Array.from(node.children.values()).filter(
-        (child) => showEmptyFolders || child.hasAnyProjects,
-      )
-      const sortedChildNodes = sortFolderNodes(childNodes)
-
-      // Add child folders to stack in reverse order
-      for (let i = sortedChildNodes.length - 1; i >= 0; i--) {
-        stack.push({
-          node: sortedChildNodes[i],
-          targetArray: folderRow.subRows,
-          isProcessed: false,
-          parentPath: [...parentPath, node.folder.label],
-        })
-      }
-    }
-
-    return result
-  }
-
-  // Build folder rows from the hierarchical structure
-  const folderRows = buildTableRowsIteratively()
+  // Build folder rows from the hierarchical structure using shared utility
+  const folderRows = buildHierarchicalTableRows({
+    folderNodes,
+    rootFolderIds,
+    showEmptyFolders,
+    buildFolderRowId: buildProjectFolderRowId,
+    createItemRow: createProjectRow,
+    sortFolderNodes,
+    getFolderLabel: (folder) => folder.label,
+    getFolderIcon: (folder) => folder.data?.icon || FOLDER_ICON,
+    getFolderColor: (folder) => folder.data?.color,
+    getItemCount: (node) =>
+      node.items.length +
+      Array.from(node.children.values()).reduce((acc, child) => acc + child.items.length, 0),
+  })
 
   // Create rows for root projects (projects not in folders)
   const rootProjectRows = rootProjects.map((project) => createProjectRow(project))

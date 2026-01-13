@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
 import { FOLDER_ICON, FOLDER_ICON_REMOVE } from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
-import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
 
 type Hidden = {
@@ -67,28 +67,6 @@ type BuildMenuItems = (
   selection: string[],
   config?: { command?: boolean; dividers?: boolean; hidden?: Hidden },
 ) => MenuItem[]
-
-const buildProjectFolderHierarchy = (folders: ProjectFolderModel[]) => {
-  const folderMap = new Map<string, ProjectFolderModel & { children: ProjectFolderModel[] }>()
-  const rootFolders: (ProjectFolderModel & { children: ProjectFolderModel[] })[] = []
-
-  // Create nodes for all folders
-  for (const folder of folders) {
-    folderMap.set(folder.id, { ...folder, children: [] })
-  }
-
-  // Build parent-child relationships
-  for (const folder of folders) {
-    const folderNode = folderMap.get(folder.id)!
-    if (folder.parentId && folderMap.has(folder.parentId)) {
-      folderMap.get(folder.parentId)!.children.push(folderNode)
-    } else {
-      rootFolders.push(folderNode)
-    }
-  }
-
-  return { folderMap, rootFolders }
-}
 
 const useProjectsListMenuItems = ({
   hidden = {},
@@ -258,7 +236,7 @@ const useProjectsListMenuItems = ({
         )
 
         if (availableParents.length > 0) {
-          const { rootFolders } = buildProjectFolderHierarchy(availableParents)
+          const { rootFolders } = buildFolderHierarchy(availableParents)
           const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
           submenuItems.push(...hierarchyItems)
         }
@@ -287,7 +265,7 @@ const useProjectsListMenuItems = ({
 
         // Add hierarchy items first (available destination folders)
         if (folders.length > 0) {
-          const { rootFolders } = buildProjectFolderHierarchy(folders)
+          const { rootFolders } = buildFolderHierarchy(folders)
           const hierarchyItems = createFolderHierarchy(rootFolders)
           submenuItems.push(...hierarchyItems)
         }

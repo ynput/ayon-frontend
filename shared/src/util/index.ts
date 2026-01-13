@@ -17,6 +17,10 @@ export * from './colorUtils'
 export * from './getGroupByDataType'
 export * from './uriUtils'
 export * from './extractEntityHierarchyFromParents'
+export * from './errorHandling'
+export * from './keyboardShortcuts'
+export * from './buildHierarchicalTableRows'
+export * from './folderHierarchy'
 
 import PubSub from './pubsub'
 export { PubSub }

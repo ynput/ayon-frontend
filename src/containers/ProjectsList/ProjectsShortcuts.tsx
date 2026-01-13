@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect } from 'react'
 import { RowSelectionState } from '@tanstack/react-table'
 import { ProjectFolderModel } from '@shared/api'
+import { shouldBlockShortcuts } from '@shared/util'
 import { parseProjectFolderRowId } from './buildProjectsTableData'
 
 
@@ -19,12 +20,7 @@ const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({
 }) => {
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
-      // Safety guards - prevent shortcuts when typing in inputs
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
-      // Or when elements have 'block-shortcuts' class
-      if ((e.target as HTMLElement)?.classList.contains('block-shortcuts')) return
-      // Or any of its parents
-      if ((e.target as HTMLElement)?.closest('.block-shortcuts')) return
+      if (shouldBlockShortcuts(e)) return
 
       const key = e.key.toLowerCase()
       const isMeta = e.metaKey || e.ctrlKey

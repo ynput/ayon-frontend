@@ -10,20 +10,12 @@ import {
   useUpdateEntityListMutation,
   type EntityListPatchModel,
 } from '@shared/api'
-import { toast } from 'react-toastify'
 import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import { parseListFolderRowId } from '../util'
-import { confirmDelete, getEntityId } from '@shared/util'
+import { confirmDelete, getEntityId, getErrorMessage } from '@shared/util'
 import { usePowerpack } from '@shared/context'
-
-const getErrorMessage = (error: unknown, prefix: string): string => {
-  const errorString = error instanceof Error ? error.message : String(error)
-  const errorMessage = `${prefix}: ${errorString}`
-  console.error(errorMessage)
-  toast.error(errorMessage)
-  return errorMessage
-}
+import { toast } from 'react-toastify'
 
 export interface UseUpdateListProps {
   setRowSelection: ListsContextType['setRowSelection']

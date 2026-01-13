@@ -5,7 +5,7 @@ import {
   useUpdateProjectFolderMutation,
   ProjectFolderModel,
 } from '@shared/api'
-import { toast } from 'react-toastify'
+import { getErrorMessage } from '@shared/util'
 import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
 
 interface UseProjectFolderActionsProps {
@@ -26,14 +26,6 @@ export const useProjectFolderActions = ({
 
   // Folder renaming state
   const [renamingFolder, setRenamingFolder] = useState<string | null>(null)
-
-  const getErrorMessage = (error: unknown, prefix: string): string => {
-    const errorString = error instanceof Error ? error.message : String(error)
-    const errorMessage = `${prefix}: ${errorString}`
-    console.error(errorMessage)
-    toast.error(errorMessage)
-    return errorMessage
-  }
 
   const onPutProjectsInFolder = useCallback(
     async (projectNames: string[], projectFolderId?: string) => {
@@ -86,6 +78,7 @@ export const useProjectFolderActions = ({
   const onDeleteFolder = useCallback(
     async (folderId: string) => {
       try {
+        onSelect([])
         await deleteProjectFolder({
           folderId: folderId,
         })
