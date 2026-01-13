@@ -12,6 +12,7 @@ interface FolderBodyProps {
     icon?: string | null
     status?: Status
     updatedAt: string
+    color?:string | null
   }
   isSelected: boolean
   isExpanded: boolean
@@ -55,6 +56,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
           <EntityCard
             title={folder.name}
             titleIcon={folder.icon ?? getEntityTypeIcon('folder')}
+            titleColor={folder.color}
             imageUrl={thumbnailUrl}
             imageIcon={folder.icon ?? getEntityTypeIcon('folder')}
             status={folder.status}
@@ -69,6 +71,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
             projectName={projectName}
             entityUpdatedAt={folder.updatedAt}
             icon={folder.icon}
+            color={folder.color}
             showBorder={false}
             src={thumbnailUrl}
             hoverIcon="expand_all"

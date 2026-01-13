@@ -396,6 +396,7 @@ export const TasksProgressTable = ({
                 id: row.__folderId,
                 name: row._folder,
                 icon: row.__folderIcon,
+                color: row.__folderColor,
                 status: folderStatuses.find((s) => s.name === row.__folderStatus),
                 updatedAt: row.__folderUpdatedAt,
               }}

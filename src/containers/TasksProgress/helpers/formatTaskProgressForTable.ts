@@ -26,6 +26,7 @@ export type FolderRow = {
   _folder: string
   _parents: string[]
   __folderIcon?: string | null
+  __folderColor?: string | null
   __folderType?: string
   __folderId: string
   __folderUpdatedA?: string
@@ -95,6 +96,7 @@ export const formatTaskProgressForTable = (
       _folder: folder.label || folder.name,
       _parents: folder.parents,
       __folderIcon: folderTypes.find((ft) => ft.name === folder.folderType)?.icon,
+      __folderColor: folderTypes.find((ft) => ft.name === folder.folderType)?.color,
       __folderId: folder.id,
       __folderType: folder.folderType,
       __folderUpdatedAt: folder.updatedAt,
