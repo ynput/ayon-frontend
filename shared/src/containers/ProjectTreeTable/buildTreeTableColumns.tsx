@@ -286,6 +286,7 @@ const buildTreeTableColumns = ({
                 toggleExpanded={row.getToggleExpandedHandler()}
                 rowHeight={rowHeight}
                 columnDisplayConfig={getColumnDisplayConfig(meta?.columnsConfig, 'name')}
+                color={row.original.color}
               />
             )}
             {isEditing(cellId) && (

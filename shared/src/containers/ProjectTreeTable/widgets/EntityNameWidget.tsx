@@ -119,6 +119,7 @@ type EntityNameWidgetProps = {
   toggleExpanded: () => void
   rowHeight?: number
   columnDisplayConfig?: DisplayConfig
+  color?: string | null
 }
 
 export const EntityNameWidget = ({
@@ -134,6 +135,7 @@ export const EntityNameWidget = ({
   toggleExpanded,
   rowHeight = 40,
   columnDisplayConfig,
+  color
 }: EntityNameWidgetProps) => {
   // Check if this is a restricted access entity
   const isRestricted = isEntityRestricted(type)
@@ -168,7 +170,7 @@ export const EntityNameWidget = ({
       <StyledContentWrapper>
         <StyledContentAbsolute>
           <StyledContent>
-            {icon && <Icon icon={icon} />}
+            {icon && <Icon style={{color: color || undefined}} icon={icon} />}
             <StyledTextContent className={clsx({ compact: isCompact })}>
               {shouldShowPath && !isRestricted && (
                 <span className="path">
