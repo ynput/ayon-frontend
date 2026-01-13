@@ -61,18 +61,9 @@ export const useProjectFolderActions = ({
 
   const onRemoveProjectsFromFolder = useCallback(
     async (projectNames: string[]) => {
-      try {
-        await assignProjectsToFolder({
-          assignProjectRequest: {
-            folderId: null,
-            projectNames: projectNames,
-          },
-        }).unwrap()
-      } catch (error: any) {
-        throw getErrorMessage(error, 'Failed to remove projects from folder')
-      }
+      return onPutProjectsInFolder(projectNames, undefined)
     },
-    [assignProjectsToFolder],
+    [onPutProjectsInFolder],
   )
 
   const onDeleteFolder = useCallback(
@@ -80,13 +71,13 @@ export const useProjectFolderActions = ({
       try {
         onSelect([])
         await deleteProjectFolder({
-          folderId: folderId,
+          folderId,
         })
       } catch (error: any) {
         throw getErrorMessage(error, 'Failed to delete folder')
       }
     },
-    [deleteProjectFolder],
+    [deleteProjectFolder, onSelect],
   )
 
   const onEditFolder = useCallback(

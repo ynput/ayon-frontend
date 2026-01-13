@@ -124,46 +124,43 @@ const useUpdateList = ({
     [renamingList, onUpdateList, closeRenameList, listFolders, updateListFolder, isUser],
   )
 
-  const onPutListsInFolder: UseUpdateListReturn['onPutListsInFolder'] = useCallback(
-    async (listIds, listFolderId) => {
-      try {
-        const updatePromises = listIds.map((listId) =>
+  const updateListsFolder = useCallback(
+    async (listIds: string[], listFolderId?: string | null) => {
+      await Promise.all(
+        listIds.map((listId) =>
           updateList({
             listId,
             projectName,
             entityListPatchModel: {
-              entityListFolderId: listFolderId,
+              entityListFolderId: (listFolderId ?? null) as unknown as string | undefined,
             },
           }).unwrap(),
-        )
+        ),
+      )
+    },
+    [updateList, projectName],
+  )
 
-        await Promise.all(updatePromises)
+  const onPutListsInFolder: UseUpdateListReturn['onPutListsInFolder'] = useCallback(
+    async (listIds, listFolderId) => {
+      try {
+        await updateListsFolder(listIds, listFolderId)
       } catch (error: any) {
         throw getErrorMessage(error, 'Failed to update list folder')
       }
     },
-    [updateList, projectName],
+    [updateListsFolder],
   )
 
   const onRemoveListsFromFolder: UseUpdateListReturn['onRemoveListsFromFolder'] = useCallback(
     async (listIds) => {
       try {
-        const updatePromises = listIds.map((listId) =>
-          updateList({
-            listId,
-            projectName,
-            entityListPatchModel: {
-              entityListFolderId: null as unknown as string | undefined,
-            },
-          }).unwrap(),
-        )
-
-        await Promise.all(updatePromises)
+        await updateListsFolder(listIds, null)
       } catch (error: any) {
         throw getErrorMessage(error, 'Failed to remove lists from folder')
       }
     },
-    [updateList, projectName],
+    [updateListsFolder],
   )
 
   const onCreateListFolder: UseUpdateListReturn['onCreateListFolder'] = async (
@@ -264,46 +261,43 @@ const useUpdateList = ({
     [projectName, deleteListFolder],
   )
 
+  const updateFoldersParent = useCallback(
+    async (folderIds: string[], parentFolderId?: string | null) => {
+      await Promise.all(
+        folderIds.map((id) =>
+          updateListFolder({
+            projectName,
+            folderId: id,
+            entityListFolderPatchModel: {
+              parentId: (parentFolderId ?? null) as unknown as string | undefined,
+            },
+          }).unwrap(),
+        ),
+      )
+    },
+    [projectName, updateListFolder],
+  )
+
   const onPutFoldersInFolder: UseUpdateListReturn['onPutFoldersInFolder'] = useCallback(
     async (folderIds, parentFolderId) => {
       try {
-        await Promise.all(
-          folderIds.map((id) =>
-            updateListFolder({
-              projectName,
-              folderId: id,
-              entityListFolderPatchModel: {
-                parentId: parentFolderId,
-              },
-            }).unwrap(),
-          ),
-        )
+        await updateFoldersParent(folderIds, parentFolderId)
       } catch (error) {
         throw getErrorMessage(error, 'Failed to move folder')
       }
     },
-    [projectName, updateListFolder],
+    [updateFoldersParent],
   )
 
   const onRemoveFoldersFromFolder: UseUpdateListReturn['onRemoveFoldersFromFolder'] = useCallback(
     async (folderIds) => {
       try {
-        await Promise.all(
-          folderIds.map((id) =>
-            updateListFolder({
-              projectName,
-              folderId: id,
-              entityListFolderPatchModel: {
-                parentId: null as unknown as string | undefined,
-              },
-            }).unwrap(),
-          ),
-        )
+        await updateFoldersParent(folderIds, null)
       } catch (error) {
         throw getErrorMessage(error, 'Failed to remove folder from parent')
       }
     },
-    [projectName, updateListFolder],
+    [updateFoldersParent],
   )
 
   return {
