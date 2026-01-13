@@ -13,7 +13,7 @@ import {
 import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
 import { parseListFolderRowId } from '../util'
-import { confirmDelete, getEntityId, getErrorMessage } from '@shared/util'
+import { getEntityId, getErrorMessage, handleDeleteFolders } from '@shared/util'
 import { usePowerpack } from '@shared/context'
 import { toast } from 'react-toastify'
 
@@ -234,40 +234,19 @@ const useUpdateList = ({
 
   const onDeleteListFolders: UseUpdateListReturn['onDeleteListFolders'] = useCallback(
     async (folderIds) => {
-      const ids = Array.isArray(folderIds) ? folderIds : [folderIds]
-
-      // Get the folder labels for the toast message
-      const folders = ids.map((id) => listFolders.find((folder) => folder.id === id)).filter(Boolean)
-      const folderLabels =
-        folders.length === 1
-          ? folders[0]?.label || 'Folder'
-          : folders.length > 1
-            ? `${folders.length} folders`
-            : 'Folder'
-
-      confirmDelete({
-        accept: async () => {
-          try {
-            await Promise.all(
-              ids.map((folderId) =>
-                deleteListFolder({
-                  projectName,
-                  folderId,
-                }).unwrap(),
-              ),
-            )
-
-            // deselect everything
-            setRowSelection({})
-          } catch (error) {
-            throw getErrorMessage(error, 'Failed to delete folder(s)')
-          }
-        },
-        label: folderLabels,
-        message: 'Only the folder(s) will be deleted. Lists inside the folder will remain.',
+      await handleDeleteFolders({
+        folderIds,
+        folders: listFolders,
+        deleteMutation: (folderId) =>
+          deleteListFolder({
+            projectName,
+            folderId,
+          }).unwrap(),
+        onSelect: () => setRowSelection({}),
+        itemTypeName: 'Lists',
       })
     },
-    [projectName, deleteListFolder, listFolders],
+    [projectName, deleteListFolder, listFolders, setRowSelection],
   )
 
   const updateFoldersParent = useCallback(

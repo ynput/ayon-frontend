@@ -5,7 +5,7 @@ import {
   useUpdateProjectFolderMutation,
   ProjectFolderModel,
 } from '@shared/api'
-import { getErrorMessage } from '@shared/util'
+import { getErrorMessage, handleDeleteFolders } from '@shared/util'
 import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
 
 interface UseProjectFolderActionsProps {
@@ -68,16 +68,15 @@ export const useProjectFolderActions = ({
 
   const onDeleteFolder = useCallback(
     async (folderId: string) => {
-      try {
-        onSelect([])
-        await deleteProjectFolder({
-          folderId,
-        })
-      } catch (error: any) {
-        throw getErrorMessage(error, 'Failed to delete folder')
-      }
+      await handleDeleteFolders({
+        folderIds: folderId,
+        folders,
+        deleteMutation: (id) => deleteProjectFolder({ folderId: id }).unwrap(),
+        onSelect,
+        itemTypeName: 'Projects',
+      })
     },
-    [deleteProjectFolder, onSelect],
+    [deleteProjectFolder, onSelect, folders],
   )
 
   const onEditFolder = useCallback(
@@ -85,7 +84,7 @@ export const useProjectFolderActions = ({
       const folder = folders?.find((f) => f.id === folderId)
       if (folder) {
         handleOpenFolderDialog({ label: folder.label, ...folder.data }, folderId)
-      }
+    }
     },
     [folders, handleOpenFolderDialog],
   )
