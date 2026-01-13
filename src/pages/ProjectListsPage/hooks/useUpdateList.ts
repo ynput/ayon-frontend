@@ -236,6 +236,15 @@ const useUpdateList = ({
     async (folderIds) => {
       const ids = Array.isArray(folderIds) ? folderIds : [folderIds]
 
+      // Get the folder labels for the toast message
+      const folders = ids.map((id) => listFolders.find((folder) => folder.id === id)).filter(Boolean)
+      const folderLabels =
+        folders.length === 1
+          ? folders[0]?.label || 'Folder'
+          : folders.length > 1
+            ? `${folders.length} folders`
+            : 'Folder'
+
       confirmDelete({
         accept: async () => {
           try {
@@ -254,11 +263,11 @@ const useUpdateList = ({
             throw getErrorMessage(error, 'Failed to delete folder(s)')
           }
         },
-        label: ids.length > 1 ? 'folders?' : 'folder?',
+        label: folderLabels,
         message: 'Only the folder(s) will be deleted. Lists inside the folder will remain.',
       })
     },
-    [projectName, deleteListFolder],
+    [projectName, deleteListFolder, listFolders],
   )
 
   const updateFoldersParent = useCallback(

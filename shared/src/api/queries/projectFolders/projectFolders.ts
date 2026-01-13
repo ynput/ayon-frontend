@@ -85,6 +85,7 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
       },
       transformErrorResponse,
       invalidatesTags: (_r, _e, arg) => [
+        PROJECT_FOLDER_LIST_TAG,
         { type: 'projectFolder', id: arg.folderId },
         { type: 'project', id: arg.folderId },
       ],
