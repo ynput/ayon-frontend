@@ -13,6 +13,11 @@ export const TableContainer = styled.div`
   &.isLoading {
     overflow: hidden;
   }
+  &.fitContent {
+    height: auto;
+    overflow: visible;
+    flex: none;
+  }
 
   /* make error icon smaller */
   .empty-placeholder {

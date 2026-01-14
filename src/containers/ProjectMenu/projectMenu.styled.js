@@ -74,6 +74,10 @@ export const All = styled.div`
   menu {
     flex: 1;
   }
+  /* Override hover color for rows in menu */
+  .menu-list td > div:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+  }
 `
 
 export const Divider = styled.hr`

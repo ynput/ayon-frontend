@@ -17,8 +17,8 @@ import { useNavigate } from 'react-router-dom'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
 import {
+  ProjectFolderFormData,
   ProjectFolderFormDialog,
-  ProjectProjectFolderFormData,
 } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { useState } from 'react'
 import { usePowerpack } from '@shared/context'

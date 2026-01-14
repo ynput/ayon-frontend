@@ -9,6 +9,7 @@ import { toast } from 'react-toastify'
 import { RowSelectionState } from '@tanstack/react-table'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import { ProjectFolderModel } from '@shared/api'
+import { getEntityId } from '@shared/util'
 
 export interface ProjectFolderFormData extends FolderFormData {
   projectNames?: string[]
@@ -155,19 +156,18 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
               toast.error(errorMessage)
             })
         } else if (projectNamesToAdd.length > 0) {
+          const folderId =  getEntityId()
           // Scenario 2: Create folder and assign selected projects to it
+          onFolderCreated?.(folderId, true)
+          onPutProjectsInFolder?.(projectNamesToAdd, folderId)
           createFolder({
             projectFolderPostModel: {
               label,
+              id: folderId,
               data: { icon, color },
             },
           })
             .unwrap()
-            .then((folder) => {
-              // Optimistically expand folder to show projects
-              onFolderCreated?.(folder.id, true)
-              return onPutProjectsInFolder?.(projectNamesToAdd, folder.id)
-            })
             .then(() => {
               toast.success('Project folder created successfully')
             })

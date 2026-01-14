@@ -1,20 +1,22 @@
-import SimpleTable, { Container, SimpleTableProvider } from '@shared/containers/SimpleTable'
+import { Container, SimpleTableProvider, SimpleTableRow } from '@shared/containers/SimpleTable'
 import { RowSelectionState, ExpandedState, RowPinningState } from '@tanstack/react-table'
 import { FC, useCallback, Dispatch, SetStateAction } from 'react'
-import ProjectsListRow from './ProjectsListRow'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { useCreateContextMenu } from '@shared/containers'
+import { ProjectsSimpleTable } from './ProjectsSimpleTable'
+import { Divider } from '@containers/ProjectMenu/projectMenu.styled'
+import { useLocalStorage } from '@shared/hooks'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 
 interface ProjectsTableProps {
-  data: any[]
+  data: SimpleTableRow[]
   isLoading?: boolean
   error?: string | undefined
   search?: string | undefined
   onSearch?: (search: string | undefined) => void
-  rowSelection: RowSelectionState
-  onRowSelectionChange: (newSelection: RowSelectionState) => void
+  rowSelection?: RowSelectionState
+  onRowSelectionChange?: (newSelection: RowSelectionState) => void
   rowPinning: string[]
   onRowPinningChange?: (pinning: RowPinningState) => void
   expanded: ExpandedState
@@ -46,7 +48,6 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   error,
   search,
   onSearch,
-  rowSelection,
   onRowSelectionChange,
   rowPinning,
   onRowPinningChange,
@@ -73,6 +74,44 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   // create the ref and model
   const [ctxMenuShow] = useCreateContextMenu()
 
+  // Track which table has active selection: 'pinned' | 'all'
+  const [activeTable, setActiveTable] = useLocalStorage<'pinned' | 'all'>('project-list-selection','all')
+
+  // Derive row selection for each table from selection prop
+  const selectionState = selection.reduce((acc, id) => {
+    acc[id] = true
+    return acc
+  }, {} as RowSelectionState)
+
+  const pinnedSelection = activeTable === 'pinned' ? selectionState : {}
+  const allProjectsSelection = activeTable === 'all' ? selectionState : {}
+
+  const handlePinnedSelectionChange = (newSelection: RowSelectionState) => {
+    setActiveTable('pinned')
+    const ids = Object.keys(newSelection).filter((id) => newSelection[id])
+    onSelect?.(ids)
+    onRowSelectionChange?.(newSelection)
+  }
+
+  const handleAllProjectsSelectionChange = (newSelection: RowSelectionState) => {
+    setActiveTable('all')
+    const ids = Object.keys(newSelection).filter((id) => newSelection[id])
+    onSelect?.(ids)
+    onRowSelectionChange?.(newSelection)
+  }
+
+  // Wrap onRowPinningChange to switch activeTable when selected project is unpinned
+  const handleRowPinningChange = (newPinning: RowPinningState) => {
+    const newPinnedList = newPinning?.top || []
+    // If active table is 'pinned' and the selected project is no longer pinned, switch to 'all'
+    if (activeTable === 'pinned' && selection.length > 0) {
+      const selectedProjectStillPinned = selection.some((id) => newPinnedList.includes(id))
+      if (!selectedProjectStillPinned) {
+        setActiveTable('all')
+      }
+    }
+    onRowPinningChange?.(newPinning)
+  }
   const handleRowContext = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
       if (readonly) return
@@ -106,23 +145,24 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     [ctxMenuShow, buildMenuItems, selection, onSelect, readonly],
   )
 
+  const pinnedSet = new Set(rowPinning)
+
+  const pinnedProjects = data.flatMap(function collectPinned(row): SimpleTableRow[] {
+    const result: SimpleTableRow[] = []
+    if (pinnedSet.has(row.name)) result.push(row)
+    if (row.subRows?.length) result.push(...row.subRows.flatMap(collectPinned))
+    return result
+  })
+
   return (
-    <SimpleTableProvider
-      {...{
-        rowSelection,
-        onRowSelectionChange,
-        rowPinning: { top: rowPinning },
-        onRowPinningChange,
-        expanded,
-        setExpanded,
-      }}
-    >
+
       <Container
         {...pt?.container}
         className={containerClassName}
         style={{ height: '100%', minWidth: 50, ...pt?.container?.style }}
       >
         {!readonly && onSearch && (
+
           <ProjectsListTableHeader
             title={title}
             search={search}
@@ -135,53 +175,60 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             hiddenButtons={hiddenButtons}
           />
         )}
-        <SimpleTable
-          data={data}
-          globalFilter={search ?? undefined}
-          isExpandable={data.some((row) => row.subRows.length > 0)}
-          isLoading={!!isLoading}
-          isMultiSelect={multiSelect}
-          error={error}
-          enableClickToDeselect={false}
-          enableNonFolderIndent={true}
-          meta={{
-            handleRowContext: readonly ? undefined : handleRowContext,
-            renamingFolder,
-            onSubmitRenameFolder,
-            closeRenameFolder,
+        {pinnedProjects.length > 0 && (
+          <SimpleTableProvider
+            {...{
+              rowSelection: pinnedSelection,
+              onRowSelectionChange: handlePinnedSelectionChange,
+              rowPinning: { top: rowPinning },
+              onRowPinningChange: handleRowPinningChange,
+              expanded,
+              setExpanded,
+            }}
+          >
+            <ProjectsSimpleTable
+              tableData={pinnedProjects}
+              search={search}
+              isLoading={isLoading}
+              multiSelect={multiSelect}
+              error={error}
+              readonly={readonly}
+              handleRowContext={handleRowContext}
+              renamingFolder={renamingFolder}
+              onSubmitRenameFolder={onSubmitRenameFolder}
+              closeRenameFolder={closeRenameFolder}
+              onOpenProject={onOpenProject}
+              fitContent
+            />
+            <Divider style={{marginTop: 5}} />
+          </SimpleTableProvider>
+        )}
+        <SimpleTableProvider
+          {...{
+            rowSelection: allProjectsSelection,
+            onRowSelectionChange: handleAllProjectsSelectionChange,
+            rowPinning: { top: rowPinning },
+            onRowPinningChange: handleRowPinningChange,
+            expanded,
+            setExpanded,
           }}
         >
-          {(props, row, table) => (
-            <ProjectsListRow
-              {...props}
-              id={row.id}
-              onContextMenu={readonly ? undefined : table.options.meta?.handleRowContext}
-              code={row.original.data.code}
-              isPinned={row.getIsPinned() === 'top'}
-              onPinToggle={
-                readonly ? undefined : () => row.pin(row.getIsPinned() === 'top' ? false : 'top')
-              }
-              inactive={row.original.data.active === false}
-              onDoubleClick={
-                readonly
-                  ? undefined
-                  : row.original.data?.isFolder
-                    ? undefined
-                    : () => onOpenProject?.(row.original.name)
-              }
-              isTableExpandable={props.isTableExpandable}
-              isRowExpandable={row.getCanExpand()}
-              isRowExpanded={row.getIsExpanded()}
-              onExpandClick={row.getToggleExpandedHandler()}
-              isRenaming={row.id === table.options.meta?.renamingFolder}
-              onSubmitRename={(v) => table.options.meta?.onSubmitRenameFolder?.(v)}
-              onCancelRename={table.options.meta?.closeRenameFolder}
-              count={row.original.data.count}
-            />
-          )}
-        </SimpleTable>
+        <ProjectsSimpleTable
+          tableData={data}
+          search={search}
+          isLoading={isLoading}
+          multiSelect={multiSelect}
+          error={error}
+          readonly={readonly}
+          handleRowContext={handleRowContext}
+          renamingFolder={renamingFolder}
+          onSubmitRenameFolder={onSubmitRenameFolder}
+          closeRenameFolder={closeRenameFolder}
+          onOpenProject={onOpenProject}
+        />
+        </SimpleTableProvider>
       </Container>
-    </SimpleTableProvider>
+
   )
 }
 

@@ -20,11 +20,12 @@ export const Cell = styled.div`
     text-overflow: ellipsis;
   }
 
-  /* by default code is hidden */
+  /* by default code is shown */
   .project-code {
-    display: none;
-    width: 100%;
+    display: inline-block;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* reveal code and hide label when smaller than 96px */
@@ -53,11 +54,24 @@ export const Cell = styled.div`
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
 
-    /* on hover - show pin */
-    &.selected {
-      .pin {
-        display: flex;
-      }
+    /* on hover - show icons, hide code */
+    .settings-icon,
+    .pin {
+      display: flex;
+    }
+    .project-code {
+      display: none;
+    }
+  }
+
+  /* when pinned - always show icons, hide code */
+  &.pinned {
+    .settings-icon,
+    .pin {
+      display: flex;
+    }
+    .project-code {
+      display: none;
     }
   }
 
@@ -132,4 +146,18 @@ export const PinIcon = styled(Icon)`
 export const ProjectCount = styled.span`
   color: var(--md-sys-color-outline);
   padding-right: 4px;
+`
+export const SettingsIcon = styled(Icon)`
+  border-radius: var(--border-radius-m);
+  padding: var(--padding-s);
+  display: none;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+`
+export const Code = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `

@@ -24,6 +24,7 @@ export interface ProjectsListRowProps extends React.HTMLAttributes<HTMLDivElemen
   onCancelRename?: () => void
   onExpandClick?: () => void
   onPinToggle?: () => void
+  onSettingsClick?: () => void
   pt?: {
     icon?: Partial<IconProps>| undefined;
   }
@@ -50,6 +51,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
       onCancelRename,
       onExpandClick,
       onPinToggle,
+      onSettingsClick,
       pt,
       className,
       id,
@@ -71,12 +73,12 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
     return (
       <Styled.Cell
         {...props}
-        className={clsx(className, { disabled, inactive })}
+        className={clsx(className, { disabled, inactive, pinned: isPinned })}
         ref={ref}
         id={id}
         style={{
           ...props.style,
-          paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
+          paddingLeft: `calc(${depth * 2.5}rem + 4px)`,
         }}
       >
         <RowExpander
@@ -84,9 +86,8 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
-          enableNonFolderIndent={true}
+          enableNonFolderIndent={false}
         />
-        {!isFolder && code && <span className="project-code">{code}</span>}
         {icon && (
           <Icon
             icon={icon}
@@ -116,9 +117,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
             }}
           />
         ) : (
-          <span className={clsx('value')}>
-            {value}
-          </span>
+          <span className={clsx('value')}>{value}</span>
         )}
 
         {!isRenaming && (
@@ -127,14 +126,25 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
             {isFolder ? (
               <Styled.ProjectCount>{count}</Styled.ProjectCount>
             ) : (
-              <Styled.PinIcon
-                icon="push_pin"
-                className={clsx('pin', { active: isPinned })}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onPinToggle?.()
-                }}
-              />
+              <>
+                <Styled.SettingsIcon
+                  icon="settings_applications"
+                  className="settings-icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSettingsClick?.()
+                  }}
+                />
+                <Styled.PinIcon
+                  icon="push_pin"
+                  className={clsx('pin', { active: isPinned })}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onPinToggle?.()
+                  }}
+                />
+                <Styled.Code className="project-code">{code}</Styled.Code>
+              </>
             )}
           </>
         )}

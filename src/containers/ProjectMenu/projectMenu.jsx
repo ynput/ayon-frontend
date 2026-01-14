@@ -335,10 +335,14 @@ const ProjectMenu = ({ isOpen, onHide }) => {
               rowSelection={rowSelection}
               onRowSelectionChange={handleRowSelectionChange}
               rowPinning={pinned}
+              onRowPinningChange={(newPinning) => {
+                const pinnedProjects = newPinning?.top || []
+                updatePinned(pinnedProjects)
+              }}
               expanded={expanded}
               setExpanded={setExpanded}
               multiSelect={false}
-              readonly={true}
+              readonly={false}
               selection={projectSelected ? [projectSelected] : []}
               containerClassName="menu-list"
             />

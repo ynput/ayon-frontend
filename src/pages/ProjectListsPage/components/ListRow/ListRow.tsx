@@ -65,7 +65,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
         ref={ref}
         style={{
           ...props.style,
-          paddingLeft: `calc(${depth * 0.5}rem + 4px)`,
+          paddingLeft: `calc(${depth * 2.5}rem + 4px)`,
         }}
       >
         <RowExpander
@@ -73,7 +73,7 @@ const ListRow = forwardRef<HTMLDivElement, ListRowProps>(
           isRowExpanded={isRowExpanded}
           isTableExpandable={isTableExpandable}
           onExpandClick={onExpandClick}
-          enableNonFolderIndent={true}
+          enableNonFolderIndent={false}
         />
         {icon && (
           <Icon
