@@ -16,8 +16,10 @@ import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/usePro
 import { useNavigate } from 'react-router-dom'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
-import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
-import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
+import {
+  ProjectFolderFormDialog,
+  ProjectProjectFolderFormData,
+} from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { useState } from 'react'
 import { usePowerpack } from '@shared/context'
 import ProjectsTable from './ProjectsTable'
@@ -58,7 +60,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const [folderDialogState, setFolderDialogState] = useState<{
     isOpen: boolean
     folderId?: string
-    initial?: Partial<FolderFormData>
+    initial?: Partial<ProjectFolderFormData>
   }>({ isOpen: false })
 
   const {
@@ -208,7 +210,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
 
   // Folder dialog handlers
   const handleOpenFolderDialog = useCallback(
-    (data?: Partial<FolderFormData>, folderId?: string) => {
+    (data?: Partial<ProjectFolderFormData>, folderId?: string) => {
       setFolderDialogState({
         isOpen: true,
         folderId,

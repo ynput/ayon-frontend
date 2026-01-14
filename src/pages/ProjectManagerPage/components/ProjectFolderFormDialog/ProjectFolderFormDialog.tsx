@@ -1,6 +1,6 @@
 import { FC, useState, useCallback, useEffect, useMemo } from 'react'
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
-import { ProjectFolderForm, ProjectFolderFormData } from './ProjectFolderForm'
+import { FolderForm, FolderFormData } from '@shared/components/FolderForm'
 import {
   useCreateProjectFolderMutation,
   useUpdateProjectFolderMutation,
@@ -10,8 +10,7 @@ import { RowSelectionState } from '@tanstack/react-table'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import { ProjectFolderModel } from '@shared/api'
 
-export interface FolderFormData extends ProjectFolderFormData {
- parentId?: string
+export interface ProjectFolderFormData extends FolderFormData {
   projectNames?: string[]
 }
 
@@ -75,10 +74,10 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
     }
   }, [mode, rowSelection, folders])
 
-  const initFolderForm: FolderFormData = {
+  const initFolderForm: ProjectFolderFormData = {
     label: '',
   }
-  const [folderForm, setFolderForm] = useState<FolderFormData>(initFolderForm)
+  const [folderForm, setFolderForm] = useState<ProjectFolderFormData>(initFolderForm)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -235,7 +234,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
   )
 
   const handleFieldChange = useCallback(
-    (field: keyof ProjectFolderFormData, value: string | undefined) => {
+    (field: keyof FolderFormData, value: string | string[] | undefined) => {
       setFolderForm((prev) => ({
         ...prev,
         [field]: value,
@@ -295,7 +294,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
           This folder will be assigned to {projectCount} selected projects.
         </p>
       )}
-      <ProjectFolderForm data={folderForm} onChange={handleFieldChange} autoFocus={true} />
+      <FolderForm data={folderForm} onChange={handleFieldChange} autoFocus={true} />
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}
     </Dialog>
   )

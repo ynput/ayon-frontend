@@ -6,12 +6,12 @@ import {
   ProjectFolderModel,
 } from '@shared/api'
 import { getErrorMessage, handleDeleteFolders } from '@shared/util'
-import { FolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog/ProjectFolderFormDialog'
+import { ProjectFolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 
 interface UseProjectFolderActionsProps {
   folders?: ProjectFolderModel[]
   onSelect: (ids: string[]) => void
-  handleOpenFolderDialog: (data?: Partial<FolderFormData>, folderId?: string) => void
+  handleOpenFolderDialog: (data?: Partial<ProjectFolderFormData>, folderId?: string) => void
 }
 
 export const useProjectFolderActions = ({

@@ -1,5 +1,5 @@
-import { FC, useRef } from 'react'
-import { InputText } from '@ynput/ayon-react-components'
+import { FC, useRef, useCallback } from 'react'
+import { InputText, Dropdown, DropdownRef } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import * as EnumStyled from '@shared/components/EnumEditor/EnumEditor.styled'
 
@@ -30,26 +30,36 @@ const InputWrapper = styled.div`
   gap: 8px;
 `
 
-export interface ProjectFolderFormData {
+export interface FolderFormData {
   label: string
   icon?: string
   color?: string
+  scope?: string[]
   parentId?: string
 }
 
-interface ProjectFolderFormProps {
-  data: ProjectFolderFormData
-  onChange: (field: keyof ProjectFolderFormData, value: string | undefined) => void
-  autoFocus?: boolean
+export const ALL_SCOPE = '__all__'
+
+interface ScopeConfig {
+  options: { value: string; label: string }[]
+  filter?: string[]
 }
 
-export const ProjectFolderForm: FC<ProjectFolderFormProps> = ({
+interface FolderFormProps {
+  data: FolderFormData
+  onChange: (field: keyof FolderFormData, value: string | string[] | undefined) => void
+  autoFocus?: boolean
+  scopeConfig?: ScopeConfig
+}
+
+export const FolderForm: FC<FolderFormProps> = ({
   data,
   onChange,
   autoFocus = false,
+  scopeConfig,
 }) => {
   const colorInputRef = useRef<HTMLInputElement>(null)
-  const iconDropdownRef = useRef<any>(null)
+  const iconDropdownRef = useRef<DropdownRef>(null)
 
   const handleColorClick = () => {
     colorInputRef.current?.click()
@@ -66,6 +76,29 @@ export const ProjectFolderForm: FC<ProjectFolderFormProps> = ({
   const handleIconClear = () => {
     onChange('icon', undefined)
   }
+
+  const handleScopeChange = useCallback(
+    (added: string[]) => {
+      if (added.includes(ALL_SCOPE)) {
+        onChange('scope', [])
+        return
+      } else {
+        onChange('scope', added)
+      }
+    },
+    [onChange],
+  )
+
+  const scopeOptions = scopeConfig
+    ? [
+        ...scopeConfig.options,
+        { value: ALL_SCOPE, label: 'All' },
+      ].filter((scope) =>
+        scopeConfig.filter
+          ? scopeConfig.filter.includes(scope.value as any) || scope.value === ALL_SCOPE
+          : true,
+      )
+    : []
 
   return (
     <FormContainer>
@@ -114,7 +147,6 @@ export const ProjectFolderForm: FC<ProjectFolderFormProps> = ({
                 onChange('icon', value[0] || undefined)
 
                 if (!data.icon) {
-                  // focus the colour button or input
                   colorInputRef?.current?.parentElement?.focus()
                 }
               }}
@@ -156,8 +188,26 @@ export const ProjectFolderForm: FC<ProjectFolderFormProps> = ({
           </EnumStyled.PlaceholderWrapper>
         </InputWrapper>
       </FormRow>
+
+      {scopeConfig && (
+        <FormRow>
+          <Label>Scope</Label>
+          <InputWrapper>
+            <Dropdown
+              value={data.scope?.length ? data.scope : [ALL_SCOPE]}
+              options={scopeOptions}
+              onChange={handleScopeChange}
+              placeholder="Select scope"
+              widthExpand
+              style={{ flex: 1 }}
+              dataKey="value"
+              labelKey="label"
+            />
+          </InputWrapper>
+        </FormRow>
+      )}
     </FormContainer>
   )
 }
 
-export default ProjectFolderForm
+export default FolderForm
