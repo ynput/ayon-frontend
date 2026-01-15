@@ -5,6 +5,7 @@ import { detailsPanelEntityTypes } from '@shared/api'
 import * as Styled from './LinksManager.styled'
 import { LinkEntity } from './LinksManager'
 import clsx from 'clsx'
+import { EntityIcon } from '@shared/components/EntityIcon'
 
 export interface LinkManagerItemProps {
   link: LinkEntity
@@ -23,7 +24,6 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
 }) => {
   const entityTypeSupported = detailsPanelEntityTypes.includes(link.entityType as any)
   const isClickable = entityTypeSupported && !link.isRestricted
-
   return (
     <Styled.LinkItem
       key={link.linkId}
@@ -42,11 +42,9 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
         unknown: link.isRestricted && isManager,
       })}
     >
-      {link.icon ? (
-        <Icon icon={link.icon} style={{ color: link.color || undefined }} />
-      ) : (
-        <Icon icon={getEntityTypeIcon(link.entityType)} />
-      )}
+
+      <EntityIcon entity={{entityType: link.entityType}} icon={link?.icon} color={link.color} />
+
 
       <span className="title">
         {link.isRestricted ? (
