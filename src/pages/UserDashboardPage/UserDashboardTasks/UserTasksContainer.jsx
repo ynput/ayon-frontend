@@ -269,6 +269,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           projectsInfo={projectsInfo}
           priorities={priorities}
           onOpenViewer={handleOpenViewer}
+          outsideSelection={selectedTasks}
         />
       </SplitterPanel>
 

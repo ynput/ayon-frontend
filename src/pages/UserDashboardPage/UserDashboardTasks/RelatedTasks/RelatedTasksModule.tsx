@@ -10,6 +10,7 @@ interface RelatedTasksModuleProps {
   projectsInfo?: Record<string, ProjectModel>
   priorities?: AttributeEnumItem[]
   onOpenViewer?: (state: Partial<ViewerState>) => void
+  outsideSelection?: string[]
 }
 
 export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
@@ -17,6 +18,7 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
   projectsInfo,
   priorities,
   onOpenViewer,
+  outsideSelection = [],
 }) => {
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const viewerTaskId = useAppSelector((state) => state.viewer.taskId)
@@ -64,7 +66,11 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
   const viewerNotATask = viewerOpen && !viewerTaskId
   if (viewerNotATask) return null
 
-  const selectedIds = viewerOpen ? [viewerTaskId!] : entities?.entities.map((e) => e.id) || []
+  const selectedIds = viewerOpen
+    ? [viewerTaskId!]
+    : entities?.entities?.length
+    ? entities?.entities.map((e) => e.id) || []
+    : outsideSelection
 
   // use powerpack RelatedTasks module
   return (
