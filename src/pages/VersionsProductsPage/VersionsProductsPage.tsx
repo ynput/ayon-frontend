@@ -14,7 +14,7 @@ import { useVPViewsContext } from './context/VPViewsContext'
 import VPDetailsPanel from './components/VPDetailsPanel/VPDetailsPanel'
 import { useVersionsSelectionContext } from './context/VPSelectionContext'
 import { VPTableSettings } from './components/VPTableSettings/VPTableSettings'
-import { EarlyPreview, DetailsDialog } from '@shared/components'
+import { DetailsDialog } from '@shared/components'
 import { useVPContextMenu } from './hooks/useVPContextMenu'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext.tsx'
@@ -133,10 +133,6 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
         entityIds={detailIds}
         visible={!!showDetail}
         onHide={() => setShowDetail(false)}
-      />
-      <EarlyPreview
-        tooltip={`The Products page replaces the old Browser page. Show the browser page again at [/settings/server](/settings/server)`}
-        data-tooltip-as="markdown"
       />
       <NewListFromContext />
     </main>
