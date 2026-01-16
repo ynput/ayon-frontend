@@ -20,6 +20,7 @@ export interface ProjectsListRowProps extends React.HTMLAttributes<HTMLDivElemen
   isRowExpandable?: boolean
   isRowExpanded?: boolean
   isPinned?: boolean
+  hidePinned?: boolean
   onSubmitRename?: (value: string) => void
   onCancelRename?: () => void
   onExpandClick?: () => void
@@ -47,6 +48,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
       isRowExpandable,
       isRowExpanded,
       isPinned,
+      hidePinned,
       onSubmitRename,
       onCancelRename,
       onExpandClick,
@@ -73,7 +75,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
     return (
       <Styled.Cell
         {...props}
-        className={clsx(className, { disabled, inactive, pinned: isPinned })}
+        className={clsx(className, { disabled, inactive, pinned: isPinned, hidePinned })}
         ref={ref}
         id={id}
         style={{

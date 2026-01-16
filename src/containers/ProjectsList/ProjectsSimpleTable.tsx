@@ -16,6 +16,8 @@ interface ProjectsSimpleTableProps {
   closeRenameFolder?: () => void
   onOpenProject?: (projectName: string) => void
   fitContent?: boolean
+  hidePinned?: boolean
+  onSettingsClick?: (projectId: string) => void
 }
 
 export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
@@ -31,12 +33,16 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   closeRenameFolder,
   onOpenProject,
   fitContent,
-
-
+  hidePinned,
+  onSettingsClick,
 }) => {
   const navigate = useNavigate()
-  const onSettings = (id:string)=>{
-  navigate('/manageProjects/projectSettings?project='+ id)
+  const onSettings = (id: string) => {
+    if (onSettingsClick) {
+      onSettingsClick(id)
+    } else {
+      navigate('/manageProjects/projectSettings?project=' + id)
+    }
   }
   return (
     <SimpleTable
@@ -63,7 +69,8 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
             id={row.id}
             onContextMenu={readonly ? undefined : table.options.meta?.handleRowContext}
             code={row.original.data.code}
-            isPinned={row.getIsPinned() === 'top'}
+            isPinned={ row.getIsPinned() === 'top'}
+            hidePinned={hidePinned}
             onPinToggle={
               readonly ? undefined : () => row.pin(row.getIsPinned() === 'top' ? false : 'top')
             }

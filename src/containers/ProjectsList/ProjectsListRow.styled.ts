@@ -26,24 +26,37 @@ export const Cell = styled.div`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--md-sys-color-outline);
   }
 
-  /* reveal code and hide label when smaller than 96px */
-  /* pin also becomes smaller */
+  /* when smaller than 85px: show code instead of name, hide action buttons */
   container-type: inline-size;
   @container (max-width: 85px) {
-    .project-code {
-      display: inline-block;
-    }
+    /* hide project name, keep project code visible */
     .value {
       display: none;
     }
+    .project-code {
+      display: inline-block !important;
+    }
+    .settings-icon {
+      display: none !important;
+    }
     .pin {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      padding: 1px;
-      font-size: 14px;
+      display: none !important;
+    }
+  }
+  
+  &.pinned {
+    @container (max-width: 85px) {
+      .pin {
+        display: flex !important;
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        padding: 1px;
+        font-size: 14px;
+      }
     }
   }
 
@@ -64,14 +77,33 @@ export const Cell = styled.div`
     }
   }
 
-  /* when pinned - always show icons, hide code */
+  /* when pinned - always show pin icon, hide code */
   &.pinned {
-    .settings-icon,
     .pin {
       display: flex;
     }
     .project-code {
       display: none;
+    }
+  }
+
+  /* when hidePinned - hide pin by default, show project code */
+  &.hidePinned&.pinned {
+    .pin {
+      display: none;
+    }
+    .project-code {
+      display: inline-block;
+    }
+    &.pinned:hover {
+      .pin {
+        display: flex;
+        opacity: 0.7;
+        font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+      }
+      .project-code {
+        display: none;
+      }
     }
   }
 
@@ -86,6 +118,14 @@ export const Cell = styled.div`
     .expander {
       &:hover {
         background-color: var(--md-sys-color-on-primary);
+      }
+    }
+    /* update button styles on hover */
+    .settings-icon,
+    .pin {
+      &:hover {
+        background-color: var(--md-sys-color-on-primary);
+        color: var(--md-sys-color-primary);
       }
     }
   }
@@ -160,4 +200,13 @@ export const Code = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+`
+
+export const PinnedDivider = styled.hr`
+  margin: 0;
+  margin-top: 5px;
+  width: 100%;
+  border-style: solid;
+  border-width: 1px 0 0 0;
+  border-color: var(--md-sys-color-outline-variant);
 `

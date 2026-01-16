@@ -51,9 +51,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     }
   }, [menuRef.current, isOpen])
 
-  const projectSelected = useSelector((state) => state.project.name)
   const username = useSelector((state) => state.user?.name)
-  const isUser = useSelector((state) => state.user?.data?.isUser)
   const pinnedState =
     useSelector((state) => state.user?.data?.frontendPreferences?.pinnedProjects) || []
   // merge pinned from user and local storage
@@ -88,11 +86,6 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   // Table state for readonly table
   const [expanded, setExpanded] = useState({})
-
-  const rowSelection = useMemo(
-    () => ({ [projectSelected]: true }),
-    [projectSelected],
-  )
 
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
 
@@ -180,6 +173,11 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     // clear search
     setSearch('')
   }, [onHide])
+
+  const handleSettingsClick = useCallback((projectId) => {
+    handleHide()
+    navigate('/manageProjects/projectSettings?project=' + projectId)
+  }, [handleHide, navigate])
 
   const onProjectSelect = useCallback((projectName) => {
     handleHide()
@@ -332,7 +330,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
             <ProjectsTable
               data={filteredProjectTree}
               isLoading={false}
-              rowSelection={rowSelection}
+              rowSelection={{}}
               onRowSelectionChange={handleRowSelectionChange}
               rowPinning={pinned}
               onRowPinningChange={(newPinning) => {
@@ -343,7 +341,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
               setExpanded={setExpanded}
               multiSelect={false}
               readonly={false}
-              selection={projectSelected ? [projectSelected] : []}
+              selection={[]}
+              onSettingsClick={handleSettingsClick}
               containerClassName="menu-list"
             />
           </Styled.All>

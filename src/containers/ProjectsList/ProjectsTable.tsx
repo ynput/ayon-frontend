@@ -4,7 +4,7 @@ import { FC, useCallback, Dispatch, SetStateAction } from 'react'
 import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { useCreateContextMenu } from '@shared/containers'
 import { ProjectsSimpleTable } from './ProjectsSimpleTable'
-import { Divider } from '@containers/ProjectMenu/projectMenu.styled'
+import { PinnedDivider } from './ProjectsListRow.styled'
 import { useLocalStorage } from '@shared/hooks'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
@@ -27,6 +27,7 @@ interface ProjectsTableProps {
   selection: string[]
   onSelect?: (ids: string[]) => void
   onOpenProject?: (projectName: string) => void
+  onSettingsClick?: (projectId: string) => void
   title?: string
   showAddProject?: boolean
   onNewProject?: () => void
@@ -59,6 +60,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   selection,
   onSelect,
   onOpenProject,
+  onSettingsClick,
   title = 'Projects',
   showAddProject,
   onNewProject,
@@ -198,9 +200,10 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
               onSubmitRenameFolder={onSubmitRenameFolder}
               closeRenameFolder={closeRenameFolder}
               onOpenProject={onOpenProject}
+              onSettingsClick={onSettingsClick}
               fitContent
             />
-            <Divider style={{marginTop: 5}} />
+            <PinnedDivider />
           </SimpleTableProvider>
         )}
         <SimpleTableProvider
@@ -225,6 +228,8 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           onSubmitRenameFolder={onSubmitRenameFolder}
           closeRenameFolder={closeRenameFolder}
           onOpenProject={onOpenProject}
+          onSettingsClick={onSettingsClick}
+          hidePinned
         />
         </SimpleTableProvider>
       </Container>
