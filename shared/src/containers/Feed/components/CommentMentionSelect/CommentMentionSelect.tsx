@@ -10,6 +10,7 @@ interface CommentMentionSelectProps {
     label: string
     type: string
     icon?: string
+    color?: string
     context?: string
     suffix?: string
   }[]
@@ -75,7 +76,9 @@ const CommentMentionSelect = ({
               {option.type === 'user' ? (
                 <UserImage size={20} name={option.id} className="image" />
               ) : (
-                option.icon && <Icon icon={option.icon} className="image" />
+                option.icon && (
+                  <Icon icon={option.icon} className="image" style={{ color: option.color }} />
+                )
               )}
               {option.context && <Styled.MentionPrefix>{option.context} - </Styled.MentionPrefix>}
               <Styled.MentionName>{option.label}</Styled.MentionName>

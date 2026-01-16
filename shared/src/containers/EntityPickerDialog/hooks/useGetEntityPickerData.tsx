@@ -60,6 +60,7 @@ export const useGetEntityPickerData = ({
   } = useHierarchyTable({
     projectName,
     folderTypes: project?.folderTypes || [],
+    includeColors: true,
   })
 
   const foldersData = useMemo(() => {
