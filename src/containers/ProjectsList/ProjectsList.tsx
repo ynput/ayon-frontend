@@ -1,9 +1,6 @@
-import {
-  useGetProjectFoldersQuery,
-  useListProjectsQuery,
-} from '@shared/api'
-import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
-import { FC, useCallback, useEffect, useMemo } from 'react'
+import { useGetProjectFoldersQuery, useListProjectsQuery } from '@shared/api'
+import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjectsTableData'
 import { MENU_ID } from './ProjectsListTableHeader'
@@ -13,17 +10,17 @@ import { useProjectFolderActions } from './hooks/useProjectFolderActions'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
 import {
   ProjectFolderFormData,
   ProjectFolderFormDialog,
 } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
-import { useState } from 'react'
 import { usePowerpack } from '@shared/context'
 import ProjectsTable from './ProjectsTable'
 import ProjectsShortcuts from './ProjectsShortcuts'
+
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
 
 interface ProjectsListProps {
@@ -51,11 +48,12 @@ const ProjectsList: FC<ProjectsListProps> = ({
 }) => {
   // GET USER PREFERENCES (moved to hook)
   const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
-  const {powerLicense} = usePowerpack()
+  const { powerLicense } = usePowerpack()
   const [expanded, setExpanded] = useState<ExpandedState>({})
   // Show archived state (stored in local storage)
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
-
+  const [searchParams] = useSearchParams()
+  const queryProject = searchParams.get('project')
   // Folder dialog state
   const [folderDialogState, setFolderDialogState] = useState<{
     isOpen: boolean
@@ -68,10 +66,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     isLoading,
     error,
   } = useListProjectsQuery({ active: showArchived ? undefined : true })
-  const {
-    data: folders,
-  } = useGetProjectFoldersQuery()
-
+  const { data: folders } = useGetProjectFoldersQuery()
 
   // transformations
   // sort projects by active pinned, active, inactive (active=false) and then alphabetically
@@ -121,15 +116,17 @@ const ProjectsList: FC<ProjectsListProps> = ({
     user?.data?.isAdmin ||
     user?.data?.isManager
 
-  // format data for the table, pass pinned projects for sorting
-  const listsTableData = useMemo(
-    () => buildProjectsTableData(projects, folders, true, powerLicense),
-    [projects, folders, powerLicense],
-  )
-
   // state
   // search state
   const [clientSearch, setClientSearch] = useQueryParam<undefined | string>('project_search')
+  // format data for the table, pass pinned projects for sorting
+  // show folders when search is empty, hide when searching
+
+  const showFolders = !clientSearch
+  const listsTableData = useMemo(
+    () => buildProjectsTableData(projects, showFolders ? folders : [], true, powerLicense),
+    [projects, folders, powerLicense, showFolders],
+  )
   // convert selection to RowSelectionState
   const rowSelection: RowSelectionState = useMemo(
     () =>
@@ -239,7 +236,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         onSelect([folderRowId])
       }
     },
-    [setExpanded, onSelect]
+    [setExpanded, onSelect],
   )
 
   const handleFoldersCreated = useCallback(
@@ -255,7 +252,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         })
       }
     },
-    [setExpanded]
+    [setExpanded],
   )
 
   // Use project folder actions hook
@@ -293,11 +290,12 @@ const ProjectsList: FC<ProjectsListProps> = ({
     onPin: (pinned) => onRowPinningChange({ top: pinned }),
     onSelectAll: toggleSelectAll,
     onArchive,
-    onDelete:  onDeleteProject ,
+    onDelete: onDeleteProject,
     onOpen: onOpenProject,
     onManage: onOpenProjectManage,
     onShowArchivedToggle,
-    onCreateFolder: ({folderId, projectNames}) => handleOpenFolderDialog({parentId: folderId, projectNames}),
+    onCreateFolder: ({ folderId, projectNames }) =>
+      handleOpenFolderDialog({ parentId: folderId, projectNames }),
     onPutProjectsInFolder,
     onPutFolderInFolder,
     onRemoveProjectsFromFolder,

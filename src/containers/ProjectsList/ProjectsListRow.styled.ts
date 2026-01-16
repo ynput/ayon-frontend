@@ -32,12 +32,13 @@ export const Cell = styled.div`
   /* when smaller than 85px: show code instead of name, hide action buttons */
   container-type: inline-size;
   @container (max-width: 85px) {
-    /* hide project name, keep project code visible */
+    /* hide project name, show project code as primary (not faded) */
     .value {
       display: none;
     }
     .project-code {
       display: inline-block !important;
+      color: inherit;
     }
     .settings-icon {
       display: none !important;
