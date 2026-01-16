@@ -30,7 +30,7 @@ const InputWrapper = styled.div`
   gap: 8px;
 `
 
-export interface ListFolderFormData {
+export interface FolderFormData {
   label: string
   icon?: string
   color?: string
@@ -38,20 +38,25 @@ export interface ListFolderFormData {
   parentId?: string
 }
 
-interface ListFolderFormProps {
-  data: ListFolderFormData
-  onChange: (field: keyof ListFolderFormData, value: string | string[] | undefined) => void
-  autoFocus?: boolean
-  scopes?: ListFolderFormData['scope']
-}
-
 export const ALL_SCOPE = '__all__'
 
-export const ListFolderForm: FC<ListFolderFormProps> = ({
+interface ScopeConfig {
+  options: { value: string; label: string }[]
+  filter?: string[]
+}
+
+interface FolderFormProps {
+  data: FolderFormData
+  onChange: (field: keyof FolderFormData, value: string | string[] | undefined) => void
+  autoFocus?: boolean
+  scopeConfig?: ScopeConfig
+}
+
+export const FolderForm: FC<FolderFormProps> = ({
   data,
   onChange,
   autoFocus = false,
-  scopes,
+  scopeConfig,
 }) => {
   const colorInputRef = useRef<HTMLInputElement>(null)
   const iconDropdownRef = useRef<DropdownRef>(null)
@@ -75,7 +80,6 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({
   const handleScopeChange = useCallback(
     (added: string[]) => {
       if (added.includes(ALL_SCOPE)) {
-        // if 'All' is selected, clear scope (means available for all)
         onChange('scope', [])
         return
       } else {
@@ -85,13 +89,16 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({
     [onChange],
   )
 
-  const SCOPE_OPTIONS = [
-    { value: 'generic', label: 'Lists' },
-    { value: 'review-session', label: 'Review Sessions' },
-    { value: ALL_SCOPE, label: 'All' },
-  ].filter((scope) =>
-    scopes ? scopes.includes(scope.value as any) || scope.value === ALL_SCOPE : true,
-  )
+  const scopeOptions = scopeConfig
+    ? [
+        ...scopeConfig.options,
+        { value: ALL_SCOPE, label: 'All' },
+      ].filter((scope) =>
+        scopeConfig.filter
+          ? scopeConfig.filter.includes(scope.value as any) || scope.value === ALL_SCOPE
+          : true,
+      )
+    : []
 
   return (
     <FormContainer>
@@ -140,7 +147,6 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({
                 onChange('icon', value[0] || undefined)
 
                 if (!data.icon) {
-                  // focus the colour button or input
                   colorInputRef?.current?.parentElement?.focus()
                 }
               }}
@@ -183,23 +189,25 @@ export const ListFolderForm: FC<ListFolderFormProps> = ({
         </InputWrapper>
       </FormRow>
 
-      <FormRow>
-        <Label>Scope</Label>
-        <InputWrapper>
-          <Dropdown
-            value={data.scope?.length ? data.scope : [ALL_SCOPE]}
-            options={SCOPE_OPTIONS}
-            onChange={handleScopeChange}
-            placeholder="Select scope"
-            widthExpand
-            style={{ flex: 1 }}
-            dataKey="value"
-            labelKey="label"
-          />
-        </InputWrapper>
-      </FormRow>
+      {scopeConfig && (
+        <FormRow>
+          <Label>Scope</Label>
+          <InputWrapper>
+            <Dropdown
+              value={data.scope?.length ? data.scope : [ALL_SCOPE]}
+              options={scopeOptions}
+              onChange={handleScopeChange}
+              placeholder="Select scope"
+              widthExpand
+              style={{ flex: 1 }}
+              dataKey="value"
+              labelKey="label"
+            />
+          </InputWrapper>
+        </FormRow>
+      )}
     </FormContainer>
   )
 }
 
-export default ListFolderForm
+export default FolderForm

@@ -52,7 +52,7 @@ export const MenuList: React.FC<MenuListProps> = ({
       id,
       style: {
         top: itemRefs.current[id]!.offsetTop + ((style?.top as number) || 0) - 4,
-        right: menuRef.current.getBoundingClientRect().width + ((style?.right as number) || 0) - 12,
+        left: menuRef.current.getBoundingClientRect().width + ((style?.left as number) || 0) - 12,
       },
       items,
       level: level,
@@ -75,7 +75,7 @@ export const MenuList: React.FC<MenuListProps> = ({
 
   return (
     <Styled.MenuWrapper
-      style={{ paddingRight: subMenu ? 16 : 0, ...style }}
+      style={{ paddingLeft: subMenu ? 16 : 0, ...style }}
       className={subMenu ? 'sub-menu' : 'menu-list'}
       id={id}
       onMouseLeave={handleMouseLeave}
@@ -91,7 +91,7 @@ export const MenuList: React.FC<MenuListProps> = ({
               return item.node
             }
 
-            if (item?.id === 'divider') return <hr key={i} />
+            if (item?.id === 'divider' || item?.separator ) return <hr key={i} />
 
             const {
               label,

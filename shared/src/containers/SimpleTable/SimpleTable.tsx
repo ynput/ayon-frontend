@@ -137,6 +137,7 @@ export interface SimpleTableProps {
   rowHeight?: number // height of each row, used for virtual scrolling
   imgRatio?: number
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
+  fitContent?: boolean
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,
@@ -198,6 +199,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onScrollBottom,
   children,
   pt,
+  fitContent,
 }) => {
   const {
     rowSelection,
@@ -567,7 +569,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   return (
     <Styled.TableContainer
       ref={tableContainerRef}
-      className={clsx({ isLoading })}
+      className={clsx({ isLoading, fitContent })}
       onScroll={handleScroll}
       onClick={handleContainerClick}
     >

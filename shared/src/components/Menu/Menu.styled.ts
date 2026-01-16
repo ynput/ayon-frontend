@@ -96,7 +96,6 @@ export const MenuWrapper = styled.div`
   /* sub menu */
   &.sub-menu {
     position: absolute;
-    bottom: 0;
 
     border-radius: 8px;
     width: max-content;

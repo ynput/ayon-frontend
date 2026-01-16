@@ -7,7 +7,7 @@ import useClearListItems from './useClearListItems'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { parseListFolderRowId } from '../util'
 import { EntityListFolderModel } from '@shared/api'
-import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { usePowerpack, useProjectContext } from '@shared/context'
 import {
   canEditList,
@@ -23,29 +23,6 @@ export const FOLDER_ICON = 'snippet_folder'
 export const FOLDER_ICON_ADD = 'create_new_folder'
 export const FOLDER_ICON_EDIT = 'folder_managed'
 export const FOLDER_ICON_REMOVE = 'folder_off'
-
-// Helper function to build hierarchical folder structure for menu
-const buildFolderHierarchy = (folders: EntityListFolderModel[]) => {
-  const folderMap = new Map<string, EntityListFolderModel & { children: EntityListFolderModel[] }>()
-  const rootFolders: (EntityListFolderModel & { children: EntityListFolderModel[] })[] = []
-
-  // Create nodes for all folders
-  for (const folder of folders) {
-    folderMap.set(folder.id, { ...folder, children: [] })
-  }
-
-  // Build parent-child relationships
-  for (const folder of folders) {
-    const folderNode = folderMap.get(folder.id)!
-    if (folder.parentId && folderMap.has(folder.parentId)) {
-      folderMap.get(folder.parentId)!.children.push(folderNode)
-    } else {
-      rootFolders.push(folderNode)
-    }
-  }
-
-  return { folderMap, rootFolders }
-}
 
 // Helper function to prevent circular dependencies
 const wouldCreateCircularDependency = (
@@ -310,6 +287,7 @@ const useListContextMenu = () => {
           command: () => openRenameList(firstSelectedRow),
           // Disable for multi-select
           disabled: multipleSelected,
+          shortcut: 'R',
           // Hide if not a list/folder OR user doesn't have edit permission
           hidden:
             (!allSelectedRowsAreLists && !isSelectedRowFolder) ||

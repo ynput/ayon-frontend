@@ -5,12 +5,12 @@ import { UseNewListReturn } from '../hooks/useNewList'
 import { UseDeleteListReturn } from '../hooks/useDeleteList'
 import { UseUpdateListReturn } from '../hooks/useUpdateList'
 import { EntityList } from '@shared/api'
-import { FolderFormData } from '../components/ListFolderFormDialog'
+import { ListFolderFormData } from '../components/ListFolderFormDialog'
 
 export type ListDetailsOpenState = {
   isOpen: boolean
   folderId?: string // id of folder being edited, undefined for create
-  initial?: Partial<FolderFormData>
+  initial?: Partial<ListFolderFormData>
 }
 
 export type OnOpenFolderListParams = (params: { folderId?: string }) => void

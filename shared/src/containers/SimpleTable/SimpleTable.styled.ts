@@ -8,10 +8,14 @@ export const TableContainer = styled.div`
   width: 100%;
   overflow: auto;
   padding: 4px;
-  padding-top: 8px;
 
   &.isLoading {
     overflow: hidden;
+  }
+  &.fitContent {
+    height: auto;
+    overflow: visible;
+    flex: none;
   }
 
   /* make error icon smaller */
