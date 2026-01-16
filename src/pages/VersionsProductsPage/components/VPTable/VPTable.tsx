@@ -57,15 +57,17 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
             enablePinning: true,
             enableHiding: true,
 
-            cell: ({ row, column }) => {
+            cell: ({ row, column, table }) => {
               const { value, id, type } = getValueIdType(row, column.id)
               if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+              const meta = table.options.meta as any
               return (
                 <CellWidget
                   rowId={id}
                   className={clsx('taskType', { loading: row.original.isLoading })}
                   columnId={column.id}
                   value={value}
+                  options={meta?.options?.taskType}
                   attributeData={{ type: 'string' }}
                   isReadOnly={true}
                 />
