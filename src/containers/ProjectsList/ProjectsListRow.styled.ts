@@ -204,7 +204,6 @@ export const Code = styled.span`
 
 export const PinnedDivider = styled.hr`
   margin: 0;
-  margin-top: 5px;
   width: 100%;
   border-style: solid;
   border-width: 1px 0 0 0;
