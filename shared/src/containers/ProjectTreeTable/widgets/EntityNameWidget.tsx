@@ -1,8 +1,9 @@
-import { Button, Icon, theme } from '@ynput/ayon-react-components'
+import { Button, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
+import { EntityIcon } from '@shared/components/EntityIcon'
 
 const Expander = styled(Button)`
   &.expander {
@@ -112,8 +113,8 @@ type EntityNameWidgetProps = {
   name: string
   path?: string | null
   isExpandable?: boolean
-  icon?: string | null
-  type: string
+  entityType: string
+  subType?: string | null
   isExpanded: boolean
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
@@ -127,8 +128,8 @@ export const EntityNameWidget = ({
   name,
   path,
   isExpandable,
-  icon,
-  type,
+  entityType,
+  subType,
   isExpanded,
   toggleExpandAll,
   toggleExpanded,
@@ -136,7 +137,7 @@ export const EntityNameWidget = ({
   columnDisplayConfig,
 }: EntityNameWidgetProps) => {
   // Check if this is a restricted access entity
-  const isRestricted = isEntityRestricted(type)
+  const isRestricted = isEntityRestricted(entityType)
 
   // Determine layout based on row height
   // < 50px = single line (compact), >= 50px = stacked
@@ -168,7 +169,7 @@ export const EntityNameWidget = ({
       <StyledContentWrapper>
         <StyledContentAbsolute>
           <StyledContent>
-            {icon && <Icon icon={icon} />}
+            <EntityIcon entity={{ entityType, subType: subType || undefined }} />
             <StyledTextContent className={clsx({ compact: isCompact })}>
               {shouldShowPath && !isRestricted && (
                 <span className="path">

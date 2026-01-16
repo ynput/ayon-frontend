@@ -126,6 +126,7 @@ const useTableDataBySlice = ({
   const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({
     projectName: projectName || '',
     folderTypes: project?.folderTypes || [],
+    includeColors: true,
   })
   //   Users
   const { getData: getUsersData, isLoading: isUsersLoading } = useUsersTable({

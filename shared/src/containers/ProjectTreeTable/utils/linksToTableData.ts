@@ -13,6 +13,7 @@ export type LinksTableData = Record<LinkId, LinkValue>
 type EntityAnatomy = {
   name: string
   icon?: string
+  color?: string
 }
 
 type Anatomy = {
@@ -38,6 +39,7 @@ export const linksToTableData = (
         entityId: '',
         entityType: linkEntityType,
         icon: getEntityIcon(linkEntityType, undefined, anatomy),
+        color: undefined,
         isRestricted: true,
       }
 
@@ -63,6 +65,7 @@ export const linksToTableData = (
       entityId: node.id,
       entityType: linkEntityType,
       icon: getEntityIcon(linkEntityType, node.subType, anatomy),
+      color: getEntityColor(linkEntityType, node.subType, anatomy),
     }
 
     // we must build the entity link type name based on the direction and entity types
@@ -113,5 +116,22 @@ export const getEntityIcon = (
       return anatomy.taskTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('task')
     default:
       return getEntityTypeIcon(entityType)
+  }
+}
+
+export const getEntityColor = (
+  entityType: string,
+  subType: string | undefined,
+  anatomy: Anatomy,
+): string | undefined => {
+  switch (entityType) {
+    case 'folder':
+      return anatomy.folderTypes.find((a) => a.name === subType)?.color
+    case 'task':
+      return anatomy.taskTypes.find((a) => a.name === subType)?.color
+    case 'product':
+      return anatomy.productTypes.find((a) => a.name === subType)?.color
+    default:
+      return undefined
   }
 }

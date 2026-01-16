@@ -278,8 +278,8 @@ const buildTreeTableColumns = ({
                 label={row.original.label}
                 name={row.original.name}
                 path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
-                icon={row.original.icon}
-                type={row.original.entityType}
+                entityType={row.original.entityType}
+                subType={row.original.subType}
                 isExpandable={isExpandable}
                 isExpanded={row.getIsExpanded()}
                 toggleExpandAll={() => meta?.toggleExpandAll?.([row.id])}
