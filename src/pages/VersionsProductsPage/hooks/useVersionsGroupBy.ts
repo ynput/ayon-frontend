@@ -81,7 +81,7 @@ const useVersionsGroupBy = ({
       getGroupQueries?.({
         groups,
         taskGroups: groups, // deprecated, but keep for backward compatibility
-        filters: groupById === 'taskType' ? taskFilters : versionFilters,
+        filters: groupById === 'taskType' ? taskFilters : versionFilters, // taskType is not natively supported for versions, so we use taskFilters here
         groupBy,
         groupPageCounts,
       }) ?? []
