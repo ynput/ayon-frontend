@@ -58,6 +58,8 @@ export const buildVersionRow = (version: VersionNode): TableRow => ({
   attrib: { ...version.product.attrib, ...version.attrib },
   ownAttrib: Object.keys(version.attrib || {}),
   subType: version.product.productType,
+  taskType: version.task?.taskType,
+  taskLabel: version.task?.label || version.task?.name,
   hasReviewables: version.hasReviewables,
   author: version.author || '',
   links: {}, // TODO add links

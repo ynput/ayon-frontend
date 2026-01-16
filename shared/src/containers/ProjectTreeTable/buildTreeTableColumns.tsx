@@ -23,12 +23,12 @@ import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
-import { ColumnsConfig, getColumnDisplayConfig } from './types/columnConfig'
+import { getColumnDisplayConfig } from './types/columnConfig'
 import { upperFirst } from 'lodash'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
 
-const MIN_SIZE = 50
+export const COLUMN_MIN_SIZE = 50
 
 // Wrapper function for sorting that pushes isLoading rows to the bottom
 const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
@@ -202,7 +202,7 @@ const buildTreeTableColumns = ({
       id: 'name',
       accessorKey: 'name',
       header: nameLabel,
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
       enableSorting: groupBy ? false : canSort('name'),
       enableResizing: true,
@@ -320,7 +320,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'status',
       accessorKey: 'status',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       header: 'Status',
       sortingFn: withLoadingStateSort((a, b, c) =>
         attribSort(a, b, c, { enum: options.status, type: 'string' }),
@@ -406,7 +406,7 @@ const buildTreeTableColumns = ({
       id: 'subType',
       accessorKey: 'subType',
       header: scopes.includes('product') || scopes.includes('version') ? 'Product type' : 'Type',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('subType'),
       enableResizing: true,
       enablePinning: true,
@@ -462,7 +462,7 @@ const buildTreeTableColumns = ({
       id: 'assignees',
       accessorKey: 'assignees',
       header: 'Assignees',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('assignees'),
       enableResizing: true,
       enablePinning: true,
@@ -517,7 +517,7 @@ const buildTreeTableColumns = ({
       id: 'folder',
       accessorKey: 'folder',
       header: 'Folder name',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('folderName'),
       enableResizing: true,
       enablePinning: true,
@@ -546,7 +546,7 @@ const buildTreeTableColumns = ({
       id: 'author',
       accessorKey: 'author',
       header: 'Author',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('author'),
       enableResizing: true,
       enablePinning: true,
@@ -579,7 +579,7 @@ const buildTreeTableColumns = ({
       id: 'version',
       accessorKey: 'version',
       header: 'Version',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('version'),
       enableResizing: true,
       enablePinning: true,
@@ -615,7 +615,7 @@ const buildTreeTableColumns = ({
       id: 'product',
       accessorKey: 'product',
       header: 'Product name',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('product'),
       enableResizing: true,
       enablePinning: true,
@@ -644,7 +644,7 @@ const buildTreeTableColumns = ({
       id: 'tags',
       accessorKey: 'tags',
       header: 'Tags',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('tags'),
       enableResizing: true,
       enablePinning: true,
@@ -682,7 +682,7 @@ const buildTreeTableColumns = ({
       id: 'createdAt',
       accessorKey: 'createdAt',
       header: 'Created at',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('createdAt'),
       enableResizing: true,
       enablePinning: true,
@@ -712,7 +712,7 @@ const buildTreeTableColumns = ({
       id: 'updatedAt',
       accessorKey: 'updatedAt',
       header: 'Updated at',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('updatedAt'),
       enableResizing: true,
       enablePinning: true,
@@ -754,7 +754,7 @@ const buildTreeTableColumns = ({
         id: 'attrib_' + attrib.name,
         accessorKey: 'attrib.' + attrib.name,
         header: attrib.data.title || attrib.name,
-        minSize: MIN_SIZE,
+        minSize: COLUMN_MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
         sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
         enableSorting: canSort(attrib.name) && canSort('attrib'),
@@ -828,7 +828,7 @@ const buildTreeTableColumns = ({
                   />
                 </LinkColumnHeader>
               ),
-              minSize: MIN_SIZE,
+              minSize: COLUMN_MIN_SIZE,
               enableSorting: false,
               enableResizing: true,
               enablePinning: true,
