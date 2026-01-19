@@ -1,0 +1,10 @@
+fragment SubTaskFragment on SubTaskNode {
+  id
+  name
+  label
+  assignees
+  description
+  startDate
+  endDate
+  isDone
+}

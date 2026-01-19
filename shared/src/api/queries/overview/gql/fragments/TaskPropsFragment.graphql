@@ -15,12 +15,6 @@ fragment TaskPropsFragment on TaskNode {
   hasReviewables
   parents
   subtasks {
-    id
-    name
-    label
-    assignees
-    description
-    startDate
-    endDate
+    ...SubTaskFragment
   }
 }
