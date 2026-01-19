@@ -47,6 +47,7 @@ const KanBanCard = forwardRef<HTMLDivElement, KanBanCardProps>(
           path={!isOverlay && parent}
           project={task.projectCode}
           titleIcon={task.taskInfo?.icon}
+          titleColor={task.taskInfo?.color}
           title={task.label || task.name}
           imageUrl={task.thumbnailUrl}
           imageIcon={task.taskInfo?.icon}

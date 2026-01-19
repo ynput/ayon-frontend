@@ -24,6 +24,12 @@ export type EntityTypeIcons = {
   product: Record<string, string>
 }
 
+export type EntityTypeColors = {
+  folder: Record<string, string>
+  task: Record<string, string>
+  product: Record<string, string>
+}
+
 type DetailsPanelHeaderProps = {
   entityType: 'folder' | 'task' | 'version' | 'representation'
   entitySubTypes: string[]
@@ -39,6 +45,7 @@ type DetailsPanelHeaderProps = {
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
   entityTypeIcons: EntityTypeIcons
+  entityTypeColors?: EntityTypeColors
 }
 
 const DetailsPanelHeader = ({
@@ -54,6 +61,7 @@ const DetailsPanelHeader = ({
   currentTab,
   onTabChange,
   entityTypeIcons,
+  entityTypeColors,
   onOpenViewer,
   onEntityFocus,
 }: DetailsPanelHeaderProps) => {
@@ -125,8 +133,8 @@ const DetailsPanelHeader = ({
   const priorities = getPriorityOptions(priorityAttrib, entityType)
 
   const thumbnails = useMemo(
-    () => getThumbnails(entities, entityType, entityTypeIcons),
-    [entities, entityType, entityTypeIcons],
+    () => getThumbnails(entities, entityType, entityTypeIcons, entityTypeColors),
+    [entities, entityType, entityTypeIcons, entityTypeColors],
   )
 
   // we need to get the intersection of all the statuses of the projects for the selected entities
