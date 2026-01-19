@@ -120,7 +120,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   // format data for the table, pass pinned projects for sorting
   // show folders when search is empty, hide when searching
 
-  const showFolders = !clientSearch
+  const showFolders = !clientSearch && powerLicense
   const listsTableData = useMemo(
     () => buildProjectsTableData(projects, showFolders ? folders : [], true, powerLicense),
     [projects, folders, powerLicense, showFolders],

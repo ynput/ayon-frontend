@@ -6,6 +6,7 @@ import { useCreateContextMenu } from '@shared/containers'
 import { ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { PinnedDivider } from './ProjectsListRow.styled'
 import { useLocalStorage } from '@shared/hooks'
+import { usePowerpack } from '@shared/context'
 
 type ButtonType = 'delete' | 'add' | 'filter' | 'search' | 'select-all'
 
@@ -74,7 +75,8 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   pt,
 }) => {
   // create the ref and model
-  const [ctxMenuShow] = useCreateContextMenu()
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const [ctxMenuShow] = useCreateContextMenu([], { powerLicense, setPowerpackDialog })
 
   // Track which table has active selection: 'pinned' | 'all'
   const [activeTable, setActiveTable] = useLocalStorage<'pinned' | 'all'>('project-list-selection','all')

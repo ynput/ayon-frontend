@@ -61,6 +61,7 @@ type MenuItem = {
   items?: any[]
   separator?: boolean
   shortcut?: string
+  powerFeature?: string
 }
 
 type BuildMenuItems = (
@@ -376,6 +377,7 @@ const useProjectsListMenuItems = ({
           label: isSelectedRowFolder? 'Create subfolder': 'Create folder',
           icon: 'create_new_folder',
           shortcut: 'F',
+          powerFeature: powerLicense ? undefined : 'projectFolders',
           [command ? 'command' : 'onClick']: isSelectedRowFolder? ()=> onCreateFolder?.({folderId: selectedFolder?.id})  : isSelectedProject ? () =>onCreateFolder?.({projectNames:newSelectedProjects.map((project)=> project.name)}) : onCreateFolder,
         },
 
