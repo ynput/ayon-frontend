@@ -32,8 +32,11 @@ export const Cell = styled.div`
   /* when smaller than 85px: show code instead of name, hide action buttons */
   container-type: inline-size;
   @container (max-width: 85px) {
-    /* hide project name, show project code as primary (not faded) */
+    /* hide project name and spacer, show project code in name position */
     .value {
+      display: none;
+    }
+    .spacer {
       display: none;
     }
     .project-code {

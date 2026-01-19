@@ -10,7 +10,7 @@ import { useProjectFolderActions } from './hooks/useProjectFolderActions'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
 import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
 import {
@@ -52,8 +52,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const [expanded, setExpanded] = useState<ExpandedState>({})
   // Show archived state (stored in local storage)
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
-  const [searchParams] = useSearchParams()
-  const queryProject = searchParams.get('project')
   // Folder dialog state
   const [folderDialogState, setFolderDialogState] = useState<{
     isOpen: boolean

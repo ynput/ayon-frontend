@@ -177,7 +177,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             hiddenButtons={hiddenButtons}
           />
         )}
-        {pinnedProjects.length > 0 && (
+        {pinnedProjects.length > 0 && !search && (
           <SimpleTableProvider
             {...{
               rowSelection: pinnedSelection,
@@ -229,7 +229,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           closeRenameFolder={closeRenameFolder}
           onOpenProject={onOpenProject}
           onSettingsClick={onSettingsClick}
-          hidePinned
+          hidePinned={!search}
         />
         </SimpleTableProvider>
       </Container>
