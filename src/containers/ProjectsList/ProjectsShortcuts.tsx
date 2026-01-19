@@ -10,6 +10,7 @@ interface ProjectsShortcutsProps {
   folders: ProjectFolderModel[]
   onOpenFolderDialog: () => void
   onRenameFolder: (folderId: string) => void
+  disabled?: boolean
 }
 
 const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({
@@ -17,9 +18,11 @@ const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({
   folders,
   onOpenFolderDialog,
   onRenameFolder,
+  disabled,
 }) => {
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
+      if (disabled) return
       if (shouldBlockShortcuts(e)) return
 
       const key = e.key.toLowerCase()
@@ -62,7 +65,7 @@ const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({
         e.stopPropagation()
       }
     },
-    [rowSelection, folders, onOpenFolderDialog, onRenameFolder],
+    [disabled, rowSelection, folders, onOpenFolderDialog, onRenameFolder],
   )
 
   useEffect(() => {

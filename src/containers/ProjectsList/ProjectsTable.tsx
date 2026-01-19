@@ -123,10 +123,14 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
       e.preventDefault()
       e.stopPropagation()
 
+      const rowId = e.currentTarget.id
       let newSelection: string[] = [...selection]
       // if we are selecting a row outside of the selection (or none), set the selection to the row
-      if (!newSelection.includes(e.currentTarget.id)) {
-        newSelection = [e.currentTarget.id]
+      if (!newSelection.includes(rowId)) {
+        newSelection = [rowId]
+        // Set active table based on whether the clicked row is pinned
+        const isPinnedRow = rowPinning.includes(rowId)
+        setActiveTable(isPinnedRow ? 'pinned' : 'all')
         onSelect?.(newSelection)
       }
       const newSelectedRows = newSelection
@@ -146,7 +150,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
         ctxMenuShow(e, menuItems)
       }
     },
-    [ctxMenuShow, buildMenuItems, selection, onSelect, readonly],
+    [ctxMenuShow, buildMenuItems, selection, onSelect, readonly, rowPinning, setActiveTable],
   )
 
   const pinnedSet = new Set(rowPinning)

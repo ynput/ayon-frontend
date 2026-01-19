@@ -351,6 +351,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         folders={folders || []}
         onOpenFolderDialog={handleOpenFolderDialog}
         onRenameFolder={onRenameFolder}
+        disabled={!powerLicense}
       />
     </>
   )
