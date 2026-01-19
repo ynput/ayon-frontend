@@ -65,8 +65,6 @@ export type YnputCloudSubscriptionModel = {
 export type YnputCloudInfoModel = {
   /** Ynput cloud instance ID */
   instanceId: string
-  /** Is the instance connected to Ynput Cloud? */
-  connected?: boolean
   /** Name of the instance */
   instanceName?: string
   /** Organization ID */
@@ -75,12 +73,14 @@ export type YnputCloudInfoModel = {
   orgName?: string
   /** Name of the organization */
   orgTitle?: string
-  /** Collect saturated metrics */
-  collectSaturatedMetrics?: boolean
   /** Is the instance managed by Ynput Cloud? */
   managed?: boolean
+  /** Collect saturated metrics */
+  collectSaturatedMetrics?: boolean
   /** List of subscriptions */
   subscriptions?: YnputCloudSubscriptionModel[]
+  /** Is the instance connected to Ynput Cloud? */
+  connected?: boolean
 }
 export type ValidationError = {
   loc: (string | number)[]
