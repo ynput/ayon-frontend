@@ -138,15 +138,19 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   // close the dialog when clicking outside of it
   useLayoutEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+
       if (
         popupRef.current &&
-        !popupRef.current.contains(event.target as Node) &&
+        !popupRef.current.contains(target) &&
         anchorElement &&
-        !anchorElement.contains(event.target as Node) &&
+        !anchorElement.contains(target) &&
         // check we are not clicking inside the EntityPickerDialog
-        !(event.target as HTMLElement).closest('.entity-picker-dialog') &&
+        !target.closest('.entity-picker-dialog') &&
         // check we are not clicking on the dialog backdrop
-        !(event.target as HTMLElement).querySelector('.entity-picker-dialog')
+        !target.querySelector('.entity-picker-dialog') &&
+        // when there is a menu open
+        !target.closest('dialog')
       ) {
         onClose?.()
       }
