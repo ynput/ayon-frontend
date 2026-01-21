@@ -2,6 +2,8 @@ import { FC, useRef, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
+export const BLOCK_DIALOG_CLOSE_CLASS = 'block-dialog-close'
+
 const StyledPopUp = styled.div`
   position: fixed;
   z-index: 310;
@@ -149,8 +151,13 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         !target.closest('.entity-picker-dialog') &&
         // check we are not clicking on the dialog backdrop
         !target.querySelector('.entity-picker-dialog') &&
-        // when there is a menu open
-        !target.closest('dialog')
+        // check we are not clicking inside another dialog
+        !target.closest('dialog') &&
+        // check we are not clicking inside a dropdown
+        !target.closest('.dropdown') &&
+        !target.closest('.p-dialog-mask') &&
+        !target.closest('.p-datepicker') &&
+        !target.closest('.' + BLOCK_DIALOG_CLOSE_CLASS)
       ) {
         onClose?.()
       }
@@ -161,6 +168,20 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [onClose, anchorElement])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // check we are not inside an input or textarea
+    const target = e.target as HTMLElement
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return
+    }
+
+    // close dialog on escape
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      onClose?.()
+    }
+  }
 
   if (!isEditing) return null
   return createPortal(
@@ -176,11 +197,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
       }}
       className="links-widget-popup"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          onClose?.()
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </StyledPopUp>,
