@@ -1,11 +1,16 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { toast } from 'react-toastify'
+import styled from 'styled-components'
 
 export interface FormFileData {
   payload: string
   filename: string
   download?: boolean
 }
+
+//
+// File upload
+//
 
 interface FormFileUploadProps {
   value?: FormFileData
@@ -19,7 +24,7 @@ export const FormFileUpload = (props: FormFileUploadProps) => {
 
   const validExtensions = useMemo(() => props.validExtensions?.map(ext => ext.startsWith('.') ? ext.toLowerCase() : `.${ext.toLowerCase()}`), [props.validExtensions])
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) {
       return
@@ -30,7 +35,7 @@ export const FormFileUpload = (props: FormFileUploadProps) => {
       return
     }
 
-    if (file.size > 2 * 1024 * 1024) { // 10 MB limit
+    if (file.size > 2 * 1024 * 1024) { // 2 MB limit, because we're sending it in JSON as base64
       toast.error('File size exceeds the 2 MB limit.')
       return
     }
@@ -53,7 +58,7 @@ export const FormFileUpload = (props: FormFileUploadProps) => {
       }
       reader.readAsDataURL(file)
     }
-  }
+  }, [props, validExtensions])
 
   return (
     <div className="form-file-upload">
@@ -64,14 +69,36 @@ export const FormFileUpload = (props: FormFileUploadProps) => {
 }
 
 
+//
+// File download
+//
+
+
+const DownloadLink = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background: none;
+  border: none;
+
+  button {
+    width: auto;
+    background: none;
+    border: none;
+    border-bottom: 1px dashed var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+    cursor: pointer;
+    padding: 2px;
+    font: inherit;
+  }
+`
 
 interface FormFileDownloadProps {
   value: FormFileData
 }
 
 export const FormFileDownload = (props: FormFileDownloadProps) => {
-  // widget that displays a download link for the file represented by the base64 string in props.value
-
   const handleDownload = () => {
     const link = document.createElement('a')
     link.href = `data:application/octet-stream;base64,${props.value.payload}`
@@ -82,8 +109,10 @@ export const FormFileDownload = (props: FormFileDownloadProps) => {
   }
 
   return (
-    <div className="form-file-download">
-      <button onClick={handleDownload}>Download {props.value.filename}</button>
-    </div>
+    <DownloadLink>
+      <button onClick={handleDownload}>
+        {props.value.filename}
+      </button>
+    </DownloadLink>
   )
 }
