@@ -42,7 +42,7 @@ export const useBaseViewMutations = ({
   const onCreateBaseView = useCallback(
     async (isStudioScope: boolean) => {
       try {
-        const settings =viewSettings || {}
+        const settings = viewSettings || {}
         const baseViewPayload = {
           label: BASE_VIEW_ID,
           working: false,
@@ -144,8 +144,8 @@ export const useBaseViewMutations = ({
               viewType: viewType as string,
               projectName: isStudioScope ? undefined : projectName,
             },
-            { subscribe: false, forceRefetch: true }
-          )
+            { subscribe: false, forceRefetch: true },
+          ),
         )
         const baseViewResult = await baseViewPromise
         const baseView = baseViewResult.data
