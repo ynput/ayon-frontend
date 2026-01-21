@@ -189,7 +189,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
     if (value && (value as FormFileData)?.download) {
       return <FormFileDownload value={value as FormFileData} />
     }
-    return <FormFileUpload value={value as FormFileData} onChange={onChange} />
+    return <FormFileUpload value={value as FormFileData} onChange={onChange} validExtensions={field.valid_extensions} />
   }
 
 }

@@ -127,6 +127,7 @@ export type SimpleFormField = {
   highlight?: 'info' | 'warning' | 'error'
   min?: number | number
   max?: number | number
+  valid_extensions?: string[]
 }
 export type BaseActionManifest = {
   /** The identifier of the action */
