@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useRef, DragEvent } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
@@ -8,9 +8,37 @@ export interface FormFileData {
   download?: boolean
 }
 
+
+const LinkButton = styled.button`
+    width: auto;
+    background: none;
+    border: none;
+    border-bottom: 1px dashed var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+    cursor: pointer;
+    padding: 2px;
+    font: inherit;
+`
+
 //
 // File upload
 //
+
+const DropArea = styled.div`
+  border: 2px dashed var(--md-sys-color-outline);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  min-height: 100px;
+
+  input {
+    display: none;
+  }
+`
+
 
 interface FormFileUploadProps {
   value?: FormFileData
@@ -21,11 +49,13 @@ interface FormFileUploadProps {
 export const FormFileUpload = (props: FormFileUploadProps) => {
   // widget that displays a file upload input (and drop area)
   // and when user selects a file, it reads the file as base64 and calls setFieldValue with the base64 string
+  
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const validExtensions = useMemo(() => props.validExtensions?.map(ext => ext.startsWith('.') ? ext.toLowerCase() : `.${ext.toLowerCase()}`), [props.validExtensions])
 
-  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const handleFileChange = useCallback((file?: File) => {
+
     if (!file) {
       return
     }
@@ -60,19 +90,57 @@ export const FormFileUpload = (props: FormFileUploadProps) => {
     }
   }, [props, validExtensions])
 
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+
+    const files = [...e.dataTransfer.files];
+    if (files.length === 1) {
+      handleFileChange(files[0]);
+    }
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    handleFileChange(file);
+  }
+
+
   return (
-    <div className="form-file-upload">
-      <input type="file" onChange={handleFileChange} accept={validExtensions?.join(',')} />
-    </div>
+    <DropArea
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <input 
+        type="file" 
+        ref={inputRef}
+        onChange={handleInputChange} 
+        accept={validExtensions?.join(',')} 
+        multiple={false}
+        style={{ display: 'none' }}
+      />
+
+      <LinkButton type="button" onClick={() => inputRef.current?.click()}>
+        {props.value ? `Change file (${props.value.filename})` : 'Upload file'}
+      </LinkButton>
+
+    </DropArea>
   )
 
 }
 
-
 //
 // File download
 //
-
 
 const DownloadLink = styled.div`
   display: flex;
@@ -81,17 +149,6 @@ const DownloadLink = styled.div`
   justify-content: flex-start;
   background: none;
   border: none;
-
-  button {
-    width: auto;
-    background: none;
-    border: none;
-    border-bottom: 1px dashed var(--md-sys-color-primary);
-    color: var(--md-sys-color-primary);
-    cursor: pointer;
-    padding: 2px;
-    font: inherit;
-  }
 `
 
 interface FormFileDownloadProps {
@@ -110,9 +167,9 @@ export const FormFileDownload = (props: FormFileDownloadProps) => {
 
   return (
     <DownloadLink>
-      <button onClick={handleDownload}>
+      <LinkButton onClick={handleDownload}>
         {props.value.filename}
-      </button>
+      </LinkButton>
     </DownloadLink>
   )
 }
