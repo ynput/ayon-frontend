@@ -123,7 +123,7 @@ export type SimpleTableRow = {
   inactive?: boolean
 }
 
-export interface SimpleTableProps {
+export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
   data: SimpleTableRow[]
   isLoading: boolean
   error?: string
@@ -200,6 +200,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   children,
   pt,
   fitContent,
+  ...props
 }) => {
   const {
     rowSelection,
@@ -569,9 +570,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
   return (
     <Styled.TableContainer
       ref={tableContainerRef}
-      className={clsx({ isLoading, fitContent })}
       onScroll={handleScroll}
       onClick={handleContainerClick}
+      {...props}
+      className={clsx(props.className, { isLoading, fitContent })}
     >
       {!error && (
         <table>

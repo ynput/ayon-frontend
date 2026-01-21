@@ -79,7 +79,10 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   const [ctxMenuShow] = useCreateContextMenu([], { powerLicense, setPowerpackDialog })
 
   // Track which table has active selection: 'pinned' | 'all'
-  const [activeTable, setActiveTable] = useLocalStorage<'pinned' | 'all'>('project-list-selection','all')
+  const [activeTable, setActiveTable] = useLocalStorage<'pinned' | 'all'>(
+    'project-list-selection',
+    'all',
+  )
 
   // Derive row selection for each table from selection prop
   const selectionState = selection.reduce((acc, id) => {
@@ -128,11 +131,17 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
       // if we are selecting a row outside of the selection (or none), set the selection to the row
       if (!newSelection.includes(rowId)) {
         newSelection = [rowId]
-        // Set active table based on whether the clicked row is pinned
-        const isPinnedRow = rowPinning.includes(rowId)
-        setActiveTable(isPinnedRow ? 'pinned' : 'all')
         onSelect?.(newSelection)
       }
+
+      // check which table the row is in
+      const isPinnedRow = !!e.currentTarget.closest('.pinned-projects')
+      if (isPinnedRow && activeTable !== 'pinned') {
+        setActiveTable('pinned')
+      } else if (!isPinnedRow && activeTable !== 'all') {
+        setActiveTable('all')
+      }
+
       const newSelectedRows = newSelection
 
       // build menu items based on selection
@@ -163,65 +172,64 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   })
 
   return (
-
-      <Container
-        {...pt?.container}
-        className={containerClassName}
-        style={{ height: '100%', minWidth: 50, ...pt?.container?.style }}
-      >
-        {!readonly && onSearch && (
-
-          <ProjectsListTableHeader
-            title={title}
-            search={search}
-            onSearch={onSearch}
-            showAddProject={showAddProject}
-            onNewProject={onNewProject}
-            menuItems={buildMenuItems?.(selection)}
-            toggleMenu={toggleMenu}
-            onSelectAll={onSelectAll}
-            hiddenButtons={hiddenButtons}
-          />
-        )}
-        {pinnedProjects.length > 0 && !search && (
-          <SimpleTableProvider
-            {...{
-              rowSelection: pinnedSelection,
-              onRowSelectionChange: handlePinnedSelectionChange,
-              rowPinning: { top: rowPinning },
-              onRowPinningChange: handleRowPinningChange,
-              expanded,
-              setExpanded,
-            }}
-          >
-            <ProjectsSimpleTable
-              tableData={pinnedProjects}
-              search={search}
-              isLoading={isLoading}
-              multiSelect={multiSelect}
-              error={error}
-              readonly={readonly}
-              handleRowContext={handleRowContext}
-              renamingFolder={renamingFolder}
-              onSubmitRenameFolder={onSubmitRenameFolder}
-              closeRenameFolder={closeRenameFolder}
-              onOpenProject={onOpenProject}
-              onSettingsClick={onSettingsClick}
-              fitContent
-            />
-            <PinnedDivider />
-          </SimpleTableProvider>
-        )}
+    <Container
+      {...pt?.container}
+      className={containerClassName}
+      style={{ height: '100%', minWidth: 50, ...pt?.container?.style }}
+    >
+      {!readonly && onSearch && (
+        <ProjectsListTableHeader
+          title={title}
+          search={search}
+          onSearch={onSearch}
+          showAddProject={showAddProject}
+          onNewProject={onNewProject}
+          menuItems={buildMenuItems?.(selection)}
+          toggleMenu={toggleMenu}
+          onSelectAll={onSelectAll}
+          hiddenButtons={hiddenButtons}
+        />
+      )}
+      {pinnedProjects.length > 0 && !search && (
         <SimpleTableProvider
           {...{
-            rowSelection: allProjectsSelection,
-            onRowSelectionChange: handleAllProjectsSelectionChange,
+            rowSelection: pinnedSelection,
+            onRowSelectionChange: handlePinnedSelectionChange,
             rowPinning: { top: rowPinning },
             onRowPinningChange: handleRowPinningChange,
             expanded,
             setExpanded,
           }}
         >
+          <ProjectsSimpleTable
+            tableData={pinnedProjects}
+            search={search}
+            isLoading={isLoading}
+            multiSelect={multiSelect}
+            error={error}
+            readonly={readonly}
+            handleRowContext={handleRowContext}
+            renamingFolder={renamingFolder}
+            onSubmitRenameFolder={onSubmitRenameFolder}
+            closeRenameFolder={closeRenameFolder}
+            onOpenProject={onOpenProject}
+            onSettingsClick={onSettingsClick}
+            fitContent
+            className="pinned-projects"
+          />
+          <PinnedDivider />
+        </SimpleTableProvider>
+      )}
+      <SimpleTableProvider
+        {...{
+          rowSelection: allProjectsSelection,
+          onRowSelectionChange: handleAllProjectsSelectionChange,
+          rowPinning: { top: rowPinning },
+          onRowPinningChange: handleRowPinningChange,
+          expanded,
+          setExpanded,
+        }}
+      >
         <ProjectsSimpleTable
           tableData={data}
           search={search}
@@ -236,10 +244,10 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           onOpenProject={onOpenProject}
           onSettingsClick={onSettingsClick}
           hidePinned={!search}
+          className="all-projects"
         />
-        </SimpleTableProvider>
-      </Container>
-
+      </SimpleTableProvider>
+    </Container>
   )
 }
 

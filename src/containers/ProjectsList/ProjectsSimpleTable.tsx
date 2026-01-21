@@ -3,7 +3,7 @@ import SimpleTable, { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { FC } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-interface ProjectsSimpleTableProps {
+interface ProjectsSimpleTableProps extends React.HTMLAttributes<HTMLDivElement> {
   tableData: SimpleTableRow[]
   search?: string
   isLoading?: boolean
@@ -35,6 +35,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   fitContent,
   hidePinned,
   onSettingsClick,
+  ...props
 }) => {
   const navigate = useNavigate()
   const onSettings = (id: string) => {
@@ -54,45 +55,45 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
       error={error}
       enableClickToDeselect={false}
       enableNonFolderIndent={true}
-      fitContent={fitContent }
+      fitContent={fitContent}
       meta={{
         handleRowContext: readonly ? undefined : handleRowContext,
         renamingFolder,
         onSubmitRenameFolder,
         closeRenameFolder,
       }}
+      {...props}
     >
-
       {(props, row, table) => (
-          <ProjectsListRow
-            {...props}
-            id={row.id}
-            onContextMenu={readonly ? undefined : table.options.meta?.handleRowContext}
-            code={row.original.data.code}
-            isPinned={ row.getIsPinned() === 'top'}
-            hidePinned={hidePinned}
-            onPinToggle={
-              readonly ? undefined : () => row.pin(row.getIsPinned() === 'top' ? false : 'top')
-            }
-            inactive={row.original.data.active === false}
-            onDoubleClick={
-              readonly
-                ? undefined
-                : row.original.data?.isFolder
-                  ? undefined
-                  : () => onOpenProject?.(row.original.name)
-            }
-            isTableExpandable={props.isTableExpandable}
-            isRowExpandable={row.getCanExpand()}
-            isRowExpanded={row.getIsExpanded()}
-            onExpandClick={row.getToggleExpandedHandler()}
-            isRenaming={row.id === table.options.meta?.renamingFolder}
-            onSubmitRename={(v) => table.options.meta?.onSubmitRenameFolder?.(v)}
-            onCancelRename={table.options.meta?.closeRenameFolder}
-            count={row.original.data.count}
-            onSettingsClick={()=>onSettings(row.id)}
-          />
+        <ProjectsListRow
+          {...props}
+          id={row.id}
+          onContextMenu={readonly ? undefined : table.options.meta?.handleRowContext}
+          code={row.original.data.code}
+          isPinned={row.getIsPinned() === 'top'}
+          hidePinned={hidePinned}
+          onPinToggle={
+            readonly ? undefined : () => row.pin(row.getIsPinned() === 'top' ? false : 'top')
+          }
+          inactive={row.original.data.active === false}
+          onDoubleClick={
+            readonly
+              ? undefined
+              : row.original.data?.isFolder
+              ? undefined
+              : () => onOpenProject?.(row.original.name)
+          }
+          isTableExpandable={props.isTableExpandable}
+          isRowExpandable={row.getCanExpand()}
+          isRowExpanded={row.getIsExpanded()}
+          onExpandClick={row.getToggleExpandedHandler()}
+          isRenaming={row.id === table.options.meta?.renamingFolder}
+          onSubmitRename={(v) => table.options.meta?.onSubmitRenameFolder?.(v)}
+          onCancelRename={table.options.meta?.closeRenameFolder}
+          count={row.original.data.count}
+          onSettingsClick={() => onSettings(row.id)}
+        />
       )}
     </SimpleTable>
   )
-};
+}
