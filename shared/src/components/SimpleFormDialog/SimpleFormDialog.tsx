@@ -14,10 +14,13 @@ import {
   DefaultItemTemplate,
 } from '@ynput/ayon-react-components'
 import { Badge } from '@shared/components'
+import { FormFileUpload } from './FormFileUpload'
+import type { FormFileData } from './FormFileUpload'
 
 import type { FormSelectOption, SimpleFormField } from '@shared/api'
 
-export type SimpleFormValue = string | number | boolean | string[] | null | undefined
+
+export type SimpleFormValue = string | number | boolean | string[] | number[] | FormFileData | null | undefined
 export type SimpleFormValueDict = Record<string, SimpleFormValue>
 
 const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => {
@@ -37,6 +40,8 @@ const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => 
       defaults[field.name] = ''
     } else if (field.type === 'multiselect') {
       defaults[field.name] = []
+    } else if (field.type === 'file') {
+      defaults[field.name] = undefined
     }
   })
   return defaults
@@ -167,7 +172,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
   } // Handle select
 
   if (field.type === 'multiselect') {
-    const parsedValue = Array.isArray(value) ? value : []
+    const parsedValue = Array.isArray(value) ? value.map(value => `${value}`) : []
     return (
       <Dropdown
         widthExpand
@@ -180,6 +185,11 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
       />
     )
   }
+
+  if (field.type === 'file') {
+    return <FormFileUpload value={value} onChange={onChange} />
+  }
+
 }
 
 export interface SimpleFormDialogProps {

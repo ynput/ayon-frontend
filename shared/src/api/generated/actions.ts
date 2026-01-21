@@ -115,7 +115,7 @@ export type FormSelectOption = {
   badges?: string[]
 }
 export type SimpleFormField = {
-  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label'
+  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label' | 'file'
   name: string
   label?: string
   placeholder?: any
