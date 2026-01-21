@@ -15,7 +15,7 @@ import { ViewSettings } from '@shared/containers'
 type Props = {
   viewType?: string
   projectName?: string
-  workingSettings?: ViewSettings
+  viewSettings?: ViewSettings
   workingView?: ViewListItemModel
   dispatch?: any
 }
@@ -30,7 +30,7 @@ export type UseBaseViewMutations = {
 export const useBaseViewMutations = ({
   viewType,
   projectName,
-  workingSettings,
+  viewSettings,
   workingView,
   dispatch,
 }: Props): UseBaseViewMutations => {
@@ -42,7 +42,7 @@ export const useBaseViewMutations = ({
   const onCreateBaseView = useCallback(
     async (isStudioScope: boolean) => {
       try {
-        const settings = workingSettings || {}
+        const settings =viewSettings || {}
         const baseViewPayload = {
           label: BASE_VIEW_ID,
           working: false,
@@ -70,13 +70,13 @@ export const useBaseViewMutations = ({
         toast.error(`Failed to create ${scope} base view: ${error?.message || error}`)
       }
     },
-    [createViewMutation, viewType, projectName, workingSettings, dispatch],
+    [createViewMutation, viewType, projectName, viewSettings, dispatch],
   )
 
   const onUpdateBaseView = useCallback(
     async (baseViewId: string, isStudioScope: boolean) => {
       try {
-        const settings = workingSettings || {}
+        const settings = viewSettings || {}
         await updateViewMutation({
           viewId: baseViewId,
           viewType: viewType as string,
@@ -99,7 +99,7 @@ export const useBaseViewMutations = ({
         toast.error(`Failed to update ${scope} base view: ${error?.message || error}`)
       }
     },
-    [updateViewMutation, viewType, projectName, workingSettings, dispatch],
+    [updateViewMutation, viewType, projectName, viewSettings, dispatch],
   )
 
   const onDeleteBaseView = useCallback(
