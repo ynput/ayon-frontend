@@ -14,8 +14,7 @@ import {
   DefaultItemTemplate,
 } from '@ynput/ayon-react-components'
 import { Badge } from '@shared/components'
-import { FormFileUpload } from './FormFileUpload'
-import type { FormFileData } from './FormFileUpload'
+import { FormFileUpload, FormFileDownload, type FormFileData} from './FormFile'
 
 import type { FormSelectOption, SimpleFormField } from '@shared/api'
 
@@ -187,7 +186,10 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
   }
 
   if (field.type === 'file') {
-    return <FormFileUpload value={value} onChange={onChange} />
+    if (value && (value as FormFileData)?.download) {
+      return <FormFileDownload value={value as FormFileData} />
+    }
+    return <FormFileUpload value={value as FormFileData} onChange={onChange} />
   }
 
 }

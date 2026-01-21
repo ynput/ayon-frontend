@@ -1,11 +1,12 @@
 export interface FormFileData {
   payload: string
   filename: string
+  download?: boolean
 }
 
 interface FormFileUploadProps {
-  value?: SimpleFormFileData
-  onChange: (value: SimpleFormFileData) => void
+  value?: FormFileData
+  onChange: (value: FormFileData) => void
 }
 
 export const FormFileUpload = (props: FormFileUploadProps) => {
@@ -32,6 +33,29 @@ export const FormFileUpload = (props: FormFileUploadProps) => {
     </div>
   )
 
+}
 
 
+
+interface FormFileDownloadProps {
+  value: FormFileData
+}
+
+export const FormFileDownload = (props: FormFileDownloadProps) => {
+  // widget that displays a download link for the file represented by the base64 string in props.value
+
+  const handleDownload = () => {
+    const link = document.createElement('a')
+    link.href = `data:application/octet-stream;base64,${props.value.payload}`
+    link.download = props.value.filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  return (
+    <div className="form-file-download">
+      <button onClick={handleDownload}>Download {props.value.filename}</button>
+    </div>
+  )
 }
