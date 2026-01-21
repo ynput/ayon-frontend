@@ -19,6 +19,7 @@ import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
+import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
@@ -731,6 +732,42 @@ const buildTreeTableColumns = ({
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly={true}
             pt={{ date: { showTime: true } }}
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('subtasks') && scopes.includes('task')) {
+    staticColumns.push({
+      id: 'subtasks',
+      accessorKey: 'subtasks',
+      header: 'Subtasks',
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        const cellId = getCellId(id, column.id)
+        const subtasksData: SubtasksWidgetData = {
+          taskId: id,
+          subtasks: value || [],
+        }
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('subtasks', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={subtasksData.subtasks?.map((s: any) => s.label || s.name) || []}
+            valueData={subtasksData}
+            attributeData={{ type: 'subtasks' }}
+            isReadOnly={meta?.readOnly?.includes(column.id)}
           />
         )
       },
