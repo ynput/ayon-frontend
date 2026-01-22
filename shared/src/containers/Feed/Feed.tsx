@@ -131,6 +131,7 @@ export const Feed = ({
     projectInfo,
     entityType,
     userName,
+    feedFilter,
   ) as any[]
 
   // REFS
