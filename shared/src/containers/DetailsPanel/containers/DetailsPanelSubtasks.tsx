@@ -1,5 +1,5 @@
 import { SubtasksManagerWrapper, SubtasksManagerWrapperProps } from '@shared/components'
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import TabHeaderAndFilters, {
   FilterItem,
 } from '../components/TabHeaderAndFilters/TabHeaderAndFilters'
@@ -13,6 +13,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
     'detailsPanelSubtasksFilters',
     {},
   )
+  const [selectedSubtaskIds, setSelectedSubtaskIds] = useState<string[]>([])
 
   const { data: users = [] } = useGetUsersQuery({})
 
@@ -40,7 +41,13 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
         currentFilter={subtasksFilters}
         onFilterChange={setSubtasksFilters}
       />
-      <SubtasksManagerWrapper {...props} style={{ padding: 8, height: 'unset' }} title={null} />
+      <SubtasksManagerWrapper
+        {...props}
+        style={{ padding: 8, height: 'unset' }}
+        title={null}
+        selectedSubtaskIds={selectedSubtaskIds}
+        onSelectSubtasks={setSelectedSubtaskIds}
+      />
     </>
   )
 }
