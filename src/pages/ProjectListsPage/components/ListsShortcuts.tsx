@@ -2,6 +2,7 @@ import { FC, useCallback, useEffect } from 'react'
 import { useListsContext } from '../context'
 import { useListsDataContext } from '../context/ListsDataContext'
 import { useAppSelector } from '@state/store'
+import { shouldBlockShortcuts } from '@shared/util'
 import { parseListFolderRowId } from '../util'
 
 interface ListsShortcutsProps {}
@@ -25,12 +26,7 @@ const ListsShortcuts: FC<ListsShortcutsProps> = ({}) => {
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
-      // check target isn't an input
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
-      // or has blocked shortcuts className
-      if ((e.target as HTMLElement)?.classList.contains('block-shortcuts')) return
-      // or any of its parents
-      if ((e.target as HTMLElement)?.closest('.block-shortcuts')) return
+      if (shouldBlockShortcuts(e)) return
       // if review is open, don't allow shortcuts
       if (reviewOpen) return
 

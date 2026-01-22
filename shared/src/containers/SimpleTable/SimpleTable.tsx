@@ -123,7 +123,7 @@ export type SimpleTableRow = {
   inactive?: boolean
 }
 
-export interface SimpleTableProps {
+export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
   data: SimpleTableRow[]
   isLoading: boolean
   error?: string
@@ -137,6 +137,7 @@ export interface SimpleTableProps {
   rowHeight?: number // height of each row, used for virtual scrolling
   imgRatio?: number
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
+  fitContent?: boolean
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,
@@ -198,6 +199,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onScrollBottom,
   children,
   pt,
+  fitContent,
+  ...props
 }) => {
   const {
     rowSelection,
@@ -567,9 +570,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
   return (
     <Styled.TableContainer
       ref={tableContainerRef}
-      className={clsx({ isLoading })}
       onScroll={handleScroll}
       onClick={handleContainerClick}
+      {...props}
+      className={clsx(props.className, { isLoading, fitContent })}
     >
       {!error && (
         <table>
