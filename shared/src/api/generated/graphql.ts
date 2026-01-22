@@ -1623,7 +1623,7 @@ export type GetDetailsPanelRepresentationQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelRepresentationQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: any, createdAt: any, allAttrib: string, context?: string | null, parents: Array<string>, version: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null } } } | null } };
+export type GetDetailsPanelRepresentationQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', representation?: { __typename?: 'RepresentationNode', id: string, versionId: string, name: string, status: string, tags: Array<string>, updatedAt: any, createdAt: any, allAttrib: string, context?: string | null, parents: Array<string>, version: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> } | null, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null } } } | null } };
 
 export type GetDetailsPanelTaskQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1631,7 +1631,7 @@ export type GetDetailsPanelTaskQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, folderId: string, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null } }> } } | null } };
+export type GetDetailsPanelTaskQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, status: string, tags: Array<string>, allAttrib: string, taskType: string, assignees: Array<string>, updatedAt: any, createdAt: any, folderId: string, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }>, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, versions: { __typename?: 'VersionsConnection', edges: Array<{ __typename?: 'VersionEdge', node: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null } }> } } | null } };
 
 export type GetDetailsPanelVersionQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1639,7 +1639,7 @@ export type GetDetailsPanelVersionQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsPanelVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, version?: { __typename?: 'VersionNode', id: string, version: number, name: string, author?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null }, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string } | null, representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number } }> } } | null } };
+export type GetDetailsPanelVersionQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', projectName: string, code: string, version?: { __typename?: 'VersionNode', id: string, version: number, name: string, author?: string | null, status: string, tags: Array<string>, updatedAt: any, createdAt: any, thumbnailId?: string | null, hasReviewables: boolean, parents: Array<string>, allAttrib: string, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folder: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, path?: string | null, folderType: string }, latestVersion?: { __typename?: 'VersionNode', version: number } | null }, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> } | null, representations: { __typename?: 'RepresentationsConnection', edges: Array<{ __typename?: 'RepresentationEdge', node: { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number } }> } } | null } };
 
 export type GetProductVersionsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1655,7 +1655,7 @@ export type DetailsPanelProductFragmentFragment = { __typename?: 'ProductNode', 
 
 export type DetailsPanelRepresentationFragmentFragment = { __typename?: 'RepresentationNode', id: string, name: string, fileCount: number };
 
-export type DetailsPanelTaskFragmentFragment = { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string };
+export type DetailsPanelTaskFragmentFragment = { __typename?: 'TaskNode', id: string, name: string, label?: string | null, assignees: Array<string>, taskType: string, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> };
 
 export type DetailsPanelVersionFragmentFragment = { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, name: string, updatedAt: any, createdAt: any, productId: string, version: number, author?: string | null };
 
@@ -2007,27 +2007,6 @@ export const DetailsPanelRepresentationFragmentFragmentDoc = `
   fileCount
 }
     `;
-export const DetailsPanelTaskFragmentFragmentDoc = `
-    fragment DetailsPanelTaskFragment on TaskNode {
-  id
-  name
-  label
-  assignees
-  taskType
-}
-    `;
-export const DetailsPanelVersionFragmentFragmentDoc = `
-    fragment DetailsPanelVersionFragment on VersionNode {
-  id
-  thumbnailId
-  name
-  updatedAt
-  createdAt
-  productId
-  version
-  author
-}
-    `;
 export const SubTaskFragmentFragmentDoc = `
     fragment SubTaskFragment on SubTaskNode {
   id
@@ -2038,6 +2017,30 @@ export const SubTaskFragmentFragmentDoc = `
   startDate
   endDate
   isDone
+}
+    `;
+export const DetailsPanelTaskFragmentFragmentDoc = `
+    fragment DetailsPanelTaskFragment on TaskNode {
+  id
+  name
+  label
+  assignees
+  taskType
+  subtasks {
+    ...SubTaskFragment
+  }
+}
+    ${SubTaskFragmentFragmentDoc}`;
+export const DetailsPanelVersionFragmentFragmentDoc = `
+    fragment DetailsPanelVersionFragment on VersionNode {
+  id
+  thumbnailId
+  name
+  updatedAt
+  createdAt
+  productId
+  version
+  author
 }
     `;
 export const ListItemFragmentFragmentDoc = `
@@ -2443,6 +2446,9 @@ export const GetDetailsPanelTaskDocument = `
       thumbnailId
       hasReviewables
       parents
+      subtasks {
+        ...SubTaskFragment
+      }
       folder {
         ...DetailsPanelFolderFragment
       }
@@ -2456,7 +2462,8 @@ export const GetDetailsPanelTaskDocument = `
     }
   }
 }
-    ${DetailsPanelFolderFragmentFragmentDoc}
+    ${SubTaskFragmentFragmentDoc}
+${DetailsPanelFolderFragmentFragmentDoc}
 ${DetailsPanelVersionFragmentFragmentDoc}`;
 export const GetDetailsPanelVersionDocument = `
     query GetDetailsPanelVersion($projectName: String!, $entityId: String!) {

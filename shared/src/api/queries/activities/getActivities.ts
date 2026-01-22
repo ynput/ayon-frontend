@@ -99,7 +99,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
   endpoints: (build) => ({
     getActivitiesInfinite: build.infiniteQuery<
       ActivitiesResult,
-      Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: string },
+      Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: any },
       { cursor: string; first?: number; last?: number }
     >({
       infiniteQueryOptions: {
@@ -187,7 +187,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
               // filter is used when a comment is made, to refetch the activities of other filters
               ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
                 type: 'entityActivities',
-                id: `${id}-${filter}`,
+                id: `${id}-${typeof filter === 'string' ? filter : JSON.stringify(filter)}`,
               })),
             ]
           : [{ type: 'activity', id: 'LIST' }],

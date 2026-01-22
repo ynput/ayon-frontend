@@ -1,38 +1,37 @@
 // Wraps the SubtasksManager remote component and provides it with required props from context and api
-import {
-  SubTaskNode,
-  useGetUsersQuery,
-  UserModel,
-  useUpdateOverviewEntitiesMutation,
-} from '@shared/api'
+import { SubTaskNode, useGetUsersQuery, UserModel, useUpdateSubtasksMutation } from '@shared/api'
 import { useSubtasksModulesContext } from '@shared/context'
 import { useNavigate } from 'react-router-dom'
 
-export type UpdateOverviewEntities = ReturnType<typeof useUpdateOverviewEntitiesMutation>[0]
+type UpdateSubtasksMutation = ReturnType<typeof useUpdateSubtasksMutation>[0]
 
-export interface SubtasksManagerProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   subtasks: SubTaskNode[]
   projectName: string
   taskId: string
   selectedSubtaskIds?: string[]
   users: UserModel[]
+  title?: string | null
   onClose?: () => void
   onSelectSubtasks?: (subtaskIds: string[]) => void
-  updateOverviewEntities: UpdateOverviewEntities
+  updateSubtasks: UpdateSubtasksMutation
   useNavigate: typeof useNavigate
 }
 
-export const SubtasksManagerWrapper = (
-  props: Omit<SubtasksManagerProps, 'updateOverviewEntities' | 'users' | 'useNavigate'>,
-) => {
+export type SubtasksManagerWrapperProps = Omit<
+  SubtasksManagerProps,
+  'updateSubtasks' | 'users' | 'useNavigate'
+>
+
+export const SubtasksManagerWrapper = (props: SubtasksManagerWrapperProps) => {
   const { SubtasksManager } = useSubtasksModulesContext()
-  const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
+  const [updateSubtasks] = useUpdateSubtasksMutation()
   const { data: users = [] } = useGetUsersQuery({})
 
   return (
     <SubtasksManager
       {...props}
-      updateOverviewEntities={updateOverviewEntities}
+      updateSubtasks={updateSubtasks}
       users={users}
       useNavigate={useNavigate}
     />

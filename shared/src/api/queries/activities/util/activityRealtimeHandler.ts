@@ -48,7 +48,7 @@ const bodyHasChecklist = (body: string): boolean => {
  * Handles real-time activity updates for the infinite query cache
  */
 export const handleActivityRealtimeUpdates = async (
-  queryArg: Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: string },
+  queryArg: Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: any },
   {
     updateCachedData,
     cacheDataLoaded,

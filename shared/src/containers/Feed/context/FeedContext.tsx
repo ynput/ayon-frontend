@@ -15,11 +15,7 @@ import {
 } from '@shared/api'
 import type { ActivityCategory, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
-import {
-  DetailsPanelTab,
-  PowerpackFeature,
-  useDetailsPanelContext,
-} from '@shared/context'
+import { FeedFilter, PowerpackFeature, useDetailsPanelContext } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
 
 export const FEED_NEW_COMMENT = '__new__' as const
@@ -53,9 +49,9 @@ export type FeedContextProps = {
   annotations?: Record<string, any>
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
-  // currentTab
-  currentTab: DetailsPanelTab
-  setCurrentTab: (tab: DetailsPanelTab) => void
+  // feedFilter - the current filter within the feed tab
+  feedFilter?: FeedFilter
+  setFeedFilter?: (filter: FeedFilter) => void
 }
 
 interface FeedContextType extends Omit<FeedContextProps, 'children'> {
@@ -89,6 +85,8 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   mentionSuggestionsData: SuggestResponse
   // categories data
   categories: ActivityCategory[]
+  feedFilter: FeedFilter
+  setFeedFilter: (filter: FeedFilter) => void
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
@@ -96,7 +94,16 @@ const FeedContext = createContext<FeedContextType | undefined>(undefined)
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const { isGuest } = useDetailsPanelContext()
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
-  const { currentTab } = props
+
+  const [feedFilterInternal, setFeedFilterInternal] = useState<FeedFilter>({
+    operator: 'and',
+    conditions: [],
+  })
+
+  // use props if provided, otherwise use local state
+  const feedFilter = props.feedFilter ?? feedFilterInternal
+  const setFeedFilter = props.setFeedFilter ?? setFeedFilterInternal
+
   const [editingId, setEditingId] = useState<EditingState>(null)
   const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
 
@@ -122,11 +129,11 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const deleteReaction: FeedContextType['deleteReaction'] = async (args) =>
     await deleteReactionToActivity(args).unwrap()
 
-  const activityTypes = getFilterActivityTypes(currentTab)
+  const activityTypes = getFilterActivityTypes(feedFilter)
 
   const activitiesDataProps = useGetFeedActivitiesData({
     entities: props.entities,
-    filter: currentTab,
+    filter: feedFilter,
     activityTypes: activityTypes,
     projectName: props.projectName,
     entityType: props.entityType,
@@ -167,7 +174,8 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         isFetchingTooltip,
         refTooltip,
         activityTypes,
-        currentTab,
+        feedFilter,
+        setFeedFilter,
         isGuest,
         editingId,
         setEditingId,

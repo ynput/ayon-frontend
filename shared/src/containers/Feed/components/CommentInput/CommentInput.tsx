@@ -87,7 +87,7 @@ const CommentInput: FC<CommentInputProps> = ({
     entities,
     projectInfo,
     scope,
-    currentTab,
+    feedFilter,
     mentionSuggestionsData,
     categories,
     isGuest,
@@ -139,7 +139,7 @@ const CommentInput: FC<CommentInputProps> = ({
     setEditorValue,
     setInitHeight,
     isOpen: isOpen,
-    filter: currentTab,
+    filter: feedFilter,
   })
 
   // When editing, set selection to the end of the editor
