@@ -194,7 +194,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   //   which settings to use for the view
   const viewSettings =
-    !selectedView || selectedView.id === WORKING_VIEW_ID ? workingSettings : selectedView?.settings
+    selectedView?.id === WORKING_VIEW_ID ? workingSettings : selectedView?.settings
 
   // is the working view selected?
   const isViewWorking = selectedView?.id === workingView?.id
@@ -236,7 +236,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     useBaseViewMutations({
       viewType: viewType as string,
       projectName,
-      workingSettings,
+      viewSettings,
       workingView,
       dispatch,
     })
