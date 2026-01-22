@@ -20,6 +20,13 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
   const filters = useMemo<FilterItem<string>[]>(
     () => [
       {
+        id: 'name',
+        icon: 'search',
+        tooltip: 'Search',
+        type: 'search',
+        placeholder: 'Search subtasks...',
+      },
+      {
         id: 'assignees',
         icon: 'person',
         tooltip: 'Assignees',
