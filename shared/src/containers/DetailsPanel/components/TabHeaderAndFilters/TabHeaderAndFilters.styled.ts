@@ -22,6 +22,9 @@ export const FiltersContainer = styled.div`
 
 export const FilterButton = styled(Button)`
   background-color: unset;
+  &.hasIcon {
+    padding: 4px;
+  }
 `
 
 export const SearchFilterContainer = styled.div`
