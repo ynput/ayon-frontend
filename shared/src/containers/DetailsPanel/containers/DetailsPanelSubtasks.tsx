@@ -9,10 +9,7 @@ import { QueryFilter, useGetUsersQuery } from '@shared/api'
 interface DetailsPanelSubtasksProps extends SubtasksManagerWrapperProps {}
 
 const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
-  const [subtasksFilters, setSubtasksFilters] = useLocalStorage<QueryFilter>(
-    'detailsPanelSubtasksFilters',
-    {},
-  )
+  const [subtasksFilters, setSubtasksFilters] = useState<QueryFilter>({})
   const [selectedSubtaskIds, setSelectedSubtaskIds] = useState<string[]>([])
 
   const { data: users = [] } = useGetUsersQuery({})
@@ -20,7 +17,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
   const filters = useMemo<FilterItem<string>[]>(
     () => [
       {
-        id: 'name',
+        id: 'search',
         icon: 'search',
         tooltip: 'Search',
         type: 'search',
@@ -35,6 +32,13 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
           label: u.attrib?.fullName || u.name,
           value: u.name,
         })),
+        operator: 'includesany',
+      },
+      {
+        id: 'done',
+        icon: 'check_circle',
+        tooltip: 'Done',
+        type: 'boolean',
       },
     ],
     [users],
@@ -54,6 +58,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
         title={null}
         selectedSubtaskIds={selectedSubtaskIds}
         onSelectSubtasks={setSelectedSubtaskIds}
+        filters={subtasksFilters}
       />
     </>
   )

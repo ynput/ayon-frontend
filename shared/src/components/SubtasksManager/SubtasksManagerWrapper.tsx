@@ -1,5 +1,11 @@
 // Wraps the SubtasksManager remote component and provides it with required props from context and api
-import { SubTaskNode, useGetUsersQuery, UserModel, useUpdateSubtasksMutation } from '@shared/api'
+import {
+  QueryFilter,
+  SubTaskNode,
+  useGetUsersQuery,
+  UserModel,
+  useUpdateSubtasksMutation,
+} from '@shared/api'
 import { useSubtasksModulesContext } from '@shared/context'
 import { useNavigate } from 'react-router-dom'
 
@@ -12,6 +18,7 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   selectedSubtaskIds?: string[]
   users: UserModel[]
   title?: string | null
+  filters?: QueryFilter
   onClose?: () => void
   onSelectSubtasks?: (subtaskIds: string[]) => void
   updateSubtasks: UpdateSubtasksMutation

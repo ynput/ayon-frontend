@@ -15,6 +15,7 @@ export interface FilterItem<T = string> {
   type?: 'boolean' | 'enum' | 'search'
   options?: AttributeEnumItem[]
   placeholder?: string
+  operator?: QueryCondition['operator']
 }
 
 interface TabHeaderAndFiltersProps<T, K = string> {
@@ -27,6 +28,70 @@ interface TabHeaderAndFiltersProps<T, K = string> {
 
 const isCondition = (c: QueryCondition | QueryFilter): c is QueryCondition => {
   return !!c && 'key' in c
+}
+
+const isSearchItem = (c: QueryCondition | QueryFilter, filterId: string): boolean => {
+  if (isCondition(c)) return c.key === filterId
+  return !!c.conditions?.some((sub) => isSearchItem(sub, filterId))
+}
+
+const stringifySearchFilter = (filter: QueryCondition | QueryFilter): string => {
+  if (isCondition(filter)) return String(filter.value || '')
+
+  const joiner = filter.operator === 'or' ? ', ' : '.'
+  return filter.conditions?.map((c) => stringifySearchFilter(c)).join(joiner) || ''
+}
+
+const parseSearchValue = (
+  val: string,
+  key: string,
+  operator: QueryCondition['operator'],
+): QueryCondition | QueryFilter => {
+  // Split by comma first (OR)
+  const orTerms = val
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+
+  if (orTerms.length > 1) {
+    return {
+      operator: 'or',
+      conditions: orTerms.map((term) => parseSearchValue(term, key, operator)),
+    }
+  }
+
+  const baseValue = orTerms[0] || val.trim()
+  if (!baseValue || baseValue === ',' || baseValue === '.') {
+    return {
+      key,
+      operator,
+      value: '',
+    }
+  }
+
+  // If no commas, split by period (AND)
+  const andTerms = baseValue
+    .split('.')
+    .map((t) => t.trim())
+    .filter(Boolean)
+
+  if (andTerms.length > 1) {
+    return {
+      operator: 'and',
+      conditions: andTerms.map((term) => ({
+        key,
+        operator,
+        value: term,
+      })),
+    }
+  }
+
+  // Single term
+  return {
+    key,
+    operator,
+    value: andTerms[0] || '',
+  }
 }
 
 const TabHeaderAndFilters = <T, K = string>({
@@ -54,10 +119,9 @@ const TabHeaderAndFilters = <T, K = string>({
   // Sync search value with current filter
   useEffect(() => {
     if (expandedSearchId && isQueryFilter(currentFilter)) {
-      const condition = currentFilter.conditions?.find(
-        (c) => isCondition(c) && c.key === expandedSearchId,
-      ) as QueryCondition
-      setSearchValue((condition?.value as string) || '')
+      if (document.activeElement === searchInputRef.current) return
+      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, expandedSearchId))
+      setSearchValue(searchItem ? stringifySearchFilter(searchItem) : '')
     }
   }, [expandedSearchId, currentFilter])
 
@@ -76,7 +140,7 @@ const TabHeaderAndFilters = <T, K = string>({
 
     const filterId = String(filter.id)
 
-    const existingIndex = conditions.findIndex((c) => isCondition(c) && c.key === filterId)
+    const existingIndex = conditions.findIndex((c) => isSearchItem(c, filterId))
 
     const type = filter.type || 'boolean'
 
@@ -84,14 +148,18 @@ const TabHeaderAndFilters = <T, K = string>({
       if (existingIndex > -1) {
         conditions.splice(existingIndex, 1)
       } else {
-        conditions.push({ key: filterId, operator: 'eq', value: true })
+        conditions.push({ key: filterId, operator: filter.operator || 'eq', value: true })
       }
     } else if (type === 'enum') {
       const newValue = Array.isArray(value) ? value : [value]
       if (newValue.length === 0 || (newValue.length === 1 && newValue[0] === undefined)) {
         if (existingIndex > -1) conditions.splice(existingIndex, 1)
       } else {
-        const condition: QueryCondition = { key: filterId, operator: 'in', value: newValue }
+        const condition: QueryCondition = {
+          key: filterId,
+          operator: filter.operator || 'in',
+          value: newValue,
+        }
         if (existingIndex > -1) {
           conditions[existingIndex] = condition
         } else {
@@ -103,11 +171,11 @@ const TabHeaderAndFilters = <T, K = string>({
       if (!stringValue) {
         if (existingIndex > -1) conditions.splice(existingIndex, 1)
       } else {
-        const condition: QueryCondition = { key: filterId, operator: 'like', value: stringValue }
+        const parsedFilter = parseSearchValue(stringValue, filterId, filter.operator || 'like')
         if (existingIndex > -1) {
-          conditions[existingIndex] = condition
+          conditions[existingIndex] = parsedFilter
         } else {
-          conditions.push(condition)
+          conditions.push(parsedFilter)
         }
       }
     }
@@ -123,10 +191,8 @@ const TabHeaderAndFilters = <T, K = string>({
     setExpandedSearchId(filterId)
     // Load existing value if any
     if (isQueryFilter(currentFilter)) {
-      const condition = currentFilter.conditions?.find(
-        (c) => isCondition(c) && c.key === filterId,
-      ) as QueryCondition
-      setSearchValue((condition?.value as string) || '')
+      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, filterId))
+      setSearchValue(searchItem ? stringifySearchFilter(searchItem) : '')
     }
   }
 
@@ -145,7 +211,7 @@ const TabHeaderAndFilters = <T, K = string>({
     if (!isQueryFilter(currentFilter)) {
       return (filter.id as unknown as T) === currentFilter
     }
-    return currentFilter.conditions?.some((c) => isCondition(c) && c.key === String(filter.id))
+    return currentFilter.conditions?.some((c) => isSearchItem(c, String(filter.id)))
   }
 
   const getEnumValue = (filter: FilterItem<K>) => {
