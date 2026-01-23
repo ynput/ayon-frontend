@@ -224,10 +224,10 @@ const TabHeaderAndFilters = <T, K = string>({
   }
 
   return (
-    <Styled.HeaderContainer className={isLoading ? 'loading' : ''}>
-      <Styled.HeaderLabel>{label}</Styled.HeaderLabel>
+    <Styled.HeaderContainer className={clsx('panel-tabs', { loading: isLoading })}>
+      <Styled.HeaderLabel className="panel-header-label">{label}</Styled.HeaderLabel>
       <Spacer />
-      <Styled.FiltersContainer>
+      <Styled.FiltersContainer className="panel-header-filters">
         {filters.map((filter) => {
           const isSelected = getIsSelected(filter)
           const type = filter.type || 'boolean'
@@ -252,6 +252,7 @@ const TabHeaderAndFilters = <T, K = string>({
                   />
                 )}
                 widthExpand
+                className="panel-filter panel-filter-enum"
               />
             )
           }
@@ -261,7 +262,7 @@ const TabHeaderAndFilters = <T, K = string>({
             return (
               <Styled.SearchFilterContainer
                 key={String(filter.id)}
-                className={clsx({ expanded: isExpanded })}
+                className={clsx('panel-filter', 'panel-filter-search', { expanded: isExpanded })}
               >
                 <Styled.FilterButton
                   selected={isSelected || isExpanded}
@@ -303,6 +304,7 @@ const TabHeaderAndFilters = <T, K = string>({
               icon={filter.icon}
               data-tooltip={filter.tooltip}
               data-tooltip-delay={0}
+              className="panel-filter panel-filter-boolean"
             />
           )
         })}
