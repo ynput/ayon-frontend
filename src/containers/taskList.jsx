@@ -5,7 +5,7 @@ import { TablePanel, Section } from '@ynput/ayon-react-components'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
-import { DetailsDialog, useVersionUploadContext, EntityIcon } from '@shared/components'
+import { DetailsDialog, useVersionUploadContext } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@state/context'
@@ -16,6 +16,7 @@ import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { CellWithIcon } from '@components/icons'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)

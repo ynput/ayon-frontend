@@ -18,7 +18,7 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
 // Cell component that uses EntityIcon for proper icon/color from anatomy
 const HierarchyCell = ({ label, name, folderType }) => (
-  <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+  <span style={{  alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
     <EntityIcon entity={{ entityType: 'folder', subType: folderType }} />
     <span
       title={name}
