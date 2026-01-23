@@ -297,13 +297,31 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
               })
               const latestVersion = sortedVersions[0]
 
-              if (formData.isProject && !addon.projectCanOverrideAddonVersion) {
+
+              // Display logic for project bundles
+
+              if (formData.isProject) {
+
+                // Inheriting from the studio bundle (undefined currentVersion or override is not possible)
+                if (currentVersion === 'NONE' || !addon.projectCanOverrideAddonVersion) {
+                  return (
+                    <span style={{ color: '#666' }}>
+                      <Icon icon="lock" />
+                      {productionVersion || 'NONE'}
+                      {!addon.projectCanOverrideAddonVersion && ' (cannot override)'}
+                    </span>
+                  )
+                }
+
+                // when currentVersion is set, show it in orange to indicate project override
                 return (
-                  <span style={{ color: '#666' }}>
-                    <Icon icon="lock" /> {productionVersion || 'NONE'}
+                  <span style={{ color: 'orange' }}>
+                    {currentVersion || 'NONE'} 
                   </span>
                 )
               }
+
+              // Display logic for normal bundles
 
               if (readOnly && isPipeline)
                 return <AddonItem latestVersion={latestVersion} currentVersion={currentVersion} />
