@@ -276,6 +276,11 @@ const TabHeaderAndFilters = <T, K = string>({
                       ref={searchInputRef}
                       value={searchValue}
                       onChange={(e) => handleSearchChange(filter, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          handleSearchClear(filter)
+                        }
+                      }}
                       placeholder={filter.placeholder || 'Search...'}
                     />
                     <Styled.ClearButton
