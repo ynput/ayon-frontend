@@ -1,3 +1,4 @@
+import { EnumWidget } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
@@ -39,6 +40,10 @@ export const SearchFilterContainer = styled.div`
     box-shadow: 0 0 0 1px var(--md-sys-color-primary-container);
     background-color: var(--md-sys-color-surface-container-lowest);
   }
+`
+
+export const Options = styled(EnumWidget)`
+  width: 32px;
 `
 
 export const SearchInput = styled.input`

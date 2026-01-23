@@ -31,6 +31,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
         options: users.map((u: any) => ({
           label: u.attrib?.fullName || u.name,
           value: u.name,
+          icon: `/api/users/${u.name}/avatar`,
         })),
         operator: 'includesany',
       },

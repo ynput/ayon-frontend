@@ -1,10 +1,11 @@
 // Tab-specific header with label and filters
 // Currently only Feed has filters: activity, comments, versions, checklists
 
-import { Button, Spacer, Dropdown } from '@ynput/ayon-react-components'
+import { Spacer } from '@ynput/ayon-react-components'
 import * as Styled from './TabHeaderAndFilters.styled'
 import { QueryFilter, QueryCondition } from '@shared/api'
 import { AttributeEnumItem } from '../../../../containers/ProjectTreeTable/types'
+import { EnumWidget } from '../../../../containers/ProjectTreeTable/widgets/EnumWidget'
 import { useState, useRef, useEffect } from 'react'
 import clsx from 'clsx'
 
@@ -233,13 +234,15 @@ const TabHeaderAndFilters = <T, K = string>({
 
           if (type === 'enum') {
             return (
-              <Dropdown
+              <Styled.Options
                 key={String(filter.id)}
                 options={filter.options || []}
                 value={getEnumValue(filter)}
                 onChange={(val) => handleToggle(filter, val)}
-                multiSelect
+                isEditing
+                autoOpen={false}
                 align="right"
+                type="list_of_strings"
                 valueTemplate={() => (
                   <Styled.FilterButton
                     selected={isSelected}
