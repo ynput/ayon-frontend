@@ -67,9 +67,9 @@ export const useProjectFolderActions = ({
   )
 
   const onDeleteFolder = useCallback(
-    async (folderId: string) => {
+    async (folderIds: string[]) => {
       await handleDeleteFolders({
-        folderIds: folderId,
+        folderIds: folderIds,
         folders,
         deleteMutation: (id) => deleteProjectFolder({ folderId: id }).unwrap(),
         onSelect,

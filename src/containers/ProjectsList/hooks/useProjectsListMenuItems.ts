@@ -41,7 +41,7 @@ interface MenuItemProps {
   onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
   onPutFolderInFolder?: (folderId: string, projectFolderId?: string) => Promise<void>
   onRemoveProjectsFromFolder?: (projectNames: string[]) => Promise<void>
-  onDeleteFolder?: (folderId: string) => void
+  onDeleteFolder?: (folderId: string[]) => void
   onRenameFolder?: (folderId: string) => void
   onEditFolder?: (folderId: string) => void
 }
@@ -118,11 +118,11 @@ const useProjectsListMenuItems = ({
     }
   }
   const handleDeleteFolder = (selection: string[]) => {
-    if (selection.length === 1) {
-      const folderId = parseProjectFolderRowId(selection[0])
-      if (folderId) {
-        onDeleteFolder?.(folderId)
-      }
+    const folderIds = selection
+      .map((folder) => parseProjectFolderRowId(folder))
+      .filter((id): id is string => id !== null)
+    if (folderIds.length > 0) {
+      onDeleteFolder?.(folderIds)
     }
   }
 
