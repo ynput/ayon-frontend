@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 export const TooltipWidget = styled.div`
   position: fixed;
-  z-index: 3000;
+  z-index: 10001;
 
   transition: opacity 300ms;
   /* how far up the tooltip us */
