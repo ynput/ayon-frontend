@@ -4,28 +4,16 @@
 import { LinkEntity } from '@shared/components'
 import { getLinkKey } from '../buildTreeTableColumns'
 import { EntityLink } from '@shared/api'
-import { getEntityTypeIcon } from '@shared/util'
+import { getEntityColor, getEntityIcon, IconAnatomy } from '@shared/util/iconUtils'
 
 export type LinkId = string
 export type LinkValue = LinkEntity[]
 export type LinksTableData = Record<LinkId, LinkValue>
 
-type EntityAnatomy = {
-  name: string
-  icon?: string
-  color?: string
-}
-
-type Anatomy = {
-  folderTypes: EntityAnatomy[]
-  productTypes: EntityAnatomy[]
-  taskTypes: EntityAnatomy[]
-}
-
 export const linksToTableData = (
   links: EntityLink[] | undefined,
   entityType: string,
-  anatomy: Anatomy,
+  anatomy: IconAnatomy,
 ): LinksTableData =>
   links?.reduce((acc, edge) => {
     const { linkType, direction, entityType: linkEntityType, id, node, isRestricted } = edge
@@ -59,10 +47,10 @@ export const linksToTableData = (
 
     // Handle normal links
     const entityData: LinkEntity = {
-      label: node.label || node.name,
+      label: (node.label || node.name) as string,
       parents: node.parents,
       linkId: id,
-      entityId: node.id,
+      entityId: node.id as string,
       entityType: linkEntityType,
       icon: getEntityIcon(linkEntityType, node.subType, anatomy),
       color: getEntityColor(linkEntityType, node.subType, anatomy),
@@ -98,40 +86,4 @@ const linkTypeToLinkName = (
   return `${linkType}|${firstType}|${secondType}`
 }
 
-export const getEntityIcon = (
-  entityType: string,
-  subType: string | undefined,
-  anatomy: Anatomy,
-) => {
-  switch (entityType) {
-    case 'folder':
-      return (
-        anatomy.folderTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('folder')
-      )
-    case 'product':
-      return (
-        anatomy.productTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('product')
-      )
-    case 'task':
-      return anatomy.taskTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('task')
-    default:
-      return getEntityTypeIcon(entityType)
-  }
-}
 
-export const getEntityColor = (
-  entityType: string,
-  subType: string | undefined,
-  anatomy: Anatomy,
-): string | undefined => {
-  switch (entityType) {
-    case 'folder':
-      return anatomy.folderTypes.find((a) => a.name === subType)?.color
-    case 'task':
-      return anatomy.taskTypes.find((a) => a.name === subType)?.color
-    case 'product':
-      return anatomy.productTypes.find((a) => a.name === subType)?.color
-    default:
-      return undefined
-  }
-}
