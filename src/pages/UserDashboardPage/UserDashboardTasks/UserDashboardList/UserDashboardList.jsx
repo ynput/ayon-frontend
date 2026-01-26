@@ -132,12 +132,17 @@ const UserDashboardList = ({
   // HANDLE TASK CLICK
   const taskClick = useTaskClick(dispatch, tasks)
 
+  // HANDLE SPACEBAR VIEWER OPEN SHORTCUT
+  const handleSpacebar = useTaskSpacebarViewer({ tasks })
+
   // KEYBOARD SUPPORT
   const handleKeyDown = (e) => {
+    // open viewer if spacebar is pressed
+    handleSpacebar(e)
+
     // if there are no tasks, do nothing
     if (!taskIds.length) return
 
-    // if arrow down, select next task
     // if arrow down, select next task
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -325,12 +330,8 @@ const UserDashboardList = ({
     [collapsedGroups],
   )
 
-  // HANDLE SPACEBAR VIEWER OPEN SHORTCUT
-  const spacebarShortcut = useTaskSpacebarViewer({ tasks })
-
   return (
     <>
-      {spacebarShortcut}
       <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
         <Styled.Inner ref={containerRef}>

@@ -27,6 +27,17 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
   const { RelatedTasks } = useUserDashboardContext()
 
   const handleOpenViewer = (taskId: string, projectName: string) => {
+    // first check that a related task has focus
+    const containerClassName = 'related-tasks'
+    const cardClassName = 'entity-card'
+
+    const activeElement = document.activeElement as HTMLElement
+    const isRelatedTasksFocused =
+      activeElement?.closest(`.${containerClassName}`) &&
+      activeElement?.closest(`.${cardClassName}`)
+
+    if (!isRelatedTasksFocused) return
+
     onOpenViewer?.({
       isOpen: true,
       projectName,
