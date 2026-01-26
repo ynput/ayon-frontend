@@ -85,5 +85,3 @@ const linkTypeToLinkName = (
   const secondType = direction === 'in' ? baseEntityType : linkEntityType
   return `${linkType}|${firstType}|${secondType}`
 }
-
-

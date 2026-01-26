@@ -1,6 +1,5 @@
 import { FC, Fragment } from 'react'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { getEntityTypeIcon } from '@shared/util'
 import { detailsPanelEntityTypes } from '@shared/api'
 import * as Styled from './LinksManager.styled'
 import { LinkEntity } from './LinksManager'
@@ -42,10 +41,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
         unknown: link.isRestricted && isManager,
       })}
     >
-
       <EntityIcon entity={{entityType: link.entityType}} icon={link?.icon} color={link.color} />
-
-
       <span className="title">
         {link.isRestricted ? (
           <span className="label">{isManager ? 'Unknown' : 'Access Restricted'}</span>

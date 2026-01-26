@@ -3,7 +3,7 @@ import { useProjectContext } from '@shared/context'
 import { getEntityColor, getEntityIcon } from '@shared/util/iconUtils'
 
 type Props = {
-  entity: { entityType: string; subType?: string | undefined }
+  entity: { entityType: string; subType?: string }
   color?: string
   icon?: string
 }
