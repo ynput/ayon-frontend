@@ -867,6 +867,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                         className="transparent nopad"
                         size={1}
                       >
+                        {addon.isProjectBundle && <>Studio scope enabled</>}
                         <AddonSettingsPanel
                           addon={addon}
                           updateAddonSchema={onUpdateAddonSchema}
@@ -890,6 +891,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                           currentSelection={currentSelection}
                           onSelect={setCurrentSelection}
                           projectName={projectName}
+                          includeStudioScope={addon.isProjectBundle}
                           siteId={siteId === '_' ? null : siteId}
                           // Needed for rerender, component memoized
                           searchText={searchText}
@@ -905,6 +907,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
                             onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
                             onPasteValue: (path) => onPasteValue(addon, siteId, path),
+                            includeStudioScope: !!addon.isProjectBundle,
                           }}
                         />
                       </Panel>

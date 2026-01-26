@@ -23,6 +23,7 @@ interface Addon {
   hasProjectSiteOverrides?: boolean
   hasProjectOverrides?: boolean
   hasStudioOverrides?: boolean
+  isProjectBundle?: boolean
 }
 
 interface AddonFocusEvent {
@@ -114,6 +115,7 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
         newSelection.push(addon)
       }
     }
+    console.log('Updated selected addons:', newSelection)
     setSelectedAddons(newSelection)
   }, [addons, preferredSelection])
 

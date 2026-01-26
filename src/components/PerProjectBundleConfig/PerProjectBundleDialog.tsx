@@ -89,9 +89,9 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
   const [formData, setFormData] = useState<ProjectBundleForm | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  
+
   const invalidateTags = () => {
-    dispatch(api.util.invalidateTags(['addonSettingsList', 'addonSettingsOverrides', 'addonSettings']))
+    dispatch(api.util.invalidateTags(['addonSettingsList', 'addonSettingsOverrides', 'addonSettings', 'addonSettingsSchema']))
   }
 
 
@@ -120,10 +120,10 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
     try {
       // do not send back addonMetadata (ignored by the server)
       await axios.post(
-        `/api/projects/${projectName}/bundle?variant=${variant}`, 
+        `/api/projects/${projectName}/bundle?variant=${variant}`,
         {
-          addons: formData.addons, 
-          installerVersion: formData.installerVersion, 
+          addons: formData.addons,
+          installerVersion: formData.installerVersion,
           dependencyPackages: formData.dependencyPackages
         }
       )
@@ -194,19 +194,19 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
     if (!formData) return null
     return (
       <AddonForm>
-      <div className='addon-row'>
-        <label htmlFor='installerVersion'>
-          Installer Version
-        </label>
-        <Dropdown
-          id='installerVersion'
-          options={formData.installerOptions.map((opt) => ({ label: opt, value: opt }))}
-          value={formData.installerVersion? [formData.installerVersion] : []}
-          onChange={handleInstallerChange}
-          placeholder="Select installer version"
-          style={{ minWidth: '200px' }}
-        />
-      </div>
+        <div className='addon-row'>
+          <label htmlFor='installerVersion'>
+            Installer Version
+          </label>
+          <Dropdown
+            id='installerVersion'
+            options={formData.installerOptions.map((opt) => ({ label: opt, value: opt }))}
+            value={formData.installerVersion ? [formData.installerVersion] : []}
+            onChange={handleInstallerChange}
+            placeholder="Select installer version"
+            style={{ minWidth: '200px' }}
+          />
+        </div>
       </AddonForm>
     )
   }, [formData])
@@ -218,26 +218,26 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       <AddonForm>
         {['windows', 'linux', 'darwin'].map((platform) => {
 
-        const options  = [{ label: 'None', value: null }]
+          const options = [{ label: 'None', value: null }]
 
-        for (const option of formData.dependencyPackageOptions[platform]) {
-          options.push({ label: option, value: option })
-        }
+          for (const option of formData.dependencyPackageOptions[platform]) {
+            options.push({ label: option, value: option })
+          }
 
-        return (
-          <div className='addon-row'>
-            <label htmlFor='dp-windows'>
-              {platform.charAt(0).toUpperCase() + platform.slice(1)}
-            </label>
-            <Dropdown
-              id='dp-windows'
-              options={options}
-              value={formData.dependencyPackages[platform]? [formData.dependencyPackages[platform]] : []}
-              onChange={(value) => handleDependencyPackageChange(value, platform)}
-              style={{ minWidth: '300px' }}
-            />
-          </div>
-        )
+          return (
+            <div className='addon-row'>
+              <label htmlFor='dp-windows'>
+                {platform.charAt(0).toUpperCase() + platform.slice(1)}
+              </label>
+              <Dropdown
+                id='dp-windows'
+                options={options}
+                value={formData.dependencyPackages[platform] ? [formData.dependencyPackages[platform]] : []}
+                onChange={(value) => handleDependencyPackageChange(value, platform)}
+                style={{ minWidth: '300px' }}
+              />
+            </div>
+          )
 
         })}
       </AddonForm>
@@ -268,7 +268,7 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       </AddonForm>
     )
   }, [formData])
-  
+
 
 
   const footer = useMemo(() => (
