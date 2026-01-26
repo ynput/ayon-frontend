@@ -60,6 +60,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
         selectedSubtaskIds={selectedSubtaskIds}
         onSelectSubtasks={setSelectedSubtaskIds}
         filters={subtasksFilters}
+        actionsPortalClassName="panel-header-filters"
       />
     </>
   )

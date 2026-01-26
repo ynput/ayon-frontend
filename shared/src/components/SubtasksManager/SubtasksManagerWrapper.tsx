@@ -19,6 +19,7 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   users: UserModel[]
   title?: string | null
   filters?: QueryFilter
+  actionsPortalClassName?: string
   onClose?: () => void
   onSelectSubtasks?: (subtaskIds: string[]) => void
   updateSubtasks: UpdateSubtasksMutation

@@ -34,7 +34,8 @@ export const SearchFilterContainer = styled.div`
   border-radius: var(--border-radius-m);
   overflow: hidden;
   transition: width 0.2s ease;
-  width: 32px;
+  width: 28px;
+  height: 28px;
   box-shadow: none;
   padding-right: 4px;
 
@@ -46,7 +47,8 @@ export const SearchFilterContainer = styled.div`
 `
 
 export const Options = styled(EnumWidget)`
-  width: 32px;
+  width: 28px;
+  height: 28px;
 `
 
 export const SearchInput = styled.input`
