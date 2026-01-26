@@ -224,6 +224,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      e.stopPropagation()
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         handleSave()
       } else if (e.key === 'Escape') {
