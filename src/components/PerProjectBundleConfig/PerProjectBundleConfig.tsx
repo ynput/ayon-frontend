@@ -5,7 +5,7 @@ import PerProjectBundleDialog from './PerProjectBundleDialog'
 
 interface PerProjectBundleConfigProps {
   projectName: string
-  variant?: string
+  variant: string
 }
 
 const PerProjectBundleConfig: FC<PerProjectBundleConfigProps> = ({ projectName, variant }) => {
@@ -28,10 +28,7 @@ const PerProjectBundleConfig: FC<PerProjectBundleConfigProps> = ({ projectName, 
         <PerProjectBundleDialog
           projectName={projectName}
           onClose={() => setDialogOpen(false)}
-          init={{
-            production: bundle?.production || null,
-            staging: bundle?.staging || null,
-          }}
+          variant={variant}
         />
       )}
     </>

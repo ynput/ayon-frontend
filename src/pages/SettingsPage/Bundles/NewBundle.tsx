@@ -357,9 +357,6 @@ const NewBundle: React.FC<NewBundleProps> = ({
         onAddonDevChange={handleAddonDevChange}
         developerMode={developerMode}
         addonListRef={addonListRef}
-        onProjectSwitchChange={() =>
-          formData && setFormData({ ...formData, isProject: !formData?.isProject })
-        }
       >
         <Styled.AddonTools>
           <AddonSearchInput />
