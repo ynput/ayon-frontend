@@ -71,6 +71,15 @@ const useExtraColumns = ({ entityType }: useExtraColumnsProps) => {
                       { field: typeColumn.value, value, id, type, rowId: row.id },
                     ])
                   }
+                  pt={{
+                    enum: {
+                      pt: {
+                        template: {
+                          iconOnlyColor: true,
+                        },
+                      },
+                    },
+                  }}
                 />
               )
             },
