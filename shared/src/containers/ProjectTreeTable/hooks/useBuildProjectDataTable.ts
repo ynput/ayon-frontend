@@ -121,11 +121,7 @@ export default function useBuildProjectDataTable({
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
 
-      const links = linksToTableData(task.links, 'task', {
-        folderTypes: project?.folderTypes || [],
-        productTypes: project.productTypes || [],
-        taskTypes: project?.taskTypes || [],
-      })
+      const links = linksToTableData(task.links, 'task', project.anatomy)
 
       return {
         id: task.id,
@@ -194,11 +190,7 @@ export default function useBuildProjectDataTable({
       const folder = foldersMap.get(folderId)
       if (!folder) continue
 
-      const links = linksToTableData(folder.links, 'folder', {
-        folderTypes: project?.folderTypes || [],
-        productTypes: project?.productTypes || [],
-        taskTypes: project?.taskTypes || [],
-      })
+      const links = linksToTableData(folder.links, 'folder', project.anatomy)
 
       const folderTypeData = getEntityTypeData('folder', folder.folderType)
 

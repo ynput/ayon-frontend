@@ -432,6 +432,8 @@ const buildTreeTableColumns = ({
                 ? meta?.options?.folderType
                 : type === 'task'
                 ? meta?.options?.taskType
+                : type === 'product' || type === 'version'
+                ? meta?.options?.productType
                 : []
             }
             isCollapsed={!!row.original.childOnlyMatch}
@@ -451,6 +453,15 @@ const buildTreeTableColumns = ({
                 ? 'Folder type cannot be edited when versions exist within the folder'
                 : undefined
             }
+            pt={{
+              enum: {
+                pt: {
+                  template: {
+                    iconOnlyColor: true,
+                  },
+                },
+              },
+            }}
           />
         )
       },

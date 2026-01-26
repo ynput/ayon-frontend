@@ -2,6 +2,8 @@ import { getEntityTypeIcon } from '@shared/util/getEntityTypeIcon'
 import { Anatomy } from '@shared/api'
 
 export type IconAnatomy = Pick<Anatomy, 'folder_types' | 'task_types' | 'product_base_types'>
+
+// Helper to find the anatomy type config for an entity
 const getAnatomyType = (
   entityType: string,
   subType: string | undefined,

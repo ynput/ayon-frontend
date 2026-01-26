@@ -1,5 +1,5 @@
 import { FC, Fragment } from 'react'
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import { detailsPanelEntityTypes } from '@shared/api'
 import * as Styled from './LinksManager.styled'
 import { LinkEntity } from './LinksManager'
