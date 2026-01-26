@@ -159,23 +159,6 @@ DetailsPanelProps) => {
     [projectInfo],
   )
 
-  // build colors for entity types
-  const entityTypeColors = useMemo(
-    () => ({
-      task: projectInfo.taskTypes
-        .filter((task) => !!task.color)
-        .reduce((acc, task) => ({ ...acc, [task.name]: task.color }), {}),
-      folder: projectInfo.folderTypes
-        .filter((folder) => !!folder.color)
-        .reduce((acc, folder) => ({ ...acc, [folder.name]: folder.color }), {}),
-      product: projectInfo.productTypes
-        .filter((product) => !!product.color)
-        .reduce((acc, product) => ({ ...acc, [product.name]: product.color }), {}),
-    }),
-    [projectInfo],
-  )
-
-  // check if tab needs to be updated when entity type changes
   // for example when switching from version to task, task doesn't have reps tab
   // if reps tab was selected, set default to feed
   useEffect(() => {
@@ -411,7 +394,6 @@ DetailsPanelProps) => {
           currentTab={currentTab}
           onTabChange={setTab}
           entityTypeIcons={entityTypeIcons}
-          entityTypeColors={entityTypeColors}
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
         />

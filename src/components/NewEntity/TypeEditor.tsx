@@ -33,7 +33,6 @@ const TypeEditor = forwardRef<DropdownRef, TypeEditorProps>(
     },
     ref,
   ) => {
-    console.log(options)
     return (
       <Dropdown
         options={options}

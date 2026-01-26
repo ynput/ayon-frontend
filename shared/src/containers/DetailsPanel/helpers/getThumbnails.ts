@@ -21,7 +21,6 @@ const getThumbnails = (
   entities: Entity[],
   entityType: DetailsPanelEntityType,
   icons: EntityTypeIcons,
-  colors?: EntityTypeColors,
 ) => {
   if (!entities[0]) return []
 
@@ -45,23 +44,8 @@ const getThumbnails = (
     }
   }
 
-  const getColor = (entity: Entity) => {
-    if (!colors) return undefined
-    switch (entityType) {
-      case 'folder':
-        return entity.folder?.folderType ? colors.folder[entity.folder.folderType] : undefined
-      case 'task':
-        return entity.task?.taskType ? colors.task[entity.task.taskType] : undefined
-      case 'version':
-        return entity.product?.productType ? colors.product[entity.product.productType] : undefined
-      default:
-        return undefined
-    }
-  }
-
   return entities.slice(0, 6).map((entity) => ({
     icon: getIcon(entity),
-    color: getColor(entity),
     id: entity.id,
     type: entityType,
     updatedAt: entity.updatedAt,

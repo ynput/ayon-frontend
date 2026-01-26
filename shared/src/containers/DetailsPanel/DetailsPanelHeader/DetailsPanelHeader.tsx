@@ -24,11 +24,6 @@ export type EntityTypeIcons = {
   product: Record<string, string>
 }
 
-export type EntityTypeColors = {
-  folder: Record<string, string>
-  task: Record<string, string>
-  product: Record<string, string>
-}
 
 type DetailsPanelHeaderProps = {
   entityType: 'folder' | 'task' | 'version' | 'representation'
@@ -45,7 +40,6 @@ type DetailsPanelHeaderProps = {
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
   entityTypeIcons: EntityTypeIcons
-  entityTypeColors?: EntityTypeColors
 }
 
 const DetailsPanelHeader = ({
@@ -61,7 +55,6 @@ const DetailsPanelHeader = ({
   currentTab,
   onTabChange,
   entityTypeIcons,
-  entityTypeColors,
   onOpenViewer,
   onEntityFocus,
 }: DetailsPanelHeaderProps) => {
@@ -93,6 +86,7 @@ const DetailsPanelHeader = ({
   // placeholder entity
   if (!firstEntity) {
     firstEntity = {
+      parents: [],
       id: 'placeholder',
       name: 'loading...',
       label: 'loading...',
@@ -104,7 +98,7 @@ const DetailsPanelHeader = ({
       attrib: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      path: '',
+      path: ''
     }
   }
 
@@ -133,13 +127,10 @@ const DetailsPanelHeader = ({
   const priorities = getPriorityOptions(priorityAttrib, entityType)
 
   const thumbnails = useMemo(
-    () => getThumbnails(entities, entityType, entityTypeIcons, entityTypeColors),
-    [entities, entityType, entityTypeIcons, entityTypeColors],
+    () => getThumbnails(entities, entityType, entityTypeIcons),
+    [entities, entityType, entityTypeIcons],
   )
 
-  // we need to get the intersection of all the statuses of the projects for the selected entities
-  // this means that if we have 2 entities from 2 different projects, we need to get the intersection of the statuses of those 2 projects
-  //  and it prevents us from showing statuses that are not available for the selected entities
   const statusesValue = useMemo(() => entities.map((t) => t.status), [entities])
   const priorityValues = useMemo(() => entities.map((t) => t.attrib?.priority), [entities])
   const tagsValues: string[][] = useMemo(() => entities.map((t) => t.tags), [entities])
