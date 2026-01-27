@@ -8,6 +8,7 @@ interface ActivityData {
 
 export interface ActivityAssigneeChangeProps {
   activity: {
+    authorName: string
     authorFullName?: string
     createdAt?: string
     activityData?: ActivityData
@@ -17,10 +18,10 @@ export interface ActivityAssigneeChangeProps {
 }
 
 const ActivityAssigneeChange: React.FC<ActivityAssigneeChangeProps> = ({ activity, isAdding }) => {
-  const { authorFullName, createdAt, activityData } = activity || {}
+  const { authorFullName, createdAt, activityData, authorName } = activity || {}
   const { assignee } = activityData || {}
 
-  let fullText = authorFullName
+  let fullText = authorFullName || authorName
   fullText += isAdding ? ' added ' : ' removed '
   fullText += 'assignee: ' + assignee
 

@@ -13,6 +13,7 @@ interface StatusInfo {
 interface ActivityStatusChangeProps {
   entityType?: string
   activity: {
+    authorName?: string
     authorFullName?: string
     createdAt?: string
     oldStatus?: StatusInfo
@@ -25,13 +26,13 @@ const ActivityStatusChange: React.FC<ActivityStatusChangeProps> = ({
   entityType,
   activity = {},
 }) => {
-  const { authorFullName, createdAt, oldStatus = {}, newStatus = {} } = activity
+  const { authorName, authorFullName, createdAt, oldStatus = {}, newStatus = {} } = activity
   const tagList = useGetContextParents(activity, entityType)
 
   return (
     <Styled.StatusChange>
       <Styled.Body>
-        <Styled.Text>{authorFullName}</Styled.Text>
+        <Styled.Text>{authorFullName || authorName}</Styled.Text>
         <Styled.Text>- {tagList.join(' / ')} -</Styled.Text>
         {oldStatus.icon && <Icon icon={oldStatus.icon} style={{ color: oldStatus.color }} />}
         <Styled.Text>{oldStatus.name}</Styled.Text>
