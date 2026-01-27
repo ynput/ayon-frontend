@@ -39,6 +39,7 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
+import { PubSub } from '@shared/util'
 
 // Query result types
 export type FolderAttribNode = VpFolderFragment & {
@@ -242,6 +243,76 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForVersionsInfinite,
+        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+            try {
+              const entityId = message.summary?.entityId
+              if (!entityId) return
+
+              const queryParams: any = {
+                projectName: arg.projectName,
+                versionFilter: arg.versionFilter,
+                productFilter: arg.productFilter,
+                taskFilter: arg.taskFilter,
+                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                versionIds: [entityId],
+                first: 1,
+              }
+
+              const result = await dispatch(
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
+                  forceRefetch: true,
+                }),
+              )
+
+              if (result.error) return
+
+              updateCachedData((draft) => {
+                const updatedVersion = result.data?.versions?.[0]
+
+                for (const page of draft.pages) {
+                  const index = page.versions.findIndex((v) => v.id === entityId)
+                  if (index !== -1) {
+                    if (updatedVersion) {
+                      page.versions[index] = updatedVersion
+                    } else {
+                      page.versions.splice(index, 1)
+                    }
+                    return
+                  }
+                }
+
+                // Version not found - add at correct sorted position
+                if (updatedVersion && draft.pages.length > 0) {
+                  const sortBy = (arg.sortBy || 'createdAt') as keyof VersionNode
+                  const desc = arg.desc || false
+                  const versions = draft.pages[0].versions
+
+                  let insertIndex = versions.length
+                  for (let i = 0; i < versions.length; i++) {
+                    const newValue = updatedVersion[sortBy]
+                    const currentValue = versions[i][sortBy]
+                    const shouldInsert = desc
+                      ? newValue > currentValue
+                      : newValue < currentValue
+
+                    if (shouldInsert) {
+                      insertIndex = i
+                      break
+                    }
+                  }
+
+                  versions.splice(insertIndex, 0, updatedVersion)
+                }
+              })
+            } catch (error) {
+              // Silently handle errors
+            }
+          })
+
+          await cacheEntryRemoved
+          PubSub.unsubscribe(token)
+        }
       },
     ),
 
@@ -356,6 +427,49 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             errors: errors.length > 0 ? errors : undefined,
           },
         }
+      },
+      onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+          try {
+            const entityId = message.summary?.entityId
+            const parentId = message.summary?.parentId
+            if (!entityId || !parentId) return
+
+            // Only handle if version belongs to one of our expanded products
+            if (!arg.productIds.includes(parentId)) return
+
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersionsByProductId.initiate(
+                {
+                  projectName: arg.projectName,
+                  productIds: [parentId],
+                  first: VERSIONS_BY_PRODUCT_ID_QUERY_COUNT,
+                },
+                { forceRefetch: true },
+              ),
+            )
+
+            if (result.error) return
+
+            updateCachedData((draft) => {
+              const newVersions = result.data?.versions || []
+
+              for (const newVersion of newVersions) {
+                const index = draft.versions.findIndex((v) => v.id === newVersion.id)
+                if (index !== -1) {
+                  draft.versions[index] = newVersion
+                } else {
+                  draft.versions.push(newVersion)
+                }
+              }
+            })
+          } catch (error) {
+            // Silently handle errors
+          }
+        })
+
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
       },
       providesTags: provideTagsForVersionsResult,
     }),
