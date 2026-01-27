@@ -124,7 +124,11 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
         {
           addons: formData.addons,
           installerVersion: formData.installerVersion,
-          dependencyPackages: formData.dependencyPackages
+          dependencyPackages: {
+            windows: formData.dependencyPackages.windows === '__none__' ? null : formData.dependencyPackages.windows,
+            linux: formData.dependencyPackages.linux === '__none__' ? null : formData.dependencyPackages.linux,
+            darwin: formData.dependencyPackages.darwin === '__none__' ? null : formData.dependencyPackages.darwin,
+          },
         }
       )
       toast.success(`Project bundle for ${projectName} set successfully`)
@@ -217,8 +221,7 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
     return (
       <AddonForm>
         {['windows', 'linux', 'darwin'].map((platform) => {
-
-          const options = [{ label: 'None', value: null }]
+          const options = [{ label: 'None', value: '__none__' }]
 
           for (const option of formData.dependencyPackageOptions[platform]) {
             options.push({ label: option, value: option })
@@ -226,15 +229,13 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
 
           return (
             <div className='addon-row'>
-              <label htmlFor='dp-windows'>
-                {platform.charAt(0).toUpperCase() + platform.slice(1)}
-              </label>
+              <label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</label>
               <Dropdown
-                id='dp-windows'
                 options={options}
-                value={formData.dependencyPackages[platform] ? [formData.dependencyPackages[platform]] : []}
+                value={formData.dependencyPackages[platform] ? [formData.dependencyPackages[platform]] : ['__none__']}
                 onChange={(value) => handleDependencyPackageChange(value, platform)}
                 style={{ minWidth: '300px' }}
+                multiSelect={false}
               />
             </div>
           )

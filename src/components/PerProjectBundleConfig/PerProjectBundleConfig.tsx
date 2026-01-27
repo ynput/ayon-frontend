@@ -27,6 +27,7 @@ const PerProjectBundleConfig: FC<PerProjectBundleConfigProps> = ({ projectName, 
         data-tooltip-delay={0}
         onClick={() => setDialogOpen(!dialogOpen)}
         variant={bundleSetForVariant ? 'filled' : 'surface'}
+        disabled={!['production', 'staging'].includes(variant)}
       />
       {dialogOpen && (
         <PerProjectBundleDialog
