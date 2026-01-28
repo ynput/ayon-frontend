@@ -85,9 +85,17 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       //@ts-ignore
       const ppts = props?.schema?.properties[propName]
       //@ts-ignore
-      if (!(ppts.scope || ['studio', 'project']).includes(props.formContext.level)) {
+      const validScopes = [...ppts?.scope || ['studio', 'project']]
+      if (validScopes.includes('studio') && props.formContext.includeStudioScope && !validScopes.includes('site')) {
+        validScopes.push('project')
+      }
+
+      if (!validScopes.includes(props.formContext.level)) {
+        console.log(`Hiding field ${propName} due to scope`, validScopes, props.formContext.level, props.formContext)
         hiddenFields.push(propName)
       }
+
+
       //@ts-ignore
       if (ppts.conditionalEnum) {
         hiddenFields = [
@@ -183,9 +191,8 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       const rmPath = override?.inGroup || path || ['root']
       if (props.formContext.onPinOverride)
         model.push({
-          label: `Add current ${rmPath[rmPath.length - 1]} value as ${
-            props.formContext.level
-          } override`,
+          label: `Add current ${rmPath[rmPath.length - 1]} value as ${props.formContext.level
+            } override`,
           command: () => props.formContext.onPinOverride(rmPath),
           disabled: overrideLevel === props.formContext.level,
         })

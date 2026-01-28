@@ -1,16 +1,21 @@
-import { useListBundlesQuery } from '@queries/bundles/getBundles'
-import { useSetProjectBundleMutation } from '@shared/api'
+import { useDispatch } from 'react-redux'
+import api, { EnumItem } from '@shared/api'
+
 import {
-  DefaultValueTemplate,
+  Button,
   Dialog,
-  DialogProps,
   Dropdown,
-  DropdownProps,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { FC, useEffect, useState } from 'react'
+import axios from 'axios'
+import { FC, useEffect, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
+
+
+//
+// Styled Components
+//
 
 const StyledDialog = styled(Dialog)`
   max-height: unset;
@@ -21,132 +26,271 @@ const StyledDialog = styled(Dialog)`
   }
 `
 
-const StyledRow = styled.div`
+const AddonForm = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 100%;
+
+  .addon-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    label {
+      display: bock;
+    }
+
+  }
 `
 
-type ProjectBundleForm = {
-  production: string | undefined
-  staging: string | undefined
+
+//
+// Hardcoded types are the best types
+//
+
+type AddonMetadata = {
+  name: string
+  label: string
+  options: EnumItem[]
 }
 
-interface PerProjectBundleDialogProps extends Partial<DialogProps> {
+
+type ProjectBundleForm = {
+  addons: Record<string, string | null>
+  installerVersion: string | null
+  dependencyPackages: Record<string, string | null>
+  // metadata to build the form
+  addonMetadata: AddonMetadata[]
+  installerOptions: string[]
+  dependencyPackageOptions: Record<string, string[]>
+}
+
+interface PerProjectBundleDialogProps {
   projectName: string
-  init: ProjectBundleForm
+  variant: string
   onClose: () => void
 }
 
-const initForm: ProjectBundleForm = {
-  production: undefined,
-  staging: undefined,
-}
 
 const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
   projectName,
-  init = initForm,
+  variant,
   onClose,
-  ...props
 }) => {
-  const [setProjectBundle, { isLoading }] = useSetProjectBundleMutation()
+  const dispatch = useDispatch()
 
-  const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
-  const projectBundles = bundles.filter((b) => b.isProject)
+  const [formData, setFormData] = useState<ProjectBundleForm | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const variants = ['production', 'staging'] as const
-  type VariantType = (typeof variants)[number]
 
-  const [form, setForm] = useState<ProjectBundleForm>(init)
-
-  //   update initial form if it changes
-  useEffect(() => {
-    setForm(init)
-
-    return () => {
-      setForm(initForm)
-    }
-  }, [init])
-
-  const handleChange = (bundle: string | null, variant: VariantType) => {
-    setForm((prev) => ({ ...prev, [variant]: bundle }))
+  const invalidateTags = () => {
+    dispatch(api.util.invalidateTags(['addonSettingsList', 'addonSettingsOverrides', 'addonSettings', 'addonSettingsSchema']))
   }
 
-  const handleSubmit = async () => {
+
+  // AXIOS TOUJOURS!
+
+  const handleUnfreeze = async () => {
+    // Unfreeze deletes the project bundle
+    setIsLoading(true)
     try {
-      await setProjectBundle({ projectName, projectBundleModel: form }).unwrap()
-
+      await axios.delete(`/api/projects/${projectName}/bundle?variant=${variant}`)
+      toast.success(`Project bundle for ${projectName} unset successfully`)
+      invalidateTags()
       onClose()
+    } catch (error: any) {
+      console.error('Error unsetting project bundle:', error)
+      toast.error(`Error unsetting project bundle: ${error.message || error}`)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-      toast.success(`Project bundles updated for ${projectName}`)
-    } catch (error) {
+  const handleFreeze = async () => {
+    // Create or update the project bundle
+    if (!formData) return
+    setIsLoading(true)
+    try {
+      // do not send back addonMetadata (ignored by the server)
+      await axios.post(
+        `/api/projects/${projectName}/bundle?variant=${variant}`,
+        {
+          addons: formData.addons,
+          installerVersion: formData.installerVersion,
+          dependencyPackages: {
+            windows: formData.dependencyPackages.windows === '__none__' ? null : formData.dependencyPackages.windows,
+            linux: formData.dependencyPackages.linux === '__none__' ? null : formData.dependencyPackages.linux,
+            darwin: formData.dependencyPackages.darwin === '__none__' ? null : formData.dependencyPackages.darwin,
+          },
+        }
+      )
+      toast.success(`Project bundle for ${projectName} set successfully`)
+      invalidateTags()
+      onClose()
+    } catch (error: any) {
       console.error('Error setting project bundle:', error)
-      toast.error(`Failed to set project bundle: ${error || 'Unknown error'}`)
-    }
-  }
-
-  const hasChanges = Object.entries(form).some(
-    ([key, value]) => value !== init[key as keyof ProjectBundleForm],
-  )
-
-  const getProjectBundleOptions = (variant: VariantType) => {
-    const options: DropdownProps['options'][number] = [
-      ...projectBundles.map((b) => ({
-        label: b.name,
-        value: b.name,
-      })),
-    ]
-
-    if (form[variant]) {
-      options.unshift({ label: 'None', value: undefined, icon: 'close' })
+      toast.error(`Error setting project bundle: ${error.message || error}`)
+    } finally {
+      setIsLoading(false)
     }
 
-    return options
   }
 
-  const someProjectBundles = projectBundles.length > 0
-  const placeholder = someProjectBundles
-    ? 'Select a project bundle...'
-    : 'No project bundles available'
+  useEffect(() => {
+    axios.get(`/api/projects/${projectName}/bundle?variant=${variant}`).then((response) => {
+      setFormData(response.data)
+      setIsLoading(false)
+    })
+  }, [projectName])
 
-  const renderVariantDropdown = (variant: VariantType) => (
-    <StyledRow key={variant}>
-      <label style={{ textTransform: 'capitalize' }}>{variant}</label>
-      <Dropdown
-        value={form[variant] ? [form[variant]] : []}
-        options={getProjectBundleOptions(variant)}
-        onChange={(v) => handleChange(v[0] || null, variant)}
-        placeholder={placeholder}
-        disabled={!someProjectBundles}
-        valueTemplate={(v, _a, o) => (
-          <DefaultValueTemplate value={v} isOpen={o} placeholder={placeholder}>
-            {v}
-          </DefaultValueTemplate>
-        )}
-        searchOnNumber={10}
-      />
-    </StyledRow>
-  )
+
+  const handleAddonChange = (value: string[], addonName: string) => {
+    setFormData((prev) => {
+      if (!prev) {
+        return prev
+      }
+      return {
+        ...prev,
+        addons: {
+          ...prev.addons,
+          [addonName]: value[0] || null,
+        },
+      }
+    })
+  }
+
+  const handleInstallerChange = (value: string[]) => {
+    setFormData((prev) => {
+      if (!prev) {
+        return prev
+      }
+      return {
+        ...prev,
+        installerVersion: value[0] || null,
+      }
+    })
+  }
+
+  const handleDependencyPackageChange = (value: string[], platform: string) => {
+    setFormData((prev) => {
+      if (!prev) {
+        return prev
+      }
+      return {
+        ...prev,
+        dependencyPackages: {
+          ...prev.dependencyPackages,
+          [platform]: value[0] || null,
+        },
+      }
+    })
+  }
+
+
+  const installerForm = useMemo(() => {
+    if (!formData) return null
+    return (
+      <AddonForm>
+        <div className='addon-row'>
+          <label htmlFor='installerVersion'>
+            Installer Version
+          </label>
+          <Dropdown
+            id='installerVersion'
+            options={formData.installerOptions.map((opt) => ({ label: opt, value: opt }))}
+            value={formData.installerVersion ? [formData.installerVersion] : []}
+            onChange={handleInstallerChange}
+            placeholder="Select installer version"
+            style={{ minWidth: '200px' }}
+          />
+        </div>
+      </AddonForm>
+    )
+  }, [formData])
+
+
+  const dependencyPackageForm = useMemo(() => {
+    if (!formData) return null
+    return (
+      <AddonForm>
+        {['windows', 'linux', 'darwin'].map((platform) => {
+          const options = [{ label: 'None', value: '__none__' }]
+
+          for (const option of formData.dependencyPackageOptions[platform]) {
+            options.push({ label: option, value: option })
+          }
+
+          return (
+            <div className='addon-row'>
+              <label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</label>
+              <Dropdown
+                options={options}
+                value={formData.dependencyPackages[platform] ? [formData.dependencyPackages[platform]] : ['__none__']}
+                onChange={(value) => handleDependencyPackageChange(value, platform)}
+                style={{ minWidth: '300px' }}
+                multiSelect={false}
+              />
+            </div>
+          )
+
+        })}
+      </AddonForm>
+    )
+  }, [formData])
+
+  const addonForm = useMemo(() => {
+    if (!formData) return null
+    return (
+      <AddonForm>
+        {formData.addonMetadata.map((meta: AddonMetadata) => {
+          return (
+            <div className='addon-row' key={meta.name}>
+              <label htmlFor={meta.name}>
+                {meta.label}
+              </label>
+              <Dropdown
+                id={meta.name}
+                options={meta.options}
+                value={[formData.addons[meta.name] || '__inherit__']}
+                onChange={(value) => handleAddonChange(value, meta.name)}
+                placeholder="Select version"
+                style={{ minWidth: '200px' }}
+              />
+            </div>
+          )
+        })}
+      </AddonForm>
+    )
+  }, [formData])
+
+
+
+  const footer = useMemo(() => (
+    <>
+      <Button onClick={handleUnfreeze} disabled={isLoading} label='Unfreeze' />
+      <SaveButton onClick={handleFreeze} active={true} saving={isLoading} label='Freeze' />
+    </>
+  ), [isLoading, handleFreeze, handleUnfreeze])
+
 
   return (
     <StyledDialog
-      {...props}
       onClose={onClose}
       isOpen
-      header={'Set Project Bundle - ' + projectName}
-      size="sm"
-      footer={
-        <SaveButton onClick={handleSubmit} active={hasChanges} saving={isLoading}>
-          Save
-        </SaveButton>
-      }
+      header={`Freeze ${variant} bundle for ${projectName}`}
+      size="md"
+      footer={footer}
     >
-      <span>
-        Assign a project bundle to this project so that it can have specific addon versions and
-        settings.
-      </span>
-      {variants.map(renderVariantDropdown)}
+      {(!isLoading && formData) ? (
+        <>
+          {installerForm}
+          <h2>Dependency Packages</h2>
+          {dependencyPackageForm}
+          <h2>Addons</h2>
+          {addonForm}
+        </>
+      ) : 'Loading...'}
     </StyledDialog>
   )
 }
