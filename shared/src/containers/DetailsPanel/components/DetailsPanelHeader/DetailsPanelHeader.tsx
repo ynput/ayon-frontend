@@ -12,10 +12,10 @@ import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
 import { DetailsPanelTab, useDetailsPanelContext } from '@shared/context'
 
-import FeedFilters from '../FeedFilters/FeedFilters'
+import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
 import * as Styled from './DetailsPanelHeader.styled'
-import getThumbnails from '../helpers/getThumbnails'
-import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
+import getThumbnails from '../../helpers/getThumbnails'
+import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { PlayableIcon } from '@shared/components/PlayableIcon/PlayableIcon'
 
 export type EntityTypeIcons = {
@@ -198,7 +198,8 @@ const DetailsPanelHeader = ({
 
   // Get title and subtitle from the imported function
   const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
-  const status = statuses?.length!==0 && statuses?.find((status)=>  status.name=== statusesValue[0])
+  const status =
+    statuses?.length !== 0 && statuses?.find((status) => status.name === statusesValue[0])
   return (
     <Styled.HeaderContainer>
       <EntityPanelUploader
@@ -253,7 +254,7 @@ const DetailsPanelHeader = ({
             onChange={(value) => handleUpdate('status', value)}
             className={clsx('status-select', { loading: isLoading })}
             align={isCompact ? 'right' : 'left'}
-            $textColor={getTextColor(status!==undefined? (status as Status).color: "#OOO")}
+            $textColor={getTextColor(status !== undefined ? (status as Status).color : '#OOO')}
           />
           {!isCompact &&
             (!hasUser || isLoading ? (
@@ -295,17 +296,11 @@ const DetailsPanelHeader = ({
           ) : (
             <div style={{ height: 32 }}></div>
           )}
-          <FeedFilters
-            isLoading={isLoading}
+          <DetailsPanelTabs
             entityType={entityType}
-            className="filters"
-            overrides={{
-              checklists: {
-                label: checklistsLabel,
-              },
-            }}
             currentTab={currentTab}
             onTabChange={onTabChange}
+            isLoading={isLoading}
           />
         </Styled.Grid>
       </EntityPanelUploader>

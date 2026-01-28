@@ -22,11 +22,10 @@ import {
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import { CustomizeButton } from '@shared/components'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
-import { useSettingsPanel } from '@shared/context'
+import { useGlobalContext, useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useAppSelector } from '@state/store'
 import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -46,8 +45,8 @@ const scopesConfig: ScopeWithFilterTypes[] = [
 ]
 
 const ProjectOverviewPage: FC = () => {
-  const user = useAppSelector((state) => state.user?.attrib)
-  const isDeveloperMode = user?.developerMode ?? false
+  const { user } = useGlobalContext()
+  const isDeveloperMode = user?.attrib?.developerMode ?? false
 
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()

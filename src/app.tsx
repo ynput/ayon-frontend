@@ -36,7 +36,12 @@ import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
-import { RemoteModulesProvider, DetailsPanelProvider, GlobalProvider } from '@shared/context'
+import {
+  RemoteModulesProvider,
+  DetailsPanelProvider,
+  GlobalProvider,
+  SubtasksModulesProvider,
+} from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
 import { MenuProvider, URIProvider } from '@shared/context'
 
@@ -182,54 +187,56 @@ const App = () => {
               <RestartProvider>
                 <RemoteModulesProvider skip={!user.name}>
                   <PowerpackProvider>
-                    <ContextMenuProvider>
-                      <GlobalContextMenu />
-                      <PasteProvider>
-                        <PasteModal />
-                        <BrowserRouter>
-                          <MenuProvider useNavigate={useNavigate}>
-                            <QueryParamProvider
-                              adapter={ReactRouter6Adapter}
-                              options={{
-                                updateType: 'replaceIn',
-                              }}
-                            >
-                              <URIProvider>
-                                <DetailsPanelProvider
-                                  {...handlerProps}
-                                  user={user}
-                                  viewer={viewer}
-                                  dispatch={dispatch}
-                                  useLocation={useLocation}
-                                  useNavigate={useNavigate}
-                                  useParams={useParams}
-                                  useSearchParams={useSearchParams}
-                                >
-                                  <NotificationsProvider>
-                                    <ShortcutsProvider>
-                                      <PiPProvider>
-                                        <Header />
-                                        <ShareDialog />
-                                        <ViewerDialog />
-                                        <ConfirmDialog />
-                                        <FileUploadPreviewContainer />
-                                        <ReleaseInstallerDialog />
-                                        <CompleteProfilePrompt />
-                                        <AppRoutes />
-                                        <DetailsPanelFloating />
-                                        <PowerpackDialog />
-                                        <AppRemoteLoader />
-                                        <TrialBanner />
-                                      </PiPProvider>
-                                    </ShortcutsProvider>
-                                  </NotificationsProvider>
-                                </DetailsPanelProvider>
-                              </URIProvider>
-                            </QueryParamProvider>
-                          </MenuProvider>
-                        </BrowserRouter>
-                      </PasteProvider>
-                    </ContextMenuProvider>
+                    <SubtasksModulesProvider>
+                      <ContextMenuProvider>
+                        <GlobalContextMenu />
+                        <PasteProvider>
+                          <PasteModal />
+                          <BrowserRouter>
+                            <MenuProvider useNavigate={useNavigate}>
+                              <QueryParamProvider
+                                adapter={ReactRouter6Adapter}
+                                options={{
+                                  updateType: 'replaceIn',
+                                }}
+                              >
+                                <URIProvider>
+                                  <DetailsPanelProvider
+                                    {...handlerProps}
+                                    user={user}
+                                    viewer={viewer}
+                                    dispatch={dispatch}
+                                    useLocation={useLocation}
+                                    useNavigate={useNavigate}
+                                    useParams={useParams}
+                                    useSearchParams={useSearchParams}
+                                  >
+                                    <NotificationsProvider>
+                                      <ShortcutsProvider>
+                                        <PiPProvider>
+                                          <Header />
+                                          <ShareDialog />
+                                          <ViewerDialog />
+                                          <ConfirmDialog />
+                                          <FileUploadPreviewContainer />
+                                          <ReleaseInstallerDialog />
+                                          <CompleteProfilePrompt />
+                                          <AppRoutes />
+                                          <DetailsPanelFloating />
+                                          <PowerpackDialog />
+                                          <AppRemoteLoader />
+                                          <TrialBanner />
+                                        </PiPProvider>
+                                      </ShortcutsProvider>
+                                    </NotificationsProvider>
+                                  </DetailsPanelProvider>
+                                </URIProvider>
+                              </QueryParamProvider>
+                            </MenuProvider>
+                          </BrowserRouter>
+                        </PasteProvider>
+                      </ContextMenuProvider>
+                    </SubtasksModulesProvider>
                   </PowerpackProvider>
                 </RemoteModulesProvider>
               </RestartProvider>

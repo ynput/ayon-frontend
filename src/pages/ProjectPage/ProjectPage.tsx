@@ -39,7 +39,7 @@ import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
-import { ProjectPageRemote } from './ProjectPageRemote'
+import { ProjectPageRemote } from '@shared/components'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 

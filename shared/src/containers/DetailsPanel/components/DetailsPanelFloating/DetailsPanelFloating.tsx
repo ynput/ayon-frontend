@@ -1,21 +1,16 @@
 import { FC, useMemo, useState } from 'react'
 import * as Styled from './DetailsPanelFloating.styled'
-import getThumbnails from '../helpers/getThumbnails'
+import getThumbnails from '../../helpers/getThumbnails'
 import { StackedThumbnails } from '@shared/components'
 import { upperFirst } from 'lodash'
 import { AssigneeField, getTextColor, Icon } from '@ynput/ayon-react-components'
-import {
-  PiPWrapper,
-  DetailsPanelTab,
-  useScopedDetailsPanel,
-  ProjectContextProvider,
-} from '@shared/context'
+import { PiPWrapper, FeedFilter, ProjectContextProvider } from '@shared/context'
 import { useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
-import getAllProjectStatuses from '../helpers/getAllProjectsStatuses'
-import FeedWrapper from '../FeedWrapper'
-import mergeProjectInfo from '../helpers/mergeProjectInfo'
-import { buildDetailsPanelTitles } from '../helpers/buildDetailsPanelTitles'
+import getAllProjectStatuses from '../../helpers/getAllProjectsStatuses'
+import FeedWrapper from '../../containers/FeedWrapper'
+import mergeProjectInfo from '../../helpers/mergeProjectInfo'
+import { buildDetailsPanelTitles } from '../../helpers/buildDetailsPanelTitles'
 import { useDetailsPanelContext } from '@shared/context'
 
 export interface DetailsPanelFloatingProps {}
@@ -26,8 +21,6 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   const entities = pip?.entities || []
   const scope = pip?.scope || ''
   const isOpen = entities.length > 0 && !!entityType
-  const { currentTab: parentTab } = useScopedDetailsPanel(scope)
-  const [currentTab, setCurrentTab] = useState<DetailsPanelTab>(parentTab)
 
   const projects: string[] = entities.map((e: any) => e.projectName)
 
@@ -157,8 +150,6 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
               readOnly
               // @ts-ignore
               statuses={statuses}
-              currentTab={currentTab}
-              setCurrentTab={setCurrentTab}
             />
           </Styled.FeedContainer>
         </Styled.Container>

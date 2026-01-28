@@ -8,6 +8,7 @@ export const Toolbar = styled(ARCToolbar)`
   padding: var(--padding-m);
   padding-bottom: 0;
   height: 40px;
+  min-height: 40px;
 
   & > * {
     min-width: max-content;

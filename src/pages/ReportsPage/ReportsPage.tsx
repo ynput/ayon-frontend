@@ -1,8 +1,7 @@
 import { useLoadModule } from '@shared/hooks'
 import { FC, useState, useEffect } from 'react'
 import ReportsFallback from './ReportsFallback'
-import { ProjectPageRemote } from '@pages/ProjectPage/ProjectPageRemote'
-import { AddonLoadingScreen } from '@shared/components'
+import { AddonLoadingScreen, ProjectPageRemote } from '@shared/components'
 import { useSlicerContext } from '@shared/containers'
 
 interface ReportsPageProps {

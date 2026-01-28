@@ -15,13 +15,39 @@ import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPrev
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext, FeedFilter } from '@shared/context'
 import { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
+import TabHeaderAndFilters, {
+  FilterItem,
+} from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
 
 // number of activities to get
 export const activitiesLast = 30
+
+const feedFilters: FilterItem<string>[] = [
+  {
+    id: 'comments',
+    tooltip: 'Comments',
+    icon: 'chat',
+  },
+  {
+    id: 'checklists',
+    tooltip: 'Checklists',
+    icon: 'checklist',
+  },
+  {
+    id: 'versions',
+    tooltip: 'Published versions',
+    icon: 'layers',
+  },
+  {
+    id: 'updates',
+    tooltip: 'Entity updates',
+    icon: 'arrow_circle_right',
+  },
+]
 
 export type FeedProps = {
   disabled?: boolean
@@ -52,7 +78,8 @@ export const Feed = ({
     loadNextPage,
     hasNextPage,
     users,
-    currentTab,
+    feedFilter,
+    setFeedFilter,
   } = useFeedContext()
 
   const {
@@ -63,8 +90,12 @@ export const Feed = ({
     setFeedAnnotations,
   } = useDetailsPanelContext()
 
+  const isVersionsFilter = feedFilter.conditions?.some(
+    (c) => 'key' in c && c.key === 'versions' && c.value === true,
+  )
+
   // hide comment input for specific filters
-  const hideCommentInput = ['versions'].includes(currentTab)
+  const hideCommentInput = isVersionsFilter
 
   const activitiesWithMergedAnnotations = useMemo(
     () => mergeAnnotationAttachments(activitiesData),
@@ -100,6 +131,7 @@ export const Feed = ({
     projectInfo,
     entityType,
     userName,
+    feedFilter,
   ) as any[]
 
   // REFS
@@ -113,7 +145,7 @@ export const Feed = ({
   useSaveScrollPos({
     entities,
     feedRef,
-    filter: currentTab,
+    filter: feedFilter,
     disabled: !!highlightedActivities.length,
     isLoading: isLoadingNew,
   })
@@ -137,7 +169,7 @@ export const Feed = ({
     projectName,
     entityType: entityType,
     entities,
-    filter: currentTab,
+    filter: feedFilter,
     entityListId,
   })
 
@@ -249,6 +281,13 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
+        <TabHeaderAndFilters
+          label="Activity Feed"
+          filters={feedFilters}
+          currentFilter={feedFilter}
+          onFilterChange={setFeedFilter}
+          isLoading={isLoadingNew}
+        />
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders
@@ -268,7 +307,7 @@ export const Feed = ({
                   createdAts={entities.map((e) => e.createdAt)}
                   onFileExpand={handleFileExpand}
                   showOrigin={entities.length > 1}
-                  filter={currentTab}
+                  filter={feedFilter}
                   editProps={{
                     projectName,
                     entities: entities,
@@ -281,7 +320,7 @@ export const Feed = ({
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 1 && currentTab === 'versions' && !isLoadingNew && (
+          {transformedActivitiesData.length === 1 && isVersionsFilter && !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
           {hasNextPage && loadNextPage && (
