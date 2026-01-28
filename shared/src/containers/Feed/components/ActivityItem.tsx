@@ -11,6 +11,7 @@ interface ActivityItemProps {
     activityType: string
     items?: any[]
     [key: string]: any
+    authorName: string
   }
   fromGroup?: boolean
   projectInfo: Record<string, any>
