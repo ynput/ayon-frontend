@@ -57,7 +57,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
     focusedCellId,
     setFocusedCellId,
   })
-
+  const isAdditiveSelectionRef = useRef<boolean>(false)
   // Register grid structure for range selections
   const registerGrid = useCallback((rows: RowId[], columns: ColId[]) => {
     const rowIdToIndex = new Map<RowId, number>()
@@ -138,6 +138,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
       if (!position) return
 
       setSelectionInProgress(true)
+      isAdditiveSelectionRef.current = additive
       // Store whether the initial cell was selected to determine drag behavior
       initialCellSelected.current = selectedCells.has(cellId)
 
@@ -213,7 +214,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
         })
       } else {
         // For normal cells, use the range selection behavior
-        const newSelection = selectCellRange(anchorCell, currentPosition, false)
+        const newSelection = selectCellRange(anchorCell, currentPosition, isAdditiveSelectionRef.current)
         updateSelection(newSelection, currentPosition)
       }
     },
