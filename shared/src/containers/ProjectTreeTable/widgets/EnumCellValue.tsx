@@ -122,6 +122,7 @@ export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement>
   isItem?: boolean
   isSelected?: boolean
   isReadOnly?: boolean
+  iconOnlyColor?: boolean // When true, only the icon gets colored, not the text label
   pt?: {
     icon?: Partial<IconProps>
     img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
@@ -140,6 +141,7 @@ export const EnumCellValue = ({
   isItem,
   isSelected,
   isReadOnly,
+  iconOnlyColor = false,
   className,
   pt,
   ...props
@@ -202,8 +204,11 @@ export const EnumCellValue = ({
             {(showLabels || !option.icon) && (
               <StyledValue
                 style={{
-                  color:
-                    backgroundColor && option.color ? getTextColor(option.color) : option.color,
+                  color: backgroundColor && option.color
+                    ? getTextColor(option.color)
+                    : iconOnlyColor && option.icon
+                      ? undefined
+                      : option.color,
                   backgroundColor: backgroundColor
                     ? option.color || 'var(--md-sys-color-surface-container)'
                     : 'transparent',

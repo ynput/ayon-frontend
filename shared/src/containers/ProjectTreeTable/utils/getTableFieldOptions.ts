@@ -38,8 +38,8 @@ export const getTableFieldOptions = ({
       scope,
     })),
   tag: tags.map(({ name, color }) => ({ value: name, label: name, color })),
-  folderType: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
-  taskType: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
+  folderType: folderTypes.map(({ name, icon, color }) => ({ value: name, label: name, icon, color })),
+  taskType: taskTypes.map(({ name, icon, color }) => ({ value: name, label: name, icon, color })),
   productType: productTypes.map(({name, icon, color}) => ({value: name, label: name, icon, color})),
 
 

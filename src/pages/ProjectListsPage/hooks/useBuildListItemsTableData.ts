@@ -30,6 +30,8 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         taskTypes: project?.taskTypes || [],
       })
 
+      const entityTypeData = getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+
       return {
         id: item.id,
         name: isRestricted ? RESTRICTED_ENTITY_NAME : item.name,
@@ -47,10 +49,8 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         ownAttrib: item.ownAttrib
           ? [...item.ownAttrib, ...item.ownItemAttrib]
           : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
-        icon: isRestricted
-          ? RESTRICTED_ENTITY_ICON
-          : getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
-              ?.icon,
+        icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
+        color: isRestricted ? '' : entityTypeData?.color,
         folderId: extractFolderId(item, item.entityType),
         parents: item.parents || [],
         tags: item.tags,
