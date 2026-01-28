@@ -515,16 +515,19 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             // This prevents unnecessary updates for versions in collapsed products
             if (!arg.productIds.includes(parentId)) return
 
-            // Re-fetch the specific version to check if it still matches filters
-            // Note: Uses GetVersionsByProductId as it has limited filter support
+            // Re-fetch the specific version using GetVersions (supports versionIds filter)
+            // Uses same filters as the base query to ensure consistency
             const result = await dispatch(
-              enhancedVersionsPageApi.endpoints.GetVersionsByProductId.initiate(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
                 {
                   projectName: arg.projectName,
                   productIds: [parentId],
-                  first: 1,
+                  versionIds: [entityId],
                   versionFilter: arg.versionFilter,
                   taskFilter: arg.taskFilter,
+                  first: 1,
+                  ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
+                  ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
                 },
                 { forceRefetch: true },
               ),
