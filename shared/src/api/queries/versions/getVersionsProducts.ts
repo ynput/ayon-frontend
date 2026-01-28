@@ -39,6 +39,104 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
+import { PubSub } from '@shared/util'
+
+// SHARED CACHE UPDATE HELPERS
+// These helpers are used by PubSub handlers to update cached data in real-time
+
+/**
+ * Finds the correct insertion index for a new item in a sorted array
+ * Used when adding new items to maintain sort order
+ */
+function findSortedInsertIndex<T>(
+  items: T[],
+  newItem: T,
+  sortBy: keyof T,
+  desc: boolean,
+): number {
+  for (let i = 0; i < items.length; i++) {
+    const newValue = newItem[sortBy]
+    const currentValue = items[i][sortBy]
+    const shouldInsert = desc ? newValue > currentValue : newValue < currentValue
+
+    if (shouldInsert) {
+      return i
+    }
+  }
+  return items.length
+}
+
+/**
+ * Updates a paginated cache (draft.pages[].items[]) with a new/updated/deleted item
+ * Handles: update existing, delete if not in response, add at sorted position
+ *
+ * @param pages - Array of page objects containing items arrays
+ * @param entityId - ID of the entity to update/delete/add
+ * @param updatedItem - The updated item, or undefined if deleted
+ * @param itemsKey - Key to access items array in each page ('versions' or 'products')
+ * @param sortBy - Property to sort by when inserting new items
+ * @param desc - Sort direction (true = descending)
+ */
+function updatePagedCache<T extends { id: string }>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pages: any[],
+  entityId: string,
+  updatedItem: T | undefined,
+  itemsKey: string,
+  sortBy: keyof T,
+  desc: boolean,
+): void {
+  // Search for existing item in all pages
+  for (const page of pages) {
+    const items = page[itemsKey] as T[]
+    const index = items.findIndex((item) => item.id === entityId)
+
+    if (index !== -1) {
+      if (updatedItem) {
+        // Update existing item
+        items[index] = updatedItem
+      } else {
+        // Item no longer exists or doesn't match filters - remove it
+        items.splice(index, 1)
+      }
+      return
+    }
+  }
+
+  // Item not found in cache - add at correct sorted position in first page
+  if (updatedItem && pages.length > 0) {
+    const items = pages[0][itemsKey] as T[]
+    const insertIndex = findSortedInsertIndex(items, updatedItem, sortBy, desc)
+    items.splice(insertIndex, 0, updatedItem)
+  }
+}
+
+/**
+ * Updates a flat cache (draft.items[]) with a new/updated/deleted item
+ * Handles: update existing, delete if not in response, add new
+ */
+function updateFlatCache<T extends { id: string }>(
+  items: T[],
+  entityId: string,
+  updatedItem: T | undefined,
+): { index: number; action: 'updated' | 'deleted' | 'added' | 'none' } {
+  const index = items.findIndex((item) => item.id === entityId)
+
+  if (index !== -1) {
+    if (updatedItem) {
+      items[index] = updatedItem
+      return { index, action: 'updated' }
+    } else {
+      items.splice(index, 1)
+      return { index, action: 'deleted' }
+    }
+  } else if (updatedItem) {
+    items.push(updatedItem)
+    return { index: items.length - 1, action: 'added' }
+  }
+
+  return { index: -1, action: 'none' }
+}
 
 // Query result types
 export type FolderAttribNode = VpFolderFragment & {
@@ -242,6 +340,53 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForVersionsInfinite,
+        // Subscribes to version entity changes and updates cache accordingly
+        // Handles: create, update, delete operations
+        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+            try {
+              const entityId = message.summary?.entityId
+              if (!entityId) return
+
+              // Re-fetch the specific version with current filters to check if it still matches
+              // If version was deleted or no longer matches filters, result will be empty
+              const result = await dispatch(
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate({
+                  projectName: arg.projectName,
+                  versionFilter: arg.versionFilter,
+                  productFilter: arg.productFilter,
+                  taskFilter: arg.taskFilter,
+                  folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                  versionIds: [entityId],
+                  first: 1,
+                }, {
+                  forceRefetch: true,
+                }),
+              )
+
+              if (result.error) return
+
+              // Update the cache: update existing, delete if not found, or add new
+              updateCachedData((draft) => {
+                const updatedVersion = result.data?.versions?.[0]
+                updatePagedCache(
+                  draft.pages,
+                  entityId,
+                  updatedVersion,
+                  'versions',
+                  (arg.sortBy || 'createdAt') as keyof VersionNode,
+                  arg.desc || false,
+                )
+              })
+            } catch (error) {
+              // Silently handle errors to prevent UI disruption
+            }
+          })
+
+          // Cleanup: unsubscribe when cache entry is removed
+          await cacheEntryRemoved
+          PubSub.unsubscribe(token)
+        }
       },
     ),
 
@@ -357,6 +502,53 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           },
         }
       },
+      // Subscribes to version entity changes for expanded products
+      // Only updates versions that belong to currently expanded products
+      onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+          try {
+            const entityId = message.summary?.entityId
+            const parentId = message.summary?.parentId // parentId is the product ID
+            if (!entityId || !parentId) return
+
+            // Only handle versions belonging to currently expanded products
+            // This prevents unnecessary updates for versions in collapsed products
+            if (!arg.productIds.includes(parentId)) return
+
+            // Re-fetch the specific version using GetVersions (supports versionIds filter)
+            // Uses same filters as the base query to ensure consistency
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                {
+                  projectName: arg.projectName,
+                  productIds: [parentId],
+                  versionIds: [entityId],
+                  versionFilter: arg.versionFilter,
+                  taskFilter: arg.taskFilter,
+                  first: 1,
+                  ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
+                  ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
+                },
+                { forceRefetch: true },
+              ),
+            )
+
+            if (result.error) return
+
+            // Update flat versions array: update existing, delete if not found, or add new
+            updateCachedData((draft) => {
+              const updatedVersion = result.data?.versions?.[0]
+              updateFlatCache(draft.versions, entityId, updatedVersion)
+            })
+          } catch (error) {
+            // Silently handle errors to prevent UI disruption
+          }
+        })
+
+        // Cleanup: unsubscribe when cache entry is removed
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
+      },
       providesTags: provideTagsForVersionsResult,
     }),
 
@@ -444,6 +636,59 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForProductsInfinite,
+
+        // Subscribes to product entity changes and updates cache accordingly
+        // Handles: create, update, delete operations
+        // Often triggered together with version changes (new product + version)
+
+        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          // Subscribe to product entity changes from websocket
+          const token = PubSub.subscribe('entity.product', async (_topic: string, message: any) => {
+            try {
+              const entityId = message.summary?.entityId
+              if (!entityId) return
+
+              // Re-fetch the specific product with current filters to check if it still matches
+              // If product was deleted or no longer matches filters, result will be empty
+              const queryParams: any = {
+                projectName: arg.projectName,
+                productIds: [entityId],
+                productFilter: arg.productFilter,
+                versionFilter: arg.versionFilter,
+                taskFilter: arg.taskFilter,
+                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                first: 1,
+              }
+
+              const result = await dispatch(
+                enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
+                  forceRefetch: true,
+                }),
+              )
+
+              if (result.error) return
+
+              // Update the cache: update existing, delete if not found, or add new
+              updateCachedData((draft) => {
+                const updatedProduct = result.data?.products?.[0]
+                updatePagedCache(
+                  draft.pages,
+                  entityId,
+                  updatedProduct,
+                  'products',
+                  (arg.sortBy || 'createdAt') as keyof ProductNode,
+                  arg.desc || false,
+                )
+              })
+            } catch (error) {
+              // Silently handle errors to prevent UI disruption
+            }
+          })
+
+          // Cleanup: unsubscribe when cache entry is removed
+          await cacheEntryRemoved
+          PubSub.unsubscribe(token)
+        },
       },
     ),
 
