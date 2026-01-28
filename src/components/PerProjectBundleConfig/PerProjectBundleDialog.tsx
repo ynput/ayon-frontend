@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux'
-import api from '@shared/api'
+import api, { EnumItem } from '@shared/api'
 
 import {
   Button,
@@ -49,16 +49,10 @@ const AddonForm = styled.div`
 // Hardcoded types are the best types
 //
 
-
-type AddonVersionOption = {
-  label: string
-  value: string
-}
-
 type AddonMetadata = {
   name: string
   label: string
-  options: AddonVersionOption[]
+  options: EnumItem[]
 }
 
 
