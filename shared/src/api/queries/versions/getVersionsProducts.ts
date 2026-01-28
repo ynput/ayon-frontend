@@ -249,18 +249,17 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               const entityId = message.summary?.entityId
               if (!entityId) return
 
-              const queryParams: any = {
-                projectName: arg.projectName,
-                versionFilter: arg.versionFilter,
-                productFilter: arg.productFilter,
-                taskFilter: arg.taskFilter,
-                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-                versionIds: [entityId],
-                first: 1,
-              }
 
               const result = await dispatch(
-                enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate({
+                  projectName: arg.projectName,
+                  versionFilter: arg.versionFilter,
+                  productFilter: arg.productFilter,
+                  taskFilter: arg.taskFilter,
+                  folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                  versionIds: [entityId],
+                  first: 1,
+                }, {
                   forceRefetch: true,
                 }),
               )
@@ -444,6 +443,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                   projectName: arg.projectName,
                   productIds: [parentId],
                   first: VERSIONS_BY_PRODUCT_ID_QUERY_COUNT,
+                  versionFilter: arg.versionFilter,
+                  taskFilter: arg.taskFilter,
                 },
                 { forceRefetch: true },
               ),
