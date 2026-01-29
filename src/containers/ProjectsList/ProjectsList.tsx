@@ -70,12 +70,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
   // sort projects by active pinned, active, inactive (active=false) and then alphabetically
   const projects = useMemo(() => {
     return [...data].sort((a, b) => {
-      // Sort by pinned AND active first
-      const aPinnedActive = rowPinning.includes(a.name) && a.active
-      const bPinnedActive = rowPinning.includes(b.name) && b.active
-      if (aPinnedActive && !bPinnedActive) return -1
-      if (!aPinnedActive && bPinnedActive) return 1
-      // Then by active
       if (a.active && !b.active) return -1
       if (!a.active && b.active) return 1
       return a.name.localeCompare(b.name)
