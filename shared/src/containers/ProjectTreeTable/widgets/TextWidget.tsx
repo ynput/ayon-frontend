@@ -114,7 +114,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     }
 
     const displayText = option?.label || value
-    const textValue = typeof displayText === 'string' ? displayText : String(displayText || '')
+    const textValue = typeof displayText === 'string' ? displayText : String(displayText ?? '')
     const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
     // does the content contain only regular text?
     const isRegularText =
