@@ -1351,11 +1351,6 @@ const TD = ({
           return
         }
 
-        // if cell is already selected and it's not the row selection column, do nothing
-        if (isCellSelected(cellId) && !(e.metaKey || e.ctrlKey) && !isRowSelectionColumn) {
-          return
-        }
-
         // If there's an active edit on a different cell, blur it first to save changes
         if (editingCellId && editingCellId !== cellId) {
           // Find the currently editing input and blur it
