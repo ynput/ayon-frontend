@@ -739,7 +739,20 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const hasDeleteOps = (operationsByType.folder || []).some(
             (op: OperationModel) => op.type === 'delete',
           )
-          if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
+
+          // Check if folder updates are attribute-only (attrib and ownAttrib changes)
+          // For attribute-only updates, skip the invalidation as the optimistic update is enough
+          // This preserves ownAttrib when pressing Enter on inherited values
+          const hasNonAttribFolderUpdates = (operationsByType.folder || []).some(
+            (op: OperationModel) => {
+              if (op.type !== 'update' || !op.data) return false
+              // Check if there are any data fields other than 'attrib' and 'ownAttrib'
+              const dataKeys = Object.keys(op.data as Record<string, unknown>)
+              return dataKeys.some((key) => key !== 'attrib' && key !== 'ownAttrib')
+            },
+          )
+
+          if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps && hasNonAttribFolderUpdates) {
             dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
           }
         } catch (error) {
