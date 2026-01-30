@@ -14,6 +14,7 @@ import { getUpdatedEntityIds } from './filterRefetchUtils'
 import {
   refetchTasksForCacheEntry,
   refetchOverviewTasksForCacheEntry,
+  refetchFoldersAndUpdateCache,
 } from './refetchFilteredEntities'
 import { patchVersions } from './patchVersions'
 import { patchProducts } from './patchProducts'
@@ -34,6 +35,9 @@ const updateEntityWithOperation = (entity: any, operationData: any) => {
       ...entity.attrib,
       ...operationData.attrib,
     }
+    // Always add attribute names to ownAttrib to mark them as explicitly set (not inherited)
+    const newAttribNames = Object.keys(operationData.attrib)
+    entity.ownAttrib = [...new Set([...(entity.ownAttrib || []), ...newAttribNames])]
   }
 
   // Handle links merging
@@ -735,25 +739,19 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
           // Always refetch folders if they were updated (for calculated attributes)
           // Not conditional on affectsFilter - requirement says "always refetch entities"
-          // Only invalidate if we haven't already done so for delete operations
+          // Only refetch if we haven't already done so for delete operations
           const hasDeleteOps = (operationsByType.folder || []).some(
             (op: OperationModel) => op.type === 'delete',
           )
-
-          // Check if folder updates are attribute-only (attrib and ownAttrib changes)
-          // For attribute-only updates, skip the invalidation as the optimistic update is enough
-          // This preserves ownAttrib when pressing Enter on inherited values
-          const hasNonAttribFolderUpdates = (operationsByType.folder || []).some(
-            (op: OperationModel) => {
-              if (op.type !== 'update' || !op.data) return false
-              // Check if there are any data fields other than 'attrib' and 'ownAttrib'
-              const dataKeys = Object.keys(op.data as Record<string, unknown>)
-              return dataKeys.some((key) => key !== 'attrib' && key !== 'ownAttrib')
-            },
-          )
-
-          if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps && hasNonAttribFolderUpdates) {
-            dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
+          if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
+            // Use targeted refetch instead of invalidateTags to preserve ownAttrib
+            // from optimistic updates (handles race condition with server commit)
+            await refetchFoldersAndUpdateCache({
+              dispatch,
+              getState,
+              projectName,
+              updatedFolderIds,
+            })
           }
         } catch (error) {
           // undo all patches if there is an error
