@@ -642,44 +642,60 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         // Often triggered together with version changes (new product + version)
 
         onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          // Helper to refetch and update a product in cache
+          const refetchProduct = async (productId: string) => {
+            const queryParams: any = {
+              projectName: arg.projectName,
+              productIds: [productId],
+              productFilter: arg.productFilter,
+              versionFilter: arg.versionFilter,
+              taskFilter: arg.taskFilter,
+              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              first: 1,
+            }
+
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+
+            if (result.error) return
+
+            // Update the cache: update existing, delete if not found, or add new
+            updateCachedData((draft) => {
+              const updatedProduct = result.data?.products?.[0]
+              updatePagedCache(
+                draft.pages,
+                productId,
+                updatedProduct,
+                'products',
+                (arg.sortBy || 'createdAt') as keyof ProductNode,
+                arg.desc || false,
+              )
+            })
+          }
+
           // Subscribe to product entity changes from websocket
-          const token = PubSub.subscribe('entity.product', async (_topic: string, message: any) => {
+          const productToken = PubSub.subscribe('entity.product', async (_topic: string, message: any) => {
             try {
               const entityId = message.summary?.entityId
               if (!entityId) return
 
-              // Re-fetch the specific product with current filters to check if it still matches
-              // If product was deleted or no longer matches filters, result will be empty
-              const queryParams: any = {
-                projectName: arg.projectName,
-                productIds: [entityId],
-                productFilter: arg.productFilter,
-                versionFilter: arg.versionFilter,
-                taskFilter: arg.taskFilter,
-                folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
-                first: 1,
-              }
+              await refetchProduct(entityId)
+            } catch (error) {
+              // Silently handle errors to prevent UI disruption
+            }
+          })
 
-              const result = await dispatch(
-                enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
-                  forceRefetch: true,
-                }),
-              )
+          // Subscribe to version entity changes - refetch parent product when version changes
+          // This ensures product's versions list and featuredVersion stay up-to-date
+          const versionToken = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+            try {
+              const parentId = message.summary?.parentId // parentId is the product ID
+              if (!parentId) return
 
-              if (result.error) return
-
-              // Update the cache: update existing, delete if not found, or add new
-              updateCachedData((draft) => {
-                const updatedProduct = result.data?.products?.[0]
-                updatePagedCache(
-                  draft.pages,
-                  entityId,
-                  updatedProduct,
-                  'products',
-                  (arg.sortBy || 'createdAt') as keyof ProductNode,
-                  arg.desc || false,
-                )
-              })
+              await refetchProduct(parentId)
             } catch (error) {
               // Silently handle errors to prevent UI disruption
             }
@@ -687,7 +703,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
           // Cleanup: unsubscribe when cache entry is removed
           await cacheEntryRemoved
-          PubSub.unsubscribe(token)
+          PubSub.unsubscribe(productToken)
+          PubSub.unsubscribe(versionToken)
         },
       },
     ),
