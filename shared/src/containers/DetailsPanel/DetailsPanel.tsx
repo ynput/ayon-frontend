@@ -104,6 +104,7 @@ DetailsPanelProps) => {
     slideOut,
     useSearchParams,
     SubtasksManager,
+    useNavigate,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
   const [_searchParams, setSearchParams] = useSearchParams()
@@ -434,6 +435,7 @@ DetailsPanelProps) => {
                 taskId={firstEntityData.id}
                 subtasks={firstEntityData.task?.subtasks || []}
                 SubtasksManager={SubtasksManager}
+                useNavigate={useNavigate!}
               />
             )}
           {currentTab === 'files' && (

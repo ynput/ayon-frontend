@@ -49,8 +49,7 @@ import useUpdateListItems from './hooks/useUpdateListItems'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
-import { useNavigate } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 // Dnd-kit imports
 import {
   DndContext,
@@ -217,6 +216,10 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               onOpenPlayer={handleOpenPlayer}
               onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
               SubtasksManager={SubtasksManager}
+              useParams={useParams}
+              useNavigate={useNavigate}
+              useLocation={useLocation}
+              useSearchParams={useSearchParams}
             >
               <DetailsPanelEntityProvider>
                 <SelectionCellsProvider>

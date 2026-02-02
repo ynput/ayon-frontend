@@ -3,7 +3,6 @@ import { FC, useMemo, useState } from 'react'
 import TabHeaderAndFilters, {
   FilterItem,
 } from '../components/TabHeaderAndFilters/TabHeaderAndFilters'
-import { useLocalStorage } from '@shared/hooks'
 import { QueryFilter, useGetUsersQuery } from '@shared/api'
 
 interface DetailsPanelSubtasksProps extends SubtasksManagerWrapperProps {}

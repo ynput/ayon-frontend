@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   ProjectTableProvider,
   SelectionCellsProvider,
@@ -45,6 +46,10 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         onOpenPlayer={handleOpenPlayer}
         onResetView={resetWorkingView}
         SubtasksManager={SubtasksManager}
+        useParams={useParams}
+        useNavigate={useNavigate}
+        useLocation={useLocation}
+        useSearchParams={useSearchParams}
       >
         <NewEntityProvider>
           <DetailsPanelEntityProvider>

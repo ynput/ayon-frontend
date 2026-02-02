@@ -6,7 +6,7 @@ import {
   UserModel,
   useUpdateSubtasksMutation,
 } from '@shared/api'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 
 type UpdateSubtasksMutation = ReturnType<typeof useUpdateSubtasksMutation>[0]
 
@@ -25,10 +25,7 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   useNavigate: typeof useNavigate
 }
 
-export type SubtasksManagerWrapperProps = Omit<
-  SubtasksManagerProps,
-  'updateSubtasks' | 'users' | 'useNavigate'
-> & {
+export type SubtasksManagerWrapperProps = Omit<SubtasksManagerProps, 'updateSubtasks' | 'users'> & {
   SubtasksManager: React.ComponentType<SubtasksManagerProps>
 }
 
@@ -39,12 +36,5 @@ export const SubtasksManagerWrapper = ({
   const [updateSubtasks] = useUpdateSubtasksMutation()
   const { data: users = [] } = useGetUsersQuery({})
 
-  return (
-    <SubtasksManager
-      {...props}
-      updateSubtasks={updateSubtasks}
-      users={users}
-      useNavigate={useNavigate}
-    />
-  )
+  return <SubtasksManager {...props} updateSubtasks={updateSubtasks} users={users} />
 }

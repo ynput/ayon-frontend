@@ -1,3 +1,4 @@
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import { ProjectTableProvider, useProjectDataContext, useViewsContext } from '@shared/containers'
 import { useAppSelector } from '@state/store'
@@ -66,6 +67,10 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       error={error}
       onResetView={resetWorkingView}
       SubtasksManager={SubtasksManager}
+      useParams={useParams}
+      useNavigate={useNavigate}
+      useLocation={useLocation}
+      useSearchParams={useSearchParams}
     >
       {children}
     </ProjectTableProvider>

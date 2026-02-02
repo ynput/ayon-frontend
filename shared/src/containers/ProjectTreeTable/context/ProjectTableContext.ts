@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { EntityMap, TableRow } from '../types/table'
 import {
   FindInheritedValueFromAncestors,
@@ -73,8 +74,14 @@ export interface ProjectTableContextType {
   playerOpen?: ProjectTableProviderProps['playerOpen']
   onOpenPlayer?: ProjectTableProviderProps['onOpenPlayer']
 
-  // views
+  // Views
   onResetView?: () => void
+
+  // router hooks
+  useParams?: typeof useParams
+  useNavigate?: typeof useNavigate
+  useLocation?: typeof useLocation
+  useSearchParams?: typeof useSearchParams
 }
 
 export const ProjectTableContext = createContext<ProjectTableContextType | undefined>(undefined)

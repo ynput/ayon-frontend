@@ -20,9 +20,9 @@
  * management, filtering,  and folder inheritance operations.
  */
 import { ReactNode, useCallback, useMemo } from 'react'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
-import { Filter } from '@ynput/ayon-react-components'
 import {
   EntitiesMap,
   EntityMap,
@@ -129,6 +129,11 @@ export interface ProjectTableProviderProps {
   ) => void
   // views
   onResetView?: () => void
+  // router hooks
+  useParams?: typeof useParams
+  useNavigate?: typeof useNavigate
+  useLocation?: typeof useLocation
+  useSearchParams?: typeof useSearchParams
 }
 
 export const ProjectTableProvider = ({
@@ -167,6 +172,10 @@ export const ProjectTableProvider = ({
   onOpenPlayer,
   // views
   onResetView,
+  useParams,
+  useNavigate,
+  useLocation,
+  useSearchParams,
 }: ProjectTableProviderProps) => {
   const { attrib: projectAttrib } = useProjectContext()
   // DATA TO TABLE
@@ -353,6 +362,11 @@ export const ProjectTableProvider = ({
         onOpenPlayer,
         // views
         onResetView,
+        // router hooks
+        useParams,
+        useNavigate,
+        useLocation,
+        useSearchParams,
       }}
     >
       {children}
