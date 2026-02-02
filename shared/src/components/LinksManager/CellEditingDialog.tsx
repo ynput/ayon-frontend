@@ -22,6 +22,7 @@ type Position = {
 export interface LinksManagerDialogProps {
   isEditing: boolean
   anchorId: string
+  containerClassName?: string
   onClose?: () => void
   children?: React.ReactNode
 }
@@ -29,6 +30,7 @@ export interface LinksManagerDialogProps {
 export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   isEditing,
   anchorId,
+  containerClassName = 'table-container',
   onClose,
   children,
 }) => {
@@ -40,7 +42,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
 
   // get the cell element based on the cellId
   const anchorElement = document.getElementById(anchorId)
-  const tableContainer = anchorElement?.closest('.table-container')
+  const tableContainer = anchorElement?.closest(`.${containerClassName}`)
 
   const updatePosition = () => {
     if (!isEditing) return
