@@ -45,6 +45,7 @@ import { PowerpackContextType, useProjectContext } from '@shared/context'
 import { useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
+import type { SubtasksManagerProps } from '@shared/components'
 
 export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
 
@@ -112,6 +113,9 @@ export interface ProjectTableProviderProps {
     entityType?: GroupByEntityType
   }
 
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
+
   // player
   playerOpen?: boolean
   onOpenPlayer?: (
@@ -157,6 +161,7 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  SubtasksManager,
   // player
   playerOpen,
   onOpenPlayer,
@@ -341,6 +346,8 @@ export const ProjectTableProvider = ({
         // powerpack context
         powerpack,
         modules,
+        // SubtasksManager
+        SubtasksManager,
         // player
         playerOpen,
         onOpenPlayer,

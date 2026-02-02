@@ -41,6 +41,7 @@ import {
   DetailsPanelProvider,
   GlobalProvider,
   SubtasksModulesProvider,
+  useSubtasksModulesContext,
 } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
 import { MenuProvider, URIProvider } from '@shared/context'
@@ -69,6 +70,19 @@ import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompletePro
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
+import type { DetailsPanelProviderProps } from '@shared/context'
+
+// Wrapper component to get SubtasksManager from SubtasksModulesContext and pass it to DetailsPanelProvider
+const DetailsPanelProviderWithSubtasks = (
+  props: Omit<DetailsPanelProviderProps, 'children'> & { children: React.ReactNode },
+) => {
+  const { SubtasksManager } = useSubtasksModulesContext()
+  return (
+    <DetailsPanelProvider {...props} SubtasksManager={SubtasksManager}>
+      {props.children}
+    </DetailsPanelProvider>
+  )
+}
 
 const App = () => {
   const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
@@ -201,7 +215,7 @@ const App = () => {
                                 }}
                               >
                                 <URIProvider>
-                                  <DetailsPanelProvider
+                                  <DetailsPanelProviderWithSubtasks
                                     {...handlerProps}
                                     user={user}
                                     viewer={viewer}
@@ -229,7 +243,7 @@ const App = () => {
                                         </PiPProvider>
                                       </ShortcutsProvider>
                                     </NotificationsProvider>
-                                  </DetailsPanelProvider>
+                                  </DetailsPanelProviderWithSubtasks>
                                 </URIProvider>
                               </QueryParamProvider>
                             </MenuProvider>

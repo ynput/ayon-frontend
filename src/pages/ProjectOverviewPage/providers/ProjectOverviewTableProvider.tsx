@@ -7,7 +7,7 @@ import {
   DetailsPanelEntityProvider,
 } from '@shared/containers/ProjectTreeTable'
 import { NewEntityProvider } from '@context/NewEntityContext'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
@@ -27,6 +27,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
   const { resetWorkingView } = useViewsContext()
 
   const powerpack = usePowerpack()
+  const { SubtasksManager } = useSubtasksModulesContext()
 
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: props.projectName })
@@ -43,6 +44,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}
         onResetView={resetWorkingView}
+        SubtasksManager={SubtasksManager}
       >
         <NewEntityProvider>
           <DetailsPanelEntityProvider>

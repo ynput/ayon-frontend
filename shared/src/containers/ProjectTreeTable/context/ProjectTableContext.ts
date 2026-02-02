@@ -9,6 +9,7 @@ import {
 import { RowId } from '../utils/cellUtils'
 
 import { ProjectTableProviderProps } from './ProjectTableProvider'
+import type { SubtasksManagerProps } from '@shared/components'
 
 export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
 export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
@@ -64,6 +65,9 @@ export interface ProjectTableContextType {
 
   // remote modules
   modules: ProjectTableProviderProps['modules']
+
+  // SubtasksManager
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
 
   // player
   playerOpen?: ProjectTableProviderProps['playerOpen']

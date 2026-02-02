@@ -12,6 +12,7 @@ import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useURIContext } from './UriContext'
 import { useLocalStorage } from '@shared/hooks'
+import type { SubtasksManagerProps } from '@shared/components'
 
 // High-level tabs for the details panel
 export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
@@ -69,6 +70,8 @@ export interface DetailsPanelContextProps {
   useSearchParams: typeof useSearchParams
   feedAnnotationsEnabled?: boolean
   hasLicense?: boolean
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
   // debugging used to simulate different values
   debug?: {
     isDeveloperMode?: boolean

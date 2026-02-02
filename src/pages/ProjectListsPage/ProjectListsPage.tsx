@@ -27,6 +27,7 @@ import {
   SettingsPanelProvider,
   useProjectContext,
   useSettingsPanel,
+  useSubtasksModulesContext,
 } from '@shared/context'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
@@ -120,6 +121,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
+  const { SubtasksManager } = useSubtasksModulesContext()
 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
@@ -214,6 +216,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
               playerOpen={viewerOpen}
               onOpenPlayer={handleOpenPlayer}
               onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
+              SubtasksManager={SubtasksManager}
             >
               <DetailsPanelEntityProvider>
                 <SelectionCellsProvider>

@@ -4,6 +4,7 @@ import { FC, useState } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
 import { type SubTaskNode } from '@shared/api'
+import { useProjectTableContext } from '../context/ProjectTableContext'
 
 export type SubtasksWidgetData = {
   taskId: string
@@ -26,6 +27,7 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
   onChange: _onChange,
   onCancelEdit,
 }) => {
+  const { SubtasksManager } = useProjectTableContext()
   const [selectedSubtaskIds, setSelectedSubtaskIds] = useState<string[]>([])
 
   const subtasks = value?.subtasks || []
@@ -44,7 +46,7 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={disabled}
       />
-      {isEditing && value && (
+      {isEditing && value && SubtasksManager && (
         <CellEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>
           {disabled ? (
             <Container style={{ color: 'var(--md-sys-color-outline)' }}>
@@ -58,6 +60,7 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
               selectedSubtaskIds={selectedSubtaskIds}
               onSelectSubtasks={setSelectedSubtaskIds}
               onClose={onCancelEdit}
+              SubtasksManager={SubtasksManager}
               style={{
                 padding: 'var(--padding-m)',
                 backgroundColor: 'var(--md-sys-color-surface-container-high)',

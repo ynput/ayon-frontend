@@ -103,6 +103,7 @@ DetailsPanelProps) => {
     setEntities,
     slideOut,
     useSearchParams,
+    SubtasksManager,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
   const [_searchParams, setSearchParams] = useSearchParams()
@@ -424,13 +425,17 @@ DetailsPanelProps) => {
               isSlideOut={isSlideOut}
             />
           )}
-          {currentTab === 'subtasks' && activeEntityType === 'task' && firstEntityData?.id && (
-            <DetailsPanelSubtasks
-              projectName={firstProject}
-              taskId={firstEntityData.id}
-              subtasks={firstEntityData.task?.subtasks || []}
-            />
-          )}
+          {currentTab === 'subtasks' &&
+            activeEntityType === 'task' &&
+            firstEntityData?.id &&
+            SubtasksManager && (
+              <DetailsPanelSubtasks
+                projectName={firstProject}
+                taskId={firstEntityData.id}
+                subtasks={firstEntityData.task?.subtasks || []}
+                SubtasksManager={SubtasksManager}
+              />
+            )}
           {currentTab === 'files' && (
             <DetailsPanelFiles
               entities={entityDetailsData}
