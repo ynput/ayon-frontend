@@ -14,7 +14,7 @@ import { getUpdatedEntityIds } from './filterRefetchUtils'
 import {
   refetchTasksForCacheEntry,
   refetchOverviewTasksForCacheEntry,
-  refetchFoldersAndUpdateCache,
+  refetchFoldersWithOwnAttrib,
 } from './refetchFilteredEntities'
 import { patchVersions } from './patchVersions'
 import { patchProducts } from './patchProducts'
@@ -744,14 +744,18 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
             (op: OperationModel) => op.type === 'delete',
           )
           if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
-            // Use targeted refetch instead of invalidateTags to preserve ownAttrib
-            // from optimistic updates (handles race condition with server commit)
-            await refetchFoldersAndUpdateCache({
-              dispatch,
-              getState,
-              projectName,
-              updatedFolderIds,
-            })
+            const hasAttribUpdates = folderOperations.some(
+              (op) => op.type === 'update' && op.data?.attrib,
+            )
+
+            if (hasAttribUpdates) {
+              // For attrib updates: use controlled refetch to preserve ownAttrib
+              // (invalidateTags causes race conditions that overwrite optimistic updates)
+              await refetchFoldersWithOwnAttrib({ dispatch, getState, folderIds: updatedFolderIds })
+            } else {
+              // For non-attrib updates: standard invalidation is fine
+              dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
+            }
           }
         } catch (error) {
           // undo all patches if there is an error

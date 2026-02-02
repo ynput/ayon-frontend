@@ -1,7 +1,7 @@
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
+import { RootState } from '@reduxjs/toolkit/query'
 import getOverviewApi from './getOverview'
 import { foldersQueries } from '@shared/api'
-import { RootState } from '@reduxjs/toolkit/query'
 
 interface RefetchTasksForCacheEntryArgs {
   dispatch: ThunkDispatch<any, any, UnknownAction>
@@ -162,89 +162,71 @@ export const refetchOverviewTasksForCacheEntry = async ({
   }
 }
 
-interface RefetchFoldersArgs {
+interface RefetchFoldersWithOwnAttribArgs {
   dispatch: ThunkDispatch<any, any, UnknownAction>
   getState: () => RootState<any, any, 'restApi'>
-  projectName: string
-  updatedFolderIds: string[]
+  folderIds: string[]
 }
 
 /**
- * Refetches folders and updates the cache with fresh data.
- * Preserves ownAttrib from the current cache if the fetched data has fewer fields
- * (handles race condition where server hasn't fully committed ownAttrib update).
+ * Refetches folders while preserving ownAttrib from optimistic updates.
+ *
+ * Why this exists:
+ * - When updating folder attributes, we optimistically set ownAttrib in the cache
+ * - The server may not have committed the change by the time we refetch
+ * - Using invalidateTags causes race conditions (multiple refetches overwrite our data)
+ * - This function does a controlled refetch and merges ownAttrib to prevent data loss
  */
-export const refetchFoldersAndUpdateCache = async ({
+export const refetchFoldersWithOwnAttrib = async ({
   dispatch,
   getState,
-  projectName,
-  updatedFolderIds,
-}: RefetchFoldersArgs): Promise<void> => {
+  folderIds,
+}: RefetchFoldersWithOwnAttribArgs): Promise<void> => {
   try {
-    // Get the current folder cache entries
     const state = getState()
-    const folderTags = updatedFolderIds.map((id) => ({ type: 'folder', id }))
+    const folderTags = folderIds.map((id) => ({ type: 'folder', id }))
     const folderEntries = foldersQueries.util
       .selectInvalidatedBy(state, folderTags)
       .filter((entry) => entry.endpointName === 'getFolderList')
 
     if (folderEntries.length === 0) return
 
-    // Store current ownAttrib values for ALL folders before refetch (not just updated ones)
-    // This is critical because forceRefetch overwrites the entire cache
-    const currentOwnAttribMap = new Map<string, string[]>()
+    // Capture ownAttrib from current cache (contains optimistic updates)
+    const ownAttribMap = new Map<string, string[]>()
     for (const entry of folderEntries) {
       const cacheData = foldersQueries.endpoints.getFolderList.select(entry.originalArgs)(state)
-      if (cacheData?.data?.folders) {
-        // Capture ownAttrib for ALL folders in the cache
-        for (const folder of cacheData.data.folders) {
-          if (folder?.ownAttrib && folder.ownAttrib.length > 0) {
-            currentOwnAttribMap.set(folder.id, [...folder.ownAttrib])
-          }
+      for (const folder of cacheData?.data?.folders || []) {
+        if (folder?.ownAttrib && folder.ownAttrib.length > 0) {
+          ownAttribMap.set(folder.id, [...folder.ownAttrib])
         }
       }
     }
-    // Fetch fresh folder data
+
+    // Refetch and merge ownAttrib
     for (const entry of folderEntries) {
       const result = await dispatch(
-        foldersQueries.endpoints.getFolderList.initiate(entry.originalArgs, { forceRefetch: true })
+        foldersQueries.endpoints.getFolderList.initiate(entry.originalArgs, { forceRefetch: true }),
       )
 
       if (!result.data?.folders) continue
 
-      // Update cache with fetched data, preserving ownAttrib additions for ALL folders
       dispatch(
         foldersQueries.util.updateQueryData('getFolderList', entry.originalArgs, (draft) => {
-          // Process ALL folders in the draft, not just updatedFolderIds
           for (let i = 0; i < draft.folders.length; i++) {
-            const draftFolder = draft.folders[i]
-            const fetchedFolder = result.data!.folders.find((f: any) => f.id === draftFolder.id)
-
+            const fetchedFolder = result.data!.folders.find((f: any) => f.id === draft.folders[i].id)
             if (fetchedFolder) {
-              const currentOwnAttrib = currentOwnAttribMap.get(draftFolder.id) || []
-              const fetchedOwnAttrib = fetchedFolder.ownAttrib || []
-
-              // Preserve ownAttrib additions from optimistic update
-              // If current has fields not in fetched, merge them (handles race condition)
-              const additionalFields = currentOwnAttrib.filter(
-                (f: string) => !fetchedOwnAttrib.includes(f)
-              )
-
-              // Create a new folder object to avoid mutating the frozen API response
-              const mergedFolder = {
+              const preserved = ownAttribMap.get(draft.folders[i].id) || []
+              const fetched = fetchedFolder.ownAttrib || []
+              draft.folders[i] = {
                 ...fetchedFolder,
-                ownAttrib: additionalFields.length > 0
-                  ? [...new Set([...fetchedOwnAttrib, ...additionalFields])]
-                  : fetchedOwnAttrib,
+                ownAttrib: [...new Set([...fetched, ...preserved])],
               }
-
-              draft.folders[i] = mergedFolder
             }
           }
-        })
+        }),
       )
     }
   } catch (error) {
-    console.error('Background folder refetch failed:', error)
+    console.error('Folder refetch with ownAttrib preservation failed:', error)
   }
 }
