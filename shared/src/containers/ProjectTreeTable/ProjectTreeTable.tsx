@@ -892,7 +892,7 @@ const TableHeadCell = ({
   })
 
   const dragStyle: CSSProperties = {
-    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transform: transform ? CSS.Translate.toString(transform) : undefined,
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 200 : undefined,
