@@ -442,7 +442,48 @@ const useCellContextMenu = ({
     cellContextMenuShow(e, constructedMenuItems)
   }
 
-  return { handleTableBodyContextMenu }
+  // Alt+Click handler for expand/collapse
+  const handleTableBodyAltClick = (e: React.MouseEvent<HTMLTableSectionElement, MouseEvent>) => {
+    if (!e.altKey) return
+
+    const target = e.target as HTMLElement
+    const tdEl = target.closest('td')
+    const cellId = tdEl?.firstElementChild?.id
+
+    if (!cellId) return
+
+    const cellData = getCellData(cellId)
+    if (!cellData) return
+
+    // Only handle folders in the name column
+    if (cellData.columnId !== 'name' || cellData.entityType !== 'folder') return
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    // Get selected folder IDs from current selection
+    const currentSelectedCells = Array.from(selectedCells)
+    const selectedCellsData = currentSelectedCells.flatMap((id) => getCellData(id) || [])
+    const selectedFolderIds = [
+      ...new Set(
+        selectedCellsData.filter((c) => c.entityType === 'folder').map((c) => c.entityId),
+      ),
+    ]
+
+    // Check if clicked folder is in the selection
+    const isClickedInSelection = selectedFolderIds.includes(cellData.entityId)
+
+    // If clicked folder is in selection, use all selected folders; otherwise just the clicked one
+    const idsToToggle = isClickedInSelection ? selectedFolderIds : [cellData.entityId]
+
+    // Check if clicked row is expanded
+    const isExpanded = expanded[cellData.entityId as keyof typeof expanded]
+
+    // Toggle expand/collapse
+    toggleExpands(idsToToggle, !isExpanded)
+  }
+
+  return { handleTableBodyContextMenu, handleTableBodyAltClick }
 }
 
 export default useCellContextMenu

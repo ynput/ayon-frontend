@@ -5,14 +5,39 @@ import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 
 type DefaultMenuItem = 'expand-collapse'
 
-// Simplified context menu item constructor for SimpleTable
+// Rich metadata for a single row
+export type SimpleTableRowMeta = {
+  rowId: string
+  hasChildren: boolean
+  isExpanded: boolean
+  depth: number
+  parentId?: string
+}
+
+// Rich context metadata passed to menu item constructors
+export type SimpleTableContextMeta = {
+  // Row IDs (for commands)
+  selectedRows: string[]
+
+  // Clicked row derived info (pre-computed)
+  clickedRowMeta: SimpleTableRowMeta
+
+  // Selected rows derived info (pre-computed)
+  selectedRowsMeta: SimpleTableRowMeta[]
+
+  // Aggregate info (useful for menu logic)
+  allSelectedHaveChildren: boolean
+  anySelectedHasChildren: boolean
+  allSelectedExpanded: boolean
+  anySelectedExpanded: boolean
+}
+
+// Context menu item constructor for SimpleTable
 export type SimpleTableContextMenuItemConstructor = (
   e: React.MouseEvent<HTMLElement>,
   clickedRow: any,
   selectedRows: any[],
-  meta: {
-    selectedRows: string[]
-  },
+  meta: SimpleTableContextMeta,
 ) => ContextMenuItemType | ContextMenuItemType[] | undefined
 interface SimpleTableContextValue {
   // forwarded from props
@@ -68,6 +93,20 @@ const getAllDescendantIds = (rowId: string, data: any): string[] => {
 
   return descendantIds
 }
+
+// Helper to compute row metadata
+const getRowMeta = (
+  row: any,
+  rowId: string,
+  expanded: ExpandedState | undefined,
+): SimpleTableRowMeta => ({
+  rowId,
+  hasChildren: Boolean(row?.subRows?.length),
+  isExpanded: Boolean(expanded && (expanded as Record<string, boolean>)[rowId]),
+  depth: row?.depth ?? 0,
+  parentId: row?.parentId,
+})
+
 export const SimpleTableProvider = ({
   children,
   menuItems: inputMenuItems,
@@ -110,18 +149,18 @@ export const SimpleTableProvider = ({
   )
 
   const expandCollapseChildrenItems: SimpleTableContextMenuItemConstructor = (
-    e,
-    clickedRow,
-    selectedRows,
+    _e,
+    _clickedRow,
+    _selectedRows,
     meta,
   ) => {
-    // Check if the row has children (subRows)
-    const hasChildren = clickedRow.subRows && clickedRow.subRows.length > 0
+    // Use pre-computed metadata
+    const { hasChildren } = meta.clickedRowMeta
 
     return [
       {
         label: 'Expand children',
-        icon: 'expand_less',
+        icon: 'expand_all',
         command: () => toggleExpandAll(meta.selectedRows, true),
         hidden: !hasChildren,
         shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
@@ -172,26 +211,38 @@ export const SimpleTableProvider = ({
         ...new Map(selectedRowsData.map((row: any) => [row.id, row])).values(),
       ]
 
+      // Pre-compute rich metadata
+      const clickedRowMeta = getRowMeta(clickedRowData, rowId, expanded)
+      const selectedRowsMeta = selectedRowsIds.map((id) =>
+        getRowMeta(tableData.get(id), id, expanded),
+      )
+
+      const meta: SimpleTableContextMeta = {
+        selectedRows: selectedRowsIds,
+        clickedRowMeta,
+        selectedRowsMeta,
+        allSelectedHaveChildren: selectedRowsMeta.every((r) => r.hasChildren),
+        anySelectedHasChildren: selectedRowsMeta.some((r) => r.hasChildren),
+        allSelectedExpanded: selectedRowsMeta.every((r) => r.isExpanded),
+        anySelectedExpanded: selectedRowsMeta.some((r) => r.isExpanded),
+      }
+
       const constructedMenuItems = inputMenuItems?.flatMap((constructor) =>
         typeof constructor === 'function'
-          ? constructor(e, clickedRowData, filteredSelectedRowsData, {
-              selectedRows: selectedRowsIds,
-            })
+          ? constructor(e, clickedRowData, filteredSelectedRowsData, meta)
           : constructor in builtInMenuItems
-          ? builtInMenuItems[constructor as DefaultMenuItem](
-              e,
-              clickedRowData,
-              filteredSelectedRowsData,
-              {
-                selectedRows: selectedRowsIds,
-              },
-            )
-          : [],
+            ? builtInMenuItems[constructor as DefaultMenuItem](
+                e,
+                clickedRowData,
+                filteredSelectedRowsData,
+                meta,
+              )
+            : [],
       )
 
       cellContextMenuShow(e, constructedMenuItems)
     },
-    [inputMenuItems, rowSelection, builtInMenuItems, cellContextMenuShow, tableData],
+    [inputMenuItems, rowSelection, builtInMenuItems, cellContextMenuShow, tableData, expanded],
   )
 
   const handleAltClick = useCallback(
