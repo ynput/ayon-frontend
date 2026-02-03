@@ -22,7 +22,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
-import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
+import { RankingInfo, rankItem, compareItems, rankings } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components'
@@ -67,8 +67,9 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
     )
   }
 
-  // Rank the item
-  const itemRank = rankItem(searchString, searchValue)
+  // Rank the item with CONTAINS threshold to avoid overly permissive fuzzy matches
+  // This ensures the search term must be a substring, not just scattered characters
+  const itemRank = rankItem(searchString, searchValue, { threshold: rankings.CONTAINS })
 
   // Store the itemRank info
   addMeta({
@@ -123,7 +124,7 @@ export type SimpleTableRow = {
   inactive?: boolean
 }
 
-export interface SimpleTableProps {
+export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
   data: SimpleTableRow[]
   isLoading: boolean
   error?: string
@@ -137,6 +138,7 @@ export interface SimpleTableProps {
   rowHeight?: number // height of each row, used for virtual scrolling
   imgRatio?: number
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
+  fitContent?: boolean
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,
@@ -198,6 +200,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onScrollBottom,
   children,
   pt,
+  fitContent,
+  ...props
 }) => {
   const {
     rowSelection,
@@ -568,9 +572,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
   return (
     <Styled.TableContainer
       ref={tableContainerRef}
-      className={clsx({ isLoading })}
       onScroll={handleScroll}
       onClick={handleContainerClick}
+      {...props}
+      className={clsx(props.className, { isLoading, fitContent })}
     >
       {!error && (
         <table>

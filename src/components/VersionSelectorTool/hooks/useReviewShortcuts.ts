@@ -62,7 +62,7 @@ const useReviewShortcuts = ({
       action: () => handleShortcut('next'),
     },
     {
-      key: 'f', //select latest version
+      key: 'r', //select latest version
       action: () => handleShortcut('latest'),
     },
     {

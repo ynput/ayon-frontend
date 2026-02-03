@@ -10,6 +10,25 @@ import { PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
 import { useProjectContext } from '@shared/context'
 
+const getErrorMessage = (
+  errorCode: string | undefined,
+  entityType: string,
+  entityName: string,
+): string => {
+  switch (errorCode) {
+    case 'unique-violation':
+      return `${entityType} with the name "${entityName}" already exists`
+    case 'not-null-violation':
+      return `${entityType} "${entityName}" is missing required fields`
+    case 'foreign-key-violation':
+      return `${entityType} "${entityName}" references invalid data`
+    case 'integrity-constraint-violation':
+      return `${entityType} "${entityName}" violates data integrity rules`
+    default:
+      return `Failed to update ${entityType}: ${entityName}`
+  }
+}
+
 export type EntityUpdate = {
   rowId: string
   id: string
@@ -248,7 +267,17 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         }
       } catch (error: any) {
         console.error('Error updating entities:', error)
-        toast.error('Failed to update entities: ' + error?.error)
+        if (operations.length === 1) {
+          error.errorCodes.forEach((errorCode: string) => {
+            const op = operations[0]
+            const entity = getEntityById(op.entityId as string)
+            const entityName = entity?.label || entity?.name || op.entityId || ''
+            const message = getErrorMessage(errorCode, op.entityType, entityName)
+            toast.error(message)
+          })
+        } else {
+          toast.error('Failed to update entities')
+        }
         // Remove the failed update from history stack
         if (pushHistory && pushToHistory && removeHistoryEntries) {
           removeHistoryEntries(1)
@@ -480,8 +509,20 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
           operations,
           patchOperations,
         })
-      } catch (error) {
-        toast.error('Failed to update entities')
+      } catch (error: any) {
+        // Extract error code from operation result - check multiple paths
+        if (operations.length === 1) {
+          error.errorCodes.forEach((errorCode: string) => {
+            const op = operations[0]
+            const entity = getEntityById(op.entityId as string)
+            const entityName = entity?.label || entity?.name || op.entityId || ''
+            const message = getErrorMessage(errorCode, op.entityType, entityName)
+            toast.error(message)
+          })
+        } else {
+          toast.error('Failed to update entities')
+        }
+
         // Remove the failed update from history stack
         if (pushToHistory && pushHistory && removeHistoryEntries) {
           removeHistoryEntries(1)

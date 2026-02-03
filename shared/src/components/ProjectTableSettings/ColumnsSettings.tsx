@@ -45,6 +45,8 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
     setColumnsConfig,
     columnSizing,
     groupBy,
+    sorting,
+    rowHeight,
   } = useColumnSettingsContext()
 
   // State for the currently dragged column
@@ -251,6 +253,9 @@ const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => 
           columnOrder: [...columnOrder],
           columnPinning: { ...columnPinning },
           columnSizing: { ...columnSizing },
+          groupBy,
+          sorting,
+          rowHeight,
         }
 
         // If we're moving a column between visible columns (including pinned)

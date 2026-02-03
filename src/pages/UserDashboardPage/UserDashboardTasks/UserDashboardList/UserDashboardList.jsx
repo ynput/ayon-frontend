@@ -95,30 +95,32 @@ const UserDashboardList = ({
   const dispatch = useDispatch()
   // get all task ids in order
   const tasks = useMemo(() => {
-    return filteredFields.flatMap(({ id }) => {
+    return sortedFields.flatMap(({ id }) => {
       const column = groupedTasks[id]
       if (!column) return []
       return column.tasks
     })
-  }, [groupedTasks, filteredFields])
+  }, [groupedTasks, sortedFields])
 
   const taskIds = useMemo(() => tasks.map((t) => t.id), [tasks])
 
   // SELECTED TASKS
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (ids, types, data) =>
+  const setSelectedTasks = (ids, types, data) => {
+    const selectedData = data || tasks.filter((t) => ids.includes(t.id))
     dispatch(
       onTaskSelected({
         ids,
         types,
-        data: tasks.map((data) => ({
-          id: data.id,
-          projectName: data.projectName,
-          taskType: data.taskType,
-          name: data.name,
+        data: selectedData.map((t) => ({
+          id: t.id,
+          projectName: t.projectName,
+          taskType: t.taskType,
+          name: t.name,
         })),
       }),
     )
+  }
 
   const selectedTasksData = useMemo(
     () => tasks.filter((task) => selectedTasks.includes(task.id)),
@@ -132,12 +134,17 @@ const UserDashboardList = ({
   // HANDLE TASK CLICK
   const taskClick = useTaskClick(dispatch, tasks)
 
+  // HANDLE SPACEBAR VIEWER OPEN SHORTCUT
+  const handleSpacebar = useTaskSpacebarViewer({ tasks })
+
   // KEYBOARD SUPPORT
   const handleKeyDown = (e) => {
+    // open viewer if spacebar is pressed
+    handleSpacebar(e)
+
     // if there are no tasks, do nothing
     if (!taskIds.length) return
 
-    // if arrow down, select next task
     // if arrow down, select next task
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -156,7 +163,7 @@ const UserDashboardList = ({
       // get taskTypes
       const newTypes = newTasks.map((task) => task.taskType)
 
-      setSelectedTasks(newIds, newTypes)
+      setSelectedTasks(newIds, newTypes, newTasks)
 
       // get the next li element based on the nextIndex from the ref
       const nextLi = listItemsRef.current[nextIndex]
@@ -204,7 +211,7 @@ const UserDashboardList = ({
       // get taskTypes
       const newTypes = newTasks.map((task) => task.taskType)
 
-      setSelectedTasks(newIds, newTypes)
+      setSelectedTasks(newIds, newTypes, newTasks)
 
       // get the previous li element based on the prevIndex from the ref
       const prevLi = listItemsRef.current[prevIndex]
@@ -325,12 +332,8 @@ const UserDashboardList = ({
     [collapsedGroups],
   )
 
-  // HANDLE SPACEBAR VIEWER OPEN SHORTCUT
-  const spacebarShortcut = useTaskSpacebarViewer({ tasks })
-
   return (
     <>
-      {spacebarShortcut}
       <Shortcuts shortcuts={shortcuts} deps={[collapsedGroups]} />
       <Styled.ListContainer onKeyDown={handleKeyDown} className="tasks-list">
         <Styled.Inner ref={containerRef}>

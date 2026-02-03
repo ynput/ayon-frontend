@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useMemo, useEffect } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react'
 
 // Contexts
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
@@ -690,9 +690,38 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     const handleKeyDown = async (e: KeyboardEvent) => {
       // Copy functionality (Ctrl+C or Command+C)
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        copyToClipboard()
-      }
+        const activeEl = document.activeElement as HTMLElement | null
 
+        const isTableFocused =
+          activeEl?.closest('table') !== null ||
+          activeEl?.closest('.table-container') !== null ||
+          activeEl?.tagName === 'TD' ||
+          activeEl?.tagName === 'TH'
+
+        // Check if there's a text selection in an input/textarea/contenteditable
+        const isEditableElement =
+          activeEl?.tagName === 'INPUT' ||
+          activeEl?.tagName === 'TEXTAREA' ||
+          activeEl?.isContentEditable
+
+        const hasTextSelection = window.getSelection()?.toString().length ?? 0 > 0
+
+        //  If user has text selected elsewhere, let browser copy that
+        if (hasTextSelection && !isTableFocused) {
+          return // Let browser handle
+        }
+
+        // If focus is in an editable element, let browser handle
+        if (isEditableElement && !isTableFocused) {
+          return // Let browser handle
+        }
+        // If cells are selected, copy table data (even if focus moved away)
+        if (selectedCells.size > 0) {
+          await copyToClipboard()
+        } else {
+          //  No cells selected, allowing default browser copy
+        }
+      }
       // Paste functionality (Ctrl+V or Command+V)
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         // don't execute paste if focus is inside an input, textarea, or content‐editable element

@@ -29,6 +29,7 @@ export const ViewsMenuContainer: FC = () => {
     selectedView,
     workingView,
     viewMenuItems,
+    projectName,
   } = useViewsContext()
 
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -112,7 +113,7 @@ export const ViewsMenuContainer: FC = () => {
             <ViewsMenu items={viewMenuItems} selected={selectedViewId} />
             {isAdmin && (
               <>
-                <BaseViewsTagContainer />
+                <BaseViewsTagContainer projectName={projectName} />
                 <Styled.ViewsMenuDivider />
               </>
             )}

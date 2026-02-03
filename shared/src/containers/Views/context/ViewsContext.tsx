@@ -1,5 +1,5 @@
 import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { ViewType, viewTypes, WORKING_VIEW_ID } from '../index'
+import { ViewType, WORKING_VIEW_ID } from '../index'
 import {
   GetDefaultViewApiResponse,
   useGetWorkingViewQuery,
@@ -76,6 +76,7 @@ export interface ViewsContextValue {
   onCreateBaseView: (isStudioScope: boolean) => Promise<void>
   onUpdateBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
   onDeleteBaseView: (baseViewId: string, isStudioScope: boolean) => Promise<void>
+  onLoadBaseView: (isStudioScope: boolean) => Promise<void>
 
   // Actions (shared)
   resetWorkingView: () => Promise<void>
@@ -99,16 +100,11 @@ export interface ViewsProviderProps {
 
 export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
-  viewType: viewTypeProp,
+  viewType,
   projectName,
   dispatch,
   debug,
 }) => {
-  // validate viewType
-  const viewType = viewTypes.includes(viewTypeProp as ViewType)
-    ? (viewTypeProp as ViewType)
-    : undefined
-
   let { powerLicense } = usePowerpack()
   if (debug?.powerLicense !== undefined) {
     console.warn('Using debug power license:', debug.powerLicense)
@@ -161,8 +157,13 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   )
 
   // Filter out base views from the list
+  // Filter out studio working view if in project scope
   const viewsList = useMemo(
-    () => viewsListRaw.filter((view) => view.label !== BASE_VIEW_ID),
+    () =>
+      viewsListRaw.filter(
+        (view) =>
+          view.label !== BASE_VIEW_ID && !(projectName && view.working && view.scope === 'studio'),
+      ),
     [viewsListRaw],
   )
 
@@ -193,7 +194,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   //   which settings to use for the view
   const viewSettings =
-    !selectedView || selectedView.id === WORKING_VIEW_ID ? workingSettings : selectedView?.settings
+    selectedView?.id === WORKING_VIEW_ID ? workingSettings : selectedView?.settings
 
   // is the working view selected?
   const isViewWorking = selectedView?.id === workingView?.id
@@ -231,12 +232,14 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   // Base view mutations
-  const { onCreateBaseView, onUpdateBaseView, onDeleteBaseView } = useBaseViewMutations({
-    viewType: viewType as string,
-    projectName,
-    workingSettings,
-    dispatch,
-  })
+  const { onCreateBaseView, onUpdateBaseView, onDeleteBaseView, onLoadBaseView } =
+    useBaseViewMutations({
+      viewType: viewType as string,
+      projectName,
+      viewSettings,
+      workingView,
+      dispatch,
+    })
 
   const onUpdateWorkingView = useCallback(
     async (payload: Partial<ViewData>, { selectView }: { selectView?: boolean } = {}) => {
@@ -314,6 +317,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     onCreateBaseView,
     onUpdateBaseView,
     onDeleteBaseView,
+    onLoadBaseView,
     editingViewId,
     viewMenuItems,
     isLoadingViews,

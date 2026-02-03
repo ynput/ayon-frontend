@@ -298,9 +298,9 @@ export const useVPContextMenu = (callbacks?: {
       }
 
       // Build the menu items for add to list using versions and reviews data
-      const combined = [...versions.data, ...reviews.data]
+      const combined = [...versions, ...reviews]
       const menuItems = buildHierarchicalMenuItems(combined, versionEntities, (list) => {
-        return list.entityListType === 'review-session' ? true : !!reviews.data.length
+        return list.entityListType === 'review-session' ? true : !!reviews.length
       })
       menuItems.push(newListMenuItem('version', versionEntities))
 
@@ -317,8 +317,8 @@ export const useVPContextMenu = (callbacks?: {
       buildAddToListMenu,
       buildHierarchicalMenuItems,
       newListMenuItem,
-      versions.data,
-      reviews.data,
+      versions,
+      reviews,
     ],
   )
 

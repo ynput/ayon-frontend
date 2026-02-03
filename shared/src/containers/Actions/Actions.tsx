@@ -152,7 +152,9 @@ export const Actions = ({
         label: action.groupLabel ? action.groupLabel + ' ' + action.label : action.label,
         icon: action.icon,
         hasConfig: !!action.configFields,
+        description: action.description,
       }))
+
 
       options.push(...groupOptions)
     })

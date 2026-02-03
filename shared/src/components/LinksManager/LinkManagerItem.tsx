@@ -11,6 +11,7 @@ export interface LinkManagerItemProps {
   isSelected?: boolean
   onEntityClick?: (entityId: string, entityType: string) => void
   onRemove: (e: React.MouseEvent<HTMLButtonElement>, link: LinkEntity) => void
+  isManager?: boolean
 }
 
 export const LinkManagerItem: FC<LinkManagerItemProps> = ({
@@ -18,6 +19,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
   isSelected = false,
   onEntityClick,
   onRemove,
+  isManager = false,
 }) => {
   const entityTypeSupported = detailsPanelEntityTypes.includes(link.entityType as any)
   const isClickable = entityTypeSupported && !link.isRestricted
@@ -28,22 +30,23 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
       onClick={() => isClickable && onEntityClick?.(link.entityId, link.entityType)}
       data-tooltip={
         link.isRestricted
-          ? "Access Restricted - Insufficient Permissions to Entity"
+          ? isManager
+            ? 'Unknown Link - Entity not found'
+            : 'Access Restricted - Insufficient Permissions to Entity'
           : link.parents.join('/') + '/' + link.label
       }
       className={clsx({
         clickable: isClickable,
         selected: isSelected,
-        restricted: link.isRestricted,
+        restricted: link.isRestricted && !isManager,
+        unknown: link.isRestricted && isManager,
       })}
     >
       {link.icon ? <Icon icon={link.icon} /> : <Icon icon={getEntityTypeIcon(link.entityType)} />}
 
       <span className="title">
         {link.isRestricted ? (
-          <span className="label">
-            Access Restricted
-          </span>
+          <span className="label">{isManager ? 'Unknown' : 'Access Restricted'}</span>
         ) : (
           <>
             {link.parents?.map((part, index) => (
@@ -56,7 +59,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
           </>
         )}
       </span>
-      { !link.isRestricted &&
+      {(!link.isRestricted || isManager) && (
         <Button
           icon={'link_off'}
           variant="text"
@@ -64,8 +67,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
           onClick={(e) => onRemove(e, link)}
           data-tooltip={'Remove link'}
         />
-      }
-
+      )}
     </Styled.LinkItem>
   )
 }

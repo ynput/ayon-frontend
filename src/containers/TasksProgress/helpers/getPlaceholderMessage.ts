@@ -1,4 +1,4 @@
-import { SliceType } from '@context/SlicerContext'
+import { SliceType } from '@shared/containers/Slicer'
 
 export const getPlaceholderMessage = (sliceType: SliceType) => {
   let type = sliceType === 'hierarchy' ? 'folder' : sliceType

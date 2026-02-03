@@ -36,6 +36,8 @@ const ProtectedRoute = ({
       }
     }
 
+    console.log(`User does not have access to ${location.pathname}, redirecting to ${redirectTo}`)
+
     return <Navigate to={redirectTo} replace />
   }
 

@@ -8,6 +8,7 @@ export type PowerpackFeature =
   | 'advancedFilters'
   | 'listAttributes'
   | 'listFolders'
+  |'projectFolders'
   | 'listAccess'
   | 'groupAttributes'
   | 'sharedViews'
@@ -23,6 +24,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
   'sharedViews',
   'listFolders',
+  'projectFolders',
   'groupAttributes',
   'listAccess',
   'slicer',
@@ -49,6 +51,11 @@ export const powerpackFeatures: {
     label: 'List Folders',
     description: 'Organize your lists into folders for a cleaner and more structured view.',
     bullet: 'Organize lists into folders',
+  },
+  projectFolders: {
+    label: 'Project Folders',
+    description: 'Organize your projects into folders for a cleaner and more structured view.',
+    bullet: 'Organize projects into folders',
   },
   groupAttributes: {
     label: 'Group Attributes',

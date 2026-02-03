@@ -37,11 +37,12 @@ type ListSubMenuItem = {
 }
 
 export interface EntityListsContextType {
-  folders: UseGetListsDataReturn
-  tasks: UseGetListsDataReturn
-  products: UseGetListsDataReturn
-  versions: UseGetListsDataReturn
-  reviews: UseGetListsDataReturn
+  allLists: UseGetListsDataReturn
+  folders: EntityList[]
+  tasks: EntityList[]
+  products: EntityList[]
+  versions: EntityList[]
+  reviews: EntityList[]
   addToList: (
     listId: string,
     entityType: string,
@@ -91,52 +92,48 @@ interface EntityListsProviderProps extends EntityListsContextProps {
   children: ReactNode
 }
 
-const getFilter = (entityType: string) => [
-  { id: 'entityType', operator: 'OR', values: [{ id: entityType }] },
-]
-
-export const EntityListsProvider = ({
-  children,
-  entityTypes = [],
-  projectName,
-}: EntityListsProviderProps) => {
+export const EntityListsProvider = ({ children, projectName }: EntityListsProviderProps) => {
   const { powerLicense } = usePowerpack()
   const [, setSearchParams] = useSearchParams()
 
-  // FOLDERS
-  const folders = useGetListsData({
+  // Fetch all lists without filters and split on client
+  const allLists = useGetListsData({
     projectName,
-    filters: getFilter('folder'),
-    skip: !entityTypes.includes('folder'),
+    filters: [],
+    skip: !projectName,
   })
 
-  //TASKS
-  const tasks = useGetListsData({
-    projectName,
-    filters: getFilter('task'),
-    skip: !entityTypes.includes('task'),
-  })
-  //PRODUCTS
-  const products = useGetListsData({
-    projectName,
-    filters: getFilter('product'),
-    // @ts-expect-error - product is not a valid entityType
-    skip: !entityTypes.includes('product'),
-  })
-  //VERSIONS
-  const versions = useGetListsData({
-    projectName,
-    filters: getFilter('version'),
-    skip: !entityTypes.includes('version'),
-    entityListTypes: ['generic'],
-  })
-  // REVIEWS
-  const reviews = useGetListsData({
-    projectName,
-    filters: getFilter('version'),
-    skip: !entityTypes.includes('version'),
-    entityListTypes: ['review-session'],
-  })
+  // Derive individual lists by filtering on client
+  const folders = useMemo(
+    () => allLists.data.filter((list) => list.entityType === 'folder'),
+    [allLists.data],
+  )
+
+  const tasks = useMemo(
+    () => allLists.data.filter((list) => list.entityType === 'task'),
+    [allLists.data],
+  )
+
+  const products = useMemo(
+    () => allLists.data.filter((list) => list.entityType === 'product'),
+    [allLists.data],
+  )
+
+  const versions = useMemo(
+    () =>
+      allLists.data.filter(
+        (list) => list.entityType === 'version' && list.entityListType === 'generic',
+      ),
+    [allLists.data],
+  )
+
+  const reviews = useMemo(
+    () =>
+      allLists.data.filter(
+        (list) => list.entityType === 'version' && list.entityListType === 'review-session',
+      ),
+    [allLists.data],
+  )
 
   // fetch list folders to build hierarchy (only needed when power license)
   const { data: listFoldersAll = [] } = useGetEntityListFoldersQuery(
@@ -455,35 +452,31 @@ export const EntityListsProvider = ({
       // helpers to decide icon visibility
       const getShowIconMultiple = () => isMultipleEntityTypes
       const getShowIconVersion = (list: EntityList) =>
-        list.entityListType === 'review-session' ? true : !!reviews.data.length
+        list.entityListType === 'review-session' ? true : !!reviews.length
 
       let subMenuItems: ListSubMenuItem[] = []
 
       if (isMultipleEntityTypes) {
-        const combined = [...folders.data, ...tasks.data]
+        const combined = [...folders, ...tasks]
         subMenuItems = buildHierarchicalMenuItems(combined, selected, () => getShowIconMultiple())
       } else if (cell.entityType === 'folder') {
-        subMenuItems = buildHierarchicalMenuItems(folders.data, selected, () =>
-          getShowIconMultiple(),
-        )
+        subMenuItems = buildHierarchicalMenuItems(folders, selected, () => getShowIconMultiple())
       } else if (cell.entityType === 'task') {
-        subMenuItems = buildHierarchicalMenuItems(tasks.data, selected, () => getShowIconMultiple())
+        subMenuItems = buildHierarchicalMenuItems(tasks, selected, () => getShowIconMultiple())
       } else if (cell.entityType === 'product') {
         // if the product has a featured version, only allow adding that version to lists
         // @ts-expect-error- just don't worry about it
         if (cell.data?.featuredVersion?.id) {
           // @ts-expect-error - featuredVersion is not supported in typings
           const versionEntity = { entityId: cell.data.featuredVersion.id, entityType: 'version' }
-          subMenuItems = buildHierarchicalMenuItems(versions.data, [versionEntity], () =>
+          subMenuItems = buildHierarchicalMenuItems(versions, [versionEntity], () =>
             getShowIconMultiple(),
           )
         } else {
-          subMenuItems = buildHierarchicalMenuItems(products.data, selected, () =>
-            getShowIconMultiple(),
-          )
+          subMenuItems = buildHierarchicalMenuItems(products, selected, () => getShowIconMultiple())
         }
       } else if (cell.entityType === 'version') {
-        const combined = [...versions.data, ...reviews.data]
+        const combined = [...versions, ...reviews]
         subMenuItems = buildHierarchicalMenuItems(combined, selected, (l) => getShowIconVersion(l))
       }
 
@@ -498,19 +491,20 @@ export const EntityListsProvider = ({
         subMenuItems.push(newListMenuItem(cell.entityType as ListEntityType, selected))
       }
 
-      // @ts-expect-error - featuredVersion is not supported in typings
       return buildAddToListMenu(subMenuItems, {
+        // @ts-expect-error - featuredVersion is not supported in typings
         label: cell.data?.featuredVersion?.id
-          ? `Add to list (${cell.data.featuredVersion.name})`
+          ? // @ts-expect-error - featuredVersion is not supported in typings
+            `Add to list (${cell.data.featuredVersion.name})`
           : undefined,
       })
     },
     [
-      folders.data,
-      tasks.data,
-      products.data,
-      versions.data,
-      reviews.data,
+      folders,
+      tasks,
+      products,
+      versions,
+      reviews,
       buildHierarchicalMenuItems,
       newListMenuItem,
       buildAddToListMenu,
@@ -519,6 +513,7 @@ export const EntityListsProvider = ({
 
   const value = useMemo(
     () => ({
+      allLists,
       folders,
       tasks,
       products,
@@ -537,6 +532,7 @@ export const EntityListsProvider = ({
       buildHierarchicalMenuItems,
     }),
     [
+      allLists,
       folders,
       tasks,
       products,

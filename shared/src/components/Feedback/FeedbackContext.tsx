@@ -199,6 +199,32 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     return false
   }
 
+  // SURVEY WIDGET
+  const initializeSurveyWidget = (): boolean => {
+    const win = window as any
+    if (typeof win.Featurebase === 'function') {
+      win.Featurebase(
+        'initialize_survey_widget',
+        {
+          organization: 'ayon',
+          placement: 'bottom-right',
+          theme: 'dark',
+          email: user?.attrib?.email,
+          featurebaseJwt: verification?.data?.featurebaseJwt,
+          locale: 'en',
+        },
+        (error: any) => {
+          if (error) {
+            console.error('Error initializing survey widget:', error)
+          } else {
+            console.log('Survey widget initialized successfully')
+          }
+        },
+      )
+    }
+    return false
+  }
+
   // Use an environment variable to skip loading Featurebase in certain environments
   // @ts-expect-error: Vite provides import.meta.env at runtime
   const skipFeaturebase = import.meta.env.VITE_SKIP_FEATUREBASE === 'true'
@@ -239,6 +265,10 @@ export const FeedbackProvider: React.FC<FeedbackProviderProps> = ({ children }) 
     if (identified) return
     // Identify the user
     identifyUser()
+
+    // Initialize survey widget
+    initializeSurveyWidget()
+
     setIdentified(true)
   }, [
     user?.name,

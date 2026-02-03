@@ -31,6 +31,14 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       value: 'version',
       label: 'Version',
     },
+    {
+      value: 'taskType',
+      label: 'Task type',
+    },
+    {
+      value: 'taskLabel',
+      label: 'Task label',
+    },
   ]
 
   const extraSettings: SettingConfig[] = [

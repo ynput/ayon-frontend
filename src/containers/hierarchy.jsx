@@ -347,7 +347,7 @@ const Hierarchy = (props) => {
       },
       buildAddToListMenu([
         ...buildHierarchicalMenuItems(
-          foldersList.data,
+          foldersList,
           selectedEntities,
           () => false, // no icon needed in hierarchy tree
         ),

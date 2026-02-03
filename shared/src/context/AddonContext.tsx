@@ -1,11 +1,15 @@
 import { createContext, FC, useContext } from 'react'
-import { RouterTypes } from './AddonProjectContext'
+import { RouterTypes } from '@shared/components'
 
 export type RemoteAddonComponent = FC<RemoteAddonProps>
 export type RemoteAddon = {
   id: string
   component: RemoteAddonComponent
   path: string
+  module: string
+  viewType?: string // if the addon is using views
+  slicer?: { fields: string[] }
+  projectList?: { multiSelect?: boolean; enabled: boolean }
 }
 
 export interface RemoteAddonProps {

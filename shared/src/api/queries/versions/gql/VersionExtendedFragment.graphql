@@ -3,6 +3,8 @@ fragment VersionExtended on VersionNode {
   task {
     id
     taskType
+    label
+    name
   }
   product {
     id

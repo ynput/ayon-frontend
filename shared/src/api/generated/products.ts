@@ -118,6 +118,10 @@ export type ProductModel = {
   status?: string
   /** Tags assigned to the the product */
   tags?: string[]
+  /** Who created the product */
+  createdBy?: string
+  /** Who last updated the product */
+  updatedBy?: string
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -144,6 +148,10 @@ export type ProductPatchModel = {
   status?: string
   /** Tags assigned to the the product */
   tags?: string[]
+  /** Who created the product */
+  createdBy?: string
+  /** Who last updated the product */
+  updatedBy?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
   /** Whether the product is active */
@@ -168,6 +176,10 @@ export type ProductPostModel = {
   status?: string
   /** Tags assigned to the the product */
   tags?: string[]
+  /** Who created the product */
+  createdBy?: string
+  /** Who last updated the product */
+  updatedBy?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
   /** Whether the product is active */

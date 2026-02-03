@@ -48,7 +48,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
     ref,
   ) => {
     const labelsArray = isArray(label) ? label : [label]
-    const { powerLicense, isLoading } = usePowerpack()
+    const { powerLicense } = usePowerpack()
     const isPowerFeature = !powerLicense && powerFeature
 
     const Item = (
@@ -62,7 +62,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
             notification: notification,
             danger: danger,
             dev: isDev,
-            disabled: disabled || isLoading,
+            disabled: disabled,
             power: isPowerFeature,
           },
           className,

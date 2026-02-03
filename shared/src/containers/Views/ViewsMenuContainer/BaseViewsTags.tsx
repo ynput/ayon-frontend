@@ -8,13 +8,17 @@ import { useLocalStorage } from '@shared/hooks'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 
-const BaseViewsTagContainer: FC = () => {
+type BaseViewsTagContainerProps = {
+  projectName?: string | undefined
+}
+
+const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) => {
   const {
     projectBaseView,
     studioBaseView,
     onCreateBaseView,
     onDeleteBaseView,
-    onUpdateWorkingView,
+    onLoadBaseView,
   } = useViewsContext()
 
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -42,9 +46,8 @@ const BaseViewsTagContainer: FC = () => {
           },
         })
       } else {
-        // set the working view to the existing base view
-        // @ts-expect-error settings exists
-        onUpdateWorkingView({ settings: existingBase.settings }, { selectView: true })
+        // load the base view settings into working view
+        await onLoadBaseView(isStudioScope)
       }
     } else {
       // create new base view
@@ -68,12 +71,14 @@ const BaseViewsTagContainer: FC = () => {
             label={'Studio'}
             onClick={(r) => handleBaseViewAction(true, r)}
           />
-          <ScopeIcon
-            existingView={!!projectBaseView}
-            label={'Project'}
-            onClick={(r) => handleBaseViewAction(false, r)}
-            powerLicense={powerLicense}
-          />
+          {projectName && (
+            <ScopeIcon
+              existingView={!!projectBaseView}
+              label={'Project'}
+              onClick={(r) => handleBaseViewAction(false, r)}
+              powerLicense={powerLicense}
+            />
+          )}
         </Styled.BaseViewsContainer>
       )}
     </>

@@ -223,7 +223,7 @@ type TableCellProps = {
   $isLastPinned?: boolean
 }
 
-export const TableCell = styled.td<TableCellProps>`
+export const TD = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
   background-color: var(--color-table-row);

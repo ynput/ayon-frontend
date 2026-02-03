@@ -22,6 +22,7 @@ const NavButton = ({
     id={`${className}-${id}`}
     onClick={() => onClick(id)}
     data-tooltip={`${upperFirst(className)} version`}
+    data-tooltip-position="bottom"
     data-shortcut={shortcut?.children}
     shortcut={shortcut}
     {...props}
@@ -107,7 +108,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!latestVersion}
         beforeContent={'Latest - '}
-        data-shortcut={'F'}
+        data-shortcut={'R'}
         selected={selected === latestVersion?.id}
       />
       <NavButton

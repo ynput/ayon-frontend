@@ -317,6 +317,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
       isOpen={true}
       style={{ width: 700, zIndex: 999 }}
       size="full"
+      enableBackdropClose={false}
       onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
           e.preventDefault()

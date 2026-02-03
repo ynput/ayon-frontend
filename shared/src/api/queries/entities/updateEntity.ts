@@ -141,6 +141,16 @@ const updateEntity = api.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
+      invalidatesTags: (result, error, { entityId, entityType }) => {
+        const tags = []
+        if (entityType === 'product') {
+          tags.push({ type: 'product', id: entityId })
+        }
+        if (entityType === 'version') {
+          tags.push({ type: 'version', id: entityId })
+        }
+        return tags
+      },
       async onQueryStarted(
         { projectName, entityId, data, currentAssignees, entityType },
         { dispatch, queryFulfilled, getState },
@@ -395,9 +405,20 @@ const updateEntity = api.injectEndpoints({
           return { error }
         }
       },
-      invalidatesTags: (result, error, { operations }) => [
-        ...operations.map((o) => ({ id: o.id, type: 'review' })),
-      ],
+      invalidatesTags: (result, error, { operations, entityType }) => {
+        const tags = operations.map((o) => ({ id: o.id, type: 'review' }))
+
+        if (entityType === 'product') {
+          tags.push({ type: 'product', id: 'LIST' }, { type: 'version', id: 'LIST' })
+          operations.forEach((o) => tags.push({ type: 'product', id: o.id }))
+        }
+        if (entityType === 'version') {
+          tags.push({ type: 'version', id: 'LIST' }, { type: 'product', id: 'LIST' })
+          operations.forEach((o) => tags.push({ type: 'version', id: o.id }))
+        }
+
+        return tags
+      },
     }),
   }),
   overrideExisting: true,

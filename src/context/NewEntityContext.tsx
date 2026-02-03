@@ -13,7 +13,7 @@ import {
 import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
 import { parseAndFormatName } from '@shared/util'
-import { useSlicerContext } from './SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import { isEmpty } from 'lodash'
 import { useProjectContext } from '@shared/context'
 
@@ -403,10 +403,10 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       if (res?.success && res.operations) {
         return res.operations
       } else {
-        throw { data: { details: 'Failed to create new entity' } }
+        throw { data: { details: `${entityForm.subType} with the name: ${entityForm.label} already exists` } }
       }
     } catch (error: any) {
-      toast.error('Failed to create new entity')
+      toast.error(`${entityForm.subType || entityType} with the name: ${entityForm.label} already exists`)
       throw new Error(error?.data?.details)
     }
   }
