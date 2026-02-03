@@ -695,6 +695,17 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               const parentId = message.summary?.parentId // parentId is the product ID
               if (!parentId) return
 
+              // Check if the product exists in our cache before refetching
+              // This prevents unnecessary API calls for products not in our view
+              let productExistsInCache = false
+              updateCachedData((draft) => {
+                productExistsInCache = draft.pages.some((page) =>
+                  page.products.some((product: ProductNode) => product.id === parentId),
+                )
+              })
+
+              if (!productExistsInCache) return
+
               await refetchProduct(parentId)
             } catch (error) {
               // Silently handle errors to prevent UI disruption
@@ -805,6 +816,71 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         }
       },
       providesTags: provideTagsForVersionsResult,
+      // Subscribes to version entity changes and updates cache accordingly
+      // Handles: create, update, delete operations for grouped versions view
+      onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+          try {
+            const entityId = message.summary?.entityId
+            if (!entityId) return
+
+            // Check if the version exists in our cache before processing
+            // This prevents unnecessary API calls for versions not in our view
+            let versionExistsInCache = false
+            updateCachedData((draft) => {
+              versionExistsInCache = draft.versions.some((version) => version.id === entityId)
+            })
+
+            if (!versionExistsInCache) return
+
+            // Re-fetch the specific version with current filters to check if it still matches
+            // If version was deleted or no longer matches filters, result will be empty
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                {
+                  projectName: arg.projectName,
+                  versionFilter: arg.versionFilter,
+                  productFilter: arg.productFilter,
+                  taskFilter: arg.taskFilter,
+                  folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                  versionIds: [entityId],
+                  first: 1,
+                  ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
+                  ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
+                },
+                {
+                  forceRefetch: true,
+                },
+              ),
+            )
+
+            if (result.error) return
+
+            // Update the cache: update existing or delete if not found
+            updateCachedData((draft) => {
+              const updatedVersion = result.data?.versions?.[0]
+              const index = draft.versions.findIndex((v) => v.id === entityId)
+
+              if (index !== -1) {
+                if (updatedVersion) {
+                  // Preserve the groups metadata from the original version
+                  const originalGroups = draft.versions[index].groups
+                  draft.versions[index] = { ...updatedVersion, groups: originalGroups }
+                } else {
+                  // Version no longer exists or doesn't match filters - remove it
+                  draft.versions.splice(index, 1)
+                }
+              }
+            })
+          } catch (error) {
+            // Silently handle errors to prevent UI disruption
+          }
+        })
+
+        // Cleanup: unsubscribe when cache entry is removed
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
+      },
     }),
   }),
 })
