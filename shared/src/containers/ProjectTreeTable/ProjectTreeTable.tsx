@@ -79,7 +79,7 @@ import {
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy, useSortable, horizontalListSortingStrategy, } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 import { useProjectContext } from '@shared/context'
@@ -501,6 +501,13 @@ export const ProjectTreeTable = ({
   }, [attribFields])
 
   const rowOrderIds = useMemo(() => tableData.map((row) => row.id), [tableData])
+  // Get column IDs for drag-and-drop (exclude non-draggable columns)
+  const columnOrderIds = useMemo(() => {
+    return visibleColumns
+      .map((col) => col.id)
+      .filter((id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID)
+  }, [visibleColumns])
+
   const draggedRowData = useMemo(() => {
     if (!dndActiveId || !sortableRows) return null // Use dndActiveId
     return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
@@ -613,6 +620,7 @@ export const ProjectTreeTable = ({
               isLoading={isLoading}
               readOnlyColumns={readOnlyColumns}
               sortableRows={sortableRows}
+              columnOrderIds={columnOrderIds}
               {...pt?.head}
             />
             <TableBody
@@ -752,6 +760,7 @@ interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   isLoading: boolean
   readOnlyColumns?: string[]
   sortableRows?: boolean
+  columnOrderIds: string[]
 }
 
 const TableHead = ({
@@ -762,6 +771,7 @@ const TableHead = ({
   isLoading,
   readOnlyColumns,
   sortableRows,
+  columnOrderIds,
   ...props
 }: TableHeadProps) => {
   return (
@@ -776,6 +786,7 @@ const TableHead = ({
           isLoading={isLoading}
           readOnlyColumns={readOnlyColumns}
           sortableRows={sortableRows}
+          columnOrderIds={columnOrderIds}
         />
       ))}
     </Styled.TableHeader>
@@ -790,6 +801,7 @@ interface TableHeadRowProps {
   isLoading: boolean
   readOnlyColumns?: string[]
   sortableRows?: boolean
+  columnOrderIds: string[]
 }
 
 const TableHeadRow = ({
@@ -800,6 +812,7 @@ const TableHeadRow = ({
   isLoading,
   readOnlyColumns,
   sortableRows,
+  columnOrderIds,
 }: TableHeadRowProps) => {
   const virtualColumns = columnVirtualizer.getVirtualItems()
   return (
@@ -808,24 +821,30 @@ const TableHeadRow = ({
         //fake empty column to the left for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingLeft }} />
       ) : null}
-      {virtualColumns.map((virtualColumn) => {
-        const header = headerGroup.headers[virtualColumn.index]
+      <SortableContext items={columnOrderIds} strategy={horizontalListSortingStrategy}>
+        {virtualColumns.map((virtualColumn) => {
+          const header = headerGroup.headers[virtualColumn.index]
+          // Exclude certain columns from being draggable
+          const isDraggable =
+            header.id !== DRAG_HANDLE_COLUMN_ID && header.id !== ROW_SELECTION_COLUMN_ID
 
-        return (
-          <TableHeadCell
-            key={header.id}
-            header={header}
-            isLoading={isLoading}
-            isReadOnly={readOnlyColumns?.includes(header.id)}
-            canSort={header.column.getCanSort()}
-            canFilter={header.column.getCanFilter()}
-            canHide={header.column.getCanHide()}
-            canPin={header.column.getCanPin()}
-            canResize={header.column.getCanResize()}
-            sortableRows={sortableRows}
-          />
-        )
-      })}
+          return (
+            <TableHeadCell
+              key={header.id}
+              header={header}
+              isLoading={isLoading}
+              isReadOnly={readOnlyColumns?.includes(header.id)}
+              canSort={header.column.getCanSort()}
+              canFilter={header.column.getCanFilter()}
+              canHide={header.column.getCanHide()}
+              canPin={header.column.getCanPin()}
+              canResize={header.column.getCanResize()}
+              sortableRows={sortableRows}
+              isDraggable={isDraggable}
+            />
+          )
+        })}
+      </SortableContext>
       {virtualPaddingRight ? (
         //fake empty column to the right for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingRight }} />
@@ -844,6 +863,7 @@ interface TableHeadCellProps {
   canResize?: boolean
   isReadOnly?: boolean
   sortableRows?: boolean
+  isDraggable?: boolean
 }
 
 const TableHeadCell = ({
@@ -856,6 +876,7 @@ const TableHeadCell = ({
   canResize,
   isReadOnly,
   sortableRows,
+  isDraggable = true,
 }: TableHeadCellProps) => {
   const { column } = header
   const sorting = column.getIsSorted()
@@ -863,17 +884,34 @@ const TableHeadCell = ({
   const { menuOpen } = useMenuContext()
   const isOpen = menuOpen === menuId
 
+  // useSortable for column drag-and-drop
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: column.id,
+    data: { type: 'column' },
+    disabled: !isDraggable,
+  })
+
+  const dragStyle: CSSProperties = {
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 200 : undefined,
+  }
+
   return (
     <Styled.HeaderCell
+      ref={setNodeRef}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
+        dragging: isDragging,
       })}
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
         width: getColumnWidth('', column.id),
+        ...dragStyle,
       }}
     >
       {header.isPlaceholder ? null : (
@@ -884,6 +922,20 @@ const TableHeadCell = ({
           )}
 
           <Styled.HeaderButtons className="actions" $isOpen={isOpen}>
+            {/* Column drag handle */}
+            {isDraggable && (
+              <button
+                className="column-drag-handle"
+                {...attributes}
+                {...listeners}
+                type="button"
+                title="Drag to reorder column"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Icon icon="drag_indicator" />
+              </button>
+            )}
+
             {(canHide || canPin || canSort) && (
               <ColumnHeaderMenu
                 className="header-menu"
