@@ -892,11 +892,11 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                     draft.versions[index] = { ...latestVersionData, groups: matchedGroups }
                   }
                 } else {
-                  // New version not in cache yet - add with matched groups
-                  draft.versions.push({
-                    ...latestVersionData,
-                    groups: matchedGroups,
-                  })
+                  // New version not in cache yet - add at sorted position with matched groups
+                  const newVersion = { ...latestVersionData, groups: matchedGroups }
+                  const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
+                  const insertIndex = findSortedInsertIndex(draft.versions, newVersion, sortKey, arg.desc || false)
+                  draft.versions.splice(insertIndex, 0, newVersion)
                 }
               }
             })
