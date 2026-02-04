@@ -75,6 +75,7 @@ import { EntityUpdate } from './hooks/useUpdateTableData'
 // dnd-kit imports
 import {
   DragOverlay,
+  useDndContext,
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
@@ -745,11 +746,63 @@ export const ProjectTreeTable = ({
       <>
         {tableUiContent}
         {dragOverlayPortal}
+        <ColumnDragOverlay table={table} />
       </>
     )
   } else {
-    return tableUiContent
+    return (
+      <>
+        {tableUiContent}
+        <ColumnDragOverlay table={table} />
+      </>
+    )
   }
+}
+
+/**
+ * Isolated component for column drag overlay.
+ * This prevents the entire table from re-rendering on every drag frame.
+ */
+interface ColumnDragOverlayProps {
+  table: Table<TableRow>
+}
+
+const ColumnDragOverlay = ({ table }: ColumnDragOverlayProps) => {
+  const { active } = useDndContext()
+
+  // Only process if dragging a column
+  const isColumnDrag = active?.data?.current?.type === 'column'
+  const activeColumnId = isColumnDrag ? (active?.id as string) : null
+
+  const draggedColumnHeader = useMemo(() => {
+    if (!activeColumnId) return null
+    return table.getHeaderGroups()[0]?.headers.find((h) => h.id === activeColumnId) || null
+  }, [activeColumnId, table])
+
+  if (!activeColumnId || !draggedColumnHeader) return null
+
+  return createPortal(
+    <DragOverlay dropAnimation={null}>
+      <Styled.HeaderCell
+        style={{
+          width: draggedColumnHeader.column.getSize(),
+          backgroundColor: 'var(--md-sys-color-surface-container-high)',
+          boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          minHeight: 34,
+        }}
+      >
+        <Styled.TableCellContent className="bold header">
+          {flexRender(
+            draggedColumnHeader.column.columnDef.header,
+            draggedColumnHeader.getContext(),
+          )}
+        </Styled.TableCellContent>
+      </Styled.HeaderCell>
+    </DragOverlay>,
+    document.body,
+  )
 }
 
 interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
@@ -894,8 +947,14 @@ const TableHeadCell = ({
   const dragStyle: CSSProperties = {
     transform: transform ? CSS.Translate.toString(transform) : undefined,
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    visibility: isDragging ? 'hidden' : 'visible',
     zIndex: isDragging ? 200 : undefined,
+  }
+
+  // Stop drag from triggering when clicking action buttons
+  const preventDragFromActions = {
+    onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
+    onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
   }
 
   return (
@@ -906,7 +965,7 @@ const TableHeadCell = ({
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
         dragging: isDragging,
-        draggable: isDraggable
+        draggable: isDraggable,
       })}
       key={header.id}
       style={{
@@ -922,7 +981,7 @@ const TableHeadCell = ({
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
 
-          <Styled.HeaderButtons className="actions" $isOpen={isOpen}>
+          <Styled.HeaderButtons className="actions" $isOpen={isOpen} {...preventDragFromActions}>
             {/* Column drag handle */}
 
             {(canHide || canPin || canSort) && (
@@ -955,8 +1014,12 @@ const TableHeadCell = ({
             <Styled.ResizedHandler
               {...{
                 onDoubleClick: () => column.resetSize(),
-                onMouseDown: header.getResizeHandler(),
+                onMouseDown: (e: React.MouseEvent) => {
+                  e.stopPropagation()
+                  header.getResizeHandler()(e)
+                },
                 onTouchStart: header.getResizeHandler(),
+                onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
                 className: clsx('resize-handle', {
                   resizing: column.getIsResizing(),
                 }),

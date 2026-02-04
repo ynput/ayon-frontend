@@ -27,11 +27,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const allColumnsRef = React.useRef<string[]>([])
   const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const columnOrderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const prevRowHeightRef = React.useRef<number | undefined>(undefined)
   const lockedAspectRatioRef = React.useRef<number | null>(null)
   // Internal state for immediate updates (similar to column sizing)
   const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
   const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
+  const [internalColumnOrder, setInternalColumnOrder] = useState<ColumnOrderState | null>(null)
 
   const setAllColumns = (allColumnIds: string[]) => {
     allColumnsRef.current = Array.from(new Set(allColumnIds))
@@ -69,7 +71,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   const rowHeight = internalRowHeight ?? configRowHeight
 
   const sorting = [...sortingInit]
-  const columnOrder = [...columnOrderInit]
+  // Use internal column order for immediate UI updates, otherwise use config value
+  const columnOrderBase = internalColumnOrder ?? [...columnOrderInit]
+  const columnOrder = [...columnOrderBase]
   const columnPinning = { ...columnPinningInit }
   const defaultOrder = ['thumbnail', 'name', 'subType', 'status', 'tags']
   // for each default column, if it is not in the columnOrder, find the index of the column before it, if none, add to beginning
@@ -217,11 +221,25 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   const updateColumnOrder = (order: ColumnOrderState) => {
     const newPinning = updatePinningOrderOnOrderChange(order)
-    onChangeWithColumns({
-      ...columnsConfig,
-      columnOrder: order,
-      columnPinning: newPinning,
-    })
+
+    // Update UI immediately (optimistic)
+    setInternalColumnOrder(order)
+
+    // Clear any existing timeout to debounce API calls
+    if (columnOrderTimeoutRef.current) {
+      clearTimeout(columnOrderTimeoutRef.current)
+    }
+
+    // Debounce API call to avoid excessive requests
+    columnOrderTimeoutRef.current = setTimeout(() => {
+      onChangeWithColumns({
+        ...columnsConfig,
+        columnOrder: order,
+        columnPinning: newPinning,
+      })
+      // Clear internal state after persistence
+      setInternalColumnOrder(null)
+    }, 300)
   }
 
   const updateColumnPinning = (pinning: ColumnPinningState) => {
