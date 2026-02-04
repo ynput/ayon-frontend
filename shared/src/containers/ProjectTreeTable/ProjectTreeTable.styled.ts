@@ -160,6 +160,12 @@ export const HeaderCell = styled.th`
       display: none;
     }
   }
+  &.draggable {
+    cursor: grab;
+    &:active {
+      cursor: grabbing;
+    }
+  }
 `
 
 export const HeaderButtons = styled.div<{ $isOpen: boolean }>`

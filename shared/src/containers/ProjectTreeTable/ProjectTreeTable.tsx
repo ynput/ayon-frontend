@@ -906,6 +906,7 @@ const TableHeadCell = ({
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
         dragging: isDragging,
+        draggable: isDraggable
       })}
       key={header.id}
       style={{
@@ -915,7 +916,7 @@ const TableHeadCell = ({
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent className={clsx('bold', 'header')}>
+        <Styled.TableCellContent className={clsx('bold', 'header')}  {...(isDraggable ? { ...attributes, ...listeners } : {})}>
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
@@ -923,18 +924,6 @@ const TableHeadCell = ({
 
           <Styled.HeaderButtons className="actions" $isOpen={isOpen}>
             {/* Column drag handle */}
-            {isDraggable && (
-              <button
-                className="column-drag-handle"
-                {...attributes}
-                {...listeners}
-                type="button"
-                title="Drag to reorder column"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Icon icon="drag_indicator" />
-              </button>
-            )}
 
             {(canHide || canPin || canSort) && (
               <ColumnHeaderMenu
