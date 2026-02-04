@@ -849,6 +849,11 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
               ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
             }
+
+            // Track which groups the version belongs to after the update
+            const matchedGroups: { value: string; hasNextPage: undefined }[] = []
+            let latestVersionData: VersionNode | null = null
+
             for (const group of arg.groups) {
               const result = await dispatch(
                 enhancedVersionsPageApi.endpoints.GetVersions.initiate({
@@ -858,40 +863,43 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                 }),
               )
 
-              if (result.data?.versions?.[0]) {
-                updateCachedData((draft) => {
-                  const updatedVersion = result.data?.versions?.[0]
-                  const index = draft.versions.findIndex((v) => v.id === entityId)
-
-                  if (index !== -1) {
-                    if (updatedVersion) {
-                      if (versionExistsInCache) {
-                        // Was already in cache before event - preserve original groups
-                        const originalGroups = draft.versions[index].groups
-                        draft.versions[index] = { ...updatedVersion, groups: originalGroups }
-                      } else {
-                        // New version we're building - add this group if not present
-                        const currentGroups = draft.versions[index].groups || []
-                        const groupExists = currentGroups.some((g) => g.value === group.value)
-                        if (!groupExists) {
-                          currentGroups.push({ value: group.value, hasNextPage: undefined })
-                        }
-                        draft.versions[index] = { ...updatedVersion, groups: currentGroups }
-                      }
-                    } else {
-                      // Version no longer exists or doesn't match filters - remove it
-                      draft.versions.splice(index, 1)
-                    }
-                  } else if (updatedVersion) {
-                    // First group match for new version - add it with groups metadata
-                    draft.versions.push({
-                      ...updatedVersion,
-                      groups: [{ value: group.value, hasNextPage: undefined }],
-                    })
-                  }
-                })
+              const fetchedVersion = result.data?.versions?.[0]
+              if (fetchedVersion) {
+                // Version matches this group's filter
+                matchedGroups.push({ value: group.value, hasNextPage: undefined })
+                latestVersionData = fetchedVersion
               }
             }
+
+            // Now update the cache based on collected results
+            updateCachedData((draft) => {
+              const index = draft.versions.findIndex((v) => v.id === entityId)
+
+              if (matchedGroups.length === 0) {
+                // Version was deleted or no longer matches any group filter - remove it
+                if (index !== -1) {
+                  draft.versions.splice(index, 1)
+                }
+              } else if (latestVersionData) {
+                // Version matches at least one group
+                if (index !== -1) {
+                  if (versionExistsInCache) {
+                    // Existing version - preserve original groups (groups may have pagination state)
+                    const originalGroups = draft.versions[index].groups
+                    draft.versions[index] = { ...latestVersionData, groups: originalGroups }
+                  } else {
+                    // New version being added - use the matched groups
+                    draft.versions[index] = { ...latestVersionData, groups: matchedGroups }
+                  }
+                } else {
+                  // New version not in cache yet - add with matched groups
+                  draft.versions.push({
+                    ...latestVersionData,
+                    groups: matchedGroups,
+                  })
+                }
+              }
+            })
           } catch (error) {
             // Silently handle errors to prevent UI disruption
           }
