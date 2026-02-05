@@ -47,8 +47,12 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
-import PerProjectBundleConfig from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
+import PerProjectBundleConfig, {
+  FROZEN_BUNDLE_ICON,
+  projectBundleFromName,
+} from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 import { useLocalStorage } from '@shared/hooks'
+import InfoMessage from '@components/InfoMessage'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -666,7 +670,11 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           />
           <Spacer />
           {projectName && (
-            <PerProjectBundleConfig projectName={projectName} variant={selectedBundle.variant} />
+            <PerProjectBundleConfig
+              projectName={projectName}
+              variant={selectedBundle.variant}
+              isPerProjectBundle={!!projectBundleFromName(loadedBundleName)}
+            />
           )}
           <CopyBundleSettingsButton
             bundleName={loadedBundleName}
@@ -685,7 +693,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           />
         </Toolbar>
         {projectName ? (
-          <div>{loadedBundleName}</div>
+          <BundlesSelector selected={{ projectBundleName: loadedBundleName }} disabled />
         ) : (
           <BundlesSelector selected={selectedBundle} onChange={setSelectedBundle} />
         )}
@@ -867,7 +875,13 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                         className="transparent nopad"
                         size={1}
                       >
-                        {addon.isProjectBundle && <>Studio scope enabled</>}
+                        {addon.isProjectBundle && (
+                          <InfoMessage
+                            message="The addon settings for this project are frozen to the project bundle.
+                            Studio settings are also displayed alongside project-scoped settings."
+                            icon={FROZEN_BUNDLE_ICON}
+                          />
+                        )}
                         <AddonSettingsPanel
                           addon={addon}
                           updateAddonSchema={onUpdateAddonSchema}

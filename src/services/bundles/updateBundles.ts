@@ -19,6 +19,7 @@ const enhancedProjectsApi = projectsApi.enhanceEndpoints({
     setProjectBundle: {
       invalidatesTags: (_result, _error, { projectName }) => [
         { type: 'bundle', id: projectName },
+        { type: 'bundleList' },
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
         { type: 'addonSettingsList' },
@@ -28,6 +29,7 @@ const enhancedProjectsApi = projectsApi.enhanceEndpoints({
     unsetProjectBundle: {
       invalidatesTags: (_result, _error, { projectName }) => [
         { type: 'bundle', id: projectName },
+        { type: 'bundleList' },
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
         { type: 'addonSettingsList' },
