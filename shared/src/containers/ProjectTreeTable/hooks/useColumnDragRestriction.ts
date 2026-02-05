@@ -10,6 +10,9 @@ interface UseColumnDragRestrictionProps {
 // Data attribute used to identify the table container
 export const TABLE_CONTAINER_ATTR = 'data-column-dnd-container'
 
+// Allow unpinned columns to overlap into pinned section for better UX
+const DRAG_OVERLAP_ALLOWANCE = 100
+
 /**
  * Hook that provides drag restriction logic for column reordering.
  * Prevents dragging columns across pinned/unpinned boundaries.
@@ -50,10 +53,11 @@ export const useColumnDragRestriction = ({
           return { ...transform, x: boundaryX - originalLeft - activeNodeRect.width }
         }
       } else {
-        // Unpinned column can't go past boundary to the left
+        // Unpinned column can overlap slightly into pinned section for better UX
         const leftEdge = originalLeft + transform.x
-        if (leftEdge < boundaryX) {
-          return { ...transform, x: boundaryX - originalLeft }
+        const minAllowedLeft = boundaryX - DRAG_OVERLAP_ALLOWANCE
+        if (leftEdge < minAllowedLeft) {
+          return { ...transform, x: minAllowedLeft - originalLeft }
         }
       }
       return transform
