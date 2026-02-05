@@ -18,9 +18,9 @@ function escapeHtml(unsafe: string) {
 }
 
 // TODO: Use a proper syntax highlighter library for more features
-function syntaxHighlight(json: string) {
+function syntaxHighlight(code: string) {
   // regex adapted for JSON token highlighting
-  return escapeHtml(json).replace(
+  return escapeHtml(code).replace(
     /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
     (match) => {
       let color = '#a626a4' // string / key default
@@ -90,6 +90,13 @@ export const SyntaxHighlighter = ({
             role="button"
             aria-label="Copy code"
             onClick={copyToClipboard}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                copyToClipboard()
+              }
+            }}
+            tabIndex={0}
             className="details-dialog__copy"
           >
             <Icon icon={!copied ? "content_copy" : "check"} data-tooltip="Copy to clipboard" />
