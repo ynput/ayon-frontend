@@ -88,7 +88,7 @@ export const SyntaxHighlighter = ({
         {showCopyButton && (
           <div
             role="button"
-            aria-label="Copy JSON"
+            aria-label="Copy code"
             onClick={copyToClipboard}
             className="details-dialog__copy"
           >
