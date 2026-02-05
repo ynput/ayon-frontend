@@ -828,13 +828,6 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             const entityId = message.summary?.entityId
             if (!entityId) return
 
-            // Check if the version exists in our cache before processing
-            // Used to distinguish between existing versions (preserve groups) and new versions (build groups)
-            let versionExistsInCache = false
-            updateCachedData((draft) => {
-              versionExistsInCache = draft.versions.some((version) => version.id === entityId)
-            })
-
             // Re-fetch the specific version with current filters to check if it still matches
             // If version was deleted or no longer matches filters, result will be empty
 
@@ -856,11 +849,14 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
             for (const group of arg.groups) {
               const result = await dispatch(
-                enhancedVersionsPageApi.endpoints.GetVersions.initiate({
-                  ...baseFilters,
-                  [arg.groupFilterKey as string]: group.filter, // group-specific filter
-                  versionIds: [entityId],
-                }),
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                  {
+                    ...baseFilters,
+                    [arg.groupFilterKey as string]: group.filter, // group-specific filter
+                    versionIds: [entityId],
+                  },
+                  { forceRefetch: true }, // Force fresh data to detect group membership changes
+                ),
               )
 
               const fetchedVersion = result.data?.versions?.[0]
@@ -874,22 +870,30 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             // Now update the cache based on collected results
             updateCachedData((draft) => {
               const index = draft.versions.findIndex((v) => v.id === entityId)
+              const versionExistsInCache = index !== -1
 
               if (matchedGroups.length === 0) {
                 // Version was deleted or no longer matches any group filter - remove it
-                if (index !== -1) {
+                if (versionExistsInCache) {
                   draft.versions.splice(index, 1)
                 }
               } else if (latestVersionData) {
                 // Version matches at least one group
-                if (index !== -1) {
-                  if (versionExistsInCache) {
-                    // Existing version - preserve original groups (groups may have pagination state)
-                    const originalGroups = draft.versions[index].groups
-                    draft.versions[index] = { ...latestVersionData, groups: originalGroups }
-                  } else {
-                    // New version being added - use the matched groups
+                if (versionExistsInCache) {
+                  const originalGroups = draft.versions[index].groups || []
+                  // Check if group membership has changed (comparing group values)
+                  const originalGroupValues = originalGroups.map((g) => g.value).sort()
+                  const matchedGroupValues = matchedGroups.map((g) => g.value).sort()
+                  const groupsChanged =
+                    originalGroupValues.length !== matchedGroupValues.length ||
+                    originalGroupValues.some((v, i) => v !== matchedGroupValues[i])
+
+                  if (groupsChanged) {
+                    // Group membership changed - use new matched groups (version moved to different group)
                     draft.versions[index] = { ...latestVersionData, groups: matchedGroups }
+                  } else {
+                    // Same groups - preserve original groups (keeps pagination state like hasNextPage)
+                    draft.versions[index] = { ...latestVersionData, groups: originalGroups }
                   }
                 } else {
                   // New version not in cache yet - add at sorted position with matched groups
