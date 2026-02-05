@@ -46,6 +46,7 @@ const PerProjectBundleConfig: FC<PerProjectBundleConfigProps> = ({
           projectName={projectName}
           onClose={() => setDialogOpen(false)}
           variant={variant}
+          isFrozen={isPerProjectBundle}
         />
       )}
     </>

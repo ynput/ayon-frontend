@@ -9,6 +9,8 @@ import {
   useSetProjectBundleMutation,
   useUnsetProjectBundleMutation,
 } from '@queries/bundles/updateBundles'
+import clsx from 'clsx'
+import InfoMessage from '@components/InfoMessage'
 
 //
 // Styled Components
@@ -21,12 +23,18 @@ const StyledDialog = styled(Dialog)`
     gap: 16px;
     padding-top: 0;
   }
+
+  h2 {
+    margin-bottom: 0;
+    margin-top: 10px;
+  }
 `
 
 const AddonForm = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  transition: opacity 0.2s ease;
 
   .addon-row {
     display: flex;
@@ -63,25 +71,37 @@ type ProjectBundleForm = {
 interface PerProjectBundleDialogProps {
   projectName: string
   variant: string
+  isFrozen?: boolean
   onClose: () => void
 }
 
 const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
   projectName,
   variant,
+  isFrozen,
   onClose,
 }) => {
   const [formData, setFormData] = useState<ProjectBundleForm | null>(null)
 
-  const { data, isLoading: queryLoading } = useGetProjectBundleInfoQuery({
+  const {
+    data,
+    isFetching: queryFetching,
+    error: queryError,
+  } = useGetProjectBundleInfoQuery({
     projectName,
     variant: variant as 'production' | 'staging',
   })
 
-  const [setProjectBundle, { isLoading: isSetting }] = useSetProjectBundleMutation()
-  const [unsetProjectBundle, { isLoading: isUnsetting }] = useUnsetProjectBundleMutation()
+  const [setProjectBundle, { isLoading: isSetting, error: setError }] =
+    useSetProjectBundleMutation()
+  const [unsetProjectBundle, { isLoading: isUnsetting, error: unsetError }] =
+    useUnsetProjectBundleMutation()
 
-  const isLoading = queryLoading || isSetting || isUnsetting
+  const isLoading = queryFetching
+  const isUpdating = isSetting || isUnsetting
+  const error = queryError || setError || unsetError
+  // @ts-ignore
+  const errorMessage = error?.data?.detail || error?.message || (error ? 'An error occurred' : null)
 
   useEffect(() => {
     if (data) {
@@ -181,88 +201,22 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
     })
   }
 
-  const installerForm = useMemo(() => {
-    if (!formData) return null
-    return (
-      <AddonForm>
-        <div className="addon-row">
-          <label htmlFor="installerVersion">Installer Version</label>
-          <Dropdown
-            id="installerVersion"
-            options={formData.installerOptions.map((opt) => ({ label: opt, value: opt }))}
-            value={formData.installerVersion ? [formData.installerVersion] : []}
-            onChange={handleInstallerChange}
-            placeholder="Select installer version"
-            style={{ minWidth: '200px' }}
-          />
-        </div>
-      </AddonForm>
-    )
-  }, [formData])
-
-  const dependencyPackageForm = useMemo(() => {
-    if (!formData) return null
-    return (
-      <AddonForm>
-        {['windows', 'linux', 'darwin'].map((platform) => {
-          const options = [{ label: 'None', value: '__none__' }]
-
-          for (const option of formData.dependencyPackageOptions[platform]) {
-            options.push({ label: option, value: option })
-          }
-
-          return (
-            <div className="addon-row">
-              <label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</label>
-              <Dropdown
-                options={options}
-                value={
-                  formData.dependencyPackages[platform]
-                    ? [formData.dependencyPackages[platform]]
-                    : ['__none__']
-                }
-                onChange={(value) => handleDependencyPackageChange(value, platform)}
-                style={{ minWidth: '300px' }}
-                multiSelect={false}
-              />
-            </div>
-          )
-        })}
-      </AddonForm>
-    )
-  }, [formData])
-
-  const addonForm = useMemo(() => {
-    if (!formData) return null
-    return (
-      <AddonForm>
-        {formData.addonMetadata.map((meta: AddonMetadata) => {
-          return (
-            <div className="addon-row" key={meta.name}>
-              <label htmlFor={meta.name}>{meta.label}</label>
-              <Dropdown
-                id={meta.name}
-                options={meta.options}
-                value={[formData.addons[meta.name] || '__inherit__']}
-                onChange={(value) => handleAddonChange(value, meta.name)}
-                placeholder="Select version"
-                style={{ minWidth: '200px' }}
-              />
-            </div>
-          )
-        })}
-      </AddonForm>
-    )
-  }, [formData])
-
   const footer = useMemo(
     () => (
       <>
-        <Button onClick={handleUnfreeze} disabled={isLoading} label="Unfreeze" />
-        <SaveButton onClick={handleFreeze} active={true} saving={isLoading} label="Freeze" />
+        {isFrozen && (
+          <Button onClick={handleUnfreeze} disabled={isLoading || isUpdating} label="Unfreeze" />
+        )}
+        <SaveButton
+          onClick={handleFreeze}
+          active={!isLoading && !isUpdating}
+          saving={isUpdating}
+          label={isFrozen ? 'Update Freeze' : 'Freeze'}
+          icon="lock"
+        />
       </>
     ),
-    [isLoading, handleFreeze, handleUnfreeze],
+    [isLoading, isUpdating, handleFreeze, handleUnfreeze],
   )
 
   return (
@@ -273,17 +227,72 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       size="md"
       footer={footer}
     >
-      {!isLoading && formData ? (
-        <>
-          {installerForm}
-          <h2>Dependency Packages</h2>
-          {dependencyPackageForm}
-          <h2>Addons</h2>
-          {addonForm}
-        </>
-      ) : (
-        'Loading...'
-      )}
+      <AddonForm className={clsx({ loading: isLoading })}>
+        <div className="addon-row">
+          <label htmlFor="installerVersion">Installer Version</label>
+          <Dropdown
+            id="installerVersion"
+            options={formData?.installerOptions.map((opt) => ({ label: opt, value: opt })) || []}
+            value={formData?.installerVersion ? [formData.installerVersion] : []}
+            onChange={handleInstallerChange}
+            placeholder="Select installer version"
+            style={{ minWidth: '200px' }}
+            disabled={isLoading}
+          />
+        </div>
+      </AddonForm>
+
+      <h2>Dependency Packages</h2>
+      <AddonForm className={clsx({ loading: isLoading })}>
+        {['windows', 'linux', 'darwin'].map((platform) => {
+          const options = [{ label: 'None', value: '__none__' }]
+
+          if (formData?.dependencyPackageOptions[platform]) {
+            for (const option of formData.dependencyPackageOptions[platform]) {
+              options.push({ label: option, value: option })
+            }
+          }
+
+          return (
+            <div className="addon-row" key={platform}>
+              <label>{platform.charAt(0).toUpperCase() + platform.slice(1)}</label>
+              <Dropdown
+                options={options}
+                value={
+                  formData?.dependencyPackages[platform]
+                    ? [formData.dependencyPackages[platform]]
+                    : ['__none__']
+                }
+                onChange={(value) => handleDependencyPackageChange(value, platform)}
+                style={{ minWidth: '300px' }}
+                multiSelect={false}
+                disabled={isLoading}
+              />
+            </div>
+          )
+        })}
+      </AddonForm>
+
+      <h2>Addons</h2>
+      <AddonForm className={clsx({ loading: isLoading })}>
+        {formData?.addonMetadata.map((meta: AddonMetadata) => {
+          return (
+            <div className="addon-row" key={meta.name}>
+              <label htmlFor={meta.name}>{meta.label}</label>
+              <Dropdown
+                id={meta.name}
+                options={meta.options}
+                value={[formData.addons[meta.name] || '__inherit__']}
+                onChange={(value) => handleAddonChange(value, meta.name)}
+                placeholder="Select version"
+                style={{ minWidth: '200px' }}
+                disabled={isLoading}
+              />
+            </div>
+          )
+        })}
+      </AddonForm>
+      {errorMessage && <InfoMessage variant="error" message={errorMessage} />}
     </StyledDialog>
   )
 }
