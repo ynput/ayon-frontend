@@ -20,18 +20,25 @@ interface ColumnDndProviderProps {
   children: ReactNode
 }
 
-// Constants
-const MIN_SCROLL_SPEED = 5
-const MAX_SCROLL_SPEED = 15
-const DROP_THRESHOLD = 50 // Distance from boundary for dropping at first position
+const SCROLL_SPEED = 25
+const SCROLL_ZONE = 100
+const DROP_THRESHOLD = 50
 const SPECIAL_COLUMNS = ['drag-handle', '__row_selection__']
 
 const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
   const { columnOrder, updateColumnOrder, columnPinning, columnSizing } = useColumnSettingsContext()
-  const { restrictToSection, setDragPinnedState, clearDragPinnedState, activePinnedState } =
+  const { restrictToSection, setDragPinnedState, clearDragPinnedState, activePinnedState, setCachedBoundary } =
     useColumnDragRestriction({ columnPinning, columnSizing })
 
-  const cursorXRef = useRef<number>(0)
+  // Cached values during drag
+  const dragCache = useRef({
+    cursorX: 0,
+    container: null as HTMLElement | null,
+    boundaryX: 0,
+    containerLeft: 0,
+    containerRight: 0,
+    scrollRAF: null as number | null,
+  })
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
@@ -41,13 +48,11 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
 
   const pinnedColumns = columnPinning.left || []
 
-  const getBoundaryX = useCallback(() => {
-    const container = document.querySelector('[data-column-dnd-container]') as HTMLElement
+  const calculateBoundaryX = useCallback(() => {
+    const container = dragCache.current.container
     if (!container) return 0
-    const lastPinnedHeader = container.querySelector('th.last-pinned-left')
-    if (lastPinnedHeader) {
-      return lastPinnedHeader.getBoundingClientRect().right
-    }
+    const lastPinned = container.querySelector('th.last-pinned-left')
+    if (lastPinned) return lastPinned.getBoundingClientRect().right
     const pinnedWidth = pinnedColumns.reduce((w, id) => w + (columnSizing[id] || 150), 24)
     return container.getBoundingClientRect().left + pinnedWidth
   }, [pinnedColumns, columnSizing])
@@ -59,41 +64,47 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
   const customCollisionDetection: CollisionDetection = useCallback(
     (args) => {
       const { active, droppableContainers } = args
-
       if (active?.data.current?.type !== 'column' || activePinnedState !== false) {
         return closestCenter(args)
       }
 
-      // Use actual cursor position to detect if user wants to drop at first position
-      const cursorX = cursorXRef.current
-      const boundaryX = getBoundaryX()
-
-      if (cursorX <= boundaryX + DROP_THRESHOLD) {
+      if (dragCache.current.cursorX <= dragCache.current.boundaryX + DROP_THRESHOLD) {
         const firstUnpinnedId = columnOrder.find(
           (id) => !pinnedColumns.includes(id) && !SPECIAL_COLUMNS.includes(id),
         )
         if (firstUnpinnedId && firstUnpinnedId !== active.id) {
           const container = droppableContainers.find((c) => c.id === firstUnpinnedId)
-          if (container) {
-            return [{ id: firstUnpinnedId, data: { droppableContainer: container } }]
-          }
+          if (container) return [{ id: firstUnpinnedId, data: { droppableContainer: container } }]
         }
       }
-
       return closestCenter(args)
     },
-    [activePinnedState, columnOrder, pinnedColumns, getBoundaryX],
+    [activePinnedState, columnOrder, pinnedColumns],
   )
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    cursorXRef.current = e.clientX
+    dragCache.current.cursorX = e.clientX
   }, [])
 
   const handleDragStart = (event: DragStartEvent) => {
-    if (event.active.data.current?.type === 'column') {
-      setDragPinnedState(event.active.id as string)
-      window.addEventListener('mousemove', handleMouseMove)
-    }
+    if (event.active.data.current?.type !== 'column') return
+
+    const container = document.querySelector('[data-column-dnd-container]') as HTMLElement
+    const rect = container?.getBoundingClientRect()
+
+    dragCache.current.container = container
+    dragCache.current.containerLeft = rect?.left ?? 0
+    dragCache.current.containerRight = rect?.right ?? 0
+    dragCache.current.boundaryX = calculateBoundaryX()
+
+    setDragPinnedState(event.active.id as string)
+    setCachedBoundary(dragCache.current.boundaryX)
+    window.addEventListener('mousemove', handleMouseMove)
+  }
+
+  const clearDragCache = () => {
+    if (dragCache.current.scrollRAF) cancelAnimationFrame(dragCache.current.scrollRAF)
+    dragCache.current = { cursorX: 0, container: null, boundaryX: 0, containerLeft: 0, containerRight: 0, scrollRAF: null }
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -101,62 +112,73 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
     window.removeEventListener('mousemove', handleMouseMove)
 
     const { active, over } = event
-
-    if (!active || active.data.current?.type !== 'column') return
+    if (!active || active.data.current?.type !== 'column') {
+      clearDragCache()
+      return
+    }
 
     const activeId = active.id as string
     const isActivePinned = pinnedColumns.includes(activeId)
 
-    if (!over || active.id === over.id) {
-      if (!isActivePinned && event.active.rect.current.translated) {
-        const draggedLeftEdge = event.active.rect.current.translated.left
-        if (draggedLeftEdge <= getBoundaryX() + DROP_THRESHOLD) {
-          const firstIdx = getFirstUnpinnedIndex()
-          const oldIdx = columnOrder.indexOf(activeId)
-          if (firstIdx !== -1 && oldIdx !== -1 && oldIdx !== firstIdx) {
-            updateColumnOrder(arrayMove(columnOrder, oldIdx, firstIdx))
-          }
+    // Handle drop at first unpinned position
+    if ((!over || active.id === over.id) && !isActivePinned && event.active.rect.current.translated) {
+      if (event.active.rect.current.translated.left <= dragCache.current.boundaryX + DROP_THRESHOLD) {
+        const firstIdx = getFirstUnpinnedIndex()
+        const oldIdx = columnOrder.indexOf(activeId)
+        if (firstIdx !== -1 && oldIdx !== -1 && oldIdx !== firstIdx) {
+          updateColumnOrder(arrayMove(columnOrder, oldIdx, firstIdx))
         }
       }
+      clearDragCache()
       return
     }
 
-    const overId = over.id as string
-    if (isActivePinned !== pinnedColumns.includes(overId)) return
+    if (!over || isActivePinned !== pinnedColumns.includes(over.id as string)) {
+      clearDragCache()
+      return
+    }
 
     const oldIdx = columnOrder.indexOf(activeId)
-    const newIdx = columnOrder.indexOf(overId)
-    if (oldIdx !== -1 && newIdx !== -1) {
-      updateColumnOrder(arrayMove(columnOrder, oldIdx, newIdx))
-    }
+    const newIdx = columnOrder.indexOf(over.id as string)
+    if (oldIdx !== -1 && newIdx !== -1) updateColumnOrder(arrayMove(columnOrder, oldIdx, newIdx))
+    clearDragCache()
   }
 
   const handleDragCancel = () => {
     clearDragPinnedState()
+    clearDragCache()
     window.removeEventListener('mousemove', handleMouseMove)
   }
 
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
-      if (event.active.data.current?.type !== 'column' || activePinnedState !== false) return
+      if (event.active.data.current?.type !== 'column') return
 
-      const container = document.querySelector('[data-column-dnd-container]') as HTMLElement
+      const { container, cursorX, boundaryX, containerLeft, containerRight } = dragCache.current
       if (!container) return
 
-      const cursorX = cursorXRef.current
-      const containerRect = container.getBoundingClientRect()
-    const boundaryX = getBoundaryX()
-      const pinnedStart = containerRect.left
+      if (dragCache.current.scrollRAF) cancelAnimationFrame(dragCache.current.scrollRAF)
 
-      if (cursorX <= boundaryX) {
-        const pinnedWidth = boundaryX - pinnedStart
-        const distanceIntoPinned = boundaryX - cursorX
-        const progress = Math.min(distanceIntoPinned / pinnedWidth, 1)
-        const speed = MIN_SCROLL_SPEED + (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED) * progress
-        container.scrollLeft -= speed
+      let scrollDelta = 0
+
+      // Scroll left when cursor enters pinned section (unpinned columns only)
+      if (activePinnedState === false && cursorX <= boundaryX) {
+        const progress = Math.min((boundaryX - cursorX) / (boundaryX - containerLeft), 1)
+        scrollDelta = -SCROLL_SPEED * (0.5 + progress * 0.5)
+      }
+      // Scroll right when cursor near right edge
+      else if (cursorX >= containerRight - SCROLL_ZONE) {
+        const progress = Math.min((cursorX - (containerRight - SCROLL_ZONE)) / SCROLL_ZONE, 1)
+        scrollDelta = SCROLL_SPEED * (0.5 + progress * 0.5)
+      }
+
+      if (scrollDelta !== 0) {
+        dragCache.current.scrollRAF = requestAnimationFrame(() => {
+          container.scrollLeft += scrollDelta
+        })
       }
     },
-    [activePinnedState, getBoundaryX],
+    [activePinnedState],
   )
 
   return (
