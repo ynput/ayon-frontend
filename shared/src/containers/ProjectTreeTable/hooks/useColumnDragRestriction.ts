@@ -47,10 +47,11 @@ export const useColumnDragRestriction = ({
       const originalLeft = draggingNodeRect?.left ?? activeNodeRect.left
 
       if (activePinnedState) {
-        // Pinned column can't go past boundary to the right
+        // Pinned column can overlap slightly into unpinned section for better UX
         const rightEdge = originalLeft + activeNodeRect.width + transform.x
-        if (rightEdge > boundaryX) {
-          return { ...transform, x: boundaryX - originalLeft - activeNodeRect.width }
+        const maxAllowedRight = boundaryX + DRAG_OVERLAP_ALLOWANCE
+        if (rightEdge > maxAllowedRight) {
+          return { ...transform, x: maxAllowedRight - originalLeft - activeNodeRect.width }
         }
       } else {
         // Unpinned column can overlap slightly into pinned section for better UX
