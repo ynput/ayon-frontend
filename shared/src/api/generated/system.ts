@@ -280,8 +280,9 @@ export type InfoResponseModel = {
   /** No admin user exists, display 'Create admin user' form */
   noAdminUser?: boolean
   onboarding?: boolean
-  /** If set, the changelog will not be shown to the user */
   disableChangelog?: boolean
+  disableFeedback?: boolean
+  offlineMode?: boolean
   /** Password authentication will not be shown on the login page */
   hidePasswordAuth?: boolean
   passwordRecoveryAvailable?: boolean
