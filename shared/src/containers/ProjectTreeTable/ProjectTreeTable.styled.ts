@@ -122,6 +122,7 @@ export const HeaderCell = styled.th`
 
     .actions {
       display: flex !important;
+      background-color: var(--md-sys-color-surface-container-lowest-hover); 
     }
 
     .actions .header-menu {
