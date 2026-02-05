@@ -43,7 +43,7 @@ export const TextWidgetInput = forwardRef<HTMLInputElement, TextWidgetInputProps
       // convert inputValue to string for consistent processing
       const inputStr =
         inputValue !== undefined && inputValue !== null ? String(inputValue).trim() : ''
-      if (!inputValue) return ''
+      if (inputValue === undefined || inputValue === null) return ''
 
       // Handle empty values
       if (inputStr === '') {

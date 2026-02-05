@@ -22,7 +22,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
-import { RankingInfo, rankItem, compareItems } from '@tanstack/match-sorter-utils'
+import { RankingInfo, rankItem, compareItems, rankings } from '@tanstack/match-sorter-utils'
 import { useSimpleTableContext } from './context/SimpleTableContext'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components'
@@ -67,8 +67,9 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
     )
   }
 
-  // Rank the item
-  const itemRank = rankItem(searchString, searchValue)
+  // Rank the item with CONTAINS threshold to avoid overly permissive fuzzy matches
+  // This ensures the search term must be a substring, not just scattered characters
+  const itemRank = rankItem(searchString, searchValue, { threshold: rankings.CONTAINS })
 
   // Store the itemRank info
   addMeta({
