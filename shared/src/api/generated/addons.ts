@@ -672,8 +672,12 @@ export type AddonSettingsItemModel = {
   reason?: {
     [key: string]: string
   }
+  /** Indicates if the addon is part of the project bundle */
+  isProjectBundle?: boolean
 }
 export type AllSettingsResponseModel = {
+  /** If specified, indicates that the settings are for a project */
+  projectName?: string
   bundleName: string
   addons?: AddonSettingsItemModel[]
   /** If a project bundle is used, this field contains alist of addons that are inherited from the studio bundle */
