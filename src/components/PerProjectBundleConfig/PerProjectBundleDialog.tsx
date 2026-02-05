@@ -1,6 +1,6 @@
 import { EnumItem } from '@shared/api'
 
-import { Button, Dialog, Dropdown, SaveButton } from '@ynput/ayon-react-components'
+import { Button, Dialog, Dropdown, SaveButton, ScrollPanel } from '@ynput/ayon-react-components'
 import { FC, useEffect, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -25,8 +25,8 @@ const StyledDialog = styled(Dialog)`
   }
 
   h2 {
-    margin-bottom: 0;
-    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-top: 14px;
   }
 `
 
@@ -35,6 +35,7 @@ const AddonForm = styled.div`
   flex-direction: column;
   gap: 4px;
   transition: opacity 0.2s ease;
+  padding-right: 8px;
 
   .addon-row {
     display: flex;
@@ -225,8 +226,11 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       isOpen
       header={`Freeze ${variant} bundle for ${projectName}`}
       size="md"
+      style={{ height: '80vh'}}
       footer={footer}
     >
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px',  width: "100%", height: "100%" }}>
+      <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
       <AddonForm className={clsx({ loading: isLoading })}>
         <div className="addon-row">
           <label htmlFor="installerVersion">Installer Version</label>
@@ -292,7 +296,9 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
           )
         })}
       </AddonForm>
+      </ScrollPanel>
       {errorMessage && <InfoMessage variant="error" message={errorMessage} />}
+    </div>
     </StyledDialog>
   )
 }
