@@ -19,7 +19,6 @@ import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@shared/containers/Slicer'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
-import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 import {
   ProjectFoldersContextProvider,
@@ -70,7 +69,7 @@ const ProjectPageInner = () => {
    */
   const { siteInfo } = useGlobalContext()
   const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
-  const { projectName, isLoading, error, isUninitialized, refetch } = useProjectContext()
+  const { projectName, isLoading, error } = useProjectContext()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
@@ -96,8 +95,6 @@ const ProjectPageInner = () => {
     data: addonsData = [],
     isLoading: addonsLoading,
     isError: addonsIsError,
-    refetch: refetchAddons,
-    isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
   // find out if and what version of the review addon is installed
@@ -112,13 +109,6 @@ const ProjectPageInner = () => {
       // redirect to project manager
     }
   }, [addonsLoading, addonsIsError, addonsData, projectName, dispatch])
-
-  const loadProjectData = () => {
-    if (!isUninitialized && !addonsIsUninitialized && !isLoading && !addonsLoading) {
-      refetch()
-      refetchAddons()
-    }
-  }
 
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
@@ -366,7 +356,6 @@ const ProjectPageInner = () => {
         </EntityListsProvider>
         <UploadVersionDialog />
       </VersionUploadProvider>
-      <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
     </ProjectContextProvider>
   )
 }
