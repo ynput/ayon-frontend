@@ -115,6 +115,7 @@ export const HeaderCell = styled.th`
   white-space: nowrap;
 
   &:hover {
+    background-color: var(--md-sys-color-surface-container-lowest-hover);
     .resize-handle {
       opacity: 1;
     }
@@ -127,10 +128,6 @@ export const HeaderCell = styled.th`
       display: flex !important;
     }
 
-    .actions .column-drag-handle {
-      opacity: 0.5;
-      visibility: visible;
-    }
   }
 
   /* Hide action buttons when resizing */
@@ -188,45 +185,26 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   background-color: var(--md-sys-color-surface-container-lowest);
   padding-left: 4px;
 
-  /* Column drag handle styles */
-  .column-drag-handle {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-    cursor: grab;
-    background: transparent;
-    border: none;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--md-sys-color-outline);
-
-    &:hover {
-      opacity: 1 !important;
-      color: var(--md-sys-color-on-surface);
-    }
-
-    &:active {
-      cursor: grabbing;
-    }
-  }
-
   .resizing & {
     cursor: col-resize !important;
   }
 
+
   &:has(.sort-button.visible),
-  &:has(.sort-button.selected) {
+  &:has(.sort-button.selected),
+  &:has(.pin-button.visible),
+  &:has(.pin-button.selected) {
     display: flex !important;
   }
 
-  .sort-button.visible {
+  .sort-button.visible,
+  .sort-button.selected,
+  .pin-button.visible,
+  .pin-button.selected {
     display: flex !important;
   }
-
-  .sort-button.selected {
-    display: flex !important;
+  .pin-button{
+    font-variation-settings: 'FILL' 1,'wght' 200,'GRAD' 200,'opsz' 10;
   }
 
   .header-menu {
@@ -248,6 +226,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
 
   .resizing & {
     .sort-button,
+    .pin-button,
     .header-menu {
       display: none !important;
     }

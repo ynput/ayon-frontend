@@ -502,12 +502,13 @@ export const ProjectTreeTable = ({
   }, [attribFields])
 
   const rowOrderIds = useMemo(() => tableData.map((row) => row.id), [tableData])
-  // Get column IDs for drag-and-drop (exclude non-draggable columns)
+  // Get column IDs for drag-and-drop from context columnOrder (exclude non-draggable columns)
+  // This ensures SortableContext items match what the drag handlers use
   const columnOrderIds = useMemo(() => {
-    return visibleColumns
-      .map((col) => col.id)
-      .filter((id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID)
-  }, [visibleColumns])
+    return columnOrder.filter(
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+    )
+  }, [columnOrder])
 
   const draggedRowData = useMemo(() => {
     if (!dndActiveId || !sortableRows) return null // Use dndActiveId
@@ -595,6 +596,7 @@ export const ProjectTreeTable = ({
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
+          data-column-dnd-container
           className={clsx(
             'table-container',
             {
@@ -936,22 +938,38 @@ const TableHeadCell = ({
   const menuId = `column-header-menu-${column.id}`
   const { menuOpen } = useMenuContext()
   const isOpen = menuOpen === menuId
+  const { columnPinning } = useColumnSettingsContext()
+
+  // Check if this column is pinned
+  const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
 
   // useSortable for column drag-and-drop
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: column.id,
-    data: { type: 'column' },
+    data: { type: 'column', isPinned: isThisColumnPinned },
     disabled: !isDraggable,
   })
 
-  const dragStyle: CSSProperties = {
-    transform: transform ? CSS.Translate.toString(transform) : undefined,
-    transition,
-    visibility: isDragging ? 'hidden' : 'visible',
-    zIndex: isDragging ? 200 : undefined,
+  // Get active drag info for visual feedback
+  const { active } = useDndContext()
+  const isColumnDrag = active?.data?.current?.type === 'column'
+  const isDraggedColumnPinned = active?.data?.current?.isPinned ?? false
+  const isDraggingInSameSection = isColumnDrag && isDraggedColumnPinned === isThisColumnPinned
+
+  // Build drag styles
+  const getDragStyle = (): CSSProperties => {
+    if (isDragging) {
+      return { transform: CSS.Translate.toString(transform!), transition, visibility: 'hidden', zIndex: 200 }
+    }
+    if (isDraggingInSameSection && transform) {
+      // For pinned columns, temporarily remove sticky positioning during drag animation
+      const pinnedOverride = isThisColumnPinned ? { position: 'relative' as const, left: 'auto' } : {}
+      return { transform: CSS.Translate.toString(transform), transition, ...pinnedOverride }
+    }
+    return {}
   }
 
-  // Stop drag from triggering when clicking action buttons
+  // Prevent drag when clicking action buttons
   const preventDragFromActions = {
     onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
     onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
@@ -971,7 +989,7 @@ const TableHeadCell = ({
       style={{
         ...getCommonPinningStyles(column),
         width: getColumnWidth('', column.id),
-        ...dragStyle,
+        ...getDragStyle(),
       }}
     >
       {header.isPlaceholder ? null : (
@@ -1007,6 +1025,16 @@ const TableHeadCell = ({
                 }}
                 onClick={column.getToggleSortingHandler()}
                 selected={!!column.getIsSorted()}
+              />
+            )}
+
+            {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}
+            {column.getIsPinned() && column.id !== ROW_SELECTION_COLUMN_ID && (
+              <HeaderActionButton
+                icon="push_pin"
+                className={clsx('pin-button', 'visible')}
+                onClick={() => column.pin(false)}
+                selected
               />
             )}
           </Styled.HeaderButtons>

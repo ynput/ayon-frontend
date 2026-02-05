@@ -220,10 +220,15 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   const updateColumnOrder = (order: ColumnOrderState) => {
-    const newPinning = updatePinningOrderOnOrderChange(order)
+    // Filter out special columns that are added dynamically
+    const filteredOrder = order.filter(
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+    )
+
+    const newPinning = updatePinningOrderOnOrderChange(filteredOrder)
 
     // Update UI immediately (optimistic)
-    setInternalColumnOrder(order)
+    setInternalColumnOrder(filteredOrder)
 
     // Clear any existing timeout to debounce API calls
     if (columnOrderTimeoutRef.current) {
@@ -234,7 +239,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     columnOrderTimeoutRef.current = setTimeout(() => {
       onChangeWithColumns({
         ...columnsConfig,
-        columnOrder: order,
+        columnOrder: filteredOrder,
         columnPinning: newPinning,
       })
       // Clear internal state after persistence
