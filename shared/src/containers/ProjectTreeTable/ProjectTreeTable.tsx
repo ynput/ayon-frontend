@@ -870,6 +870,10 @@ const TableHeadRow = ({
   columnOrderIds,
 }: TableHeadRowProps) => {
   const virtualColumns = columnVirtualizer.getVirtualItems()
+  const { active } = useDndContext()
+  const isColumnDrag = active?.data?.current?.type === 'column'
+  const isDraggedColumnPinned = isColumnDrag && (active?.data?.current?.isPinned ?? false)
+
   return (
     <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
       {virtualPaddingLeft ? (
@@ -896,6 +900,8 @@ const TableHeadRow = ({
               canResize={header.column.getCanResize()}
               sortableRows={sortableRows}
               isDraggable={isDraggable}
+              isColumnDrag={isColumnDrag}
+              isDraggedColumnPinned={isDraggedColumnPinned}
             />
           )
         })}
@@ -919,6 +925,8 @@ interface TableHeadCellProps {
   isReadOnly?: boolean
   sortableRows?: boolean
   isDraggable?: boolean
+  isColumnDrag?: boolean
+  isDraggedColumnPinned?: boolean
 }
 
 const TableHeadCell = ({
@@ -932,6 +940,8 @@ const TableHeadCell = ({
   isReadOnly,
   sortableRows,
   isDraggable = true,
+  isColumnDrag,
+  isDraggedColumnPinned,
 }: TableHeadCellProps) => {
   const { column } = header
   const sorting = column.getIsSorted()
@@ -950,10 +960,6 @@ const TableHeadCell = ({
     disabled: !isDraggable,
   })
 
-  // Get active drag info for visual feedback
-  const { active } = useDndContext()
-  const isColumnDrag = active?.data?.current?.type === 'column'
-  const isDraggedColumnPinned = active?.data?.current?.isPinned ?? false
   const isDraggingInSameSection = isColumnDrag && isDraggedColumnPinned === isThisColumnPinned
 
   // Build drag styles

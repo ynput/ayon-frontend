@@ -70,9 +70,12 @@ const useColumnVirtualization = ({
       const end = range.endIndex
       const overscan = range.overscan
 
+      // During column drag, render all columns to prevent glitchy mount/unmount during scroll
+      const effectiveOverscan = activeColumnIndex !== null ? visibleColumns.length : overscan
+
       // Calculate the base visible range with overscan
       const baseIndexes = []
-      for (let i = start - overscan; i <= end + overscan; i++) {
+      for (let i = start - effectiveOverscan; i <= end + effectiveOverscan; i++) {
         if (i >= 0 && i < visibleColumns.length) {
           baseIndexes.push(i)
         }

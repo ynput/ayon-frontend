@@ -19,8 +19,8 @@ interface ColumnDndProviderProps {
   children: ReactNode
 }
 
-const SCROLL_SPEED = 25
-const SCROLL_ZONE = 100
+const SCROLL_SPEED = 60
+const SCROLL_ZONE = 150
 const DROP_THRESHOLD = 50
 const SPECIAL_COLUMNS = ['drag-handle', '__row_selection__']
 
@@ -38,7 +38,6 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
     isScrolling: false,
     isColumnDrag: false,
     isPinnedDrag: null as boolean | null,
-    frameCount: 0,
   })
 
   const sensors = useSensors(
@@ -93,23 +92,19 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
         return
       }
 
-      cache.frameCount++
+      const leftScrollStart = cache.boundaryX + 20
+      let scrollDelta = 0
 
-      if (cache.frameCount % 3 === 0) {
-        const leftScrollStart = cache.boundaryX + 20
-        let scrollDelta = 0
+      if (cache.isPinnedDrag === false && cache.cursorX <= leftScrollStart) {
+        const progress = Math.min((leftScrollStart - cache.cursorX) / SCROLL_ZONE, 1)
+        scrollDelta = -SCROLL_SPEED * (0.3 + progress * 0.7)
+      } else if (cache.cursorX >= cache.containerRight - SCROLL_ZONE) {
+        const progress = Math.min((cache.cursorX - (cache.containerRight - SCROLL_ZONE)) / SCROLL_ZONE, 1)
+        scrollDelta = SCROLL_SPEED * (0.3 + progress * 0.7)
+      }
 
-        if (cache.isPinnedDrag === false && cache.cursorX <= leftScrollStart) {
-          const progress = Math.min((leftScrollStart - cache.cursorX) / SCROLL_ZONE, 1)
-          scrollDelta = -SCROLL_SPEED * (0.5 + progress * 0.5)
-        } else if (cache.cursorX >= cache.containerRight - SCROLL_ZONE) {
-          const progress = Math.min((cache.cursorX - (cache.containerRight - SCROLL_ZONE)) / SCROLL_ZONE, 1)
-          scrollDelta = SCROLL_SPEED * (0.5 + progress * 0.5)
-        }
-
-        if (scrollDelta !== 0) {
-          cache.container.scrollLeft += scrollDelta
-        }
+      if (scrollDelta !== 0) {
+        cache.container.scrollLeft += scrollDelta
       }
 
       cache.scrollRAF = requestAnimationFrame(scrollLoop)
@@ -149,8 +144,7 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
       isScrolling: false,
       isColumnDrag: false,
       isPinnedDrag: null,
-      frameCount: 0,
-    }
+      }
   }
 
   const handleDragStart = (event: DragStartEvent) => {
