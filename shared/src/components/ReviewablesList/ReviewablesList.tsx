@@ -166,22 +166,26 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
 
   const incompatibleMessage = `File type not supported at this time. Please contact support for further assistance.`
 
-  const handleDownloadFile = (fileId: string, fileName: string = '') => {
-    let url = `/api/projects/${projectName}/files/${fileId}`
+  const handleDownloadFile = async (fileId: string, fileName: string = '') => {
+    const url = `/api/projects/${projectName}/files/${fileId}`
 
-    // if (codec) url += `.${codec}`
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error(`Download failed: ${response.statusText}`)
 
-    // Create an invisible anchor element
-    const a = document.createElement('a')
-    a.href = url
-    a.download = fileName
-    document.body.appendChild(a)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = fileName || `${fileId}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
 
-    // Trigger a click event on the anchor element
-    a.click()
-
-    // Remove the anchor element from the document
-    document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+      toast.error('Failed to download file')
+    }
   }
 
   const [deleteReviewable] = useDeleteReviewableMutation()
