@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { ColumnSettingsProvider } from '@shared/containers'
+import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers'
 import { useVPViewsContext } from '../context/VPViewsContext'
 
 interface VPColumnSettingsProviderProps {
@@ -11,7 +11,7 @@ export const VPColumnSettingsProvider: FC<VPColumnSettingsProviderProps> = ({ ch
 
   return (
     <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
-      {children}
+      <ColumnDndProvider>{children}</ColumnDndProvider>
     </ColumnSettingsProvider>
   )
 }
