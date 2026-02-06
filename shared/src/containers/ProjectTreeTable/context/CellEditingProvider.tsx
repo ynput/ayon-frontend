@@ -8,6 +8,8 @@ import useUpdateTableData, {
   UpdateTableEntities,
 } from '../hooks/useUpdateTableData'
 import { useProjectTableContext } from './ProjectTableContext'
+import { useProjectContext } from '@shared/context'
+import { useUpdateSubtasksMutation } from '@shared/api'
 import validateUpdateEntities from '../utils/validateUpdateEntities'
 import { toast } from 'react-toastify'
 import { CellEditingContext } from './CellEditingContext'
@@ -35,6 +37,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
     removeHistoryEntries,
   })
   const { attribFields, getEntityById } = useProjectTableContext()
+  const { projectName } = useProjectContext()
+  const [updateSubtasks] = useUpdateSubtasksMutation()
 
   const handleUpdateEntities: UpdateTableEntities = useCallback(
     async (entities = [], pushToHistory = true) => {
@@ -121,6 +125,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       const entityUpdates: EntityUpdate[] = []
       // of if they are inheritable, we inherit from the parent entity
       const entityInheriting: InheritFromParentEntity[] = []
+      // Track subtasks to clear
+      const subtasksToClear: Array<{ taskId: string }> = []
 
       for (const cellId of cells) {
         const { colId, rowId } = parseCellId(cellId) || {}
@@ -140,6 +146,15 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
 
         if (!fieldName) {
           console.warn(`Invalid column ID: ${colId}`)
+          continue
+        }
+
+        // Special handling for subtasks
+        if (colId === 'subtasks') {
+          // Only clear subtasks for tasks
+          if (entity.entityType === 'task') {
+            subtasksToClear.push({ taskId: rowId })
+          }
           continue
         }
 
@@ -225,12 +240,29 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
       }
 
+      // Clear subtasks by calling updateSubtasks with empty array
+      if (subtasksToClear.length > 0) {
+        try {
+          const subtasksPromises = subtasksToClear.map(({ taskId }) =>
+            updateSubtasks({ projectName, taskId, subtasks: [] }).unwrap(),
+          )
+          await Promise.all(subtasksPromises)
+        } catch (error) {
+          toast.error('Failed to clear subtasks')
+          console.error('Error clearing subtasks:', error)
+        }
+      }
+
       // if nothing was done, warn the user
-      if (entityUpdates.length === 0 && entityInheriting.length === 0) {
+      if (
+        entityUpdates.length === 0 &&
+        entityInheriting.length === 0 &&
+        subtasksToClear.length === 0
+      ) {
         toast.warn('No valid cells selected to clear')
       }
     },
-    [attribFields, updateOverviewEntities],
+    [attribFields, updateOverviewEntities, projectName, updateSubtasks],
   )
 
   const value = useMemo(
