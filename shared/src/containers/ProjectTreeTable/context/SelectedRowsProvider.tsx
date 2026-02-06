@@ -24,7 +24,7 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
 
   const prevSelectedRowsRef = useRef<string[]>([])
 
-  // Calculate the current selected rows
+  // Calculate the current selected rows, filtering out rows that no longer exist in the grid
   const currentSelectedRows = useMemo(
     () =>
       Array.from(selectedCells)
@@ -32,8 +32,9 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
           (cellId) =>
             parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID && parseCellId(cellId)?.rowId,
         )
-        .map((cellId) => parseCellId(cellId)?.rowId) as string[],
-    [selectedCells],
+        .map((cellId) => parseCellId(cellId)?.rowId)
+        .filter((rowId): rowId is string => rowId !== undefined && gridMap.rowIdToIndex.has(rowId)),
+    [selectedCells, gridMap],
   )
 
   // Memoize the selected rows with a stable reference

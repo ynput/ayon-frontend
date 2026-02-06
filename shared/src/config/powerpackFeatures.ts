@@ -11,6 +11,7 @@ export type PowerpackFeature =
   | 'groupAttributes'
   | 'sharedViews'
   | 'commentCategories'
+  | 'projectFolders'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -19,6 +20,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'groupAttributes',
   'listAccess',
   'slicer',
+  'projectFolders',
   'releases',
   'advancedFilters',
   'listAttributes',
@@ -32,6 +34,11 @@ export const powerpackFeatures: {
     label: 'Annotations',
     description: 'Create detailed visual feedback directly on media files.',
     bullet: 'Advanced media review tools',
+  },
+  projectFolders: {
+    label: 'Project Folders',
+    description: 'Organize your projects into folders for a cleaner and more structured view.',
+    bullet: 'Organize projects into folders',
   },
   sharedViews: {
     label: 'Shared Views',

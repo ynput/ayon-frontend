@@ -14,10 +14,12 @@ import {
   DefaultItemTemplate,
 } from '@ynput/ayon-react-components'
 import { Badge } from '@shared/components'
+import { FormFileUpload, FormFileDownload, type FormFileData} from './FormFile'
 
 import type { FormSelectOption, SimpleFormField } from '@shared/api'
 
-export type SimpleFormValue = string | number | boolean | string[] | null | undefined
+
+export type SimpleFormValue = string | number | boolean | string[] | number[] | FormFileData | null | undefined
 export type SimpleFormValueDict = Record<string, SimpleFormValue>
 
 const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => {
@@ -37,6 +39,8 @@ const getDefaults = (fields: SimpleFormField[], values: SimpleFormValueDict) => 
       defaults[field.name] = ''
     } else if (field.type === 'multiselect') {
       defaults[field.name] = []
+    } else if (field.type === 'file') {
+      defaults[field.name] = undefined
     }
   })
   return defaults
@@ -167,7 +171,7 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
   } // Handle select
 
   if (field.type === 'multiselect') {
-    const parsedValue = Array.isArray(value) ? value : []
+    const parsedValue = Array.isArray(value) ? value.map(value => `${value}`) : []
     return (
       <Dropdown
         widthExpand
@@ -180,6 +184,14 @@ const FormField = ({ field, value, onChange }: FormFieldProps) => {
       />
     )
   }
+
+  if (field.type === 'file') {
+    if (value && (value as FormFileData)?.download) {
+      return <FormFileDownload value={value as FormFileData} />
+    }
+    return <FormFileUpload value={value as FormFileData} onChange={onChange} validExtensions={field.valid_extensions} />
+  }
+
 }
 
 export interface SimpleFormDialogProps {

@@ -1,11 +1,11 @@
 import { FC, useState, useCallback, useEffect } from 'react'
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { ListFolderForm, ListFolderFormData } from './ListFolderForm'
+import { FolderForm, FolderFormData } from '@shared/components/FolderForm'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
-export interface FolderFormData extends ListFolderFormData {
+export interface ListFolderFormData extends FolderFormData {
   id?: string // if id is present, it's edit mode
 }
 
@@ -28,11 +28,11 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
 
   const editingFolder = listFolders?.find((f) => f.id === folderId)
 
-  const initFolderForm: FolderFormData = {
+  const initFolderForm: ListFolderFormData = {
     label: '',
     scope: [isReview ? 'review-session' : 'generic'],
   }
-  const [folderForm, setFolderForm] = useState<FolderFormData>(initFolderForm)
+  const [folderForm, setFolderForm] = useState<ListFolderFormData>(initFolderForm)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -135,7 +135,7 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   )
 
   const handleFieldChange = useCallback(
-    (field: keyof ListFolderFormData, value: string | string[] | undefined) => {
+    (field: keyof FolderFormData, value: string | string[] | undefined) => {
       setFolderForm((prev) => ({
         ...prev,
         [field]: value,
@@ -195,11 +195,17 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           This folder will be assigned to {listCount} selected lists.
         </p>
       )}
-      <ListFolderForm
+      <FolderForm
         data={folderForm}
         onChange={handleFieldChange}
         autoFocus={true}
-        scopes={isReview ? ['review-session'] : ['generic']}
+        scopeConfig={{
+          options: [
+            { value: 'generic', label: 'Lists' },
+            { value: 'review-session', label: 'Review Sessions' },
+          ],
+          filter: isReview ? ['review-session'] : ['generic'],
+        }}
       />
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}
     </Dialog>

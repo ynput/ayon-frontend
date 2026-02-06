@@ -33,6 +33,7 @@ type ActionsDropdownItemProps = {
   icon?: IconModel
   header?: boolean
   hasConfig?: boolean
+  description?: string
   onConfig?: (value: string) => void
 }
 
@@ -42,6 +43,7 @@ export const ActionsDropdownItem = ({
   icon,
   header,
   hasConfig,
+  description,
   onConfig,
 }: ActionsDropdownItemProps) => {
   if (header) return <DropdownHeader>{upperFirst(label)}</DropdownHeader>
@@ -54,7 +56,7 @@ export const ActionsDropdownItem = ({
 
   return (
     <DropdownItem>
-      <ActionItemContainer>
+      <ActionItemContainer data-tooltip={description || ''} data-tooltip-delay={0}>
         <ActionIcon icon={icon} />
         <span>{label}</span>
         <Spacer />
@@ -93,7 +95,6 @@ export const ActionsDropdown = ({
     dropdownRef.current?.close()
     onConfig(e)
   }
-
   return (
     <StyledDropdown
       ref={dropdownRef}
