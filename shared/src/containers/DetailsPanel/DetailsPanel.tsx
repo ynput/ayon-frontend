@@ -436,6 +436,7 @@ DetailsPanelProps) => {
                 subtasks={firstEntityData.task?.subtasks || []}
                 SubtasksManager={SubtasksManager}
                 useNavigate={useNavigate!}
+                onNotFound={() => setTab('feed')} // if subtasks module is not found, switch to feed tab
               />
             )}
           {currentTab === 'files' && (

@@ -1,8 +1,19 @@
-import { FC, ReactNode, createContext, useContext } from 'react'
+import { FC, ReactNode, createContext, useContext, useEffect } from 'react'
 import { useLoadModule } from '@shared/hooks'
 import { SubtasksManagerProps } from '@shared/components'
+import { usePowerpack } from './PowerpackContext'
 
-const SubtasksManagerFallback: FC<SubtasksManagerProps> = () => null
+const SubtasksManagerFallback: FC<SubtasksManagerProps> = (props) => {
+  const { setPowerpackDialog } = usePowerpack()
+  // open planner addon dialog
+  useEffect(() => {
+    setPowerpackDialog({ addon: 'planner', feature: 'subtasks' })
+    // callback for when the module is not found, allowing parent components to handle this case (e.g. by hiding subtasks-related UI)
+    props?.onNotFound?.()
+  }, [setPowerpackDialog, props.onNotFound])
+
+  return null
+}
 
 interface SubtasksModulesContextType {
   SubtasksManager: typeof SubtasksManagerFallback

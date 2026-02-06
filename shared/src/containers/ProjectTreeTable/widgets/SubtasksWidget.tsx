@@ -27,8 +27,7 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
   onChange: _onChange,
   onCancelEdit,
 }) => {
-  const { SubtasksManager, useParams, useNavigate, useLocation, useSearchParams } =
-    useProjectTableContext()
+  const { SubtasksManager, useNavigate } = useProjectTableContext()
   const [selectedSubtaskIds, setSelectedSubtaskIds] = useState<string[]>([])
 
   const subtasks = value?.subtasks || []

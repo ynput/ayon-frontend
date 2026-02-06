@@ -23,6 +23,7 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   onSelectSubtasks?: (subtaskIds: string[]) => void
   updateSubtasks: UpdateSubtasksMutation
   useNavigate: typeof useNavigate
+  onNotFound?: () => void // when remote module is not found
 }
 
 export type SubtasksManagerWrapperProps = Omit<SubtasksManagerProps, 'updateSubtasks' | 'users'> & {
@@ -36,5 +37,12 @@ export const SubtasksManagerWrapper = ({
   const [updateSubtasks] = useUpdateSubtasksMutation()
   const { data: users = [] } = useGetUsersQuery({})
 
-  return <SubtasksManager {...props} updateSubtasks={updateSubtasks} users={users} />
+  return (
+    <SubtasksManager
+      {...props}
+      updateSubtasks={updateSubtasks}
+      users={users}
+      onNotFound={props.onNotFound}
+    />
+  )
 }
