@@ -120,6 +120,11 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       value: 'updatedAt',
       label: 'Updated At',
     },
+    {
+      value: 'subtasks',
+      label: 'Subtasks',
+      hidden: !scopes.includes('task'),
+    },
     ...attribFields
       .filter((field) => field.scope?.some((scope) => scopes.includes(scope)))
       .map((field) => ({

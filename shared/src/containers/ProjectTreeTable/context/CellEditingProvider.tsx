@@ -20,7 +20,14 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   // Get history functions
   const history = useHistory()
-  const { pushHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo, removeHistoryEntries } = history
+  const {
+    pushHistory,
+    undo: undoHistory,
+    redo: redoHistory,
+    canUndo,
+    canRedo,
+    removeHistoryEntries,
+  } = history
 
   const { selectedCells } = useSelectionCellsContext()
   const { updateEntities: updateOverviewEntities, inheritFromParent } = useUpdateTableData({
@@ -264,6 +271,11 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       ) {
         return
       }
+
+      // check focus is on table or body
+      const isTableFocused = target?.closest('table') !== null || target === document.body
+
+      if (!isTableFocused) return
 
       const isMac =
         typeof navigator !== 'undefined' &&

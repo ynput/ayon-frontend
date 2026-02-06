@@ -1,5 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import useDetailsPanelURLSync from './hooks/useDetailsPanelURLSync'
 import * as Styled from './DetailsPanel.styled'
 
@@ -15,15 +15,17 @@ import {
   useDetailsPanelContext,
   useScopedDetailsPanel,
   useURIContext,
+  FeedFilter,
 } from '@shared/context'
 
-import DetailsPanelHeader from './DetailsPanelHeader/DetailsPanelHeader'
-import DetailsPanelFiles from './DetailsPanelFiles'
+import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
+import DetailsPanelFiles from './components/DetailsPanelFiles'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
-import FeedWrapper from './FeedWrapper'
-import FeedContextWrapper from './FeedContextWrapper'
+import FeedWrapper from './containers/FeedWrapper'
+import FeedContextWrapper from './containers/FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
+import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
 
 export const entitiesWithoutFeed = ['product', 'representation']
 
@@ -101,6 +103,8 @@ DetailsPanelProps) => {
     setEntities,
     slideOut,
     useSearchParams,
+    SubtasksManager,
+    useNavigate,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
   const [_searchParams, setSearchParams] = useSearchParams()
@@ -166,8 +170,12 @@ DetailsPanelProps) => {
     if (currentTab === 'files') {
       // check entity type is still version
       if (activeEntityType !== 'version') {
-        setTab('activity')
+        setTab('feed')
       }
+    }
+    // Reset to feed if subtasks tab is selected but entity is not a task
+    if (currentTab === 'subtasks' && activeEntityType !== 'task') {
+      setTab('feed')
     }
   }, [activeEntityType, currentTab, scope])
 
@@ -371,7 +379,7 @@ DetailsPanelProps) => {
               onClick={handleOpenPip}
             />
 
-            {(onClose) && (
+            {onClose && (
               <Button
                 icon="close"
                 variant={'text'}
@@ -398,6 +406,7 @@ DetailsPanelProps) => {
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
         />
+
         <ProjectContextProvider projectName={firstProject}>
           {isFeed && !isError && (
             <FeedWrapper
@@ -414,11 +423,22 @@ DetailsPanelProps) => {
               annotations={annotations}
               removeAnnotation={removeAnnotation}
               exportAnnotationComposite={exportAnnotationComposite}
-              currentTab={currentTab}
-              setCurrentTab={setTab}
               isSlideOut={isSlideOut}
             />
           )}
+          {currentTab === 'subtasks' &&
+            activeEntityType === 'task' &&
+            firstEntityData?.id &&
+            SubtasksManager && (
+              <DetailsPanelSubtasks
+                projectName={firstProject}
+                taskId={firstEntityData.id}
+                subtasks={firstEntityData.task?.subtasks || []}
+                SubtasksManager={SubtasksManager}
+                useNavigate={useNavigate!}
+                onNotFound={() => setTab('feed')} // if subtasks module is not found, switch to feed tab
+              />
+            )}
           {currentTab === 'files' && (
             <DetailsPanelFiles
               entities={entityDetailsData}

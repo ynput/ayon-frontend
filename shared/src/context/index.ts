@@ -1,5 +1,6 @@
 export * from './RemoteModulesContext'
 export * from './DetailsPanelContext'
+export * from './SubtasksModulesContext'
 export * from './ThumbnailUploaderContext'
 export * from './SettingsPanelContext'
 export * from './pip'

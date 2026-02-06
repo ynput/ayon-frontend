@@ -6,17 +6,19 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import { useLocalStorage } from '@shared/hooks'
-import type { UserModel } from '@shared/api'
-import { DetailsPanelEntityType } from '@shared/api'
+import { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useURIContext } from './UriContext'
+import { useLocalStorage } from '@shared/hooks'
+import type { SubtasksManagerProps } from '@shared/components'
 
-export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
+// High-level tabs for the details panel
+export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
 
-export type DetailsPanelTab = FeedFilters | 'details' | 'files'
+// Filters within the feed tab
+export type FeedFilter = QueryFilter
 
 export type SlideOut = {
   entityId: string
@@ -68,6 +70,8 @@ export interface DetailsPanelContextProps {
   useSearchParams: typeof useSearchParams
   feedAnnotationsEnabled?: boolean
   hasLicense?: boolean
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
   // debugging used to simulate different values
   debug?: {
     isDeveloperMode?: boolean
@@ -128,7 +132,7 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   children,
-  defaultTab = 'activity',
+  defaultTab = 'feed',
   hasLicense: hasLicenseProp,
   debug = {},
   ...forwardedProps
@@ -292,13 +296,13 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
       setEntities(newEntities)
 
-      // if there is an activity param, open the activity tab
+      // if there is an activity param, open the feed tab (activity is shown by default)
 
       if (activity) {
         setHighlightedActivities([activity])
         setTabByScope({
           ...tabsByScope,
-          overview: 'activity',
+          overview: 'feed',
         })
       }
     }
@@ -369,7 +373,7 @@ export const useScopedDetailsPanel = (scope: string) => {
   )
 
   const currentTab = tab
-  const isFeed = ['activity', 'comments', 'versions', 'checklists'].includes(currentTab)
+  const isFeed = currentTab === 'feed'
 
   return {
     isOpen: getOpenForScope(scope),

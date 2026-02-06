@@ -1,4 +1,4 @@
 export * from './DetailsPanel'
-export * from './DetailsPanelHeader'
-export * from './DetailsPanelSlideOut'
-export * from './DetailsPanelFloating'
+export * from './components/DetailsPanelHeader'
+export * from './components/DetailsPanelSlideOut'
+export * from './components/DetailsPanelFloating'

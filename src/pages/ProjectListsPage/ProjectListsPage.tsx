@@ -27,6 +27,7 @@ import {
   SettingsPanelProvider,
   useProjectContext,
   useSettingsPanel,
+  useSubtasksModulesContext,
 } from '@shared/context'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
@@ -48,8 +49,7 @@ import useUpdateListItems from './hooks/useUpdateListItems'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
-import { useNavigate } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@state/store.ts'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
@@ -107,6 +107,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
+  const { SubtasksManager } = useSubtasksModulesContext()
 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
@@ -159,6 +160,11 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 playerOpen={viewerOpen}
                 onOpenPlayer={handleOpenPlayer}
                 onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
+                SubtasksManager={SubtasksManager}
+                useParams={useParams}
+                useNavigate={useNavigate}
+                useLocation={useLocation}
+                useSearchParams={useSearchParams}
               >
                 <DetailsPanelEntityProvider>
                   <SelectionCellsProvider>
