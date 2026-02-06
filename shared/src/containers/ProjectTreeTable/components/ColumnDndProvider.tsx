@@ -1,4 +1,4 @@
-import { FC, ReactNode, useCallback, useRef } from 'react'
+import { FC, ReactNode, useCallback, useMemo, useRef } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -9,7 +9,6 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
-  type DragMoveEvent,
   type CollisionDetection,
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
@@ -30,14 +29,16 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
   const { restrictToSection, setDragPinnedState, clearDragPinnedState, activePinnedState, setCachedBoundary } =
     useColumnDragRestriction({ columnPinning, columnSizing })
 
-  // Cached values during drag
   const dragCache = useRef({
     cursorX: 0,
     container: null as HTMLElement | null,
     boundaryX: 0,
-    containerLeft: 0,
     containerRight: 0,
     scrollRAF: null as number | null,
+    isScrolling: false,
+    isColumnDrag: false,
+    isPinnedDrag: null as boolean | null,
+    frameCount: 0,
   })
 
   const sensors = useSensors(
@@ -45,6 +46,8 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
     useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }),
     useSensor(KeyboardSensor, {}),
   )
+
+  const modifiers = useMemo(() => [restrictToSection], [restrictToSection])
 
   const pinnedColumns = columnPinning.left || []
 
@@ -64,7 +67,7 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
   const customCollisionDetection: CollisionDetection = useCallback(
     (args) => {
       const { active, droppableContainers } = args
-      if (active?.data.current?.type !== 'column' || activePinnedState !== false) {
+      if (activePinnedState.current === null || activePinnedState.current) {
         return closestCenter(args)
       }
 
@@ -79,40 +82,101 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
       }
       return closestCenter(args)
     },
-    [activePinnedState, columnOrder, pinnedColumns],
+    [columnOrder, pinnedColumns],
   )
+
+  const scrollLoop = useCallback(() => {
+    try {
+      const cache = dragCache.current
+
+      if (!cache.container || !cache.isScrolling || !cache.isColumnDrag) {
+        return
+      }
+
+      cache.frameCount++
+
+      if (cache.frameCount % 3 === 0) {
+        const leftScrollStart = cache.boundaryX + 20
+        let scrollDelta = 0
+
+        if (cache.isPinnedDrag === false && cache.cursorX <= leftScrollStart) {
+          const progress = Math.min((leftScrollStart - cache.cursorX) / SCROLL_ZONE, 1)
+          scrollDelta = -SCROLL_SPEED * (0.5 + progress * 0.5)
+        } else if (cache.cursorX >= cache.containerRight - SCROLL_ZONE) {
+          const progress = Math.min((cache.cursorX - (cache.containerRight - SCROLL_ZONE)) / SCROLL_ZONE, 1)
+          scrollDelta = SCROLL_SPEED * (0.5 + progress * 0.5)
+        }
+
+        if (scrollDelta !== 0) {
+          cache.container.scrollLeft += scrollDelta
+        }
+      }
+
+      cache.scrollRAF = requestAnimationFrame(scrollLoop)
+    } catch (e) {
+      console.error('[DND] scrollLoop error:', e)
+      stopScrollLoop()
+    }
+  }, [])
+
+  const startScrollLoop = useCallback(() => {
+    if (dragCache.current.isScrolling) return
+    dragCache.current.isScrolling = true
+    dragCache.current.scrollRAF = requestAnimationFrame(scrollLoop)
+  }, [scrollLoop])
+
+  const stopScrollLoop = () => {
+    dragCache.current.isScrolling = false
+    if (dragCache.current.scrollRAF) {
+      cancelAnimationFrame(dragCache.current.scrollRAF)
+      dragCache.current.scrollRAF = null
+    }
+  }
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     dragCache.current.cursorX = e.clientX
   }, [])
+
+  const clearDragCache = () => {
+    stopScrollLoop()
+    window.removeEventListener('mousemove', handleMouseMove)
+    dragCache.current = {
+      cursorX: 0,
+      container: null,
+      boundaryX: 0,
+      containerRight: 0,
+      scrollRAF: null,
+      isScrolling: false,
+      isColumnDrag: false,
+      isPinnedDrag: null,
+      frameCount: 0,
+    }
+  }
 
   const handleDragStart = (event: DragStartEvent) => {
     if (event.active.data.current?.type !== 'column') return
 
     const container = document.querySelector('[data-column-dnd-container]') as HTMLElement
     const rect = container?.getBoundingClientRect()
+    const isPinned = pinnedColumns.includes(event.active.id as string)
 
     dragCache.current.container = container
-    dragCache.current.containerLeft = rect?.left ?? 0
     dragCache.current.containerRight = rect?.right ?? 0
     dragCache.current.boundaryX = calculateBoundaryX()
+    dragCache.current.isColumnDrag = true
+    dragCache.current.isPinnedDrag = isPinned
 
     setDragPinnedState(event.active.id as string)
     setCachedBoundary(dragCache.current.boundaryX)
     window.addEventListener('mousemove', handleMouseMove)
-  }
-
-  const clearDragCache = () => {
-    if (dragCache.current.scrollRAF) cancelAnimationFrame(dragCache.current.scrollRAF)
-    dragCache.current = { cursorX: 0, container: null, boundaryX: 0, containerLeft: 0, containerRight: 0, scrollRAF: null }
+    startScrollLoop()
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
     clearDragPinnedState()
-    window.removeEventListener('mousemove', handleMouseMove)
 
     const { active, over } = event
-    if (!active || active.data.current?.type !== 'column') {
+    if (!active || !dragCache.current.isColumnDrag) {
       clearDragCache()
       return
     }
@@ -120,7 +184,6 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
     const activeId = active.id as string
     const isActivePinned = pinnedColumns.includes(activeId)
 
-    // Handle drop at first unpinned position
     if ((!over || active.id === over.id) && !isActivePinned && event.active.rect.current.translated) {
       if (event.active.rect.current.translated.left <= dragCache.current.boundaryX + DROP_THRESHOLD) {
         const firstIdx = getFirstUnpinnedIndex()
@@ -147,49 +210,16 @@ const ColumnDndProvider: FC<ColumnDndProviderProps> = ({ children }) => {
   const handleDragCancel = () => {
     clearDragPinnedState()
     clearDragCache()
-    window.removeEventListener('mousemove', handleMouseMove)
   }
-
-  const handleDragMove = useCallback(
-    (event: DragMoveEvent) => {
-      if (event.active.data.current?.type !== 'column') return
-
-      const { container, cursorX, boundaryX, containerLeft, containerRight } = dragCache.current
-      if (!container) return
-
-      if (dragCache.current.scrollRAF) cancelAnimationFrame(dragCache.current.scrollRAF)
-
-      let scrollDelta = 0
-
-      // Scroll left when cursor enters pinned section (unpinned columns only)
-      if (activePinnedState === false && cursorX <= boundaryX) {
-        const progress = Math.min((boundaryX - cursorX) / (boundaryX - containerLeft), 1)
-        scrollDelta = -SCROLL_SPEED * (0.5 + progress * 0.5)
-      }
-      // Scroll right when cursor near right edge
-      else if (cursorX >= containerRight - SCROLL_ZONE) {
-        const progress = Math.min((cursorX - (containerRight - SCROLL_ZONE)) / SCROLL_ZONE, 1)
-        scrollDelta = SCROLL_SPEED * (0.5 + progress * 0.5)
-      }
-
-      if (scrollDelta !== 0) {
-        dragCache.current.scrollRAF = requestAnimationFrame(() => {
-          container.scrollLeft += scrollDelta
-        })
-      }
-    },
-    [activePinnedState],
-  )
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={customCollisionDetection}
-      modifiers={[restrictToSection]}
+      modifiers={modifiers}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
-      onDragMove={handleDragMove}
     >
       {children}
     </DndContext>

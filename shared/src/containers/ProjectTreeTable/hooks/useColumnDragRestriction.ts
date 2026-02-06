@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef } from 'react'
 import { type Modifier } from '@dnd-kit/core'
 import { ColumnPinningState, ColumnSizingState } from '@tanstack/react-table'
 
@@ -21,7 +21,7 @@ export const useColumnDragRestriction = ({
   columnPinning,
   columnSizing,
 }: UseColumnDragRestrictionProps) => {
-  const [activePinnedState, setActivePinnedState] = useState<boolean | null>(null)
+  const activePinnedState = useRef<null| boolean>(null as boolean | null)
 
   // Cached boundary position - set at drag start, avoids DOM queries per frame
   const cachedBoundaryRef = useRef<number | null>(null)
@@ -39,7 +39,7 @@ export const useColumnDragRestriction = ({
   // Restrict drag to prevent crossing pinned/unpinned boundary
   const restrictToSection: Modifier = useCallback(
     ({ transform, activeNodeRect, draggingNodeRect, active }) => {
-      if (activePinnedState === null || !activeNodeRect) return transform
+      if (activePinnedState.current === null || !activeNodeRect) return transform
       if (active?.data.current?.type && active.data.current.type !== 'column') return transform
 
       // Use cached boundary if available, otherwise calculate (fallback)
@@ -52,7 +52,7 @@ export const useColumnDragRestriction = ({
 
       const originalLeft = draggingNodeRect?.left ?? activeNodeRect.left
 
-      if (activePinnedState) {
+      if (activePinnedState.current) {
         // Pinned column can overlap slightly into unpinned section for better UX
         const rightEdge = originalLeft + activeNodeRect.width + transform.x
         const maxAllowedRight = boundaryX + DRAG_OVERLAP_ALLOWANCE
@@ -69,25 +69,24 @@ export const useColumnDragRestriction = ({
       }
       return transform
     },
-    [activePinnedState, getPinnedSectionWidth],
+    [getPinnedSectionWidth],
   )
 
   // Set pinned state when drag starts
   const setDragPinnedState = useCallback(
     (columnId: string | null) => {
       if (columnId === null) {
-        setActivePinnedState(null)
+        activePinnedState.current = null
         return
       }
-      const isPinned = columnPinning.left?.includes(columnId) || false
-      setActivePinnedState(isPinned)
+      activePinnedState.current = columnPinning.left?.includes(columnId) || false
     },
     [columnPinning.left],
   )
 
   // Clear pinned state and cached boundary
   const clearDragPinnedState = useCallback(() => {
-    setActivePinnedState(null)
+    activePinnedState.current = null
     cachedBoundaryRef.current = null
   }, [])
 

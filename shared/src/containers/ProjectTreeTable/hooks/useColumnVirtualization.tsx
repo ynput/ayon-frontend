@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Column, ColumnOrderState, ColumnSizingState } from '@tanstack/react-table'
 import { TableRow } from '../types/table'
 import { throttle } from 'lodash'
+import { useDndMonitor } from '@dnd-kit/core'
 
 interface UseColumnVirtualizationProps {
   visibleColumns: Column<TableRow, unknown>[]
@@ -31,6 +32,22 @@ const useColumnVirtualization = ({
   const leftPinnedIndexes = useMemo(() => {
     return visibleColumns.filter((col) => col.getIsPinned() === 'left').map((col) => col.getIndex())
   }, [visibleColumns, columnPinning])
+  const [activeColumnIndex, setActiveColumnIndex] = useState<number | null>(null)
+
+  useDndMonitor({
+    onDragStart(event) {
+      if (event.active.data?.current?.type === 'column') {
+        const idx = visibleColumns.findIndex((col) => col.id === event.active.id)
+        if (idx !== -1) setActiveColumnIndex(idx)
+      }
+    },
+    onDragEnd() {
+      setActiveColumnIndex(null)
+    },
+    onDragCancel() {
+      setActiveColumnIndex(null)
+    },
+  })
 
   // Find highest pinned index and include all columns between 0 and that index
   const pinnedColumnIndexes: number[] = []
@@ -65,6 +82,7 @@ const useColumnVirtualization = ({
       const allIndexes = new Set([
         ...pinnedColumnIndexes, // All columns up to the highest pinned column
         ...baseIndexes, // Visible columns in the current range
+        ...(activeColumnIndex !== null && activeColumnIndex !== -1 ? [activeColumnIndex] : []),
       ])
 
       // Sort indexes to maintain column order
