@@ -23,7 +23,7 @@ const tasksApi = api.injectEndpoints({
 
           return { data: undefined }
         } catch (error: any) {
-          return { error }
+          return { error: error.data?.detail || 'Failed to update subtasks (unknown error)' }
         }
       },
       async onQueryStarted({ taskId, subtasks }, { dispatch, queryFulfilled, getState }) {
