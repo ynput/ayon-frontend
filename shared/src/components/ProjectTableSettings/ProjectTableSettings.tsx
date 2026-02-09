@@ -12,6 +12,7 @@ import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import ColumnsSettings from './ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
+import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
@@ -42,7 +43,7 @@ export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
   extraColumns?: { value: string; label: string }[]
   hiddenColumns?: string[]
-  hiddenSettings?: ('columns' | 'row-height' | 'group-by')[]
+  hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId
   includeLinks?: boolean
   order?: string[]
@@ -157,6 +158,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   ).length
 
   const groupBySettings = useGroupBySettings({ scope })
+  const sortBySettings = useSortBySettings()
 
   const defaultSettings: (SettingConfig | undefined | null)[] = [
     {
@@ -166,6 +168,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       preview: `${visibleCount}/${visibleColumns.length}`,
       component: <ColumnsSettings columns={visibleColumns} highlighted={highlighted} />,
     },
+    sortBySettings,
     groupBySettings,
     {
       id: 'row-height',
@@ -181,8 +184,16 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     },
   ].filter(Boolean)
 
-  settings.forEach(
-    (setting) => !hiddenSettings.includes(setting.id as any) && defaultSettings.push(setting),
-  )
+  // Merge extra settings: replace defaults with matching ids, append the rest
+  settings.forEach((setting) => {
+    if (hiddenSettings.includes(setting.id as any)) return
+    const existingIndex = defaultSettings.findIndex((s) => s && 'id' in s && s.id === setting.id)
+    if (existingIndex !== -1) {
+      console.log(setting)
+      defaultSettings[existingIndex] = setting
+    } else {
+      defaultSettings.push(setting)
+    }
+  })
   return <SettingsPanel settings={defaultSettings as SettingConfig[]} order={order} />
 }
