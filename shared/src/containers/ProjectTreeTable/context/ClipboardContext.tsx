@@ -45,7 +45,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 }) => {
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
-  const { updateEntities } = useCellEditing()
+  const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
   const { getEntityById, attribFields } = useProjectTableContext()
   const { projectName } = useProjectContext()
@@ -443,6 +443,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           attrib: Record<string, any>
           links: Record<string, string[]>
           subtasks?: any[]
+          previousSubtasks?: any[]
         }
       >()
 
@@ -532,6 +533,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             // Get existing subtasks from entity
             const entity = getEntityById(rowId)
             const existingSubtasks = (entity && 'subtasks' in entity && entity.subtasks) || []
+            // store previous subtasks for history/undo
+            entityData.previousSubtasks = existingSubtasks
 
             let subtasksToProcess: any[] = []
 
@@ -836,12 +839,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       const allLinkUpdates = Array.from(linkUpdatesMap.values())
 
       // Collect subtasks updates
-      const subtasksUpdates: Array<{ taskId: string; subtasks: any[] }> = []
+      const subtasksUpdates: Array<{ taskId: string; subtasks: any[]; previousSubtasks?: any[] }> =
+        []
       entitiesToUpdateMap.forEach((entity) => {
         if (entity.subtasks) {
           subtasksUpdates.push({
             taskId: entity.id,
             subtasks: entity.subtasks,
+            previousSubtasks: entity.previousSubtasks,
           })
         }
       })
@@ -858,6 +863,24 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       }
 
       if (subtasksUpdates.length > 0) {
+        // push undo/redo history entries for subtasks updates
+        if (history) {
+          subtasksUpdates.forEach(({ taskId, subtasks, previousSubtasks }) => {
+            const prev = previousSubtasks || []
+            const next = subtasks || []
+            const undoCallback = () => {
+              updateSubtasks({ projectName, taskId, subtasks: prev })
+                .unwrap()
+                .catch(() => {})
+            }
+            const redoCallback = () => {
+              updateSubtasks({ projectName, taskId, subtasks: next })
+                .unwrap()
+                .catch(() => {})
+            }
+            history.pushHistory([undoCallback], [redoCallback])
+          })
+        }
         // Update subtasks for each task
         const subtasksPromises = subtasksUpdates.map(({ taskId, subtasks }) =>
           updateSubtasks({ projectName, taskId, subtasks }).unwrap(),
@@ -886,6 +909,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       attribFields,
       projectName,
       updateSubtasks,
+      history,
     ],
   )
 

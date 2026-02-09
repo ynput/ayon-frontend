@@ -125,8 +125,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       const entityUpdates: EntityUpdate[] = []
       // of if they are inheritable, we inherit from the parent entity
       const entityInheriting: InheritFromParentEntity[] = []
-      // Track subtasks to clear
-      const subtasksToClear: Array<{ taskId: string }> = []
+      // Track subtasks to clear (include previous subtasks for history)
+      const subtasksToClear: Array<{ taskId: string; previousSubtasks?: any[] }> = []
 
       for (const cellId of cells) {
         const { colId, rowId } = parseCellId(cellId) || {}
@@ -153,7 +153,8 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         if (colId === 'subtasks') {
           // Only clear subtasks for tasks
           if (entity.entityType === 'task') {
-            subtasksToClear.push({ taskId: rowId })
+            const existingSubtasks = ('subtasks' in entity && entity.subtasks) || []
+            subtasksToClear.push({ taskId: rowId, previousSubtasks: existingSubtasks })
           }
           continue
         }
@@ -243,6 +244,24 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Clear subtasks by calling updateSubtasks with empty array
       if (subtasksToClear.length > 0) {
         try {
+          // push undo/redo history entries for clearing subtasks
+          if (pushHistory) {
+            subtasksToClear.forEach(({ taskId, previousSubtasks }) => {
+              const prev = previousSubtasks || []
+              const undoCallback = () => {
+                updateSubtasks({ projectName, taskId, subtasks: prev })
+                  .unwrap()
+                  .catch(() => {})
+              }
+              const redoCallback = () => {
+                updateSubtasks({ projectName, taskId, subtasks: [] })
+                  .unwrap()
+                  .catch(() => {})
+              }
+              pushHistory([undoCallback], [redoCallback])
+            })
+          }
+
           const subtasksPromises = subtasksToClear.map(({ taskId }) =>
             updateSubtasks({ projectName, taskId, subtasks: [] }).unwrap(),
           )
@@ -262,7 +281,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         toast.warn('No valid cells selected to clear')
       }
     },
-    [attribFields, updateOverviewEntities, projectName, updateSubtasks],
+    [attribFields, updateOverviewEntities, projectName, updateSubtasks, pushHistory, getEntityById],
   )
 
   const value = useMemo(
