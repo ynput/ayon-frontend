@@ -753,7 +753,9 @@ const buildTreeTableColumns = ({
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
 
-        const cellId = getCellId(id, column.id)
+        // only show for tasks
+        if (type !== 'task') return <div className="readonly"></div>
+
         const subtasksData: SubtasksWidgetData = {
           taskId: id,
           subtasks: value || [],
