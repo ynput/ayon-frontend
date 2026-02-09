@@ -1,7 +1,10 @@
 import { useCallback } from 'react'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
-import { FOLDER_ICON, FOLDER_ICON_REMOVE } from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
+import {
+  FOLDER_ICON,
+  FOLDER_ICON_REMOVE,
+} from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
 
@@ -37,7 +40,13 @@ interface MenuItemProps {
   onDelete?: (projectName: string) => void
   onShowArchivedToggle?: () => void
   powerLicense?: boolean
-  onCreateFolder?: ({folderId, projectNames}:{folderId?:string, projectNames?:string[]}) => void
+  onCreateFolder?: ({
+    folderId,
+    projectNames,
+  }: {
+    folderId?: string
+    projectNames?: string[]
+  }) => void
   onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
   onPutFolderInFolder?: (folderId: string, projectFolderId?: string) => Promise<void>
   onRemoveProjectsFromFolder?: (projectNames: string[]) => Promise<void>
@@ -94,7 +103,6 @@ const useProjectsListMenuItems = ({
   onDeleteFolder,
   onEditFolder,
   onRenameFolder,
-
 }: MenuItemProps): BuildMenuItems => {
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
@@ -195,12 +203,12 @@ const useProjectsListMenuItems = ({
           const hasChildren = folder.children.length > 0
           const childItems = hasChildren
             ? createFolderHierarchy(
-              folder.children as (ProjectFolderModel & {
-                children: ProjectFolderModel[]
-              })[],
-              excludeFolderId,
-              depth + 1,
-            )
+                folder.children as (ProjectFolderModel & {
+                  children: ProjectFolderModel[]
+                })[],
+                excludeFolderId,
+                depth + 1,
+              )
             : []
           items.push({
             id: folder.id,
@@ -209,10 +217,10 @@ const useProjectsListMenuItems = ({
             [command ? 'command' : 'onClick']: allSelectedRowsAreFolders
               ? () => onPutFolderInFolder?.(selectedFolderId as string, folder.id)
               : () =>
-                onPutProjectsInFolder?.(
-                  newSelectedProjects.map((p) => p.name),
-                  folder.id,
-                ),
+                  onPutProjectsInFolder?.(
+                    newSelectedProjects.map((p) => p.name),
+                    folder.id,
+                  ),
             disabled:
               allSelectedRowsAreFolders &&
               wouldCreateCircularDependency(selectedFolderId!, folder.id, folders),
@@ -241,7 +249,6 @@ const useProjectsListMenuItems = ({
           const hierarchyItems = createFolderHierarchy(rootFolders, selectedFolderId || undefined)
           submenuItems.push(...hierarchyItems)
         }
-
 
         if (selectedFolder.parentId) {
           if (submenuItems.length > 0) submenuItems.push({ id: 'divider', separator: true })
@@ -275,7 +282,7 @@ const useProjectsListMenuItems = ({
         // For single selection, show "Unset folder" only if that project has a folder
         const hasAnyFolder = newSelectedProjects.some((project) => project.name)
         if (hasAnyFolder) {
-          if (submenuItems.length > 0)  submenuItems.push({ id: 'divider', separator: true })
+          if (submenuItems.length > 0) submenuItems.push({ id: 'divider', separator: true })
           submenuItems.push({
             id: 'unset-folder',
             label: 'Unset folder',
@@ -293,17 +300,19 @@ const useProjectsListMenuItems = ({
       const projectFolderSubmenu = createProjectFolderSubmenu()
       const folderFolderSubmenu = createFolderFolderSubmenu()
 
-      const moveMenuItem: MenuItem | null = powerLicense ? {
-        id: 'move-project',
-        label: allSelectedRowsAreFolders ? 'Move folder' : 'Move project',
-        icon: FOLDER_ICON,
-        items: allSelectedRowsAreProjects ? projectFolderSubmenu : folderFolderSubmenu,
-        disabled: !allSelectedRowsAreProjects && !allSelectedRowsAreFolders,
-        hidden:
-          (!allSelectedRowsAreProjects && !allSelectedRowsAreFolders) ||
-          (allSelectedRowsAreProjects && projectFolderSubmenu.length === 0) ||
-          (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0)
-      } : null
+      const moveMenuItem: MenuItem | null = powerLicense
+        ? {
+            id: 'move-project',
+            label: allSelectedRowsAreFolders ? 'Move folder' : 'Move project',
+            icon: FOLDER_ICON,
+            items: allSelectedRowsAreProjects ? projectFolderSubmenu : folderFolderSubmenu,
+            disabled: !allSelectedRowsAreProjects && !allSelectedRowsAreFolders,
+            hidden:
+              (!allSelectedRowsAreProjects && !allSelectedRowsAreFolders) ||
+              (allSelectedRowsAreProjects && projectFolderSubmenu.length === 0) ||
+              (allSelectedRowsAreFolders && folderFolderSubmenu.length === 0),
+          }
+        : null
 
       const allItems: MenuItem[] = [
         {
@@ -349,7 +358,7 @@ const useProjectsListMenuItems = ({
           icon: 'push_pin',
           [command ? 'command' : 'onClick']: () => handlePin(allPinned, selection),
           disabled: selection.length === 0,
-          hidden: isSelectedRowFolder
+          hidden: isSelectedRowFolder,
         },
         {
           id: 'rename-folder',
@@ -357,13 +366,14 @@ const useProjectsListMenuItems = ({
           icon: 'edit',
           shortcut: 'R',
           [command ? 'command' : 'onClick']: () => onRenameFolder?.(selectedFolderId as string),
-          hidden: !isSelectedRowFolder
-        }, {
+          hidden: !isSelectedRowFolder,
+        },
+        {
           id: 'edit-folder',
           label: 'Edit folder',
           icon: 'folder_managed',
           [command ? 'command' : 'onClick']: () => onEditFolder?.(selectedFolderId as string),
-          hidden: !isSelectedRowFolder
+          hidden: !isSelectedRowFolder,
         },
         { id: 'divider' },
         {
@@ -374,39 +384,46 @@ const useProjectsListMenuItems = ({
         },
         {
           id: 'create-folder',
-          label: isSelectedRowFolder? 'Create subfolder': 'Create folder',
+          label: isSelectedRowFolder ? 'Create subfolder' : 'Create folder',
           icon: 'create_new_folder',
           shortcut: 'F',
           powerFeature: powerLicense ? undefined : 'projectFolders',
-          [command ? 'command' : 'onClick']: isSelectedRowFolder? ()=> onCreateFolder?.({folderId: selectedFolder?.id})  : isSelectedProject ? () =>onCreateFolder?.({projectNames:newSelectedProjects.map((project)=> project.name)}) : onCreateFolder,
+          [command ? 'command' : 'onClick']: isSelectedRowFolder
+            ? () => onCreateFolder?.({ folderId: selectedFolder?.id })
+            : isSelectedProject
+            ? () =>
+                onCreateFolder?.({
+                  projectNames: newSelectedProjects.map((project) => project.name),
+                })
+            : onCreateFolder,
         },
 
         ...(moveMenuItem ? [moveMenuItem] : []),
         { id: 'divider' },
         {
           id: 'archive-project',
-          label: `${singleActive ? 'Deactivate' : 'Activate'}`,
+          label: `${singleActive ? 'Archive' : 'Activate'}`,
           icon: 'archive',
           [command ? 'command' : 'onClick']: () => handleArchive(singleProject, selection),
           disabled: selection.length !== 1,
-          hidden: isSelectedRowFolder
+          hidden: isSelectedRowFolder,
         },
         {
           id: 'delete-project',
-          label: `${singleActive ? 'Deactivate to delete' : 'Delete'}`,
+          label: `${singleActive ? 'Archive to delete' : 'Delete'}`,
           icon: 'delete',
-          [command ? 'command' : 'onClick']: () =>  handleDelete(singleProject, selection),
+          [command ? 'command' : 'onClick']: () => handleDelete(singleProject, selection),
           disabled: selection.length !== 1 || singleActive,
           danger: true,
-          hidden: isSelectedRowFolder
+          hidden: isSelectedRowFolder,
         },
         {
           id: 'delete-folder',
           label: 'Delete (only folder)',
           icon: 'delete',
-          [command ? 'command' : 'onClick']: () =>  handleDeleteFolder(selection),
+          [command ? 'command' : 'onClick']: () => handleDeleteFolder(selection),
           danger: true,
-          hidden: !isSelectedRowFolder
+          hidden: !isSelectedRowFolder,
         },
       ]
 
@@ -447,7 +464,7 @@ const useProjectsListMenuItems = ({
       onDeleteFolder,
       wouldCreateCircularDependency,
       onRenameFolder,
-      onEditFolder
+      onEditFolder,
     ],
   )
 
