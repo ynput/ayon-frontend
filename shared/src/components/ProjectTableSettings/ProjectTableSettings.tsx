@@ -189,7 +189,6 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     if (hiddenSettings.includes(setting.id as any)) return
     const existingIndex = defaultSettings.findIndex((s) => s && 'id' in s && s.id === setting.id)
     if (existingIndex !== -1) {
-      console.log(setting)
       defaultSettings[existingIndex] = setting
     } else {
       defaultSettings.push(setting)
