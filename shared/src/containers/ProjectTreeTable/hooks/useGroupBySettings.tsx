@@ -6,7 +6,7 @@ interface UseGroupBySettingsProps {
 }
 
 export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
-  const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig, sorting, updateSorting } = useColumnSettingsContext()
+  const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig } = useColumnSettingsContext()
   const { modules } = useProjectTableContext()
   const groupByFields = useGetGroupedFields({ scope })
   if (!modules) return null
@@ -27,8 +27,6 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
         updateGroupBy={updateGroupBy}
         config={groupByConfig}
         onConfigChange={updateGroupByConfig}
-        sorting={sorting}
-        onSortingChange={updateSorting}
       />
     ),
   }

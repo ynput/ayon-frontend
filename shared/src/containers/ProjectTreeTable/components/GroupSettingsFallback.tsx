@@ -3,7 +3,6 @@ import { FC } from 'react'
 import { ColumnSettingsContextType } from '../context'
 import styled from 'styled-components'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { SortingState } from '@tanstack/react-table'
 
 const FieldItem = styled.li`
   display: flex;
@@ -29,8 +28,6 @@ export interface GroupSettingsProps {
   groupBy?: ColumnSettingsContextType['groupBy']
   updateGroupBy?: ColumnSettingsContextType['updateGroupBy']
   onConfigChange?: (config: GroupByConfig) => void
-  sorting?: SortingState
-  onSortingChange?: (sorting: SortingState) => void
 }
 
 export interface GroupSettingsFallbackProps extends GroupSettingsProps {

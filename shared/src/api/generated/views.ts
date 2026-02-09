@@ -243,6 +243,7 @@ export type OverviewSettings = {
   showHierarchy?: boolean
   rowHeight?: number
   groupBy?: string
+  groupSortByDesc?: boolean
   showEmptyGroups?: boolean
   sortBy?: string
   sortDesc?: boolean

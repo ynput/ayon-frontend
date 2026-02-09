@@ -255,23 +255,24 @@ const useBuildGroupByTableData = ({
 
     // sort the groups by their label
     // if the group is an attribute with enum values, sort by the enum values
+    const sortDirection = groupBy.desc ? -1 : 1
     groupsList.sort((a, b) => {
-      if (a.group?.value === ungroupedId) return 1 // "Ungrouped" should be last
-      if (b.group?.value === ungroupedId) return -1 // "Ungrouped" should be last
+      if (a.group?.value === ungroupedId) return 1 // "Ungrouped" should always be last
+      if (b.group?.value === ungroupedId) return -1 // "Ungrouped" should always be last
       if (attribSortingIds.length) {
         // sort by index of the enum value
         const indexA = attribSortingIds.indexOf(a.group?.value || '')
         const indexB = attribSortingIds.indexOf(b.group?.value || '')
         if (indexA !== -1 && indexB !== -1) {
-          return indexA - indexB
+          return (indexA - indexB) * sortDirection
         }
         if (indexA !== -1) return -1 // a is in the enum, b is not
         if (indexB !== -1) return 1 // b is in the enum, a is not
         // if both are not in the enum, sort by label
-        return a.group?.label?.localeCompare(b.group?.label || '') || 0
+        return (a.group?.label?.localeCompare(b.group?.label || '') || 0) * sortDirection
       } else {
         // for other groupings, sort by the group label
-        return a.group?.label?.localeCompare(b.group?.label || '') || 0
+        return (a.group?.label?.localeCompare(b.group?.label || '') || 0) * sortDirection
       }
     })
 
