@@ -234,6 +234,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   }
 
   const handleProgress = (e) => {
+    if (isTransitioning.current) return
     // create a list of buffered time ranges
     const buffered = e.target.buffered
     if (!buffered.length) return
