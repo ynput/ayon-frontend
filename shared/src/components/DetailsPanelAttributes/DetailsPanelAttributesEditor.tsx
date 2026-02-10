@@ -182,8 +182,11 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
               <FieldValue
                 className={clsx({ editing: isEditing, readonly: isReadOnly })}
                 onClick={(e) => {
+                  // Allow links to work normally - don't intercept clicks on anchor elements
+                  if ((e.target as HTMLElement).closest('a')) {
+                    return
+                  }
                   e.preventDefault()
-                  e.stopPropagation()
                   if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
                     handleStartEditing(field.name)
                   }

@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo } fro
 // Contexts
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
 import { useCellEditing } from './CellEditingContext'
+import { useProjectContext } from '@shared/context'
 
 // Utils
 import {
@@ -15,6 +16,7 @@ import {
 // Types
 import { EntityUpdate } from '../hooks/useUpdateTableData'
 import usePasteLinks, { LinkUpdate } from '../hooks/usePasteLinks'
+import { useUpdateSubtasksMutation } from '@shared/api'
 
 // Import from the new modular files
 import {
@@ -22,11 +24,15 @@ import {
   parseClipboardText,
   clipboardError,
   processFieldValue,
-} from './clipboard/clipboardUtils'
+  subtasksToTSV,
+  isSubtasksTSV,
+  tsvToSubtasks,
+  sanitizeSubtaskName,
+} from './clipboard'
 import { validateClipboardData } from './clipboard/clipboardValidation'
 import { ClipboardContextType, ClipboardProviderProps } from './clipboard/clipboardTypes'
 import { useProjectTableContext } from './ProjectTableContext'
-import { validateEntityId } from '@shared/util'
+import { validateEntityId, getEntityId } from '@shared/util'
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined)
 
@@ -39,9 +45,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 }) => {
   // Get selection information from SelectionContext
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
-  const { updateEntities } = useCellEditing()
+  const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
   const { getEntityById, attribFields } = useProjectTableContext()
+  const { projectName } = useProjectContext()
+  const [updateSubtasks] = useUpdateSubtasksMutation()
 
   const getSelectionData = useCallback(
     async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {
@@ -157,6 +165,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             if (colId.startsWith('link_')) {
               // @ts-expect-error - only complaining about missing __typename
               cellValue = getLinkEntityIdsByColumnId(entity.links, colId)
+            } else if (colId === 'subtasks') {
+              // Special handling for subtasks - convert to TSV format
+              // @ts-ignore
+              const subtasks = getCellValue(entity, colId) || []
+              cellValue = subtasksToTSV(subtasks, entity.id, entity.name)
             } else {
               // @ts-ignore
               let foundValue = getCellValue(entity, colId)
@@ -297,6 +310,13 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       const clipboardText = await getClipboardString()
       if (!clipboardText) return
 
+      // Check if this is subtasks TSV data first, before normal parsing
+      let isSubtasksData = false
+      let subtasksClipboardText = clipboardText
+      if (isSubtasksTSV(clipboardText)) {
+        isSubtasksData = true
+      }
+
       // Parse the clipboard text
       const parsedData = parseClipboardText(clipboardText)
       if (!parsedData.length) return
@@ -422,6 +442,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           fields: Record<string, any>
           attrib: Record<string, any>
           links: Record<string, string[]>
+          subtasks?: any[]
+          previousSubtasks?: any[]
         }
       >()
 
@@ -431,6 +453,173 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         // Skip special handling for 'name' which we don't want to paste
         if (colId === 'name') continue
+
+        // Special handling for subtasks column
+        if (colId === 'subtasks') {
+          // For subtasks, group them by source task so each group can be applied to different cells
+          let subtaskGroups: Array<{ taskId?: string; taskName?: string; subtasks: any[] }> = []
+          let isFromSingleSourceTask = false
+
+          if (isSubtasksData) {
+            // Parse all subtask data to understand the source grouping
+            const allLines = subtasksClipboardText.trim().split('\n')
+
+            // Check for header
+            const firstLine = allLines[0].toLowerCase()
+            const hasHeader =
+              firstLine.includes('label') &&
+              firstLine.includes('name') &&
+              firstLine.includes('start date') &&
+              firstLine.includes('end date') &&
+              firstLine.includes('assignees') &&
+              firstLine.includes('status')
+
+            const dataLines = hasHeader ? allLines.slice(1) : allLines
+
+            // Parse all lines and group by source taskId
+            const groupMap = new Map<string, any[]>()
+            const groupOrder: string[] = []
+
+            dataLines.forEach((line) => {
+              const parsed = tsvToSubtasks(line)
+              if (parsed.length === 0) return
+
+              const subtask = parsed[0]
+              const groupKey = `${subtask.taskId || ''}|${subtask.taskName || ''}`
+
+              if (!groupMap.has(groupKey)) {
+                groupMap.set(groupKey, [])
+                groupOrder.push(groupKey)
+              }
+              groupMap.get(groupKey)!.push(subtask)
+            })
+
+            // Create groups in order
+            groupOrder.forEach((groupKey) => {
+              const [taskId, taskName] = groupKey.split('|')
+              subtaskGroups.push({
+                taskId: taskId || undefined,
+                taskName: taskName || undefined,
+                subtasks: groupMap.get(groupKey) || [],
+              })
+            })
+
+            // Check if all subtasks come from the same source task
+            isFromSingleSourceTask = subtaskGroups.length <= 1
+          }
+
+          // Handle subtasks paste for each selected row
+          for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
+            const rowId = sortedRows[rowIndex]
+            const entityType = getEntityDataById(rowId, entitiesMap)?.entityType
+
+            // Subtasks only apply to tasks
+            if (entityType !== 'task') continue
+
+            // Get entity to access entityId (important for list items where rowId is list item ID)
+            const entity = getEntityById(rowId)
+            const actualEntityId = entity?.entityId || rowId
+
+            // Get or create entity entry in the map
+            const entityKey = `${rowId}-${entityType}`
+            if (!entitiesToUpdateMap.has(entityKey)) {
+              entitiesToUpdateMap.set(entityKey, {
+                rowId,
+                id: actualEntityId,
+                type: entityType,
+                fields: {},
+                attrib: {},
+                links: {},
+              })
+            }
+
+            const entityData = entitiesToUpdateMap.get(entityKey)!
+            // Get existing subtasks from entity
+            const existingSubtasks = (entity && 'subtasks' in entity && entity.subtasks) || []
+            // store previous subtasks for history/undo
+            entityData.previousSubtasks = existingSubtasks
+
+            let subtasksToProcess: any[] = []
+
+            if (isSubtasksData) {
+              if (isFromSingleSourceTask && subtaskGroups.length > 0) {
+                // All subtasks from one source - apply to all cells
+                subtasksToProcess = subtaskGroups[0].subtasks
+              } else if (subtaskGroups.length > 0) {
+                // Multiple groups - distribute by row (like regular data does with modulo)
+                const groupIndex = rowIndex % subtaskGroups.length
+                subtasksToProcess = subtaskGroups[groupIndex].subtasks
+              }
+            } else {
+              // For parsed clipboard data, get the appropriate row
+              if (isSingleCellValue) {
+                const pasteValue = parsedData[0].values[0]
+                subtasksToProcess = tsvToSubtasks(pasteValue)
+              } else {
+                const pasteRowIndex = rowIndex % parsedData.length
+                const clipboardRow = parsedData[pasteRowIndex]
+                const pasteColIndex = colIndex % clipboardRow.values.length
+                const pasteValue = clipboardRow.values[pasteColIndex]
+                subtasksToProcess = tsvToSubtasks(pasteValue)
+              }
+            }
+
+            // Skip if no subtasks to process
+            if (!subtasksToProcess || subtasksToProcess.length === 0) continue
+
+            // Create normalized subtasks from parsed data
+            const newSubtasks = subtasksToProcess.map((st, index) => ({
+              id: getEntityId(),
+              name: sanitizeSubtaskName(st.name || st.label || `Subtask ${index + 1}`),
+              label: st.label || '',
+              assignees: st.assignees || [],
+              description: st.label || '',
+              startDate: st.startDate,
+              endDate: st.endDate,
+              isDone: st.isDone || false,
+            }))
+
+            // Handle merge vs replace
+            if (method === 'merge') {
+              // Merge new subtasks with existing ones, removing duplicates by label and name
+              const mergedSubtasks = [...existingSubtasks]
+              const existingIdentifiers = new Set(
+                existingSubtasks.map((st) => {
+                  const label = (st.label || '').toLowerCase()
+                  const name = (st.name || '').toLowerCase()
+                  return `${label}|${name}`
+                }),
+              )
+
+              // Add new subtasks that don't already exist
+              for (const newSubtask of newSubtasks) {
+                const label = (newSubtask.label || '').toLowerCase()
+                const name = (newSubtask.name || '').toLowerCase()
+                const identifier = `${label}|${name}`
+                if (!existingIdentifiers.has(identifier)) {
+                  mergedSubtasks.push(newSubtask)
+                }
+              }
+              entityData.subtasks = mergedSubtasks
+            } else {
+              // Replace mode: use new subtasks, preserving IDs for any matching label and name
+              const replacedSubtasks = newSubtasks.map((newSt) => {
+                // Try to find existing subtask with matching label and name to preserve ID
+                const existingMatch = existingSubtasks.find(
+                  (est) =>
+                    (est.label || '').toLowerCase() === (newSt.label || '').toLowerCase() &&
+                    (est.name || '').toLowerCase() === (newSt.name || '').toLowerCase(),
+                )
+                return {
+                  ...newSt,
+                  id: existingMatch?.id || newSt.id,
+                }
+              })
+              entityData.subtasks = replacedSubtasks
+            }
+          }
+          continue
+        }
 
         // Check if this is an attribute field by examining the first entity
         let isAttrib = false,
@@ -560,12 +749,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           // Process the value based on its type
           const processedValue = processFieldValue(pasteValue, fieldValueType)
 
+          // Get entity to access entityId (important for list items where rowId is list item ID)
+          const entity = getEntityById(rowId)
+          const actualEntityId = entity?.entityId || rowId
+
           // Get or create entity entry in the map
           const entityKey = `${rowId}-${entityType}`
           if (!entitiesToUpdateMap.has(entityKey) && entityType) {
             entitiesToUpdateMap.set(entityKey, {
               rowId,
-              id: rowId,
+              id: actualEntityId,
               type: entityType,
               fields: {},
               attrib: {},
@@ -652,7 +845,20 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
       const allLinkUpdates = Array.from(linkUpdatesMap.values())
 
-      // Make separate calls to update entities and links
+      // Collect subtasks updates
+      const subtasksUpdates: Array<{ taskId: string; subtasks: any[]; previousSubtasks?: any[] }> =
+        []
+      entitiesToUpdateMap.forEach((entity) => {
+        if (entity.subtasks) {
+          subtasksUpdates.push({
+            taskId: entity.id,
+            subtasks: entity.subtasks,
+            previousSubtasks: entity.previousSubtasks,
+          })
+        }
+      })
+
+      // Make separate calls to update entities, links, and subtasks
       const updatePromises: Promise<void>[] = []
 
       if (allEntityUpdates.length > 0) {
@@ -661,6 +867,32 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
       if (allLinkUpdates.length > 0) {
         updatePromises.push(pasteTableLinks(allLinkUpdates))
+      }
+
+      if (subtasksUpdates.length > 0) {
+        // push undo/redo history entries for subtasks updates
+        if (history) {
+          subtasksUpdates.forEach(({ taskId, subtasks, previousSubtasks }) => {
+            const prev = previousSubtasks || []
+            const next = subtasks || []
+            const undoCallback = () => {
+              updateSubtasks({ projectName, taskId, subtasks: prev })
+                .unwrap()
+                .catch(() => {})
+            }
+            const redoCallback = () => {
+              updateSubtasks({ projectName, taskId, subtasks: next })
+                .unwrap()
+                .catch(() => {})
+            }
+            history.pushHistory([undoCallback], [redoCallback])
+          })
+        }
+        // Update subtasks for each task
+        const subtasksPromises = subtasksUpdates.map(({ taskId, subtasks }) =>
+          updateSubtasks({ projectName, taskId, subtasks }).unwrap(),
+        )
+        updatePromises.push(...subtasksPromises)
       }
 
       if (updatePromises.length > 0) {
@@ -682,6 +914,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       getEntityById,
       visibleColumns,
       attribFields,
+      projectName,
+      updateSubtasks,
+      history,
     ],
   )
 

@@ -9,6 +9,7 @@ import { filterProjectStatuses } from '@shared/hooks'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedDetailsPanel } from '@shared/context'
 import { EmptyPlaceholder } from '@shared/components'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
@@ -53,6 +54,11 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  // Filter out folder IDs - only actual project names should be used for API queries
+  const selectedProjectNames = useMemo(
+    () => selectedProjects.filter((id) => !parseProjectFolderRowId(id)),
+    [selectedProjects],
+  )
   let { isOpen: isPanelOpen } = useScopedDetailsPanel('dashboard')
 
   const user = useSelector((state) => state.user)
@@ -102,8 +108,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     isError,
     error,
   } = useGetKanbanQuery(
-    { assignees: assignees, projects: selectedProjects },
-    { skip: !assignees.length || !selectedProjects?.length },
+    { assignees: assignees, projects: selectedProjectNames },
+    { skip: !assignees.length || !selectedProjectNames?.length },
   )
 
   // get priority attribute so we know the colors and icons for each priority
@@ -163,8 +169,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   const { data: projectUsers = [], isLoading: isLoadingProjectUsers } =
     useGetKanbanProjectUsersQuery(
-      { projects: selectedProjects },
-      { skip: !selectedProjects?.length },
+      { projects: selectedProjectNames },
+      { skip: !selectedProjectNames?.length },
     )
 
   // for selected projects, make sure user is on all
@@ -269,6 +275,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           projectsInfo={projectsInfo}
           priorities={priorities}
           onOpenViewer={handleOpenViewer}
+          outsideSelection={selectedTasks}
         />
       </SplitterPanel>
 

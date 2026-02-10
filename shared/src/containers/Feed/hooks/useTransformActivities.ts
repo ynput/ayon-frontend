@@ -42,6 +42,7 @@ const useTransformActivities = (
   projectInfo = {},
   entityType,
   userName,
+  feedFilter,
 ) => {
   // 1. add status icons and data for status change activities
   const activitiesWithIcons = useMemo(
@@ -93,10 +94,17 @@ const useTransformActivities = (
   )
 
   // 5. group minor activities together
-  const groupedActivitiesData = useMemo(
-    () => groupMinorActivities(mergedActivitiesData, users),
-    [mergedActivitiesData, users],
-  )
+  const groupedActivitiesData = useMemo(() => {
+    const isUpdatesFilter = feedFilter?.conditions?.some(
+      (c) => 'key' in c && c.key === 'updates' && c.value === true,
+    )
+
+    if (isUpdatesFilter) {
+      return mergedActivitiesData
+    }
+
+    return groupMinorActivities(mergedActivitiesData, users)
+  }, [mergedActivitiesData, users, feedFilter])
 
   // 6. group version activities together
   const groupedVersionsData = useMemo(

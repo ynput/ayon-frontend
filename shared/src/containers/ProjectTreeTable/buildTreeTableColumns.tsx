@@ -8,27 +8,28 @@ import {
   GroupHeaderWidget,
   ThumbnailWidget,
 } from './widgets'
-import { getCellId, getCellValue } from './utils/cellUtils'
+import { getCellId, getCellValue, parseCellId } from './utils/cellUtils'
 import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
-import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
+import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
+import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
-import { ColumnsConfig, getColumnDisplayConfig } from './types/columnConfig'
+import { getColumnDisplayConfig } from './types/columnConfig'
 import { upperFirst } from 'lodash'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
 
-const MIN_SIZE = 50
+export const COLUMN_MIN_SIZE = 50
 
 // Wrapper function for sorting that pushes isLoading rows to the bottom
 const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
@@ -202,7 +203,7 @@ const buildTreeTableColumns = ({
       id: 'name',
       accessorKey: 'name',
       header: nameLabel,
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
       enableSorting: groupBy ? false : canSort('name'),
       enableResizing: true,
@@ -320,7 +321,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'status',
       accessorKey: 'status',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       header: 'Status',
       sortingFn: withLoadingStateSort((a, b, c) =>
         attribSort(a, b, c, { enum: options.status, type: 'string' }),
@@ -406,7 +407,7 @@ const buildTreeTableColumns = ({
       id: 'subType',
       accessorKey: 'subType',
       header: scopes.includes('product') || scopes.includes('version') ? 'Product type' : 'Type',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('subType'),
       enableResizing: true,
       enablePinning: true,
@@ -473,7 +474,7 @@ const buildTreeTableColumns = ({
       id: 'assignees',
       accessorKey: 'assignees',
       header: 'Assignees',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('assignees'),
       enableResizing: true,
       enablePinning: true,
@@ -528,7 +529,7 @@ const buildTreeTableColumns = ({
       id: 'folder',
       accessorKey: 'folder',
       header: 'Folder name',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('folderName'),
       enableResizing: true,
       enablePinning: true,
@@ -557,7 +558,7 @@ const buildTreeTableColumns = ({
       id: 'author',
       accessorKey: 'author',
       header: 'Author',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('author'),
       enableResizing: true,
       enablePinning: true,
@@ -590,7 +591,7 @@ const buildTreeTableColumns = ({
       id: 'version',
       accessorKey: 'version',
       header: 'Version',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('version'),
       enableResizing: true,
       enablePinning: true,
@@ -626,7 +627,7 @@ const buildTreeTableColumns = ({
       id: 'product',
       accessorKey: 'product',
       header: 'Product name',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('product'),
       enableResizing: true,
       enablePinning: true,
@@ -655,7 +656,7 @@ const buildTreeTableColumns = ({
       id: 'tags',
       accessorKey: 'tags',
       header: 'Tags',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('tags'),
       enableResizing: true,
       enablePinning: true,
@@ -693,7 +694,7 @@ const buildTreeTableColumns = ({
       id: 'createdAt',
       accessorKey: 'createdAt',
       header: 'Created at',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('createdAt'),
       enableResizing: true,
       enablePinning: true,
@@ -723,7 +724,7 @@ const buildTreeTableColumns = ({
       id: 'updatedAt',
       accessorKey: 'updatedAt',
       header: 'Updated at',
-      minSize: MIN_SIZE,
+      minSize: COLUMN_MIN_SIZE,
       enableSorting: canSort('updatedAt'),
       enableResizing: true,
       enablePinning: true,
@@ -748,6 +749,44 @@ const buildTreeTableColumns = ({
     })
   }
 
+  if (isIncluded('subtasks') && scopes.includes('task')) {
+    staticColumns.push({
+      id: 'subtasks',
+      accessorKey: 'subtasks',
+      header: 'Subtasks',
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        // only show for tasks
+        if (type !== 'task') return <div className="readonly"></div>
+
+        const subtasksData: SubtasksWidgetData = {
+          taskId: parseGroupId(row.id) || row.original.entityId || row.original.id,
+          subtasks: value || [],
+        }
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('subtasks', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={subtasksData.subtasks?.map((s: any) => s.label || s.name) || []}
+            valueData={subtasksData}
+            attributeData={{ type: 'subtasks' }}
+            isReadOnly={meta?.readOnly?.includes(column.id)}
+          />
+        )
+      },
+    })
+  }
+
   const attributeColumns: ColumnDef<TableRow>[] = attribs
     .filter((attrib) => {
       // filter out attributes that are out of scope
@@ -765,7 +804,7 @@ const buildTreeTableColumns = ({
         id: 'attrib_' + attrib.name,
         accessorKey: 'attrib.' + attrib.name,
         header: attrib.data.title || attrib.name,
-        minSize: MIN_SIZE,
+        minSize: COLUMN_MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
         sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
         enableSorting: canSort(attrib.name) && canSort('attrib'),
@@ -839,7 +878,7 @@ const buildTreeTableColumns = ({
                   />
                 </LinkColumnHeader>
               ),
-              minSize: MIN_SIZE,
+              minSize: COLUMN_MIN_SIZE,
               enableSorting: false,
               enableResizing: true,
               enablePinning: true,

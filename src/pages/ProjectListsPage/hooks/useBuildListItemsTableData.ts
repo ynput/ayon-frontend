@@ -58,6 +58,7 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         hasReviewables: 'hasReviewables' in item ? item.hasReviewables : false, // products don't have this field
         subRows: [],
         links: links, // Add processed links
+        subtasks: item.subtasks || [], // Add subtasks if they exist
       }
     })
   }

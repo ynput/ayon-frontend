@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.3.2",
+  "version": "0.3.11",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -84,6 +84,11 @@
       "types": "./dist/types/containers/SimpleTable/index.d.ts",
       "import": "./dist/SimpleTable.es.js",
       "require": "./dist/SimpleTable.cjs.js"
+    },
+    "./EntityPickerDialog": {
+      "types": "./dist/types/containers/EntityPickerDialog/index.d.ts",
+      "import": "./dist/EntityPickerDialog.es.js",
+      "require": "./dist/EntityPickerDialog.cjs.js"
     }
   },
   "files": [

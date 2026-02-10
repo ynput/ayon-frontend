@@ -161,7 +161,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           align="right"
           isReadOnly={isReadOnly}
           enableCustomValues={field.enableCustomValues ?? false}
-          search={field.enableSearch ?? false}
+          search={field.enableSearch ?? enumOptions.length>=5}
           sortBySelected={!enumOptions}
           {...widgetCommonProps}
         />

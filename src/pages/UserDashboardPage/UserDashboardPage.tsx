@@ -15,6 +15,7 @@ import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import styled from 'styled-components'
@@ -92,10 +93,16 @@ const UserDashboardPage: React.FC = () => {
   const selectedProjects = useAppSelector((state: any) => state.dashboard.selectedProjects)
   const setSelectedProjects = (projects: string[]) => dispatch(onProjectSelected(projects))
 
+  // Filter out folder IDs from selection - only actual project names should be used for API queries
+  const selectedProjectNames = useMemo(
+    () => selectedProjects.filter((id: string) => !parseProjectFolderRowId(id)),
+    [selectedProjects],
+  )
+
   // get all the info required for the projects selected, like status icons and colours
   const { data: projectsInfo = {}, isFetching: isLoadingInfo } = useGetProjectsInfoQuery(
-    { projects: selectedProjects },
-    { skip: !selectedProjects?.length },
+    { projects: selectedProjectNames },
+    { skip: !selectedProjectNames?.length },
   )
 
   // get projects list
@@ -153,7 +160,7 @@ const UserDashboardPage: React.FC = () => {
         path: '/dashboard/dashboard',
         module: 'dashboard',
         accessLevels: [],
-        component: <ProjectDashboard projectName={selectedProjects[0]} />,
+        component: <ProjectDashboard projectName={selectedProjectNames[0]} />,
         showProjectList: true,
         isMultiSelect: false,
       },
@@ -208,6 +215,7 @@ const UserDashboardPage: React.FC = () => {
       projectsInfoWithProjects,
       isLoadingInfo,
       selectedProjects,
+      selectedProjectNames,
       isAdmin,
       isManager,
       addonName,

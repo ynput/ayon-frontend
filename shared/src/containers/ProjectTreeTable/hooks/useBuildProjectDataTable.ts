@@ -147,6 +147,7 @@ export default function useBuildProjectDataTable({
         createdAt: task.createdAt,
         hasReviewables: task.hasReviewables || false,
         links: links,
+        subtasks: task.subtasks || [],
       }
     }
 
