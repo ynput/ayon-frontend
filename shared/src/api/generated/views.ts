@@ -319,6 +319,7 @@ export type VersionsSettings = {
   featuredVersionOrder?: string[]
   slicerType?: string
   groupBy?: string
+  groupSortByDesc?: boolean
   showEmptyGroups?: boolean
   sortBy?: string
   sortDesc?: boolean
