@@ -516,12 +516,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             // Subtasks only apply to tasks
             if (entityType !== 'task') continue
 
+            // Get entity to access entityId (important for list items where rowId is list item ID)
+            const entity = getEntityById(rowId)
+            const actualEntityId = entity?.entityId || rowId
+
             // Get or create entity entry in the map
             const entityKey = `${rowId}-${entityType}`
             if (!entitiesToUpdateMap.has(entityKey)) {
               entitiesToUpdateMap.set(entityKey, {
                 rowId,
-                id: rowId,
+                id: actualEntityId,
                 type: entityType,
                 fields: {},
                 attrib: {},
@@ -531,7 +535,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
             const entityData = entitiesToUpdateMap.get(entityKey)!
             // Get existing subtasks from entity
-            const entity = getEntityById(rowId)
             const existingSubtasks = (entity && 'subtasks' in entity && entity.subtasks) || []
             // store previous subtasks for history/undo
             entityData.previousSubtasks = existingSubtasks
@@ -746,12 +749,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           // Process the value based on its type
           const processedValue = processFieldValue(pasteValue, fieldValueType)
 
+          // Get entity to access entityId (important for list items where rowId is list item ID)
+          const entity = getEntityById(rowId)
+          const actualEntityId = entity?.entityId || rowId
+
           // Get or create entity entry in the map
           const entityKey = `${rowId}-${entityType}`
           if (!entitiesToUpdateMap.has(entityKey) && entityType) {
             entitiesToUpdateMap.set(entityKey, {
               rowId,
-              id: rowId,
+              id: actualEntityId,
               type: entityType,
               fields: {},
               attrib: {},
