@@ -127,6 +127,7 @@ const defaultEntityToGroupRow = (
       productTypes: Object.values(project.productTypes) || [],
       taskTypes: project?.taskTypes || [],
     }),
+    subtasks: task.subtasks || [],
   }
 }
 

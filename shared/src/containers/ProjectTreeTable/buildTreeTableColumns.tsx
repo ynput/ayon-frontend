@@ -8,14 +8,14 @@ import {
   GroupHeaderWidget,
   ThumbnailWidget,
 } from './widgets'
-import { getCellId, getCellValue } from './utils/cellUtils'
+import { getCellId, getCellValue, parseCellId } from './utils/cellUtils'
 import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
-import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
+import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
@@ -757,7 +757,7 @@ const buildTreeTableColumns = ({
         if (type !== 'task') return <div className="readonly"></div>
 
         const subtasksData: SubtasksWidgetData = {
-          taskId: id,
+          taskId: parseGroupId(row.id) || row.original.entityId || row.original.id,
           subtasks: value || [],
         }
 
