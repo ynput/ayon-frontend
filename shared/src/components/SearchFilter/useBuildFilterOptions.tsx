@@ -582,6 +582,11 @@ const getSubTypes = (
             inverted: false,
             values: [],
             allowsCustomValues: false,
+            pt: {
+              style:{
+                color: 'inherit'
+              }
+            }
           })
         }
       })
@@ -601,6 +606,11 @@ const getSubTypes = (
             inverted: false,
             values: [],
             allowsCustomValues: false,
+            pt: {
+              style:{
+                color: 'inherit'
+              }
+            }
           })
         }
       })
@@ -874,6 +884,9 @@ const getAttributeOptions = (
         values: [],
         icon: enumItem.icon,
         color: enumItem.color,
+        pt:{
+          style:{color:'inherit'}
+        }
       })
     })
   }
