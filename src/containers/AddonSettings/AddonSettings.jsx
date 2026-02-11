@@ -105,7 +105,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const isUser = useSelector((state) => state.user.data.isUser)
   //const navigate = useNavigate()
   const user = useSelector((state) => state.user)
-  const developerMode = user?.attrib?.developerMode
+  const developerMode = useMemo(() => user?.attrib?.developerMode, [JSON.stringify(user?.attrib)])
+  const userName = useSelector((state) => state.user.name)
 
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -119,26 +120,11 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
-  const userName = useSelector((state) => state.user.name)
 
-  const [selectedBundle, setSelectedBundle] = useLocalStorage('variant-type', () => {
-    // If in developer mode, try to find the user's dev bundle
-    if (developerMode) {
-      const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
-      if (devBundle) {
-        return {
-          variant: devBundle.name,
-          bundleName: devBundle.name,
-          projectBundleName: undefined,
-        }
-      }
-    }
-    // Default to production for non-developers or if no dev bundle found
-    return {
-      variant: 'production',
-      bundleName: null,
-      projectBundleName: undefined,
-    }
+  const [selectedBundle, setSelectedBundle] = useLocalStorage('variant-type', {
+    variant: 'production',
+    bundleName: null,
+    projectBundleName: undefined,
   })
 
   const [loadedBundleName, setLoadedBundleName] = useState('????')
@@ -180,11 +166,15 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     })
   }
 
+  const devBundles = useMemo(() => {
+    return bundles.filter((bundle) => bundle.isDev && bundle.activeUser === userName)
+  }, [bundles, userName])
+
   // Update selectedBundle when developer mode changes
   useEffect(() => {
     if (developerMode) {
       // Switch to dev bundle when entering developer mode
-      const devBundle = bundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
+      const devBundle = devBundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
       if (devBundle) {
         setSelectedBundle({
           variant: devBundle.name,
@@ -196,12 +186,12 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     } else {
       // Switch back to production when leaving developer mode
       setSelectedBundle({
-        variant: selectedBundle.variant || 'production',
+        variant: 'production',
         bundleName: null,
         projectBundleName: undefined,
       })
     }
-  }, [developerMode, bundles, userName])
+  }, [developerMode, JSON.stringify(devBundles), userName])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
