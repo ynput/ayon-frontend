@@ -76,6 +76,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   const initialPosition = useRef(0) // in seconds
   const seekedToInitialPosition = useRef(false)
+  const isTransitioning = useRef(false)
+  const pendingSourceRef = useRef(null)
+  const [transitionTick, setTransitionTick] = useState(0)
 
   const [currentTime, setCurrentTime] = useState(0) // in seconds
   const [duration, setDuration] = useState(0) // in seconds
@@ -162,8 +165,18 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     }
 
     const handleCanPlay = () => {
-      seekPreferredInitialPosition()
-      setShowStill(false)
+      const didSeek = seekPreferredInitialPosition()
+      if (didSeek) {
+        const onSeeked = () => {
+          isTransitioning.current = false
+          setShowStill(false)
+          videoRef.current?.removeEventListener('seeked', onSeeked)
+        }
+        videoRef.current?.addEventListener('seeked', onSeeked)
+      } else {
+        isTransitioning.current = false
+        setShowStill(false)
+      }
     }
 
     // Attach event listeners
@@ -182,10 +195,23 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     // so the transition to the new video is not visible
     console.debug('VideoPlayer: source changed to', src)
     if (!videoRef.current) return
+    isTransitioning.current = true
+    pendingSourceRef.current = src
     setShowStill(true)
-    // Give the overlay some time to show up
-    setTimeout(() => setActualSource(src), 20)
+    setCurrentTime(initialPosition.current)
+    setTransitionTick((t) => t + 1)
   }, [src, videoRef])
+
+  useEffect(() => {
+    // After React has rendered showStill=true and VideoOverlay has drawn the still,
+    // wait one frame for the browser to paint, then swap the video source
+    if (!pendingSourceRef.current) return
+    const source = pendingSourceRef.current
+    pendingSourceRef.current = null
+    requestAnimationFrame(() => {
+      setActualSource(source)
+    })
+  }, [transitionTick])
 
   const handleLoad = () => {
     console.debug('VideoPlayer: handleLoad')
@@ -221,6 +247,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   }
 
   const handleProgress = (e) => {
+    if (isTransitioning.current) return
     // create a list of buffered time ranges
     const buffered = e.target.buffered
     if (!buffered.length) return
@@ -247,7 +274,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   const frameCallbackRef = useRef(null)
 
   const updateCurrentTime = (now, metadataInfo) => {
-    setCurrentTime(metadataInfo.mediaTime)
+    if (!isTransitioning.current) {
+      setCurrentTime(metadataInfo.mediaTime)
+    }
     const video = videoRef.current
     if (!video) return
     
@@ -330,19 +359,20 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     // This is called when verison is changed
     // It maintains the position of the video after switching
     // so the user can compare two frames
-    if (seekedToInitialPosition.current) return
+    // Returns true if a seek was initiated (async), false otherwise
+    if (seekedToInitialPosition.current) return false
     const newTime = initialPosition.current
 
-    if (newTime >= videoRef.current?.duration) return
-    if (isNaN(newTime)) return
+    if (newTime >= videoRef.current?.duration) return false
+    if (isNaN(newTime)) return false
 
     if (videoRef.current?.currentTime > 0 || newTime === 0) {
       seekedToInitialPosition.current = true
-      return
+      return false
     }
     if (videoRef.current?.currentTime === newTime) {
       seekedToInitialPosition.current = true
-      return
+      return false
     }
 
     console.debug(
@@ -353,6 +383,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     )
     seekToTime(newTime)
     seekedToInitialPosition.current = true
+    return true
   }
 
   const seekToTime = (newTime) => {
