@@ -29,16 +29,21 @@ const PerProjectBundleConfig: FC<PerProjectBundleConfigProps> = ({
   const bundleSetForVariant = false // Placeholder until project context works
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const enabled = ['production', 'staging'].includes(variant)
 
   return (
     <>
       <Button
         icon={FROZEN_BUNDLE_ICON}
-        data-tooltip={`Freeze ${variant} bundle for this project`}
+        data-tooltip={
+          enabled
+            ? `Freeze ${variant} bundle for this project`
+            : 'Variant must be production or staging to freeze.'
+        }
         data-tooltip-delay={0}
         onClick={() => setDialogOpen(!dialogOpen)}
         variant={bundleSetForVariant ? 'filled' : 'surface'}
-        disabled={!['production', 'staging'].includes(variant)}
+        disabled={!enabled}
         selected={isPerProjectBundle}
       />
       {dialogOpen && (
