@@ -20,9 +20,9 @@
  * management, filtering,  and folder inheritance operations.
  */
 import { ReactNode, useCallback, useMemo } from 'react'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
-import { Filter } from '@ynput/ayon-react-components'
 import {
   EntitiesMap,
   EntityMap,
@@ -45,6 +45,7 @@ import { PowerpackContextType, useProjectContext } from '@shared/context'
 import { useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
+import type { SubtasksManagerProps } from '@shared/components'
 
 export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
 
@@ -112,6 +113,9 @@ export interface ProjectTableProviderProps {
     entityType?: GroupByEntityType
   }
 
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
+
   // player
   playerOpen?: boolean
   onOpenPlayer?: (
@@ -125,6 +129,11 @@ export interface ProjectTableProviderProps {
   ) => void
   // views
   onResetView?: () => void
+  // router hooks
+  useParams?: typeof useParams
+  useNavigate?: typeof useNavigate
+  useLocation?: typeof useLocation
+  useSearchParams?: typeof useSearchParams
 }
 
 export const ProjectTableProvider = ({
@@ -157,11 +166,16 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  SubtasksManager,
   // player
   playerOpen,
   onOpenPlayer,
   // views
   onResetView,
+  useParams,
+  useNavigate,
+  useLocation,
+  useSearchParams,
 }: ProjectTableProviderProps) => {
   const { attrib: projectAttrib } = useProjectContext()
   // DATA TO TABLE
@@ -341,11 +355,18 @@ export const ProjectTableProvider = ({
         // powerpack context
         powerpack,
         modules,
+        // SubtasksManager
+        SubtasksManager,
         // player
         playerOpen,
         onOpenPlayer,
         // views
         onResetView,
+        // router hooks
+        useParams,
+        useNavigate,
+        useLocation,
+        useSearchParams,
       }}
     >
       {children}

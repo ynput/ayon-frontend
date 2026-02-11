@@ -1,8 +1,9 @@
 import { FC } from 'react'
 
 import { Feed, ActivityReferenceTooltip, FeedProvider } from '@shared/containers/Feed'
-import type { Status } from '@shared/api'
-import { useDetailsPanelContext, DetailsPanelTab } from '@shared/context'
+import type { Status, QueryFilter } from '@shared/api'
+import { useDetailsPanelContext } from '@shared/context'
+import { useLocalStorage } from '@shared/hooks'
 
 interface FeedWrapperProps {
   entities: any[]
@@ -19,8 +20,6 @@ interface FeedWrapperProps {
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
-  currentTab: DetailsPanelTab
-  setCurrentTab: (tab: DetailsPanelTab) => void
 }
 
 // forwards any props
@@ -33,8 +32,6 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
   annotations,
   removeAnnotation,
   exportAnnotationComposite,
-  currentTab,
-  setCurrentTab,
   ...props
 }) => {
   const annotationsProps = { annotations, removeAnnotation, exportAnnotationComposite }
@@ -43,6 +40,11 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
 
   const userName = user.name || ''
   const userFullName = user.attrib?.fullName || ''
+
+  const [feedFilter, setFeedFilter] = useLocalStorage<QueryFilter>(`feed-filters-${scope}`, {
+    operator: 'and',
+    conditions: [],
+  })
 
   return (
     <FeedProvider
@@ -54,12 +56,13 @@ const FeedWrapper: FC<FeedWrapperProps> = ({
         projectInfo,
         userName,
         userFullName,
+        feedFilter,
+        setFeedFilter,
       }}
       {...annotationsProps}
-      {...{ currentTab, setCurrentTab }}
       {...props}
     >
-      <Feed {...props} />
+      <Feed {...props} statuses={props.statuses} />
       <ActivityReferenceTooltip />
     </FeedProvider>
   )

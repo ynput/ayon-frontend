@@ -8,17 +8,18 @@ import {
   GroupHeaderWidget,
   ThumbnailWidget,
 } from './widgets'
-import { getCellId, getCellValue } from './utils/cellUtils'
+import { getCellId, getCellValue, parseCellId } from './utils/cellUtils'
 import { LinkColumnHeader, TableCellContent } from './ProjectTreeTable.styled'
 import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
-import { NEXT_PAGE_ID } from './hooks/useBuildGroupByTableData'
+import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import { LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
+import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import { NameWidgetData } from '@shared/components/RenameForm'
@@ -731,6 +732,44 @@ const buildTreeTableColumns = ({
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly={true}
             pt={{ date: { showTime: true } }}
+          />
+        )
+      },
+    })
+  }
+
+  if (isIncluded('subtasks') && scopes.includes('task')) {
+    staticColumns.push({
+      id: 'subtasks',
+      accessorKey: 'subtasks',
+      header: 'Subtasks',
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column, table }) => {
+        const meta = table.options.meta
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+
+        // only show for tasks
+        if (type !== 'task') return <div className="readonly"></div>
+
+        const subtasksData: SubtasksWidgetData = {
+          taskId: parseGroupId(row.id) || row.original.entityId || row.original.id,
+          subtasks: value || [],
+        }
+
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx('subtasks', { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={subtasksData.subtasks?.map((s: any) => s.label || s.name) || []}
+            valueData={subtasksData}
+            attributeData={{ type: 'subtasks' }}
+            isReadOnly={meta?.readOnly?.includes(column.id)}
           />
         )
       },

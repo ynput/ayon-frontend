@@ -1,5 +1,5 @@
 import { GetTasksByParentQuery } from '@shared/api'
-import type { EntityLink } from '@shared/api'
+import type { EntityLink, SubTaskNode } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
 import { LinkValue } from '../utils'
 
@@ -59,6 +59,7 @@ export type TableRow = {
   author?: string
   attrib?: Record<string, any>
   links?: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
+  subtasks?: SubTaskNode[]
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean

@@ -2,6 +2,8 @@ import { FC, useRef, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
+export const BLOCK_DIALOG_CLOSE_CLASS = 'block-dialog-close'
+
 const StyledPopUp = styled.div`
   position: fixed;
   z-index: 310;
@@ -20,6 +22,7 @@ type Position = {
 export interface LinksManagerDialogProps {
   isEditing: boolean
   anchorId: string
+  containerClassName?: string
   onClose?: () => void
   children?: React.ReactNode
 }
@@ -27,6 +30,7 @@ export interface LinksManagerDialogProps {
 export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   isEditing,
   anchorId,
+  containerClassName = 'table-container',
   onClose,
   children,
 }) => {
@@ -38,7 +42,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
 
   // get the cell element based on the cellId
   const anchorElement = document.getElementById(anchorId)
-  const tableContainer = anchorElement?.closest('.table-container')
+  const tableContainer = anchorElement?.closest(`.${containerClassName}`)
 
   const updatePosition = () => {
     if (!isEditing) return
@@ -138,15 +142,24 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   // close the dialog when clicking outside of it
   useLayoutEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+
       if (
         popupRef.current &&
-        !popupRef.current.contains(event.target as Node) &&
+        !popupRef.current.contains(target) &&
         anchorElement &&
-        !anchorElement.contains(event.target as Node) &&
+        !anchorElement.contains(target) &&
         // check we are not clicking inside the EntityPickerDialog
-        !(event.target as HTMLElement).closest('.entity-picker-dialog') &&
+        !target.closest('.entity-picker-dialog') &&
         // check we are not clicking on the dialog backdrop
-        !(event.target as HTMLElement).querySelector('.entity-picker-dialog')
+        !target.querySelector('.entity-picker-dialog') &&
+        // check we are not clicking inside another dialog
+        !target.closest('dialog') &&
+        // check we are not clicking inside a dropdown
+        !target.closest('.dropdown') &&
+        !target.closest('.p-dialog-mask') &&
+        !target.closest('.p-datepicker') &&
+        !target.closest('.' + BLOCK_DIALOG_CLOSE_CLASS)
       ) {
         onClose?.()
       }
@@ -157,6 +170,20 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [onClose, anchorElement])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // check we are not inside an input or textarea
+    const target = e.target as HTMLElement
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return
+    }
+
+    // close dialog on escape
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      onClose?.()
+    }
+  }
 
   if (!isEditing) return null
   return createPortal(
@@ -172,11 +199,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
       }}
       className="links-widget-popup"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          onClose?.()
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </StyledPopUp>,

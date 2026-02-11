@@ -87,6 +87,7 @@ export const transformDetailsPanelQueriesData = ({
           label: task.label,
           assignees: task.assignees,
           taskType: task.taskType,
+          subtasks: task.subtasks,
         },
         product: undefined,
         version: task.versions?.edges?.[0]?.node,

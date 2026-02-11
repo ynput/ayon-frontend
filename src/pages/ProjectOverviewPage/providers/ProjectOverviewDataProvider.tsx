@@ -1,5 +1,9 @@
 import { FC } from 'react'
-import { ColumnSettingsProvider, ProjectDataProvider } from '@shared/containers/ProjectTreeTable'
+import {
+  ColumnSettingsProvider,
+  ProjectDataProvider,
+  ColumnDndProvider,
+} from '@shared/containers/ProjectTreeTable'
 import { useGroupByRemoteModules } from '@shared/hooks'
 import { SettingsPanelProvider, MoveEntityProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
@@ -23,13 +27,15 @@ const ProjectOverviewDataProvider: FC = () => {
   return (
     <ProjectDataProvider projectName={projectName}>
       <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
-        <MoveEntityProvider>
-          <ProjectOverviewProvider modules={modules}>
-            <SettingsPanelProvider>
-              <ProjectOverviewTableProvider modules={modules} />
-            </SettingsPanelProvider>
-          </ProjectOverviewProvider>
-        </MoveEntityProvider>
+        <ColumnDndProvider>
+          <MoveEntityProvider>
+            <ProjectOverviewProvider modules={modules}>
+              <SettingsPanelProvider>
+                <ProjectOverviewTableProvider modules={modules} />
+              </SettingsPanelProvider>
+            </ProjectOverviewProvider>
+          </MoveEntityProvider>
+        </ColumnDndProvider>
       </ColumnSettingsProvider>
     </ProjectDataProvider>
   )

@@ -70,7 +70,12 @@ export const patchVersions = (
   // Step 1: Get caches that need updating using selectInvalidatedBy for version tags
   const versionEntries = injectedVersionsPageApi.util.selectInvalidatedBy(state, tags)
 
-  // Step 2: Optimistically patch getVersionsInfinite and getVersionsByProducts caches
+  // Get IDs of versions being deleted
+  const deleteIds = new Set(
+    versions.filter((op) => op.type === 'delete').map((op) => op.entityId),
+  )
+
+  // Step 2: Optimistically patch caches - handle both updates and deletes
   for (const entry of versionEntries) {
     if (entry.endpointName === 'getVersionsInfinite') {
       const patch = dispatch(
@@ -78,11 +83,19 @@ export const patchVersions = (
           'getVersionsInfinite',
           entry.originalArgs,
           (draft: any) => {
-            // Update versions across all pages
             for (const page of draft.pages) {
+              // Remove deleted versions (iterate in reverse to avoid index issues)
+              for (let i = page.versions.length - 1; i >= 0; i--) {
+                if (deleteIds.has(page.versions[i].id)) {
+                  page.versions.splice(i, 1)
+                }
+              }
+              // Update remaining versions
               for (let i = 0; i < page.versions.length; i++) {
                 const version = page.versions[i]
-                const operation = versions.find((op) => op.entityId === version.id)
+                const operation = versions.find(
+                  (op) => op.entityId === version.id && op.type !== 'delete',
+                )
                 if (operation?.data) {
                   page.versions[i] = updateVersionWithOperation(version, operation.data)
                 }
@@ -98,10 +111,18 @@ export const patchVersions = (
           'getVersionsByProducts',
           entry.originalArgs,
           (draft: any) => {
-            // Update versions in the flat array
+            // Remove deleted versions (iterate in reverse to avoid index issues)
+            for (let i = draft.versions.length - 1; i >= 0; i--) {
+              if (deleteIds.has(draft.versions[i].id)) {
+                draft.versions.splice(i, 1)
+              }
+            }
+            // Update remaining versions
             for (let i = 0; i < draft.versions.length; i++) {
               const version = draft.versions[i]
-              const operation = versions.find((op) => op.entityId === version.id)
+              const operation = versions.find(
+                (op) => op.entityId === version.id && op.type !== 'delete',
+              )
               if (operation?.data) {
                 draft.versions[i] = updateVersionWithOperation(version, operation.data)
               }
@@ -116,20 +137,54 @@ export const patchVersions = (
           'getProductsInfinite',
           entry.originalArgs,
           (draft: any) => {
-            // Update featuredVersion for products whose featured version was updated
             for (const page of draft.pages) {
               for (const product of page.products) {
                 if (product.featuredVersion) {
-                  const operation = versions.find(
-                    (op) => op.entityId === product.featuredVersion.id,
-                  )
-                  if (operation?.data) {
-                    product.featuredVersion = updateVersionWithOperation(
-                      product.featuredVersion,
-                      operation.data,
+                  // If featured version was deleted, set to null
+                  if (deleteIds.has(product.featuredVersion.id)) {
+                    product.featuredVersion = null
+                  } else {
+                    // Update featured version if it was updated
+                    const operation = versions.find(
+                      (op) => op.entityId === product.featuredVersion.id && op.type !== 'delete',
                     )
+                    if (operation?.data) {
+                      product.featuredVersion = updateVersionWithOperation(
+                        product.featuredVersion,
+                        operation.data,
+                      )
+                    }
                   }
                 }
+              }
+            }
+          },
+        ),
+      )
+      patches?.push(patch)
+    } else if (entry.endpointName === 'getGroupedVersionsList') {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          'getGroupedVersionsList',
+          entry.originalArgs,
+          (draft: any) => {
+            // Remove deleted versions (iterate in reverse to avoid index issues)
+            for (let i = draft.versions.length - 1; i >= 0; i--) {
+              if (deleteIds.has(draft.versions[i].id)) {
+                draft.versions.splice(i, 1)
+              }
+            }
+            // Update remaining versions
+            for (let i = 0; i < draft.versions.length; i++) {
+              const version = draft.versions[i]
+              const operation = versions.find(
+                (op) => op.entityId === version.id && op.type !== 'delete',
+              )
+              if (operation?.data) {
+                // Preserve the groups array (contains pagination state)
+                const groups = version.groups
+                draft.versions[i] = updateVersionWithOperation(version, operation.data)
+                draft.versions[i].groups = groups
               }
             }
           },

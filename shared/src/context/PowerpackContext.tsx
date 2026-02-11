@@ -1,18 +1,24 @@
 import { useLoadModule } from '@shared/hooks'
-import { createContext, useContext, ReactNode, useState, useEffect, useMemo } from 'react'
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react'
+import { addonConfigs, type AddonConfig } from '../config'
 
-export type PowerpackFeature =
-  | 'slicer'
-  | 'annotations'
-  | 'releases'
-  | 'advancedFilters'
-  | 'listAttributes'
-  | 'listFolders'
-  |'projectFolders'
-  | 'listAccess'
-  | 'groupAttributes'
-  | 'sharedViews'
-  | 'commentCategories'
+// Re-export from separate feature files for backwards compatibility
+export type { PowerpackFeature } from '../config'
+export { powerpackFeatureOrder, powerpackFeatures } from '../config'
+export type { AddonConfig, AddonFeatureKey } from '../config'
+export { addonConfigs } from '../config'
+
+import type { PowerpackFeature } from '../config'
+import { powerpackFeatures } from '../config'
+
 export type PowerpackDialogType = {
   label: string
   description: string
@@ -20,84 +26,21 @@ export type PowerpackDialogType = {
   icon?: string
 }
 
-export const powerpackFeatureOrder: PowerpackFeature[] = [
-  'annotations',
-  'sharedViews',
-  'listFolders',
-  'projectFolders',
-  'groupAttributes',
-  'listAccess',
-  'slicer',
-  'releases',
-  'advancedFilters',
-  'listAttributes',
-  'commentCategories',
-]
-
-export const powerpackFeatures: {
-  [key in PowerpackFeature]: Omit<PowerpackDialogType, 'priority'>
-} = {
-  annotations: {
-    label: 'Annotations',
-    description: 'Create detailed visual feedback directly on media files.',
-    bullet: 'Advanced media review tools',
-  },
-  sharedViews: {
-    label: 'Shared Views',
-    description: 'Save custom views and share them with team members for better collaboration.',
-    bullet: 'Save and share custom views',
-  },
-  listFolders: {
-    label: 'List Folders',
-    description: 'Organize your lists into folders for a cleaner and more structured view.',
-    bullet: 'Organize lists into folders',
-  },
-  projectFolders: {
-    label: 'Project Folders',
-    description: 'Organize your projects into folders for a cleaner and more structured view.',
-    bullet: 'Organize projects into folders',
-  },
-  groupAttributes: {
-    label: 'Group Attributes',
-    description: 'Group tasks by assignees, status, or other attributes for better organization.',
-    bullet: 'Group tasks by attributes',
-  },
-  commentCategories: {
-    label: 'Comment Categories',
-    description:
-      'Organize comments with categories, assign permissions, and use colors for better distinction. Set visibility rules to control who can view specific comments.',
-    bullet: 'Enhanced comment organization, permissions, and visibility',
-  },
-  slicer: {
-    label: 'Slicer',
-    description: 'Advanced filtering system for project organization.',
-    bullet: 'Powerful project filtering tools',
-  },
-  releases: {
-    label: 'Release History',
-    description: 'Access and download the complete archive of releases',
-    bullet: 'Full release archive access',
-  },
-  advancedFilters: {
-    label: 'Advanced Filters',
-    description: 'Customize your view and find your data with powerful filtering options',
-    bullet: 'Advanced filtering options',
-  },
-  listAttributes: {
-    label: 'List Attributes',
-    description: 'Add custom attributes to your lists for better collaboration and organization.',
-    bullet: 'Custom attributes for lists',
-  },
-  listAccess: {
-    label: 'List Access',
-    description: 'Manage and control access to your lists with advanced sharing options.',
-    bullet: 'Advanced list sharing options',
-  },
+/** Selection for an addon-specific dialog */
+export type AddonDialogSelection = {
+  addon: string
+  feature?: string
 }
+
+/** The dialog can be opened for a power feature or an addon */
+export type PowerpackDialogSelection = PowerpackFeature | AddonDialogSelection | null
+
 export type PowerpackContextType = {
-  selectedPowerPack: null | PowerpackFeature
-  setPowerpackDialog: (open: PowerpackContextType['selectedPowerPack']) => void
+  selectedPowerPack: PowerpackFeature | null
+  selectedAddon: AddonDialogSelection | null
+  setPowerpackDialog: (open: PowerpackDialogSelection) => void
   powerpackDialog: PowerpackDialogType | null
+  addonDialog: (AddonConfig & { selectedFeature?: string }) | null
   powerLicense: boolean
   isLoading: boolean
 }
@@ -111,12 +54,41 @@ export const PowerpackProvider = ({
   children: ReactNode
   debug?: { powerLicense?: boolean }
 }) => {
-  const [selectedPowerPack, setPowerpackDialog] =
-    useState<PowerpackContextType['selectedPowerPack']>(null)
+  const [selectedPowerPack, setSelectedPowerPack] = useState<PowerpackFeature | null>(null)
+  const [selectedAddon, setSelectedAddon] = useState<AddonDialogSelection | null>(null)
 
-  const resolvePowerPackDialog = (selected: PowerpackContextType['selectedPowerPack']) => {
+  const isAddonSelection = (
+    selection: PowerpackDialogSelection,
+  ): selection is AddonDialogSelection => {
+    return selection !== null && typeof selection === 'object' && 'addon' in selection
+  }
+
+  const setPowerpackDialog = useCallback((selection: PowerpackDialogSelection) => {
+    if (selection === null) {
+      setSelectedPowerPack(null)
+      setSelectedAddon(null)
+    } else if (isAddonSelection(selection)) {
+      setSelectedPowerPack(null)
+      setSelectedAddon(selection)
+    } else {
+      // It's a PowerpackFeature string
+      setSelectedAddon(null)
+      setSelectedPowerPack(selection)
+    }
+  }, [])
+
+  const resolvePowerPackDialog = (selected: PowerpackFeature | null) => {
     if (!selected) return null
     return powerpackFeatures[selected]
+  }
+
+  const resolveAddonDialog = (
+    selected: AddonDialogSelection | null,
+  ): (AddonConfig & { selectedFeature?: string }) | null => {
+    if (!selected) return null
+    const config = addonConfigs[selected.addon]
+    if (!config) return null
+    return { ...config, selectedFeature: selected.feature }
   }
 
   // check license state
@@ -168,10 +140,12 @@ export const PowerpackProvider = ({
       powerLicense: powerLicense,
       isLoading,
       selectedPowerPack,
+      selectedAddon,
       setPowerpackDialog,
       powerpackDialog: resolvePowerPackDialog(selectedPowerPack),
+      addonDialog: resolveAddonDialog(selectedAddon),
     }),
-    [powerLicense, selectedPowerPack, setPowerpackDialog, isLoading],
+    [powerLicense, selectedPowerPack, selectedAddon, setPowerpackDialog, isLoading],
   )
 
   return <PowerpackContext.Provider value={value}>{children}</PowerpackContext.Provider>

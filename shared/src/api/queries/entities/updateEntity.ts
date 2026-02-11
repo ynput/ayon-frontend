@@ -2,10 +2,10 @@
 
 import api from './getEntity'
 import { detailsPanelQueries } from '@shared/api/queries'
-import { patchDetailsPanelEntity } from '@shared/api'
 import { toast } from 'react-toastify'
 import { dashboardQueries, getKanbanTasks } from '@shared/api/queries/userDashboard'
 import { patchOverviewFolders, patchOverviewTasks } from '@shared/api/queries/overview'
+import { patchDetailsPanel } from './patchDetailsPanel'
 
 const patchKanban = (
   { assignees = [], projects = [] },
@@ -287,31 +287,7 @@ const updateEntity = api.injectEndpoints({
         }
 
         // get all details panel caches that would be affected by this update
-        const detailsPanelTags = [
-          {
-            type: 'entities',
-            id: entityId,
-          },
-        ]
-
-        const detailsPanelEntries = api.util.selectInvalidatedBy(state, detailsPanelTags)
-
-        for (const entry of detailsPanelEntries) {
-          // patch any entity details panels in dashboard
-          let entityDetailsResult = dispatch(
-            detailsPanelQueries.util.updateQueryData(
-              'getEntitiesDetailsPanel',
-              entry.originalArgs,
-              (draft) => {
-                for (const entity of draft) {
-                  patchDetailsPanelEntity([{ entityId, data, entityType }], entity)
-                }
-              },
-            ),
-          )
-
-          patchResults.push(entityDetailsResult)
-        }
+        patchDetailsPanel([{ entityId, data, entityType }], { state, dispatch }, patchResults)
 
         try {
           await queryFulfilled
