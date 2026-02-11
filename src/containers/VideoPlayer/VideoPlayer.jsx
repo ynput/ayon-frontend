@@ -77,6 +77,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   const initialPosition = useRef(0) // in seconds
   const seekedToInitialPosition = useRef(false)
   const isTransitioning = useRef(false)
+  const pendingSourceRef = useRef(null)
+  const [transitionTick, setTransitionTick] = useState(0)
 
   const [currentTime, setCurrentTime] = useState(0) // in seconds
   const [duration, setDuration] = useState(0) // in seconds
@@ -194,11 +196,22 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     console.debug('VideoPlayer: source changed to', src)
     if (!videoRef.current) return
     isTransitioning.current = true
+    pendingSourceRef.current = src
     setShowStill(true)
     setCurrentTime(initialPosition.current)
-    // Give the overlay some time to show up
-    setTimeout(() => setActualSource(src), 20)
+    setTransitionTick((t) => t + 1)
   }, [src, videoRef])
+
+  useEffect(() => {
+    // After React has rendered showStill=true and VideoOverlay has drawn the still,
+    // wait one frame for the browser to paint, then swap the video source
+    if (!pendingSourceRef.current) return
+    const source = pendingSourceRef.current
+    pendingSourceRef.current = null
+    requestAnimationFrame(() => {
+      setActualSource(source)
+    })
+  }, [transitionTick])
 
   const handleLoad = () => {
     console.debug('VideoPlayer: handleLoad')
