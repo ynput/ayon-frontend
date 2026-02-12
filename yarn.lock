@@ -2717,10 +2717,10 @@
   dependencies:
     tslib "^2.6.3"
 
-"@ynput/ayon-react-components@^1.15.20":
-  version "1.15.20"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.15.20.tgz#11905836b76232df607b08f2fe361898abf018e1"
-  integrity sha512-hebvrIZHnvOMA+t50kd61TqR8JZFKYy1MRJN/4m2qbWvH64EN/zzgoZr/flSVSvK44RQxdFTI3g5Ijw63IKGTw==
+"@ynput/ayon-react-components@^1.15.21":
+  version "1.15.21"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.15.21.tgz#4063f4f0bfeb29748e5e6a4a91b7288a21c0b801"
+  integrity sha512-jonswwcoo7jPgKzVrIglRyZdkcsqOs7o+p/9dvaKw2zdgPiZuJttsLUl0+1/Kq3RSlTmg4So+3SeJo5gg/yc3w==
   dependencies:
     short-uuid "^5.2.0"
 
@@ -2970,15 +2970,6 @@ available-typed-arrays@^1.0.7:
   dependencies:
     possible-typed-array-names "^1.0.0"
 
-axios@1.13.5:
-  version "1.13.5"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.5.tgz#5e464688fa127e11a660a2c49441c009f6567a43"
-  integrity sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==
-  dependencies:
-    follow-redirects "^1.15.11"
-    form-data "^4.0.5"
-    proxy-from-env "^1.1.0"
-
 axios@^1.12.0:
   version "1.13.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.2.tgz#9ada120b7b5ab24509553ec3e40123521117f687"
@@ -2986,6 +2977,15 @@ axios@^1.12.0:
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.4"
+    proxy-from-env "^1.1.0"
+
+axios@^1.13.2:
+  version "1.13.5"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.5.tgz#5e464688fa127e11a660a2c49441c009f6567a43"
+  integrity sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==
+  dependencies:
+    follow-redirects "^1.15.11"
+    form-data "^4.0.5"
     proxy-from-env "^1.1.0"
 
 babel-plugin-styled-components@^2.0.7:

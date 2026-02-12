@@ -5,24 +5,36 @@ import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-compo
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
-import { CellWithIcon } from '@components/icons'
-import { DetailsDialog } from '@shared/components'
+import { EntityIcon, DetailsDialog } from '@shared/components'
 import { useGetFolderHierarchyQuery } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
-import { setFocusedFolders, setUri, setExpandedFolders, setSelectedVersions } from '@state/context'
+import { setFocusedFolders, setExpandedFolders, setSelectedVersions } from '@state/context'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 
-const filterHierarchy = (text, folder, folders) => {
+// Cell component that uses EntityIcon for proper icon/color from anatomy
+const HierarchyCell = ({ label, name, folderType }) => (
+  <span style={{  alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+    <EntityIcon entity={{ entityType: 'folder', subType: folderType }} />
+    <span
+      title={name}
+      style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+    >
+      {label || name}
+    </span>
+  </span>
+)
+
+const filterHierarchy = (text, folder) => {
   let result = []
   if (!folder) return []
   for (const item of folder) {
     if (item.name && (!text || item.name.toLowerCase().includes(text.toLowerCase()))) {
-      const newChildren = filterHierarchy(false, item.children, folders)
+      const newChildren = filterHierarchy(false, item.children)
       result.push({
         key: item.id,
         children: newChildren,
@@ -31,20 +43,15 @@ const filterHierarchy = (text, folder, folders) => {
           label: item.label,
           status: item.status,
           folderType: item.folderType,
-          // hasProducts: item.hasProducts,
           hasTasks: item.hasTasks,
           parents: item.parents,
           body: (
-            <CellWithIcon
-              icon={folders[item.folderType]?.icon}
-              text={item.label}
-              name={item.name}
-            />
+            <HierarchyCell label={item.label} name={item.name} folderType={item.folderType} />
           ),
         },
       })
     } else if (item.children) {
-      const newChildren = filterHierarchy(text, item.children, folders)
+      const newChildren = filterHierarchy(text, item.children)
       if (newChildren.length > 0) {
         result.push({
           key: item.id,
@@ -54,15 +61,10 @@ const filterHierarchy = (text, folder, folders) => {
             label: item.label,
             status: item.status,
             folderType: item.folderType,
-            // hasProducts: item.hasProducts,
             hasTasks: item.hasTasks,
             parents: item.parents,
             body: (
-              <CellWithIcon
-                icon={folders[item.folderType]?.icon}
-                text={item.label}
-                name={item.name}
-              />
+              <HierarchyCell label={item.label} name={item.name} folderType={item.folderType} />
             ),
           },
         })
@@ -75,15 +77,12 @@ const filterHierarchy = (text, folder, folders) => {
 const Hierarchy = (props) => {
   const projectName = useSelector((state) => state.project.name)
   const foldersOrder = useSelector((state) => state.project.foldersOrder || [])
-  const folders = useSelector((state) => state.project.folders || {})
   const folderTypeList = foldersOrder.map((f) => ({ label: f, value: f }))
-  // const focusedType = useSelector((state) => state.context.focused.type)
   const expandedFolders = useSelector((state) => state.context.expandedFolders)
   const focusedFolders = useSelector((state) => state.context.focused.folders)
 
   const dispatch = useDispatch()
   const [query, setQuery] = useState('')
-  const [newUri, setNewUri] = useState('')
   const [selectedFolderTypes, setSelectedFolderTypes] = useState([])
   const [showDetail, setShowDetail] = useState(false)
 
@@ -145,7 +144,7 @@ const Hierarchy = (props) => {
 
   let treeData = useMemo(() => {
     if (!hierarchyData) return []
-    return filterHierarchy(query, hierarchyData, folders)
+    return filterHierarchy(query, hierarchyData)
   }, [hierarchyData, query, isFetching])
 
   function filterArray(arr = [], filter = []) {
@@ -215,9 +214,8 @@ const Hierarchy = (props) => {
   const onFocus = (event) => {
     const id = extractIdFromClassList(event.target.classList)
     if (!id) return
-    const node = hierarchyObjectData[id]
-    if (!node) return
-    setNewUri(`ayon+entity://${projectName}/${node.parents.join('/')}/${node.name}`)
+    // Focus handling - node lookup for potential future use
+    hierarchyObjectData[id]
   }
 
   // Update the folder selection in the project context
@@ -320,7 +318,6 @@ const Hierarchy = (props) => {
 
   const {
     buildAddToListMenu,
-    buildListMenuItem,
     newListMenuItem,
     folders: foldersList,
     buildHierarchicalMenuItems,

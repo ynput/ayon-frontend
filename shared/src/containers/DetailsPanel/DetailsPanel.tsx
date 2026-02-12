@@ -163,7 +163,6 @@ DetailsPanelProps) => {
     [projectInfo],
   )
 
-  // check if tab needs to be updated when entity type changes
   // for example when switching from version to task, task doesn't have reps tab
   // if reps tab was selected, set default to feed
   useEffect(() => {

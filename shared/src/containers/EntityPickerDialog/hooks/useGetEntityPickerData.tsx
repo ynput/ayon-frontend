@@ -5,7 +5,7 @@ import {
 } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 import { useHierarchyTable } from '@shared/hooks'
-import { FC, useMemo } from 'react'
+import { useMemo } from 'react'
 import { PickerEntityType, PickerSearch } from '../EntityPickerDialog'
 import {
   buildEntityPickerTableData,
@@ -60,6 +60,7 @@ export const useGetEntityPickerData = ({
   } = useHierarchyTable({
     projectName,
     folderTypes: project?.folderTypes || [],
+    includeColors: true,
   })
 
   const foldersData = useMemo(() => {
