@@ -6,17 +6,18 @@ import { Icon, IconProps } from '@ynput/ayon-react-components'
 interface InfoMessageProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'info' | 'warning' | 'error' | 'success'
   message: string
+  icon?: IconProps['icon']
 }
 
 export const InfoMessage = forwardRef<HTMLDivElement, InfoMessageProps>(
-  ({ variant = 'info', message, ...props }, ref) => {
+  ({ variant = 'info', message, icon, ...props }, ref) => {
     return (
       <Styled.MessageCard
         className={clsx('message', props.className, variant)}
         {...props}
         ref={ref}
       >
-        <Icon icon={getVariantIcon(variant)} />
+        <Icon icon={icon || getVariantIcon(variant)} />
         {message}
       </Styled.MessageCard>
     )

@@ -8,21 +8,11 @@ import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useURIContext } from '@shared/context'
+import { AddonSettingsItemModel } from '@shared/api'
 
-interface Addon {
-  name: string
-  title: string
-  version: string
-  hasSiteSettings?: boolean
-  hasProjectSiteSettings?: boolean
-  hasProjectSettings?: boolean
-  isBroken?: boolean
-  hasSettings?: boolean
+interface Addon extends AddonSettingsItemModel {
   key?: string
-  variant?: string
-  hasProjectSiteOverrides?: boolean
-  hasProjectOverrides?: boolean
-  hasStudioOverrides?: boolean
+  variant: 'production' | 'staging'
 }
 
 interface AddonFocusEvent {
@@ -114,6 +104,7 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
         newSelection.push(addon)
       }
     }
+    console.log('Updated selected addons:', newSelection)
     setSelectedAddons(newSelection)
   }, [addons, preferredSelection])
 

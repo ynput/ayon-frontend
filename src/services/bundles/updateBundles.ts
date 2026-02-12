@@ -1,5 +1,6 @@
 // we continue to use the enhanced bundles api from getBundles.js
 import api from './getBundles'
+import { projectsApi } from '@shared/api'
 
 const enhancedUpdateBundles = api.enhanceEndpoints({
   endpoints: {
@@ -8,6 +9,31 @@ const enhancedUpdateBundles = api.enhanceEndpoints({
         { type: 'addonSettings' },
         { type: 'addonSettingsOverrides' },
         { type: 'addonSettingsList' },
+      ],
+    },
+  },
+})
+
+const enhancedProjectsApi = projectsApi.enhanceEndpoints({
+  endpoints: {
+    setProjectBundle: {
+      invalidatesTags: (_result, _error, { projectName }) => [
+        { type: 'bundle', id: projectName },
+        { type: 'bundleList' },
+        { type: 'addonSettings' },
+        { type: 'addonSettingsOverrides' },
+        { type: 'addonSettingsList' },
+        { type: 'addonSettingsSchema' },
+      ],
+    },
+    unsetProjectBundle: {
+      invalidatesTags: (_result, _error, { projectName }) => [
+        { type: 'bundle', id: projectName },
+        { type: 'bundleList' },
+        { type: 'addonSettings' },
+        { type: 'addonSettingsOverrides' },
+        { type: 'addonSettingsList' },
+        { type: 'addonSettingsSchema' },
       ],
     },
   },
@@ -114,4 +140,7 @@ export const {
   usePromoteBundleMutation,
   useMigrateSettingsByBundleMutation,
 } = updateBundles
+
+export const { useSetProjectBundleMutation, useUnsetProjectBundleMutation } = enhancedProjectsApi
+
 export { updateBundles as bundlesQueries }
