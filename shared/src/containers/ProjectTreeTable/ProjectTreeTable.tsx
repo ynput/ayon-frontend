@@ -62,7 +62,7 @@ import { useMoveEntities } from './hooks/useMoveEntities'
 import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
-import { getCellId, parseCellId } from './utils/cellUtils'
+import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
@@ -1421,6 +1421,9 @@ const TD = ({
     getCellBorderClasses,
     clearSelection,
     selectedCells,
+    setSelectedCells,
+    setAnchorCell,
+    setFocusedCellId,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
@@ -1471,6 +1474,53 @@ const TD = ({
 
         // check we are not clicking in a dropdown
         if (target.closest('.options')) return
+
+        // Handle double-click via e.detail (browser's native click count).
+        // We handle it here in mousedown instead of relying on the dblclick event,
+        // because the 1st mousedown triggers React state updates that can replace
+        // the DOM node, preventing the native dblclick event from firing.
+        if (e.detail === 2) {
+          const isReadOnly = isTargetReadOnly(e)
+          if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
+            e.preventDefault()
+            return
+          }
+
+          // name column: select row to open details panel
+          if (cell.column.id === 'name' && !target.closest('.expander')) {
+            const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
+            const additive = e.metaKey || e.ctrlKey
+            const position = parseCellId(rowSelectionCellId)
+
+            setSelectedCells((prev) => {
+              const newSelection = additive ? new Set(prev) : new Set<CellId>()
+              newSelection.add(rowSelectionCellId)
+              newSelection.add(cellId)
+              return newSelection
+            })
+            if (position) {
+              setAnchorCell(position)
+              setFocusedCellId(rowSelectionCellId)
+            }
+          }
+          // thumbnail: open viewer
+          else if (cell.column.id === 'thumbnail') {
+            if (onOpenPlayer) {
+              const entity = getEntityById(cell.row.original.entityId || cell.row.id)
+              if (entity) {
+                const targetIds = getEntityViewierIds(entity)
+                onOpenPlayer(targetIds, { quickView: true })
+              }
+            }
+          }
+          // other cells: start editing
+          else {
+            setEditingCellId(cellId)
+          }
+
+          e.preventDefault()
+          return
+        }
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
@@ -1536,45 +1586,9 @@ const TD = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        const isReadOnly = isTargetReadOnly(e)
-        if (isReadOnly) return
-
-        // check if this is a restricted entity - prevent opening details/viewer
-        const isRestricted = isEntityRestricted(cell.row.original.entityType)
-
-        // do nothing for restricted entities
-        if (isRestricted) return
-
-        // do nothing for groups
-        if (isGroup) return
-
-        // row selection on name column double click
-        // making sure it's not the expander that was clicked
-        if (cell.column.id === 'name' && !(e.target as HTMLElement).closest('.expander')) {
-          // select the row by selecting the row-selection cell
-          const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
-          const additive = e.metaKey || e.ctrlKey
-
-          // Select both the row-selection cell and the name cell
-          if (!isCellSelected(rowSelectionCellId)) {
-            selectCell(rowSelectionCellId, additive, false)
-          }
-          selectCell(cellId, true, false) // additive=true to keep row-selection
-        }
-        // open the viewer on thumbnail double click
-        else if (cell.column.id === 'thumbnail') {
-          if (onOpenPlayer) {
-            const entity = getEntityById(cell.row.original.entityId || cell.row.id)
-            if (entity) {
-              const targetIds = getEntityViewierIds(entity)
-              onOpenPlayer(targetIds, { quickView: true })
-            }
-          }
-        }
-        // Double click on editable cell triggers edit mode
-        else {
-          setEditingCellId(cellId)
-        }
+        // Double-click is primarily handled in onMouseDown via e.detail == 2.
+        // This is a fallback for cases where the native dblclick event does fire.
+        e.preventDefault()
       }}
       onContextMenu={(e) => {
         e.preventDefault()

@@ -43,11 +43,12 @@ const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
   }
 }
 
+const naturalSortCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+
 const pathSort: SortingFn<any> = (rowA, rowB) => {
-  const labelA = rowA.original.path || rowA.original.name || ''
-  const labelB = rowB.original.path || rowB.original.name || ''
-  // sort alphabetically by label
-  return labelA.localeCompare(labelB)
+  const labelA = rowA.original.label || rowA.original.path || rowA.original.name || ''
+  const labelB = rowB.original.label || rowB.original.path || rowB.original.name || ''
+  return naturalSortCollator.compare(labelA, labelB)
 }
 
 const valueLengthSort: SortingFn<any> = (rowA, rowB, columnId) => {
@@ -530,6 +531,7 @@ const buildTreeTableColumns = ({
       accessorKey: 'folder',
       header: 'Folder name',
       minSize: COLUMN_MIN_SIZE,
+      sortingFn: withLoadingStateSort(pathSort),
       enableSorting: canSort('folderName'),
       enableResizing: true,
       enablePinning: true,

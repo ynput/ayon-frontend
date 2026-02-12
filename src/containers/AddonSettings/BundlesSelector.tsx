@@ -140,29 +140,30 @@ const DropdownBundleItem = ({ bundle, isSelected }: DropdownBundleItemProps) => 
   )
 }
 
-
 export interface BundleIdentifier {
   bundleName?: string
   projectBundleName?: string
   variant?: string
 }
 
-
 interface BundlesSelectorProps {
   selected: BundleIdentifier
   onChange: (value: BundleIdentifier) => void
+  disabled?: boolean
 }
 
-const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
+const BundlesSelector = ({ selected, onChange, disabled }: BundlesSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const userName = useAppSelector((state) => state.user.name)
   const devMode = useAppSelector((state) => state.user.attrib.developerMode)
 
-  console.debug("selected bundle: ", selected)
+  console.debug('selected bundle: ', selected)
 
   const bundleOptions = useMemo<BundleOption[]>(() => {
     return bundles
-      .filter((b) => (devMode /* IDK: is this a good idea? && b.activeUser === userName*/) || !b?.isDev)
+      .filter(
+        (b) => devMode /* IDK: is this a good idea? && b.activeUser === userName*/ || !b?.isDev,
+      )
       .map((bundle) => ({
         label: bundle.name,
         value: bundle.name,
@@ -176,16 +177,24 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
   }, [bundles, devMode, userName])
 
   const selectedBundle = useMemo(() => {
-    if (!(selected.bundleName || selected.projectBundleName)) {
-      if (selected.variant === 'production')
-        return bundleOptions.find((b) => b.isProduction) 
-      if (selected.variant === 'staging')
-        return bundleOptions.find((b) => b.isStaging)
-    } 
+    const { bundleName, projectBundleName, variant } = selected
 
-    return bundleOptions.find((b) => b.value === (selected.projectBundleName || selected.bundleName || selected.variant))
-   
+    // If no bundle is explicitly selected, try to match by variant type
+    if (!bundleName && !projectBundleName) {
+      if (variant === 'production') {
+        return bundleOptions.find((b) => b.isProduction)
+      }
+      if (variant === 'staging') {
+        return bundleOptions.find((b) => b.isStaging)
+      }
+    }
+
+    // Find bundle by name (project bundle takes precedence)
+    const selectedValue = projectBundleName || bundleName || variant
+    return bundleOptions.find((b) => b.value === selectedValue)
   }, [selected, bundleOptions])
+
+  console.log(bundleOptions, selected)
 
   const handleOnChange = (bundle: string) => {
     // find bundle object
@@ -194,13 +203,29 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
 
     // if the bundle is staging or production, set the variant instead of bundle name
     if (selectedBundle.type === 'staging' || selectedBundle.type === 'production') {
-      onChange({variant: selected.variant, bundleName: selectedBundle.value, projectBundleName: undefined})
+      onChange({
+        variant: selected.variant,
+        bundleName: selectedBundle.value,
+        projectBundleName: undefined,
+      })
     } else if (selectedBundle.type === 'project') {
-      onChange({variant: selected.variant, bundleName: undefined, projectBundleName: selectedBundle.value})
+      onChange({
+        variant: selected.variant,
+        bundleName: undefined,
+        projectBundleName: selectedBundle.value,
+      })
     } else if (selectedBundle.type === 'dev') {
-      onChange({ bundleName: selectedBundle.value, variant: selectedBundle.value, projectBundleName: undefined })
+      onChange({
+        bundleName: selectedBundle.value,
+        variant: selectedBundle.value,
+        projectBundleName: undefined,
+      })
     } else {
-      onChange({ bundleName: selectedBundle.value, variant: selected.variant, projectBundleName: undefined })
+      onChange({
+        bundleName: selectedBundle.value,
+        variant: selected.variant,
+        projectBundleName: undefined,
+      })
     }
   }
 
@@ -215,6 +240,8 @@ const BundlesSelector = ({ selected, onChange }: BundlesSelectorProps) => {
         <DropdownBundleItem bundle={option} isSelected={isSelected} />
       )}
       searchOnNumber={10}
+      disabled={disabled}
+      placeholder="No bundle selected"
     />
   )
 }

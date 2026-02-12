@@ -47,6 +47,7 @@ const Bundles = () => {
   }
 
   const [showArchived, setShowArchived] = useLocalStorage('bundles-archived', true)
+  const [showProject, setShowProject] = useLocalStorage('bundles-project', false)
 
   // REDUX QUERIES
   let {
@@ -80,6 +81,14 @@ const Bundles = () => {
     }
     return bundleList
   }, [bundleList, developerMode])
+
+  // filter out isProject bundles if showProject is false
+  bundleList = useMemo(() => {
+    if (!showProject) {
+      return [...bundleList].filter((bundle) => !bundle.isProject)
+    }
+    return bundleList
+  }, [bundleList, showProject])
 
   const getBundleFromQuery = (param) => {
     if (!param) return null
@@ -437,12 +446,18 @@ const Bundles = () => {
                   <span className="small">Package</span>
                 </Button>
                 <span style={{ whiteSpace: 'nowrap' }} className="large">
-                  Show Archived
+                  Archived
                 </span>
-                <span className="small">Archived</span>
                 <InputSwitch
                   checked={showArchived}
                   onChange={(e) => setShowArchived(e.target.checked)}
+                />
+                <span style={{ whiteSpace: 'nowrap' }} className="large">
+                  Project
+                </span>
+                <InputSwitch
+                  checked={showProject}
+                  onChange={(e) => setShowProject(e.target.checked)}
                 />
               </Styled.MainToolbar>
               <BundleList
@@ -460,37 +475,37 @@ const Bundles = () => {
           </SplitterPanel>
           <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
             <AddonSearchProvider addons={addons}>
-            <Section style={{ height: '100%' }}>
-              {isLoadingAddons || isLoadingInstallers ? (
-                <BundleFormLoading />
-              ) : newBundleOpen ? (
-                <NewBundle
-                  initBundle={newBundleOpen}
-                  onSave={handleNewBundleEnd}
-                  installers={installerVersions}
-                  developerMode={developerMode}
-                />
-              ) : (
-                !!bundlesData.length &&
-                (bundlesData.length === 1 && bundlesData[0].isDev ? (
+              <Section style={{ height: '100%' }}>
+                {isLoadingAddons || isLoadingInstallers ? (
+                  <BundleFormLoading />
+                ) : newBundleOpen ? (
                   <NewBundle
-                    initBundle={bundlesData[0]}
-                    isLoading={isLoadingInstallers || isFetching}
+                    initBundle={newBundleOpen}
+                    onSave={handleNewBundleEnd}
                     installers={installerVersions}
-                    isDev
-                  />
-                ) : (
-                  <BundleDetail
-                    selectedBundles={bundlesData}
-                    onDuplicate={handleDuplicateBundle}
-                    isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
-                    installers={installerVersions}
-                    toggleBundleStatus={toggleBundleStatus}
                     developerMode={developerMode}
                   />
-                ))
-              )}
-            </Section>
+                ) : (
+                  !!bundlesData.length &&
+                  (bundlesData.length === 1 && bundlesData[0].isDev ? (
+                    <NewBundle
+                      initBundle={bundlesData[0]}
+                      isLoading={isLoadingInstallers || isFetching}
+                      installers={installerVersions}
+                      isDev
+                    />
+                  ) : (
+                    <BundleDetail
+                      selectedBundles={bundlesData}
+                      onDuplicate={handleDuplicateBundle}
+                      isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
+                      installers={installerVersions}
+                      toggleBundleStatus={toggleBundleStatus}
+                      developerMode={developerMode}
+                    />
+                  ))
+                )}
+              </Section>
             </AddonSearchProvider>
           </SplitterPanel>
         </Splitter>
