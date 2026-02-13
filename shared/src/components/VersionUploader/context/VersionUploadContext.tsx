@@ -7,6 +7,7 @@ import React, {
   createContext,
   useContext,
   useState,
+  useRef,
   ReactNode,
   useMemo,
   useCallback,
@@ -34,6 +35,7 @@ interface VersionUploadContextType {
   productId: string
   folderId: string
   taskId: string
+  setTaskId: (taskId: string) => void
   setProductId: (productId: string) => void
   setFolderId: (folderId: string) => void
   isOpen: boolean
@@ -89,6 +91,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [error, setError] = useState<string>('')
   const [createdProductId, setCreatedProductId] = useState<string | null>(null)
   const [createdVersionId, setCreatedVersionId] = useState<string | null>(null)
+  // Track whether taskId has been prefilled this session to avoid re-prefilling after user clears it
+  const hasPrefilledTaskRef = useRef(false)
 
   const { currentData: version } = useGetLatestProductVersionQuery(
     {
@@ -103,6 +107,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       setProductId(productId || '')
       setFolderId(folderId || '')
       setTaskId(taskId || '')
+      hasPrefilledTaskRef.current = !!taskId
       setIsOpen(true)
     },
     [],
@@ -125,6 +130,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     setProductId('')
     setFolderId('')
     setTaskId('')
+    hasPrefilledTaskRef.current = false
   }, [pendingFiles])
 
   const [createProduct] = useCreateProductMutation()
@@ -139,6 +145,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
           const versionRes = await createVersionHelper(createVersion, projectName, {
             productId,
             version: data.version,
+            taskId: taskId || undefined,
           })
 
           // select the new version
@@ -259,6 +266,11 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         ...defaultFormData,
         version: getNextVersionNumber(version),
       })
+      // Auto-prefill taskId from previous version (only once per dialog session)
+      if (!hasPrefilledTaskRef.current && version.taskId) {
+        setTaskId(version.taskId)
+        hasPrefilledTaskRef.current = true
+      }
     } else {
       setForm(defaultFormData)
     }
@@ -274,6 +286,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       setProductId,
       folderId,
       taskId,
+      setTaskId,
       setFolderId,
       isOpen,
       projectName,
@@ -299,6 +312,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       setFolderId,
       productId,
       taskId,
+      setTaskId,
       setProductId,
       isOpen,
       projectName,

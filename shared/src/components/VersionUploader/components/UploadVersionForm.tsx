@@ -1,10 +1,12 @@
-import { FC, FormEvent, useEffect, useRef, useMemo } from 'react'
+import { FC, FormEvent, useEffect, useRef, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import { FormLayout, FormRow, InputText, InputNumber, Dropdown } from '@ynput/ayon-react-components'
+import {FormLayout, FormRow, InputText, InputNumber, Dropdown, Button} from '@ynput/ayon-react-components'
 import type { DropdownRef } from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '@shared/components'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
 import { useProjectContext } from '@shared/context'
+import { useGetTaskQuery } from '@shared/api'
+import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
 
 const StyledForm = styled.form`
   display: flex;
@@ -54,6 +56,25 @@ const StyledUpload = styled.div`
   min-height: 80px;
 `
 
+const TaskFieldContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  width: 100%;
+`
+
+const TaskName = styled.span`
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+const NoTask = styled.span`
+  flex: 1;
+  color: var(--md-sys-color-outline);
+`
+
 type FormData = {
   version: number
   name: string
@@ -90,7 +111,17 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     onCloseVersionUpload,
     extractAndSetVersionFromFiles,
     dispatch,
+    taskId,
+    setTaskId,
+    folderId,
   } = useVersionUploadContext()
+
+  const [isTaskPickerOpen, setIsTaskPickerOpen] = useState(false)
+
+  const { data: taskData, isFetching: isTaskFetching } = useGetTaskQuery(
+    { projectName, taskId },
+    { skip: !taskId },
+  )
 
   const project = useProjectContext()
 
@@ -245,7 +276,55 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
             />
           </FormRow>
         )}
+
+        <FormRow label="Task">
+          <TaskFieldContainer>
+            {taskId ? (
+              isTaskFetching ? (
+                <NoTask>Loading task...</NoTask>
+              ) : taskData ? (
+                <TaskName>{taskData.label || taskData.name}</TaskName>
+              ) : (
+                <NoTask>No task linked</NoTask>
+              )
+            ) : (
+              <NoTask>No task linked</NoTask>
+            )}
+            <Button
+              type="button"
+              label="Pick linked task"
+              icon="link"
+              variant="text"
+              onClick={() => setIsTaskPickerOpen(true)}
+              disabled={isFormSubmitted}
+            />
+            {taskId && (
+              <Button
+                type="button"
+                icon="close"
+                variant="text"
+                onClick={() => setTaskId('')}
+                disabled={isFormSubmitted}
+              />
+            )}
+          </TaskFieldContainer>
+        </FormRow>
       </StyledFormLayout>
+
+      {isTaskPickerOpen && (
+        <EntityPickerDialog
+          projectName={projectName}
+          entityType="task"
+          initialSelection={folderId ? { folder: { [folderId]: true } } : undefined}
+          onSubmit={(selection) => {
+            if (selection.length > 0) {
+              setTaskId(selection[0])
+            }
+            setIsTaskPickerOpen(false)
+          }}
+          onClose={() => setIsTaskPickerOpen(false)}
+        />
+      )}
 
       <FormRow label="Reviewable files" />
       <StyledUpload>
