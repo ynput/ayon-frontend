@@ -93,9 +93,15 @@ export const Feed = ({
   const isVersionsFilter = feedFilter.conditions?.some(
     (c) => 'key' in c && c.key === 'versions' && c.value === true,
   )
+  const hasActiveFilters = feedFilter.conditions?.some(
+    (c) => 'key' in c && ['comments', 'checklists', 'versions', 'updates'].includes(c.key) && c.value === true,
+  )
+  const hasCommentLikeFilter = feedFilter.conditions?.some(
+    (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
+  )
 
   // hide comment input for specific filters
-  const hideCommentInput = isVersionsFilter
+  const hideCommentInput = hasActiveFilters && !hasCommentLikeFilter
 
   const activitiesWithMergedAnnotations = useMemo(
     () => mergeAnnotationAttachments(activitiesData),
