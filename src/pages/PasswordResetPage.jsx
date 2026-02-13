@@ -16,7 +16,7 @@ const RequestPage = () => {
     e.preventDefault()
 
     const payload = {
-      email,
+      email: email.trim(),
       url: `${window.location.origin}/passwordReset`,
     }
     axios

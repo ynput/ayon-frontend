@@ -84,7 +84,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
         name: user.name,
         patch: {
           attrib: {
-            email,
+            email: email.trim(),
             fullName: fullName.trim() || undefined,
           },
         },
@@ -93,7 +93,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
       // Update Redux state
       dispatch(
         updateUserAttribs({
-          email,
+          email: email.trim(),
           fullName: fullName.trim() || undefined,
         }),
       )
