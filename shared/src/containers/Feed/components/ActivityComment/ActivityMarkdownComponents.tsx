@@ -32,6 +32,7 @@ interface ATagProps {
 interface ATagOptions {
   entityId?: string
   projectName?: string
+  userName?: string
   onReferenceClick: (data: {
     entityId: string
     entityType: string
@@ -54,6 +55,7 @@ export const aTag = (
   { children, href }: ATagProps,
   {
     entityId,
+    userName,
     projectName,
     onReferenceClick,
     activityId,
@@ -84,13 +86,13 @@ export const aTag = (
   }
 
   const label = (children && children.toString().replace('@', '')) || ''
-  // is this ref the same as the current task id
-  const isEntity = id === entityId
+  // is this ref the same as the current task id or the user is mentioning themselves
+  const isHighlighted = id === entityId || (type === 'user' && id === userName)
 
   return (
     <ActivityReference
       {...{ type, id: id.replaceAll('.', '-') }}
-      variant={isEntity ? 'filled' : 'surface'}
+      variant={isHighlighted ? 'filled' : 'surface'}
       onClick={() =>
         type !== 'user' &&
         onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
