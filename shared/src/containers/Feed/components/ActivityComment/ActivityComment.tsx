@@ -288,6 +288,7 @@ const ActivityComment = ({
                       // @ts-ignore
                       aTag(props, {
                         entityId,
+                        userName,
                         projectName,
                         projectInfo,
                         onReferenceClick,
