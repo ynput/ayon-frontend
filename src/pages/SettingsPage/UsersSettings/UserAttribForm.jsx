@@ -104,7 +104,8 @@ const UserAttribForm = ({
             value={formData[name] || ''}
             disabled={disabled}
             onChange={(e) => {
-              const value = e.target.value
+              let value = e.target.value
+              if (name === 'email') value = value.replace(/\s/g, '')
               setFormData((fd) => {
                 return { ...fd, [name]: value }
               })

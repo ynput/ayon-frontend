@@ -54,7 +54,8 @@ export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFiel
 
   const handleInputChange = (event) => {
     const { id, value } = event.target
-    const newForm = { ...userForm, [id]: value }
+    const adjustedValue = id === 'email' ? value.replace(/\s/g, '') : value
+    const newForm = { ...userForm, [id]: adjustedValue }
     setUserForm(newForm)
     setFormValid(validateForm(newForm, false))
   }

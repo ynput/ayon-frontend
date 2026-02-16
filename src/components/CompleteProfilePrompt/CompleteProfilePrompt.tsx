@@ -167,7 +167,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
           <InputText
             id="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
             placeholder="Email address"
             style={{ width: '100%' }}
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
