@@ -72,33 +72,8 @@ const TaskFieldContainer = styled.div`
   width: 100%;
 `
 
-const TaskButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-small);
+const TaskButton = styled(Button)`
   flex: 1;
-  min-width: 0;
-  padding: 4px 8px;
-  cursor: pointer;
-  color: inherit;
-  font-size: inherit;
-  font-family: inherit;
-  background: none;
-  border: none;
-  text-align: left;
-
-  &:hover {
-    background: var(--md-sys-color-surface-container);
-    border-radius: var(--border-radius-m);
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.5;
-    &:hover {
-      background: none;
-    }
-  }
 `
 
 const TaskText = styled.div`
@@ -171,7 +146,10 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   const [isTaskPickerOpen, setIsTaskPickerOpen] = useState(false)
 
   // Fetch full task data for path; linkedTask provides instant name/type display
-  const { data: taskData, isFetching: isFetchingTask } = useGetTaskQuery({ projectName, taskId }, { skip: !taskId })
+  const { data: taskData, isFetching: isFetchingTask } = useGetTaskQuery(
+    { projectName, taskId },
+    { skip: !taskId },
+  )
   const isTaskLoading = isLoadingTask || (!!taskId && isFetchingTask && !linkedTask)
 
   // Use task's folder when available, fall back to product's folder
@@ -349,6 +327,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                   type={'button'}
                   onClick={() => setIsTaskPickerOpen(true)}
                   disabled={isFormSubmitted}
+                  variant="text"
                 >
                   <Icon icon={taskIcon} style={{ color: taskTypeInfo?.color }} />
                   <TaskText>
