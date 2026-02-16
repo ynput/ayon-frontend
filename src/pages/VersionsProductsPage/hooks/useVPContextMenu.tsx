@@ -167,12 +167,28 @@ export const useVPContextMenu = (callbacks?: {
       const entity = entitiesMap.get(entityId)
       if (!entity) return undefined
 
-      // Get product ID - either directly from product or from version's product property
       let productId: string | undefined
+      let folderId: string | undefined
+      let linkedTask: { id: string; name: string; label?: string | null; taskType: string } | undefined
+      let latestVersionNumber: number | undefined
+      let latestVersionId: string | undefined
       if (entity.entityType === 'product') {
         productId = entity.id
+        folderId = entity.folderId
+        const versions = (entity as any).versions as { id: string; version: number }[] | undefined
+        if (versions?.length) {
+          const latest = versions.reduce((a, b) => (a.version > b.version ? a : b))
+          latestVersionNumber = latest.version
+          latestVersionId = latest.id
+          // Look up the latest version in entitiesMap to get its task data
+          const latestVersion = entitiesMap.get(latest.id)
+          linkedTask = (latestVersion as any)?.task
+        }
       } else if (entity.entityType === 'version' && 'product' in entity) {
         productId = (entity as any).product?.id
+        folderId = (entity as any).product?.folder?.id
+        latestVersionNumber = (entity as any).version
+        linkedTask = (entity as any).task
       }
 
       if (!productId) return undefined
@@ -180,7 +196,14 @@ export const useVPContextMenu = (callbacks?: {
       return {
         label: 'Upload version',
         icon: 'upload',
-        command: () => onOpenVersionUpload({ productId }),
+        command: () => onOpenVersionUpload({
+          productId,
+          folderId,
+          taskId: linkedTask?.id,
+          linkedTask,
+          latestVersionNumber,
+          latestVersionId,
+        }),
         hidden: cell.isGroup,
       }
     },
