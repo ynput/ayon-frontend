@@ -15,6 +15,7 @@ import { useVersionUploadContext } from '../context/VersionUploadContext'
 import { useProjectContext } from '@shared/context'
 import { useGetTaskQuery } from '@shared/api'
 import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
+import { Skeleton } from 'primereact/skeleton'
 
 const StyledForm = styled.form`
   display: flex;
@@ -152,6 +153,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     dispatch,
     taskId,
     linkedTask,
+    isLoadingTask,
     setTaskId,
     setLinkedTask,
     folderId,
@@ -160,7 +162,8 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
   const [isTaskPickerOpen, setIsTaskPickerOpen] = useState(false)
 
   // Fetch full task data for path; linkedTask provides instant name/type display
-  const { data: taskData } = useGetTaskQuery({ projectName, taskId }, { skip: !taskId })
+  const { data: taskData, isFetching: isFetchingTask } = useGetTaskQuery({ projectName, taskId }, { skip: !taskId })
+  const isTaskLoading = isLoadingTask || (!!taskId && isFetchingTask && !linkedTask)
 
   // Use task's folder when available, fall back to product's folder
   const pickerFolderId = taskData?.folderId || folderId
@@ -329,7 +332,9 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
 
         <FormRow label="Task">
           <TaskFieldContainer>
-            {taskId && taskName ? (
+            {isTaskLoading ? (
+              <Skeleton height="20px" />
+            ) : taskId && taskName ? (
               <>
                 <TaskButton
                   type="button"

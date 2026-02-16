@@ -1,6 +1,8 @@
 import {
   useCreateVersionMutation,
+  useCreateProductMutation,
   useGetLatestProductVersionQuery,
+  useGetVersionQuery,
 } from '@shared/api'
 import React, {
   createContext,
@@ -11,7 +13,6 @@ import React, {
   useCallback,
   useEffect,
 } from 'react'
-import { useCreateProductMutation } from '@shared/api'
 import { extractVersionFromFilename } from '@shared/util'
 import { toast } from 'react-toastify'
 import {
@@ -37,6 +38,7 @@ interface VersionUploadContextType {
   folderId: string
   taskId: string
   linkedTask: LinkedTask | null
+  isLoadingTask: boolean
   setTaskId: (taskId: string) => void
   setLinkedTask: (task: LinkedTask | null) => void
   setProductId: (productId: string) => void
@@ -59,6 +61,7 @@ interface VersionUploadContextType {
     taskId?: string
     linkedTask?: LinkedTask
     latestVersionNumber?: number
+    latestVersionId?: string
   }) => void
   onCloseVersionUpload: () => void
   onUploadVersion: (data: FormData) => Promise<{ productId: string; versionId: string }>
@@ -92,7 +95,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [folderId, setFolderId] = useState<string>('')
   const [productId, setProductId] = useState<string>('')
   // optional task to link the version to
-  const [taskId, setTaskId] = useState<string>('')
+  // null = not set by user (auto-resolve from version), '' = explicitly cleared, 'id' = explicitly set
+  const [userTaskId, setUserTaskId] = useState<string | null>(null)
   const [linkedTask, setLinkedTask] = useState<LinkedTask | null>(null)
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview?: string }>>([])
@@ -104,6 +108,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   // Stores the latest version number passed from the caller (e.g. VP page)
   // so we can skip the GetLatestProductVersion query when we already know it
   const [latestVersionNumber, setLatestVersionNumber] = useState<number | undefined>(undefined)
+  // Stores the latest version ID so we can fetch its task when not already known
+  const [latestVersionId, setLatestVersionId] = useState<string | undefined>(undefined)
 
   const { currentData: version } = useGetLatestProductVersionQuery(
     {
@@ -113,13 +119,24 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     { skip: !productId || !isOpen || latestVersionNumber != null },
   )
 
+  // Fetch the latest version to discover its taskId (e.g. when versions are collapsed)
+  const { data: latestVersionData } = useGetVersionQuery(
+    { projectName, versionId: latestVersionId! },
+    { skip: !latestVersionId || !isOpen || userTaskId !== null },
+  )
+
+  // Derive effective taskId: user's explicit choice takes priority, then auto-resolved from version
+  const taskId = userTaskId ?? latestVersionData?.taskId ?? ''
+  const isLoadingTask = !!(latestVersionId && userTaskId === null && !latestVersionData)
+
   const onOpenVersionUpload = useCallback<VersionUploadContextType['onOpenVersionUpload']>(
-    ({ productId, folderId, taskId, linkedTask, latestVersionNumber }) => {
+    ({ productId, folderId, taskId, linkedTask, latestVersionNumber, latestVersionId }) => {
       setProductId(productId || '')
       setFolderId(folderId || '')
-      setTaskId(taskId || '')
+      setUserTaskId(taskId || null)
       setLinkedTask(linkedTask || null)
       setLatestVersionNumber(latestVersionNumber)
+      setLatestVersionId(latestVersionId)
 
       // If we already know the latest version number, set the form immediately
       if (latestVersionNumber != null) {
@@ -146,9 +163,10 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     setIsOpen(false)
     setProductId('')
     setFolderId('')
-    setTaskId('')
+    setUserTaskId(null)
     setLinkedTask(null)
     setLatestVersionNumber(undefined)
+    setLatestVersionId(undefined)
   }, [pendingFiles])
 
   const [createProduct] = useCreateProductMutation()
@@ -291,6 +309,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     }
   }, [isOpen, version, latestVersionNumber])
 
+  // Wrap setUserTaskId so consumers use a simple string setter
+  const setTaskId = useCallback((id: string) => setUserTaskId(id), [])
+
   const value = useMemo(
     () => ({
       productId,
@@ -298,6 +319,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       folderId,
       taskId,
       linkedTask,
+      isLoadingTask,
       setTaskId,
       setLinkedTask,
       setFolderId,
@@ -326,6 +348,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       productId,
       taskId,
       linkedTask,
+      isLoadingTask,
       setTaskId,
       setLinkedTask,
       setProductId,

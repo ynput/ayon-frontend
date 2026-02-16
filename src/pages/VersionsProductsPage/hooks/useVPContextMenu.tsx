@@ -171,6 +171,7 @@ export const useVPContextMenu = (callbacks?: {
       let folderId: string | undefined
       let linkedTask: { id: string; name: string; label?: string | null; taskType: string } | undefined
       let latestVersionNumber: number | undefined
+      let latestVersionId: string | undefined
       if (entity.entityType === 'product') {
         productId = entity.id
         folderId = entity.folderId
@@ -178,6 +179,7 @@ export const useVPContextMenu = (callbacks?: {
         if (versions?.length) {
           const latest = versions.reduce((a, b) => (a.version > b.version ? a : b))
           latestVersionNumber = latest.version
+          latestVersionId = latest.id
           // Look up the latest version in entitiesMap to get its task data
           const latestVersion = entitiesMap.get(latest.id)
           linkedTask = (latestVersion as any)?.task
@@ -200,6 +202,7 @@ export const useVPContextMenu = (callbacks?: {
           taskId: linkedTask?.id,
           linkedTask,
           latestVersionNumber,
+          latestVersionId,
         }),
         hidden: cell.isGroup,
       }
