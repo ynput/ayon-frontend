@@ -1,4 +1,10 @@
-import { DefaultValueTemplate, Button, Spacer, DropdownRef, DropdownProps } from '@ynput/ayon-react-components'
+import {
+  DefaultValueTemplate,
+  Button,
+  Spacer,
+  DropdownRef,
+  DropdownProps,
+} from '@ynput/ayon-react-components'
 import { DropdownHeader, DropdownItem, StyledDropdown } from './ActionsDropdown.styled'
 import clsx from 'clsx'
 import { useRef } from 'react'
@@ -99,7 +105,7 @@ export const ActionsDropdown = ({
     <StyledDropdown
       ref={dropdownRef}
       disabled={isLoading}
-      className={clsx('more', { loading: isLoading, dev: isDeveloperMode })}
+      className={clsx('more', { dev: isDeveloperMode })}
       options={options}
       maxOptionsShown={100}
       value={[]}
