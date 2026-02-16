@@ -326,27 +326,27 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
         )}
 
         {!hidden.includes('version') && (
-          <FormRow label="Version">
+          <FormRow label={'Version'}>
             <InputNumber
               value={formData.version}
               onChange={handleVersionChange}
               min={minVersion}
               step={1}
-              aria-label="Version Number"
+              aria-label={'Version Number'}
               autoFocus={hidden.includes('name')}
               disabled={isFormSubmitted}
             />
           </FormRow>
         )}
 
-        <FormRow label="Task">
+        <FormRow label={'Task'}>
           <TaskFieldContainer>
             {isTaskLoading ? (
-              <Skeleton height="20px" />
+              <Skeleton height={'20px'} />
             ) : taskId && taskName ? (
               <>
                 <TaskButton
-                  type="button"
+                  type={'button'}
                   onClick={() => setIsTaskPickerOpen(true)}
                   disabled={isFormSubmitted}
                 >
@@ -354,20 +354,16 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                   <TaskText>
                     {taskFolderPath && (
                       <TaskPath>
-                        {taskFolderPath
-                          .split('/')
-                          .filter(Boolean)
-                          .join(' / ')}{' '}
-                        /{' '}
+                        {taskFolderPath.split('/').filter(Boolean).join(' / ')} /{' '}
                       </TaskPath>
                     )}
                     <TaskValue>{taskName}</TaskValue>
                   </TaskText>
                 </TaskButton>
                 <Button
-                  type="button"
-                  icon="close"
-                  variant="text"
+                  type={'button'}
+                  icon={'close'}
+                  variant={'text'}
                   onClick={() => {
                     setTaskId('')
                     setLinkedTask(null)
@@ -377,9 +373,10 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
               </>
             ) : (
               <Button
-                type="button"
-                icon="link"
-                variant="text"
+                type={'button'}
+                icon={'link'}
+                label={'Link task'}
+                variant={'text'}
                 onClick={() => setIsTaskPickerOpen(true)}
                 disabled={isFormSubmitted}
               />
@@ -391,7 +388,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
       {isTaskPickerOpen && (
         <EntityPickerDialog
           projectName={projectName}
-          entityType="task"
+          entityType={'task'}
           initialSelection={{
             ...(pickerFolderId ? { folder: { [pickerFolderId]: true } } : {}),
             ...(taskId ? { task: { [taskId]: true } } : {}),
