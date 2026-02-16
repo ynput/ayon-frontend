@@ -1,5 +1,4 @@
 import {
-  GetLatestVersionResult,
   useCreateVersionMutation,
   useGetLatestProductVersionQuery,
 } from '@shared/api'
@@ -7,7 +6,6 @@ import React, {
   createContext,
   useContext,
   useState,
-  useRef,
   ReactNode,
   useMemo,
   useCallback,
@@ -20,10 +18,6 @@ import {
   validateFormData as validateFormDataHelper,
   createProductAndVersion,
   createVersionHelper,
-  handleUploadError,
-  getNextVersionNumber,
-  type ProductCreationData,
-  type VersionCreationData,
 } from '@shared/util/versionUploadHelpers'
 
 export interface FormData {
@@ -31,16 +25,25 @@ export interface FormData {
   name: string
   productType: string
 }
+export interface LinkedTask {
+  id: string
+  name: string
+  label?: string | null
+  taskType: string
+}
+
 interface VersionUploadContextType {
   productId: string
   folderId: string
   taskId: string
+  linkedTask: LinkedTask | null
   setTaskId: (taskId: string) => void
+  setLinkedTask: (task: LinkedTask | null) => void
   setProductId: (productId: string) => void
   setFolderId: (folderId: string) => void
   isOpen: boolean
   projectName: string
-  version: GetLatestVersionResult | undefined
+  latestVersion: number | undefined
   pendingFiles: Array<{ file: File; preview?: string }>
   setPendingFiles: React.Dispatch<React.SetStateAction<Array<{ file: File; preview?: string }>>>
   extractAndSetVersionFromFiles: (files: File[]) => void
@@ -50,7 +53,13 @@ interface VersionUploadContextType {
   error: string
   createdProductId: string | null
   createdVersionId: string | null
-  onOpenVersionUpload: (params: { productId?: string; folderId?: string; taskId?: string }) => void
+  onOpenVersionUpload: (params: {
+    productId?: string
+    folderId?: string
+    taskId?: string
+    linkedTask?: LinkedTask
+    latestVersionNumber?: number
+  }) => void
   onCloseVersionUpload: () => void
   onUploadVersion: (data: FormData) => Promise<{ productId: string; versionId: string }>
   handleFormChange: (key: keyof FormData, value: string | number) => void
@@ -82,8 +91,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
 }) => {
   const [folderId, setFolderId] = useState<string>('')
   const [productId, setProductId] = useState<string>('')
-  // optional taskId to link the version to
+  // optional task to link the version to
   const [taskId, setTaskId] = useState<string>('')
+  const [linkedTask, setLinkedTask] = useState<LinkedTask | null>(null)
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview?: string }>>([])
   const [form, setForm] = useState<FormData>(defaultFormData)
@@ -91,23 +101,30 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [error, setError] = useState<string>('')
   const [createdProductId, setCreatedProductId] = useState<string | null>(null)
   const [createdVersionId, setCreatedVersionId] = useState<string | null>(null)
-  // Track whether taskId has been prefilled this session to avoid re-prefilling after user clears it
-  const hasPrefilledTaskRef = useRef(false)
+  // Stores the latest version number passed from the caller (e.g. VP page)
+  // so we can skip the GetLatestProductVersion query when we already know it
+  const [latestVersionNumber, setLatestVersionNumber] = useState<number | undefined>(undefined)
 
   const { currentData: version } = useGetLatestProductVersionQuery(
     {
       projectName,
       productId,
     },
-    { skip: !productId || !isOpen },
+    { skip: !productId || !isOpen || latestVersionNumber != null },
   )
 
   const onOpenVersionUpload = useCallback<VersionUploadContextType['onOpenVersionUpload']>(
-    ({ productId, folderId, taskId }) => {
+    ({ productId, folderId, taskId, linkedTask, latestVersionNumber }) => {
       setProductId(productId || '')
       setFolderId(folderId || '')
       setTaskId(taskId || '')
-      hasPrefilledTaskRef.current = !!taskId
+      setLinkedTask(linkedTask || null)
+      setLatestVersionNumber(latestVersionNumber)
+
+      // If we already know the latest version number, set the form immediately
+      if (latestVersionNumber != null) {
+        setForm((prev) => ({ ...prev, version: latestVersionNumber + 1 }))
+      }
       setIsOpen(true)
     },
     [],
@@ -130,7 +147,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     setProductId('')
     setFolderId('')
     setTaskId('')
-    hasPrefilledTaskRef.current = false
+    setLinkedTask(null)
+    setLatestVersionNumber(undefined)
   }, [pendingFiles])
 
   const [createProduct] = useCreateProductMutation()
@@ -138,9 +156,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
 
   const onUploadVersion = useCallback<VersionUploadContextType['onUploadVersion']>(
     async (data: FormData) => {
-      console.log('Uploading version with data:', data)
       try {
-        if (version && productId) {
+        if (productId) {
           // product already exists, create new version for it
           const versionRes = await createVersionHelper(createVersion, projectName, {
             productId,
@@ -187,7 +204,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         throw error.message || error
       }
     },
-    [onCloseVersionUpload, productId, folderId, taskId, version, projectName],
+    [onCloseVersionUpload, productId, folderId, taskId, projectName],
   )
 
   const extractAndSetVersionFromFiles = useCallback(
@@ -210,6 +227,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     [productId, form.version],
   )
 
+  const latestVersion = version?.version ?? latestVersionNumber
+
   // Handle form changes
   const handleFormChange = useCallback((key: keyof FormData, value: string | number) => {
     setForm((prev) => ({
@@ -219,7 +238,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   }, [])
 
   const validateFormData = () => {
-    const validation = validateFormDataHelper(form, version?.version, !version)
+    const validation = validateFormDataHelper(form, latestVersion, !productId)
     if (!validation.isValid) {
       throw validation.error
     }
@@ -257,20 +276,12 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     [onUploadVersion, pendingFiles.length, onCloseVersionUpload],
   )
 
-  // Update form when version data changes
+  // Update form when version data changes (only when query is used as fallback)
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || latestVersionNumber != null) return
 
     if (version) {
-      setForm({
-        ...defaultFormData,
-        version: getNextVersionNumber(version),
-      })
-      // Auto-prefill taskId from previous version (only once per dialog session)
-      if (!hasPrefilledTaskRef.current && version.taskId) {
-        setTaskId(version.taskId)
-        hasPrefilledTaskRef.current = true
-      }
+      setForm((prev) => ({ ...prev, version: version.version + 1 }))
     } else {
       setForm(defaultFormData)
     }
@@ -278,7 +289,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     return () => {
       setForm(defaultFormData)
     }
-  }, [isOpen, version])
+  }, [isOpen, version, latestVersionNumber])
 
   const value = useMemo(
     () => ({
@@ -286,11 +297,13 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       setProductId,
       folderId,
       taskId,
+      linkedTask,
       setTaskId,
+      setLinkedTask,
       setFolderId,
       isOpen,
       projectName,
-      version: productId ? version : undefined,
+      latestVersion,
       pendingFiles,
       setPendingFiles,
       onOpenVersionUpload,
@@ -312,11 +325,13 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       setFolderId,
       productId,
       taskId,
+      linkedTask,
       setTaskId,
+      setLinkedTask,
       setProductId,
       isOpen,
       projectName,
-      version,
+      latestVersion,
       pendingFiles,
       setPendingFiles,
       onOpenVersionUpload,

@@ -1,3 +1,13 @@
 import { api } from '@shared/api/generated/tasks'
 
-export const { useGetTaskQuery } = api
+const enhancedApi = api.enhanceEndpoints({
+  endpoints: {
+    getTask: {
+      providesTags: (_result, _error, { taskId }) => [
+        { type: 'task', id: taskId },
+      ],
+    },
+  },
+})
+
+export const { useGetTaskQuery } = enhancedApi

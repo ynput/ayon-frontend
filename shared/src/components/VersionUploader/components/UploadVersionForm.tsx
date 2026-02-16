@@ -1,7 +1,15 @@
-import { FC, FormEvent, useEffect, useRef, useMemo, useState } from 'react'
+import { FC, FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
-import {FormLayout, FormRow, InputText, InputNumber, Dropdown, Button} from '@ynput/ayon-react-components'
 import type { DropdownRef } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Dropdown,
+  FormLayout,
+  FormRow,
+  Icon,
+  InputNumber,
+  InputText,
+} from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '@shared/components'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
 import { useProjectContext } from '@shared/context'
@@ -63,15 +71,46 @@ const TaskFieldContainer = styled.div`
   width: 100%;
 `
 
-const TaskName = styled.span`
+const TaskButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
   flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  background: none;
+  border: none;
+  text-align: left;
+
+  &:hover {
+    background: var(--md-sys-color-surface-container);
+    border-radius: var(--border-radius-m);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+    &:hover {
+      background: none;
+    }
+  }
+`
+
+const TaskName = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
 
-const NoTask = styled.span`
-  flex: 1;
+const TaskPath = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
   color: var(--md-sys-color-outline);
 `
 
@@ -112,18 +151,29 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     extractAndSetVersionFromFiles,
     dispatch,
     taskId,
+    linkedTask,
     setTaskId,
+    setLinkedTask,
     folderId,
   } = useVersionUploadContext()
 
   const [isTaskPickerOpen, setIsTaskPickerOpen] = useState(false)
 
-  const { data: taskData, isFetching: isTaskFetching } = useGetTaskQuery(
-    { projectName, taskId },
-    { skip: !taskId },
-  )
+  // Fetch full task data for path; linkedTask provides instant name/type display
+  const { data: taskData } = useGetTaskQuery({ projectName, taskId }, { skip: !taskId })
+
+  // Use task's folder when available, fall back to product's folder
+  const pickerFolderId = taskData?.folderId || folderId
 
   const project = useProjectContext()
+
+  const taskName = taskData?.label || taskData?.name || linkedTask?.label || linkedTask?.name || ''
+  const taskType = taskData?.taskType || linkedTask?.taskType
+  const taskTypeInfo = taskType ? project.getTaskType(taskType) : undefined
+  const taskIcon = taskTypeInfo?.icon || 'task_alt'
+  const taskFolderPath = taskData?.path
+    ? taskData.path.substring(0, taskData.path.lastIndexOf('/'))
+    : ''
 
   const productTypeOptions = project.getProductTypeOptions()
   const productTypes = useMemo(() => {
@@ -279,31 +329,34 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
 
         <FormRow label="Task">
           <TaskFieldContainer>
-            {taskId ? (
-              isTaskFetching ? (
-                <NoTask>Loading task...</NoTask>
-              ) : taskData ? (
-                <TaskName>{taskData.label || taskData.name}</TaskName>
-              ) : (
-                <NoTask>No task linked</NoTask>
-              )
+            {taskId && taskName ? (
+              <>
+                <TaskButton
+                  type="button"
+                  onClick={() => setIsTaskPickerOpen(true)}
+                  disabled={isFormSubmitted}
+                >
+                  <Icon icon={taskIcon} style={{ color: taskTypeInfo?.color }} />
+                  <TaskName>{taskName}</TaskName>
+                  {taskFolderPath && <TaskPath>{taskFolderPath}</TaskPath>}
+                </TaskButton>
+                <Button
+                  type="button"
+                  icon="close"
+                  variant="text"
+                  onClick={() => {
+                    setTaskId('')
+                    setLinkedTask(null)
+                  }}
+                  disabled={isFormSubmitted}
+                />
+              </>
             ) : (
-              <NoTask>No task linked</NoTask>
-            )}
-            <Button
-              type="button"
-              label="Pick linked task"
-              icon="link"
-              variant="text"
-              onClick={() => setIsTaskPickerOpen(true)}
-              disabled={isFormSubmitted}
-            />
-            {taskId && (
               <Button
                 type="button"
-                icon="close"
+                icon="link"
                 variant="text"
-                onClick={() => setTaskId('')}
+                onClick={() => setIsTaskPickerOpen(true)}
                 disabled={isFormSubmitted}
               />
             )}
@@ -315,7 +368,10 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
         <EntityPickerDialog
           projectName={projectName}
           entityType="task"
-          initialSelection={folderId ? { folder: { [folderId]: true } } : undefined}
+          initialSelection={{
+            ...(pickerFolderId ? { folder: { [pickerFolderId]: true } } : {}),
+            ...(taskId ? { task: { [taskId]: true } } : {}),
+          }}
           onSubmit={(selection) => {
             if (selection.length > 0) {
               setTaskId(selection[0])
