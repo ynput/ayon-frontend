@@ -101,18 +101,27 @@ const TaskButton = styled.button`
   }
 `
 
-const TaskName = styled.span`
+const TaskText = styled.div`
+  width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: flex;
+  min-width: 0;
 `
 
 const TaskPath = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-xs);
-  color: var(--md-sys-color-outline);
+  max-width: fit-content;
+  margin-right: 4px;
+  flex: 1;
+`
+
+const TaskValue = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: bold;
 `
 
 type FormData = {
@@ -342,8 +351,18 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                   disabled={isFormSubmitted}
                 >
                   <Icon icon={taskIcon} style={{ color: taskTypeInfo?.color }} />
-                  <TaskName>{taskName}</TaskName>
-                  {taskFolderPath && <TaskPath>{taskFolderPath}</TaskPath>}
+                  <TaskText>
+                    {taskFolderPath && (
+                      <TaskPath>
+                        {taskFolderPath
+                          .split('/')
+                          .filter(Boolean)
+                          .join(' / ')}{' '}
+                        /{' '}
+                      </TaskPath>
+                    )}
+                    <TaskValue>{taskName}</TaskValue>
+                  </TaskText>
                 </TaskButton>
                 <Button
                   type="button"
