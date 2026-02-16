@@ -16,7 +16,7 @@ const RequestPage = () => {
     e.preventDefault()
 
     const payload = {
-      email,
+      email: email.trim(),
       url: `${window.location.origin}/passwordReset`,
     }
     axios
@@ -54,7 +54,7 @@ const RequestPage = () => {
           name="email"
           aria-label="Email address"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
         />
         <Button label={<strong>Send Reset Link</strong>} type="submit" />
       </form>
