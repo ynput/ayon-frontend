@@ -8,15 +8,15 @@ import isHTMLElement from '@helpers/isHTMLElement'
 import { useDetailsPanelContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`
-  /* dnd overlay must offset this 64px by 32px */
-  width: calc(100% - 64px);
-  height: calc(99% - 64px);
+  /* dnd overlay must offset this 32px by 16px */
+  width: calc(100% - 32px);
+  height: calc(99% - 32px);
   max-height: unset;
   max-width: unset;
 
   .body {
     overflow: hidden;
-    padding: var(--padding-m);
+    padding: var(--padding-s);
   }
   &:focus-visible {
     outline: none;

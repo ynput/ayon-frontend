@@ -1,4 +1,4 @@
-import { Menu, MenuContainer } from '@shared/components'
+import { Menu, MenuContainer, MenuItemType } from '@shared/components'
 import ListsSearch from '@pages/ProjectListsPage/components/ListsTable/ListsSearch'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
@@ -87,12 +87,7 @@ interface ProjectsListTableHeaderProps {
   onNewProject?: () => void
   showAddProject?: boolean
   toggleMenu?: (open: boolean) => void
-  menuItems?: Array<{
-    id: string
-    label?: string
-    icon?: string
-    onClick?: () => void
-  }>
+  menuItems?: MenuItemType[]
 }
 
 const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
@@ -121,7 +116,6 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
     tooltip: 'Search projects',
     ...buttonLabels.search,
   }
-
   return (
     <HeaderStyled className="projects-list-header">
       <HeaderTop className="projects-list-header-top">

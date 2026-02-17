@@ -26,7 +26,7 @@ interface ActivityVersionsProps {
   projectName: string
   entityType?: string
   onReferenceClick?: (ref: any) => void
-  filter?: string
+  filter?: any
 }
 
 const ActivityVersions: React.FC<ActivityVersionsProps> = ({
@@ -39,7 +39,13 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
   const { onOpenViewer } = useDetailsPanelContext()
   let { authorName, authorFullName, createdAt, versions = [] } = activity
 
-  const [showAll, setShowAll] = useState(filter === 'versions')
+  const isVersionsFilter =
+    filter === 'versions' ||
+    (filter &&
+      typeof filter === 'object' &&
+      filter.conditions?.some((c: any) => c.key === 'versions' && c.value === true))
+
+  const [showAll, setShowAll] = useState(isVersionsFilter)
   const limit = 2
 
   const [thumbnailError, setThumbnailError] = useState(false)
@@ -86,7 +92,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
           )
         )
       })}
-      {filter !== 'versions' && versions.length > limit && (
+      {!isVersionsFilter && versions.length > limit && (
         <More onClick={() => setShowAll(!showAll)}>
           <Icon icon="more" />
           <span>{showAll ? `Show less` : `Show ${versions.length - limit} more versions`}</span>

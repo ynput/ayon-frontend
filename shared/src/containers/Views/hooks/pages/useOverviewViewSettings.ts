@@ -16,7 +16,7 @@ import {
   convertColumnConfigToTanstackStates,
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
-import { useViewUpdateHelper } from '../../utils/viewUpdateHelper'
+import { UpdateViewSettingsFn } from '../../utils/viewUpdateHelper'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
@@ -36,17 +36,16 @@ type Return = {
   onUpdateColumns: (columns: ColumnsConfig, allColumnIds?: string[]) => void
 }
 
-export const useOverviewViewSettings = (): Return => {
-  // this views context is per page/project
-  const { viewSettings } = useViewsContext()
+type Props = {
+  viewSettings: OverviewSettings | undefined
+  updateViewSettings: UpdateViewSettingsFn
+}
 
+export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Props): Return => {
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
-
-  // Get view update helper
-  const { updateViewSettings } = useViewUpdateHelper()
 
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings

@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef, FC } from 'react'
+import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 
 // Widgets
@@ -8,6 +8,7 @@ import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
+import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -21,6 +22,7 @@ import { useProjectContext } from '@shared/context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
 import { NameWidgetData } from '@shared/components/RenameForm'
+import { READ_ONLY } from '../utils'
 
 const Cell = styled.div`
   position: absolute;
@@ -48,7 +50,7 @@ const Cell = styled.div`
 // use this class to trigger the editing mode on a single click
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
-type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' }
+type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' | 'subtasks' }
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -115,19 +117,6 @@ export const CellWidget: FC<EditorCellProps> = ({
   const isCurrentCellEditing = isEditing(cellId)
   const isCurrentCellFocused = isCellFocused(cellId)
 
-  const handleDoubleClick = useCallback(() => {
-    if (isPlaceholder || isReadOnly) return
-    setEditingCellId(cellId)
-  }, [cellId, setEditingCellId, isPlaceholder])
-
-  const handleSingleClick = () => {
-    // clicking a cell that is not editing will close the editor on this cell
-    // NOTE: the selection of a cell is handled in ProjectTreeTable.tsx line 1324
-    if (!isCurrentCellEditing) {
-      setEditingCellId(null)
-    }
-  }
-
   const moveToNextRow = () => {
     const rowIndex = gridMap.rowIdToIndex.get(rowId)
     if (rowIndex === undefined) return
@@ -144,9 +133,10 @@ export const CellWidget: FC<EditorCellProps> = ({
     setEditingCellId(null)
     if (isReadOnly) return
     // move to the next cell row
-    key === 'Enter' && moveToNextRow()
-    // make change if the value is different or if the key is 'Enter'
-    if (newValue !== value || key === 'Enter') {
+    if (key === 'Enter') {
+      moveToNextRow()
+      onChange?.(newValue, key)
+    } else if (key === 'Click' && newValue != value) {
       onChange?.(newValue, key)
     }
   }
@@ -216,6 +206,20 @@ export const CellWidget: FC<EditorCellProps> = ({
         )
       }
 
+      case type === 'subtasks': {
+        const subtasksValue = valueData as SubtasksWidgetData | undefined
+
+        return (
+          <SubtasksWidget
+            value={subtasksValue}
+            cellId={cellId}
+            projectName={projectName}
+            disabled={isReadOnly}
+            {...sharedProps}
+          />
+        )
+      }
+
       case !!options.length: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
@@ -240,6 +244,7 @@ export const CellWidget: FC<EditorCellProps> = ({
               isReadOnly
               hasMultipleValues={enumValue.length > 1}
               isMultiSelect={type?.includes('list')}
+              {...pt?.enum?.pt?.template}
             />
           )
         }
@@ -301,12 +306,10 @@ export const CellWidget: FC<EditorCellProps> = ({
       {...props}
       className={clsx(props.className, {
         inherited: isInherited && !isCurrentCellEditing,
-        readonly: isReadOnly,
+        [READ_ONLY]: isReadOnly,
         editable: !isReadOnly,
       })}
       ref={ref}
-      onDoubleClick={handleDoubleClick}
-      onClick={handleSingleClick}
       id={cellId}
       data-tooltip={
         tooltip ||

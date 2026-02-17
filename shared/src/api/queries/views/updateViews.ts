@@ -1,5 +1,6 @@
 import { ViewListItemModel } from '@shared/api/generated'
 import { getScopeTag, getViewsApi } from './getViews'
+import { v4 as uuidv4 } from 'uuid'
 
 const updateViewsApi = getViewsApi.enhanceEndpoints({
   endpoints: {
@@ -8,7 +9,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         const { payload } = arg
         const state = getState()
         // @ts-expect-error - user is not typed in the state
-        const user = state.user.name
+        const user = state.user?.name
 
         // Optimistically update the view list
         const patch = dispatch(
@@ -77,53 +78,50 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           )
         }
 
-        // Also update the getBaseView cache if this is a base view
         let baseViewPatch
+
         if (payload.label === '__base__') {
-          // Check if the getBaseView cache exists before updating
-          const currentBaseView = getViewsApi.endpoints.getBaseView.select({
-            viewType: arg.viewType,
-            projectName: arg.projectName,
-          })(state)
+          const newBaseView = {
+            id: uuidv4(),
+            ...payload,
+            working: false,
+            scope: arg.projectName ? 'project' : 'studio',
+            visibility: 'private',
+            owner: user,
+            accessLevel: 30,
+            position: 0,
+          }
 
-          // Only perform optimistic update if cache is initialized (even if data is null)
-          if (currentBaseView !== undefined) {
-            const newBaseView = {
-              ...payload,
-              working: false,
-              scope: arg.projectName ? 'project' : 'studio',
-              visibility: 'private',
-              owner: user,
-              accessLevel: 30,
-              position: 0,
-            }
+          baseViewPatch = dispatch(
+            getViewsApi.util.updateQueryData(
+              'getBaseView',
+              { viewType: arg.viewType, projectName: arg.projectName },
+              (draft) => {
+                if (draft) {
+                  Object.assign(draft, newBaseView)
+                }
+              },
+            ),
+          )
 
-            baseViewPatch = dispatch(
-              getViewsApi.util.updateQueryData(
+          // If the cache wasn't updated (because it didn't exist), upsert it
+          if (!baseViewPatch?.patches?.length) {
+            dispatch(
+              getViewsApi.util.upsertQueryData(
                 'getBaseView',
                 { viewType: arg.viewType, projectName: arg.projectName },
-                () => newBaseView as any,
+                newBaseView as any,
               ),
             )
-          } else {
-            // No cache exists yet, optimistic update will be skipped
-            // The invalidation tags will handle the refetch
-            console.log('Skipping optimistic update for getBaseView - cache does not exist yet')
           }
         }
 
         try {
           await queryFulfilled
         } catch (error) {
-          // If the query failed, we need to roll back the optimistic updates
           patch.undo()
-          if (workingViewPatch) {
-            workingViewPatch.undo()
-          }
-          if (baseViewPatch) {
-            baseViewPatch.undo()
-          }
-          console.error('Failed to create view:', error)
+          if (workingViewPatch) workingViewPatch.undo()
+          if (baseViewPatch) baseViewPatch.undo()
         }
       },
       transformErrorResponse: (error: any) => error.data?.detail,
@@ -134,11 +132,96 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
       ],
     },
     updateView: {
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        const { viewId, payload, viewType, projectName } = arg
+
+        const patches: any[] = []
+
+        // 1. Update listViews
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData('listViews', { viewType, projectName }, (draft) => {
+              const view = draft.find((v) => v.id === viewId)
+              if (view) {
+                Object.assign(view, payload)
+              }
+            }),
+          ),
+        )
+
+        // 2. Update getWorkingView
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData(
+              'getWorkingView',
+              { viewType, projectName },
+              (draft) => {
+                if (draft?.id === viewId) {
+                  Object.assign(draft, payload)
+                }
+              },
+            ),
+          ),
+        )
+
+        // 3. Update getDefaultView
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData(
+              'getDefaultView',
+              { viewType, projectName },
+              (draft) => {
+                if (draft?.id === viewId) {
+                  Object.assign(draft, payload)
+                }
+              },
+            ),
+          ),
+        )
+
+        // 4. Update getView
+        patches.push(
+          dispatch(
+            getViewsApi.util.updateQueryData(
+              'getView',
+              { viewType, viewId, projectName },
+              (draft) => {
+                if (draft) {
+                  Object.assign(draft, payload)
+                }
+              },
+            ),
+          ),
+        )
+
+        try {
+          await queryFulfilled
+        } catch (error) {
+          patches.forEach((patch) => patch.undo())
+        }
+      },
       transformErrorResponse: (error: any) => error.data?.detail,
-      invalidatesTags: (_r, _e, { viewType, projectName, viewId }) => [
-        { type: 'view', id: viewId },
-        getScopeTag(viewType, projectName),
-      ],
+      invalidatesTags: (_r, _e, { viewType, projectName, viewId, payload }) => {
+        const tags: any[] = [{ type: 'view', id: viewId }]
+
+        // Only invalidate the full list if metadata fields (like label) have changed
+        const metadataFields = [
+          'label',
+          'owner',
+          'position',
+          'visibility',
+          'scope',
+          'accessLevel',
+          'working',
+        ]
+        const hasMetadataChanges = Object.keys(payload).some((key) => metadataFields.includes(key))
+
+        if (hasMetadataChanges) {
+          tags.push(getScopeTag(viewType, projectName))
+        }
+
+        return tags
+      },
     },
     deleteView: {
       onQueryStarted: async (arg, { dispatch, queryFulfilled, getState }) => {

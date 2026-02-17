@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { EntityMap, TableRow } from '../types/table'
 import {
   FindInheritedValueFromAncestors,
@@ -9,6 +10,7 @@ import {
 import { RowId } from '../utils/cellUtils'
 
 import { ProjectTableProviderProps } from './ProjectTableProvider'
+import type { SubtasksManagerProps } from '@shared/components'
 
 export type ToggleExpandAll = (rowIds: RowId[], expand?: boolean) => void
 export type ToggleExpands = (rowIds: RowId[], expand?: boolean) => void
@@ -36,8 +38,6 @@ export interface ProjectTableContextType {
   groups: ProjectTableProviderProps['groups']
 
   // Filters
-  filters: ProjectTableProviderProps['filters']
-  setFilters: ProjectTableProviderProps['setFilters']
   queryFilters: ProjectTableProviderProps['queryFilters']
 
   // Hierarchy
@@ -67,12 +67,21 @@ export interface ProjectTableContextType {
   // remote modules
   modules: ProjectTableProviderProps['modules']
 
+  // SubtasksManager
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
+
   // player
   playerOpen?: ProjectTableProviderProps['playerOpen']
   onOpenPlayer?: ProjectTableProviderProps['onOpenPlayer']
 
-  // views
+  // Views
   onResetView?: () => void
+
+  // router hooks
+  useParams?: typeof useParams
+  useNavigate?: typeof useNavigate
+  useLocation?: typeof useLocation
+  useSearchParams?: typeof useSearchParams
 }
 
 export const ProjectTableContext = createContext<ProjectTableContextType | undefined>(undefined)

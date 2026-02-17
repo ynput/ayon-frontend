@@ -5,7 +5,7 @@ import { useVPViewsContext } from '../../context/VPViewsContext'
 import { buildVPGrid } from '../../util'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '@shared/containers'
 import { EntityCard } from '@ynput/ayon-react-components'
-import { FC, useMemo, useCallback, useRef, useState } from 'react'
+import { FC, useMemo, useCallback, useRef } from 'react'
 import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { useGridKeyboardNavigation } from '../../hooks/useGridKeyboardNavigation'
 import { useVPGridContextMenu } from '../../hooks'
@@ -13,7 +13,6 @@ import { VPGridGroupHeader } from './VPGridGroupHeader'
 import { VPGridCard } from './VPGridCard'
 import { useVPFocusContext } from '../../context/VPFocusContext'
 import clsx from 'clsx'
-import { ExpandedState } from '@tanstack/react-table'
 import styled from 'styled-components'
 import { EmptyPlaceholder } from '@shared/components'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
@@ -43,7 +42,8 @@ interface VPGridProps {
 
 const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
-  const { productsMap, versionsMap, isLoading, fetchNextPage, groups } = useVersionsDataContext()
+  const { productsMap, versionsMap, isLoading, fetchNextPage, groups, expanded, updateExpanded } =
+    useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
   const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
@@ -54,9 +54,6 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
 
   // Track the last clicked item for shift-click range selection
   const lastClickedIndexRef = useRef<number | null>(null)
-
-  // Track expanded state - by default groups are expanded (not in the map)
-  const [expanded, setExpanded] = useState<ExpandedState>({})
 
   // Check if a group is expanded (default is expanded if not in the map, unless it's empty)
   const isGroupExpanded = useCallback(
@@ -334,15 +331,14 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   const handleGroupToggle = useCallback(
     (groupValue: string) => {
       const groupId = `_GROUP_${groupValue}`
-      setExpanded((old) => {
-        const oldObj = old as Record<string, boolean>
-        return {
-          ...oldObj,
-          [groupId]: typeof oldObj[groupId] === 'boolean' ? !oldObj[groupId] : false,
-        }
-      })
+      const oldExpanded = expanded as Record<string, boolean>
+      const newExpanded = {
+        ...oldExpanded,
+        [groupId]: typeof oldExpanded[groupId] === 'boolean' ? !oldExpanded[groupId] : true,
+      }
+      updateExpanded(newExpanded)
     },
-    [setExpanded],
+    [updateExpanded, expanded],
   )
 
   // return a pages worth of loading skeletons
@@ -382,7 +378,7 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
     )
   }
 
-  if (!gridData.length) {
+  if (!gridData.length && !groupBy) {
     return (
       <GridContainer>
         <EmptyPlaceholder message="No versions or products found." />
@@ -404,7 +400,7 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
           if (!group) return null
 
           // Skip empty groups based on showEmptyGroups setting
-          if (groupEntities.length === 0) {
+          if (group.count === 0) {
             // Always skip empty ungrouped category
             if (groupValue === UNGROUPED_VALUE) return null
             // Skip empty groups if showEmptyGroups is false
@@ -421,7 +417,7 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
                 value={groupValue}
                 icon={group.icon}
                 color={group.color}
-                count={group.count}
+                count={groupBy !== 'taskType' ? group.count : undefined} // taskType group counts are unreliable as they use counts from tasks
                 isExpanded={isExpanded}
                 onToggle={() => handleGroupToggle(groupValue)}
               />

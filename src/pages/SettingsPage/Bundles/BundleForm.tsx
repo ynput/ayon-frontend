@@ -37,7 +37,6 @@ type BundleFormProps = {
   developerMode?: boolean
   addonListRef?: any
   onAddonAutoUpdate?: (addon: string, version: string | null) => void
-  onProjectSwitchChange?: () => void
 }
 
 const BundleForm: React.FC<BundleFormProps> = ({
@@ -53,7 +52,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
   developerMode,
   addonListRef,
   onAddonAutoUpdate,
-  onProjectSwitchChange,
 }) => {
   const showNameError = formData && !formData?.name && isNew
   const currentUser = useAppSelector((state) => state.user.name)
@@ -91,16 +89,6 @@ const BundleForm: React.FC<BundleFormProps> = ({
                     id={'bundle-name'}
                   />
                 </Styled.BundleNameInput>
-                {!isDev && onProjectSwitchChange && (
-                  <Styled.ProjectSwitchContainer data-tooltip="A bundle that is used for a specific project (experimental)">
-                    <span>Project bundle</span>
-                    <InputSwitch
-                      checked={formData?.isProject || false}
-                      onChange={onProjectSwitchChange}
-                      disabled={!formData || formData.isDev}
-                    />
-                  </Styled.ProjectSwitchContainer>
-                )}
               </Styled.BundleNameContainer>
             ) : (
               <Styled.BundleName>{formData?.name}</Styled.BundleName>

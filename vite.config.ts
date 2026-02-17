@@ -77,6 +77,9 @@ export default ({ mode }) => {
             singleton: true,
             requiredVersion: dependencies['react-dom'],
           },
+          '@ynput/ayon-react-components': {
+            singleton: true,
+          },
         },
       }),
       react(),

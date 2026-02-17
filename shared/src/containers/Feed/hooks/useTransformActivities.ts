@@ -42,11 +42,12 @@ const useTransformActivities = (
   projectInfo = {},
   entityType,
   userName,
+  feedFilter,
 ) => {
   // 1. add status icons and data for status change activities
   const activitiesWithIcons = useMemo(
     () => getStatusActivityIcon(activities, projectInfo),
-    [activities],
+    [activities, projectInfo],
   )
 
   // 1,5. add any extra meta data to the activities
@@ -60,7 +61,7 @@ const useTransformActivities = (
   // 2. versions should not have relations shown (comments posted on parent task)
   const activitiesWithoutRelations = useMemo(
     () => filterOutRelations(activitiesWithMeta, ['version'], entityType),
-    [activitiesWithMeta, projectInfo],
+    [activitiesWithMeta, entityType],
   )
 
   // 3. sort createdAt oldest first (because we are using flex: column-reverse)
@@ -93,10 +94,17 @@ const useTransformActivities = (
   )
 
   // 5. group minor activities together
-  const groupedActivitiesData = useMemo(
-    () => groupMinorActivities(mergedActivitiesData, users),
-    [mergedActivitiesData, users],
-  )
+  const groupedActivitiesData = useMemo(() => {
+    const isUpdatesFilter = feedFilter?.conditions?.some(
+      (c) => 'key' in c && c.key === 'updates' && c.value === true,
+    )
+
+    if (isUpdatesFilter) {
+      return mergedActivitiesData
+    }
+
+    return groupMinorActivities(mergedActivitiesData, users)
+  }, [mergedActivitiesData, users, feedFilter])
 
   // 6. group version activities together
   const groupedVersionsData = useMemo(

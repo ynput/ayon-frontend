@@ -1,4 +1,3 @@
-import Slicer from '@containers/Slicer'
 import TasksProgress from '@containers/TasksProgress'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -8,7 +7,7 @@ import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
 import { useProjectContext, useScopedDetailsPanel } from '@shared/context'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 

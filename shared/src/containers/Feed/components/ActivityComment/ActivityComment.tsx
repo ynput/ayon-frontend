@@ -201,7 +201,6 @@ const ActivityComment = ({
     [onGoToFrame],
   )
 
-  console.log(categoryNotFound)
   return (
     <>
       <Styled.Comment
@@ -269,6 +268,7 @@ const ActivityComment = ({
               initValue={body}
               initFiles={files}
               initCategory={categoryData?.name}
+              data={activity.activityData}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
@@ -288,6 +288,7 @@ const ActivityComment = ({
                       // @ts-ignore
                       aTag(props, {
                         entityId,
+                        userName,
                         projectName,
                         projectInfo,
                         onReferenceClick,

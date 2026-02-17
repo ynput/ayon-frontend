@@ -5,7 +5,8 @@ import { TextWidget } from '@shared/containers/ProjectTreeTable/widgets/TextWidg
 import { BooleanWidget } from '@shared/containers/ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '@shared/containers/ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
-import { useScopedStatuses } from '@shared/hooks'
+import type { AttributeEnumItem } from '@shared/containers/ProjectTreeTable/types'
+import { useScopedStatuses, useScopedTypes } from '@shared/hooks'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData } from '@shared/api'
@@ -64,6 +65,11 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     onChange: (newValue: CellValue | CellValue[]) => onChange(field.name, newValue),
   }
 
+  // Hooks must be called at top level - not inside conditions
+  const projectNames = entities.map((entity) => entity.projectName)
+  const scopedStatuses = useScopedStatuses(projectNames, [entityType])
+  const scopedTypes = useScopedTypes(projectNames, entityType)
+
   // Format the value for display
   let displayValue = value === null || value === undefined ? '' : value
   const labelValue = field.data.title || field.name
@@ -104,21 +110,28 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
         valueArray = [displayValue]
       }
 
-      // Use scoped statuses if the field name is 'status'
-      let enumOptions = field.data.enum || []
-      if (field.name === 'status' && entities.length > 0) {
-        const scopedStatuses = useScopedStatuses(
-          entities.map((entity) => entity.projectName),
-          [entityType],
-        )
-        if (scopedStatuses && scopedStatuses.length > 0) {
-          enumOptions = scopedStatuses.map((status) => ({
-            value: status.name,
-            label: status.name,
-            icon: status.icon,
-            color: status.color,
-          }))
-        }
+      // Use scoped statuses/types based on field name
+      let enumOptions: AttributeEnumItem[] = (field.data.enum || []).map((item) => ({
+        value: item.value,
+        label: item.label,
+        icon: typeof item.icon === 'string' ? item.icon : undefined,
+        color: item.color,
+      }))
+      if (field.name === 'status' && entities.length > 0 && scopedStatuses && scopedStatuses.length > 0) {
+        enumOptions = scopedStatuses.map((status) => ({
+          value: status.name,
+          label: status.name,
+          icon: status.icon,
+          color: status.color,
+        }))
+      }
+      if (field.name === 'taskType' && entities.length > 0 && scopedTypes && scopedTypes.length > 0) {
+        enumOptions = scopedTypes.map((t) => ({
+          value: t.name,
+          label: t.name,
+          icon: t.icon,
+          color: t.color,
+        }))
       }
 
       if (field.allowNone && !!valueArray.length && !isListType) {
@@ -148,7 +161,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           align="right"
           isReadOnly={isReadOnly}
           enableCustomValues={field.enableCustomValues ?? false}
-          search={field.enableSearch ?? false}
+          search={field.enableSearch ?? enumOptions.length>=5}
           sortBySelected={!enumOptions}
           {...widgetCommonProps}
         />

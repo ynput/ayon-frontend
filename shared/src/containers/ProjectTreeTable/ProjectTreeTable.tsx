@@ -62,9 +62,9 @@ import { useMoveEntities } from './hooks/useMoveEntities'
 import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
-import { getCellId, parseCellId } from './utils/cellUtils'
+import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
-import { isEntityRestricted } from './utils/restrictedEntity'
+import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
@@ -75,11 +75,12 @@ import { EntityUpdate } from './hooks/useUpdateTableData'
 // dnd-kit imports
 import {
   DragOverlay,
+  useDndContext,
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy, useSortable, horizontalListSortingStrategy, } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 import { useProjectContext } from '@shared/context'
@@ -501,6 +502,14 @@ export const ProjectTreeTable = ({
   }, [attribFields])
 
   const rowOrderIds = useMemo(() => tableData.map((row) => row.id), [tableData])
+  // Get column IDs for drag-and-drop from context columnOrder (exclude non-draggable columns)
+  // This ensures SortableContext items match what the drag handlers use
+  const columnOrderIds = useMemo(() => {
+    return columnOrder.filter(
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+    )
+  }, [columnOrder])
+
   const draggedRowData = useMemo(() => {
     if (!dndActiveId || !sortableRows) return null // Use dndActiveId
     return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
@@ -587,6 +596,7 @@ export const ProjectTreeTable = ({
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
+          data-column-dnd-container
           className={clsx(
             'table-container',
             {
@@ -613,6 +623,7 @@ export const ProjectTreeTable = ({
               isLoading={isLoading}
               readOnlyColumns={readOnlyColumns}
               sortableRows={sortableRows}
+              columnOrderIds={columnOrderIds}
               {...pt?.head}
             />
             <TableBody
@@ -700,17 +711,17 @@ export const ProjectTreeTable = ({
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
                           return (
-                            <Styled.TableCell
+                            <Styled.TD
                               key={`overlay-drag-${cell.id}`}
                               style={{ ...cellStyleBase, justifyContent: 'center' }}
                               className={clsx(cell.column.id)}
                             >
                               <Icon icon="drag_handle" /> {/* Static icon */}
-                            </Styled.TableCell>
+                            </Styled.TD>
                           )
                         }
                         return (
-                          <TableCellMemo
+                          <TD
                             cell={cell}
                             cellId={`overlay-${getCellId(overlayRowInstance.id, cell.column.id)}`}
                             rowId={overlayRowInstance.id}
@@ -737,11 +748,63 @@ export const ProjectTreeTable = ({
       <>
         {tableUiContent}
         {dragOverlayPortal}
+        <ColumnDragOverlay table={table} />
       </>
     )
   } else {
-    return tableUiContent
+    return (
+      <>
+        {tableUiContent}
+        <ColumnDragOverlay table={table} />
+      </>
+    )
   }
+}
+
+/**
+ * Isolated component for column drag overlay.
+ * This prevents the entire table from re-rendering on every drag frame.
+ */
+interface ColumnDragOverlayProps {
+  table: Table<TableRow>
+}
+
+const ColumnDragOverlay = ({ table }: ColumnDragOverlayProps) => {
+  const { active } = useDndContext()
+
+  // Only process if dragging a column
+  const isColumnDrag = active?.data?.current?.type === 'column'
+  const activeColumnId = isColumnDrag ? (active?.id as string) : null
+
+  const draggedColumnHeader = useMemo(() => {
+    if (!activeColumnId) return null
+    return table.getHeaderGroups()[0]?.headers.find((h) => h.id === activeColumnId) || null
+  }, [activeColumnId, table])
+
+  if (!activeColumnId || !draggedColumnHeader) return null
+
+  return createPortal(
+    <DragOverlay dropAnimation={null}>
+      <Styled.HeaderCell
+        style={{
+          width: draggedColumnHeader.column.getSize(),
+          backgroundColor: 'var(--md-sys-color-surface-container-high)',
+          boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          minHeight: 34,
+        }}
+      >
+        <Styled.TableCellContent className="bold header">
+          {flexRender(
+            draggedColumnHeader.column.columnDef.header,
+            draggedColumnHeader.getContext(),
+          )}
+        </Styled.TableCellContent>
+      </Styled.HeaderCell>
+    </DragOverlay>,
+    document.body,
+  )
 }
 
 interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
@@ -752,6 +815,7 @@ interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   isLoading: boolean
   readOnlyColumns?: string[]
   sortableRows?: boolean
+  columnOrderIds: string[]
 }
 
 const TableHead = ({
@@ -762,6 +826,7 @@ const TableHead = ({
   isLoading,
   readOnlyColumns,
   sortableRows,
+  columnOrderIds,
   ...props
 }: TableHeadProps) => {
   return (
@@ -776,6 +841,7 @@ const TableHead = ({
           isLoading={isLoading}
           readOnlyColumns={readOnlyColumns}
           sortableRows={sortableRows}
+          columnOrderIds={columnOrderIds}
         />
       ))}
     </Styled.TableHeader>
@@ -790,6 +856,7 @@ interface TableHeadRowProps {
   isLoading: boolean
   readOnlyColumns?: string[]
   sortableRows?: boolean
+  columnOrderIds: string[]
 }
 
 const TableHeadRow = ({
@@ -800,32 +867,45 @@ const TableHeadRow = ({
   isLoading,
   readOnlyColumns,
   sortableRows,
+  columnOrderIds,
 }: TableHeadRowProps) => {
   const virtualColumns = columnVirtualizer.getVirtualItems()
+  const { active } = useDndContext()
+  const isColumnDrag = active?.data?.current?.type === 'column'
+  const isDraggedColumnPinned = isColumnDrag && (active?.data?.current?.isPinned ?? false)
+
   return (
     <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
       {virtualPaddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingLeft }} />
       ) : null}
-      {virtualColumns.map((virtualColumn) => {
-        const header = headerGroup.headers[virtualColumn.index]
+      <SortableContext items={columnOrderIds} strategy={horizontalListSortingStrategy}>
+        {virtualColumns.map((virtualColumn) => {
+          const header = headerGroup.headers[virtualColumn.index]
+          // Exclude certain columns from being draggable
+          const isDraggable =
+            header.id !== DRAG_HANDLE_COLUMN_ID && header.id !== ROW_SELECTION_COLUMN_ID
 
-        return (
-          <TableHeadCell
-            key={header.id}
-            header={header}
-            isLoading={isLoading}
-            isReadOnly={readOnlyColumns?.includes(header.id)}
-            canSort={header.column.getCanSort()}
-            canFilter={header.column.getCanFilter()}
-            canHide={header.column.getCanHide()}
-            canPin={header.column.getCanPin()}
-            canResize={header.column.getCanResize()}
-            sortableRows={sortableRows}
-          />
-        )
-      })}
+          return (
+            <TableHeadCell
+              key={header.id}
+              header={header}
+              isLoading={isLoading}
+              isReadOnly={readOnlyColumns?.includes(header.id)}
+              canSort={header.column.getCanSort()}
+              canFilter={header.column.getCanFilter()}
+              canHide={header.column.getCanHide()}
+              canPin={header.column.getCanPin()}
+              canResize={header.column.getCanResize()}
+              sortableRows={sortableRows}
+              isDraggable={isDraggable}
+              isColumnDrag={isColumnDrag}
+              isDraggedColumnPinned={isDraggedColumnPinned}
+            />
+          )
+        })}
+      </SortableContext>
       {virtualPaddingRight ? (
         //fake empty column to the right for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingRight }} />
@@ -844,6 +924,9 @@ interface TableHeadCellProps {
   canResize?: boolean
   isReadOnly?: boolean
   sortableRows?: boolean
+  isDraggable?: boolean
+  isColumnDrag?: boolean
+  isDraggedColumnPinned?: boolean
 }
 
 const TableHeadCell = ({
@@ -856,34 +939,75 @@ const TableHeadCell = ({
   canResize,
   isReadOnly,
   sortableRows,
+  isDraggable = true,
+  isColumnDrag,
+  isDraggedColumnPinned,
 }: TableHeadCellProps) => {
   const { column } = header
   const sorting = column.getIsSorted()
   const menuId = `column-header-menu-${column.id}`
   const { menuOpen } = useMenuContext()
   const isOpen = menuOpen === menuId
+  const { columnPinning } = useColumnSettingsContext()
+
+  // Check if this column is pinned
+  const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
+
+  // useSortable for column drag-and-drop
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: column.id,
+    data: { type: 'column', isPinned: isThisColumnPinned },
+    disabled: !isDraggable,
+  })
+
+  const isDraggingInSameSection = isColumnDrag && isDraggedColumnPinned === isThisColumnPinned
+
+  // Build drag styles
+  const getDragStyle = (): CSSProperties => {
+    if (isDragging) {
+      return { transform: CSS.Translate.toString(transform!), transition, visibility: 'hidden', zIndex: 200 }
+    }
+    if (isDraggingInSameSection && transform) {
+      // For pinned columns, temporarily remove sticky positioning during drag animation
+      const pinnedOverride = isThisColumnPinned ? { position: 'relative' as const, left: 'auto' } : {}
+      return { transform: CSS.Translate.toString(transform), transition, ...pinnedOverride }
+    }
+    return {}
+  }
+
+  // Prevent drag when clicking action buttons
+  const preventDragFromActions = {
+    onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
+    onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
+  }
 
   return (
     <Styled.HeaderCell
+      ref={setNodeRef}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
+        dragging: isDragging,
+        draggable: isDraggable,
       })}
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
         width: getColumnWidth('', column.id),
+        ...getDragStyle(),
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent className={clsx('bold', 'header')}>
+        <Styled.TableCellContent className={clsx('bold', 'header')}  {...(isDraggable ? { ...attributes, ...listeners } : {})}>
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
 
-          <Styled.HeaderButtons className="actions" $isOpen={isOpen}>
+          <Styled.HeaderButtons className="actions" $isOpen={isOpen} {...preventDragFromActions}>
+            {/* Column drag handle */}
+
             {(canHide || canPin || canSort) && (
               <ColumnHeaderMenu
                 className="header-menu"
@@ -909,13 +1033,27 @@ const TableHeadCell = ({
                 selected={!!column.getIsSorted()}
               />
             )}
+
+            {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}
+            {column.getIsPinned() && column.id !== ROW_SELECTION_COLUMN_ID && (
+              <HeaderActionButton
+                icon="push_pin"
+                className={clsx('pin-button', 'visible')}
+                onClick={() => column.pin(false)}
+                selected
+              />
+            )}
           </Styled.HeaderButtons>
           {canResize && (
             <Styled.ResizedHandler
               {...{
                 onDoubleClick: () => column.resetSize(),
-                onMouseDown: header.getResizeHandler(),
+                onMouseDown: (e: React.MouseEvent) => {
+                  e.stopPropagation()
+                  header.getResizeHandler()(e)
+                },
                 onTouchStart: header.getResizeHandler(),
+                onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
                 className: clsx('resize-handle', {
                   resizing: column.getIsResizing(),
                 }),
@@ -1198,7 +1336,7 @@ const TableBodyRow = ({
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
-            <Styled.TableCell
+            <Styled.TD
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
@@ -1226,11 +1364,11 @@ const TableBodyRow = ({
                 attributes={sortable?.attributes}
                 listeners={sortable?.listeners}
               />
-            </Styled.TableCell>
+            </Styled.TD>
           )
         }
         return (
-          <TableCellMemo
+          <TD
             cell={cell}
             cellId={cellId}
             rowId={row.id}
@@ -1260,7 +1398,7 @@ interface TableCellProps {
   rowHeight?: number
 }
 
-const TableCell = ({
+const TD = ({
   cell,
   rowId,
   cellId,
@@ -1283,11 +1421,14 @@ const TableCell = ({
     getCellBorderClasses,
     clearSelection,
     selectedCells,
+    setSelectedCells,
+    setAnchorCell,
+    setFocusedCellId,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
 
-  const { isEditing, setEditingCellId } = useCellEditing()
+  const { isEditing, setEditingCellId, editingCellId } = useCellEditing()
 
   const borderClasses = getCellBorderClasses(cellId)
 
@@ -1298,7 +1439,7 @@ const TableCell = ({
   const isMultipleSelected = selectedCells.size > 1
 
   return (
-    <Styled.TableCell
+    <Styled.TD
       {...props}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
@@ -1331,35 +1472,102 @@ const TableCell = ({
         // check we are not clicking on expander
         if (target.closest('.expander')) return
 
-        // check if this is a restricted entity - prevent editing
-        const isRestricted = isEntityRestricted(cell.row.original.entityType)
-
-        // if we are clicking on an edit trigger, we need to start editing
-        if (target.closest('.' + EDIT_TRIGGER_CLASS)) {
-          if (!isCellSelected(cellId)) {
-            // if the cell is not selected, select it and deselect all others
-            selectCell(cellId, false, false)
-            focusCell(cellId)
-          }
-          // skip if restricted
-          if (isRestricted) return
-          setEditingCellId(cellId)
-
-          return
-        }
-
         // check we are not clicking in a dropdown
         if (target.closest('.options')) return
+
+        // Handle double-click via e.detail (browser's native click count).
+        // We handle it here in mousedown instead of relying on the dblclick event,
+        // because the 1st mousedown triggers React state updates that can replace
+        // the DOM node, preventing the native dblclick event from firing.
+        if (e.detail === 2) {
+          const isReadOnly = isTargetReadOnly(e)
+          if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
+            e.preventDefault()
+            return
+          }
+
+          // name column: select row to open details panel
+          if (cell.column.id === 'name' && !target.closest('.expander')) {
+            const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
+            const additive = e.metaKey || e.ctrlKey
+            const position = parseCellId(rowSelectionCellId)
+
+            setSelectedCells((prev) => {
+              const newSelection = additive ? new Set(prev) : new Set<CellId>()
+              newSelection.add(rowSelectionCellId)
+              newSelection.add(cellId)
+              return newSelection
+            })
+            if (position) {
+              setAnchorCell(position)
+              setFocusedCellId(rowSelectionCellId)
+            }
+          }
+          // thumbnail: open viewer
+          else if (cell.column.id === 'thumbnail') {
+            if (onOpenPlayer) {
+              const entity = getEntityById(cell.row.original.entityId || cell.row.id)
+              if (entity) {
+                const targetIds = getEntityViewierIds(entity)
+                onOpenPlayer(targetIds, { quickView: true })
+              }
+            }
+          }
+          // other cells: start editing
+          else {
+            setEditingCellId(cellId)
+          }
+
+          e.preventDefault()
+          return
+        }
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
-        const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
-        if (e.shiftKey) {
-          // Shift+click extends selection from anchor cell
-          selectCell(cellId, additive, true) // true for range selection
-        } else {
-          startSelection(cellId, additive)
+        // check if this is a restricted entity - prevent editing
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
+        // if clicking on an edit trigger, start editing
+        if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
+          // Select the cell first if not already selected
+          if (!isCellSelected(cellId)) {
+            selectCell(cellId, false, false)
+            focusCell(cellId)
+          }
+          setEditingCellId(cellId)
+          return
+        }
+
+        // If there's an active edit on a different cell, blur it first to save changes
+        if (editingCellId && editingCellId !== cellId) {
+          // Find the currently editing input and blur it
+          const editingInput = document.querySelector(
+            `#${editingCellId} input, #${editingCellId} [role="textbox"]`,
+          ) as HTMLElement
+          if (editingInput) {
+            editingInput.blur()
+            // Wait a tick for the blur event to process and save
+            setTimeout(() => {
+              proceedWithSelection()
+            }, 0)
+            return
+          }
+        }
+
+        proceedWithSelection()
+
+        function proceedWithSelection() {
+          const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
+          if (e.shiftKey) {
+            // Shift+click extends selection from anchor cell
+            selectCell(cellId, additive, true) // true for range selection
+          } else {
+            startSelection(cellId, additive)
+          }
+
+          // Prevent default browser behavior to ensure focus stays on the cell
+          e.preventDefault()
         }
       }}
       onMouseOver={(e) => {
@@ -1378,38 +1586,9 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        // check if this is a restricted entity - prevent opening details/viewer
-        const isRestricted = isEntityRestricted(cell.row.original.entityType)
-
-        // row selection on name column double click
-        if (
-          cell.column.id === 'name' &&
-          !(e.target as HTMLElement).closest('.expander') &&
-          !isGroup &&
-          !isRestricted
-        ) {
-          // select the row by selecting the row-selection cell
-          const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
-          const additive = e.metaKey || e.ctrlKey
-
-          // Select both the row-selection cell and the name cell
-          if (!isCellSelected(rowSelectionCellId)) {
-            selectCell(rowSelectionCellId, additive, false)
-          }
-          if (!isCellSelected(cellId)) {
-            selectCell(cellId, true, false) // additive=true to keep row-selection
-          }
-        }
-        // open the viewer on thumbnail double click
-        if (cell.column.id === 'thumbnail' && !isRestricted) {
-          if (onOpenPlayer) {
-            const entity = getEntityById(cell.row.original.entityId || cell.row.id)
-            if (entity) {
-              const targetIds = getEntityViewierIds(entity)
-              onOpenPlayer(targetIds, { quickView: true })
-            }
-          }
-        }
+        // Double-click is primarily handled in onMouseDown via e.detail == 2.
+        // This is a fallback for cases where the native dblclick event does fire.
+        e.preventDefault()
       }}
       onContextMenu={(e) => {
         e.preventDefault()
@@ -1418,10 +1597,11 @@ const TableCell = ({
           selectCell(cellId, false, false)
         }
       }}
+      onKeyDown={() => {
+        // keyboard events are handled in useKeyboardNavigation hook
+      }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </Styled.TableCell>
+    </Styled.TD>
   )
 }
-
-const TableCellMemo = memo(TableCell)

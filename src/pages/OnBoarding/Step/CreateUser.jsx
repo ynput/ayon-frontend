@@ -54,7 +54,8 @@ export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFiel
 
   const handleInputChange = (event) => {
     const { id, value } = event.target
-    const newForm = { ...userForm, [id]: value }
+    const adjustedValue = id === 'email' ? value.replace(/\s/g, '') : value
+    const newForm = { ...userForm, [id]: adjustedValue }
     setUserForm(newForm)
     setFormValid(validateForm(newForm, false))
   }
@@ -62,13 +63,16 @@ export const CreateUser = ({ Header, Footer, userForm, setUserForm, userFormFiel
   const handleSubmit = async (event) => {
     event.preventDefault()
     // handle userForm submission
-    const isValid = validateForm(userForm, true)
+    const trimmedForm = { ...userForm, email: userForm.email?.trim() }
+    setUserForm(trimmedForm)
+
+    const isValid = validateForm(trimmedForm, true)
     if (!isValid) return
 
     // add "admin" to all keys and remove confirmPassword
-    const formatedForm = Object.keys(userForm).reduce((acc, key) => {
+    const formatedForm = Object.keys(trimmedForm).reduce((acc, key) => {
       if (key === 'confirmPassword') return acc
-      acc[`admin${upperFirst(key)}`] = userForm[key]
+      acc[`admin${upperFirst(key)}`] = trimmedForm[key]
       return acc
     }, {})
 

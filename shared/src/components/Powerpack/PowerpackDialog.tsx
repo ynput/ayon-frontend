@@ -25,32 +25,80 @@ export const PowerpackDialog: FC<PowerpackDialogProps> = ({
   addon,
 }) => {
   const [showAll, setShowAll] = useState(false)
-  const { setPowerpackDialog, selectedPowerPack, powerpackDialog } = usePowerpack()
+  const { setPowerpackDialog, selectedPowerPack, powerpackDialog, addonDialog } = usePowerpack()
   const { openSupport, messengerLoaded } = useFeedback()
 
-  if (!powerpackDialog && (!label || !description)) return null
+  // Determine if we're showing an addon dialog (from context or props)
+  const isAddon = !!addon || !!addonDialog
+
+  // Resolve the active dialog values: props override context, addon context provides its own data
+  const activeLabel = label ?? powerpackDialog?.label ?? addonDialog?.label
+  const activeDescription =
+    description ??
+    powerpackDialog?.description ??
+    (addonDialog
+      ? addonDialog.features[addonDialog.selectedFeature ?? '']?.description ??
+        Object.values(addonDialog.features)[0]?.description
+      : undefined)
+  const activeIcon = addon?.icon ?? (addonDialog ? addonDialog.icon : 'bolt')
+
+  if (!powerpackDialog && !addonDialog && (!label || !description)) return null
 
   // Dynamic support message
-  const featureLabel = label ?? powerpackDialog?.label ?? (addon ? 'this addon' : 'this feature')
-  const SUPPORT_MESSAGE = addon
+  const featureLabel = activeLabel ?? (isAddon ? 'this addon' : 'this feature')
+  const SUPPORT_MESSAGE = isAddon
     ? `I would like to know how I can try out the "${featureLabel}" addon?`
     : `I would like to know how I can try out the "${featureLabel}" power feature?`
 
-  const sortedFeatures = Object.entries(features ?? powerpackFeatures).sort(([keyA], [keyB]) => {
-    // Move selected feature to the top
-    if (keyA === selectedPowerPack) return -1
-    if (keyB === selectedPowerPack) return 1
-
-    const indexA = powerpackFeatureOrder.indexOf(keyA as any)
-    const indexB = powerpackFeatureOrder.indexOf(keyB as any)
-
-    if (indexA > -1 && indexB > -1) {
-      return indexA - indexB
+  // Resolve the features list and sort it
+  const resolveFeatures = (): [string, Pick<PowerpackDialogType, 'bullet' | 'icon'>][] => {
+    // Explicit features prop takes highest priority
+    if (features) {
+      return Object.entries(features)
     }
-    if (indexA > -1) return -1
-    if (indexB > -1) return 1
-    return 0
-  })
+
+    // Addon dialog from context
+    if (addonDialog) {
+      const ordered = addonDialog.featureOrder
+        .filter((key) => key in addonDialog.features)
+        .map(
+          (key) =>
+            [key, addonDialog.features[key]] as [
+              string,
+              Pick<PowerpackDialogType, 'bullet' | 'icon'>,
+            ],
+        )
+
+      // Move selected feature to top
+      if (addonDialog.selectedFeature) {
+        const idx = ordered.findIndex(([key]) => key === addonDialog.selectedFeature)
+        if (idx > 0) {
+          const [item] = ordered.splice(idx, 1)
+          ordered.unshift(item)
+        }
+      }
+
+      return ordered
+    }
+
+    // Default: powerpack features
+    return Object.entries(powerpackFeatures).sort(([keyA], [keyB]) => {
+      if (keyA === selectedPowerPack) return -1
+      if (keyB === selectedPowerPack) return 1
+
+      const indexA = powerpackFeatureOrder.indexOf(keyA as any)
+      const indexB = powerpackFeatureOrder.indexOf(keyB as any)
+
+      if (indexA > -1 && indexB > -1) {
+        return indexA - indexB
+      }
+      if (indexA > -1) return -1
+      if (indexB > -1) return 1
+      return 0
+    })
+  }
+
+  const sortedFeatures = resolveFeatures()
 
   const handleClose = () => {
     if (!isCloseable) return
@@ -68,14 +116,14 @@ export const PowerpackDialog: FC<PowerpackDialogProps> = ({
     >
       <Styled.MainFeature>
         <h1>
-          <Icon icon={addon?.icon ? addon.icon : 'bolt'} />
-          {label ?? powerpackDialog?.label}
+          <Icon icon={activeIcon} />
+          {activeLabel}
         </h1>
-        <h2>{description ?? powerpackDialog?.description}</h2>
+        <h2>{activeDescription}</h2>
       </Styled.MainFeature>
 
       <Styled.FeaturesList>
-        {addon ? (
+        {isAddon ? (
           <h3>
             Unlock all <span className="green">Premium Addons</span> with an AYON Studio
             subscription.

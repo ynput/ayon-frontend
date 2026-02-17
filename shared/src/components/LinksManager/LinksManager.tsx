@@ -7,6 +7,7 @@ import { EntityPickerDialog, PickerEntityType } from '@shared/containers/EntityP
 import { upperFirst } from 'lodash'
 import { LinkManagerItem } from './LinkManagerItem'
 import { Button } from '@ynput/ayon-react-components'
+import { useGlobalContext } from '@shared/context'
 
 export type LinkEntity = {
   linkId: string
@@ -15,6 +16,7 @@ export type LinkEntity = {
   parents: string[]
   entityType: string
   icon: string
+  color?: string // color from folder/task type anatomy
   isRestricted?: boolean // flag to indicate if this link is restricted (node is null from API)
 }
 
@@ -47,6 +49,9 @@ export const LinksManager: FC<LinksManagerProps> = ({
   onClose,
   onEntityClick,
 }) => {
+  const { user } = useGlobalContext()
+  const isManager = user?.data?.isAdmin || user?.data?.isManager
+
   const linksUpdater = useUpdateLinks({
     projectName,
     direction,
@@ -92,6 +97,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
               isSelected={selectedEntityIds.includes(link.entityId)}
               onEntityClick={onEntityClick}
               onRemove={handleRemove}
+              isManager={isManager}
             />
           ))}
           {links.length === 0 && <Styled.SubHeader>No links yet</Styled.SubHeader>}

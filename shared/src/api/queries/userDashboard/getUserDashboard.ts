@@ -234,6 +234,7 @@ export const { useGetKanbanQuery, useGetKanbanProjectUsersQuery } = enhancedDash
 
 type GetProjectsInfoParams = {
   projects: string[]
+  anatomy?: boolean
 }
 
 export type ProjectModeWithAnatomy = ProjectModel & { anatomy?: Anatomy }
@@ -243,7 +244,7 @@ export type GetProjectsInfoResponse = { [projectName: string]: ProjectModeWithAn
 const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
   endpoints: (build) => ({
     getProjectsInfo: build.query<GetProjectsInfoResponse, GetProjectsInfoParams>({
-      async queryFn({ projects = [] }, { dispatch }) {
+      async queryFn({ projects = [], anatomy = true }, { dispatch }) {
         try {
           // get project info for each project
           const projectInfo: Record<string, ProjectModeWithAnatomy | undefined> = {}
@@ -258,21 +259,35 @@ const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
                   { forceRefetch: true },
                 ),
               ).unwrap(),
-              dispatch(
-                projectQueries.endpoints.getProjectAnatomy.initiate(
-                  { projectName },
-                  { forceRefetch: true },
-                ),
-              ).unwrap(),
+              ...(anatomy
+                ? [
+                    dispatch(
+                      projectQueries.endpoints.getProjectAnatomy.initiate(
+                        { projectName },
+                        { forceRefetch: true },
+                      ),
+                    ).unwrap(),
+                  ]
+                : []),
             ]
 
-            const response = await Promise.all(responses)
+            const settled = await Promise.allSettled(responses)
 
-            const projectData = response[0] as ProjectModel | undefined
-            const anatomyData = response[1] as Anatomy | undefined
+            const projectDataResult = settled[0]
+            const projectData =
+              projectDataResult.status === 'fulfilled'
+                ? (projectDataResult.value as ProjectModel)
+                : undefined
+            const anatomyData =
+              anatomy && settled[1]?.status === 'fulfilled'
+                ? (settled[1].value as Anatomy)
+                : undefined
 
             if (projectData) {
-              projectInfo[projectName] = { ...projectData, anatomy: anatomyData }
+              projectInfo[projectName] = {
+                ...projectData,
+                anatomy: anatomyData,
+              } as ProjectModeWithAnatomy
             }
           }
 

@@ -1,24 +1,24 @@
 import React, {
   createContext,
-  useContext,
-  useCallback,
   ReactNode,
-  useState,
+  useCallback,
+  useContext,
   useEffect,
+  useState,
 } from 'react'
-import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType } from '@shared/api'
-import type { UserModel } from '@shared/api'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
+import { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
-import { useGlobalContext } from './GlobalContext'
 import { useURIContext } from './UriContext'
+import { useLocalStorage } from '@shared/hooks'
+import type { SubtasksManagerProps } from '@shared/components'
 
-export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
+// High-level tabs for the details panel
+export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
 
-export type DetailsPanelTab = FeedFilters | 'details' | 'files'
+// Filters within the feed tab
+export type FeedFilter = QueryFilter
 
 export type SlideOut = {
   entityId: string
@@ -70,6 +70,8 @@ export interface DetailsPanelContextProps {
   useSearchParams: typeof useSearchParams
   feedAnnotationsEnabled?: boolean
   hasLicense?: boolean
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
   // debugging used to simulate different values
   debug?: {
     isDeveloperMode?: boolean
@@ -130,18 +132,17 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   children,
-  defaultTab = 'activity',
+  defaultTab = 'feed',
   hasLicense: hasLicenseProp,
   debug = {},
   ...forwardedProps
 }) => {
-  // get current user
-  const { user: currentUser } = useGlobalContext()
+  const user = forwardedProps.user
   const isDeveloperMode =
     'isDeveloperMode' in debug
       ? (debug.isDeveloperMode as boolean)
-      : currentUser?.attrib?.developerMode ?? false
-  const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : currentUser?.data?.isGuest
+      : user?.attrib?.developerMode ?? false
+  const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : user?.data?.isGuest
 
   // get license from powerpack or forwarded down from props
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -179,7 +180,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
+  const [tabsByScope, setTabByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
@@ -216,7 +217,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   // close slide out whenever the page changes
   useEffect(() => {
     closeSlideOut()
-  }, [useLocation().pathname])
+  }, [forwardedProps.useLocation().pathname])
 
   const [pip, setPip] = useState<DetailsPanelPip | null>(null)
 
@@ -232,7 +233,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const [highlightedActivities, setHighlightedActivities] = useState<string[]>([])
 
   const { uriType, uri, entity, getUriEntities } = useURIContext()
-  const [searchParams] = useSearchParams()
+  const [searchParams] = forwardedProps.useSearchParams()
 
   // on first load, check if there is a uri or URL params and open details panel if present
   useEffect(() => {
@@ -295,9 +296,14 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
       setEntities(newEntities)
 
-      // if there is an activity param, open the activity tab
+      // if there is an activity param, open the feed tab (activity is shown by default)
+
       if (activity) {
         setHighlightedActivities([activity])
+        setTabByScope({
+          ...tabsByScope,
+          overview: 'feed',
+        })
       }
     }
   }, [])
@@ -341,7 +347,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 export const useDetailsPanelContext = (): DetailsPanelContextType => {
   const context = useContext(DetailsPanelContext)
   if (context === undefined) {
-    throw new Error('useDetailsPanel must be used within a DetailsProvider')
+    throw new Error('useDetailsPanel must be used within a DetailsPanelProvider')
   }
   return context
 }
@@ -367,7 +373,7 @@ export const useScopedDetailsPanel = (scope: string) => {
   )
 
   const currentTab = tab
-  const isFeed = ['activity', 'comments', 'versions', 'checklists'].includes(currentTab)
+  const isFeed = currentTab === 'feed'
 
   return {
     isOpen: getOpenForScope(scope),

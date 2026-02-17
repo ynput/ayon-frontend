@@ -4,4 +4,7 @@ fragment DetailsPanelTaskFragment on TaskNode {
   label
   assignees
   taskType
+  subtasks {
+    ...SubTaskFragment
+  }
 }

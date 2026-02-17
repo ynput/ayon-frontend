@@ -70,6 +70,8 @@ export type ChipValue = {
   label: string
   tooltip: string
   icon?: string
+  prefix?: React.ReactNode
+  suffix?: React.ReactNode
 }
 
 interface ChipsProps {
@@ -178,7 +180,10 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
             pt?.chip?.className,
           )}
         >
-          {chip?.icon && <Icon icon={chip.icon}/>}  {chip.label}
+          {chip.prefix}
+          {chip?.icon && <Icon icon={chip.icon} />}
+          {chip.label}
+          {chip.suffix}
         </Chip>
       ))}
       {hiddenCount > 0 && (
@@ -186,7 +191,10 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, pt }) => {
       )}
       {offscreenChips.map((chip, index) => (
         <OffscreenChip key={chip.label + index} className="offscreen-chip">
+          {chip.prefix}
+          {chip?.icon && <Icon icon={chip.icon} />}
           {chip.label}
+          {chip.suffix}
         </OffscreenChip>
       ))}
     </ChipsContainer>

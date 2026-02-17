@@ -39,7 +39,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
@@ -336,7 +336,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   const {
     groups,
-    isLoading: isLoadingGroups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
   } = useVersionsGroupBy({
@@ -345,13 +344,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     taskFilters: combinedTaskFilter.combinedFilters,
     modules,
     versionArguments,
+    expanded,
   })
 
-  const isLoadingTable =
-    useQueryArgumentChangeLoading(
-      { ...queryArgs, featuredVersionOrder },
-      isFetchingProducts || isFetchingVersions || isLoadingViews,
-    ) || isLoadingGroups
+  const isLoadingTable = useQueryArgumentChangeLoading(
+    { ...queryArgs, featuredVersionOrder },
+    isFetchingProducts || isFetchingVersions || isLoadingViews,
+  )
 
   // Dynamic pagination based on showProducts
   const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage

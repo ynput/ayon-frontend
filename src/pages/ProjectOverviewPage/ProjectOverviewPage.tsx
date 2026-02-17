@@ -3,16 +3,13 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
 
 // state
-import { useSlicerContext } from '@context/SlicerContext'
-
-// containers
-import Slicer from '@containers/Slicer'
+import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
 
 // arc
 import { Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { FilterFieldType } from '@shared/components'
+import { ScopeWithFilterTypes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -25,28 +22,31 @@ import {
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import { CustomizeButton } from '@shared/components'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
-import { useSettingsPanel } from '@shared/context'
+import { useGlobalContext, useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useAppSelector } from '@state/store'
 import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
 import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
 
-const searchFilterTypes: FilterFieldType[] = [
-  'attributes',
-  'status',
-  'assignees',
-  'tags',
-  'taskType',
+// Configure scope-specific filter types for the search filter
+const scopesConfig: ScopeWithFilterTypes[] = [
+  {
+    scope: 'task',
+    filterTypes: ['status', 'tags', 'taskType', 'assignees', 'attributes', 'name'],
+  },
+  {
+    scope: 'folder',
+    filterTypes: ['status', 'tags', 'folderType', 'attributes', 'name'],
+  },
 ]
 
 const ProjectOverviewPage: FC = () => {
-  const user = useAppSelector((state) => state.user?.attrib)
-  const isDeveloperMode = user?.developerMode ?? false
+  const { user } = useGlobalContext()
+  const isDeveloperMode = user?.attrib?.developerMode ?? false
 
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -149,12 +149,12 @@ const ProjectOverviewPage: FC = () => {
               <SearchFilterWrapper
                 queryFilters={displayFilters}
                 onChange={handleFiltersChange}
-                filterTypes={searchFilterTypes}
-                scope="task"
+                scopes={scopesConfig}
                 projectNames={projectName ? [projectName] : []}
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
                 disabledFilters={sliceType ? [sliceType] : []}
+                data={{}}
               />
               <ReloadButton />
               <SwitchButton

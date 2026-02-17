@@ -3,17 +3,35 @@ import styled from 'styled-components'
 
 export const Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
-
   height: 100%;
   width: 100%;
   gap: var(--base-gap-small);
-
+  &:not(.minimized) {
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
   .close {
     width: fit-content;
-    justify-self: end;
+  }
+  .details {
+    width: fit-content;
+
+    &.active {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+  }
+
+  /* Layout when minimized - 3 columns with toolbar */
+  &.minimized {
+    display: flex;
+    flex-direction: column;
+
+    .related-tasks,
+    .trackbar-row,
+    .controls-row {
+      display: none;
+    }
   }
 
   /* when there is related panel, details panel height full */
@@ -21,6 +39,40 @@ export const Container = styled.div`
     .viewer-details-panel {
       grid-row: span 2;
     }
+  }
+`
+
+export const MinimizedToolbar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+
+  /* When minimized (no PathDisplay), push ButtonGroup to the right */
+  &.minimized {
+    justify-content: flex-end;
+  }
+`
+
+export const PathDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--border-radius-m);
+  padding: var(--padding-s) var(--padding-m);
+`
+export const ButtonGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  justify-self: end;
+  align-self: flex-end;
+
+  /* When standalone (not minimized), position at top-right */
+  &.standalone {
+    justify-self: end;
   }
 `
 
@@ -82,4 +134,7 @@ export const EmptyPlaceholderWrapper = styled.div`
 export const RightToolBar = styled.div`
   display: flex;
   flex-direction: column;
+`
+export const RightContainer = styled.div`
+  display: flex;
 `

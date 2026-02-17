@@ -84,7 +84,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
         name: user.name,
         patch: {
           attrib: {
-            email,
+            email: email.trim(),
             fullName: fullName.trim() || undefined,
           },
         },
@@ -93,7 +93,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
       // Update Redux state
       dispatch(
         updateUserAttribs({
-          email,
+          email: email.trim(),
           fullName: fullName.trim() || undefined,
         }),
       )
@@ -167,7 +167,7 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
           <InputText
             id="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
             placeholder="Email address"
             style={{ width: '100%' }}
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}

@@ -107,7 +107,6 @@ const VideoPlayerControls = ({
         { keys: ['ArrowRight', '4'], action: handleGoForward1 },
         { keys: ['l', '2'], shiftKeys: ['ArrowRight'], action: handleGoForward5 },
         { shiftKeys: ['D'], action: handleGoToEnd },
-        { keys: ['f'], action: () => dispatch(toggleFullscreen()) },
         { keys: ['m'], action: () => setMuted(!muted) },
       ]
 

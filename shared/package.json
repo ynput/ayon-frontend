@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.2.42",
+  "version": "0.3.11",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -84,6 +84,11 @@
       "types": "./dist/types/containers/SimpleTable/index.d.ts",
       "import": "./dist/SimpleTable.es.js",
       "require": "./dist/SimpleTable.cjs.js"
+    },
+    "./EntityPickerDialog": {
+      "types": "./dist/types/containers/EntityPickerDialog/index.d.ts",
+      "import": "./dist/EntityPickerDialog.es.js",
+      "require": "./dist/EntityPickerDialog.cjs.js"
     }
   },
   "files": [
@@ -122,6 +127,7 @@
   "dependencies": {
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-virtual": "^3.13.4",
+    "@ynput/ayon-react-components": "^1.15.14",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "custom-protocol-check": "^1.4.0",
@@ -134,6 +140,7 @@
     "react-markdown": "^10.1.0",
     "react-quill-ayon": "^2.0.2",
     "react-toastify": "^9.0.3",
+    "rehype-raw": "^7.0.0",
     "remark-directive": "^3.0.0",
     "remark-directive-rehype": "^0.4.2",
     "remark-emoji": "^4.0.1",

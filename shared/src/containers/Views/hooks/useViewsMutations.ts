@@ -231,8 +231,8 @@ export const useViewsMutations = ({
 
         if (notify) {
           const message =
-            baseViewSource === 'project' ? 'View reset to project base view' :
-            baseViewSource === 'studio' ? 'View reset to studio base view' :
+            baseViewSource === 'project' ? 'View reset to project default view' :
+            baseViewSource === 'studio' ? 'View reset to studio default view' :
             'View reset to default settings'
           toast.success(message)
         }

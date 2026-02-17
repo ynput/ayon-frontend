@@ -68,7 +68,6 @@ const AccountPage = () => {
   return (
     <>
       <DocumentTitle title={title} />
-      {/* @ts-expect-error: AppNavLinks not TS */}
       <AppNavLinks links={links} />
       {moduleComponent}
     </>

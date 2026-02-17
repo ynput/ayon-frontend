@@ -115,17 +115,20 @@ export const HeaderCell = styled.th`
   white-space: nowrap;
 
   &:hover {
+    background-color: var(--md-sys-color-surface-container-lowest-hover);
     .resize-handle {
       opacity: 1;
     }
 
     .actions {
       display: flex !important;
+      background-color: var(--md-sys-color-surface-container-lowest-hover); 
     }
 
     .actions .header-menu {
       display: flex !important;
     }
+
   }
 
   /* Hide action buttons when resizing */
@@ -155,6 +158,12 @@ export const HeaderCell = styled.th`
       display: none;
     }
   }
+  &.draggable {
+    cursor: grab;
+    &:active {
+      cursor: grabbing;
+    }
+  }
 `
 
 export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
@@ -181,17 +190,22 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     cursor: col-resize !important;
   }
 
+
   &:has(.sort-button.visible),
-  &:has(.sort-button.selected) {
+  &:has(.sort-button.selected),
+  &:has(.pin-button.visible),
+  &:has(.pin-button.selected) {
     display: flex !important;
   }
 
-  .sort-button.visible {
+  .sort-button.visible,
+  .sort-button.selected,
+  .pin-button.visible,
+  .pin-button.selected {
     display: flex !important;
   }
-
-  .sort-button.selected {
-    display: flex !important;
+  .pin-button{
+    font-variation-settings: 'FILL' 1,'wght' 200,'GRAD' 200,'opsz' 10;
   }
 
   .header-menu {
@@ -213,6 +227,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
 
   .resizing & {
     .sort-button,
+    .pin-button,
     .header-menu {
       display: none !important;
     }
@@ -223,7 +238,7 @@ type TableCellProps = {
   $isLastPinned?: boolean
 }
 
-export const TableCell = styled.td<TableCellProps>`
+export const TD = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
   background-color: var(--color-table-row);

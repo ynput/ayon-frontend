@@ -7,7 +7,7 @@ import {
   getCellId,
   ROW_SELECTION_COLUMN_ID,
 } from '@shared/containers/ProjectTreeTable'
-import { FC, useEffect, useMemo, useState } from 'react' // Added useState
+import { FC, useEffect, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
@@ -27,6 +27,7 @@ import {
   SettingsPanelProvider,
   useProjectContext,
   useSettingsPanel,
+  useSubtasksModulesContext,
 } from '@shared/context'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import {
@@ -48,29 +49,15 @@ import useUpdateListItems from './hooks/useUpdateListItems'
 import { Actions } from '@shared/containers/Actions/Actions'
 import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
-import { useNavigate } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
-// Dnd-kit imports
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-  type UniqueIdentifier,
-  type Active,
-  type Over,
-} from '@dnd-kit/core'
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppSelector } from '@state/store.ts'
+import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { useViewsContext } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
+import DndContextWrapper from './components/DndContextWrapper'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -120,6 +107,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
+  const { SubtasksManager } = useSubtasksModulesContext()
 
   // merge attribFields with listAttributes
   const mergedAttribFields = useMemo(
@@ -143,98 +131,62 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     entityType: selectedList?.entityType,
   })
 
-  // DND State and Handlers
-  const [dndActiveId, setDndActiveId] = useState<UniqueIdentifier | null>(null)
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 100,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {}),
-  )
-
-  function handleDndDragStart(event: DragStartEvent) {
-    setDndActiveId(event.active.id)
-  }
-
-  function handleDndDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    if (active && over && active.id !== over.id) {
-      if (reorderListItem) {
-        // Type assertion if necessary, or ensure reorderListItem matches (Active, Over)
-        reorderListItem(active as Active, over as Over)
-      }
-    }
-    setDndActiveId(null)
-  }
-
-  function handleDndDragCancel() {
-    setDndActiveId(null)
-  }
-
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDndDragStart}
-      onDragEnd={handleDndDragEnd}
-      onDragCancel={handleDndDragCancel}
-    >
-      <SettingsPanelProvider>
-        <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
-          <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
-            <ProjectTableProvider
-              projectName={projectName}
-              attribFields={mergedAttribFields}
-              projectInfo={projectInfo}
-              users={props.users}
-              modules={modules}
-              // @ts-ignore
-              entitiesMap={props.listItemsMap}
-              foldersMap={props.foldersMap}
-              tasksMap={props.tasksMap}
-              tableRows={props.listItemsTableData}
-              expanded={{}}
-              isInitialized={props.isInitialized}
-              showHierarchy={false}
-              isLoading={props.isLoadingAll}
-              contextMenuItems={contextMenuItems}
-              scopes={[selectedList?.entityType]}
-              playerOpen={viewerOpen}
-              onOpenPlayer={handleOpenPlayer}
-              onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
-            >
-              <DetailsPanelEntityProvider>
-                <SelectionCellsProvider>
-                  <SelectedRowsProvider>
-                    <CellEditingProvider>
-                      <ProjectLists
-                        extraColumns={extraColumns}
-                        extraColumnsSettings={extraColumnsSettings}
-                        isReview={isReview}
-                        dndActiveId={dndActiveId}
-                      />
-                      <ListsShortcuts />
-                    </CellEditingProvider>
-                  </SelectedRowsProvider>
-                </SelectionCellsProvider>
-              </DetailsPanelEntityProvider>
-            </ProjectTableProvider>
-          </ProjectTableQueriesProvider>
-        </ColumnSettingsProvider>
-      </SettingsPanelProvider>
-    </DndContext>
+    <SettingsPanelProvider>
+      <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
+        <DndContextWrapper reorderListItem={reorderListItem}>
+          {(dndActiveId) => (
+            <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>
+              <ProjectTableProvider
+                projectName={projectName}
+                attribFields={mergedAttribFields}
+                projectInfo={projectInfo}
+                users={props.users}
+                modules={modules}
+                // @ts-ignore
+                entitiesMap={props.listItemsMap}
+                foldersMap={props.foldersMap}
+                tasksMap={props.tasksMap}
+                tableRows={props.listItemsTableData}
+                expanded={{}}
+                isInitialized={props.isInitialized}
+                showHierarchy={false}
+                isLoading={props.isLoadingAll}
+                contextMenuItems={contextMenuItems}
+                scopes={[selectedList?.entityType]}
+                playerOpen={viewerOpen}
+                onOpenPlayer={handleOpenPlayer}
+                onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
+                SubtasksManager={SubtasksManager}
+                useParams={useParams}
+                useNavigate={useNavigate}
+                useLocation={useLocation}
+                useSearchParams={useSearchParams}
+              >
+                <DetailsPanelEntityProvider>
+                  <SelectionCellsProvider>
+                    <SelectedRowsProvider>
+                      <CellEditingProvider>
+                        <ProjectLists
+                          extraColumns={extraColumns}
+                          extraColumnsSettings={extraColumnsSettings}
+                          isReview={isReview}
+                          dndActiveId={dndActiveId}
+                        />
+                        <ListsShortcuts />
+                      </CellEditingProvider>
+                    </SelectedRowsProvider>
+                  </SelectionCellsProvider>
+                </DetailsPanelEntityProvider>
+              </ProjectTableProvider>
+            </ProjectTableQueriesProvider>
+          )}
+        </DndContextWrapper>
+      </ColumnSettingsProvider>
+    </SettingsPanelProvider>
   )
 }
 

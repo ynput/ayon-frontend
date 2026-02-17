@@ -13,7 +13,15 @@ import { GroupByConfig } from '@shared/containers/ProjectTreeTable/components/Gr
  * Converts ColumnItemModel array from OverviewSettings to TanStack table states
  */
 export function convertColumnConfigToTanstackStates(settings: OverviewSettings): ColumnsConfig {
-  const { columns = [], groupBy: groupByField, showEmptyGroups, sortBy, sortDesc, rowHeight } = settings || {}
+  const {
+    columns = [],
+    groupBy: groupByField,
+    groupSortByDesc,
+    showEmptyGroups,
+    sortBy,
+    sortDesc,
+    rowHeight,
+  } = settings || {}
 
   // Initialize state objects
   const columnVisibility: VisibilityState = {}
@@ -46,12 +54,23 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   const sorting: SortingState = sortBy ? [{ id: sortBy, desc: sortDesc || false }] : []
 
   // Handle grouping
-  const groupBy: TableGroupBy | undefined = groupByField
-    ? { id: groupByField, desc: false }
-    : undefined
+  let groupBy: TableGroupBy | undefined
+  if (typeof groupByField === 'string' && groupByField.length > 0) {
+    groupBy = { id: groupByField, desc: groupSortByDesc ?? false }
+  } else if (Array.isArray(groupByField)) {
+    const first = groupByField.find((v) => typeof v === 'string' && v.length > 0)
+    if (first) {
+      groupBy = { id: first, desc: groupSortByDesc ?? false }
+    } else {
+      groupBy = undefined
+    }
+  } else {
+    groupBy = undefined
+  }
 
   const groupByConfig: GroupByConfig = {
     showEmpty: showEmptyGroups || false,
+    entityType: '',
   }
 
   return {
@@ -194,9 +213,12 @@ export function convertTanstackStatesToColumnConfig(
 
   // Add grouping information if present
   if (groupBy) {
-    result.groupBy = groupBy.id
+    const id = Array.isArray(groupBy.id) ? groupBy.id[0] : groupBy.id
+    result.groupBy = id || undefined
+    result.groupSortByDesc = groupBy.desc ?? false
   } else {
     result.groupBy = undefined
+    result.groupSortByDesc = undefined
   }
 
   if (groupByConfig?.showEmpty !== undefined) {

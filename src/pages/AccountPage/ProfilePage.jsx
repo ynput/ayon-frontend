@@ -112,9 +112,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   }, [formData, initData])
 
   const onSave = async () => {
+    const trimmedFormData = Object.fromEntries(
+      Object.entries(formData).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value]),
+    )
     const attrib = {
       ...user.attrib,
-      ...formData,
+      ...trimmedFormData,
       developerMode: !!user.attrib.developerMode,
     }
 

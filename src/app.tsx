@@ -36,7 +36,13 @@ import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
-import { RemoteModulesProvider, DetailsPanelProvider, GlobalProvider } from '@shared/context'
+import {
+  RemoteModulesProvider,
+  DetailsPanelProvider,
+  GlobalProvider,
+  SubtasksModulesProvider,
+  useSubtasksModulesContext,
+} from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
 import { MenuProvider, URIProvider } from '@shared/context'
 
@@ -64,6 +70,19 @@ import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompletePro
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
+import type { DetailsPanelProviderProps } from '@shared/context'
+
+// Wrapper component to get SubtasksManager from SubtasksModulesContext and pass it to DetailsPanelProvider
+const DetailsPanelProviderWithSubtasks = (
+  props: Omit<DetailsPanelProviderProps, 'children'> & { children: React.ReactNode },
+) => {
+  const { SubtasksManager } = useSubtasksModulesContext()
+  return (
+    <DetailsPanelProvider {...props} SubtasksManager={SubtasksManager}>
+      {props.children}
+    </DetailsPanelProvider>
+  )
+}
 
 const App = () => {
   const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
@@ -178,62 +197,64 @@ const App = () => {
         <Favicon />
         <Suspense fallback={<LoadingPage />}>
           <GlobalProvider>
-            <MenuProvider>
-              <FeedbackProvider>
-                <RestartProvider>
-                  <RemoteModulesProvider skip={!user.name}>
-                    <PowerpackProvider>
+            <FeedbackProvider>
+              <RestartProvider>
+                <RemoteModulesProvider skip={!user.name}>
+                  <PowerpackProvider>
+                    <SubtasksModulesProvider>
                       <ContextMenuProvider>
                         <GlobalContextMenu />
                         <PasteProvider>
                           <PasteModal />
                           <BrowserRouter>
-                            <QueryParamProvider
-                              adapter={ReactRouter6Adapter}
-                              options={{
-                                updateType: 'replaceIn',
-                              }}
-                            >
-                              <URIProvider>
-                                <DetailsPanelProvider
-                                  {...handlerProps}
-                                  user={user}
-                                  viewer={viewer}
-                                  dispatch={dispatch}
-                                  useLocation={useLocation}
-                                  useNavigate={useNavigate}
-                                  useParams={useParams}
-                                  useSearchParams={useSearchParams}
-                                >
-                                  <NotificationsProvider>
-                                    <ShortcutsProvider>
-                                      <PiPProvider>
-                                        <Header />
-                                        <ShareDialog />
-                                        <ViewerDialog />
-                                        <ConfirmDialog />
-                                        <FileUploadPreviewContainer />
-                                        <ReleaseInstallerDialog />
-                                        <CompleteProfilePrompt />
-                                        <AppRoutes />
-                                        <DetailsPanelFloating />
-                                        <PowerpackDialog />
-                                        <AppRemoteLoader />
-                                        <TrialBanner />
-                                      </PiPProvider>
-                                    </ShortcutsProvider>
-                                  </NotificationsProvider>
-                                </DetailsPanelProvider>
-                              </URIProvider>
-                            </QueryParamProvider>
+                            <MenuProvider useNavigate={useNavigate}>
+                              <QueryParamProvider
+                                adapter={ReactRouter6Adapter}
+                                options={{
+                                  updateType: 'replaceIn',
+                                }}
+                              >
+                                <URIProvider>
+                                  <DetailsPanelProviderWithSubtasks
+                                    {...handlerProps}
+                                    user={user}
+                                    viewer={viewer}
+                                    dispatch={dispatch}
+                                    useLocation={useLocation}
+                                    useNavigate={useNavigate}
+                                    useParams={useParams}
+                                    useSearchParams={useSearchParams}
+                                  >
+                                    <NotificationsProvider>
+                                      <ShortcutsProvider>
+                                        <PiPProvider>
+                                          <Header />
+                                          <ShareDialog />
+                                          <ViewerDialog />
+                                          <ConfirmDialog />
+                                          <FileUploadPreviewContainer />
+                                          <ReleaseInstallerDialog />
+                                          <CompleteProfilePrompt />
+                                          <AppRoutes />
+                                          <DetailsPanelFloating />
+                                          <PowerpackDialog />
+                                          <AppRemoteLoader />
+                                          <TrialBanner />
+                                        </PiPProvider>
+                                      </ShortcutsProvider>
+                                    </NotificationsProvider>
+                                  </DetailsPanelProviderWithSubtasks>
+                                </URIProvider>
+                              </QueryParamProvider>
+                            </MenuProvider>
                           </BrowserRouter>
                         </PasteProvider>
                       </ContextMenuProvider>
-                    </PowerpackProvider>
-                  </RemoteModulesProvider>
-                </RestartProvider>
-              </FeedbackProvider>
-            </MenuProvider>
+                    </SubtasksModulesProvider>
+                  </PowerpackProvider>
+                </RemoteModulesProvider>
+              </RestartProvider>
+            </FeedbackProvider>
           </GlobalProvider>
         </Suspense>
       </>

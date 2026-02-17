@@ -10,6 +10,7 @@ interface RelatedTasksModuleProps {
   projectsInfo?: Record<string, ProjectModel>
   priorities?: AttributeEnumItem[]
   onOpenViewer?: (state: Partial<ViewerState>) => void
+  outsideSelection?: string[]
 }
 
 export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
@@ -17,6 +18,7 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
   projectsInfo,
   priorities,
   onOpenViewer,
+  outsideSelection = [],
 }) => {
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const viewerTaskId = useAppSelector((state) => state.viewer.taskId)
@@ -25,6 +27,17 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
   const { RelatedTasks } = useUserDashboardContext()
 
   const handleOpenViewer = (taskId: string, projectName: string) => {
+    // first check that a related task has focus
+    const containerClassName = 'related-tasks'
+    const cardClassName = 'entity-card'
+
+    const activeElement = document.activeElement as HTMLElement
+    const isRelatedTasksFocused =
+      activeElement?.closest(`.${containerClassName}`) &&
+      activeElement?.closest(`.${cardClassName}`)
+
+    if (!isRelatedTasksFocused) return
+
     onOpenViewer?.({
       isOpen: true,
       projectName,
@@ -64,7 +77,11 @@ export const RelatedTasksModule: FC<RelatedTasksModuleProps> = ({
   const viewerNotATask = viewerOpen && !viewerTaskId
   if (viewerNotATask) return null
 
-  const selectedIds = viewerOpen ? [viewerTaskId!] : entities?.entities.map((e) => e.id) || []
+  const selectedIds = viewerOpen
+    ? [viewerTaskId!]
+    : entities?.entities?.length
+    ? entities?.entities.map((e) => e.id) || []
+    : outsideSelection
 
   // use powerpack RelatedTasks module
   return (

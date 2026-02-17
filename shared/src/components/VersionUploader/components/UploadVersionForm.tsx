@@ -1,10 +1,21 @@
-import { FC, FormEvent, useEffect, useRef, useMemo } from 'react'
+import { FC, FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { FormLayout, FormRow, InputText, InputNumber, Dropdown } from '@ynput/ayon-react-components'
 import type { DropdownRef } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Dropdown,
+  FormLayout,
+  FormRow,
+  Icon,
+  InputNumber,
+  InputText,
+} from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '@shared/components'
 import { useVersionUploadContext } from '../context/VersionUploadContext'
 import { useProjectContext } from '@shared/context'
+import { useGetTaskQuery } from '@shared/api'
+import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
+import { Skeleton } from 'primereact/skeleton'
 
 const StyledForm = styled.form`
   display: flex;
@@ -54,6 +65,40 @@ const StyledUpload = styled.div`
   min-height: 80px;
 `
 
+const TaskFieldContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  width: 100%;
+`
+
+const TaskButton = styled(Button)`
+  flex: 1;
+`
+
+const TaskText = styled.div`
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  min-width: 0;
+`
+
+const TaskPath = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: fit-content;
+  margin-right: 4px;
+  flex: 1;
+`
+
+const TaskValue = styled.span`
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: bold;
+`
+
 type FormData = {
   version: number
   name: string
@@ -90,9 +135,35 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
     onCloseVersionUpload,
     extractAndSetVersionFromFiles,
     dispatch,
+    taskId,
+    linkedTask,
+    isLoadingTask,
+    setTaskId,
+    setLinkedTask,
+    folderId,
   } = useVersionUploadContext()
 
+  const [isTaskPickerOpen, setIsTaskPickerOpen] = useState(false)
+
+  // Fetch full task data for path; linkedTask provides instant name/type display
+  const { data: taskData, isFetching: isFetchingTask } = useGetTaskQuery(
+    { projectName, taskId },
+    { skip: !taskId },
+  )
+  const isTaskLoading = isLoadingTask || (!!taskId && isFetchingTask && !linkedTask)
+
+  // Use task's folder when available, fall back to product's folder
+  const pickerFolderId = taskData?.folderId || folderId
+
   const project = useProjectContext()
+
+  const taskName = taskData?.label || taskData?.name || linkedTask?.label || linkedTask?.name || ''
+  const taskType = taskData?.taskType || linkedTask?.taskType
+  const taskTypeInfo = taskType ? project.getTaskType(taskType) : undefined
+  const taskIcon = taskTypeInfo?.icon || 'task_alt'
+  const taskFolderPath = taskData?.path
+    ? taskData.path.substring(0, taskData.path.lastIndexOf('/'))
+    : ''
 
   const productTypeOptions = project.getProductTypeOptions()
   const productTypes = useMemo(() => {
@@ -233,19 +304,83 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
         )}
 
         {!hidden.includes('version') && (
-          <FormRow label="Version">
+          <FormRow label={'Version'}>
             <InputNumber
               value={formData.version}
               onChange={handleVersionChange}
               min={minVersion}
               step={1}
-              aria-label="Version Number"
+              aria-label={'Version Number'}
               autoFocus={hidden.includes('name')}
               disabled={isFormSubmitted}
             />
           </FormRow>
         )}
+
+        <FormRow label={'Task'}>
+          <TaskFieldContainer>
+            {isTaskLoading ? (
+              <Skeleton height={'20px'} />
+            ) : taskId && taskName ? (
+              <>
+                <TaskButton
+                  type={'button'}
+                  onClick={() => setIsTaskPickerOpen(true)}
+                  disabled={isFormSubmitted}
+                  variant="text"
+                >
+                  <Icon icon={taskIcon} style={{ color: taskTypeInfo?.color }} />
+                  <TaskText>
+                    {taskFolderPath && (
+                      <TaskPath>
+                        {taskFolderPath.split('/').filter(Boolean).join(' / ')} /{' '}
+                      </TaskPath>
+                    )}
+                    <TaskValue>{taskName}</TaskValue>
+                  </TaskText>
+                </TaskButton>
+                <Button
+                  type={'button'}
+                  icon={'close'}
+                  variant={'text'}
+                  onClick={() => {
+                    setTaskId('')
+                    setLinkedTask(null)
+                  }}
+                  disabled={isFormSubmitted}
+                />
+              </>
+            ) : (
+              <Button
+                type={'button'}
+                icon={'link'}
+                label={'Link task'}
+                variant={'text'}
+                onClick={() => setIsTaskPickerOpen(true)}
+                disabled={isFormSubmitted}
+              />
+            )}
+          </TaskFieldContainer>
+        </FormRow>
       </StyledFormLayout>
+
+      {isTaskPickerOpen && (
+        <EntityPickerDialog
+          projectName={projectName}
+          entityType={'task'}
+          initialSelection={{
+            ...(pickerFolderId ? { folder: { [pickerFolderId]: true } } : {}),
+            ...(taskId ? { task: { [taskId]: true } } : {}),
+          }}
+          onSubmit={(selection) => {
+            if (selection.length > 0) {
+              setTaskId(selection[0])
+            }
+            setIsTaskPickerOpen(false)
+          }}
+          onClose={() => setIsTaskPickerOpen(false)}
+        />
+      )}
 
       <FormRow label="Reviewable files" />
       <StyledUpload>

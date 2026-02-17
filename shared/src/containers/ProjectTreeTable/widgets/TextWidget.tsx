@@ -1,4 +1,4 @@
-import { forwardRef, useCallback } from 'react'
+import { forwardRef } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -15,6 +15,7 @@ const StyledBaseTextWidget = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  user-select: none;
 
   display: flex;
   gap: 4px;
@@ -113,7 +114,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     }
 
     const displayText = option?.label || value
-    const textValue = typeof displayText === 'string' ? displayText : String(displayText || '')
+    const textValue = typeof displayText === 'string' ? displayText : String(displayText ?? '')
     const isDescriptionColumn = columnId === 'attrib_description' || columnId === 'description'
     // does the content contain only regular text?
     const isRegularText =
@@ -155,7 +156,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
               <StyledLink
                 key={part.key}
                 href={part.href}
-                onClick={(e) => handleLinkClick(e, part.href!)}
                 onMouseDown={(e) => e.stopPropagation()}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -183,7 +183,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
               <StyledLink
                 key={part.key}
                 href={part.content}
-                onClick={(e) => handleLinkClick(e, part.content)}
                 onMouseDown={(e) => e.stopPropagation()}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -200,7 +199,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       return textValue
     }
 
-    const combinedClassName = clsx(className, EDIT_TRIGGER_CLASS, {
+    const combinedClassName = clsx(className, {
       markdown: isDescriptionColumn,
       regular: isRegularText,
     })

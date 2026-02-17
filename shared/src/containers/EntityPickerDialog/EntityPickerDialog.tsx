@@ -1,7 +1,7 @@
 // This components lets you pick a specific entity from the tree table.
 // Each entity type has it's own table
 
-import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
+import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useState } from 'react'
 import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
@@ -65,7 +65,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   showMoveToRoot,
   onMoveToRoot,
   disabledIds = [],
-  disabledMessage = "Cannot select this item",
+  disabledMessage = 'Cannot select this item',
   getDisabledMessage,
   ...props
 }) => {
@@ -136,42 +136,44 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
   const entityHierarchy = entityHierarchies[entityType]
 
   // Process table data to filter out excluded IDs and mark disabled rows
-  const recursivelyProcessRows = (row:{id:string, subRows:any[]}, disabledIds:string[], parentIsDisabled: boolean) => {
+  const recursivelyProcessRows = (
+    row: { id: string; subRows: any[] },
+    disabledIds: string[],
+    parentIsDisabled: boolean,
+  ) => {
     // Determine if the current row should be disabled.
 
     // A row is disabled if its parent is disabled OR its own ID is in the disabledIds list.
-    const isDisabled = parentIsDisabled || disabledIds.includes(row.id);
+    const isDisabled = parentIsDisabled || disabledIds.includes(row.id)
     const disabledRowMessage = isDisabled
-        ? (getDisabledMessage?.(row.id) || disabledMessage)
-        : undefined;
+      ? getDisabledMessage?.(row.id) || disabledMessage
+      : undefined
 
     // Create a new row object with the updated disabled state.
     const newRow = {
       ...row,
       isDisabled,
-      disabledMessage: disabledRowMessage
-    };
+      disabledMessage: disabledRowMessage,
+    }
 
     // If the row has subRows, recursively process each of them.
     if (row.subRows && row.subRows.length > 0) {
-      newRow.subRows = row.subRows.map((subRow:any ) =>
-          recursivelyProcessRows(subRow, disabledIds, isDisabled)
-      );
+      newRow.subRows = row.subRows.map((subRow: any) =>
+        recursivelyProcessRows(subRow, disabledIds, isDisabled),
+      )
     }
 
-    return newRow;
-  };
+    return newRow
+  }
 
-  const processTableDataWithDisabled = (tableData:any ) => {
-
-
+  const processTableDataWithDisabled = (tableData: any) => {
     if (!disabledIds || disabledIds.length === 0) {
-      return tableData;
+      return tableData
     }
 
     // Iterate over the top-level rows and start the recursive processing.
-    return tableData.map((row:any) => recursivelyProcessRows(row, disabledIds, false));
-  };
+    return tableData.map((row: any) => recursivelyProcessRows(row, disabledIds, false))
+  }
 
   const handleSubmit = () => {
     // check the target entity has a selection
@@ -197,11 +199,7 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
       footer={
         <>
           {showMoveToRoot && onMoveToRoot && (
-            <Button
-              label="Move to root"
-              variant="text"
-              onClick={onMoveToRoot}
-            />
+            <Button label="Move to root" variant="text" onClick={onMoveToRoot} />
           )}
           <Button
             label={`Select ${entityType}${isMultiSelect ? 's' : ''}`}

@@ -80,6 +80,26 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectTeams: build.query<GetProjectTeamsApiResponse, GetProjectTeamsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/dashboard/users` }),
     }),
+    getProjectFolders: build.query<GetProjectFoldersApiResponse, GetProjectFoldersApiArg>({
+      query: () => ({ url: `/api/projectFolders` }),
+    }),
+    createProjectFolder: build.mutation<CreateProjectFolderApiResponse, CreateProjectFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projectFolders`,
+        method: 'POST',
+        body: queryArg.projectFolderPostModel,
+      }),
+    }),
+    deleteProjectFolder: build.mutation<DeleteProjectFolderApiResponse, DeleteProjectFolderApiArg>({
+      query: (queryArg) => ({ url: `/api/projectFolders/${queryArg.folderId}`, method: 'DELETE' }),
+    }),
+    updateProjectFolder: build.mutation<UpdateProjectFolderApiResponse, UpdateProjectFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projectFolders/${queryArg.folderId}`,
+        method: 'PATCH',
+        body: queryArg.projectFolderPatchModel,
+      }),
+    }),
     getProjectAnatomy: build.query<GetProjectAnatomyApiResponse, GetProjectAnatomyApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/anatomy` }),
     }),
@@ -94,7 +114,7 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    setProjectBundle: build.mutation<SetProjectBundleApiResponse, SetProjectBundleApiArg>({
+    setProjectBundles: build.mutation<SetProjectBundlesApiResponse, SetProjectBundlesApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/bundles`,
         method: 'POST',
@@ -102,6 +122,41 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           'x-sender': queryArg['x-sender'],
           'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    getProjectBundleInfo: build.query<GetProjectBundleInfoApiResponse, GetProjectBundleInfoApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundle`,
+        params: {
+          variant: queryArg.variant,
+        },
+      }),
+    }),
+    setProjectBundle: build.mutation<SetProjectBundleApiResponse, SetProjectBundleApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundle`,
+        method: 'POST',
+        body: queryArg.projectBundle,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+        params: {
+          variant: queryArg.variant,
+        },
+      }),
+    }),
+    unsetProjectBundle: build.mutation<UnsetProjectBundleApiResponse, UnsetProjectBundleApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundle`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+        params: {
+          variant: queryArg.variant,
         },
       }),
     }),
@@ -300,6 +355,22 @@ export type GetProjectTeamsApiResponse =
 export type GetProjectTeamsApiArg = {
   projectName: string
 }
+export type GetProjectFoldersApiResponse =
+  /** status 200 Successful Response */ ProjectFoldersResponseModel
+export type GetProjectFoldersApiArg = void
+export type CreateProjectFolderApiResponse = /** status 200 Successful Response */ EntityIdResponse
+export type CreateProjectFolderApiArg = {
+  projectFolderPostModel: ProjectFolderPostModel
+}
+export type DeleteProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type DeleteProjectFolderApiArg = {
+  folderId: string
+}
+export type UpdateProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type UpdateProjectFolderApiArg = {
+  folderId: string
+  projectFolderPatchModel: ProjectFolderPatchModel
+}
 export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ Anatomy
 export type GetProjectAnatomyApiArg = {
   projectName: string
@@ -311,16 +382,37 @@ export type SetProjectAnatomyApiArg = {
   'x-sender-type'?: string
   anatomy: Anatomy
 }
-export type SetProjectBundleApiResponse = unknown
-export type SetProjectBundleApiArg = {
+export type SetProjectBundlesApiResponse = unknown
+export type SetProjectBundlesApiArg = {
   projectName: string
   'x-sender'?: string
   'x-sender-type'?: string
   projectBundleModel: ProjectBundleModel
 }
+export type GetProjectBundleInfoApiResponse = /** status 200 Successful Response */ ProjectBundle
+export type GetProjectBundleInfoApiArg = {
+  projectName: string
+  variant?: 'production' | 'staging'
+}
+export type SetProjectBundleApiResponse = /** status 200 Successful Response */ any
+export type SetProjectBundleApiArg = {
+  projectName: string
+  variant?: 'production' | 'staging'
+  'x-sender'?: string
+  'x-sender-type'?: string
+  projectBundle: ProjectBundle
+}
+export type UnsetProjectBundleApiResponse = unknown
+export type UnsetProjectBundleApiArg = {
+  projectName: string
+  variant?: 'production' | 'staging'
+  'x-sender'?: string
+  'x-sender-type'?: string
+}
 export type ListProjectsApiResponse =
   /** status 200 Successful Response */ ListProjectsResponseModel
 export type ListProjectsApiArg = {
+  /** Page number, starting from 1 */
   page?: number
   /** If not provided, the result will not be limited */
   length?: number
@@ -328,6 +420,7 @@ export type ListProjectsApiArg = {
   library?: boolean
   /** If not provided, return projects regardless the flag */
   active?: boolean
+  /** Attribute to order the list by */
   order?: 'name' | 'createdAt' | 'updatedAt'
   desc?: boolean
   /** Limit the result to project with the matching name,
@@ -511,6 +604,37 @@ export type ProjectTeamsResponseModel = {
     [key: string]: number
   }
 }
+export type ProjectFolderData = {
+  /** Hex color code */
+  color?: string
+  /** Icon name */
+  icon?: string
+}
+export type ProjectFolderModel = {
+  id: string
+  label: string
+  parentId?: string
+  position?: number
+  data?: ProjectFolderData
+}
+export type ProjectFoldersResponseModel = {
+  folders?: ProjectFolderModel[]
+}
+export type EntityIdResponse = {
+  /** Entity ID */
+  id: string
+}
+export type ProjectFolderPostModel = {
+  id?: string
+  label: string
+  parentId?: string
+  data?: ProjectFolderData
+}
+export type ProjectFolderPatchModel = {
+  label?: string
+  parentId?: string
+  data?: ProjectFolderData
+}
 export type EntityNaming = {
   /** How to capitalize the entity names */
   capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
@@ -589,6 +713,7 @@ export type FolderType = {
   name: string
   original_name?: string
   shortName?: string
+  color?: string
   icon?: string
 }
 export type TaskType = {
@@ -659,10 +784,56 @@ export type ProjectBundleModel = {
   production?: string
   staging?: string
 }
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for type material-symbols) */
+  name?: string
+  /** The color of the icon (for type material-symbols) */
+  color?: string
+  /** The URL of the icon (for type url) */
+  url?: string
+}
+export type EnumItem = {
+  value: string | number | number | boolean
+  label: string
+  description?: string
+  fulltext?: string[]
+  group?: string
+  /** Icon name (material symbol) or IconModel object */
+  icon?: string | IconModel
+  color?: string
+  /** Enum item is visible, but not selectable */
+  disabled?: boolean
+  /** Message to show when the option is disabled */
+  disabledMessage?: string
+}
+export type AddonMetadata = {
+  name: string
+  label: string
+  options: EnumItem[]
+}
+export type ProjectBundle = {
+  /** Dictionary of addon names and their versions. Use `null` to disable an addon. */
+  addons: {
+    [key: string]: string
+  }
+  installerVersion?: string
+  dependencyPackages?: {
+    [key: string]: string
+  }
+  addonMetadata?: AddonMetadata[]
+  installerOptions?: string[]
+  dependencyPackageOptions?: {
+    [key: string]: string[]
+  }
+}
 export type ListProjectsItemModel = {
   name: string
   code: string
-  active: boolean
+  active?: boolean
+  library?: boolean
+  pinned?: boolean
+  projectFolder?: string
   createdAt: string
   updatedAt: string
 }

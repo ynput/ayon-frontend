@@ -647,9 +647,9 @@ const Products = () => {
       buildAddToListMenu(
         [
           ...buildHierarchicalMenuItems(
-            [...versionsLists.data, ...reviewsLists.data],
+            [...versionsLists, ...reviewsLists],
             selectedEntities,
-            (l) => (l.entityListType === 'review-session' ? true : !!reviewsLists.data.length),
+            (l) => (l.entityListType === 'review-session' ? true : !!reviewsLists.length),
           ),
           newListMenuItem('version', selectedEntities),
         ],

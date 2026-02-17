@@ -243,10 +243,12 @@ export type OverviewSettings = {
   showHierarchy?: boolean
   rowHeight?: number
   groupBy?: string
+  groupSortByDesc?: boolean
   showEmptyGroups?: boolean
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter
+  folderFilter?: QueryFilter
   sliceType?: string
   columns?: ColumnItemModel[]
 }
@@ -258,6 +260,7 @@ export type OverviewViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: OverviewSettings
+  viewType?: 'overview'
 }
 export type TaskProgressSettings = {
   filter?: QueryFilter
@@ -272,6 +275,7 @@ export type TaskProgressViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: TaskProgressSettings
+  viewType?: 'taskProgress'
 }
 export type ListsSettings = {
   rowHeight?: number
@@ -288,6 +292,7 @@ export type ListsViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: ListsSettings
+  viewType?: 'lists'
 }
 export type ReviewsSettings = {
   rowHeight?: number
@@ -304,6 +309,7 @@ export type ReviewsViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: ReviewsSettings
+  viewType?: 'reviews'
 }
 export type VersionsSettings = {
   showProducts?: boolean
@@ -313,6 +319,7 @@ export type VersionsSettings = {
   featuredVersionOrder?: string[]
   slicerType?: string
   groupBy?: string
+  groupSortByDesc?: boolean
   showEmptyGroups?: boolean
   sortBy?: string
   sortDesc?: boolean
@@ -327,6 +334,7 @@ export type VersionsViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: VersionsSettings
+  viewType?: 'versions'
 }
 export type GenericViewPostModel = {
   /** Unique identifier for the view within the given scope. */
@@ -336,6 +344,7 @@ export type GenericViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: object
+  viewType: string
 }
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */
@@ -449,7 +458,7 @@ export type GenericViewModel = {
   accessLevel: number
   settings: object
   access: object
-  viewType?: 'reports'
+  viewType: string
 }
 export type SetDefaultViewRequestModel = {
   viewId: string
@@ -458,29 +467,35 @@ export type OverviewViewPatchModel = {
   label?: string
   owner?: string
   settings?: OverviewSettings
+  viewType?: 'overview'
 }
 export type TaskProgressViewPatchModel = {
   label?: string
   owner?: string
   settings?: TaskProgressSettings
+  viewType?: 'taskProgress'
 }
 export type ListsViewPatchModel = {
   label?: string
   owner?: string
   settings?: ListsSettings
+  viewType?: 'lists'
 }
 export type ReviewsViewPatchModel = {
   label?: string
   owner?: string
   settings?: ReviewsSettings
+  viewType?: 'reviews'
 }
 export type VersionsViewPatchModel = {
   label?: string
   owner?: string
   settings?: VersionsSettings
+  viewType?: 'versions'
 }
 export type GenericViewPatchModel = {
   label?: string
   owner?: string
   settings?: object
+  viewType: string
 }

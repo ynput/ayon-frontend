@@ -36,6 +36,7 @@ export const { useGetLatestProductVersionQuery } = enhancedGqlApi
 // create a new version for a specific product
 const uploadVersions = versionsApi.enhanceEndpoints({
   endpoints: {
+    getVersion: {},
     createVersion: {
       invalidatesTags: (_r, _e, { versionPostModel }) => [
         { type: 'product', id: versionPostModel.productId },
@@ -53,5 +54,5 @@ const uploadVersions = versionsApi.enhanceEndpoints({
   },
 })
 
-export const { useCreateVersionMutation, useDeleteVersionMutation } = uploadVersions
+export const { useGetVersionQuery, useCreateVersionMutation, useDeleteVersionMutation } = uploadVersions
 export { uploadVersions as versionsQueries }
