@@ -21,6 +21,7 @@ import CopyBundleSettingsDropdown, { SourceBundle } from './CopyBundleSettingsDr
 type DialogBodyProps = {
   onCancel: () => void
   onFinish: () => void
+  onSetTag?: () => Promise<void>
   bundle?: BundleModel | null
   previousBundle?: BundleModel | null
   envTarget?: string | null // has the bundle just been set to production, staging, or dev
@@ -33,10 +34,12 @@ const CopyBundleSettingsDialog = ({
   envTarget,
   onCancel,
   onFinish,
+  onSetTag,
   devMode,
 }: DialogBodyProps) => {
   const [sourceBundle, setSourceBundle] = useState<string | null>(null)
   const [sourceVariant, setSourceVariant] = useState('production')
+  const [isSaving, setIsSaving] = useState(false)
 
   const { data: { bundles = [] } = {} } = useListBundlesQuery({})
 
@@ -113,18 +116,50 @@ const CopyBundleSettingsDialog = ({
       setSourceVariant(bundleInfo.variant)
       setSourceBundle(bundleInfo.bundleName)
     } else {
-      onCancel()
+      // No source bundles to copy from
+      if (onSetTag) {
+        // No source to copy from, set tag immediately
+        onSetTag()
+          .then(() => onFinish())
+          .catch(() => onCancel())
+      } else {
+        onCancel()
+      }
     }
   }, [currentProductionBundle, envTarget, currentStagingBundle, bundle, sourceBundles, devMode])
 
-  const handleClose = () => {
+  const handleCancel = () => {
     onCancel()
+  }
+
+  const handleDoNotCopy = async () => {
+    if (onSetTag) {
+      setIsSaving(true)
+      try {
+        await onSetTag()
+      } catch {
+        setIsSaving(false)
+        return
+      }
+      setIsSaving(false)
+    }
+    onFinish()
   }
 
   const [migrateSettingsByBundle, { isLoading }] = useMigrateSettingsByBundleMutation()
 
   const handleConfirm = async () => {
-    console.log('copying settings over')
+    if (onSetTag) {
+      setIsSaving(true)
+      try {
+        await onSetTag()
+      } catch {
+        setIsSaving(false)
+        return
+      }
+      setIsSaving(false)
+    }
+
     try {
       if (!sourceBundle || !sourceVariant || !bundle || !envTarget) {
         const missingFields = [
@@ -156,7 +191,9 @@ const CopyBundleSettingsDialog = ({
   }
 
   let title = `Copy addon settings from another bundle's addons?`
-  if (envTarget) {
+  if (envTarget && onSetTag) {
+    title = `Set ${bundle?.name} as ${envTarget}?`
+  } else if (envTarget) {
     title = `Copy addon settings to your new ${envTarget} bundle?`
   }
 
@@ -178,12 +215,27 @@ const CopyBundleSettingsDialog = ({
 
   const footer = (
     <>
-      <Button onClick={handleClose} label={cancelLabel} variant="text" className="cancel" />
+      {onSetTag && (
+        <Button
+          onClick={handleCancel}
+          label="Cancel"
+          variant="text"
+          className="cancel"
+          disabled={isSaving}
+        />
+      )}
+      <Button
+        onClick={onSetTag ? handleDoNotCopy : handleCancel}
+        label={cancelLabel}
+        variant="text"
+        className="cancel"
+        disabled={isSaving || isLoading}
+      />
       <SaveButton
         onClick={handleConfirm}
         label="Copy all settings"
         active={confirmActive}
-        saving={isLoading}
+        saving={isSaving || isLoading}
       />
     </>
   )
