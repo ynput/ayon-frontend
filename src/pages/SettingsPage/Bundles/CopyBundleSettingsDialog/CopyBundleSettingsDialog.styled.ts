@@ -19,6 +19,10 @@ export const FriendlyDialog = styled(Dialog)`
   }
 
   button.cancel {
+    &:first-child {
+      margin-right: auto;
+    }
+
     &:hover {
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
