@@ -11,8 +11,8 @@ const VideoOverlay = ({ videoWidth, videoHeight, showOverlay, showStill, videoRe
       const width = canvas.width
       const height = canvas.height
 
+      ctx.clearRect(0, 0, width, height)
       if (showStill) {
-        ctx.clearRect(0, 0, width, height)
         ctx.drawImage(videoRef.current, 0, 0, width, height)
       }
 
