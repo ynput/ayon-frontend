@@ -233,13 +233,13 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       <ScrollPanel style={{ flexGrow: 1, background: 'transparent' }}>
       <AddonForm className={clsx({ loading: isLoading })}>
         <div className="addon-row">
-          <label htmlFor="installerVersion">Installer Version</label>
+          <label htmlFor="installerVersion">Launch Version</label>
           <Dropdown
             id="installerVersion"
             options={formData?.installerOptions.map((opt) => ({ label: opt, value: opt })) || []}
             value={formData?.installerVersion ? [formData.installerVersion] : []}
             onChange={handleInstallerChange}
-            placeholder="Select installer version"
+            placeholder="Select launch version"
             style={{ minWidth: '200px' }}
             disabled={isLoading}
           />
