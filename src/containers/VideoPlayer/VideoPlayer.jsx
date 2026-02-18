@@ -168,14 +168,18 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       const didSeek = seekPreferredInitialPosition()
       if (didSeek) {
         const onSeeked = () => {
-          isTransitioning.current = false
-          setShowStill(false)
+          videoRef.current?.requestVideoFrameCallback(() => {
+            isTransitioning.current = false
+            setShowStill(false)
+          })
           videoRef.current?.removeEventListener('seeked', onSeeked)
         }
         videoRef.current?.addEventListener('seeked', onSeeked)
       } else {
-        isTransitioning.current = false
-        setShowStill(false)
+        videoRef.current?.requestVideoFrameCallback(() => {
+          isTransitioning.current = false
+          setShowStill(false)
+        })
       }
     }
 
@@ -495,6 +499,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
               width={videoDimensions.width}
               height={videoDimensions.height}
               src={actualSource}
+              style={{ opacity: showStill ? 0 : 1 }}
               onProgress={handleProgress}
               onEnded={handleEnded}
               onPlay={handleOnPlay}
