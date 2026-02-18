@@ -39,7 +39,7 @@ const Bundles = () => {
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
   // show copy settings dialog
-  const initCopySettingsBundle = { env: null, bundle: null, previous: null }
+  const initCopySettingsBundle = { env: null, bundle: null, previous: null, pendingChange: null }
   const [copySettingsBundle, setCopySettingsBundle] = useState(initCopySettingsBundle)
 
   const closeCopySettings = () => {
@@ -273,64 +273,77 @@ const Bundles = () => {
 
     const { name, [statusKey]: isActive } = bundle
     const newActive = !isActive
+    const patch = { ...bundle, [statusKey]: newActive }
 
-    const message = `bundle ${name} ${newActive ? 'set' : 'unset'} ${status}`
+  if (newActive) {
+      const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
+
+      // Check if any source bundles exist to copy settings from
+      const hasSource =
+        oldBundle ||
+        bundleList.find((b) => b.name !== name && b.isProduction) ||
+        bundleList.find((b) => b.name !== name && b.isStaging) ||
+        (developerMode && bundleList.find((b) => b.name !== name && b.isDev))
+
+      if (hasSource) {
+        // Open dialog — let user confirm, cancel, or copy
+        setCopySettingsBundle({
+          bundle: patch,
+          env: status,
+          previous: oldBundle,
+          pendingChange: { name, statusKey, patch, oldBundle, settingDev: statusKey === 'isDev' },
+        })
+      } else {
+        // No source bundles to copy from — set tag directly
+        try {
+          await updateBundle({ name, data: { [statusKey]: true }, patch }).unwrap()
+        } catch (error) {
+          console.error(error)
+          toast.error(`Error setting bundle ${name} as ${status}`)
+        }
+      }
+    } else {
+      // Unsetting tag - still immediate
+      try {
+        await updateBundle({ name, data: { [statusKey]: newActive }, patch }).unwrap()
+      } catch (error) {
+        console.error(error)
+        toast.error(`Error unsetting ${status} on bundle ${name}`)
+      }
+    }
+  }
+
+  const handleConfirmTagChange = async () => {
+    const { pendingChange } = copySettingsBundle
+    if (!pendingChange) return
+
+    const { name, statusKey, patch, oldBundle, settingDev } = pendingChange
     let patchResult
 
     try {
-      const patch = { ...bundle, [statusKey]: newActive }
-
-      // before updating status, check if we need to copy settings
-      if (newActive) {
-        // source is the current bundle that matches statusKey
-        let source = bundleList.find((b) => b.name !== name && b[statusKey])
-
-        // if no source, use the other status
-        if (!source) {
-          statusKey === 'isProduction'
-            ? (source = bundleList.find((b) => b.isStaging))
-            : (source = bundleList.find((b) => b.isProduction))
-        }
-
-        // if still no source and developerMode is enabled, use the dev bundle
-        if (!source && developerMode) {
-          source = bundleList.find((b) => b.isDev)
+      // Optimistically update old bundle to remove status
+      if (!settingDev && oldBundle) {
+        try {
+          const patchOld = { ...oldBundle, [statusKey]: false }
+          patchResult = dispatch(
+            bundlesQueries.util.updateQueryData('listBundles', { archived: true }, (draft) => {
+              const bundleIndex = draft.bundles.findIndex(
+                (bundle) => bundle.name === oldBundle.name,
+              )
+              draft.bundles[bundleIndex] = patchOld
+            }),
+          )
+        } catch (error) {
+          console.error(error)
         }
       }
 
-      const settingDev = statusKey === 'isDev'
-      // try and find an old bundle with the same status and unset it (not if setting dev)
-      const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
-      if (newActive && !settingDev) {
-        if (oldBundle) {
-          // optimistically update old bundle to remove status
-          try {
-            const patchOld = { ...oldBundle, [statusKey]: false }
-            patchResult = dispatch(
-              bundlesQueries.util.updateQueryData('listBundles', { archived: true }, (draft) => {
-                const bundleIndex = draft.bundles.findIndex(
-                  (bundle) => bundle.name === oldBundle.name,
-                )
-                draft.bundles[bundleIndex] = patchOld
-              }),
-            )
-          } catch (error) {
-            console.error(error)
-          }
-        }
-      }
-
-      await updateBundle({ name, data: { [statusKey]: newActive }, patch }).unwrap()
-
-      if (newActive) {
-        // now ask if the user wants to copy settings from the source bundle
-        setCopySettingsBundle({ bundle: patch, env: status, previous: oldBundle })
-      }
+      await updateBundle({ name, data: { [statusKey]: true }, patch }).unwrap()
     } catch (error) {
       console.error(error)
-      toast.error(`Error setting ${message}`)
-      // revert optimistic update if failed to set new bundle
+      toast.error(`Error setting bundle ${name} as ${copySettingsBundle.env}`)
       patchResult?.undo()
+      throw error
     }
   }
 
@@ -404,6 +417,7 @@ const Bundles = () => {
         devMode={developerMode}
         onCancel={closeCopySettings}
         onFinish={closeCopySettings}
+        onSetTag={copySettingsBundle.pendingChange ? handleConfirmTagChange : undefined}
       />
       <main>
         <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
@@ -477,7 +491,7 @@ const Bundles = () => {
             <AddonSearchProvider addons={addons}>
               <Section style={{ height: '100%' }}>
                 {isLoadingAddons || isLoadingInstallers ? (
-                  <BundleFormLoading />
+              <BundleFormLoading />
                 ) : newBundleOpen ? (
                   <NewBundle
                     initBundle={newBundleOpen}
