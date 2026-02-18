@@ -168,14 +168,18 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       const didSeek = seekPreferredInitialPosition()
       if (didSeek) {
         const onSeeked = () => {
-          isTransitioning.current = false
-          setShowStill(false)
+          videoRef.current?.requestVideoFrameCallback(() => {
+            isTransitioning.current = false
+            setShowStill(false)
+          })
           videoRef.current?.removeEventListener('seeked', onSeeked)
         }
         videoRef.current?.addEventListener('seeked', onSeeked)
       } else {
-        isTransitioning.current = false
-        setShowStill(false)
+        videoRef.current?.requestVideoFrameCallback(() => {
+          isTransitioning.current = false
+          setShowStill(false)
+        })
       }
     }
 
@@ -227,7 +231,6 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       setIsPlaying(false)
     }
     if (videoRef.current?.duration < currentTime) {
-      console.log('resetting current time to 0')
       setCurrentTime(0)
     }
     setBufferedRanges([])
@@ -279,62 +282,27 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     }
     const video = videoRef.current
     if (!video) return
-    
-    // Cancel previous callback if it exists and is a function
-    if (frameCallbackRef.current && typeof frameCallbackRef.current === 'function') {
-      try {
-        frameCallbackRef.current()
-      } catch (error) {
-        console.warn('Error canceling previous video frame callback:', error)
-      }
+
+    if (typeof frameCallbackRef.current === 'function') {
+      frameCallbackRef.current()
     }
-    
-    try {
-      const cancelCallback = video.requestVideoFrameCallback(updateCurrentTime)
-      if (typeof cancelCallback === 'function') {
-        frameCallbackRef.current = cancelCallback
-      } else {
-        console.warn('requestVideoFrameCallback did not return a cancel function')
-        frameCallbackRef.current = null
-      }
-    } catch (error) {
-      console.error('Error setting up video frame callback:', error)
-      frameCallbackRef.current = null
-    }
+
+    frameCallbackRef.current = video.requestVideoFrameCallback(updateCurrentTime)
   }
 
   useEffect(() => {
     if (!videoRef.current) return
     const video = videoRef.current
-    
-    if (frameCallbackRef.current && typeof frameCallbackRef.current === 'function') {
-      try {
-        frameCallbackRef.current()
-      } catch (error) {
-        console.warn('Error canceling previous video frame callback:', error)
-      }
+
+    if (typeof frameCallbackRef.current === 'function') {
+      frameCallbackRef.current()
     }
-    
-    try {
-      const cancelCallback = video.requestVideoFrameCallback(updateCurrentTime)
-      if (typeof cancelCallback === 'function') {
-        frameCallbackRef.current = cancelCallback
-      } else {
-        console.warn('requestVideoFrameCallback did not return a cancel function')
-        frameCallbackRef.current = null
-      }
-    } catch (error) {
-      console.error('Error setting up video frame callback:', error)
-      frameCallbackRef.current = null
-    }
-    
+
+    frameCallbackRef.current = video.requestVideoFrameCallback(updateCurrentTime)
+
     return () => {
-      if (frameCallbackRef.current && typeof frameCallbackRef.current === 'function') {
-        try {
-          frameCallbackRef.current()
-        } catch (error) {
-          console.warn('Error canceling video frame callback on cleanup:', error)
-        }
+      if (typeof frameCallbackRef.current === 'function') {
+        frameCallbackRef.current()
         frameCallbackRef.current = null
       }
     }
