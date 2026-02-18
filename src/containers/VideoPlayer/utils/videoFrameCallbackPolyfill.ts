@@ -16,7 +16,7 @@ type CancelVideoFrameCallback = () => void
  */
 const isRequestVideoFrameCallbackSupported = (): boolean => {
   if (typeof HTMLVideoElement === 'undefined') return false
-  
+
   const video = document.createElement('video')
   return typeof video.requestVideoFrameCallback === 'function'
 }
@@ -29,7 +29,7 @@ const createVideoFrameCallbackPolyfill = (): boolean => {
   if (typeof window === 'undefined' || typeof HTMLVideoElement === 'undefined') {
     return false
   }
-  
+
   if (isRequestVideoFrameCallbackSupported()) {
     return false
   }
@@ -74,24 +74,24 @@ const createVideoFrameCallbackPolyfill = (): boolean => {
       if (typeof callback !== 'function') {
         throw new Error('requestVideoFrameCallback requires a callback function')
       }
-      
+
       const video = this
       let rafId: number | null = null
-      let lastTime = 0
+      let lastTime = -1
       let isCancelled = false
       let frameCount = 0
-      
+
       const raf = getRequestAnimationFrame()
       const caf = getCancelAnimationFrame()
 
       const tick = (): void => {
         if (isCancelled) return
-        
+
         try {
           const now = getNow()
           const mediaTime = video.currentTime
-          
-          if (!video.paused && mediaTime !== lastTime) {
+
+          if (video.readyState >= 2 && mediaTime !== lastTime) {
             frameCount++
             const metadataInfo: VideoFrameCallbackMetadata = {
               mediaTime: mediaTime,
@@ -101,11 +101,11 @@ const createVideoFrameCallbackPolyfill = (): boolean => {
               height: video.videoHeight,
               presentedFrames: frameCount
             }
-            
+
             callback(now, metadataInfo)
-            lastTime = mediaTime
+            return
           }
-          
+
           if (!isCancelled) {
             rafId = raf(tick)
           }
@@ -120,14 +120,13 @@ const createVideoFrameCallbackPolyfill = (): boolean => {
       rafId = raf(tick)
 
       const cancelFunction = (): void => {
-        console.log('🎬 Video Polyfill: Canceling video frame callback')
         isCancelled = true
         if (rafId) {
           caf(rafId)
           rafId = null
         }
       }
-      
+
       return cancelFunction
     }
 
