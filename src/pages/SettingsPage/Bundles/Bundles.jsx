@@ -275,7 +275,7 @@ const Bundles = () => {
     const newActive = !isActive
     const patch = { ...bundle, [statusKey]: newActive }
 
-  if (newActive) {
+    if (newActive) {
       const oldBundle = bundleList.find((b) => b.name !== name && b[statusKey])
 
       // Check if any source bundles exist to copy settings from
@@ -466,7 +466,11 @@ const Bundles = () => {
                   checked={showArchived}
                   onChange={(e) => setShowArchived(e.target.checked)}
                 />
-                <span style={{ whiteSpace: 'nowrap' }} className="large">
+                <span
+                  style={{ whiteSpace: 'nowrap' }}
+                  className="large"
+                  data-tooltip={'Show per-project bundles'}
+                >
                   Project
                 </span>
                 <InputSwitch
@@ -491,7 +495,7 @@ const Bundles = () => {
             <AddonSearchProvider addons={addons}>
               <Section style={{ height: '100%' }}>
                 {isLoadingAddons || isLoadingInstallers ? (
-              <BundleFormLoading />
+                  <BundleFormLoading />
                 ) : newBundleOpen ? (
                   <NewBundle
                     initBundle={newBundleOpen}
