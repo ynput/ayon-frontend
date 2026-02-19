@@ -1,10 +1,8 @@
-import { useGetUsersQuery } from '@shared/api'
 import * as Styled from './MeOrUserSwitch.styled'
 import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
 import { useMemo } from 'react'
 
-const MeOrUserSwitch = ({ value = [], onChange, filter, ...props }) => {
-  const { data: users = [] } = useGetUsersQuery({})
+const MeOrUserSwitch = ({ value = [], onChange, filter, users = [], ...props }) => {
 
   const options = useMemo(
     () =>
