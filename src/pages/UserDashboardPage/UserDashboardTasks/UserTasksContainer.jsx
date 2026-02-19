@@ -66,7 +66,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
   const draggingIds = useSelector((state) => state.dashboard.tasks.draggingIds)
   const isDragging = draggingIds.length > 0
-  // Only admins and managers can see task of other users
 
   const handleOpenViewer = (args) => dispatch(openViewer(args))
 

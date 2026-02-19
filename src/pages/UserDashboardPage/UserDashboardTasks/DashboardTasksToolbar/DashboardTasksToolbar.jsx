@@ -12,11 +12,8 @@ import * as Styled from './DashboardTasksToolbar.styled'
 import sortByOptions from './KanBanSortByOptions'
 import { getGroupByOptions } from './KanBanGroupByOptions'
 
-const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
+const DashboardTasksToolbar = ({ isLoading, view, setView, projectUsers = [] }) => {
   const dispatch = useDispatch()
-
-  const user = useSelector((state) => state.user)
-  const isManager = user?.data?.isManager || user?.data?.isAdmin
 
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
@@ -57,16 +54,6 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
     setAssignees(payload)
   }
 
-  // When user does not have permission to list other users, force the
-  // assignees filter to "me" to avoid being unable to list tasks.
-  if (!isManager && assigneesFilter !== "me") {
-    console.log("Force assignees filter to 'me'")
-    setAssignees({
-      assignees: [],
-      filter: "me"
-    })
-  }
-
   return (
     <Styled.TasksToolbar>
       <SortingDropdown
@@ -87,11 +74,12 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />
-      {isManager && !isLoading && (
+      {!isLoading && (
         <MeOrUserSwitch
           value={assignees}
           onChange={(state, v) => handleAssigneesChange(state, v)}
           filter={assigneesFilter}
+          users={projectUsers}
           align={'right'}
           placeholder="Assignees"
           buttonStyle={{ outline: '1px solid var(--md-sys-color-outline-variant)' }}
