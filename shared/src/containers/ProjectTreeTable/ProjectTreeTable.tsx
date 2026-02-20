@@ -1129,6 +1129,7 @@ const TableBody = ({
   })
 
   const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
+  const handleTableBodyAltClick = cellContextMenuHook.handleTableBodyAltClick
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -1172,6 +1173,7 @@ const TableBody = ({
         display: 'grid',
       }}
       onContextMenu={handleTableBodyContextMenu}
+      onClick={handleTableBodyAltClick}
       onMouseOver={(e) => {
         handlePreFetchTasks(e)
       }}
