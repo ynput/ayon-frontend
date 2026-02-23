@@ -13,6 +13,18 @@ import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
 
+const isEqualArray = (a: any[], b: any[]): boolean => {
+  if (a.length !== b.length) return false
+  return a.every((val, i) => val === b[i])
+}
+
+const isEqualRecord = (a: Record<string, any>, b: Record<string, any>): boolean => {
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+  if (keysA.length !== keysB.length) return false
+  return keysA.every((key) => a[key] === b[key])
+}
+
 interface ColumnSettingsProviderProps {
   children: ReactNode
   config?: Record<string, any>
@@ -341,26 +353,37 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   // ON-CHANGE HANDLERS (TanStack-compatible)
   const columnVisibilityOnChange: OnChangeFn<VisibilityState> = (updater) => {
     const newVisibility = functionalUpdate(updater, columnVisibility)
+    if (isEqualRecord(newVisibility, columnVisibility)) return
     setColumnVisibility(newVisibility)
   }
 
   const columnPinningOnChange: OnChangeFn<ColumnPinningState> = (updater) => {
     const newPinning = functionalUpdate(updater, columnPinning)
+    if (
+      isEqualArray(newPinning.left || [], columnPinning.left || []) &&
+      isEqualArray(newPinning.right || [], columnPinning.right || [])
+    ) return
     setColumnPinning(newPinning)
   }
 
   const columnOrderOnChange: OnChangeFn<ColumnOrderState> = (updater) => {
     const newOrder = functionalUpdate(updater, columnOrder)
+    if (isEqualArray(newOrder, columnOrder)) return
     setColumnOrder(newOrder)
   }
 
   const columnSizingOnChange: OnChangeFn<ColumnSizingState> = (updater) => {
     const newSizing = functionalUpdate(updater, columnSizing)
+    if (isEqualRecord(newSizing, columnSizing)) return
     setColumnSizing(newSizing)
   }
 
   const sortingOnChange: OnChangeFn<SortingState> = (updater) => {
     const newSorting = functionalUpdate(updater, sorting)
+    if (
+      newSorting.length === sorting.length &&
+      newSorting.every((s, i) => s.id === sorting[i].id && s.desc === sorting[i].desc)
+    ) return
     updateSorting(newSorting)
   }
 
