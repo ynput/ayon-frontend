@@ -55,6 +55,11 @@ export const updateViewSettings = async (
   const wasWorking = selectedView?.working
 
   try {
+    if (viewSettings === undefined) {
+      console.warn('updateViewSettings called while viewSettings is undefined; skipping update')
+      return
+    }
+
     // Immediately update local state for fast UI response
     localStateSetter(newLocalValue)
 
