@@ -12,6 +12,7 @@ import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
+import { isEqual } from 'lodash'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
@@ -341,26 +342,31 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   // ON-CHANGE HANDLERS (TanStack-compatible)
   const columnVisibilityOnChange: OnChangeFn<VisibilityState> = (updater) => {
     const newVisibility = functionalUpdate(updater, columnVisibility)
+    if (isEqual(newVisibility, columnVisibility)) return
     setColumnVisibility(newVisibility)
   }
 
   const columnPinningOnChange: OnChangeFn<ColumnPinningState> = (updater) => {
     const newPinning = functionalUpdate(updater, columnPinning)
+    if (isEqual(newPinning, columnPinning)) return
     setColumnPinning(newPinning)
   }
 
   const columnOrderOnChange: OnChangeFn<ColumnOrderState> = (updater) => {
     const newOrder = functionalUpdate(updater, columnOrder)
+    if (isEqual(newOrder, columnOrder)) return
     setColumnOrder(newOrder)
   }
 
   const columnSizingOnChange: OnChangeFn<ColumnSizingState> = (updater) => {
     const newSizing = functionalUpdate(updater, columnSizing)
+    if (isEqual(newSizing, columnSizing)) return
     setColumnSizing(newSizing)
   }
 
   const sortingOnChange: OnChangeFn<SortingState> = (updater) => {
     const newSorting = functionalUpdate(updater, sorting)
+    if (isEqual(newSorting, sorting)) return
     updateSorting(newSorting)
   }
 
