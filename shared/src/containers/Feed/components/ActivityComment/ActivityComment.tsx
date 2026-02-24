@@ -119,7 +119,7 @@ const ActivityComment = ({
   const isMenuOpen = menuOpen === menuId
 
   const { onGoToFrame, setHighlightedActivities, user } = useDetailsPanelContext()
-  const canDelete = isOwner || user?.data?.isAdmin || user?.data?.isManager
+  const canDelete = isOwner || user?.data?.isAdmin
 
   const handleEditComment = () => {
     setEditingId(activityId)
