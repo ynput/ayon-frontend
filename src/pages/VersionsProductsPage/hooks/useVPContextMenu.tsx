@@ -187,7 +187,6 @@ export const useVPContextMenu = (callbacks?: {
       } else if (entity.entityType === 'version' && 'product' in entity) {
         productId = (entity as any).product?.id
         folderId = (entity as any).product?.folder?.id
-        latestVersionNumber = (entity as any).version
         linkedTask = (entity as any).task
       }
 

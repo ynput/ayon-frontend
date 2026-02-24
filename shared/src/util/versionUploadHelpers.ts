@@ -5,6 +5,7 @@ export interface ProductCreationData {
   folderId: string
   name: string
   productType: string
+  productBaseType?: string
 }
 
 export interface VersionCreationData {
