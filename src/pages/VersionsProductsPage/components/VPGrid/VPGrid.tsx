@@ -5,7 +5,7 @@ import { useVPViewsContext } from '../../context/VPViewsContext'
 import { buildVPGrid } from '../../util'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '@shared/containers'
 import { EntityCard } from '@ynput/ayon-react-components'
-import { FC, useMemo, useCallback, useRef } from 'react'
+import { FC, useMemo, useCallback, useRef, useEffect } from 'react'
 import { getCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { useGridKeyboardNavigation } from '../../hooks/useGridKeyboardNavigation'
 import { useVPGridContextMenu } from '../../hooks'
@@ -45,7 +45,8 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   const { productsMap, versionsMap, isLoading, fetchNextPage, groups, expanded, updateExpanded } =
     useVersionsDataContext()
   const { showProducts, gridHeight, groupBy, showEmptyGroups } = useVPViewsContext()
-  const { selectedCells, setSelectedCells, setFocusedCellId } = useSelectionCellsContext()
+  const { selectedCells, setSelectedCells, setFocusedCellId, registerGrid } =
+    useSelectionCellsContext()
   const { showVersionsTable } = useVersionsSelectionContext()
   const { focusVersionsTable, gridContainerRef } = useVPFocusContext()
 
@@ -149,6 +150,12 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
 
     return visible
   }, [gridData, groupBy, groups, showProducts, groupedData, showEmptyGroups, expanded])
+
+  // Register grid entities so SelectedRowsProvider recognizes them
+  useEffect(() => {
+    const rowIds = visibleGridData.map((entity) => entity.id)
+    registerGrid(rowIds, [GRID_COLUMN_ID, ROW_SELECTION_COLUMN_ID])
+  }, [visibleGridData, registerGrid])
 
   // Handle Enter key press - same behavior as clicking the title
   const handleEnterPress = useCallback(
