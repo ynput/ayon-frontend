@@ -10,7 +10,7 @@ import {
 import { FC, useEffect, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section, Toolbar } from '@ynput/ayon-react-components'
+import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
@@ -315,16 +315,22 @@ const ProjectLists: FC<ProjectListsProps> = ({
         </SplitterPanel>
         <SplitterPanel size={88}>
           <Section wrap direction="column" style={{ height: '100%' }}>
-            {selectedList && (!isReview || view === "table") && (
+            {selectedList && (
               <Toolbar>
-                <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
-                {/*@ts-expect-error - we do not support product right now*/}
-                <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
+                <Spacer />
+                {
+                  (!isReview || view === "table") && (
+                    <>
+                      <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
+                      {/*@ts-expect-error - we do not support product right now*/}
+                      <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
+                    </>
+                  )
+                }
+                {
+                  (!isReview || view === "table") && <CustomizeButton />
+                }
                 <OpenReviewSessionButton projectName={projectName} />
-                <TableGridSwitch
-                  showGrid={view === "cards"}
-                  onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
-                />
                 <Actions
                   entities={[
                     {
@@ -343,7 +349,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   isDeveloperMode={isDeveloperMode}
                   align="right"
                 />
-                <CustomizeButton />
+                {
+                  isReview && (
+                    <TableGridSwitch
+                      showGrid={view === "cards"}
+                      onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
+                    />
+                  )
+                }
               </Toolbar>
             )}
             <Splitter
@@ -379,19 +392,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                               entities: [{ id: version, projectName }],
                             })
                           }}
-                          headerContentStart={
-                            <>
-                              <OpenReviewSessionButton
-                                projectName={projectName}
-                              />
-                            </>
-                          }
-                          headerContentEnd={<>
-                            <TableGridSwitch
-                              showGrid={view === "cards"}
-                              onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
-                            />
-                          </>}
                         />
                       )
                     }
