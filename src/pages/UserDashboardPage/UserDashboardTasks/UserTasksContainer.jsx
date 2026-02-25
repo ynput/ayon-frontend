@@ -78,7 +78,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       assignees = []
       break
     case 'users':
-      assignees = assigneesState.length ? assigneesState : [user.name]
+      assignees = assigneesState
       break
     default:
       break
