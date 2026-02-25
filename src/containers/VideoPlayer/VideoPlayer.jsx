@@ -214,10 +214,11 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   }, [videoRef.current])
 
   // Step 1: When src changes, capture still + mark transitioning
+  // The actual source swap is debounced so rapid version clicking only loads the final one
   useEffect(() => {
     console.debug('VideoPlayer: source changed to', src)
     if (!videoRef.current) return
-    // Invalidate any pending rVFC/seeked callbacks from previous transition
+    // Immediately: invalidate stale callbacks, show still, store pending source
     transitionGenRef.current += 1
     if (rvfcIdRef.current != null) {
       videoRef.current.cancelVideoFrameCallback(rvfcIdRef.current)
@@ -227,7 +228,13 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     pendingSourceRef.current = src
     setShowStill(true)
     setCurrentTime(initialPosition.current)
-    setTransitionTick((t) => t + 1)
+
+    // Debounce: only trigger the actual source swap after rapid clicking settles
+    const debounce = setTimeout(() => {
+      setTransitionTick((t) => t + 1)
+    }, 150)
+
+    return () => clearTimeout(debounce)
   }, [src])
 
   // Step 2: After React has committed the still overlay, swap the source synchronously
