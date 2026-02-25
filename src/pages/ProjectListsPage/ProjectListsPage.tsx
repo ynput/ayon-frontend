@@ -328,7 +328,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   )
                 }
                 {
-                  (!isReview || view === "table") && <CustomizeButton />
+                  (isReview && view === "table") && <CustomizeButton />
                 }
                 <OpenReviewSessionButton projectName={projectName} />
                 <Actions
@@ -357,6 +357,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     />
                   )
                 }
+                {
+                  !isReview && <CustomizeButton />
+                }
               </Toolbar>
             )}
             <Splitter
@@ -375,7 +378,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 >
                   <SplitterPanel size={70}>
                     {
-                      selectedList && reviewSessionCardsLoaded && view === "cards" && (
+                      selectedList && isReview && reviewSessionCardsLoaded && view === "cards" && (
                         // @ts-expect-error because of some weird JSX.Element type mismatch
                         <ReviewSessionCards
                           projectName={projectName}
@@ -396,7 +399,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       )
                     }
                     {
-                      selectedList && view === "table" && (
+                      selectedList && (!isReview || view === "table") && (
                         <ListItemsTable
                           extraColumns={extraColumns}
                           isReview={isReview}
