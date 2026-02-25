@@ -32,7 +32,19 @@ function convertStringToBlockquotes(text: string) {
   ))
 }
 
+// Preserve multiple blank lines by replacing sequences of 3+ newlines
+// with interleaved &nbsp; lines so ReactMarkdown renders empty paragraphs
+const preserveBlankLines = (text: string): string => {
+  return text.replace(/\n{3,}/g, (match) => {
+    // Number of extra blank lines beyond the standard paragraph break
+    const extraLines = Math.floor(match.length / 2) - 1
+    return '\n\n' + '&nbsp;\n\n'.repeat(extraLines)
+  })
+}
+
 const InputMarkdownConvert = ({ typeOptions, initValue }: InputMarkdownConvertProps) => {
+  const processedValue = initValue ? preserveBlankLines(initValue) : initValue
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -99,7 +111,7 @@ const InputMarkdownConvert = ({ typeOptions, initValue }: InputMarkdownConvertPr
         },
       }}
     >
-      {initValue}
+      {processedValue}
     </ReactMarkdown>
   )
 }

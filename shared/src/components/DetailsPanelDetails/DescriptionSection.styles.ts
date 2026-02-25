@@ -196,6 +196,11 @@ export const StyledEditor = styled.div`
         font-style: italic;
       }
 
+      /* Ensure blank line paragraphs have visible height */
+      p {
+        min-height: 1em;
+      }
+
       .ql-code-block-container {
         background-color: var(--md-sys-color-surface-container-lowest);
         padding: var(--padding-m);
