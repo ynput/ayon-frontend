@@ -44,7 +44,7 @@ import {
   useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
-import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
+import OverviewActions, { ActionType, TableActionConstructor } from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
@@ -62,6 +62,8 @@ import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { useLoadModule } from '@shared/hooks/useLoadModule.ts'
 import { toast } from 'react-toastify'
+import { useStore } from 'react-redux'
+import api from '@shared/api/index.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -228,7 +230,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   } = useListItemsDataContext()
 
   const detailsPanel = useDetailsPanelContext()
-  const [view, setView] = useState<ReviewPageView>("cards")
+  const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
 
   // Try to get the entity context, but it might not exist
   let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
@@ -300,6 +302,15 @@ const ProjectLists: FC<ProjectListsProps> = ({
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
+  const overviewActions: (TableActionConstructor | ActionType)[] = useMemo(() => {
+    const actions: (TableActionConstructor | ActionType)[] = ['undo', 'redo']
+    if (view === "table") {
+      actions.push(deleteListItemAction)
+    }
+
+    return actions
+  }, [view])
+
   return (
     <main style={{ gap: 4 }}>
       <Splitter
@@ -317,16 +328,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
           <Section wrap direction="column" style={{ height: '100%' }}>
             {selectedList && (
               <Toolbar>
-                <Spacer />
-                {
-                  (!isReview || view === "table") && (
-                    <>
-                      <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
-                      {/*@ts-expect-error - we do not support product right now*/}
-                      <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
-                    </>
-                  )
-                }
+                <OverviewActions items={overviewActions} />
+                {/*@ts-expect-error - we do not support product right now*/}
+                <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
                 {
                   (isReview && view === "table") && <CustomizeButton />
                 }
@@ -388,6 +392,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                             useLocation,
                             useSearchParams,
                           }}
+                          api={api}
                           toast={toast}
                           onItemClicked={(version: string) => {
                             detailsPanel.setEntities({
