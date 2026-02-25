@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import styled from 'styled-components'
 
 import VideoOverlay from './VideoOverlay'
@@ -78,6 +78,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   const seekedToInitialPosition = useRef(false)
   const isTransitioning = useRef(false)
   const pendingSourceRef = useRef(null)
+  const transitionGenRef = useRef(0) // incremented each transition, used to discard stale callbacks
+  const rvfcIdRef = useRef(null) // track rVFC callback ID for cancellation
   const [transitionTick, setTransitionTick] = useState(0)
 
   const [currentTime, setCurrentTime] = useState(0) // in seconds
@@ -165,21 +167,34 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     }
 
     const handleCanPlay = () => {
+      // Guard: if a newer transition already started, this canplay is stale
+      if (!isTransitioning.current) return
       const didSeek = seekPreferredInitialPosition()
-      if (didSeek) {
-        const onSeeked = () => {
-          videoRef.current?.requestVideoFrameCallback(() => {
+
+      const revealVideo = () => {
+        // Capture generation at the time reveal is requested
+        const gen = transitionGenRef.current
+        // Double rVFC: first confirms decode, second confirms it's paintable
+        rvfcIdRef.current = videoRef.current?.requestVideoFrameCallback(() => {
+          // Stale check: a newer transition may have started
+          if (gen !== transitionGenRef.current) return
+          rvfcIdRef.current = videoRef.current?.requestVideoFrameCallback(() => {
+            if (gen !== transitionGenRef.current) return
             isTransitioning.current = false
             setShowStill(false)
           })
-          videoRef.current?.removeEventListener('seeked', onSeeked)
-        }
-        videoRef.current?.addEventListener('seeked', onSeeked)
-      } else {
-        videoRef.current?.requestVideoFrameCallback(() => {
-          isTransitioning.current = false
-          setShowStill(false)
         })
+      }
+
+      if (didSeek) {
+        const gen = transitionGenRef.current
+        const onSeeked = () => {
+          if (gen !== transitionGenRef.current) return // stale seek from previous transition
+          revealVideo()
+        }
+        videoRef.current?.addEventListener('seeked', onSeeked, { once: true })
+      } else {
+        revealVideo()
       }
     }
 
@@ -187,34 +202,55 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata)
     videoElement.addEventListener('canplay', handleCanPlay)
 
-    // Cleanup event listeners on unmount
+    // Cleanup event listeners and pending rVFC on unmount
     return () => {
       videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata)
       videoElement.removeEventListener('canplay', handleCanPlay)
+      if (rvfcIdRef.current != null) {
+        videoElement.cancelVideoFrameCallback(rvfcIdRef.current)
+        rvfcIdRef.current = null
+      }
     }
   }, [videoRef.current])
 
+  // Step 1: When src changes, capture still + mark transitioning
   useEffect(() => {
-    // Obscure the video element with a still image,
-    // so the transition to the new video is not visible
     console.debug('VideoPlayer: source changed to', src)
     if (!videoRef.current) return
+    // Invalidate any pending rVFC/seeked callbacks from previous transition
+    transitionGenRef.current += 1
+    if (rvfcIdRef.current != null) {
+      videoRef.current.cancelVideoFrameCallback(rvfcIdRef.current)
+      rvfcIdRef.current = null
+    }
     isTransitioning.current = true
     pendingSourceRef.current = src
     setShowStill(true)
     setCurrentTime(initialPosition.current)
     setTransitionTick((t) => t + 1)
-  }, [src, videoRef])
+  }, [src])
 
-  useEffect(() => {
-    // After React has rendered showStill=true and VideoOverlay has drawn the still,
-    // wait one frame for the browser to paint, then swap the video source
+  // Step 2: After React has committed the still overlay, swap the source synchronously
+  // useLayoutEffect ensures the source swap happens before the browser paints,
+  // eliminating the timing gap that causes flashes
+  useLayoutEffect(() => {
     if (!pendingSourceRef.current) return
     const source = pendingSourceRef.current
     pendingSourceRef.current = null
-    requestAnimationFrame(() => {
-      setActualSource(source)
-    })
+    setActualSource(source)
+  }, [transitionTick])
+
+  // Safety timeout to prevent isTransitioning from getting stuck forever
+  useEffect(() => {
+    if (!isTransitioning.current) return
+    const timeout = setTimeout(() => {
+      if (isTransitioning.current) {
+        console.warn('VideoPlayer: Transition timed out, forcing reveal')
+        isTransitioning.current = false
+        setShowStill(false)
+      }
+    }, 3000)
+    return () => clearTimeout(timeout)
   }, [transitionTick])
 
   const handleLoad = () => {
@@ -231,7 +267,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       setIsPlaying(false)
     }
     if (videoRef.current?.duration < currentTime) {
-      setCurrentTime(0)
+      const lastFrameTime = Math.max(0, videoRef.current.duration - (1 / frameRate))
+      setCurrentTime(lastFrameTime)
+      initialPosition.current = lastFrameTime
     }
     setBufferedRanges([])
     setLoadError(null)
@@ -324,34 +362,33 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   }, [videoRef, isPlaying, duration])
 
   const seekPreferredInitialPosition = () => {
-    // This is called when verison is changed
-    // It maintains the position of the video after switching
-    // so the user can compare two frames
-    // Returns true if a seek was initiated (async), false otherwise
+    // Called when version is changed to maintain the frame position
+    // so the user can compare two frames across versions.
+    // Returns true if a seek was initiated (async), false otherwise.
     if (seekedToInitialPosition.current) return false
-    const newTime = initialPosition.current
-
-    if (newTime >= videoRef.current?.duration) return false
-    if (isNaN(newTime)) return false
-
-    if (videoRef.current?.currentTime > 0 || newTime === 0) {
-      seekedToInitialPosition.current = true
-      return false
-    }
-    if (videoRef.current?.currentTime === newTime) {
-      seekedToInitialPosition.current = true
-      return false
-    }
-
-    console.debug(
-      'VideoPlayer: Setting initial position',
-      newTime,
-      'from',
-      videoRef.current?.currentTime,
-    )
-    seekToTime(newTime)
     seekedToInitialPosition.current = true
-    return true
+
+    const newTime = initialPosition.current
+    if (isNaN(newTime) || newTime < 0) return false
+
+    // Clamp to new video's duration
+    const dur = videoRef.current?.duration
+    if (!dur || isNaN(dur)) return false
+    const clampedTime = Math.min(newTime, dur - 0.001)
+
+    // Always seek if we have a non-zero target
+    if (clampedTime > 0) {
+      console.debug(
+        'VideoPlayer: Setting initial position',
+        clampedTime,
+        'from',
+        videoRef.current?.currentTime,
+      )
+      seekToTime(clampedTime)
+      return true
+    }
+
+    return false
   }
 
   const seekToTime = (newTime) => {
