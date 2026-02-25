@@ -198,7 +198,7 @@ export const StyledEditor = styled.div`
 
       /* Ensure blank line paragraphs have visible height */
       p {
-        min-height: 1em;
+        min-height: 1.43em;
       }
 
       .ql-code-block-container {
