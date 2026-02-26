@@ -2,7 +2,7 @@ import * as Styled from './MeOrUserSwitch.styled'
 import { AssigneeSelect, Button } from '@ynput/ayon-react-components'
 import { useMemo } from 'react'
 
-const MeOrUserSwitch = ({ value = [], onChange, filter, users = [], ...props }) => {
+const MeOrUserSwitch = ({ value = [], onChange, filter, users = [], canViewOtherUsers = true, ...props }) => {
 
   const options = useMemo(
     () =>
@@ -30,7 +30,11 @@ const MeOrUserSwitch = ({ value = [], onChange, filter, users = [], ...props }) 
         variant="surface"
         selected={filter === 'me'}
         onClick={() => onChange('me')}
-        data-tooltip="View my tasks"
+        data-tooltip={
+          canViewOtherUsers
+            ? 'View my tasks'
+            : 'Viewing my tasks. Remove read restrictions to see other users tasks.'
+        }
       />
 
       {/* <Button
@@ -42,20 +46,22 @@ const MeOrUserSwitch = ({ value = [], onChange, filter, users = [], ...props }) 
         onClick={() => onChange('all')} // empty array means all users
       /> */}
 
-      <AssigneeSelect
-        value={value}
-        onChange={(v) => onChange('users', v)}
-        options={options}
-        {...props}
-        className={filter === 'users' && 'selected'}
-        onClick={handleDropdownClick}
-        disableOpen={filter !== 'users' && !!value.length}
-        emptyIcon="groups"
-        emptyMessage="Assignees"
-        style={{ zIndex: 'none' }}
-        data-tooltip="View other users tasks"
-        onSelectAll
-      />
+      {canViewOtherUsers && (
+        <AssigneeSelect
+          value={value}
+          onChange={(v) => onChange('users', v)}
+          options={options}
+          {...props}
+          className={filter === 'users' && 'selected'}
+          onClick={handleDropdownClick}
+          disableOpen={filter !== 'users' && !!value.length}
+          emptyIcon="groups"
+          emptyMessage="Assignees"
+          style={{ zIndex: 'none' }}
+          data-tooltip="View other users tasks"
+          onSelectAll
+        />
+      )}
     </Styled.MeOrUserSwitchContainer>
   )
 }
