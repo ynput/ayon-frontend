@@ -12,9 +12,10 @@ export const StyledContent = styled.div`
     cursor: default;
     padding: 0;
     margin: 0;
+    height: auto;
 
-    .ql-container.ql-snow {
-      max-height: calc(100% - 57px);
+    .quill {
+      height: auto;
     }
   }
 
