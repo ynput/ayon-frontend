@@ -297,15 +297,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsControlsRight,
   } = useReviewSessionCards({ skip: !isReview })
 
-  const overviewActions: (TableActionConstructor | ActionType)[] = useMemo(() => {
-    const actions: (TableActionConstructor | ActionType)[] = ['undo', 'redo']
-    if (view === "table") {
-      actions.push(deleteListItemAction)
-    }
-
-    return actions
-  }, [view])
-
   return (
     <main style={{ gap: 4 }}>
       <Splitter
@@ -340,11 +331,23 @@ const ProjectLists: FC<ProjectListsProps> = ({
             >
               {selectedList && (
                 <Toolbar>
-                  <ReviewSessionCardsControlsLeft />
-                  <OverviewActions items={overviewActions} />
+                  {
+                    view === "cards" && (
+                      <ReviewSessionCardsControlsLeft />
+                    )
+                  }
+                  {
+                    view === "table" && (
+                      <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
+                    )
+                  }
                   {/*@ts-expect-error - we do not support product right now*/}
                   <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
-                  <ReviewSessionCardsControlsRight />
+                  {
+                    view === "cards" && (
+                      <ReviewSessionCardsControlsRight />
+                    )
+                  }
                   <Actions
                     entities={[
                       {
@@ -371,7 +374,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       />
                     )
                   }
-                  <CustomizeButton />
+                  {
+                    view === "table" && (
+                      <CustomizeButton />
+                    )
+                  }
                   <OpenReviewSessionButton projectName={projectName} />
                 </Toolbar>
               )}
