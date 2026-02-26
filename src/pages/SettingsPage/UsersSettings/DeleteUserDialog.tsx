@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { InputText, FormLayout, FormRow, Dialog, Button } from '@ynput/ayon-react-components'
+import { FormLayout, Dialog, Button } from '@ynput/ayon-react-components'
 import InfoMessage from '@components/InfoMessage'
+import * as Styled from './DeleteUserDialog.styled'
 
 type DeleteUserDialogProps = {
   onHide: () => void
@@ -18,22 +19,38 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
     return <></>
   }
 
-  const selectedUsersString = selectedUsers.join(', ')
-  const confirmDeleteUsersString = selectedUsers.length > 1 ? "delete selected" : selectedUsersString
+  const isSingle = selectedUsers.length === 1
+  const confirmDeleteUsersString = isSingle ? selectedUsers[0] : 'delete selected'
+
+  const header = isSingle
+    ? `Delete ${selectedUsers[0]}`
+    : `Delete ${selectedUsers.length} Users`
+
   return (
     <Dialog
       size="md"
-      header={`Delete ${selectedUsersString} Users`}
+      header={header}
       footer={
-        <>
-          <Button label={selectedUsers.length > 1 ? 'Disable users' : 'Disable user'} onClick={onDisable} />
-          <Button
-            variant="danger"
-            label="Delete"
-            onClick={onDelete}
-            disabled={value !== confirmDeleteUsersString}
+        <Styled.FooterContainer>
+          <Styled.FooterLabel>
+            To confirm delete action, type '{confirmDeleteUsersString}' in the box below
+          </Styled.FooterLabel>
+          <Styled.ConfirmInput
+            data-testid="delete-user-dialog-input"
+            value={value}
+            placeholder={confirmDeleteUsersString}
+            onChange={(e) => setValue(e.target.value)}
           />
-        </>
+          <Styled.FooterActions>
+            <Button label={isSingle ? 'Disable user' : 'Disable users'} onClick={onDisable} />
+            <Button
+              variant="danger"
+              label="Delete"
+              onClick={onDelete}
+              disabled={value !== confirmDeleteUsersString}
+            />
+          </Styled.FooterActions>
+        </Styled.FooterContainer>
       }
       isOpen={true}
       onClose={onHide}
@@ -43,20 +60,13 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
           variant="warning"
           message="Deleting users can have unintended consequences. Consider deactivating the user instead?"
         />
-        <FormRow
-          label={`To confirm delete action, type '${confirmDeleteUsersString}' in the box below`}
-          style={{ flexDirection: 'column', alignItems: 'start', marginTop: '16px' }}
-          labelStyle={{ height: 'auto', lineHeight: 'auto' }}
-          fieldStyle={{ display: 'block', width: '100%' }}
-        >
-          <InputText
-            style={{ width: '100%' }}
-            data-testid="delete-user-dialog-input"
-            value={value}
-            placeholder={confirmDeleteUsersString}
-            onChange={(e) => setValue(e.target.value)}
-          />
-        </FormRow>
+        {!isSingle && (
+          <div>
+            {selectedUsers.map((user) => (
+              <div key={user}>{user}</div>
+            ))}
+          </div>
+        )}
       </FormLayout>
     </Dialog>
   )
