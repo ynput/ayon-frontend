@@ -42,7 +42,7 @@ import {
   TreeTableExtraColumn,
   useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
-import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
+import ProjectOverviewDetailsPanel, { EntitySelection } from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import OverviewActions, { ActionType, TableActionConstructor } from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
@@ -62,6 +62,8 @@ import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
 import api from '@shared/api/index.ts'
 import useReviewSessionCards from './hooks/useReviewSessionCards'
+import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
+import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -80,21 +82,23 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   const modules = undefined
 
   return (
-    <ListsModuleProvider>
-      <ProjectDataProvider projectName={projectName}>
-        <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
-          <ListsProvider isReview={isReview}>
-            <ListItemsDataProvider>
-              <ListsAttributesProvider>
-                <MoveEntityProvider>
-                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
-                </MoveEntityProvider>
-              </ListsAttributesProvider>
-            </ListItemsDataProvider>
-          </ListsProvider>
-        </ListsDataProvider>
-      </ProjectDataProvider>
-    </ListsModuleProvider>
+    <ReviewCardsSettingsProvider>
+      <ListsModuleProvider>
+        <ProjectDataProvider projectName={projectName}>
+          <ListsDataProvider entityListTypes={entityListTypes} isReview={isReview}>
+            <ListsProvider isReview={isReview}>
+              <ListItemsDataProvider>
+                <ListsAttributesProvider>
+                  <MoveEntityProvider>
+                    <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
+                  </MoveEntityProvider>
+                </ListsAttributesProvider>
+              </ListItemsDataProvider>
+            </ListsProvider>
+          </ListsDataProvider>
+        </ProjectDataProvider>
+      </ListsModuleProvider>
+    </ReviewCardsSettingsProvider>
   )
 }
 
@@ -289,6 +293,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     )
   }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
 
+  const { gridHeight } = useReviewCardsSettingsContext()
 
   const {
     ReviewSessionCards,
@@ -322,7 +327,13 @@ const ProjectLists: FC<ProjectListsProps> = ({
               }}
               api={api}
               toast={toast}
+              gridSize={gridHeight}
               onSelectionChange={(versionIds) => {
+                if (versionIds.length === 0 && detailsPanel.entities?.entityType === "version") {
+                  detailsPanel.setEntities(null)
+                  return
+                }
+
                 detailsPanel.setEntities({
                   entityType: "version",
                   entities: versionIds.map((id) => ({ id, projectName })),
@@ -374,11 +385,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       />
                     )
                   }
-                  {
-                    view === "table" && (
-                      <CustomizeButton />
-                    )
-                  }
+                  <CustomizeButton />
                   <OpenReviewSessionButton projectName={projectName} />
                 </Toolbar>
               )}
@@ -442,11 +449,17 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       zIndex: 500,
                     }}
                   >
-                    <ListsTableSettings
-                      extraColumns={extraColumnsSettings}
-                      highlightedSetting={highlightedSetting}
-                      onGoTo={handleGoToCustomAttrib}
-                    />
+                    {
+                      view === "table" ? (
+                        <ListsTableSettings
+                          extraColumns={extraColumnsSettings}
+                          highlightedSetting={highlightedSetting}
+                          onGoTo={handleGoToCustomAttrib}
+                        />
+                      ) : (
+                        <ReviewCardsSettings />
+                      )
+                    }
                   </SplitterPanel>
                 ) : (
                   <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

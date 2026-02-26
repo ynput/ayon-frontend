@@ -7,6 +7,7 @@ function FallbackReviewCardsProvider({ }: RemoteAddonProjectProps & PropsWithChi
   headerContentStart?: JSX.Element
   headerContentEnd?: JSX.Element
   api?: any
+  gridSize?: number
 }) { return <></> }
 
 type Args = {
