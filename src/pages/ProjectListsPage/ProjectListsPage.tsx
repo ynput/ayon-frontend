@@ -10,7 +10,7 @@ import {
 import { FC, useEffect, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section, Toolbar } from '@ynput/ayon-react-components'
+import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { ListsDataProvider } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
@@ -42,8 +42,8 @@ import {
   TreeTableExtraColumn,
   useSelectedRowsContext,
 } from '@shared/containers/ProjectTreeTable'
-import ProjectOverviewDetailsPanel, { EntitySelection } from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
-import OverviewActions, { ActionType, TableActionConstructor } from '@pages/ProjectOverviewPage/components/OverviewActions'
+import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
+import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
@@ -349,14 +349,19 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   }
                   {
                     view === "table" && (
-                      <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
+                      <>
+                        <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
+                        {/*@ts-expect-error - we do not support product right now*/}
+                        <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
+                      </>
                     )
                   }
-                  {/*@ts-expect-error - we do not support product right now*/}
-                  <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
                   {
                     view === "cards" && (
-                      <ReviewSessionCardsControlsRight />
+                      <>
+                        <Spacer />
+                        <ReviewSessionCardsControlsRight />
+                      </>
                     )
                   }
                   <Actions
