@@ -13,6 +13,7 @@ export const StyledContent = styled.div`
     padding: 0;
     margin: 0;
     height: auto;
+    min-height: 300px;
 
     .quill {
       height: auto;
