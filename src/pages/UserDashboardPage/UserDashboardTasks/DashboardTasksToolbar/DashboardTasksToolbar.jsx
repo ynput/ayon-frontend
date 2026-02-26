@@ -39,7 +39,7 @@ const DashboardTasksToolbar = ({ isLoading, view, setView, projectUsers = [] }) 
 
     // every selected project must have read restrictions disabled (read.enabled !== true)
     return selectedProjectNames.every((projectName) => {
-      const projectPerm = permissions.permissions?.projects[projectName]
+      const projectPerm = permissions.permissions?.projects?.[projectName]
       return !projectPerm?.read?.enabled
     })
   }, [permissions, selectedProjectNames])
