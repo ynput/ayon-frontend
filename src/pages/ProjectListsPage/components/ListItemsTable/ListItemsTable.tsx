@@ -21,7 +21,7 @@ interface ListItemsTableProps {
 const ListItemsTable: FC<ListItemsTableProps> = ({
   extraColumns,
   isLoading,
-  isReview: _,
+  isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
 }) => {
@@ -58,7 +58,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         isLoading={isLoading}
-        sortableRows={!viewOnly}
+        sortableRows={!viewOnly && !isReview}
         dndActiveId={dndActiveId} // Pass prop
       />
       <ListItemsShortcuts />
