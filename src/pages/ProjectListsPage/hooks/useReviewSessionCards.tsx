@@ -3,7 +3,7 @@ import { useLoadModule } from "@shared/hooks"
 import { PropsWithChildren } from "react"
 
 function FallbackReviewCardsProvider({ }: RemoteAddonProjectProps & PropsWithChildren & {
-  onItemClicked: (versionId: string) => void
+  onSelectionChange: (versionIds: string[]) => void
   headerContentStart?: JSX.Element
   headerContentEnd?: JSX.Element
   api?: any

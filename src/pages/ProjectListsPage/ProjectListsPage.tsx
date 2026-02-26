@@ -322,10 +322,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
               }}
               api={api}
               toast={toast}
-              onItemClicked={(version: string) => {
+              onSelectionChange={(versionIds) => {
                 detailsPanel.setEntities({
                   entityType: "version",
-                  entities: [{ id: version, projectName }],
+                  entities: versionIds.map((id) => ({ id, projectName })),
                 })
               }}
             >
