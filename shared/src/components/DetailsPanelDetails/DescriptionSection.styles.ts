@@ -12,9 +12,11 @@ export const StyledContent = styled.div`
     cursor: default;
     padding: 0;
     margin: 0;
+    height: auto;
+    min-height: 300px;
 
-    .ql-container.ql-snow {
-      max-height: calc(100% - 57px);
+    .quill {
+      height: auto;
     }
   }
 
@@ -194,6 +196,11 @@ export const StyledEditor = styled.div`
         color: var(--md-sys-color-on-surface-variant);
         opacity: 0.6;
         font-style: italic;
+      }
+
+      /* Ensure blank line paragraphs have visible height */
+      p {
+        min-height: 1.43em;
       }
 
       .ql-code-block-container {
