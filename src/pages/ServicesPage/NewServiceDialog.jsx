@@ -17,7 +17,6 @@ import VariantSelector from '@containers/AddonSettings/VariantSelector'
 import { useSpawnServiceMutation, usePatchServiceMutation } from '@queries/services/updateServices'
 import { useGetServiceAddonsQuery, useListHostsQuery } from '@queries/services/getServices'
 import { confirmDialog } from 'primereact/confirmdialog'
-import { Label } from '@components/ReviewablesSelector/ReviewablesSelector.styled'
 
 // Function to validate bucket name
 const validateServiceName = (name) => {
