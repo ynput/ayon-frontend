@@ -1,4 +1,13 @@
-import { useState, useEffect, useLayoutEffect, useRef, Dispatch, SetStateAction, MutableRefObject, RefObject } from 'react'
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  Dispatch,
+  SetStateAction,
+  MutableRefObject,
+  RefObject,
+} from 'react'
 
 interface MetadataPayload {
   duration: number
@@ -18,12 +27,17 @@ const useVideoSourceTransition = (
   src: string,
   videoRef: RefObject<HTMLVideoElement | null>,
   isTransitioning: MutableRefObject<boolean>,
-  { seekPreferredInitialPosition, setCurrentTime, initialPosition, onMetadataLoaded }: UseVideoSourceTransitionDeps,
+  {
+    seekPreferredInitialPosition,
+    setCurrentTime,
+    initialPosition,
+    onMetadataLoaded,
+  }: UseVideoSourceTransitionDeps,
 ) => {
   const pendingSourceRef = useRef<string | null>(null)
   const transitionGenRef = useRef(0)
   const rvfcIdRef = useRef<(() => void) | number | null>(null)
-  const [transitionTick, setTransitionTick] = useState(0)
+  const [transitionToken, setTransitionToken] = useState(0)
 
   const [actualSource, setActualSource] = useState(src)
   const [showStill, setShowStill] = useState(false)
@@ -46,7 +60,7 @@ const useVideoSourceTransition = (
     rvfcIdRef.current = null
   }
 
-  // Event listeners for loadedmetadata and canplay
+  // Event listeners for metadata and earliest decodable frame readiness
   useEffect(() => {
     const videoElement = videoRef.current
     if (!videoElement) return
@@ -67,11 +81,11 @@ const useVideoSourceTransition = (
       })
     }
 
-    const handleCanPlay = () => {
-      // Guard: if a newer transition already started, this canplay is stale
+    const handleReadyForReveal = () => {
+      // Guard: if a newer transition already started, this readiness event is stale
       if (!isTransitioning.current) return
-      // If a newer source is pending (debounce hasn't fired yet), this canplay
-      // is for a stale source — skip it so we don't prematurely clear the overlay
+      // If a newer source is pending, this readiness event is for an older
+      // source — skip it so we don't prematurely clear the overlay
       if (pendingSourceRef.current) return
       const didSeek = seekRef.current()
 
@@ -79,24 +93,52 @@ const useVideoSourceTransition = (
         const gen = transitionGenRef.current
         const video = videoRef.current as any
         if (!video) return
+        let didFinish = false
+        let fallbackId: number | null = null
+        let rafId1: number | null = null
+        let rafId2: number | null = null
 
         const finishTransition = () => {
+          if (didFinish) return
+          didFinish = true
+          if (fallbackId != null) {
+            clearTimeout(fallbackId)
+            fallbackId = null
+          }
+          if (rafId1 != null) {
+            cancelAnimationFrame(rafId1)
+            rafId1 = null
+          }
+          if (rafId2 != null) {
+            cancelAnimationFrame(rafId2)
+            rafId2 = null
+          }
           if (gen !== transitionGenRef.current) return
           isTransitioning.current = false
           setShowStill(false)
         }
 
+        const scheduleRafFallback = () => {
+          rafId1 = requestAnimationFrame(() => {
+            rafId2 = requestAnimationFrame(finishTransition)
+          })
+        }
+
+        // Never wait long for one specific callback; prefer quick bounded reveal.
+        fallbackId = window.setTimeout(finishTransition, 90)
+
+        // Paused playback can miss rVFC on some engines, so rely on paint ticks.
+        if (video.paused) {
+          scheduleRafFallback()
+          return
+        }
+
         // First rVFC confirms the frame is decoded
         rvfcIdRef.current = video.requestVideoFrameCallback(() => {
           if (gen !== transitionGenRef.current) return
-          if (video.paused) {
-            // Paused: the seek/load already presented the only frame available.
-            // A second rVFC would never fire because paused videos don't present new frames.
-            finishTransition()
-          } else {
-            // Playing: wait one more frame to confirm it's fully paintable
-            rvfcIdRef.current = video.requestVideoFrameCallback(finishTransition)
-          }
+          // Playing: wait one more frame to confirm it's fully paintable.
+          // If callbacks don't arrive, bounded fallback above will still reveal.
+          rvfcIdRef.current = video.requestVideoFrameCallback(finishTransition)
         })
       }
 
@@ -104,8 +146,14 @@ const useVideoSourceTransition = (
         const gen = transitionGenRef.current
         const onSeeked = () => {
           if (gen !== transitionGenRef.current) return // stale seek from previous transition
+          clearTimeout(seekFallback)
           revealVideo()
         }
+        const seekFallback = window.setTimeout(() => {
+          if (gen !== transitionGenRef.current) return
+          videoRef.current?.removeEventListener('seeked', onSeeked)
+          revealVideo()
+        }, 250)
         videoRef.current?.addEventListener('seeked', onSeeked, { once: true })
       } else {
         revealVideo()
@@ -113,19 +161,21 @@ const useVideoSourceTransition = (
     }
 
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata)
-    videoElement.addEventListener('canplay', handleCanPlay)
+    videoElement.addEventListener('loadeddata', handleReadyForReveal)
+    videoElement.addEventListener('canplay', handleReadyForReveal)
 
     // Handle video loaded from cache before listeners were attached
     if (videoElement.readyState >= 1) {
       handleLoadedMetadata()
     }
-    if (isTransitioning.current && videoElement.readyState >= 3) {
-      handleCanPlay()
+    if (isTransitioning.current && videoElement.readyState >= 2) {
+      handleReadyForReveal()
     }
 
     return () => {
       videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      videoElement.removeEventListener('canplay', handleCanPlay)
+      videoElement.removeEventListener('loadeddata', handleReadyForReveal)
+      videoElement.removeEventListener('canplay', handleReadyForReveal)
       cancelRvfc(videoElement)
     }
   }, []) // video element is never unmounted
@@ -149,12 +199,9 @@ const useVideoSourceTransition = (
     }
     setCurrentTime(initialPosition.current)
 
-    // Debounce: only trigger the actual source swap after rapid clicking settles
-    const debounce = setTimeout(() => {
-      setTransitionTick((t) => t + 1)
-    }, 150)
-
-    return () => clearTimeout(debounce)
+    // Trigger the actual source swap on the next render cycle.
+    // This keeps the still overlay in place while avoiding artificial delays.
+    setTransitionToken((t) => t + 1)
   }, [src])
 
   // Step 2: After React has committed the still overlay, swap the source synchronously
@@ -165,7 +212,7 @@ const useVideoSourceTransition = (
     const source = pendingSourceRef.current
     pendingSourceRef.current = null
     setActualSource(source)
-  }, [transitionTick])
+  }, [transitionToken])
 
   // Safety timeout to prevent isTransitioning from getting stuck forever
   useEffect(() => {
@@ -178,7 +225,7 @@ const useVideoSourceTransition = (
       }
     }, 3000)
     return () => clearTimeout(timeout)
-  }, [transitionTick])
+  }, [transitionToken])
 
   return { actualSource, showStill, setShowStill }
 }

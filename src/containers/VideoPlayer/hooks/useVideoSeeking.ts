@@ -13,21 +13,22 @@ const useVideoSeeking = (
   const initialPosition = useRef(0) // in seconds
   const seekedToInitialPosition = useRef(false)
 
-  const seekToTime = (newTime: number) => {
+  const seekToTime = (newTime: number): boolean => {
     const videoElement = videoRef.current
-    if (!videoElement) return
-    if (newTime === videoElement.currentTime) return
-    if (videoElement.readyState >= 3) {
-      // HAVE_FUTURE_DATA
+    if (!videoElement) return false
+    if (newTime === videoElement.currentTime) return false
+    if (videoElement.readyState >= 1) {
+      // HAVE_METADATA
       videoElement.currentTime = newTime
     } else {
-      const onCanPlay = () => {
+      const onLoadedMetadata = () => {
         videoElement.currentTime = newTime
-        videoElement.removeEventListener('canplay', onCanPlay)
+        videoElement.removeEventListener('loadedmetadata', onLoadedMetadata)
       }
-      videoElement.addEventListener('canplay', onCanPlay)
+      videoElement.addEventListener('loadedmetadata', onLoadedMetadata)
     }
     initialPosition.current = newTime
+    return true
   }
 
   const seekToFrame = (newFrame: number) => {
@@ -58,8 +59,7 @@ const useVideoSeeking = (
         'from',
         videoRef.current?.currentTime,
       )
-      seekToTime(clampedTime)
-      return true
+      return seekToTime(clampedTime)
     }
 
     return false
