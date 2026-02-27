@@ -122,6 +122,16 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
     setLabelTooltipYPos(top)
   }
 
+  // select with enter or space key when focused on a reviewable card
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      const closest = (event.target as HTMLElement).closest('.reviewable-card') as HTMLElement
+      if (!closest) return
+      const fileId = closest.id.replace('preview-', '')
+      onChange && onChange(fileId)
+    }
+  }
+
   // if no reviewables, return null
   if (!reviewables.length) return <div />
 
@@ -141,6 +151,8 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
             onClick={() => onChange && onChange(fileId)}
             className={clsx('reviewable-card', { selected: selected.includes(fileId) })}
             onMouseOver={(e) => handleMouseOver(e, { label })}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
           >
             <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
           </Styled.ReviewableCard>
