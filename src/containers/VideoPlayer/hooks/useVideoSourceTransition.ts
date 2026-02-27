@@ -70,20 +70,33 @@ const useVideoSourceTransition = (
     const handleCanPlay = () => {
       // Guard: if a newer transition already started, this canplay is stale
       if (!isTransitioning.current) return
+      // If a newer source is pending (debounce hasn't fired yet), this canplay
+      // is for a stale source — skip it so we don't prematurely clear the overlay
+      if (pendingSourceRef.current) return
       const didSeek = seekRef.current()
 
       const revealVideo = () => {
-        // Capture generation at the time reveal is requested
         const gen = transitionGenRef.current
-        // Double rVFC: first confirms decode, second confirms it's paintable
-        rvfcIdRef.current = (videoRef.current as any)?.requestVideoFrameCallback(() => {
-          // Stale check: a newer transition may have started
+        const video = videoRef.current as any
+        if (!video) return
+
+        const finishTransition = () => {
           if (gen !== transitionGenRef.current) return
-          rvfcIdRef.current = (videoRef.current as any)?.requestVideoFrameCallback(() => {
-            if (gen !== transitionGenRef.current) return
-            isTransitioning.current = false
-            setShowStill(false)
-          })
+          isTransitioning.current = false
+          setShowStill(false)
+        }
+
+        // First rVFC confirms the frame is decoded
+        rvfcIdRef.current = video.requestVideoFrameCallback(() => {
+          if (gen !== transitionGenRef.current) return
+          if (video.paused) {
+            // Paused: the seek/load already presented the only frame available.
+            // A second rVFC would never fire because paused videos don't present new frames.
+            finishTransition()
+          } else {
+            // Playing: wait one more frame to confirm it's fully paintable
+            rvfcIdRef.current = video.requestVideoFrameCallback(finishTransition)
+          }
         })
       }
 
@@ -102,6 +115,14 @@ const useVideoSourceTransition = (
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata)
     videoElement.addEventListener('canplay', handleCanPlay)
 
+    // Handle video loaded from cache before listeners were attached
+    if (videoElement.readyState >= 1) {
+      handleLoadedMetadata()
+    }
+    if (isTransitioning.current && videoElement.readyState >= 3) {
+      handleCanPlay()
+    }
+
     return () => {
       videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata)
       videoElement.removeEventListener('canplay', handleCanPlay)
@@ -110,8 +131,9 @@ const useVideoSourceTransition = (
   }, []) // video element is never unmounted
 
   // Step 1: When src changes, capture still + mark transitioning
-  // The actual source swap is debounced so rapid version clicking only loads the final one
-  useEffect(() => {
+  // useLayoutEffect ensures the overlay is up BEFORE the browser paints,
+  // eliminating the timing gap that allows flash frames
+  useLayoutEffect(() => {
     console.debug('VideoPlayer: source changed to', src)
     if (!videoRef.current) return
     // Immediately: invalidate stale callbacks, show still, store pending source
@@ -119,7 +141,12 @@ const useVideoSourceTransition = (
     cancelRvfc(videoRef.current)
     isTransitioning.current = true
     pendingSourceRef.current = src
-    setShowStill(true)
+    // Only show the still overlay if the video has a frame to capture.
+    // On initial render readyState is 0 — showing still with no captured frame
+    // would draw a black rectangle instead of the video.
+    if (videoRef.current.readyState >= 2) {
+      setShowStill(true)
+    }
     setCurrentTime(initialPosition.current)
 
     // Debounce: only trigger the actual source swap after rapid clicking settles
