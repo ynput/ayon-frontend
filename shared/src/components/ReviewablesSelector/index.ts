@@ -1,3 +1,3 @@
 import ReviewablesSelector from './ReviewablesSelector'
 
-export default ReviewablesSelector
+export { ReviewablesSelector }

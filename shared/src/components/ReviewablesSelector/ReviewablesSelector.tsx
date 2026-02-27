@@ -3,7 +3,7 @@ import * as Styled from './ReviewablesSelector.styled'
 import clsx from 'clsx'
 import { FileThumbnail } from '@shared/components'
 import { ReviewableModel } from '@shared/api'
-import isHTMLElement from '@helpers/isHTMLElement'
+import { isHTMLElement } from '@shared/util'
 import ScrollBar from 'react-perfect-scrollbar'
 
 type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label' | 'fileId'>
@@ -13,7 +13,7 @@ interface ReviewablesSelectorProps {
   selected: string[]
   projectName: string | null
   onChange?: (fileId: string) => void
-  onUpload: () => void
+  onUpload?: () => void
 }
 
 const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
@@ -24,16 +24,31 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
   onUpload,
 }) => {
   const scrollRef = useRef<ScrollBar>(null)
+  const scrollContainerRef = useRef<HTMLElement | null>(null)
   const [labelTooltip, setLabelTooltip] = useState<null | string>(null)
   const [labelTooltipYPos, setLabelTooltipYPos] = useState<null | number>(null)
 
   const getScrollTop = (): number => {
-    let scrollTop = 0
-    if (scrollRef.current) {
-      // @ts-ignore
-      scrollTop = scrollRef.current._container.scrollTop
+    return scrollContainerRef.current?.scrollTop || 0
+  }
+
+  const scrollReviewableIntoView = (fileId: string) => {
+    const container = scrollContainerRef.current
+    const el = document.getElementById('preview-' + fileId)
+    if (!container || !el) return
+
+    const containerRect = container.getBoundingClientRect()
+    const itemRect = el.getBoundingClientRect()
+
+    if (itemRect.top < containerRect.top) {
+      container.scrollTop -= containerRect.top - itemRect.top
+    } else if (itemRect.bottom > containerRect.bottom) {
+      container.scrollTop += itemRect.bottom - containerRect.bottom
     }
-    return scrollTop
+
+    // keep the custom scrollbar thumb in sync with manual scrollTop updates
+    // @ts-ignore
+    scrollRef.current?.updateScroll?.()
   }
 
   // add keyboard support
@@ -57,6 +72,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
         const nextFileId = nextReviewable.fileId
 
         onChange && onChange(nextFileId)
+        requestAnimationFrame(() => scrollReviewableIntoView(nextFileId))
         // also set new label for the tooltip
         setLabelTooltip(nextReviewable.label ?? null)
         // set label tooltip position
@@ -106,12 +122,28 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
     setLabelTooltipYPos(top)
   }
 
+  // select with enter or space key when focused on a reviewable card
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      const closest = (event.target as HTMLElement).closest('.reviewable-card') as HTMLElement
+      if (!closest) return
+      const fileId = closest.id.replace('preview-', '')
+      onChange && onChange(fileId)
+    }
+  }
+
   // if no reviewables, return null
   if (!reviewables.length) return <div />
 
   return (
     <Styled.ReviewablesSelector>
-      <Styled.Scrollable className="reviewables" ref={scrollRef}>
+      <Styled.Scrollable
+        className="reviewables"
+        ref={scrollRef}
+        containerRef={(ref) => {
+          scrollContainerRef.current = ref
+        }}
+      >
         {reviewables.map(({ fileId, label }) => (
           <Styled.ReviewableCard
             key={fileId}
@@ -119,15 +151,19 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
             onClick={() => onChange && onChange(fileId)}
             className={clsx('reviewable-card', { selected: selected.includes(fileId) })}
             onMouseOver={(e) => handleMouseOver(e, { label })}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
           >
             <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
           </Styled.ReviewableCard>
         ))}
-        <Styled.AddButton
-          icon="add"
-          onClick={onUpload}
-          onMouseEnter={() => setLabelTooltip(null)}
-        />
+        {!!onUpload && (
+          <Styled.AddButton
+            icon="add"
+            onClick={onUpload}
+            onMouseEnter={() => setLabelTooltip(null)}
+          />
+        )}
       </Styled.Scrollable>
       {labelTooltip && labelTooltipYPos && (
         <Styled.Label style={{ top: labelTooltipYPos }}>{labelTooltip}</Styled.Label>
