@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FormLayout, Dialog, Button } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import InfoMessage from '@components/InfoMessage'
 import * as Styled from './DeleteUserDialog.styled'
 
@@ -27,7 +27,7 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
     : `Delete ${selectedUsers.length} Users`
 
   return (
-    <Dialog
+    <Styled.StyledDialog
       size="md"
       header={header}
       footer={
@@ -55,20 +55,19 @@ const DeleteUserDialog = ({ onHide, selectedUsers, onDelete, onDisable }: Delete
       isOpen={true}
       onClose={onHide}
     >
-      <FormLayout>
-        <InfoMessage
-          variant="warning"
-          message="Deleting users can have unintended consequences. Consider deactivating the user instead?"
-        />
-        {!isSingle && (
-          <div>
-            {selectedUsers.map((user) => (
-              <div key={user}>{user}</div>
-            ))}
-          </div>
-        )}
-      </FormLayout>
-    </Dialog>
+      <InfoMessage
+        style={{ marginBottom: 16 }}
+        variant="warning"
+        message="Deleting users can have unintended consequences. Consider deactivating the user instead?"
+      />
+      {!isSingle && (
+        <Styled.UserList>
+          {selectedUsers.map((user) => (
+            <div key={user}>{user}</div>
+          ))}
+        </Styled.UserList>
+      )}
+    </Styled.StyledDialog>
   )
 }
 
