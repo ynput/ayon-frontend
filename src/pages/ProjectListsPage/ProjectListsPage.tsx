@@ -300,7 +300,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                 {/*@ts-expect-error - we do not support product right now*/}
                 <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
-                <OpenReviewSessionButton projectName={projectName} />
+                <OpenReviewSessionButton
+                  projectName={projectName}
+                  disabled={listItemsData.length === 0}
+                />
                 <Actions
                   entities={[
                     {
