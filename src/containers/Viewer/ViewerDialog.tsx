@@ -4,7 +4,7 @@ import { closeViewer } from '@state/viewer'
 import { useEffect } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
-import isHTMLElement from '@helpers/isHTMLElement'
+import { isHTMLElement } from '@shared/util'
 import { useDetailsPanelContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`

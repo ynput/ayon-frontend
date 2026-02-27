@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -138,6 +138,7 @@
     "primereact-context": "npm:primereact@9.2.3",
     "quill-magic-url": "^4.2.0",
     "react-markdown": "^10.1.0",
+    "react-perfect-scrollbar": "^1.5.8",
     "react-quill-ayon": "^2.0.2",
     "react-toastify": "^9.0.3",
     "rehype-raw": "^7.0.0",

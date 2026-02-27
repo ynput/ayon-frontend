@@ -1,7 +1,16 @@
 import { getMimeTypeIcon, Icon } from '@ynput/ayon-react-components'
 import { FC, HTMLAttributes, ImgHTMLAttributes, useEffect, useState } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import clsx from 'clsx'
+
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`
 
 const Wrapper = styled.div`
   position: relative;
@@ -13,6 +22,12 @@ const Wrapper = styled.div`
 
   background-color: var(--md-sys-color-surface-container-low);
 `
+
+const LoadingIcon = styled(Icon)`
+  animation: ${spin} 1s linear infinite;
+  opacity: 0.6;
+`
+
 const Image = styled.img`
   position: absolute;
   inset: 0;
@@ -46,7 +61,11 @@ export const FileThumbnail: FC<FileThumbnailProps> = ({ mimetype = '', src, ...p
 
   return (
     <Wrapper {...props} className={clsx('file-thumbnail', props.className)}>
-      <Icon icon={getMimeTypeIcon(mimetype)} />
+      {!loaded ? (
+        <LoadingIcon icon="progress_activity" />
+      ) : (
+        <Icon icon={getMimeTypeIcon(mimetype)} />
+      )}
       <Image
         src={src}
         {...props}
