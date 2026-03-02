@@ -85,7 +85,8 @@ const AddonListItem: React.FC<{
   versions: string[]
   isDev?: boolean
   addonName: string
-}> = ({ version, setVersion, selection, addons = [], versions, addonName }) => {
+  latestVersion?: string
+}> = ({ version, setVersion, selection, addons = [], versions, addonName, latestVersion }) => {
   const options = useMemo(() => {
     // Normalize selection to always be an array
     const selectionArray = Array.isArray(selection) ? selection : [selection]
@@ -102,15 +103,27 @@ const AddonListItem: React.FC<{
       : [[...versions.sort((a, b) => -1 * compareBuild(a, b)), 'NONE']]
   }, [selection, addons, addonName, versions])
 
+  const showLatestIcon = latestVersion && version !== latestVersion
+
   return (
-    <VersionSelect
-      style={{ width: '100%', height: 32 }}
-      buttonStyle={{ zIndex: 0 }}
-      versions={options}
-      value={version ? [version] : []}
-      placeholder="NONE"
-      onChange={(e: string[]) => setVersion(e[0] || null)}
-    />
+    <>
+      <VersionSelect
+        style={{ width: '100%', height: 32 }}
+        buttonStyle={{ zIndex: 0 }}
+        versions={options}
+        value={version ? [version] : []}
+        placeholder="NONE"
+        onChange={(e: string[]) => setVersion(e[0] || null)}
+      />
+      {showLatestIcon && (
+        <LatestIcon
+          data-tooltip-delay={0}
+          style={{marginLeft:3}}
+          data-tooltip={'Latest installed version: ' + latestVersion}
+          icon="info"
+        />
+      )}
+    </>
   )
 }
 
@@ -318,7 +331,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
                 // when currentVersion is set, show it in orange to indicate project override
                 return (
                   <span style={{ color: 'orange' }}>
-                    {currentVersion || 'NONE'} 
+                    {currentVersion || 'NONE'}
                   </span>
                 )
               }
@@ -349,6 +362,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
                   versions={availableVersions}
                   isDev={isDev}
                   addonName={addon.name}
+                  latestVersion={latestVersion}
                 />
               )
             }}
