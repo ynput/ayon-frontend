@@ -82,19 +82,18 @@ const KanBanColumn = forwardRef(
     const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
     const { setUri } = useURIContext()
-    const openInBrowser = async (task) => {
+    const openInOverview = async (task) => {
       const taskUri = getTaskRoute(task)
       setUri(taskUri)
 
-      // // navigate to browser page with uri as query param
       if (taskUri) {
-        navigate(`/projects/${task.projectName}/browser?uri=${encodeURIComponent(taskUri)}`)
+        navigate(`/projects/${task.projectName}/overview?uri=${encodeURIComponent(taskUri)}`)
       }
     }
 
     // CONTEXT MENU
     const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
-      onOpenInBrowser: openInBrowser,
+      onOpenInOverview: openInOverview,
     })
 
     // HANDLE TASK CLICK
@@ -103,7 +102,7 @@ const KanBanColumn = forwardRef(
     const handleDoubleClick = (e, task) => {
       if (e.metaKey || e.ctrlKey) {
         // get the task
-        openInBrowser(task)
+        openInOverview(task)
       } else {
         onTogglePanel(true)
       }

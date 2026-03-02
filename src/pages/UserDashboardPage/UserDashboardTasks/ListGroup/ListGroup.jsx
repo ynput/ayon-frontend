@@ -9,6 +9,7 @@ import { InView } from 'react-intersection-observer'
 import { useURIContext } from '@shared/context'
 import { getTaskRoute } from '@helpers/routes'
 import { useScopedDetailsPanel } from '@shared/context'
+import { useNavigate } from 'react-router-dom'
 
 const ListGroup = ({
   tasks = [],
@@ -30,8 +31,15 @@ const ListGroup = ({
   containerRef,
 }) => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const { setUri } = useURIContext()
-  const openInBrowser = (task) => setUri(getTaskRoute(task))
+  const openInOverview = (task) => {
+    const taskUri = getTaskRoute(task)
+    setUri(taskUri)
+    if (taskUri) {
+      navigate(`/projects/${task.projectName}/overview?uri=${encodeURIComponent(taskUri)}`)
+    }
+  }
   const column = groups[id] || {}
 
   const { setOpen } = useScopedDetailsPanel('dashboard')
@@ -43,13 +51,13 @@ const ListGroup = ({
 
   // CONTEXT MENU
   const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
-    onOpenInBrowser: openInBrowser,
+    onOpenInOverview: openInOverview,
   })
 
   const handleDoubleClick = (e, task) => {
     if (e.metaKey || e.ctrlKey) {
       // get the task
-      openInBrowser(task)
+      openInOverview(task)
     } else {
       onTogglePanel(true)
     }
