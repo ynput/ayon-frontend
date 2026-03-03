@@ -4,6 +4,12 @@ import { PropsWithChildren } from "react"
 
 function FallbackReviewCardsProvider({ }: RemoteAddonProjectProps & PropsWithChildren & {
   onSelectionChange: (versionIds: string[]) => void
+  onOpenInViewer?: (state: {
+    versionId: string
+    productId: string
+    folderId: string
+    taskId?: string
+  }) => void
   headerContentStart?: JSX.Element
   headerContentEnd?: JSX.Element
   api?: any

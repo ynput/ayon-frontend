@@ -302,6 +302,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsControlsRight,
   } = useReviewSessionCards({ skip: !isReview })
 
+  const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
+
   return (
     <main style={{ gap: 4 }}>
       <Splitter
@@ -338,6 +340,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   entityType: "version",
                   entities: versionIds.map((id) => ({ id, projectName })),
                 })
+              }}
+              onOpenInViewer={(state) => {
+                handleOpenPlayer(state, { quickView: true })
               }}
             >
               {selectedList && (
