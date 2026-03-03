@@ -334,8 +334,8 @@ const App = () => {
     return <LoginPage isFirstTime={isOnboarding} />
   }
 
-  // Trial has finished
-  if (isTrialing && left?.finished) {
+  // Trial has finished and it's a cloud-managed instance, show trial ended page
+  if (isTrialing && left?.finished && ynputConnect?.managed) {
     return (
       <FeedbackProvider>
         <BrowserRouter>
