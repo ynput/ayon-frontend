@@ -1,13 +1,5 @@
-import {
-  ProjectDataProvider,
-  useDetailsPanelEntityContext,
-  useProjectTableContext,
-  isEntityRestricted,
-  useSelectionCellsContext,
-  getCellId,
-  ROW_SELECTION_COLUMN_ID,
-} from '@shared/containers/ProjectTreeTable'
-import { FC, useEffect, useMemo, useState } from 'react'
+import { ProjectDataProvider } from '@shared/containers/ProjectTreeTable'
+import { FC, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
@@ -39,10 +31,8 @@ import {
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionCellsProvider,
-  TreeTableExtraColumn,
-  useSelectedRowsContext,
+  TreeTableExtraColumn
 } from '@shared/containers/ProjectTreeTable'
-import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
@@ -54,16 +44,16 @@ import { useNavigate, useParams, useLocation, useSearchParams } from 'react-rout
 import { useAppSelector } from '@state/store.ts'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
-import ListDetailsPanel from './components/ListDetailsPanel/ListDetailsPanel.tsx'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { useViewsContext } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
 import api from '@shared/api/index.ts'
-import useReviewSessionCards from './hooks/useReviewSessionCards'
+import useReviewSessionCardsModules from './hooks/useReviewSessionCardsModules.tsx'
 import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
 import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
+import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -71,7 +61,7 @@ type ProjectListsPageProps = {
   isReview?: boolean
 }
 
-type ReviewPageView = "table" | "cards"
+export type ReviewPageView = "table" | "cards"
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   projectName,
@@ -217,81 +207,18 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const isDeveloperMode = user?.developerMode ?? false
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { projectName, ...projectInfo } = useProjectContext()
-  const { getEntityById } = useProjectTableContext()
+  const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
-  const { selectedList, listDetailsOpen } = useListsContext()
-  const { selectedRows } = useSelectedRowsContext()
-  const { setSelectedCells } = useSelectionCellsContext()
-  const {
-    deleteListItemAction,
-    listItemsData,
-    isLoadingAll: isLoadingListItems,
-    listItemsFilters,
-    setListItemsFilters,
-  } = useListItemsDataContext()
+  const { selectedList } = useListsContext()
+  const { deleteListItemAction } = useListItemsDataContext()
 
   const detailsPanel = useDetailsPanelContext()
   const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
-
-  // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
-  try {
-    const entityContext = useDetailsPanelEntityContext()
-    selectedEntity = entityContext.selectedEntity
-  } catch {
-    // Context not available, that's fine
-    selectedEntity = null
-  }
-
-  // Check if any selected rows are restricted entities
-  const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
-    const entity = getEntityById(rowId)
-    return entity && !isEntityRestricted(entity.entityType)
-  })
-
-  // Check if we should show the details panel
-  // Don't show entity details panel if only selected entity is restricted
-  const shouldShowEntityDetailsPanel =
-    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
-  const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
     selectSetting('columns', attrib)
   }
-
-  // Handle URI opening to select list item
-  // We use state and effect because the uri callback can be called before data is loaded
-  const [uriEntityId, setUriEntityId] = useState<null | string>(null)
-  useEffect(() => {
-    if (!uriEntityId) return
-
-    // if there are filters, we need to remove them first
-    if (listItemsFilters.conditions?.length) {
-      setListItemsFilters({})
-      return
-      // now the list items data will reload without filters, and the effect will run again
-    }
-
-    if (isLoadingListItems || !listItemsData.length) return
-
-    setUriEntityId(null)
-    console.debug('URI found, navigating to list item:', uriEntityId)
-
-    // find the list item by entity id
-    const listItem = listItemsData.find((item) => item.entityId === uriEntityId)
-    if (!listItem) {
-      console.warn('List item not found for entity ID:', uriEntityId)
-      return
-    }
-
-    // select the list item in the table
-    // Select the entity in the table
-    setSelectedCells(
-      new Set([getCellId(listItem.id, 'name'), getCellId(listItem.id, ROW_SELECTION_COLUMN_ID)]),
-    )
-  }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
 
   const { gridHeight } = useReviewCardsSettingsContext()
 
@@ -300,7 +227,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsProvider,
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
-  } = useReviewSessionCards({ skip: !isReview })
+  } = useReviewSessionCardsModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
@@ -331,7 +258,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
               toast={toast}
               gridSize={gridHeight}
               onSelectionChange={(versionIds) => {
-                if (versionIds.length === 0 && detailsPanel.entities?.entityType === "version") {
+                if (versionIds.length === 0) {
                   detailsPanel.setEntities(null)
                   return
                 }
@@ -439,17 +366,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       }}
                       className="details"
                     >
-                      <ProjectOverviewDetailsPanel
-                        projectInfo={projectInfo}
-                        projectName={projectName}
-                        isOpen={shouldShowEntityDetailsPanel}
-                        onUriOpen={(entity) => setUriEntityId(entity.id)}
-                      />
-                      {selectedList &&
-                        !shouldShowEntityDetailsPanel &&
-                        shouldShowListDetailsPanel && (
-                          <ListDetailsPanel listId={selectedList.id} projectName={projectName} />
-                        )}
+                      <ProjectListsDetailsPanels isReview={!!isReview} view={view} />
                     </SplitterPanel>
                   </DetailsPanelSplitter>
                 </SplitterPanel>

@@ -18,6 +18,7 @@ type ProjectOverviewDetailsPanelProps = {
   projectName: string
   isOpen?: boolean
   onUriOpen?: (entity: DetailsPanelEntityData) => void
+  overrideHandleClose?: () => void
 }
 
 type EntitySelection = {
@@ -31,6 +32,7 @@ const ProjectOverviewDetailsPanel = ({
   projectName,
   isOpen,
   onUriOpen,
+  overrideHandleClose,
 }: ProjectOverviewDetailsPanelProps) => {
   const dispatch = useAppDispatch()
   const handleOpenViewer = (args: any) => dispatch(openViewer(args))
@@ -81,7 +83,7 @@ const ProjectOverviewDetailsPanel = ({
         activeProjectUsers={users}
         style={{ boxShadow: 'none' }}
         scope="overview"
-        onClose={handleClose}
+        onClose={overrideHandleClose ?? handleClose}
         onOpenViewer={handleOpenViewer}
         onUriOpen={onUriOpen}
       />
