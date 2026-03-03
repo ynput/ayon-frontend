@@ -7,6 +7,7 @@ import {
     ReactNode,
     useCallback,
     useContext,
+    useEffect,
     useMemo,
     useState,
 } from 'react'
@@ -51,11 +52,10 @@ export const ReviewCardsSettingsProvider: FC<ReviewCardsSettingsProviderProps> =
   )
 
   // Sync local state with server when viewSettings change
-  // TODO: uncomment once views are working
-  // useEffect(() => {
-  //   setLocalGridHeight(null)
-  //   setLocalGridHeightImmediate(null)
-  // }, [JSON.stringify(viewSettings)])
+  useEffect(() => {
+    setLocalGridHeight(null)
+    setLocalGridHeightImmediate(null)
+  }, [JSON.stringify(viewSettings)])
 
   const gridHeight = useMemo(
     () =>
@@ -79,7 +79,7 @@ export const ReviewCardsSettingsProvider: FC<ReviewCardsSettingsProviderProps> =
         errorMessage: 'Failed to update grid height',
       })
       // Clear immediate state after persistence
-      // setLocalGridHeightImmediate(null)
+      setLocalGridHeightImmediate(null)
     },
     [updateViewSettings],
   )
