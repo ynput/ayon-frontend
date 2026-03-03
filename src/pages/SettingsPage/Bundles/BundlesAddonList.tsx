@@ -115,14 +115,12 @@ const AddonListItem: React.FC<{
         placeholder="NONE"
         onChange={(e: string[]) => setVersion(e[0] || null)}
       />
-      {showLatestIcon && (
-        <LatestIcon
-          data-tooltip-delay={0}
-          style={{marginLeft:3}}
-          data-tooltip={'Latest installed version: ' + latestVersion}
-          icon="info"
-        />
-      )}
+      <LatestIcon
+        data-tooltip-delay={0}
+        style={{ marginLeft: 3, visibility: showLatestIcon ? 'visible' : 'hidden' }}
+        data-tooltip={showLatestIcon ? 'Latest installed version: ' + latestVersion : undefined}
+        icon="info"
+      />
     </>
   )
 }
