@@ -2,7 +2,7 @@ import { RemoteAddonProjectProps, usePowerpack } from "@shared/context"
 import { useLoadModule } from "@shared/hooks"
 import { PropsWithChildren } from "react"
 
-function FallbackReviewCardsProvider({ }: RemoteAddonProjectProps & PropsWithChildren & {
+function FallbackReviewCardsProvider({ children }: RemoteAddonProjectProps & PropsWithChildren & {
   onSelectionChange: (versionIds: string[]) => void
   onOpenInViewer?: (state: {
     versionId: string
@@ -14,7 +14,7 @@ function FallbackReviewCardsProvider({ }: RemoteAddonProjectProps & PropsWithChi
   headerContentEnd?: JSX.Element
   api?: any
   gridSize?: number
-}) { return <></> }
+}) { return <>{children}</> }
 
 function FallbackReviewCardsControlsRight({ }: {
   groupingDisabled?: boolean
