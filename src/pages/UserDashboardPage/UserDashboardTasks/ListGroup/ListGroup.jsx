@@ -6,8 +6,6 @@ import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
 import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
-import { useURIContext } from '@shared/context'
-import { getTaskRoute } from '@helpers/routes'
 import { useScopedDetailsPanel } from '@shared/context'
 import { useNavigate } from 'react-router-dom'
 
@@ -32,13 +30,8 @@ const ListGroup = ({
 }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const { setUri } = useURIContext()
   const openInOverview = (task) => {
-    const taskUri = getTaskRoute(task)
-    setUri(taskUri)
-    if (taskUri) {
-      navigate(`/projects/${task.projectName}/overview?uri=${encodeURIComponent(taskUri)}`)
-    }
+    navigate(`/projects/${task.projectName}/overview?project=${task.projectName}&type=task&id=${task.id}`)
   }
   const column = groups[id] || {}
 

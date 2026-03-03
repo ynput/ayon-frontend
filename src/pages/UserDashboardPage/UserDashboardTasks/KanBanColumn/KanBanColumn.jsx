@@ -9,8 +9,6 @@ import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import clsx from 'clsx'
-import { useURIContext } from '@shared/context'
-import { getTaskRoute } from '@helpers/routes'
 import { useScopedDetailsPanel } from '@shared/context'
 import { useNavigate } from 'react-router-dom'
 
@@ -81,14 +79,8 @@ const KanBanColumn = forwardRef(
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
     const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
-    const { setUri } = useURIContext()
-    const openInOverview = async (task) => {
-      const taskUri = getTaskRoute(task)
-      setUri(taskUri)
-
-      if (taskUri) {
-        navigate(`/projects/${task.projectName}/overview?uri=${encodeURIComponent(taskUri)}`)
-      }
+    const openInOverview = (task) => {
+      navigate(`/projects/${task.projectName}/overview?project=${task.projectName}&type=task&id=${task.id}`)
     }
 
     // CONTEXT MENU
