@@ -10,6 +10,10 @@ function FallbackReviewCardsProvider({ }: RemoteAddonProjectProps & PropsWithChi
   gridSize?: number
 }) { return <></> }
 
+function FallbackReviewCardsControlsRight({ }: {
+  groupingDisabled?: boolean
+}) { return <></> }
+
 type Args = {
   skip: boolean
 }
@@ -42,7 +46,7 @@ export default function useReviewSessionCards({ skip }: Args) {
   const [ReviewSessionCardsControlsRight, { isLoaded: reviewSessionCardsControlsRightLoaded }] = useLoadModule({
     ...commonOptions,
     module: 'ReviewCardsControlsRight',
-    fallback: () => <></>,
+    fallback: FallbackReviewCardsControlsRight,
   })
 
   const allModulesLoaded = reviewSessionCardsLoaded

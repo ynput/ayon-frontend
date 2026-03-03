@@ -357,10 +357,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )
                   }
                   {
-                    view === "cards" && (
+                    isReview && (
                       <>
                         <Spacer />
-                        <ReviewSessionCardsControlsRight />
+                        <ReviewSessionCardsControlsRight groupingDisabled={view === "table"} />
                       </>
                     )
                   }
@@ -385,6 +385,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   {
                     isReview && (
                       <TableGridSwitch
+                        gridFirst
                         showGrid={view === "cards"}
                         onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
                       />
