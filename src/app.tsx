@@ -337,11 +337,13 @@ const App = () => {
   // Trial has finished and it's a cloud-managed instance, show trial ended page
   if (isTrialing && left?.finished && ynputConnect?.managed) {
     return (
-      <FeedbackProvider>
-        <BrowserRouter>
-          <TrialEnded orgName={ynputConnect?.orgName} />
-        </BrowserRouter>
-      </FeedbackProvider>
+      <GlobalProvider>
+        <FeedbackProvider>
+          <BrowserRouter>
+            <TrialEnded orgName={ynputConnect?.orgName} />
+          </BrowserRouter>
+        </FeedbackProvider>
+      </GlobalProvider>
     )
   }
 
