@@ -7,6 +7,7 @@ export const ReviewablesSelector = styled.div`
   flex: 1;
   z-index: 1000;
   overflow: hidden;
+  padding-bottom: var(--padding-m);
 `
 
 export const Scrollable = styled(PerfectScrollbar)`

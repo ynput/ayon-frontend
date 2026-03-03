@@ -210,7 +210,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
-  const { deleteListItemAction } = useListItemsDataContext()
+  const { listItemsData, deleteListItemAction } = useListItemsDataContext()
 
   const detailsPanel = useDetailsPanelContext()
   const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
@@ -324,7 +324,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )
                   }
                   <CustomizeButton />
-                  <OpenReviewSessionButton projectName={projectName} />
+                  <OpenReviewSessionButton
+                    projectName={projectName}
+                    disabled={listItemsData.length === 0}
+                  />
                 </Toolbar>
               )}
               <Splitter
