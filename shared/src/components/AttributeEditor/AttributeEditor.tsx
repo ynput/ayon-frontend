@@ -167,6 +167,7 @@ const buildInitFormData = (excludes: Excludes, data?: Partial<AttributeForm>) =>
 
 export interface AttributeEditorProps {
   attribute: AttributeForm | null
+  defaultData?: Partial<AttributeForm>
   existingNames: string[]
   error?: string
   isUpdating?: boolean
@@ -178,6 +179,7 @@ export interface AttributeEditorProps {
 
 export const AttributeEditor: FC<AttributeEditorProps> = ({
   attribute,
+  defaultData,
   existingNames,
   error = '',
   isUpdating,
@@ -186,7 +188,16 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const initForm = buildInitFormData(excludes, { position: existingNames.length })
+  const initForm = buildInitFormData(excludes, {
+    position: existingNames.length,
+    ...defaultData,
+  })
+  // Set name after buildInitFormData since it skips excluded keys during merge
+  if (defaultData?.name) {
+    initForm.name = defaultData.name
+  } else if (defaultData?.data?.title) {
+    initForm.name = camelCase(defaultData.data.title)
+  }
   const [formData, setFormData] = useState<AttributeForm | null>(attribute || initForm)
 
   useEffect(() => {
