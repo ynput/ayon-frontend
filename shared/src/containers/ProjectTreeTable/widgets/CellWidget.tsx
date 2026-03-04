@@ -119,25 +119,36 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const moveToNextRow = () => {
     const rowIndex = gridMap.rowIdToIndex.get(rowId)
-    if (rowIndex === undefined) return
+    if (rowIndex === undefined) {
+      setEditingCellId(null)
+      return
+    }
     const newRowId = gridMap.indexToRowId.get(rowIndex + 1)
     if (newRowId) {
       const newCellId = getCellId(newRowId, columnId)
       selectCell(newCellId, false, false)
       focusCell(newCellId)
       setEditingCellId(newCellId)
+    } else {
+      setEditingCellId(null)
     }
   }
 
   const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
-    setEditingCellId(null)
-    if (isReadOnly) return
-    // move to the next cell row
+    if (isReadOnly) {
+      setEditingCellId(null)
+      return
+    }
     if (key === 'Enter') {
+      // Move to next row first (sets new editing cell), then save value.
+      // This prevents the dialog from blinking between rows.
       moveToNextRow()
       onChange?.(newValue, key)
     } else if (key === 'Click' && newValue != value) {
+      setEditingCellId(null)
       onChange?.(newValue, key)
+    } else {
+      setEditingCellId(null)
     }
   }
 
@@ -267,6 +278,9 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={value as string}
             isInherited={isInherited}
             columnId={columnId}
+            cellId={cellId}
+            isSelected={isCurrentCellFocused}
+            type={type as TextWidgetType}
             {...sharedProps}
             {...pt?.text}
           />
