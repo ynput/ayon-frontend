@@ -150,7 +150,6 @@ const buildInitFormData = (excludes: Excludes, data?: Partial<AttributeForm>) =>
     // Merge top-level fields
     Object.keys(data).forEach((key) => {
       const typedKey = key as keyof AttributeForm
-      if (typedKey !== 'data' && excludes.includes(typedKey)) return
 
       if (typedKey === 'data' && data.data && formData.data) {
         // Deep merge of data fields
@@ -188,17 +187,22 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const initForm = buildInitFormData(excludes, {
-    position: existingNames.length,
-    ...defaultData,
-  })
-  // Set name after buildInitFormData since it skips excluded keys during merge
-  if (defaultData?.name) {
-    initForm.name = defaultData.name
-  } else if (defaultData?.data?.title) {
-    initForm.name = camelCase(defaultData.data.title)
-  }
-  const [formData, setFormData] = useState<AttributeForm | null>(attribute || initForm)
+  const resolvedDefaultData = defaultData
+    ? {
+        ...defaultData,
+        name:
+          defaultData.name ||
+          (defaultData.data?.title ? camelCase(defaultData.data.title) : undefined),
+      }
+    : undefined
+
+  const [formData, setFormData] = useState<AttributeForm | null>(
+    attribute ||
+      buildInitFormData(excludes, {
+        position: existingNames.length,
+        ...resolvedDefaultData,
+      }),
+  )
 
   useEffect(() => {
     if (!!attribute) setFormData(attribute)
