@@ -1,13 +1,9 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { useGetEntityQuery } from '@shared/api'
-import {Dialog, Icon} from '@ynput/ayon-react-components'
+import { Dialog, Icon } from '@ynput/ayon-react-components'
 import CodeEditor from '@uiw/react-textarea-code-editor'
-// TODO: Probably not import cross-component like this
-import {
-  BlockCode
-} from "@shared/containers/Feed/components/ActivityComment/ActivityComment.styled";
-
+import { copyToClipboard } from '@shared/util'
 
 export interface DetailsDialogProps {
   projectName?: string
@@ -15,42 +11,6 @@ export interface DetailsDialogProps {
   entityIds: string[]
   visible: boolean
   onHide: () => void
-}
-
-// Small, dependency-free syntax highlighter that returns HTML with inline styles
-function escapeHtml(unsafe: string) {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
-// TODO: Use a proper syntax highlighter library for more features
-function syntaxHighlight(json: string) {
-  // regex adapted for JSON token highlighting
-  return escapeHtml(json).replace(
-    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-    (match) => {
-      let color = '#a626a4' // string / key default
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          // key
-          color = '#8fceff'
-        } else {
-          // string
-          color = '#00a3ea'
-        }
-      } else if (/true|false/.test(match)) {
-        color = '#99d9ff'
-      } else if (/null/.test(match)) {
-        color = '#a2e1ff'
-      } else {
-        // number
-        color = '#a1d8ff'
-      }
-      return `<span style="color: ${color}">${match}</span>`
-    },
-  )
 }
 
 export const DetailsDialog = ({
@@ -85,33 +45,6 @@ export const DetailsDialog = ({
     }
   }, [data])
 
-  const highlighted = useMemo(() => syntaxHighlight(rawJson), [rawJson])
-
-  const [copied, setCopied] = useState(false)
-
-  const copyToClipboard = useCallback(async () => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(rawJson)
-      } else {
-        // Fallback for older browsers
-        const ta = document.createElement('textarea')
-        ta.value = rawJson
-        ta.style.position = 'fixed'
-        ta.style.left = '-9999px'
-        document.body.appendChild(ta)
-        ta.focus()
-        ta.select()
-        document.execCommand('copy')
-        document.body.removeChild(ta)
-      }
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch {
-      toast.error('Unable to copy to clipboard')
-    }
-  }, [rawJson])
-
   // Keep the early return after hooks to ensure hooks are called on every render in the same order
   if (!visible || (Array.isArray(data) ? data.length < 1 : false)) return null
 
@@ -140,27 +73,25 @@ export const DetailsDialog = ({
       `}</style>
       <div className="details-dialog__code">
         {/* If loading or error, render plain text */}
-        {(isLoading || isError) ? (
-          <pre>
-            {isLoading ? 'loading...' : 'error...'}
-          </pre>
+        {isLoading || isError ? (
+          <pre>{isLoading ? 'loading...' : 'error...'}</pre>
         ) : (
           <>
             <div
               role="button"
               aria-label="Copy JSON"
-              onClick={copyToClipboard}
+              onClick={() => copyToClipboard(rawJson)}
               className="details-dialog__copy"
             >
-              <Icon icon={!copied ? "content_copy" : "check"} data-tooltip="Copy to clipboard" />
+              <Icon icon={'content_copy'} data-tooltip="Copy to clipboard" />
             </div>
             <CodeEditor
-              wrap={"off"}
+              wrap={'off'}
               value={rawJson}
               language="json"
               placeholder="Please enter JS code."
               readOnly
-              data-color-mode={"dark"}
+              data-color-mode={'dark'}
             />
           </>
         )}
