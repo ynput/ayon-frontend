@@ -13,7 +13,7 @@ import {
 } from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import { CustomizeButton, TableGridSwitch } from '@shared/components'
+import { CustomizeButton, EmptyPlaceholder, TableGridSwitch } from '@shared/components'
 import {
   MoveEntityProvider,
   SettingsPanelProvider,
@@ -227,9 +227,22 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsProvider,
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
+    outdated: reviewSessionCardsOutdated,
   } = useReviewSessionCardsModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
+
+  if (reviewSessionCardsOutdated) {
+    return (
+      <EmptyPlaceholder
+        message={
+          `The Review addon version (${reviewSessionCardsOutdated.current}) is out of date.`
+        }
+      >
+        Please update to version {reviewSessionCardsOutdated.required} or newer.
+      </EmptyPlaceholder>
+    )
+  }
 
   return (
     <main style={{ gap: 4 }}>
@@ -346,12 +359,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   >
                     <SplitterPanel size={70}>
                       {
-                        selectedList && isReview && view === "cards" && (
-                          <ReviewSessionCards />
-                        )
-                      }
-                      {
-                        selectedList && (!isReview || view === "table") && (
+                        selectedList && isReview && view === "cards"
+                        ? <ReviewSessionCards />
+                        : (
                           <ListItemsTable
                             extraColumns={extraColumns}
                             isReview={isReview}

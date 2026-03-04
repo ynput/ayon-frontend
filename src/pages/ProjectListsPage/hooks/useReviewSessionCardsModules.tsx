@@ -42,7 +42,7 @@ export default function useReviewSessionCardsModules({ skip }: Args) {
     skip: !powerLicense || skip, // skip loading if powerpack license is not available
   }
 
-  const [ReviewSessionCards, { isLoaded: reviewSessionCardsLoaded }] = useLoadModule({
+  const [ReviewSessionCards, { isLoaded: reviewSessionCardsLoaded, outdated }] = useLoadModule({
     ...commonOptions,
     module: 'ReviewCards',
     fallback: () => <></>,
@@ -81,5 +81,6 @@ export default function useReviewSessionCardsModules({ skip }: Args) {
     ReviewSessionCardsControlsRight,
     useReviewSessionCards,
     allModulesLoaded,
+    outdated,
   }
 }
