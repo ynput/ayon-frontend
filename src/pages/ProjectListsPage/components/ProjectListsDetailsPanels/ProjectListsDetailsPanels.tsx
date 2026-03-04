@@ -92,12 +92,13 @@ export default function ProjectListsDetailsPanels({ isReview, view }: Props) {
     useReviewSessionCards
   } = useReviewSessionCardsModules({ skip: !isReview })
 
+  console.log(selectedRows)
+
   const { clearHighlighted } = useReviewSessionCards()
 
   // For review session lists, closing the details panel
-  // should clear the state in the addon component,
-  // rather than the table.
-  const overrideHandleClose = useMemo(() => {
+  // should also clear the state in the addon component.
+  const onClose = useMemo(() => {
     if (!clearHighlighted || view !== "cards") return
 
     return () => {
@@ -112,7 +113,7 @@ export default function ProjectListsDetailsPanels({ isReview, view }: Props) {
         projectName={projectName}
         isOpen={shouldShowEntityDetailsPanel}
         onUriOpen={(entity) => setUriEntityId(entity.id)}
-        overrideHandleClose={overrideHandleClose}
+        onClose={onClose}
       />
       {selectedList &&
         !shouldShowEntityDetailsPanel &&

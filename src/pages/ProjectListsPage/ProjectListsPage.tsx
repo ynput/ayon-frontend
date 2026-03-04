@@ -1,4 +1,4 @@
-import { ProjectDataProvider } from '@shared/containers/ProjectTreeTable'
+import { parseCellId, ProjectDataProvider, ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -17,7 +17,6 @@ import { CustomizeButton, EmptyPlaceholder, TableGridSwitch } from '@shared/comp
 import {
   MoveEntityProvider,
   SettingsPanelProvider,
-  useDetailsPanelContext,
   useProjectContext,
   useSettingsPanel,
   useSubtasksModulesContext,
@@ -54,6 +53,7 @@ import useReviewSessionCardsModules from './hooks/useReviewSessionCardsModules.t
 import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
 import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
+import { getCellIdForColumn } from './util/cellIds.ts'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -212,7 +212,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { selectedList } = useListsContext()
   const { listItemsData, deleteListItemAction } = useListItemsDataContext()
 
-  const detailsPanel = useDetailsPanelContext()
+  const {
+    setSelectedCells,
+    setFocusedCellId,
+    setAnchorCell,
+    clearSelection
+  } = useSelectionCellsContext()
   const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
 
   const handleGoToCustomAttrib = (attrib: string) => {
@@ -271,15 +276,26 @@ const ProjectLists: FC<ProjectListsProps> = ({
               toast={toast}
               gridSize={gridHeight}
               onSelectionChange={(versionIds) => {
-                if (versionIds.length === 0) {
-                  detailsPanel.setEntities(null)
-                  return
-                }
+                if (versionIds.length === 0) return clearSelection()
 
-                detailsPanel.setEntities({
-                  entityType: "version",
-                  entities: versionIds.map((id) => ({ id, projectName })),
-                })
+                const cellIds = versionIds
+                  .map((versionId) => getCellIdForColumn(listItemsData, versionId, "name"))
+                  .filter((id) => id !== null)
+
+                setSelectedCells(new Set(cellIds))
+              }}
+              onOpenDetails={(versionId) => {
+                const cellId = getCellIdForColumn(
+                  listItemsData,
+                  versionId,
+                  ROW_SELECTION_COLUMN_ID,
+                )
+                if (!cellId) return
+
+                const position = parseCellId(cellId)
+                setSelectedCells(new Set([cellId]))
+                setFocusedCellId(cellId)
+                setAnchorCell(position)
               }}
               onOpenInViewer={(state) => {
                 handleOpenPlayer(state, { quickView: true })

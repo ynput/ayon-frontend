@@ -1,9 +1,10 @@
 import { RemoteAddonProjectProps, usePowerpack } from "@shared/context"
 import { useLoadModule } from "@shared/hooks"
-import { PropsWithChildren } from "react"
+import { createContext, PropsWithChildren, useContext } from "react"
 
 function FallbackReviewCardsProvider({ children }: RemoteAddonProjectProps & PropsWithChildren & {
   onSelectionChange: (versionIds: string[]) => void
+  onOpenDetails: (versionId: string) => void
   onOpenInViewer?: (state: {
     versionId: string
     productId: string
@@ -24,8 +25,10 @@ type UseReviewSessionCardsReturn = {
   clearHighlighted?: () => void
 }
 
+const fallbackReviewSessionCardsContext = createContext({})
+
 function fallbackUseReviewSessionCards(): UseReviewSessionCardsReturn {
-  return {}
+  return useContext(fallbackReviewSessionCardsContext)
 }
 
 type Args = {
