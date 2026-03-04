@@ -330,7 +330,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   {
                     isReview && (
                       <TableGridSwitch
-                        gridFirst
                         showGrid={view === "cards"}
                         onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
                       />
