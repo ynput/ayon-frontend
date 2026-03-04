@@ -32,25 +32,25 @@ export const Comment = styled.li<CommentProps>`
   padding: var(--padding-m);
   border-radius: var(--border-radius-m);
 
-  /* hide date and show tools */
-  &.isOwner {
-    /* by default hide menu */
+  /* by default hide menu */
 
-    .tools {
-      opacity: 0;
-    }
+  .isEditing {
+    z-index: 1000;
+  }
 
-    .isEditing {
-      z-index: 1000;
-    }
-
-    :not(.isEditing) {
-      /* on hover show menu and hide date */
-      &:hover {
-        .tools {
-          opacity: 1;
-        }
+  :not(.isEditing) {
+    /* on hover show menu and hide date */
+    &:hover {
+      .tools {
+        opacity: 1;
       }
+    }
+  }
+
+  /* keep tools visible when menu is open */
+  &.menuOpen {
+    .tools {
+      opacity: 1;
     }
   }
 
@@ -270,12 +270,16 @@ export const Tools = styled.div`
   z-index: 50;
   padding: 2px;
   gap: var(--base-gap-small);
+
+  /* by default hidden */
+  opacity: 0;
 `
 
 export const ToolButton = styled(Button)`
   &.hasIcon {
     padding: 4px;
   }
+  background-color: unset;
 
   &:hover {
     background-color: var(--button-color-secondary);

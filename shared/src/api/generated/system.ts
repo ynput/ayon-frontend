@@ -13,6 +13,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    deleteSite: build.mutation<DeleteSiteApiResponse, DeleteSiteApiArg>({
+      query: (queryArg) => ({ url: `/api/system/sites/${queryArg.siteId}`, method: 'DELETE' }),
+    }),
     getSiteInfo: build.query<GetSiteInfoApiResponse, GetSiteInfoApiArg>({
       query: (queryArg) => ({
         url: `/api/info`,
@@ -76,6 +79,10 @@ export type GetSitesApiResponse = /** status 200 Successful Response */ SiteInfo
 export type GetSitesApiArg = {
   platform?: 'windows' | 'linux' | 'darwin'
   hostname?: string
+}
+export type DeleteSiteApiResponse = /** status 200 Successful Response */ any
+export type DeleteSiteApiArg = {
+  siteId: string
 }
 export type GetSiteInfoApiResponse = /** status 200 Successful Response */ InfoResponseModel
 export type GetSiteInfoApiArg = {
@@ -155,6 +162,7 @@ export type UserAttribModel = {
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
+  uiExposureLevel?: number
   attrib?: UserAttribModel
   data?: Record<string, any>
   /** Whether the user is active */
@@ -165,13 +173,24 @@ export type UserModel = {
   /** Time of last update */
   updatedAt?: string
 }
-export type AttributeEnumItem = {
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for type material-symbols) */
+  name?: string
+  /** The color of the icon (for type material-symbols) */
+  color?: string
+  /** The URL of the icon (for type url) */
+  url?: string
+}
+export type EnumItem = {
   value: string | number | number | boolean
   label: string
-  icon?: string
+  description?: string
+  fulltext?: string[]
+  group?: string
+  /** Icon name (material symbol) or IconModel object */
+  icon?: string | IconModel
   color?: string
-  /** List of project this item is available on */
-  projects?: string[]
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -206,7 +225,11 @@ export type AttributeData = {
   /** Only for string types. The value must match this regex. */
   regex?: string
   /** List of enum items used for displaying select widgets */
-  enum?: AttributeEnumItem[]
+  enum?: EnumItem[]
+  /** Name of the function that provides enum values dynamically. */
+  enumResolver?: string
+  /** Settings passed to the enum resolver function. */
+  enumResolverSettings?: object
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
 }
@@ -257,8 +280,9 @@ export type InfoResponseModel = {
   /** No admin user exists, display 'Create admin user' form */
   noAdminUser?: boolean
   onboarding?: boolean
-  /** If set, the changelog will not be shown to the user */
   disableChangelog?: boolean
+  disableFeedback?: boolean
+  offlineMode?: boolean
   /** Password authentication will not be shown on the login page */
   hidePasswordAuth?: boolean
   passwordRecoveryAvailable?: boolean
@@ -266,6 +290,7 @@ export type InfoResponseModel = {
   attributes?: AttributeModel[]
   sites?: SiteInfo[]
   ssoOptions?: SsoOption[]
+  frontendFlags?: string[]
   extras?: string
 }
 export type SystemMetricsData = {

@@ -56,6 +56,7 @@ export type UserAttribModel = {
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
+  uiExposureLevel?: number
   attrib?: UserAttribModel
   data?: Record<string, any>
   /** Whether the user is active */
@@ -134,4 +135,5 @@ export type UserPoolModel = {
   exp: number
   max: number
   used: number
+  meta?: object
 }

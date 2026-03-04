@@ -7,11 +7,11 @@ const CATEGORIES_ACCESS_ID = 'activity_categories'
 const categoryAccessOptions: AccessOption[] = [
   { label: 'Viewer', value: 10, tooltip: 'Can view comments with this category.' },
   { label: 'Creator', value: 20, tooltip: 'Can create and view comments with this category.' },
-  {
-    label: 'Admin',
-    value: 30,
-    tooltip: 'Can create, view and delete comments with this category.',
-  },
+  // {
+  //   label: 'Admin',
+  //   value: 30,
+  //   tooltip: 'Can create, view and delete comments with this category.',
+  // },
 ]
 
 export interface AccessWidgetProps {

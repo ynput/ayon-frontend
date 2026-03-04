@@ -1,102 +1,158 @@
-import {
-  SimpleTableCellTemplate,
-  SimpleTableCellTemplateProps,
-} from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
-import { Icon } from '@ynput/ayon-react-components'
+import { forwardRef, useEffect, useState } from 'react'
+import * as Styled from './ProjectsListRow.styled'
+import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { FC } from 'react'
-import styled from 'styled-components'
+import { RowExpander } from '@shared/containers/SimpleTable/SimpleTableRowTemplate'
+import { parseProjectFolderRowId } from './buildProjectsTableData'
 
-const StyledTableRow = styled(SimpleTableCellTemplate)`
-  /* on hover - show pin */
-  &.selected {
-    &:hover {
-      .pin {
-        display: flex;
-      }
-    }
-  }
-
-  &.inactive {
-    color: var(--md-sys-color-outline);
-  }
-
-  /* by default code is hidden */
-  .project-code {
-    display: none;
-    width: 100%;
-    overflow: hidden;
-    /* text-overflow: ellipsis; */
-  }
-  /* reveal code and hide label when smaller than 96px */
-  /* pin also becomes smaller */
-  container-type: inline-size;
-  @container (max-width: 85px) {
-    .project-code {
-      display: inline-block;
-    }
-    .value {
-      display: none;
-    }
-    .pin {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      padding: 1px;
-      font-size: 14px;
-    }
-  }
-`
-
-const StyledPin = styled(Icon)`
-  border-radius: var(--border-radius-m);
-  padding: var(--padding-s);
-  /* default it is not visible and only outline */
-  /* on hover we should it (above in StyledTableRow) */
-  display: none;
-
-  /* when active, always show and fill */
-  &.active {
-    display: flex;
-    opacity: 0.7;
-    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-  }
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-highest-hover);
-  }
-`
-
-interface ProjectsListRowProps extends SimpleTableCellTemplateProps {
-  code: string // used when the width is too small to show the full name
-  isInActive?: boolean
+export interface ProjectsListRowProps extends React.HTMLAttributes<HTMLDivElement> {
+  value: string
+  icon?: string
+  iconFilled?: boolean
+  iconColor?: string
+  depth?: number
+  code?: string
+  count?: number | string
+  disabled?: boolean
+  inactive?: boolean
+  isRenaming?: boolean
+  isTableExpandable?: boolean
+  isRowExpandable?: boolean
+  isRowExpanded?: boolean
   isPinned?: boolean
+  hidePinned?: boolean
+  onSubmitRename?: (value: string) => void
+  onCancelRename?: () => void
+  onExpandClick?: () => void
   onPinToggle?: () => void
+  onSettingsClick?: () => void
+  pt?: {
+    icon?: Partial<IconProps>| undefined;
+  }
 }
 
-const ProjectsListRow: FC<ProjectsListRowProps> = ({
-  code,
-  isPinned,
-  isInActive,
-  onPinToggle,
-  className,
-  ...props
-}) => {
-  return (
-    <StyledTableRow
-      {...props}
-      style={{ paddingRight: 2 }}
-      className={clsx(className, { inactive: isInActive })}
-      startContent={<span className="project-code">{code}</span>}
-      endContent={
-        <StyledPin
-          icon="push_pin"
-          className={clsx('pin', { active: isPinned })}
-          onClick={onPinToggle}
-        />
+const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
+  (
+    {
+      value,
+      depth = 0,
+      icon,
+      iconFilled,
+      iconColor,
+      code,
+      count,
+      disabled,
+      inactive,
+      isRenaming,
+      isTableExpandable,
+      isRowExpandable,
+      isRowExpanded,
+      isPinned,
+      hidePinned,
+      onSubmitRename,
+      onCancelRename,
+      onExpandClick,
+      onPinToggle,
+      onSettingsClick,
+      pt,
+      className,
+      id,
+      ...props
+    },
+    ref,
+  ) => {
+    const [renameValue, setRenameValue] = useState(value)
+
+    useEffect(() => {
+      if (isRenaming) {
+        setRenameValue(value)
       }
-    />
-  )
-}
+    }, [value, isRenaming])
+
+    // Check if this is a folder row using the canonical folder ID parser
+    const isFolder = !!parseProjectFolderRowId(id || '')
+
+    return (
+      <Styled.Cell
+        {...props}
+        className={clsx(className, { disabled, inactive, pinned: isPinned, hidePinned })}
+        ref={ref}
+        id={id}
+        style={{
+          ...props.style,
+          paddingLeft: `calc(${depth * 2.5}rem + 4px)`,
+        }}
+      >
+        <RowExpander
+          isRowExpandable={isRowExpandable}
+          isRowExpanded={isRowExpanded}
+          isTableExpandable={isTableExpandable}
+          onExpandClick={onExpandClick}
+          enableNonFolderIndent={false}
+        />
+        {icon && (
+          <Icon
+            icon={icon}
+            className={clsx('icon', { filled: iconFilled })}
+            style={iconColor ? { color: iconColor } : undefined}
+          />
+        )}
+        {isRenaming && isFolder ? (
+          <InputText
+            autoFocus
+            style={{ flex: 1 }}
+            onChange={(e) => setRenameValue(e.target.value)}
+            value={renameValue}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                onSubmitRename?.(renameValue)
+              }
+              if (e.key === 'Escape') {
+                onCancelRename?.()
+              }
+            }}
+            onBlur={() => {
+              onCancelRename?.()
+            }}
+            onFocus={(e) => {
+              e.target.select()
+            }}
+          />
+        ) : (
+          <span className={clsx('value')}>{value}</span>
+        )}
+
+        {!isRenaming && (
+          <>
+            <Spacer className="spacer" />
+            {isFolder ? (
+              <Styled.ProjectCount>{count}</Styled.ProjectCount>
+            ) : (
+              <>
+                <Styled.SettingsIcon
+                  icon="settings_applications"
+                  className="settings-icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSettingsClick?.()
+                  }}
+                />
+                <Styled.PinIcon
+                  icon="push_pin"
+                  className={clsx('pin', { active: isPinned })}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onPinToggle?.()
+                  }}
+                />
+                <Styled.Code className="project-code">{code}</Styled.Code>
+              </>
+            )}
+          </>
+        )}
+      </Styled.Cell>
+    )
+  },
+)
 
 export default ProjectsListRow

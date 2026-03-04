@@ -31,10 +31,14 @@ function FieldTemplate(props: FieldTemplateProps) {
   const [contextMenu] = useCreateContextMenu([])
 
   // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
+    const validScopes = [...props.schema.scope || ['studio', 'project']]
+    if (validScopes.includes('studio') && props.formContext.includeStudioScope && !validScopes.includes('site')) {
+      validScopes.push('project')
+    }
 
   if (
     props.schema.scope !== undefined &&
-    !(props.schema.scope || ['studio', 'project']).includes(props.formContext.level)
+    !(validScopes.includes(props.formContext.level))
   ) {
     return null
   }

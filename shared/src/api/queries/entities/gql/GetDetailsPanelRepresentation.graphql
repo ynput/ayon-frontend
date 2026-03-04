@@ -10,6 +10,7 @@ query GetDetailsPanelRepresentation($projectName: String!, $entityId: String!) {
       createdAt
       allAttrib
       context
+      parents
       version {
         ...DetailsPanelVersionFragment
         task {

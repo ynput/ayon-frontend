@@ -6,7 +6,10 @@ type ServerRestartingPageProps = {
   active?: boolean
 }
 
-const ServerRestartingPage = ({ message, active }: ServerRestartingPageProps) => {
+const ServerRestartingPage = ({
+  message = 'Server restarting...',
+  active,
+}: ServerRestartingPageProps) => {
   const serverIsRestarting = useSocketContext().serverRestartingVisible || false
 
   if (!serverIsRestarting && !active) return null

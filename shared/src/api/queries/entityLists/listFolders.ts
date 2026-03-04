@@ -90,6 +90,7 @@ const enhancedListsFoldersApi = entityListsApi.enhanceEndpoints<TagTypes, Update
       },
       transformErrorResponse,
       invalidatesTags: (_r, _e, arg) => [
+        LIST_FOLDER_LIST_TAG,
         { type: 'entityListFolder', id: arg.folderId },
         { type: 'entityList', id: arg.folderId },
       ],

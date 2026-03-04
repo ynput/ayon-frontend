@@ -115,7 +115,7 @@ export type FormSelectOption = {
   badges?: string[]
 }
 export type SimpleFormField = {
-  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label'
+  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label' | 'file'
   name: string
   label?: string
   placeholder?: any
@@ -127,12 +127,15 @@ export type SimpleFormField = {
   highlight?: 'info' | 'warning' | 'error'
   min?: number | number
   max?: number | number
+  valid_extensions?: string[]
 }
 export type BaseActionManifest = {
   /** The identifier of the action */
   identifier: string
   /** Human-friendly name of the action */
   label: string
+  /** A short description of the action */
+  description?: string
   /** The label of the group the action belongs to */
   groupLabel?: string
   /** Action category */

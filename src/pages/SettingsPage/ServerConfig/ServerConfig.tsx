@@ -7,8 +7,8 @@ import {
   useGetServerConfigQuery,
   useGetServerConfigOverridesQuery,
   useGetServerConfigSchemaQuery,
-} from '@queries/config/getConfig'
-import { useSetServerConfigMutation } from '@queries/config/updateConfig'
+  useSetServerConfigMutation,
+} from '@shared/api'
 import { ServerConfigModel } from '@shared/api'
 import styled from 'styled-components'
 import { toast } from 'react-toastify'
@@ -69,6 +69,7 @@ const ServerConfig = () => {
           login_background: originalData?.customization?.login_background || '',
           studio_logo: originalData?.customization?.studio_logo || '',
           motd: originalData?.customization?.motd || '',
+          frontend_flags: originalData?.customization?.frontend_flags || [],
         },
       })
     }

@@ -10,9 +10,10 @@ import { useViewer } from '@context/ViewerContext'
 type Props = {
   versionIds: string[]
   projectName: string | null
+  noVersions?: boolean
 }
 
-const ViewerDetailsPanel = ({ versionIds = [], projectName }: Props) => {
+const ViewerDetailsPanel = ({ versionIds = [], projectName, noVersions }: Props) => {
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
     { projects: projectName ? [projectName] : [] },
     { skip: !projectName },
@@ -32,9 +33,13 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName }: Props) => {
   const projectInfo = projectsInfo[projectName]
 
   return (
-    <ViewerDetailsPanelWrapper>
+    <ViewerDetailsPanelWrapper
+      className="viewer-details-panel"
+      style={{ display: noVersions ? 'none' : 'block' }}
+    >
       {!!versionIds.length && (
         <DetailsPanel
+          isOpen
           entities={entities}
           tagsOptions={projectInfo?.tags || []}
           projectUsers={users}

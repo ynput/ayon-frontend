@@ -106,6 +106,17 @@ const enhancedRest = inboxApi.enhanceEndpoints({
             )
           } else {
             // un-clearing a message
+            // remove the message from the cleared tab cache
+            dispatch(
+              enhancedInboxGraphql.util.updateQueryData(
+                'GetInboxMessages',
+                { last, important: null, active: false },
+                (draft) => {
+                  // remove the messages from cleared cache
+                  draft.messages = draft.messages.filter((m) => !ids.includes(m.referenceId))
+                },
+              ),
+            )
             // we don't know if the message will go to important or other tab
             // so just invalidate all the tabs and unread counts
             tagsToInvalidate.push(

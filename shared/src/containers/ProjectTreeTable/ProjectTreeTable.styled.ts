@@ -112,19 +112,23 @@ export const HeaderCell = styled.th`
   display: flex;
   align-items: center;
   min-height: fit-content;
+  white-space: nowrap;
 
   &:hover {
+    background-color: var(--md-sys-color-surface-container-lowest-hover);
     .resize-handle {
       opacity: 1;
     }
-    
+
     .actions {
       display: flex !important;
+      background-color: var(--md-sys-color-surface-container-lowest-hover); 
     }
-    
+
     .actions .header-menu {
       display: flex !important;
     }
+
   }
 
   /* Hide action buttons when resizing */
@@ -154,6 +158,12 @@ export const HeaderCell = styled.th`
       display: none;
     }
   }
+  &.draggable {
+    cursor: grab;
+    &:active {
+      cursor: grabbing;
+    }
+  }
 `
 
 export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
@@ -180,23 +190,28 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     cursor: col-resize !important;
   }
 
+
   &:has(.sort-button.visible),
-  &:has(.sort-button.selected) {
+  &:has(.sort-button.selected),
+  &:has(.pin-button.visible),
+  &:has(.pin-button.selected) {
     display: flex !important;
   }
 
-  .sort-button.visible {
+  .sort-button.visible,
+  .sort-button.selected,
+  .pin-button.visible,
+  .pin-button.selected {
     display: flex !important;
   }
-  
-  .sort-button.selected {
-    display: flex !important;
+  .pin-button{
+    font-variation-settings: 'FILL' 1,'wght' 200,'GRAD' 200,'opsz' 10;
   }
 
   .header-menu {
     display: none;
   }
-  
+
   ${({ $isOpen }) =>
     $isOpen &&
     `
@@ -204,14 +219,15 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
       display: flex !important;
     }
   `}
-  
+
   .header-menu.open,
   .header-menu.active {
     display: flex !important;
   }
 
-   .resizing & {
+  .resizing & {
     .sort-button,
+    .pin-button,
     .header-menu {
       display: none !important;
     }
@@ -222,10 +238,10 @@ type TableCellProps = {
   $isLastPinned?: boolean
 }
 
-export const TableCell = styled.td<TableCellProps>`
+export const TD = styled.td<TableCellProps>`
   position: relative;
   box-shadow: ${getDefaultShadow(false)};
-  background-color: var(--color-table-task);
+  background-color: var(--color-table-row);
 
   &.${DRAG_HANDLE_CLASS} {
     // Styles for the button inside the drag handle cell
@@ -248,9 +264,9 @@ export const TableCell = styled.td<TableCellProps>`
     }
   }
 
-  /* Lighter background for folders in hierarchy mode */
-  &.folder-in-hierarchy {
-    background-color: var(--color-table-folder);
+  /* Lighter background for expandable rows */
+  &.expandable {
+    background-color: var(--color-table-row-high);
   }
 
   &.selected-row {
@@ -401,7 +417,7 @@ export const TableCell = styled.td<TableCellProps>`
 
   /* if there is no cell widget element (no children) then the cell should not be selectable at all */
   &:not(:has(> div)) {
-    pointer-events: none;
+    /* pointer-events: none; */
     cursor: default;
   }
 
@@ -503,5 +519,20 @@ export const LinkColumnHeader = styled.div`
   .icon {
     font-size: 18px;
     color: var(--md-sys-color-outline);
+  }
+`
+
+export const AnimatedEmptyPlaceholder = styled.div`
+  animation: fadeIn 20ms ease-in forwards;
+  animation-delay: 300ms;
+  opacity: 0;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 `

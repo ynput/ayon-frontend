@@ -1,10 +1,11 @@
-import { EntityGroup, QueryTasksFoldersApiArg } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap } from '.'
 import { ProjectDataContextProps } from '../context'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
-import { ContextMenuItemConstructors, ProjectTableModulesType } from '../hooks'
-import { ReactNode } from 'react'
+import { ContextMenuItemConstructors } from '../hooks'
+import { ProjectTableModulesType } from '@shared/hooks'
 import { QueryFilter } from './operations'
+import { ReactNode } from 'react'
 
 interface EntityMoveData {
   entityId: string
@@ -14,6 +15,12 @@ interface EntityMoveData {
 export interface ProjectOverviewProviderProps {
   children: ReactNode
   modules: ProjectTableModulesType
+}
+
+type QueryFilterParams = {
+  filter: Record<string, unknown> | undefined
+  filterString?: string
+  search?: string
 }
 
 export interface ProjectOverviewContextType {
@@ -41,12 +48,11 @@ export interface ProjectOverviewContextType {
   // Grouping data
   taskGroups: EntityGroup[]
 
-  // Query Filters
-  queryFilters: {
-    filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
-    filterString?: string
-    search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
-  }
+  // Query Filters - separate filters for tasks and folders
+  taskFilters: QueryFilterParams
+  folderFilters: QueryFilterParams
+  // Backward compatibility for ProjectTableProvider (uses taskFilters)
+  queryFilters: QueryFilterParams
   setQueryFilters: (queryFilters: QueryFilter) => void
 
   // Dual filtering system

@@ -7,7 +7,7 @@ import SettingsEditor from '@containers/SettingsEditor'
 import AnatomyPresetDropdown from './AnatomyPresetDropdown'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { useDeployProjectMutation } from '@shared/api'
-import { useGetConfigValueQuery } from '@queries/config/getConfig'
+import { useGetConfigValueQuery } from '@shared/api'
 import { camelCase } from 'lodash'
 
 // allow only alphanumeric and underscorer,

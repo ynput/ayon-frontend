@@ -274,7 +274,11 @@ const AddonUpload = ({
   // complete message
   if (isComplete && !isUploading) {
     if (errorMessage) {
-      message = <span style={{ color: 'var(--color-hl-error)' }}>{errorMessage}</span>
+      message = (
+        <span style={{ color: 'var(--color-hl-error)' }}>
+          {typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage}
+        </span>
+      )
     } else {
       message = 'Upload complete!'
     }

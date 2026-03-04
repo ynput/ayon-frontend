@@ -1,12 +1,11 @@
 import { FC, useState, useMemo, useRef, useEffect, Fragment } from 'react'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
-import { useGetProjectQuery, useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
+import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
 import SearchingLoadingItems from './SearchingLoadingItems'
-import { upperFirst } from 'lodash'
-import { productTypes } from '@shared/util'
-import { getEntityIcon } from '@shared/containers'
+import { useProjectContext } from '@shared/context'
+import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 
 export type LinkSearchType = 'search' | 'picker' | null
 
@@ -27,13 +26,12 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
 }) => {
   const [search, setSearch] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const project = useProjectContext()
 
-  // TODO: replace with project context
-  const { data: project } = useGetProjectQuery({ projectName })
   const anatomyForIcons = {
     folderTypes: project?.folderTypes || [],
     taskTypes: project?.taskTypes || [],
-    productTypes: Object.values(productTypes),
+    productTypes: project?.productTypes || [],
   }
 
   const {
@@ -130,7 +128,9 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
                   tabIndex={0}
                   {...getItemProps(flatIndex)}
                 >
-                  <Icon icon={getEntityIcon(entity.entityType, entity.subType, anatomyForIcons)} />
+                  <EntityIcon
+                   entity={entity}
+                  />
                   <span className="label">
                     {entity.parents?.map((part, index) => (
                       <Fragment key={index}>

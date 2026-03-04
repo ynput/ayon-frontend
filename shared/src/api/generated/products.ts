@@ -104,8 +104,10 @@ export type ProductModel = {
   name: string
   /** ID of the parent folder */
   folderId: string
-  /** Product  */
+  /** Product type */
   productType: string
+  /** Product base type */
+  productBaseType?: string
   path?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
@@ -116,6 +118,10 @@ export type ProductModel = {
   status?: string
   /** Tags assigned to the the product */
   tags?: string[]
+  /** Who created the product */
+  createdBy?: string
+  /** Who last updated the product */
+  updatedBy?: string
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -134,12 +140,18 @@ export type ProductPatchModel = {
   name?: string
   /** ID of the parent folder */
   folderId?: string
-  /** Product  */
+  /** Product type */
   productType?: string
+  /** Product base type */
+  productBaseType?: string
   /** Status of the product */
   status?: string
   /** Tags assigned to the the product */
   tags?: string[]
+  /** Who created the product */
+  createdBy?: string
+  /** Who last updated the product */
+  updatedBy?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
   /** Whether the product is active */
@@ -156,12 +168,18 @@ export type ProductPostModel = {
   name: string
   /** ID of the parent folder */
   folderId: string
-  /** Product  */
+  /** Product type */
   productType: string
+  /** Product base type */
+  productBaseType?: string
   /** Status of the product */
   status?: string
   /** Tags assigned to the the product */
   tags?: string[]
+  /** Who created the product */
+  createdBy?: string
+  /** Who last updated the product */
+  updatedBy?: string
   attrib?: ProductAttribModel
   data?: Record<string, any>
   /** Whether the product is active */

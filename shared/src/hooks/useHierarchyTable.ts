@@ -1,29 +1,27 @@
 // create table data for the hierarchy
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { useGetFolderListQuery } from '@shared/api'
 import type { FolderType, FolderListItem } from '@shared/api'
 import { useCallback, useMemo } from 'react'
-import { useQueryArgumentChangeLoading } from './useQueryArgumentChangeLoading'
+import { useProjectFoldersContext } from '@shared/context'
 
 type Props = {
   projectName: string | null
   folderTypes: FolderType[]
+  includeColors?: boolean
 }
 
-export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
-  const { data: { folders = [] } = {}, isFetching: isFetchingRaw } = useGetFolderListQuery(
-    { projectName: projectName || '', attrib: true },
-    { skip: !projectName },
-  )
-
-  const isFetching = useQueryArgumentChangeLoading(
-    { projectName: projectName || '' },
-    isFetchingRaw,
-  )
+export const useHierarchyTable = ({ projectName, folderTypes, includeColors = false }: Props) => {
+  const { folders, isLoading } = useProjectFoldersContext()
 
   const getFolderIcon = (type: string) => {
     const folderType = folderTypes.find((folderType) => folderType.name === type)
     return folderType?.icon || 'folder'
+  }
+
+  const getFolderColor = (type: string) => {
+    if (!includeColors) return undefined
+    const folderType = folderTypes.find((folderType) => folderType.name === type)
+    return folderType?.color
   }
 
   const folderToTableRow = (folder: FolderListItem): Omit<SimpleTableRow, 'subRows'> => ({
@@ -32,6 +30,7 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     name: folder.name,
     label: folder.label || folder.name,
     icon: getFolderIcon(folder.folderType),
+    iconColor: getFolderColor(folder.folderType),
     img: null,
     data: {
       id: folder.id,
@@ -89,16 +88,21 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
   }
 
   const tableData: SimpleTableRow[] = useMemo(() => {
-    if (!folders.length || isFetching) return []
+    if (!folders.length || isLoading) return []
 
     const rows = createDataTree(folders)
 
     return rows
-  }, [folders, folderTypes, isFetching])
+  }, [folders, folderTypes, isLoading])
 
   const getHierarchyData = useCallback(async () => {
     return tableData
   }, [tableData])
 
-  return { data: tableData, folders, getData: getHierarchyData, isFetching: isFetching }
+  return {
+    data: tableData,
+    folders,
+    getData: getHierarchyData,
+    isFetching: isLoading,
+  }
 }

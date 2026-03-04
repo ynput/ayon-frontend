@@ -6,10 +6,14 @@ export const getGroupedReviewables = (
 ) => {
   // create a list of reviewables that are actually viewable
   const readyReviewables = reviewables.filter(
-    (reviewable) => reviewable.availability === 'ready' && !reviewable.processing,
+    (reviewable) =>
+      (reviewable.availability === 'ready' ||
+        reviewable.availability === 'conversionRecommended') &&
+      !reviewable.processing,
   )
   const notReadyReviewables = reviewables.filter(
-    (reviewable) => reviewable.availability !== 'ready',
+    (reviewable) =>
+      reviewable.availability !== 'ready' && reviewable.availability !== 'conversionRecommended',
   )
 
   // reviewables that will never be converted:
@@ -24,11 +28,6 @@ export const getGroupedReviewables = (
   // reviewables that cannot be played and will never be converted
   const incompatibleReviewables = neverConvertedReviewables.filter(
     (reviewable) => reviewable.availability === 'conversionRequired',
-  )
-
-  // reviewables that need to be converted but can still be played
-  const unoptimizedReviewables = neverConvertedReviewables.filter(
-    (reviewable) => reviewable.availability === 'conversionRecommended',
   )
 
   // reviewables that are/will be converted and not already converted
@@ -51,18 +50,8 @@ export const getGroupedReviewables = (
     (reviewable) => reviewable.availability === 'conversionRequired',
   )
 
-  const playableQueuedReviewables = queuedReviewables.filter(
-    (reviewable) => reviewable.availability === 'ready',
-  )
-
-  const nonSortableButPlayableReviewables = [
-    ...unoptimizedReviewables,
-    ...playableQueuedReviewables,
-  ]
-
   return {
-    optimized: readyReviewables,
-    unoptimized: nonSortableButPlayableReviewables,
+    playable: readyReviewables,
     incompatible: incompatibleReviewables,
     processing: processingReviewables,
     queued: unplayableQueuedReviewables,

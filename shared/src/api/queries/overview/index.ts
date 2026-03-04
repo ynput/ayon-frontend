@@ -1,3 +1,5 @@
 export * from './getOverview'
 export * from './updateOverview'
+export * from './patchVersions'
+export * from './patchProducts'
 export * from '../links/getEntityLinks'

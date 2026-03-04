@@ -4,7 +4,6 @@ import {
   OperationModel,
   OperationResponseModel,
   useUpdateOverviewEntitiesMutation,
-  useGetFolderListQuery,
 } from '@shared/api'
 import { useProjectTableContext } from '@shared/containers'
 import {
@@ -12,6 +11,7 @@ import {
   EntityMoveData,
   MultiEntityMoveData,
 } from '@shared/context/MoveEntityContext'
+import { useProjectFoldersContext } from '@shared/context'
 
 export type EntityType = 'folder' | 'task'
 
@@ -34,10 +34,7 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
   const { tableData, getEntityById } = useProjectTableContext()
 
   // Get folder data to check hasVersions property
-  const { data: { folders = [] } = {} } = useGetFolderListQuery(
-    { projectName: projectName || '', attrib: true },
-    { skip: !projectName },
-  )
+  const { folders } = useProjectFoldersContext()
 
   // Action dispatchers
   const openMoveDialogHandler = useCallback(

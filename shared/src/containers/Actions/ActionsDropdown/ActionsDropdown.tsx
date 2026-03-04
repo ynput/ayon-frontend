@@ -1,4 +1,10 @@
-import { DefaultValueTemplate, Button, Spacer, DropdownRef, DropdownProps } from '@ynput/ayon-react-components'
+import {
+  DefaultValueTemplate,
+  Button,
+  Spacer,
+  DropdownRef,
+  DropdownProps,
+} from '@ynput/ayon-react-components'
 import { DropdownHeader, DropdownItem, StyledDropdown } from './ActionsDropdown.styled'
 import clsx from 'clsx'
 import { useRef } from 'react'
@@ -33,6 +39,7 @@ type ActionsDropdownItemProps = {
   icon?: IconModel
   header?: boolean
   hasConfig?: boolean
+  description?: string
   onConfig?: (value: string) => void
 }
 
@@ -42,6 +49,7 @@ export const ActionsDropdownItem = ({
   icon,
   header,
   hasConfig,
+  description,
   onConfig,
 }: ActionsDropdownItemProps) => {
   if (header) return <DropdownHeader>{upperFirst(label)}</DropdownHeader>
@@ -54,7 +62,7 @@ export const ActionsDropdownItem = ({
 
   return (
     <DropdownItem>
-      <ActionItemContainer>
+      <ActionItemContainer data-tooltip={description || ''} data-tooltip-delay={0}>
         <ActionIcon icon={icon} />
         <span>{label}</span>
         <Spacer />
@@ -93,12 +101,11 @@ export const ActionsDropdown = ({
     dropdownRef.current?.close()
     onConfig(e)
   }
-
   return (
     <StyledDropdown
       ref={dropdownRef}
       disabled={isLoading}
-      className={clsx('more', { loading: isLoading, dev: isDeveloperMode })}
+      className={clsx('more', { dev: isDeveloperMode })}
       options={options}
       maxOptionsShown={100}
       value={[]}

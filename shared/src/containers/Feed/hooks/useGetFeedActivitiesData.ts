@@ -4,7 +4,7 @@ import { isEqual, union } from 'lodash'
 import { useMemo } from 'react'
 
 export type UseGetActivitiesInfiniteInfiniteQuery = (
-  queryArgs: Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: string },
+  queryArgs: Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: any },
   options: { skip: boolean },
 ) => {
   data: { pages: { activities: any[] }[] } & { pageInfo: PageInfo }
@@ -17,7 +17,7 @@ export type UseGetActivitiesInfiniteInfiniteQuery = (
 
 type Props = {
   entities: Array<{ id: string; projectName: string }>
-  filter: string
+  filter: any
   activityTypes?: string[] | null
   projectName: string
   entityType: string

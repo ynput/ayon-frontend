@@ -22,6 +22,7 @@ const NavButton = ({
     id={`${className}-${id}`}
     onClick={() => onClick(id)}
     data-tooltip={`${upperFirst(className)} version`}
+    data-tooltip-position="bottom"
     data-shortcut={shortcut?.children}
     shortcut={shortcut}
     {...props}
@@ -58,11 +59,10 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
     approved: approvedVersion,
     hero: heroVersion,
   }
-  const selectRef = useRef(null)
 
   const toolsRef = useRef(null)
 
-  useReviewShortcuts({ allVersions, onChange, toolsRef, selectRef })
+  useReviewShortcuts({ allVersions, onChange, toolsRef })
 
   if (selectedIndex === -1) return
 
@@ -87,12 +87,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         beforeContent={<Icon icon="chevron_left" />}
         shortcut={{ children: 'A' }}
       />
-      <ReviewVersionDropdown
-        options={options}
-        value={selected}
-        onChange={onChange}
-        selectRef={selectRef}
-      />
+      <ReviewVersionDropdown options={options} value={selected} onChange={onChange} />
       <NavButton
         version={allVersions.next}
         className="next"
@@ -107,7 +102,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         onClick={onChange}
         disabled={!latestVersion}
         beforeContent={'Latest - '}
-        data-shortcut={'F'}
+        data-shortcut={'R'}
         selected={selected === latestVersion?.id}
       />
       <NavButton

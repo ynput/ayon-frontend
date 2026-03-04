@@ -7,7 +7,6 @@ import {
   useUpdateEntityListMutation,
 } from '@shared/api'
 import type { EntityListPatchModel, EntityListPostModel, EntityListSummary } from '@shared/api'
-import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
 import useDeleteList from '../hooks/useDeleteList'
 import useUpdateList from '../hooks/useUpdateList'
 import { useListsDataContext } from './ListsDataContext'
@@ -17,7 +16,7 @@ import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import { useLocalStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../util/buildListsTableData'
 import useInitialListsExpanded from '../hooks/useInitialListsExpanded'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useProjectContext } from '@shared/context'
 
 // Custom param for RowSelectionState
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
@@ -46,7 +45,7 @@ interface ListsProviderProps {
 
 export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
-  const { projectName } = useProjectDataContext()
+  const { projectName } = useProjectContext()
   const { listsMap, listsData, listFolders } = useListsDataContext()
 
   // Memoize the configurations for the query parameters

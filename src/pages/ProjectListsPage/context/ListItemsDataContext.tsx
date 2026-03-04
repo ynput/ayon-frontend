@@ -11,13 +11,12 @@ import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
 import { SortingState } from '@tanstack/react-table'
+import { useProjectContext } from '@shared/context'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
 export interface ListItemsDataContextValue {
   // Project Info
-  projectInfo?: ProjectDataContextProps['projectInfo']
-  projectName: string
   users: ProjectDataContextProps['users']
   selectedListId?: string
   // Attributes
@@ -62,14 +61,8 @@ interface ListItemsDataProviderProps {
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
   // Get project data from the new context
-  const {
-    projectName,
-    projectInfo,
-    attribFields,
-    users,
-    isInitialized,
-    isLoading: isLoadingData,
-  } = useProjectDataContext()
+  const { projectName } = useProjectContext()
+  const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
   const { selectedList } = useListsContext()
   const selectedListId = selectedList?.id
@@ -178,8 +171,6 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   return (
     <ListItemsDataContext.Provider
       value={{
-        projectName,
-        projectInfo,
         selectedListId,
         attribFields: scopedAttribFields,
         users,

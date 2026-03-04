@@ -230,8 +230,9 @@ const getErrorInfo = (
   if (usersFetchError) {
     return {
       icon: 'admin_panel_settings',
-      message: 'Missing permissions',
-      details: 'Project user management permissions are missing. Contact an admin for more info.',
+      message: 'Missing Users permissions',
+      details:
+        'Project user permissions are missing. Ensure "List all users" permission is enabled on the studio level access group.',
     }
   }
   if (filteredSelectedProjects.length == 0) {

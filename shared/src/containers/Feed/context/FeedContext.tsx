@@ -15,12 +15,7 @@ import {
 } from '@shared/api'
 import type { ActivityCategory, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
-import {
-  DetailsPanelTab,
-  PowerpackFeature,
-  useDetailsPanelContext,
-  useScopedDetailsPanel,
-} from '@shared/context'
+import { FeedFilter, PowerpackFeature, useDetailsPanelContext } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
 
 export const FEED_NEW_COMMENT = '__new__' as const
@@ -54,13 +49,15 @@ export type FeedContextProps = {
   annotations?: Record<string, any>
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
-  // editingId state and functions
-  editingId: EditingState
-  setEditingId: (id: EditingState) => void
+  // feedFilter - the current filter within the feed tab
+  feedFilter?: FeedFilter
+  setFeedFilter?: (filter: FeedFilter) => void
 }
 
 interface FeedContextType extends Omit<FeedContextProps, 'children'> {
-  currentTab: DetailsPanelTab
+  // local UI state
+  editingId: EditingState
+  setEditingId: (id: EditingState) => void
   // activities data props
   activitiesData: any[]
   isLoadingActivities: boolean
@@ -88,6 +85,8 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   mentionSuggestionsData: SuggestResponse
   // categories data
   categories: ActivityCategory[]
+  feedFilter: FeedFilter
+  setFeedFilter: (filter: FeedFilter) => void
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
@@ -95,7 +94,18 @@ const FeedContext = createContext<FeedContextType | undefined>(undefined)
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const { isGuest } = useDetailsPanelContext()
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
-  const { currentTab } = useScopedDetailsPanel(props.scope)
+
+  const [feedFilterInternal, setFeedFilterInternal] = useState<FeedFilter>({
+    operator: 'and',
+    conditions: [],
+  })
+
+  // use props if provided, otherwise use local state
+  const feedFilter = props.feedFilter ?? feedFilterInternal
+  const setFeedFilter = props.setFeedFilter ?? setFeedFilterInternal
+
+  const [editingId, setEditingId] = useState<EditingState>(null)
+  const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
 
   //   queries
   const [createEntityActivityMutation, { isLoading: isLoadingCreate }] =
@@ -119,17 +129,15 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const deleteReaction: FeedContextType['deleteReaction'] = async (args) =>
     await deleteReactionToActivity(args).unwrap()
 
-  const activityTypes = getFilterActivityTypes(currentTab)
+  const activityTypes = getFilterActivityTypes(feedFilter)
 
   const activitiesDataProps = useGetFeedActivitiesData({
     entities: props.entities,
-    filter: currentTab,
+    filter: feedFilter,
     activityTypes: activityTypes,
     projectName: props.projectName,
     entityType: props.entityType,
   })
-
-  const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
   const skip = !props.projectName || !refTooltip?.id || refTooltip.type === 'user'
   const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
     { entityType: refTooltip?.type, entityId: refTooltip?.id, projectName: props.projectName },
@@ -145,7 +153,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
       },
       projectName: props.projectName,
     },
-    { skip: !props.editingId },
+    { skip: !editingId },
   )
 
   // get comment categories for this project and user
@@ -166,8 +174,11 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         isFetchingTooltip,
         refTooltip,
         activityTypes,
-        currentTab,
+        feedFilter,
+        setFeedFilter,
         isGuest,
+        editingId,
+        setEditingId,
         setRefTooltip,
         // Query functions
         createEntityActivity,

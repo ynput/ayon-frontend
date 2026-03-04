@@ -115,7 +115,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   const handleVersionDropdownChange = (selectedVersions: string[]) => {
     const versionNumber = selectedVersions[0]
-    const selectedVersion = versions.find(version => version.version === versionNumber)
+    const selectedVersion = versions.find((version) => version.version === versionNumber)
 
     if (selectedVersion?.isCompatible !== false) {
       handleDownload(versionNumber)
@@ -151,7 +151,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
   if (isLatestIncompatible) {
     actionButton = (
-      <Button variant="filled" disabled icon={'block'} style={{fontSize: '12px'}}>
+      <Button variant="filled" disabled icon={'block'} style={{ fontSize: '12px' }}>
         {`v${displayVersion} (server update required)`}
       </Button>
     )
@@ -173,11 +173,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     actionButton = <Button onClick={onUninstall}>Uninstall</Button>
   } else if ((isDownloaded && isOutdated && latestVersion) || latestVersion) {
     actionButton = (
-      <Button
-        variant="filled"
-        icon={'download'}
-        onClick={() => handleDownload(latestVersion)}
-      >
+      <Button variant="filled" icon={'download'} onClick={() => handleDownload(latestVersion)}>
         {`Download v${displayVersion}`}
       </Button>
     )
@@ -210,7 +206,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     <Styled.PanelContainer direction="row" className={clsx({ noData: !name })}>
       {name && (
         <>
-          <Styled.Left className={Type.bodyLarge} style={{height: "auto"}}>
+          <Styled.Left className={Type.bodyLarge} style={{ height: 'auto' }}>
             <Styled.Header className={clsx({ loading: isLoading })}>
               <AddonIcon size={64} src={icon} alt={name + ' icon'} isPlaceholder={isLoading} />
               <div className="titles">
@@ -246,13 +242,8 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                 </a>
               </Styled.ErrorCard>
             )}
-            <div className="description">
-              <ReactMarkdown
-                className={clsx({ loading: isLoading })}
-                remarkPlugins={[remarkGfm, emoji]}
-              >
-                {description}
-              </ReactMarkdown>
+            <div className={clsx('description', { loading: isLoading })}>
+              <ReactMarkdown remarkPlugins={[remarkGfm, emoji]}>{description}</ReactMarkdown>
             </div>
           </Styled.Left>
           {/* RIGHT PANEL */}
@@ -272,11 +263,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
                     <Styled.VersionDropdownItem>
                       <Icon
                         icon={
-                          option.disabled
-                            ? 'block'
-                            : option.isDownloaded
-                              ? 'check'
-                              : 'download'
+                          option.disabled ? 'block' : option.isDownloaded ? 'check' : 'download'
                         }
                       />
                       {option.label}

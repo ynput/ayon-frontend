@@ -1,4 +1,4 @@
-import Menu from '../MenuComponents/Menu'
+import { Menu } from '@shared/components'
 import YnputConnector from '@components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
@@ -47,15 +47,13 @@ export const AppMenu = ({ user, ...props }) => {
   ]
 
   if (isUser)
-    items.unshift(
-      {
-        id: 'siteSettings',
-        link: '/settings/site',
-        label: 'Site Settings',
-        icon: 'computer',
-        shortcut: 'S+S',
-      },
-    )
+    items.unshift({
+      id: 'siteSettings',
+      link: '/settings/site',
+      label: 'Site Settings',
+      icon: 'computer',
+      shortcut: 'S+S',
+    })
 
   if (!isUser)
     items.unshift({

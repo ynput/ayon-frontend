@@ -78,11 +78,6 @@ const LoginPage = ({ isFirstTime = false }) => {
 
 
   const handleSSOCallback = async (ssoOptions) => {
-
-    if (!ssoOptions?.length) {
-      return
-    }
-
     // First we check if there's a provider name in the URL
     // And abort if there isn't
     const provider = window.location.pathname.split('/')[2]

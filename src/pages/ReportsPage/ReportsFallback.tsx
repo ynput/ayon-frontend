@@ -1,15 +1,9 @@
-import { SelectionData, SliceType } from '@shared/containers'
+import { SlicerContextValue } from '@shared/containers/Slicer'
 import { RemoteAddonProjectProps } from '@shared/context'
 import { FC } from 'react'
 
-type Slicer = {
-  selection: SelectionData
-  type: SliceType
-  persistentRowSelectionData: SelectionData
-  setPersistentRowSelectionData: (data: SelectionData) => void
-}
 interface ReportsFallbackProps extends RemoteAddonProjectProps {
-  slicer: Slicer
+  state?: { slicer?: SlicerContextValue }
 }
 
 const ReportsFallback: FC<ReportsFallbackProps> = ({}) => {

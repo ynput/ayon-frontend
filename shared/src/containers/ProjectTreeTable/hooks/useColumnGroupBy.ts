@@ -8,7 +8,7 @@ import { isAttribGroupable } from './useGetGroupedFields'
  */
 export const useColumnGroupBy = (columnId: string) => {
   const { updateGroupBy } = useColumnSettingsContext()
-  const { attribFields } = useProjectTableContext()
+  const { attribFields, scopes } = useProjectTableContext()
 
   const isAttribColumn = columnId.startsWith('attrib_')
   const attribName = isAttribColumn ? columnId.replace('attrib_', '') : undefined
@@ -19,7 +19,13 @@ export const useColumnGroupBy = (columnId: string) => {
 
   const targetGroupById = useMemo(() => {
     if (columnId.startsWith('attrib_')) return 'attrib.' + columnId.replace('attrib_', '')
-    if (columnId === 'subType') return 'taskType'
+    if (columnId === 'subType') {
+      if (scopes.includes('task')) {
+        return 'taskType'
+      } else if (scopes.includes('version')) {
+        return 'productType'
+      }
+    }
     if (['status', 'assignees', 'tags', 'taskType'].includes(columnId)) return columnId
     return undefined
   }, [columnId])
@@ -31,7 +37,8 @@ export const useColumnGroupBy = (columnId: string) => {
   }, [attribField, isAttribColumn, targetGroupById])
 
   const groupLabel = useMemo(() => {
-    if (isAttribColumn) return attribField?.data.title || attribField?.name || attribName || 'Attribute'
+    if (isAttribColumn)
+      return attribField?.data.title || attribField?.name || attribName || 'Attribute'
     if (columnId === 'status') return 'Status'
     if (columnId === 'subType') return 'Type'
     if (columnId === 'assignees') return 'Assignees'
@@ -50,5 +57,3 @@ export const useColumnGroupBy = (columnId: string) => {
     groupBySelectedColumn,
   }
 }
-
-

@@ -1,4 +1,4 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { getTextColor, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef } from 'react'
 import styled from 'styled-components'
@@ -55,7 +55,7 @@ export const CategoryDropdownItem = forwardRef<HTMLSpanElement, CategoryDropdown
       <StyledItem
         {...props}
         className={clsx(className, { selected: isSelected })}
-        style={{ backgroundColor: isSelected && color ? color : '', ...style }}
+        style={{ backgroundColor: isSelected && color ? color : '', color: getTextColor(isSelected && color ? color : ''), ...style }}
         ref={ref}
       >
         {startContent}

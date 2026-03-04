@@ -26,7 +26,12 @@ const injectedRtkApi = api.injectEndpoints({
       GetFeedbackVerificationApiResponse,
       GetFeedbackVerificationApiArg
     >({
-      query: () => ({ url: `/api/connect/feedback` }),
+      query: (queryArg) => ({
+        url: `/api/connect/feedback`,
+        params: {
+          force: queryArg.force,
+        },
+      }),
     }),
   }),
   overrideExisting: false,
@@ -46,7 +51,9 @@ export type ConnectToYnputCloudApiArg = {
 }
 export type GetFeedbackVerificationApiResponse =
   /** status 200 Successful Response */ UserVerificationResponse
-export type GetFeedbackVerificationApiArg = void
+export type GetFeedbackVerificationApiArg = {
+  force?: boolean
+}
 export type YnputCloudSubscriptionModel = {
   /** Name of the subscription */
   name: string
@@ -58,8 +65,6 @@ export type YnputCloudSubscriptionModel = {
 export type YnputCloudInfoModel = {
   /** Ynput cloud instance ID */
   instanceId: string
-  /** Is the instance connected to Ynput Cloud? */
-  connected?: boolean
   /** Name of the instance */
   instanceName?: string
   /** Organization ID */
@@ -68,12 +73,14 @@ export type YnputCloudInfoModel = {
   orgName?: string
   /** Name of the organization */
   orgTitle?: string
-  /** Collect saturated metrics */
-  collectSaturatedMetrics?: boolean
   /** Is the instance managed by Ynput Cloud? */
   managed?: boolean
+  /** Collect saturated metrics */
+  collectSaturatedMetrics?: boolean
   /** List of subscriptions */
   subscriptions?: YnputCloudSubscriptionModel[]
+  /** Is the instance connected to Ynput Cloud? */
+  connected?: boolean
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -87,23 +94,8 @@ export type YnputConnectRequestModel = {
   /** Ynput cloud key */
   key: string
 }
-export type UserCustomFields = {
-  level?: string
-  instanceId?: string
-  verifiedUser?: string
-}
-export type CompanyInfo = {
-  id: string
-  name: string
-  subscriptions?: string
-}
 export type UserVerificationResponse = {
-  organization?: string
-  name: string
-  email?: string
-  userId: string
-  userHash: string
-  profilePicture?: string
-  customFields: UserCustomFields
-  companies: CompanyInfo[]
+  available?: boolean
+  detail?: string
+  data?: Record<string, any>
 }

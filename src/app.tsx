@@ -34,12 +34,17 @@ import TrialBanner from '@components/TrialBanner/TrialBanner'
 import { ShortcutsProvider } from '@context/ShortcutsContext'
 import { RestartProvider } from '@context/RestartContext'
 import { PasteProvider, PasteModal } from '@context/PasteContext'
-import { URIProvider } from '@context/UriContext'
 import { NotificationsProvider } from '@context/NotificationsContext'
 import { PiPProvider } from '@shared/context/pip/PiPProvider'
-import { RemoteModulesProvider, DetailsPanelProvider } from '@shared/context'
+import {
+  RemoteModulesProvider,
+  DetailsPanelProvider,
+  GlobalProvider,
+  SubtasksModulesProvider,
+  useSubtasksModulesContext,
+} from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { MenuProvider } from '@shared/context/MenuContext'
+import { MenuProvider, URIProvider } from '@shared/context'
 
 // containers
 import Header from '@containers/header'
@@ -65,9 +70,22 @@ import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompletePro
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
+import type { DetailsPanelProviderProps } from '@shared/context'
+
+// Wrapper component to get SubtasksManager from SubtasksModulesContext and pass it to DetailsPanelProvider
+const DetailsPanelProviderWithSubtasks = (
+  props: Omit<DetailsPanelProviderProps, 'children'> & { children: React.ReactNode },
+) => {
+  const { SubtasksManager } = useSubtasksModulesContext()
+  return (
+    <DetailsPanelProvider {...props} SubtasksManager={SubtasksManager}>
+      {props.children}
+    </DetailsPanelProvider>
+  )
+}
 
 const App = () => {
-  const user = useAppSelector((state) => state.user)
+  const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
   const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
@@ -178,62 +196,66 @@ const App = () => {
       <>
         <Favicon />
         <Suspense fallback={<LoadingPage />}>
-          <MenuProvider>
+          <GlobalProvider>
             <FeedbackProvider>
               <RestartProvider>
                 <RemoteModulesProvider skip={!user.name}>
                   <PowerpackProvider>
-                    <ContextMenuProvider>
-                      <DetailsPanelProvider
-                        {...handlerProps}
-                        user={user}
-                        viewer={viewer}
-                        dispatch={dispatch}
-                        useLocation={useLocation}
-                        useNavigate={useNavigate}
-                        useParams={useParams}
-                        useSearchParams={useSearchParams}
-                      >
+                    <SubtasksModulesProvider>
+                      <ContextMenuProvider>
                         <GlobalContextMenu />
                         <PasteProvider>
                           <PasteModal />
                           <BrowserRouter>
-                            <NotificationsProvider>
-                              <URIProvider>
-                                <ShortcutsProvider>
-                                  <PiPProvider>
-                                    <QueryParamProvider
-                                      adapter={ReactRouter6Adapter}
-                                      options={{
-                                        updateType: 'replaceIn',
-                                      }}
-                                    >
-                                      <Header />
-                                      <ShareDialog />
-                                      <ViewerDialog />
-                                      <ConfirmDialog />
-                                      <FileUploadPreviewContainer />
-                                      <ReleaseInstallerDialog />
-                                      <CompleteProfilePrompt />
-                                      <AppRoutes isUser={isUser} />
-                                      <DetailsPanelFloating />
-                                      <PowerpackDialog />
-                                      <AppRemoteLoader />
-                                      <TrialBanner />
-                                    </QueryParamProvider>
-                                  </PiPProvider>
-                                </ShortcutsProvider>
-                              </URIProvider>
-                            </NotificationsProvider>
+                            <MenuProvider useNavigate={useNavigate}>
+                              <QueryParamProvider
+                                adapter={ReactRouter6Adapter}
+                                options={{
+                                  updateType: 'replaceIn',
+                                }}
+                              >
+                                <URIProvider>
+                                  <DetailsPanelProviderWithSubtasks
+                                    {...handlerProps}
+                                    user={user}
+                                    viewer={viewer}
+                                    dispatch={dispatch}
+                                    useLocation={useLocation}
+                                    useNavigate={useNavigate}
+                                    useParams={useParams}
+                                    useSearchParams={useSearchParams}
+                                  >
+                                    <NotificationsProvider>
+                                      <ShortcutsProvider>
+                                        <PiPProvider>
+                                          <Header />
+                                          <ShareDialog />
+                                          <ViewerDialog />
+                                          <ConfirmDialog />
+                                          <FileUploadPreviewContainer />
+                                          <ReleaseInstallerDialog />
+                                          <CompleteProfilePrompt />
+                                          <AppRoutes />
+                                          <DetailsPanelFloating />
+                                          <PowerpackDialog />
+                                          <AppRemoteLoader />
+                                          <TrialBanner />
+                                        </PiPProvider>
+                                      </ShortcutsProvider>
+                                    </NotificationsProvider>
+                                  </DetailsPanelProviderWithSubtasks>
+                                </URIProvider>
+                              </QueryParamProvider>
+                            </MenuProvider>
                           </BrowserRouter>
                         </PasteProvider>
-                      </DetailsPanelProvider>
-                    </ContextMenuProvider>
+                      </ContextMenuProvider>
+                    </SubtasksModulesProvider>
                   </PowerpackProvider>
                 </RemoteModulesProvider>
               </RestartProvider>
             </FeedbackProvider>
-          </MenuProvider>
+          </GlobalProvider>
         </Suspense>
       </>
     ),
@@ -312,14 +334,16 @@ const App = () => {
     return <LoginPage isFirstTime={isOnboarding} />
   }
 
-  // Trial has finished
-  if (isTrialing && left?.finished) {
+  // Trial has finished and it's a cloud-managed instance, show trial ended page
+  if (isTrialing && left?.finished && ynputConnect?.managed) {
     return (
-      <FeedbackProvider>
-        <BrowserRouter>
-          <TrialEnded orgName={ynputConnect?.orgName} />
-        </BrowserRouter>
-      </FeedbackProvider>
+      <GlobalProvider>
+        <FeedbackProvider>
+          <BrowserRouter>
+            <TrialEnded orgName={ynputConnect?.orgName} />
+          </BrowserRouter>
+        </FeedbackProvider>
+      </GlobalProvider>
     )
   }
 

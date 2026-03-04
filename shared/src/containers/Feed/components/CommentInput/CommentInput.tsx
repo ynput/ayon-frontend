@@ -37,6 +37,7 @@ import useAnnotationsUpload from './hooks/useAnnotationsUpload'
 import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
+import { useProjectContext } from '@shared/context'
 
 var Delta = Quill.import('delta')
 
@@ -58,6 +59,7 @@ interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
   initCategory?: string | null
+  data?: any
   onSubmit: (markdown: string, files: any[], data?: any) => Promise<void>
   isEditing?: boolean
   disabled?: boolean
@@ -71,6 +73,7 @@ const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
   initCategory = null,
+  data = {},
   onSubmit,
   isEditing,
   disabled,
@@ -84,14 +87,16 @@ const CommentInput: FC<CommentInputProps> = ({
     entities,
     projectInfo,
     scope,
-    currentTab,
+    feedFilter,
     mentionSuggestionsData,
     categories,
     isGuest,
   } = useFeedContext()
 
   const { hasLicense, onPowerFeature, user } = useDetailsPanelContext()
-  const isUser = !user?.data?.isAdmin && !user?.data?.isManager
+  const isAdmin = user?.data?.isAdmin
+
+  const project = useProjectContext()
 
   const {
     users: mentionUsers,
@@ -134,7 +139,7 @@ const CommentInput: FC<CommentInputProps> = ({
     setEditorValue,
     setInitHeight,
     isOpen: isOpen,
-    filter: currentTab,
+    filter: feedFilter,
   })
 
   // When editing, set selection to the end of the editor
@@ -165,7 +170,7 @@ const CommentInput: FC<CommentInputProps> = ({
         mention?.type,
         {
           '@': () => getMentionUsers(mentionUsers),
-          '@@': () => getMentionVersions(mentionVersions),
+          '@@': () => getMentionVersions(mentionVersions, project),
           '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
         mention?.search,
@@ -475,14 +480,17 @@ const CommentInput: FC<CommentInputProps> = ({
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true)
+
       // upload any annotations first
       let annotationFiles = []
-      let annotationMetadata: SavedAnnotationMetadata[] = []
-
+      let annotationMetadata: SavedAnnotationMetadata[] | undefined = undefined
       if (annotations.length) {
         const { files, metadata } = await uploadAnnotations(annotations)
         annotationFiles = files
-        annotationMetadata = metadata
+        // get current files data
+        const { annotations: annotationsData = [] } = data || {}
+        // merge existing annotations data with new metadata
+        annotationMetadata = [...annotationsData, ...metadata]
       }
 
       // convert to markdown
@@ -493,12 +501,15 @@ const CommentInput: FC<CommentInputProps> = ({
 
       const uploadedFiles = [...files, ...annotationFiles]
 
+      const newData = {
+        ...data,
+        annotations: annotationMetadata, // could be undefined
+        category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
+      }
+
       if ((markdownParsed || uploadedFiles.length) && onSubmit) {
         try {
-          await onSubmit(markdownParsed, uploadedFiles, {
-            annotations: annotationMetadata,
-            category: isGuest ? null : category, // guests cannot set category (it is done by default on backend)
-          })
+          await onSubmit(markdownParsed, uploadedFiles, newData)
           // only clear if onSubmit is successful
           setEditorValue('')
           setFiles([])
@@ -658,7 +669,7 @@ const CommentInput: FC<CommentInputProps> = ({
                   isCompact={isEditing}
                   hasPowerpack={hasLicense}
                   onPowerFeature={onPowerFeature}
-                  isHidden={isCategoryHidden(categoryOptions, { isGuest, isUser })}
+                  isHidden={isCategoryHidden(categoryOptions, { isGuest, isAdmin })}
                   style={{
                     position: isEditing ? 'relative' : 'absolute',
                     left: 4,

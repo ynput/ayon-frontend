@@ -8,10 +8,14 @@ export const TableContainer = styled.div`
   width: 100%;
   overflow: auto;
   padding: 4px;
-  padding-top: 8px;
 
   &.isLoading {
     overflow: hidden;
+  }
+  &.fitContent {
+    height: auto;
+    overflow: visible;
+    flex: none;
   }
 
   /* make error icon smaller */
@@ -68,16 +72,25 @@ export const Cell = styled.div`
 
   border-radius: var(--border-radius-m);
 
-  .value {
+  .text {
     width: 100%;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .value {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .path {
-    display: flex;
-    gap: var(--base-gap-small);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: fit-content;
+    margin-right: 4px;
+    flex: 1; // path ellipsis first before value
   }
 
   .loading {
@@ -133,6 +146,24 @@ export const Cell = styled.div`
   /* filled icon */
   .icon.filled {
     font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  }
+
+  .image {
+    width: auto;
+    height: 24px;
+    max-height: 24px;
+    object-fit: cover;
+    aspect-ratio: 1;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    margin-right: 4px;
+
+    &.circle {
+      border-radius: 50%;
+    }
+
+    &.square {
+      border-radius: 4px;
+    }
   }
 `
 

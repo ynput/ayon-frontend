@@ -6,7 +6,19 @@ export const useTaskClick = (dispatch, tasks = [], closeContext) => {
   const { setOpen } = useScopedDetailsPanel('dashboard')
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
+  const setSelectedTasks = (ids, types, tasks = []) =>
+    dispatch(
+      onTaskSelected({
+        ids,
+        types,
+        data: tasks.map((data) => ({
+          id: data.id,
+          projectName: data.projectName,
+          taskType: data.taskType,
+          name: data.name,
+        })),
+      }),
+    )
   // HANDLE TASK CLICK
   const handleTaskClick = (e, id, taskIds, openPanel = false) => {
     e?.preventDefault()
@@ -48,7 +60,7 @@ export const useTaskClick = (dispatch, tasks = [], closeContext) => {
     const newTasks = tasks.filter((task) => newSelection.includes(task.id))
     const taskTypes = [...new Set(newTasks.map((task) => task.taskType))]
 
-    setSelectedTasks(newSelection, taskTypes)
+    setSelectedTasks(newSelection, taskTypes, newTasks)
 
     if (openPanel) {
       setOpen(true)

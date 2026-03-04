@@ -61,11 +61,12 @@ const convertConditionToFilter = (
 
   // check if the filter is a text search filter
   if (key === SEARCH_FILTER_ID) {
+    const valuesArray = Array.isArray(value) ? value : [value || '']
     const filter: Filter = {
       id: SEARCH_FILTER_ID,
       type: 'string',
       label: '',
-      values: (value as string[]).map((v) => ({ id: v, label: v })),
+      values: valuesArray.map((v) => ({ id: String(v), label: String(v) })),
     }
 
     return filter
@@ -159,15 +160,25 @@ const convertConditionValueToFilterValues = (
   const values = Array.isArray(value) ? value : [value]
 
   return values.map((val) => {
-    const stringValue = String(val)
+    let stringValue = String(val)
+    let isCustomValue = false
 
-    // Try to find existing option value with metadata
-    const existingValue = filterOption.values?.find((v: FilterValue) => v.id === stringValue)
-    if (existingValue) {
-      return existingValue
+    // Handle LIKE operator with wildcards - strip them and mark as custom
+    if (operator === 'like' && typeof val === 'string') {
+      // Remove leading and trailing % wildcards
+      stringValue = val.replace(/^%/, '').replace(/%$/, '')
+      isCustomValue = true
     }
 
-    // Create a basic FilterValue if no existing option found
+    // Try to find existing option value with metadata (only if not already marked as custom from LIKE)
+    if (!isCustomValue) {
+      const existingValue = filterOption.values?.find((v: FilterValue) => v.id === stringValue)
+      if (existingValue) {
+        return existingValue
+      }
+    }
+
+    // Create a basic FilterValue if no existing option found or if it's a LIKE value
     return {
       id: stringValue,
       label: stringValue,

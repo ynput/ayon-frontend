@@ -1,5 +1,4 @@
-import Menu from '@components/Menu/MenuComponents/Menu'
-import MenuContainer from '@components/Menu/MenuComponents/MenuContainer'
+import { Menu, MenuContainer, MenuItemType } from '@shared/components'
 import ListsSearch from '@pages/ProjectListsPage/components/ListsTable/ListsSearch'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
@@ -88,12 +87,7 @@ interface ProjectsListTableHeaderProps {
   onNewProject?: () => void
   showAddProject?: boolean
   toggleMenu?: (open: boolean) => void
-  menuItems?: Array<{
-    id: string
-    label?: string
-    icon?: string
-    onClick?: () => void
-  }>
+  menuItems?: MenuItemType[]
 }
 
 const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
@@ -122,7 +116,6 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
     tooltip: 'Search projects',
     ...buttonLabels.search,
   }
-
   return (
     <HeaderStyled className="projects-list-header">
       <HeaderTop className="projects-list-header-top">
@@ -135,9 +128,7 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
             id={MENU_ID}
             className={clsx('list-menu', { active: isOpen })}
           />
-          {/* @ts-expect-error - non TS file */}
           <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
-            {/* @ts-expect-error - non TS file */}
             <Menu menu={menuItems} onClose={() => toggleMenu?.(false)} />
           </MenuContainer>
 

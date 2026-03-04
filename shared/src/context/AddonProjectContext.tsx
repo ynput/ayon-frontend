@@ -1,11 +1,14 @@
 // NOT USED IN AYON-FRONTEND, ONLY IN ADDONS
 
-import { ProjectModel, useGetCurrentUserQuery, useGetProjectQuery, UserModel } from '@shared/api'
+import { ProjectModel, useGetProjectQuery, UserModel } from '@shared/api'
 import { createContext, FC, useContext } from 'react'
-import router from 'react-router-dom'
 import type { toast } from 'react-toastify'
+import { useGlobalContext } from './GlobalContext'
+import { RemotePageProps } from '@shared/components'
 
 type ToastFunc = typeof toast
+
+export interface RemoteAddonProjectProps extends RemotePageProps {}
 
 export type RemoteAddonProjectComponent = FC<RemoteAddonProjectProps>
 export type RemoteAddonProject = {
@@ -13,23 +16,12 @@ export type RemoteAddonProject = {
   component: RemoteAddonProjectComponent
   name: string
   module: string
-}
-
-export type RouterTypes = {
-  useParams: typeof router.useParams
-  useNavigate: typeof router.useNavigate
-  useLocation: typeof router.useLocation
-  useSearchParams: typeof router.useSearchParams
-}
-
-export interface RemoteAddonProjectProps {
-  projectName: string
-  router: RouterTypes
-  toast?: any
+  viewType?: string // if the addon is using views
+  slicer?: { fields: string[] }
 }
 
 // types for props passed to the provider
-export interface AddonProjectContextProps extends RemoteAddonProjectProps {
+export interface AddonProjectContextValue extends RemoteAddonProjectProps {
   children: React.ReactNode
 }
 
@@ -48,15 +40,15 @@ export const AddonProjectProvider = ({
   // utils
   toast,
   ...props
-}: AddonProjectContextProps) => {
+}: AddonProjectContextValue) => {
   // get current project data
   const { data: project } = useGetProjectQuery(
     { projectName: projectName as string },
     { skip: !projectName },
   )
 
-  // get current user data
-  const { data: user } = useGetCurrentUserQuery()
+  const { user } = useGlobalContext()
+
   return (
     <AddonProjectContext.Provider
       value={{

@@ -1,11 +1,16 @@
-import { useCreateViewMutation, UserModel, ViewListItemModel } from '@shared/api'
+import {
+  GetWorkingViewApiResponse,
+  useCreateViewMutation,
+  UserModel,
+  ViewListItemModel,
+} from '@shared/api'
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
-import { useLoadModule, useLocalStorage } from '@shared/hooks'
+import { useLoadModule } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
 import { CollapsedViewState } from '../context/ViewsContext'
@@ -13,6 +18,7 @@ import { CollapsedViewState } from '../context/ViewsContext'
 // constants
 export const WORKING_VIEW_ID = '_working_' as const
 export const NEW_VIEW_ID = '_new_view_' as const
+export const BASE_VIEW_ID = '__base__' as const
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
   highlighted?: 'save' | 'edit'
@@ -20,7 +26,7 @@ export type ViewListItemModelExtended = ViewListItemModel & {
 
 type Props = {
   viewsList: ViewListItemModel[]
-  workingView?: ViewListItemModel
+  workingView?: GetWorkingViewApiResponse
   viewType?: string
   projectName?: string
   currentUser?: UserModel
@@ -137,23 +143,22 @@ const useBuildViewMenuItems = ({
     ]
   }, [myViews, sharedViews, allPrivateViews])
 
-  const workingViewItem: ViewMenuItem = useMemo(
-    () => ({
+  const workingViewItem: ViewMenuItem = useMemo(() => {
+    return {
       ...workingBaseView,
       onClick: handleWorkingViewChange,
       // expose reset button when handler is provided
       isEditable: Boolean(onResetWorkingView),
       onResetView: onResetWorkingView,
-    }),
-    [handleWorkingViewChange, onResetWorkingView],
-  )
+    }
+  }, [handleWorkingViewChange, onResetWorkingView])
 
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
   const viewItems: ViewMenuItem[] = useMemo(() => {
     const result: ViewMenuItem[] = [workingViewItem]
 
-    // Add divider only if any section exists
-    const visibleSections = sections.filter((s) => (s.items?.length || 0) > 0)
+    // Add divider only if any section exists and powerpack is available
+    const visibleSections = sections.filter((s) => powerLicense && (s.items?.length || 0) > 0)
     if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
 
     visibleSections.forEach((section) => {
@@ -173,11 +178,8 @@ const useBuildViewMenuItems = ({
       }
     })
 
-    // Add a closing divider after all sections (only if sections exist)
-    if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
-
     return result
-  }, [workingViewItem, sections, collapsed, toggleSection, selectedId])
+  }, [workingViewItem, sections, collapsed, toggleSection, selectedId, powerLicense])
 
   return viewItems
 }

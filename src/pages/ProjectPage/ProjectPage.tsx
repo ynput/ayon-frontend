@@ -1,48 +1,46 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
-import BrowserPage from '../BrowserPage'
+import VersionsProductsPage from '../VersionsProductsPage'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import LoadingPage from '../LoadingPage'
 import ProjectAddon from '../ProjectAddon'
 import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
-import SchedulerPage from '@pages/SchedulerPage/SchedulerPage'
 
 import { selectProject } from '@state/project'
-import { useGetProjectQuery } from '@queries/project/enhancedProject'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { TabPanel, TabView } from 'primereact/tabview'
-import AppNavLinks from '@containers/header/AppNavLinks'
-import { SlicerProvider } from '@context/SlicerContext'
+import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
+import { SlicerProvider } from '@shared/containers/Slicer'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
-import ProjectPubSub from './ProjectPubSub'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
-import { RemoteAddonProject } from '@shared/context'
+import {
+  ProjectFoldersContextProvider,
+  RemoteAddonProject,
+  useGlobalContext,
+  useProjectContext,
+} from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
-import GuestUserPageLocked from '@components/GuestUserPageLocked'
-import { Views, ViewsProvider, ViewType } from '@shared/containers'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ReportsPage from '@pages/ReportsPage/ReportsPage'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
+import BrowserPage from '@pages/BrowserPage'
+import GuestUserPageLocked from '@components/GuestUserPageLocked'
+import { ProjectContextProvider } from '@shared/context'
+import { WithViews } from '@/hoc/WithViews'
+import { ProjectPageRemote } from '@shared/components'
 
-type NavLink = {
-  name?: string
-  path?: string
-  module?: string
-  viewType?: ViewType
-  uriSync?: boolean
-  enabled?: boolean
-  node?: React.ReactNode
-}
+const BROWSER_FLAG = 'enable-legacy-version-browser'
 
 const ProjectContextInfo = () => {
   /**
@@ -63,31 +61,40 @@ const ProjectContextInfo = () => {
   )
 }
 
-const ProjectPage = () => {
+const ProjectPageInner = () => {
   /**
    * This component is a wrapper for all project pages
    * It parses the url, loads the project data, dispatches the
    * project data to the store, and renders the requested page.
    */
-
+  const { siteInfo } = useGlobalContext()
+  const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
+  const { projectName, isLoading, error } = useProjectContext()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
-  const isGuest = useAppSelector((state) => state.user.data.isGuest)
   const navigate = useNavigate()
-  const { projectName, module = '', addonName } = useParams()
+  const { pathname } = useLocation()
+  const params = useParams()
+  const { addonName } = params
+  let { module = '' } = params
+
+  // if module is not in params, try to get it from the path
+  // this happens for routes like /projects/:projectName/reviews/:sessionId
+  if (!module) {
+    const pathParts = pathname.split('/')
+    if (pathParts[1] === 'projects' && pathParts[3]) {
+      module = pathParts[3]
+    }
+  }
+
   const dispatch = useAppDispatch()
+  const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
-  const { isLoading, isError, isUninitialized, refetch } = useGetProjectQuery(
-    { projectName: projectName || '' },
-    { skip: !projectName },
-  )
 
   const {
     data: addonsData = [],
     isLoading: addonsLoading,
     isError: addonsIsError,
-    refetch: refetchAddons,
-    isUninitialized: addonsIsUninitialized,
   } = useGetProjectAddonsQuery({}, { skip: !projectName })
 
   // find out if and what version of the review addon is installed
@@ -103,13 +110,6 @@ const ProjectPage = () => {
     }
   }, [addonsLoading, addonsIsError, addonsData, projectName, dispatch])
 
-  const loadProjectData = () => {
-    if (!isUninitialized && !addonsIsUninitialized && !isLoading && !addonsLoading) {
-      refetch()
-      refetchAddons()
-    }
-  }
-
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
@@ -123,7 +123,7 @@ const ProjectPage = () => {
   }
 
   // get remote project module pages
-  const links: NavLink[] = useMemo(
+  const links: NavLinkItem[] = useMemo(
     () => [
       {
         name: 'Overview',
@@ -144,6 +144,15 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/browser`,
         module: 'browser',
         uriSync: true,
+        deprecated: true,
+        enabled: frontendFlags.includes(BROWSER_FLAG),
+      },
+      {
+        name: 'Products',
+        path: `/projects/${projectName}/products`,
+        module: 'products',
+        viewType: 'versions',
+        uriSync: true,
       },
       {
         name: 'Lists',
@@ -156,12 +165,6 @@ const ProjectPage = () => {
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
         viewType: 'reviews',
-      },
-      {
-        name: 'Scheduler',
-        path: `/projects/${projectName}/scheduler`,
-        module: 'scheduler',
-        enabled: matchedAddons?.get('planner') === '0.1.0-dev', // for dev purposes, remove when planner is released out of beta
       },
       {
         name: 'Reports',
@@ -177,9 +180,10 @@ const ProjectPage = () => {
         uriSync: true,
       },
       ...remotePages.map((remote) => ({
-        name: remote.name,
+        name: remote.name || remote.module,
         module: remote.module,
         path: `/projects/${projectName}/${remote.module}`,
+        viewType: remote.viewType,
       })),
       ...addonsData
         .filter((addon) => {
@@ -217,57 +221,46 @@ const ProjectPage = () => {
 
   const title = useTitle(module, links, projectName || 'AYON')
 
-  //
-  // Render page
-  //
-
-  if (isLoading || !projectName || addonsLoading || isLoadingModules) {
-    return <LoadingPage />
-  }
-
-  // error
-  if (isError) {
-    setTimeout(() => {
-      navigate('/')
-    }, 1500)
-    return <div className="page">Project Not Found, Redirecting...</div>
-  }
+  const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
+  const isAddon = !!addonName // Check if we're on an addon page
+  useEffect(() => {
+    trackCurrentTab(tab, isAddon)
+  }, [tab, isAddon, trackCurrentTab])
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
+    let component: JSX.Element | null = <div>Module Not Found</div>,
+      viewType = activeLink?.viewType
+
+    const foundAddon = addonsData?.find((item) => item.name === addonName)
+    const foundRemotePage = remotePages.find((item) => item.module === module)
+
     if (module === 'overview') {
-      return <ProjectOverviewPage />
-    }
-    if (module === 'tasks') {
-      return <TasksProgressPage />
-    }
-    if (module === 'browser') {
-      return <BrowserPage projectName={projectName} />
-    }
-    if (module === 'lists') {
-      return <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
-    }
-    if (module === 'reviews') {
-      return (
+      component = <ProjectOverviewPage />
+    } else if (module === 'tasks') {
+      component = <TasksProgressPage />
+    } else if (module === 'browser') {
+      if (!frontendFlags.includes(BROWSER_FLAG)) {
+        component = <Navigate to={`/projects/${projectName}/overview`} />
+      }
+      component = <BrowserPage projectName={projectName} />
+    } else if (module === 'products') {
+      component = <VersionsProductsPage projectName={projectName} />
+    } else if (module === 'lists') {
+      component = <ProjectListsPage projectName={projectName} entityListTypes={['generic']} />
+    } else if (module === 'reviews') {
+      component = (
         <ProjectReviewsPage
           projectName={projectName}
           isLoadingAccess={isLoadingAddons}
           hasReviewAddon={!!matchedAddons.has('review')}
         />
       )
-    }
-    if (module === 'workfiles') {
-      return <WorkfilesPage />
-    }
-    if (module === 'scheduler') {
-      return <SchedulerPage />
-    }
-    if (module === 'reports') {
-      return <ReportsPage />
-    }
-
-    const foundAddon = addonsData?.find((item) => item.name === addonName)
-    if (foundAddon) {
-      return (
+    } else if (module === 'workfiles') {
+      component = <WorkfilesPage />
+    } else if (module === 'reports') {
+      component = <ReportsPage projectName={projectName} />
+    } else if (foundAddon) {
+      component = (
         <ProjectAddon
           addonName={addonName}
           addonVersion={foundAddon.version}
@@ -275,38 +268,68 @@ const ProjectPage = () => {
           addonTitle={foundAddon.title}
         />
       )
-    }
-
-    const foundRemotePage = remotePages.find((item) => item.module === module)
-    if (foundRemotePage) {
-      const RemotePage = foundRemotePage.component
-      return (
-        <RemotePage
-          router={{
-            ...{ useParams, useNavigate, useLocation, useSearchParams },
-          }}
-          projectName={projectName}
-        />
+    } else if (foundRemotePage) {
+      viewType = foundRemotePage.viewType
+      component = (
+        // this gets wrapped in ViewsProvider for addons to use views
+        <main>
+          <ProjectPageRemote
+            Component={foundRemotePage.component}
+            slicer={foundRemotePage.slicer}
+            projectName={projectName}
+            key={foundRemotePage.id}
+          />
+        </main>
       )
+    } else {
+      console.log('addon not found, redirecting to overview')
+      // Fallback to versions page if no addon matches addonName
+      component = null
     }
 
-    // Fallback to browser page if no addon matches addonName
-    return <Navigate to={`/projects/${projectName}/overview`} />
+    return { component, viewType }
   }
 
-  const child = getPageByModuleAndAddonData(module, addonName)
+  const page = getPageByModuleAndAddonData(module, addonName)
 
   const handleNewVersionUploaded = (productId: string, versionId: string) => {
-    // focus the new version in the browser
+    // focus the new version in the versions
     dispatch(productSelected({ products: [productId], versions: [versionId] }))
   }
 
-  if (isGuest) {
+  // loading
+  const loadingAll = isLoading || !projectName || addonsLoading || isLoadingModules
+
+  // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
+  useEffect(() => {
+    let timeoutId: any
+    if (!loadingAll && !page.component) {
+      timeoutId = setTimeout(() => {
+        navigate(`/projects/${projectName}/overview`)
+      }, 5000)
+    }
+
+    return () => clearTimeout(timeoutId)
+  }, [loadingAll, page.component, navigate, projectName])
+
+  if (loadingAll) {
+    return <LoadingPage />
+  }
+
+  // error
+  if (error) {
+    setTimeout(() => {
+      navigate('/')
+    }, 1500)
+    return <div className="page">Project Not Found, Redirecting...</div>
+  }
+
+  if (uiExposureLevel >= 500) {
     return <GuestUserPageLocked />
   }
 
   return (
-    <>
+    <ProjectContextProvider projectName={projectName}>
       <DocumentTitle title={title} />
       <Dialog
         header="Project Context"
@@ -317,7 +340,6 @@ const ProjectPage = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
-      {/* @ts-expect-error - AppNavLinks is jsx */}
       <AppNavLinks links={links} currentModule={module} projectName={projectName} />
       <VersionUploadProvider
         projectName={projectName}
@@ -326,21 +348,30 @@ const ProjectPage = () => {
       >
         <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
           <SlicerProvider>
-            <ViewsProvider
-              viewType={activeLink?.viewType}
-              projectName={projectName}
-              dispatch={dispatch}
-            >
-              <Views />
-              {child}
-            </ViewsProvider>
+            <WithViews viewType={page.viewType} projectName={projectName}>
+              {page.component}
+            </WithViews>
           </SlicerProvider>
           <NewListFromContext />
         </EntityListsProvider>
         <UploadVersionDialog />
       </VersionUploadProvider>
-      <ProjectPubSub projectName={projectName} onReload={loadProjectData} />
-    </>
+    </ProjectContextProvider>
+  )
+}
+
+const ProjectPage = () => {
+  const { projectName } = useParams()
+
+  // umm... projectName is required
+  if (!projectName) return <Navigate to="/" />
+
+  return (
+    <ProjectContextProvider projectName={projectName}>
+      <ProjectFoldersContextProvider projectName={projectName}>
+        <ProjectPageInner />
+      </ProjectFoldersContextProvider>
+    </ProjectContextProvider>
   )
 }
 

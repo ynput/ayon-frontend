@@ -1,10 +1,7 @@
 import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
 import { registerRemotes } from '@module-federation/enhanced/runtime'
-import {
-  FrontendModuleListItem,
-  useListFrontendModulesQuery,
-  useGetSiteInfoQuery,
-} from '@shared/api'
+import { FrontendModuleListItem, useListFrontendModulesQuery } from '@shared/api'
+import { useGlobalContext } from './GlobalContext'
 
 type Module = {
   remote: string
@@ -36,10 +33,10 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     skip,
   })
 
-  const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery(
-    { full: true },
-    { skip },
-  )
+  const {
+    siteInfo,
+    isLoading: { siteInfo: isLoadingInfo },
+  } = useGlobalContext()
 
   const [remotesInitialized, setRemotesInitialized] = useState(false)
 
@@ -75,8 +72,8 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
         alias: r.remote,
         entry: `/addons/${r.addon || r.remote}/${r.version}/frontend/modules/${
           r.remote
-        }/remoteEntry.js?server=${info?.releaseInfo?.version || info?.releaseInfo}-${
-          info?.releaseInfo?.buildDate
+        }/remoteEntry.js?server=${siteInfo?.releaseInfo?.version || siteInfo?.releaseInfo}-${
+          siteInfo?.releaseInfo?.buildDate
         }-${new Date().getTime()}`,
         type: 'module',
       })),

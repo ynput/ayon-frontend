@@ -1,4 +1,5 @@
 import compare from 'semver/functions/compare'
+import { valid } from 'semver'
 
 export const transformAddonsWithBundles = (addons = [], bundles = []) => {
   const result = new Map()
@@ -100,6 +101,24 @@ export const transformVersionsTable = (data, addons = [], deletedVersions) => {
   const versionSort = (sortOrder) => (a, b) => {
     const aVersion = a.version.split(' ')[1]
     const bVersion = b.version.split(' ')[1]
+    const fallbackCompare = () =>
+      sortOrder === 1 ? a.version.localeCompare(b.version) : b.version.localeCompare(a.version)
+
+    // check if either version is null/undefined
+    if (!aVersion || !bVersion) {
+      return fallbackCompare()
+    }
+
+    // check the versions are valid before comparing
+    if (!valid(aVersion) || !valid(bVersion)) {
+      return fallbackCompare()
+    }
+
+    // Check if both versions are valid semver before comparing
+    if (compare(aVersion, aVersion) !== 0 || compare(bVersion, bVersion) !== 0) {
+      return fallbackCompare()
+    }
+
     const compareResult = compare(aVersion, bVersion)
     return sortOrder === 1 ? compareResult : -1 * compareResult
   }

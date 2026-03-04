@@ -7,6 +7,7 @@ import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityConte
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { useGlobalContext } from '@shared/context'
 
 export const sortEntityLinksByPath = (links: LinkEntity[]) => {
   return [...links].sort((a, b) => {
@@ -61,6 +62,9 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   onChange: _onChange, // not used in this widget
   onCancelEdit,
 }) => {
+  const { user } = useGlobalContext()
+  const isManager = user?.data?.isAdmin || user?.data?.isManager
+
   // Try to get the contexts, but they might not exist in all environments
   let setSelectedEntity:
     | ((entity: { entityId: string; entityType: 'folder' | 'task' }) => void)
@@ -115,8 +119,13 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
       <Chips
         values={
           sortedLinks.map((v) => ({
-            label: v.label,
-            tooltip: v.parents.join('/') + '/' + v.label,
+            label: v.isRestricted ? (isManager ? 'Unknown' : 'Restricted') : v.label,
+            tooltip: v.isRestricted
+              ? isManager
+                ? 'Unknown Link - Entity not found'
+                : 'Access Restricted - Insufficient Permissions to Entity'
+              : v.parents.join('/') + '/' + v.label,
+            icon: v.isRestricted ? (isManager ? 'help' : 'lock') : undefined,
           })) || []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}

@@ -4,6 +4,7 @@ query GetTasksList(
   $folderIds: [String!]
   $taskIds: [String!]
   $filter: String
+  $folderFilter: String
   $search: String
   $after: String
   $first: Int
@@ -15,6 +16,7 @@ query GetTasksList(
     name
     tasks(
       filter: $filter
+      folderFilter: $folderFilter
       search: $search
       folderIds: $folderIds
       after: $after

@@ -14,4 +14,7 @@ fragment TaskPropsFragment on TaskNode {
   allAttrib
   hasReviewables
   parents
+  subtasks {
+    ...SubTaskFragment
+  }
 }

@@ -1,8 +1,7 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { FC, ReactNode } from 'react'
+import { FC, Fragment, ReactNode } from 'react'
 import styled from 'styled-components'
 import { SettingField, useSettingsPanel } from '@shared/context'
-import RowHeightSettings from '@shared/components/ProjectTableSettings/RowHeightSettings'
 
 // Side panel styled components
 const SidePanel = styled.div<{ open: boolean }>`
@@ -26,6 +25,7 @@ const PanelHeader = styled.div`
   h3 {
     margin-left: 4px;
     padding: 0;
+    white-space: nowrap;
   }
 `
 
@@ -65,7 +65,7 @@ export const SettingOption = styled(Button)`
 
 export interface SettingConfig {
   id: SettingField
-  title: string
+  title?: string
   component: ReactNode
   icon?: string
   preview?: string | number
@@ -73,9 +73,10 @@ export interface SettingConfig {
 
 export interface SettingsPanelProps {
   settings: SettingConfig[]
+  order?: string[]
 }
 
-export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
+export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
   const { isPanelOpen, selectedSetting, closePanel, backToMainMenu, selectSetting } =
     useSettingsPanel()
 
@@ -85,23 +86,40 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
     return setting?.title || 'Settings'
   }
 
+  const sortedSettings = order
+    ? settings.toSorted((a, b) => {
+        const aIndex = a.id ? order.indexOf(a.id) : -1
+        const bIndex = b.id ? order.indexOf(b.id) : -1
+        if (aIndex === -1 && bIndex === -1) return 0
+        if (aIndex === -1) return 1
+        if (bIndex === -1) return -1
+        return aIndex - bIndex
+      })
+    : settings
+
   const renderSettingContent = () => {
     if (!selectedSetting) {
       // Render main menu
       return (
         <>
-          {settings.map((setting) => (
-            <SettingOption
-              key={setting.id}
-              onClick={() => selectSetting(setting.id)}
-              variant="text"
-            >
-              {setting.icon && <Icon icon={setting.icon} />}
-              <span className="title">{setting.title}</span>
-              {!!setting.preview?.toString() && <span className="preview">{setting.preview}</span>}
-              <Icon icon="chevron_right" className="arrow" />
-            </SettingOption>
-          ))}
+          {sortedSettings.map((setting, i) =>
+            setting.title ? (
+              <SettingOption
+                key={setting.id}
+                onClick={() => selectSetting(setting.id as string)}
+                variant="text"
+              >
+                {setting.icon && <Icon icon={setting.icon} />}
+                <span className="title">{setting.title}</span>
+                {!!setting.preview?.toString() && (
+                  <span className="preview">{setting.preview}</span>
+                )}
+                <Icon icon="chevron_right" className="arrow" />
+              </SettingOption>
+            ) : (
+              <Fragment key={setting.id}>{setting.component}</Fragment>
+            ),
+          )}
         </>
       )
     }
@@ -113,16 +131,13 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings }) => {
   return (
     <SidePanel open={isPanelOpen}>
       <PanelHeader>
-        {selectedSetting && settings.length > 1 && (
+        {selectedSetting && (
           <ToolButton variant="text" icon="arrow_back" onClick={backToMainMenu} />
         )}
         <PanelTitle>{getPanelTitle()}</PanelTitle>
         <ToolButton variant="text" icon="close" onClick={closePanel} />
       </PanelHeader>
-      <PanelContent>
-        {renderSettingContent()}
-        <RowHeightSettings />
-      </PanelContent>
+      <PanelContent>{renderSettingContent()}</PanelContent>
     </SidePanel>
   )
 }

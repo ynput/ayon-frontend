@@ -66,10 +66,10 @@ function generateOutputFiles(filterTags: string[] = []) {
 
       // skip if it's an addon endpoint (with a version)
       if (tag.match(/^[a-z]+[0-9]+.*$/i) && !filterTags.includes(tag)) continue
-      console.log(operation.operationId, operationId)
 
       // Skip if filtering by tags and this tag is not included
       if (filterTags.length > 0 && !filterTags.includes(tag)) continue
+      console.log(operation.operationId, operationId)
 
       // Initialize tag array if it doesn't exist
       if (!endpointsByTag[tag]) {

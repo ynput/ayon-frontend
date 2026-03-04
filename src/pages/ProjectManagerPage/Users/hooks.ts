@@ -1,10 +1,11 @@
 import { $Any } from '@types'
 import { useState } from 'react'
 import { SelectionStatus } from './types'
-import { useSetFrontendPreferencesMutation, useGetCurrentUserQuery } from '@shared/api'
+import { useSetFrontendPreferencesMutation } from '@shared/api'
 import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
 import { useGetProjectsAccessQuery } from '@queries/accessGroups/getAccessGroups'
 import { Filter } from '@ynput/ayon-react-components'
+import { useGlobalContext } from '@shared/context'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
@@ -102,7 +103,7 @@ const useProjectAccessGroupData = (selectedProject: string) => {
 const useUserPageFilters = (): [filters: Filter[], setFilters: (value: Filter[]) => void] => {
   const pageId = 'project.settings.user.access_groups'
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
-  const { data: user } = useGetCurrentUserQuery()
+  const { user } = useGlobalContext()
   const userName = user?.name as string
   const { data: { frontendPreferences = {} } = {} } = user || {}
   const frontendPreferencesFilters: {
@@ -150,7 +151,7 @@ const useUserPreferencesExpandedPanels = (): [
 ] => {
   const pageId = 'project.settings.user.access_groups'
   const [updateUserPreferences] = useSetFrontendPreferencesMutation()
-  const { data: user } = useGetCurrentUserQuery()
+  const { user } = useGlobalContext()
   const userName = user?.name as string
   const { data: { frontendPreferences = {} } = {} } = user || {}
   const pageExpandedAccessGroups: {

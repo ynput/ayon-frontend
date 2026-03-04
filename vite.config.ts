@@ -77,12 +77,24 @@ export default ({ mode }) => {
             singleton: true,
             requiredVersion: dependencies['react-dom'],
           },
+          '@ynput/ayon-react-components': {
+            singleton: true,
+          },
         },
       }),
       react(),
     ],
     build: {
       target: 'chrome89',
+      // Disable module preload to prevent hardcoded URLs
+      modulePreload: false,
+      // Use hash for better cache invalidation
+      rollupOptions: {
+        output: {
+          // Ensure chunks don't have hardcoded base URLs
+          manualChunks: undefined,
+        },
+      },
     },
     resolve: {
       alias: [

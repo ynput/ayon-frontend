@@ -296,6 +296,7 @@ export type UserPoolModel = {
   exp: number
   max: number
   used: number
+  meta?: object
 }
 export type ApiKeyModel = {
   id: string
@@ -334,6 +335,7 @@ export type UserAttribModel = {
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
+  uiExposureLevel?: number
   attrib?: UserAttribModel
   data?: Record<string, any>
   /** Whether the user is active */
@@ -389,6 +391,14 @@ export type AttributeWriteAccessList = {
   attributes?: string[]
   fields?: string[]
 }
+export type ActionsAccessList = {
+  enabled?: boolean
+  actions?: string[]
+}
+export type EntityLinksAccessList = {
+  enabled?: boolean
+  link_types?: string[]
+}
 export type EndpointsAccessList = {
   enabled?: boolean
   endpoints?: string[]
@@ -414,6 +424,10 @@ export type Permissions = {
   attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
   attrib_write?: AttributeWriteAccessList
+  /** Whitelist actions a user can perform */
+  actions?: ActionsAccessList
+  /** Whitelist link types a user can create between entities */
+  links?: EntityLinksAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
   advanced?: ProjectAdvancedPermissions

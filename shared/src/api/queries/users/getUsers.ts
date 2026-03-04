@@ -1,4 +1,5 @@
-import { gqlApi, usersApi } from '@shared/api/generated'
+import { GetCurrentUserApiResponse, gqlApi, usersApi } from '@shared/api/generated'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { parseAllAttribs } from '@shared/api'
 import {
   GetActiveUsersCountQuery,
@@ -82,7 +83,18 @@ query Assignees($projectName: String) {
 }
 }`
 
-const enhancedApi = usersApi.enhanceEndpoints({
+interface GetCurrentUserResult extends GetCurrentUserApiResponse {
+  uiExposureLevel: number
+}
+
+type RestDefinitions = DefinitionsFromApi<typeof usersApi>
+type RestTagTypes = TagTypesFromApi<typeof usersApi>
+// update the definitions to include the new types
+type RestUpdatedDefinitions = Omit<RestDefinitions, 'getCurrentUser'> & {
+  getCurrentUser: OverrideResultType<RestDefinitions['getCurrentUser'], GetCurrentUserResult>
+}
+
+const enhancedApi = usersApi.enhanceEndpoints<RestTagTypes, RestUpdatedDefinitions>({
   endpoints: {
     getCurrentUser: {
       providesTags: [{ type: 'user', id: 'LIST' }],
@@ -115,7 +127,7 @@ const injectedApi = gqlApi.injectEndpoints({
           throw new Error(res.errors[0].message)
         }
 
-        return res?.data?.users.edges.map((e: any) => ({
+        return res?.data?.users.edges.filter((e:any) => e.node.name !== 'CloudServiceWorker').map((e: any) => ({
           ...e.node,
           self: e.node.name === selfName,
           avatarUrl: `/api/users/${e.node.name}/avatar`,
@@ -188,7 +200,6 @@ export type Assignees = {
   updatedAt: AssigneeNode['updatedAt']
 }[]
 
-import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
 // update the definitions to include the new types

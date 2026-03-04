@@ -7,6 +7,9 @@ import { QueryFilter, QueryCondition } from '../types/operations'
 interface UseQueryFiltersProps {
   queryFilters: QueryFilter
   sliceFilter?: Filter | null
+  config?: {
+    searchKey?: string
+  }
 }
 
 interface QueryFiltersResult {
@@ -20,6 +23,7 @@ interface QueryFiltersResult {
 export const useQueryFilters = ({
   queryFilters,
   sliceFilter,
+  config: { searchKey } = {},
 }: UseQueryFiltersProps): QueryFiltersResult => {
   return useMemo(() => {
     let combinedQueryFilter = queryFilters
@@ -42,20 +46,49 @@ export const useQueryFilters = ({
     // This excludes slice filters, except for hierarchy when slice type changes
     let displayQueryFilter = queryFilters
 
-    //  extract text search conditions, remove them from combinedQueryFilter and merge to fuzzySearchFilter
+    //  extract text search and name filter conditions, remove them from combinedQueryFilter and merge to fuzzySearchFilter
     let fuzzySearchFilter = ''
 
     if (combinedQueryFilter?.conditions?.length) {
       const searchValues: string[] = []
 
       const remainingConditions = combinedQueryFilter.conditions.filter((condition) => {
-        if ((condition as QueryCondition).key === SEARCH_FILTER_ID) {
-          const val = (condition as QueryCondition).value
+        const queryCondition = condition as QueryCondition
+
+        // Extract global text search filter
+        if (queryCondition.key === SEARCH_FILTER_ID) {
+          const val = queryCondition.value
           if (val !== undefined && val !== null && String(val).trim() !== '') {
             searchValues.push(String(val))
           }
           return false // remove search condition
         }
+
+        // Extract name filter (can be scoped like 'task_name' or 'folder_name' or just 'name')
+        if (
+          (searchKey && queryCondition.key === searchKey) ||
+          queryCondition.key?.endsWith('_' + 'searchKey')
+        ) {
+          const val = queryCondition.value
+          // Name filters use 'like' operator with wildcards, extract the actual search term
+          if (val !== undefined && val !== null) {
+            if (Array.isArray(val)) {
+              val.forEach((v) => {
+                const searchTerm = String(v).replace(/%/g, '').trim()
+                if (searchTerm) {
+                  searchValues.push(searchTerm)
+                }
+              })
+            } else {
+              const searchTerm = String(val).replace(/%/g, '').trim()
+              if (searchTerm) {
+                searchValues.push(searchTerm)
+              }
+            }
+          }
+          return false // remove name condition
+        }
+
         return true
       })
 

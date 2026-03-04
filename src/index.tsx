@@ -4,7 +4,14 @@ import ReactDOM from 'react-dom/client'
 import store, { useAppDispatch, useAppSelector } from '@state/store'
 import { Provider as ReduxProvider } from 'react-redux'
 import { ToastContainer, Flip } from 'react-toastify'
+import { init } from '@module-federation/enhanced/runtime'
 
+// Initialize Module Federation runtime
+// Use dynamic origin based on current window.location for production deployments
+init({
+  name: 'host',
+  remotes: [],
+})
 import App from './app'
 
 // styles
@@ -14,6 +21,7 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 import './styles/loadingShimmer.scss'
 import './styles/index.scss'
+import 'react-perfect-scrollbar/dist/css/styles.css'
 
 import short from 'short-uuid'
 import { SocketProvider } from '@shared/context'
@@ -67,7 +75,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ReduxProvider store={store}>
       <SocketProviderWrapper>
-        <div id="root-header" />
+        <div id="root-header" className={import.meta.env.DEV ? 'DEV' : ''} />
         <App />
         <ToastContainer
           position="bottom-right"

@@ -115,7 +115,7 @@ export const EntityPath: FC<EntityPathProps> = ({
 
     // Reduce the segment's width by the difference
     const newWidth = `${finalSegmentRef.current.clientWidth - diff}px`
-    finalSegmentRef.current.style.width = newWidth
+    // finalSegmentRef.current.style.width = newWidth
   }, [maxSegments])
 
   // Check if there are fewer than or equal to maxSegments segments

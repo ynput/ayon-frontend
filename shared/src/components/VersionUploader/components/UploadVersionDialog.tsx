@@ -37,7 +37,7 @@ export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
     taskId,
     projectName,
     form,
-    version,
+    latestVersion,
     handleFormChange,
     handleFormSubmit,
     isSubmitting,
@@ -79,7 +79,7 @@ export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
     >
       <UploadVersionForm
         formData={form}
-        minVersion={version?.version}
+        minVersion={latestVersion}
         onChange={handleFormChange}
         onSubmit={handleFormSubmit}
         hidden={productId ? ['name', 'productType'] : []}

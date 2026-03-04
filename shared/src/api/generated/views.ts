@@ -27,6 +27,14 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getBaseView: build.query<GetBaseViewApiResponse, GetBaseViewApiArg>({
+      query: (queryArg) => ({
+        url: `/api/views/${queryArg.viewType}/base`,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
     getDefaultView: build.query<GetDefaultViewApiResponse, GetDefaultViewApiArg>({
       query: (queryArg) => ({
         url: `/api/views/${queryArg.viewType}/default`,
@@ -90,17 +98,38 @@ export type CreateViewApiArg = {
     | TaskProgressViewPostModel
     | ListsViewPostModel
     | ReviewsViewPostModel
+    | VersionsViewPostModel
+    | GenericViewPostModel
 }
-export type GetWorkingViewApiResponse =
-  /** status 200 Successful Response */
-  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
+export type GetWorkingViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
+  | GenericViewModel
 export type GetWorkingViewApiArg = {
   viewType: string
   projectName?: string
 }
-export type GetDefaultViewApiResponse =
-  /** status 200 Successful Response */
-  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
+export type GetBaseViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
+  | GenericViewModel
+export type GetBaseViewApiArg = {
+  viewType: string
+  projectName?: string
+}
+export type GetDefaultViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
+  | GenericViewModel
 export type GetDefaultViewApiArg = {
   viewType: string
   projectName?: string
@@ -111,9 +140,13 @@ export type SetDefaultViewApiArg = {
   projectName?: string
   setDefaultViewRequestModel: SetDefaultViewRequestModel
 }
-export type GetViewApiResponse =
-  /** status 200 Successful Response */
-  OverviewViewModel | TaskProgressViewModel | ListsViewModel | ReviewsViewModel
+export type GetViewApiResponse = /** status 200 Successful Response */
+  | OverviewViewModel
+  | TaskProgressViewModel
+  | ListsViewModel
+  | ReviewsViewModel
+  | VersionsViewModel
+  | GenericViewModel
 export type GetViewApiArg = {
   viewType: string
   viewId: string
@@ -135,6 +168,8 @@ export type UpdateViewApiArg = {
     | TaskProgressViewPatchModel
     | ListsViewPatchModel
     | ReviewsViewPatchModel
+    | VersionsViewPatchModel
+    | GenericViewPatchModel
 }
 export type ViewListItemModel = {
   /** Unique identifier for the view within the given scope. */
@@ -208,10 +243,13 @@ export type OverviewSettings = {
   showHierarchy?: boolean
   rowHeight?: number
   groupBy?: string
+  groupSortByDesc?: boolean
   showEmptyGroups?: boolean
   sortBy?: string
   sortDesc?: boolean
   filter?: QueryFilter
+  folderFilter?: QueryFilter
+  sliceType?: string
   columns?: ColumnItemModel[]
 }
 export type OverviewViewPostModel = {
@@ -222,9 +260,11 @@ export type OverviewViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: OverviewSettings
+  viewType?: 'overview'
 }
 export type TaskProgressSettings = {
   filter?: QueryFilter
+  sliceType?: string
   columns?: ColumnItemModel[]
 }
 export type TaskProgressViewPostModel = {
@@ -235,6 +275,7 @@ export type TaskProgressViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: TaskProgressSettings
+  viewType?: 'taskProgress'
 }
 export type ListsSettings = {
   rowHeight?: number
@@ -251,6 +292,7 @@ export type ListsViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: ListsSettings
+  viewType?: 'lists'
 }
 export type ReviewsSettings = {
   rowHeight?: number
@@ -267,6 +309,42 @@ export type ReviewsViewPostModel = {
   /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
   working?: boolean
   settings: ReviewsSettings
+  viewType?: 'reviews'
+}
+export type VersionsSettings = {
+  showProducts?: boolean
+  rowHeight?: number
+  showGrid?: boolean
+  gridHeight?: number
+  featuredVersionOrder?: string[]
+  slicerType?: string
+  groupBy?: string
+  groupSortByDesc?: boolean
+  showEmptyGroups?: boolean
+  sortBy?: string
+  sortDesc?: boolean
+  filter?: QueryFilter
+  columns?: ColumnItemModel[]
+}
+export type VersionsViewPostModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
+  settings: VersionsSettings
+  viewType?: 'versions'
+}
+export type GenericViewPostModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working?: boolean
+  settings: object
+  viewType: string
 }
 export type OverviewViewModel = {
   /** Unique identifier for the view within the given scope. */
@@ -344,6 +422,44 @@ export type ReviewsViewModel = {
   access: object
   viewType?: 'reviews'
 }
+export type VersionsViewModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Determines whether the view is only available for the given project or for all projects (studio). */
+  scope: 'project' | 'studio'
+  /** Name of the user who created the view. Owners have full control over the view,  */
+  owner: string
+  /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
+  visibility: 'public' | 'private'
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  accessLevel: number
+  settings: VersionsSettings
+  access: object
+  viewType?: 'versions'
+}
+export type GenericViewModel = {
+  /** Unique identifier for the view within the given scope. */
+  id?: string
+  /** Human-readable name of the view. */
+  label: string
+  /** Determines whether the view is only available for the given project or for all projects (studio). */
+  scope: 'project' | 'studio'
+  /** Name of the user who created the view. Owners have full control over the view,  */
+  owner: string
+  /** Visibility of the view. Public views are visible to all users, private views are only visible to the owner. */
+  visibility: 'public' | 'private'
+  /** Working view is a special type of the view that automatically stores the current view settings without explicitly saving them. Working views are always private and scoped to the project  */
+  working: boolean
+  position: number
+  accessLevel: number
+  settings: object
+  access: object
+  viewType: string
+}
 export type SetDefaultViewRequestModel = {
   viewId: string
 }
@@ -351,19 +467,35 @@ export type OverviewViewPatchModel = {
   label?: string
   owner?: string
   settings?: OverviewSettings
+  viewType?: 'overview'
 }
 export type TaskProgressViewPatchModel = {
   label?: string
   owner?: string
   settings?: TaskProgressSettings
+  viewType?: 'taskProgress'
 }
 export type ListsViewPatchModel = {
   label?: string
   owner?: string
   settings?: ListsSettings
+  viewType?: 'lists'
 }
 export type ReviewsViewPatchModel = {
   label?: string
   owner?: string
   settings?: ReviewsSettings
+  viewType?: 'reviews'
+}
+export type VersionsViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: VersionsSettings
+  viewType?: 'versions'
+}
+export type GenericViewPatchModel = {
+  label?: string
+  owner?: string
+  settings?: object
+  viewType: string
 }

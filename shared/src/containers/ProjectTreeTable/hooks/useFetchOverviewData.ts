@@ -1,17 +1,12 @@
 import {
-  useGetFolderListQuery,
   useGetGroupedTasksListQuery,
   useGetOverviewTasksByFoldersQuery,
-  useGetQueryTasksFoldersQuery,
+  useGetSearchFoldersQuery,
   useGetTasksListInfiniteInfiniteQuery,
 } from '@shared/api'
-import type {
-  FolderListItem,
-  GetGroupedTasksListArgs,
-  EntityGroup,
-  QueryTasksFoldersApiArg,
-  QueryFilter,
-} from '@shared/api'
+import type { FolderListItem, GetGroupedTasksListArgs, EntityGroup, QueryFilter } from '@shared/api'
+import { useGroupedPagination } from '@shared/hooks'
+import { getGroupByDataType } from '@shared/util'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
@@ -19,11 +14,17 @@ import { determineLoadingTaskFolders } from '../utils/loadingUtils'
 import { LoadingTasks } from '../types'
 import { TasksByFolderMap } from '../utils'
 import { TableGroupBy } from '../context'
-import { isGroupId } from '../hooks/useBuildGroupByTableData'
+import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
-import { ProjectTableModulesType } from './useProjectTableModules'
+import { ProjectTableModulesType } from '@shared/hooks'
 import { useGetEntityLinksQuery } from '@shared/api'
-import { useQueryArgumentChangeLoading } from '@shared/hooks'
+import { useProjectFoldersContext } from '@shared/context'
+
+type QueryFilterParams = {
+  filter: QueryFilter | undefined
+  filterString?: string
+  search?: string
+}
 
 type useFetchOverviewDataData = {
   foldersMap: FolderNodeMap
@@ -39,14 +40,12 @@ type useFetchOverviewDataData = {
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
-  queryFilters: {
-    filter: QueryFilter | undefined
-    filterString?: string
-    search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
-  } // filters from the filters bar or slicer (not hierarchy)
+  taskFilters: QueryFilterParams // filters for tasks
+  folderFilters: QueryFilterParams // filters for folders
   sorting: SortingState
   groupBy: TableGroupBy | undefined
   taskGroups: EntityGroup[]
+  taskGroupsCount?: number // override for number of items per group
   expanded: ExpandedState
   showHierarchy: boolean
   attribFields: ProjectTableAttribute[]
@@ -56,10 +55,12 @@ type Params = {
 export const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
-  queryFilters,
+  taskFilters,
+  folderFilters,
   sorting,
   groupBy,
   taskGroups = [],
+  taskGroupsCount,
   expanded,
   showHierarchy,
   attribFields,
@@ -68,20 +69,11 @@ export const useFetchOverviewData = ({
   const { getGroupQueries, isLoading: isLoadingModules } = modules
 
   const {
-    data: { folders = [] } = {},
-    isLoading,
-    isFetching: isFetchingFoldersRaw,
+    folders,
+    isLoading: isLoadingFolders,
     isUninitialized: isUninitializedFolders,
     refetch: refetchFolders,
-  } = useGetFolderListQuery(
-    { projectName: projectName || '', attrib: true },
-    { skip: !projectName },
-  )
-
-  const isFetchingFolders = useQueryArgumentChangeLoading(
-    { projectName: projectName || '' },
-    isFetchingFoldersRaw,
-  )
+  } = useProjectFoldersContext()
 
   // console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
@@ -98,13 +90,20 @@ export const useFetchOverviewData = ({
     {
       projectName,
       parentIds: expandedParentIds,
-      filter: queryFilters.filterString,
-      search: queryFilters.search,
+      filter: taskFilters.filterString,
+      folderFilter: folderFilters.filterString,
+      search: taskFilters.search,
     },
     { skip: !expandedParentIds.length || !showHierarchy },
   )
 
-  const skipFoldersByTaskFilter = !queryFilters.filterString || !folders.length || !showHierarchy
+  const skipFoldersByTaskFilter =
+    (!taskFilters.filterString &&
+      !folderFilters.filterString &&
+      !taskFilters.search &&
+      !folderFilters.search) ||
+    !folders.length ||
+    !showHierarchy
   // get folders that would be left if the filters were applied for tasks
   const {
     data: foldersByTaskFilter,
@@ -112,10 +111,15 @@ export const useFetchOverviewData = ({
     isFetching: isFetchingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
     refetch: refetchTasksFolders,
-  } = useGetQueryTasksFoldersQuery(
+  } = useGetSearchFoldersQuery(
     {
       projectName,
-      tasksFoldersQuery: { filter: queryFilters.filter, search: queryFilters.search },
+      folderSearchRequest: {
+        taskFilter: taskFilters.filter?.conditions?.length ? taskFilters.filter : undefined,
+        taskSearch: taskFilters.search,
+        folderFilter: folderFilters.filter?.conditions?.length ? folderFilters.filter : undefined,
+        folderSearch: folderFilters.search,
+      },
     },
     {
       skip: skipFoldersByTaskFilter,
@@ -296,8 +300,9 @@ export const useFetchOverviewData = ({
   } = useGetTasksListInfiniteInfiniteQuery(
     {
       projectName,
-      filter: queryFilters.filterString,
-      search: queryFilters.search,
+      filter: taskFilters.filterString,
+      folderFilter: folderFilters.filterString,
+      search: taskFilters.search,
       folderIds: tasksFolderIdsParams,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
@@ -317,63 +322,50 @@ export const useFetchOverviewData = ({
     return tasksListInfiniteData.pages.flatMap((page) => page.tasks || [])
   }, [tasksListInfiniteData?.pages])
 
-  const initGroupPageCounts = useMemo(() => {
-    return taskGroups.reduce((acc, group) => {
-      acc[group.value] = 1 // initialize each group with 1 count
-      return acc
-    }, {} as Record<string, number>)
-  }, [taskGroups])
-  const [groupPageCounts, setGroupPageCounts] = useState<Record<string, number>>({})
-
-  // when initGroupPageCounts changes, set it to groupPageCounts
-  useEffect(() => {
-    const hasInitData = Object.keys(initGroupPageCounts).length > 0
-    const hasCurrentData = Object.keys(groupPageCounts).length > 0
-
-    if (hasInitData && !hasCurrentData) {
-      setGroupPageCounts(initGroupPageCounts)
-    }
-  }, [initGroupPageCounts])
+  const { pageCounts: groupPageCounts, incrementPageCount } = useGroupedPagination({
+    groups: taskGroups,
+  })
 
   // for grouped tasks, we fetch all tasks for each group
   // we do this by building a list of groups with filters for that group
+  const groupByDataType = getGroupByDataType(groupBy, attribFields)
 
-  // get the data type for the groupBy
-  const groupByDataType = useMemo(() => {
-    if (!groupBy?.id) return 'string'
+  // get expanded group values from the expanded state
+  // group IDs are formatted as `_GROUP_<value>` so we extract the values
+  const expandedGroupValues = useMemo(() => {
+    return Object.entries(expanded)
+      .filter(([, isExpanded]) => isExpanded)
+      .filter(([id]) => isGroupId(id))
+      .map(([id]) => id.slice(GROUP_BY_ID.length))
+  }, [expanded])
 
-    const groupById = groupBy.id
-
-    // Handle special cases for built-in group types
-    if (groupById === 'assignees' || groupById === 'tags') {
-      return 'list_of_strings'
-    }
-
-    // Handle attribute-based grouping (format: "attrib.attributeName")
-    if (groupById.startsWith('attrib.')) {
-      const attributeName = groupById.split('.')[1]
-      const attribute = attribFields.find((field) => field.name === attributeName)
-      return attribute?.data?.type || 'string'
-    }
-
-    // Default fallback
-    return 'string'
-  }, [groupBy?.id, attribFields])
-
+  // get group queries from powerpack, filtered to only include expanded groups
   const groupQueries: GetGroupedTasksListArgs['groups'] = useMemo(() => {
-    return groupBy
-      ? getGroupQueries?.({
-          taskGroups,
-          filters: queryFilters.filter,
-          groupBy,
-          groupPageCounts,
-        }) ?? []
-      : []
-  }, [groupBy, taskGroups, groupPageCounts, groupByDataType, queryFilters.filter, getGroupQueries])
+    if (!groupBy) return []
+
+    const allGroupQueries =
+      getGroupQueries?.({
+        groups: taskGroups,
+        taskGroups, // deprecated, but keep for backward compatibility
+        filters: taskFilters.filter,
+        groupBy,
+        groupPageCounts,
+      }) ?? []
+
+    // Only fetch tasks for groups that are expanded
+    return allGroupQueries.filter((group) => expandedGroupValues.includes(group.value))
+  }, [
+    groupBy,
+    taskGroups,
+    groupPageCounts,
+    groupByDataType,
+    taskFilters.filter,
+    getGroupQueries,
+    expandedGroupValues,
+  ])
 
   const {
     data: { tasks: groupTasks = [] } = {},
-    isFetching: isFetchingGroups,
     isUninitialized: isUninitializedGroupedTasks,
     refetch: refetchGroupedTasks,
   } = useGetGroupedTasksListQuery(
@@ -382,8 +374,10 @@ export const useFetchOverviewData = ({
       groups: groupQueries,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
-      search: queryFilters.search,
+      search: taskFilters.search,
+      folderFilter: folderFilters.filterString,
       folderIds: tasksFolderIdsParams,
+      groupCount: taskGroupsCount,
     },
     {
       skip: !groupBy || !groupQueries.length || isLoadingModules,
@@ -416,12 +410,7 @@ export const useFetchOverviewData = ({
     if (groupBy) {
       if (group && group in groupPageCounts) {
         console.log('fetching next page for group:', group)
-        // fetch next page for a specific group by increasing the count in groupPageCounts
-        setGroupPageCounts((prevCounts) => {
-          const newCounts = { ...prevCounts }
-          newCounts[group] = (newCounts[group] || 1) + 1 // increment the count for this group
-          return newCounts
-        })
+        incrementPageCount(group)
       }
     } else if (hasNextPage) {
       console.log('fetching next page')
@@ -490,12 +479,7 @@ export const useFetchOverviewData = ({
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     isLoadingAll:
-      isLoading ||
-      isFetchingFolders ||
-      isLoadingTasksList ||
-      isFetchingTasksFolders ||
-      isFetchingGroups ||
-      isLoadingModules, // these all show a full loading state
+      isLoadingFolders || isLoadingTasksList || isFetchingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,

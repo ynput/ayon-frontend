@@ -307,7 +307,8 @@ const UserDetail = ({
         } else if (field === 'isDeveloper') {
           data.isDeveloper = formData.isDeveloper && formData.userLevel === 'admin'
         } else if (singleUserEdit && attributes.find((a) => a.name === field)) {
-          attrib[field] = formData[field]
+          const value = formData[field]
+          attrib[field] = typeof value === 'string' ? value.trim() : value
         } else if (field === 'disablePasswordLogin') {
           data.disablePasswordLogin = formData.disablePasswordLogin
         }
@@ -338,9 +339,8 @@ const UserDetail = ({
         type: toast.TYPE.SUCCESS,
       })
     } catch (error) {
-      console.error(error)
       toast.update(toastId.current, {
-        render: `Error updating ${usersString}.`,
+        render: `Error updating ${usersString}: ${error?.detail}`,
         type: toast.TYPE.ERROR,
       })
     }

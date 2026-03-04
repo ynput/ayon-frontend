@@ -4,12 +4,13 @@ import clsx from 'clsx'
 import { EntityCard } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util'
 import type { Status } from '@shared/api'
+import { useProjectContext } from '@shared/context'
 
 interface FolderBodyProps {
   folder: {
     id: string
     name: string
-    icon?: string | null
+    folderType?: string
     status?: Status
     updatedAt: string
   }
@@ -30,6 +31,11 @@ export const FolderBody: FC<FolderBodyProps> = ({
   onFolderOpen,
   onSpaceKey,
 }) => {
+  const { folderTypes } = useProjectContext()
+  const folderTypeData = folderTypes?.find((ft) => ft.name === folder.folderType)
+  const icon = folderTypeData?.icon ?? getEntityTypeIcon('folder')
+  const color = folderTypeData?.color
+
   const thumbnailUrl = `/api/projects/${projectName}/folders/${folder.id}/thumbnail?updatedAt=${folder.updatedAt}`
 
   // handle hitting enter or space on the cell
@@ -54,9 +60,10 @@ export const FolderBody: FC<FolderBodyProps> = ({
         <Styled.ContentWrapper className={clsx({ expanded: isExpanded })}>
           <EntityCard
             title={folder.name}
-            titleIcon={folder.icon ?? getEntityTypeIcon('folder')}
+            titleIcon={icon}
+            titleColor={color}
             imageUrl={thumbnailUrl}
-            imageIcon={folder.icon ?? getEntityTypeIcon('folder')}
+            imageIcon={icon}
             status={folder.status}
             onClick={() => onFolderOpen?.(folder.id)}
             isActive={isSelected}
@@ -68,7 +75,8 @@ export const FolderBody: FC<FolderBodyProps> = ({
             entityType="folder"
             projectName={projectName}
             entityUpdatedAt={folder.updatedAt}
-            icon={folder.icon}
+            icon={icon}
+            color={color}
             showBorder={false}
             src={thumbnailUrl}
             hoverIcon="expand_all"

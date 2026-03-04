@@ -4,37 +4,56 @@
 import { LinkEntity } from '@shared/components'
 import { getLinkKey } from '../buildTreeTableColumns'
 import { EntityLink } from '@shared/api'
-import { getEntityTypeIcon } from '@shared/util'
+import { getEntityColor, getEntityIcon, IconAnatomy } from '@shared/util/iconUtils'
 
 export type LinkId = string
 export type LinkValue = LinkEntity[]
 export type LinksTableData = Record<LinkId, LinkValue>
 
-type EntityAnatomy = {
-  name: string
-  icon?: string
-}
-
-type Anatomy = {
-  folderTypes: EntityAnatomy[]
-  productTypes: EntityAnatomy[]
-  taskTypes: EntityAnatomy[]
-}
-
 export const linksToTableData = (
   links: EntityLink[] | undefined,
   entityType: string,
-  anatomy: Anatomy,
+  anatomy: IconAnatomy,
 ): LinksTableData =>
   links?.reduce((acc, edge) => {
-    const { linkType, direction, entityType: linkEntityType, id, node } = edge
+    const { linkType, direction, entityType: linkEntityType, id, node, isRestricted } = edge
+
+    // Handle restricted links (node is null)
+    if (isRestricted || !node) {
+      const entityData: LinkEntity = {
+        label: '',
+        parents: [],
+        linkId: id,
+        entityId: '',
+        entityType: linkEntityType,
+        icon: getEntityIcon(linkEntityType, undefined, anatomy),
+        color: undefined,
+        isRestricted: true,
+      }
+
+      const linkTypeName = linkTypeToLinkName(linkType, entityType, linkEntityType, direction)
+      const tableId = getLinkKey({ name: linkTypeName }, direction)
+
+      if (!acc[tableId]) {
+        acc[tableId] = []
+      }
+
+      if (!acc[tableId].includes(entityData)) {
+        acc[tableId].push(entityData)
+      }
+
+      return acc
+    }
+
+    // Handle normal links
     const entityData: LinkEntity = {
-      label: node.label || node.name,
+      label: (node.label || node.name) as string,
       parents: node.parents,
       linkId: id,
-      entityId: node.id,
+      entityId: node.id as string,
       entityType: linkEntityType,
       icon: getEntityIcon(linkEntityType, node.subType, anatomy),
+      color: getEntityColor(linkEntityType, node.subType, anatomy),
     }
 
     // we must build the entity link type name based on the direction and entity types
@@ -65,25 +84,4 @@ const linkTypeToLinkName = (
   const firstType = direction === 'in' ? linkEntityType : baseEntityType
   const secondType = direction === 'in' ? baseEntityType : linkEntityType
   return `${linkType}|${firstType}|${secondType}`
-}
-
-export const getEntityIcon = (
-  entityType: string,
-  subType: string | undefined,
-  anatomy: Anatomy,
-) => {
-  switch (entityType) {
-    case 'folder':
-      return (
-        anatomy.folderTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('folder')
-      )
-    case 'product':
-      return (
-        anatomy.productTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('product')
-      )
-    case 'task':
-      return anatomy.taskTypes.find((a) => a.name === subType)?.icon || getEntityTypeIcon('task')
-    default:
-      return getEntityTypeIcon(entityType)
-  }
 }

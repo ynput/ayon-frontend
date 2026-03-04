@@ -1,19 +1,23 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router'
 
 interface MenuContextType {
   menuOpen: string | false
   setMenuOpen: (menuId: string | false) => void
   toggleMenuOpen: (menuId: string | false) => void
+  navigate: NavigateFunction
 }
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined)
 
 interface MenuProviderProps {
   children: ReactNode
+  useNavigate: typeof useNavigate
 }
 
-export const MenuProvider: React.FC<MenuProviderProps> = ({ children }) => {
+export const MenuProvider: React.FC<MenuProviderProps> = ({ children, useNavigate }) => {
   const [menuOpen, setMenuOpenState] = useState<string | false>(false)
+  const navigate = useNavigate()
 
   const setMenuOpen = (menuId: string | false) => {
     setMenuOpenState(menuId)
@@ -39,6 +43,7 @@ export const MenuProvider: React.FC<MenuProviderProps> = ({ children }) => {
     menuOpen,
     setMenuOpen,
     toggleMenuOpen,
+    navigate,
   }
 
   return <MenuContext.Provider value={value}>{children}</MenuContext.Provider>

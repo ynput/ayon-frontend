@@ -6,14 +6,16 @@ import { useUpdateEntityListItemMutation } from '@shared/api'
 import { useListsContext } from '../context'
 import type { OperationWithRowId } from '@shared/containers/ProjectTreeTable'
 import { toast } from 'react-toastify'
+import { useProjectContext } from '@shared/context'
 
 type Props = {
   updateEntities: ProjectTableQueriesProviderProps['updateEntities']
 }
 
 const useUpdateListItems = ({ updateEntities }: Props) => {
+  const { projectName } = useProjectContext()
   const { selectedList } = useListsContext()
-  const { projectName, listItemsMap } = useListItemsDataContext()
+  const { listItemsMap } = useListItemsDataContext()
   const { entityAttribFields } = useListsAttributesContext()
   const [updateEntityListItem] = useUpdateEntityListItemMutation()
 
@@ -62,7 +64,6 @@ const useUpdateListItems = ({ updateEntities }: Props) => {
             // check if the field is an entity attributes or custom attribute
             const isCustom = !entityAttribFields.includes(key)
             if (isCustom) {
-              listItemUpdate.ownAttrib = [...(listItemUpdate.ownAttrib || []), key]
             } else {
               entityUpdate['ownAttrib'] = [...(entityUpdate['ownAttrib'] || []), key]
             }

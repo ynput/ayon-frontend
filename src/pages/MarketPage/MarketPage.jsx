@@ -11,7 +11,6 @@ import {
   useLazyMarketAddonDetailQuery,
 } from '@queries/market/getMarket'
 import MarketAddonsList from './MarketAddonsList'
-import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './MarketDetails/AddonDetails'
 import { useListAddonsQuery } from '@shared/api'
 import { mergeAddonWithDownloaded } from './mergeAddonsData'
@@ -40,7 +39,6 @@ const placeholders = [...Array(20)].map((_, i) => ({
 }))
 
 const MarketPage = () => {
-  
   const dispatch = useAppDispatch()
   // GET ALL ADDONS IN MARKET
   const {

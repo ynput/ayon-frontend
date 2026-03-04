@@ -10,11 +10,12 @@ import {
   OperationResponseModel,
   EntityNaming,
 } from '@shared/api'
-import { useProjectDataContext, useProjectTableContext } from '@shared/containers/ProjectTreeTable'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable'
 import { EditorTaskNode, MatchingFolder } from '@shared/containers/ProjectTreeTable'
 import { parseAndFormatName } from '@shared/util'
-import { useSlicerContext } from './SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import { isEmpty } from 'lodash'
+import { useProjectContext } from '@shared/context'
 
 export type NewEntityType = 'folder' | 'task'
 
@@ -51,11 +52,11 @@ interface NewEntityProviderProps {
 }
 
 export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }) => {
-  const { findNonInheritedValues, projectName, attribFields, projectInfo, getEntityById } =
-    useProjectTableContext()
+  const { projectName, ...projectInfo } = useProjectContext()
+  const { findNonInheritedValues, attribFields, getEntityById } = useProjectTableContext()
   const { attrib: projectAttrib = {}, statuses } = projectInfo || {}
 
-  const { anatomy } = useProjectDataContext()
+  const { anatomy } = useProjectContext()
   const { entity_naming: config = { capitalization: 'lower', separator: '_' } } = anatomy as {
     entity_naming?: EntityNaming
   }
@@ -402,10 +403,10 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
       if (res?.success && res.operations) {
         return res.operations
       } else {
-        throw { data: { details: 'Failed to create new entity' } }
+        throw { data: { details: `${entityForm.subType} with the name: ${entityForm.label} already exists` } }
       }
     } catch (error: any) {
-      toast.error('Failed to create new entity')
+      toast.error(`${entityForm.subType || entityType} with the name: ${entityForm.label} already exists`)
       throw new Error(error?.data?.details)
     }
   }

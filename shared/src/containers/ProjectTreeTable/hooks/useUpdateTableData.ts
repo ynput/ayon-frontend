@@ -8,6 +8,26 @@ import { useProjectTableContext } from '../context/ProjectTableContext'
 import { OperationModel } from '../types/operations'
 import { PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
+import { useProjectContext } from '@shared/context'
+
+const getErrorMessage = (
+  errorCode: string | undefined,
+  entityType: string,
+  entityName: string,
+): string => {
+  switch (errorCode) {
+    case 'unique-violation':
+      return `${entityType} with the name "${entityName}" already exists`
+    case 'not-null-violation':
+      return `${entityType} "${entityName}" is missing required fields`
+    case 'foreign-key-violation':
+      return `${entityType} "${entityName}" references invalid data`
+    case 'integrity-constraint-violation':
+      return `${entityType} "${entityName}" violates data integrity rules`
+    default:
+      return `Failed to update ${entityType}: ${entityName}`
+  }
+}
 
 export type EntityUpdate = {
   rowId: string
@@ -41,17 +61,18 @@ export type UpdateTableEntity = (
   { includeSelection }: { includeSelection: boolean },
 ) => Promise<void>
 
-export type OperationWithRowId = OperationModel & { rowId: string; meta?: Record<string, any> }
+export type OperationWithRowId = OperationModel & { meta?: Record<string, any> }
 
 interface UseUpdateTableDataProps {
   pushHistory?: UseHistoryReturn['pushHistory']
+  removeHistoryEntries?: UseHistoryReturn['removeHistoryEntries']
 }
 
 const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
-  const { pushHistory } = props || {}
+  const { pushHistory, removeHistoryEntries } = props || {}
+  const { projectName } = useProjectContext()
   const {
     getEntityById,
-    projectName,
     getInheritedDependents,
     findInheritedValueFromAncestors,
     findNonInheritedValues,
@@ -65,7 +86,30 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       }
 
       // Filter out link updates - they should be handled by useUpdateTableLinks
-      const entityUpdates = entities.filter((e) => !e.isLink)
+      let entityUpdates = entities.filter((e) => !e.isLink)
+
+      // Filter out folder type updates for folders with versions
+      const filteredUpdates = entityUpdates.filter((entity) => {
+        if (entity.field === 'folderType' && entity.type === 'folder') {
+          const entityData = getEntityById(entity.id)
+          if (entityData?.hasVersions) {
+            return false
+          }
+        }
+        return true
+      })
+
+      // Show warning if any updates were filtered out
+      const filteredCount = entityUpdates.length - filteredUpdates.length
+      if (filteredCount > 0) {
+        toast.error(
+          `Cannot change folder type for ${filteredCount} folder${
+            filteredCount > 1 ? 's' : ''
+          } with published versions`,
+        )
+      }
+
+      entityUpdates = filteredUpdates
 
       // If no entity updates to process, return early
       if (!entityUpdates.length) {
@@ -183,7 +227,6 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         } else {
           // Add new operation
           operations.push({
-            rowId: entity.rowId,
             entityType: entityType,
             entityId: entityId,
             type: 'update',
@@ -223,7 +266,21 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         }
       } catch (error: any) {
         console.error('Error updating entities:', error)
-        toast.error('Failed to update entities: ' + error?.error)
+        if (operations.length === 1) {
+          error.errorCodes.forEach((errorCode: string) => {
+            const op = operations[0]
+            const entity = getEntityById(op.entityId as string)
+            const entityName = entity?.label || entity?.name || op.entityId || ''
+            const message = getErrorMessage(errorCode, op.entityType, entityName)
+            toast.error(message)
+          })
+        } else {
+          toast.error('Failed to update entities')
+        }
+        // Remove the failed update from history stack
+        if (pushHistory && pushToHistory && removeHistoryEntries) {
+          removeHistoryEntries(1)
+        }
       }
     },
     [
@@ -232,6 +289,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       getEntityById,
       getInheritedDependents,
       pushHistory,
+      removeHistoryEntries,
     ],
   )
 
@@ -314,7 +372,6 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
 
         // Add new operation this is what's sent to the server and is actually updated in the DB
         operations.push({
-          rowId: entity.rowId,
           entityType: entityType,
           entityId: entity.entityId,
           type: 'update',
@@ -450,8 +507,24 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
           operations,
           patchOperations,
         })
-      } catch (error) {
-        toast.error('Failed to update entities')
+      } catch (error: any) {
+        // Extract error code from operation result - check multiple paths
+        if (operations.length === 1) {
+          error.errorCodes.forEach((errorCode: string) => {
+            const op = operations[0]
+            const entity = getEntityById(op.entityId as string)
+            const entityName = entity?.label || entity?.name || op.entityId || ''
+            const message = getErrorMessage(errorCode, op.entityType, entityName)
+            toast.error(message)
+          })
+        } else {
+          toast.error('Failed to update entities')
+        }
+
+        // Remove the failed update from history stack
+        if (pushToHistory && pushHistory && removeHistoryEntries) {
+          removeHistoryEntries(1)
+        }
       }
     },
     [
@@ -460,6 +533,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       getInheritedDependents,
       findInheritedValueFromAncestors,
       pushHistory,
+      removeHistoryEntries,
     ],
   )
 

@@ -28,8 +28,6 @@ const initialState = {
   reload: {},
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
-  uri: null,
-  uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
   activeReactionPopup: null,
   previewFiles: [],
@@ -253,11 +251,6 @@ const reducers = {
       payload: 'products',
     },
   },
-  setUri: {
-    uri: {
-      payload: true,
-    },
-  },
   onUriNavigate: {
     'focused.folders': {
       payload: 'folders',
@@ -372,9 +365,6 @@ const contextSlice = createSlice({
     setUri: (state, action) => {
       updateStateWithReducer(reducers.setUri, state, action)
     },
-    setUriChanged: (state) => {
-      state.uriChanged = state.uriChanged + 1
-    },
     onUriNavigate: (state, action) => {
       updateStateWithReducer(reducers.onUriNavigate, state, action)
     },
@@ -459,7 +449,6 @@ export const {
   setReload,
   setFocusedType,
   setUri,
-  setUriChanged,
   productSelected,
   projectSelected,
   onShare,

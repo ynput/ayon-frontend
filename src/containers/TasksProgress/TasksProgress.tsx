@@ -35,7 +35,7 @@ import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
-import { useSlicerContext } from '@context/SlicerContext'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
@@ -148,7 +148,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   )
 
   // when the slice type is not hierarchy we need to get the root folders
-  const rootFolderIds = useRootFolders({ sliceType, projectName })
+  const rootFolderIds = useRootFolders()
 
   const resolveSelectedFolders = (
     rowSelection: RowSelectionState,

@@ -16,6 +16,9 @@ export const HELP_ARTICLES: Record<string, HelpArticle> = {
   reviews: {
     articleId: '8669165',
   },
+  reports: {
+    articleId: '9869698',
+  },
   planner: {
     articleId: '8736562',
   },

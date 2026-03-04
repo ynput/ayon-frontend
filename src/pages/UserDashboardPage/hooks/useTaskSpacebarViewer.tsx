@@ -1,7 +1,5 @@
-import Shortcuts from '@containers/Shortcuts'
 import { $Any } from '@types'
-import { MouseEvent, useMemo } from 'react'
-import useOpenTaskInViewer from './useOpenTaskInViewer'
+import { useOpenTaskInViewer } from './useOpenTaskInViewer'
 import { useSelector } from 'react-redux'
 
 type Props = {
@@ -16,29 +14,38 @@ export const useTaskSpacebarViewer = ({ tasks = [] }: Props) => {
   const openTaskInViewer = useOpenTaskInViewer()
   const selected = useSelector((state: $Any) => state.dashboard.tasks.selected)
 
-  const handleSpacebar = (_event: MouseEvent<HTMLDivElement>) => {
-    let id: string | null = null
+  const handleSpacebar = (e: React.KeyboardEvent<any>) => {
+    if (e.key !== ' ') return
+
+    const activeElement = document.activeElement as HTMLElement
+
+    // check active is not on an input or editable element
+    const tagName = activeElement?.tagName.toLowerCase()
+    const isContentEditable = activeElement?.isContentEditable
+
+    if (
+      tagName === 'input' ||
+      tagName === 'textarea' ||
+      tagName === 'select' ||
+      isContentEditable
+    ) {
+      return
+    }
+
     if (selected.length) {
       // check if any tasks are selected, we always open that task
-      id = selected[0]
+      const id = selected[0]
 
       // find task from id
       const task = tasks.find((t) => t.id === id)
 
       if (!task) return
 
+      e.preventDefault()
+      e.stopPropagation()
       openTaskInViewer(task)
     }
   }
 
-  const shortcuts = useMemo(() => {
-    return [
-      {
-        key: ' ',
-        action: handleSpacebar,
-      },
-    ]
-  }, [tasks, selected])
-
-  return <Shortcuts shortcuts={shortcuts} deps={[tasks, selected]} />
+  return handleSpacebar
 }

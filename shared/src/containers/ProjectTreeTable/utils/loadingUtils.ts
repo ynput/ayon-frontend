@@ -1,6 +1,7 @@
 import { TableRow } from '../types/table'
 import { FolderNodeMap } from '../types/table'
 import { AttributeModel, LoadingTasks } from '../types'
+import { uuid } from 'short-uuid'
 
 /**
  * Generates an array of placeholder rows for loading state
@@ -8,34 +9,13 @@ import { AttributeModel, LoadingTasks } from '../types'
  * @param count - Number of loading rows to generate (default: 50)
  * @returns Array of TableRow objects with loading state
  */
-export const generateLoadingRows = (
-  attribs: { name: string }[],
-  count = 50,
-  { type = 'folder', parentId }: { type?: string; parentId?: string } = {},
-): TableRow[] => {
-  return new Array(count).fill(0).map(
-    (_, index): TableRow => ({
-      id: `loading-${type}-${index}-${parentId}`,
-      name: 'Loading...',
-      status: 'Loading...',
-      parentId: parentId,
-      isLoading: true,
-      label: 'Loading...',
-      color: null,
-      icon: null,
-      img: null,
-      entityType: type,
-      ownAttrib: [],
-      tags: [],
-      subRows: [],
-      path: '',
-      attrib: attribs.reduce((acc: { [key: string]: null }, attrib) => {
-        acc[attrib.name] = null
-        return acc
-      }, {}),
-      links: {},
-    }),
-  )
+export const generateLoadingRows = (count = 50, attrib = {}): TableRow[] => {
+  // @ts-ignore
+  return new Array(count).fill(0).map((_, index) => ({
+    id: uuid(),
+    isLoading: true,
+    ...attrib,
+  }))
 }
 
 /**

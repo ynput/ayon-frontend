@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux'
 import api from '@shared/api'
-import { selectProject as selectProjectContext, setUri } from '@state/context'
+import { selectProject as selectProjectContext } from '@state/context'
 import { selectProject } from '@state/project'
 import { onProjectOpened } from '@state/dashboard'
 
@@ -17,8 +17,6 @@ const useProjectSelectDispatcher = (): Function[] => {
     dispatch(selectProjectContext())
     // remove editor query caches
     dispatch(api.util.invalidateTags(['branch', 'workfile', 'hierarchy', 'project', 'product']))
-    // reset uri
-    dispatch(setUri(`ayon+entity://${projectName}`))
     // set dashboard projects
     dispatch(onProjectOpened(projectName))
   }

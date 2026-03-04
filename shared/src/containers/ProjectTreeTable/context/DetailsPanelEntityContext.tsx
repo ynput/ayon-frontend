@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, ReactNode } from 'rea
 
 export interface DetailsPanelEntity {
   entityId: string
-  entityType: 'folder' | 'task'
+  entityType: 'folder' | 'task' | 'version'
 }
 
 export interface DetailsPanelEntityContextType {

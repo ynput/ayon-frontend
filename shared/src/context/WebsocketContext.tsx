@@ -73,7 +73,7 @@ export const SocketProvider = ({
   }
 
   useEffect(() => {
-    console.log('Topics changed', topics)
+    console.debug('Topics changed', topics)
     subscribe()
   }, [topics, projectName])
 

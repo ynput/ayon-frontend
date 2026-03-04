@@ -152,6 +152,7 @@ export const Actions = ({
         label: action.groupLabel ? action.groupLabel + ' ' + action.label : action.label,
         icon: action.icon,
         hasConfig: !!action.configFields,
+        description: action.description,
       }))
 
       options.push(...groupOptions)
@@ -305,12 +306,11 @@ export const Actions = ({
   const featuredActionsToDisplay = isLoading ? loadingActions : featuredActions
 
   return (
-    <Styled.Actions className="actions">
+    <Styled.Actions className={clsx('actions', { loading: isLoading })}>
       {featuredActionsToDisplay.map((action, i) => (
         <Styled.FeaturedAction
           key={action.identifier + '-' + i}
           className={clsx('action', {
-            loading: isLoading,
             isPlaceholder: action.isPlaceholder,
           })}
           data-tooltip={action.groupLabel ? action.groupLabel + ' ' + action.label : action.label}

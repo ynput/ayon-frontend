@@ -55,6 +55,7 @@ type Thumbnail = {
   type?: string
   projectName?: string
   icon?: string
+  color?: string
   updatedAt?: string
   src?: string
 }
@@ -93,6 +94,7 @@ export const StackedThumbnails = ({
             entityType={thumb.type}
             entityId={thumb.id}
             icon={thumb.icon}
+            color={thumb.color}
             key={thumb.id || thumb.src || i}
             style={{ ...style, zIndex: -i }}
             entityUpdatedAt={thumb.updatedAt}
