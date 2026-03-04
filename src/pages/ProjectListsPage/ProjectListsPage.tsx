@@ -213,6 +213,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { listItemsData, deleteListItemAction } = useListItemsDataContext()
 
   const {
+    selectedCells,
     setSelectedCells,
     setFocusedCellId,
     setAnchorCell,
@@ -278,8 +279,13 @@ const ProjectLists: FC<ProjectListsProps> = ({
               onSelectionChange={(versionIds) => {
                 if (versionIds.length === 0) return clearSelection()
 
+                const areRowsSelected = Array.from(selectedCells)
+                  .some((cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID)
+
+                const columnToSelect = areRowsSelected ? ROW_SELECTION_COLUMN_ID : "name"
+
                 const cellIds = versionIds
-                  .map((versionId) => getCellIdForColumn(listItemsData, versionId, "name"))
+                  .map((versionId) => getCellIdForColumn(listItemsData, versionId, columnToSelect))
                   .filter((id) => id !== null)
 
                 setSelectedCells(new Set(cellIds))

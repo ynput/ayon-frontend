@@ -92,8 +92,6 @@ export default function ProjectListsDetailsPanels({ isReview, view }: Props) {
     useReviewSessionCards
   } = useReviewSessionCardsModules({ skip: !isReview })
 
-  console.log(selectedRows)
-
   const { clearHighlighted } = useReviewSessionCards()
 
   // For review session lists, closing the details panel
