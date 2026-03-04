@@ -72,7 +72,6 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     }
 
     const cellRect = anchorElement.getBoundingClientRect()
-    const containerRect = tableContainer.getBoundingClientRect()
 
     const screenPadding = 24
     const minHeightThreshold = 250
@@ -137,7 +136,6 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
   // Watch for anchor element and table container resize
   useLayoutEffect(() => {
     if (!isEditing) return
-    const controller = new AbortController()
     const resizeObserver = new ResizeObserver(() => {
       updatePosition()
     })
@@ -146,7 +144,6 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     if (anchorElement) resizeObserver.observe(anchorElement)
 
     return () => {
-      controller.abort()
       resizeObserver.disconnect()
     }
   }, [isEditing, tableContainer, anchorElement])
@@ -254,6 +251,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
         right: position?.right,
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
+        width: maxWidth ? `${maxWidth}px` : 'auto',
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
         ...style,

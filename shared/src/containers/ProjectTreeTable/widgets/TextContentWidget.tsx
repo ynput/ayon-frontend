@@ -367,7 +367,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
         <CellEditingDialog
           isEditing={Boolean(isEditing || isPreview)}
           anchorId={cellId}
-          onClose={isPreview ? undefined : onCancelEdit}
+          onClose={onCancelEdit}
           onSave={isPreview ? undefined : () => handleSave('Click')}
           closeOnOutsideClick={isPreview ? false : true}
           closeOnScroll={!isPreview}

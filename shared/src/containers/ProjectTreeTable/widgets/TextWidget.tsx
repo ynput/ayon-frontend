@@ -3,7 +3,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
-import { WidgetBaseProps, EDIT_TRIGGER_CLASS } from './CellWidget'
+import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
 import { AttributeData } from '../types'
 import { AttributeEnumItem } from '@shared/api'
@@ -30,6 +30,7 @@ export const StyledBaseTextWidget = styled.span`
     word-break: break-word;
     display: block;
     overflow: hidden;
+    width: 100%;
   }
 
   &.regular {
@@ -142,7 +143,6 @@ export interface TextWidgetProps
   type?: TextWidgetType
   columnId?: string
   cellId?: string
-  isSelected?: boolean
 }
 
 export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
@@ -158,7 +158,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       type,
       columnId,
       cellId,
-      isSelected,
       className,
       ...props
     },
@@ -274,6 +273,15 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       setShowPreview(false)
       if (cellId) setEditingCellId(cellId)
     }, [cellId, setEditingCellId])
+
+    // For description columns, Ctrl+Enter should save and close — not jump to next row.
+    // Remap 'Enter' → 'Click' so CellWidget doesn't call moveToNextRow.
+    const handleDescriptionChange: WidgetBaseProps['onChange'] = useCallback(
+      (val, key) => {
+        onChange(val, key === 'Enter' ? 'Click' : key)
+      },
+      [onChange],
+    )
 
     // ── Render content
     const renderContent = () => {
@@ -407,7 +415,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             variant="edit"
             allowMarkdown={true}
             valueType={type || 'string'}
-            onChange={onChange}
+            onChange={handleDescriptionChange}
             onCancelEdit={onCancelEdit}
             onDismissWithoutSave={onCancelEdit}
           />
@@ -422,7 +430,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             variant="preview"
             allowMarkdown={true}
             onChange={onChange}
-            onCancelEdit={onCancelEdit}
+            onCancelEdit={() => setShowPreview(false)}
             onPreviewClick={handlePreviewClick}
             onPreviewMouseEnter={() => setIsHoveredOnPreview(true)}
             onPreviewMouseLeave={() => setIsHoveredOnPreview(false)}
@@ -434,6 +442,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           <CellEditingDialog
             isEditing={true}
             anchorId={cellId}
+            onClose={() => setShowPreview(false)}
             closeOnOutsideClick={false}
             closeOnScroll={false}
           >

@@ -30,6 +30,11 @@ const Cell = styled.div`
   padding: 4px 8px;
   display: flex;
   align-items: center;
+  overflow: hidden;
+
+  &:has(.markdown) {
+    align-items: flex-start;
+  }
 
   &:focus-visible {
     outline: none;
@@ -279,7 +284,6 @@ export const CellWidget: FC<EditorCellProps> = ({
             isInherited={isInherited}
             columnId={columnId}
             cellId={cellId}
-            isSelected={isCurrentCellFocused}
             type={type as TextWidgetType}
             {...sharedProps}
             {...pt?.text}
