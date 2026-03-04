@@ -6,9 +6,8 @@ import * as Styled from './ListGroup.styled'
 import { Button } from '@ynput/ayon-react-components'
 import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
-import { useURIContext } from '@shared/context'
-import { getTaskRoute } from '@helpers/routes'
 import { useScopedDetailsPanel } from '@shared/context'
+import { useNavigate } from 'react-router-dom'
 
 const ListGroup = ({
   tasks = [],
@@ -30,8 +29,10 @@ const ListGroup = ({
   containerRef,
 }) => {
   const dispatch = useDispatch()
-  const { setUri } = useURIContext()
-  const openInBrowser = (task) => setUri(getTaskRoute(task))
+  const navigate = useNavigate()
+  const openInOverview = (task) => {
+    navigate(`/projects/${task.projectName}/overview?project=${task.projectName}&type=task&id=${task.id}`)
+  }
   const column = groups[id] || {}
 
   const { setOpen } = useScopedDetailsPanel('dashboard')
@@ -43,13 +44,13 @@ const ListGroup = ({
 
   // CONTEXT MENU
   const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
-    onOpenInBrowser: openInBrowser,
+    onOpenInOverview: openInOverview,
   })
 
   const handleDoubleClick = (e, task) => {
     if (e.metaKey || e.ctrlKey) {
       // get the task
-      openInBrowser(task)
+      openInOverview(task)
     } else {
       onTogglePanel(true)
     }

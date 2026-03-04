@@ -241,7 +241,12 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const { uriType, uri, entity, getUriEntities } = useURIContext()
   const [searchParams] = forwardedProps.useSearchParams()
 
-  // on first load, check if there is a uri or URL params and open details panel if present
+  const project = searchParams.get('project')
+  const type = searchParams.get('type')
+  const id = searchParams.get('id')
+  const activity = searchParams.get('activity')
+
+  // on first load or URL param change, check if there is a uri or URL params and open details panel if present
   useEffect(() => {
     // Priority 1: Check for 'uri' parameter (ayon+entity://...)
     if (uriType === 'entity' && entity && entity.entityType !== 'product') {
@@ -283,11 +288,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     }
 
     // Priority 2: Check for URL params (project, type, id)
-    const project = searchParams.get('project')
-    const type = searchParams.get('type')
-    const id = searchParams.get('id')
-    const activity = searchParams.get('activity')
-
     if (project && type && id) {
       const newEntities: Entities = {
         entityType: type as DetailsPanelEntityType,
@@ -312,7 +312,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
         })
       }
     }
-  }, [])
+  }, [project, type, id])
 
   const value = {
     // open state for the panel by scope

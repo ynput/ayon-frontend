@@ -6,7 +6,7 @@ import useOpenTaskInViewer from './useOpenTaskInViewer'
 import { useScopedDetailsPanel } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
-export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {}) => {
+export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInOverview } = {}) => {
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
   const { setOpen, isOpen } = useScopedDetailsPanel('dashboard')
 
@@ -27,8 +27,8 @@ export const useGetTaskContextMenu = (tasks, dispatch, { onOpenInBrowser } = {})
         shortcut: 'Spacebar',
       },
       {
-        label: 'Open in browser',
-        command: () => onOpenInBrowser(task),
+        label: 'Open in overview',
+        command: () => onOpenInOverview(task),
         icon: 'open_in_new',
         shortcut: `${getPlatformShortcutKey('Double Click', [KeyMode.Ctrl])}`,
       },
