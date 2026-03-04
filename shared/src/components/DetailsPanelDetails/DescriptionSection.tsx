@@ -103,17 +103,17 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     if (isEditing) {
       return
     }
-    
+
     // Check if the clicked element is a link or inside a link
     const target = e.target as HTMLElement
     const link = target.closest('a')
-    
+
     if (link) {
       // If clicking on a link, prevent the edit mode from activating
       e.stopPropagation()
       return
     }
-    
+
     // For other clicks when not editing, allow edit mode to activate
     if (!isEditing) {
       handleStartEditing()
@@ -129,13 +129,13 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
       enableHover={!isEditing}
       onClick={!isEditing ? handleStartEditing : undefined}
     >
-      <StyledContent 
+      <StyledContent
         className={clsx({ editing: isEditing })}
         onClick={handleContentClick}
       >
         <StyledEditor className="block-shortcuts">
-          <QuillListStyles>
-            <StyledQuillContainer>
+          <QuillListStyles style={isEditing ? { height: 'auto' } : undefined}>
+            <StyledQuillContainer style={isEditing ? { height: 'auto' } : undefined}>
               <ReactQuill
                 key={`description-editor-${isEditing}`}
                 theme="snow"

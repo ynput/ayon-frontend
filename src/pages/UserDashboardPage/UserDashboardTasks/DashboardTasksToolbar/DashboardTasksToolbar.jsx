@@ -1,5 +1,5 @@
 import { Button, InputText, SortingDropdown, Spacer } from '@ynput/ayon-react-components'
-import React from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   onAssigneesChanged,
@@ -11,18 +11,45 @@ import MeOrUserSwitch from '@components/MeOrUserSwitch/MeOrUserSwitch'
 import * as Styled from './DashboardTasksToolbar.styled'
 import sortByOptions from './KanBanSortByOptions'
 import { getGroupByOptions } from './KanBanGroupByOptions'
+import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 
-const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
+const DashboardTasksToolbar = ({ isLoading, view, setView, projectUsers = [] }) => {
   const dispatch = useDispatch()
-
-  const user = useSelector((state) => state.user)
-  const isManager = user?.data?.isManager || user?.data?.isAdmin
 
   // ASSIGNEES SELECT
   const assignees = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
 
   const setAssignees = (payload) => dispatch(onAssigneesChanged(payload))
+
+  // CHECK READ RESTRICTIONS
+  const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
+  const selectedProjectNames = useMemo(
+    () => selectedProjects.filter((id) => !parseProjectFolderRowId(id)),
+    [selectedProjects],
+  )
+  const isUser = useSelector((state) => state.user.data.isUser)
+  const { permissions } = useUserProjectPermissions(isUser)
+
+  const canViewOtherUsers = useMemo(() => {
+    if (!permissions) return false
+    if (permissions.hasElevatedPrivileges) return true
+    
+
+    // every selected project must have read restrictions disabled (read.enabled !== true)
+    return selectedProjectNames.every((projectName) => {
+      const projectPerm = permissions.permissions?.projects?.[projectName]
+      return !projectPerm?.read?.enabled
+    })
+  }, [permissions, selectedProjectNames])
+
+  // auto-reset to 'me' when user loses access to other users
+  useEffect(() => {
+    if (!canViewOtherUsers && assigneesFilter !== 'me') {
+      setAssignees({ filter: 'me', assignees: [] })
+    }
+  }, [canViewOtherUsers])
 
   const sortByValue = useSelector((state) => state.dashboard.tasks.sortBy)
   const setSortByValue = (value) => dispatch(onTasksSortByChanged(value))
@@ -57,16 +84,6 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
     setAssignees(payload)
   }
 
-  // When user does not have permission to list other users, force the
-  // assignees filter to "me" to avoid being unable to list tasks.
-  if (!isManager && assigneesFilter !== "me") {
-    console.log("Force assignees filter to 'me'")
-    setAssignees({
-      assignees: [],
-      filter: "me"
-    })
-  }
-
   return (
     <Styled.TasksToolbar>
       <SortingDropdown
@@ -87,11 +104,13 @@ const DashboardTasksToolbar = ({ isLoading, view, setView }) => {
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />
-      {isManager && !isLoading && (
+      {!isLoading && (
         <MeOrUserSwitch
           value={assignees}
           onChange={(state, v) => handleAssigneesChange(state, v)}
           filter={assigneesFilter}
+          users={projectUsers}
+          canViewOtherUsers={canViewOtherUsers}
           align={'right'}
           placeholder="Assignees"
           buttonStyle={{ outline: '1px solid var(--md-sys-color-outline-variant)' }}

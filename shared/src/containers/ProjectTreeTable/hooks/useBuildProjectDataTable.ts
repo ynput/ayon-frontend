@@ -121,11 +121,7 @@ export default function useBuildProjectDataTable({
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
 
-      const links = linksToTableData(task.links, 'task', {
-        folderTypes: project?.folderTypes || [],
-        productTypes: project.productTypes || [],
-        taskTypes: project?.taskTypes || [],
-      })
+      const links = linksToTableData(task.links, 'task', project.anatomy)
 
       return {
         id: task.id,
@@ -151,6 +147,7 @@ export default function useBuildProjectDataTable({
         createdAt: task.createdAt,
         hasReviewables: task.hasReviewables || false,
         links: links,
+        subtasks: task.subtasks || [],
       }
     }
 
@@ -194,11 +191,9 @@ export default function useBuildProjectDataTable({
       const folder = foldersMap.get(folderId)
       if (!folder) continue
 
-      const links = linksToTableData(folder.links, 'folder', {
-        folderTypes: project?.folderTypes || [],
-        productTypes: project?.productTypes || [],
-        taskTypes: project?.taskTypes || [],
-      })
+      const links = linksToTableData(folder.links, 'folder', project.anatomy)
+
+      const folderTypeData = getEntityTypeData('folder', folder.folderType)
 
       // Create row with minimal required properties
       const row: TableRow = {
@@ -208,8 +203,8 @@ export default function useBuildProjectDataTable({
         folderId: folderId || null, // root folders have no folderId
         name: folder.name || '',
         label: folder.label || folder.name || '',
-        icon: getEntityTypeData('folder', folder.folderType)?.icon || null,
-        color: null,
+        icon: folderTypeData?.icon || null,
+        color: folderTypeData?.color || null,
         img: null,
         subRows: [],
         status: folder.status,

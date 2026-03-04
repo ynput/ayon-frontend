@@ -1153,6 +1153,18 @@ export type Status = {
   state?: Maybe<Scalars['String']['output']>;
 };
 
+export type SubTaskNode = {
+  __typename?: 'SubTaskNode';
+  assignees: Array<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  endDate?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['String']['output'];
+  isDone: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  startDate?: Maybe<Scalars['DateTime']['output']>;
+};
+
 export type Tag = {
   __typename?: 'Tag';
   color?: Maybe<Scalars['String']['output']>;
@@ -1214,6 +1226,7 @@ export type TaskNode = BaseNode & {
   path?: Maybe<Scalars['String']['output']>;
   projectName: Scalars['String']['output'];
   status: Scalars['String']['output'];
+  subtasks: Array<SubTaskNode>;
   tags: Array<Scalars['String']['output']>;
   taskType: Scalars['String']['output'];
   thumbnail?: Maybe<ThumbnailInfo>;

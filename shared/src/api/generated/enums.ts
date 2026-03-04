@@ -31,6 +31,8 @@ export type EnumItem = {
   /** Icon name (material symbol) or IconModel object */
   icon?: string | IconModel
   color?: string
+  disabled?: boolean
+  disabledMessage?: string
 }
 export type ValidationError = {
   loc: (string | number)[]

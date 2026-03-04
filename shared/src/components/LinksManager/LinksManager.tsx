@@ -16,6 +16,7 @@ export type LinkEntity = {
   parents: string[]
   entityType: string
   icon: string
+  color?: string // color from folder/task type anatomy
   isRestricted?: boolean // flag to indicate if this link is restricted (node is null from API)
 }
 

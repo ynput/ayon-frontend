@@ -106,7 +106,7 @@ const useGetListItemsData = ({
     }
   }
   const buildRestrictedItem = (
-    i: GetListItemsResult['items'][number]
+    i: GetListItemsResult['items'][number],
   ): EntityListItemWithLinks => ({
     active: true,
     name: RESTRICTED_ENTITY_NAME,
@@ -119,24 +119,26 @@ const useGetListItemsData = ({
     status: '',
     tags: [],
     updatedAt: '',
-    createdAt: '',  // <-- required to match EntityListItemWithLinks type
+    createdAt: '', // <-- required to match EntityListItemWithLinks type
     position: 0,
     ownItemAttrib: [],
     links: [],
     parents: [],
+    subtasks: [],
   })
 
   // Extract tasks from infinite query data correctly
   const data = useMemo(() => {
     if (!itemsInfiniteData?.pages) return []
     return itemsInfiniteData.pages.flatMap(
-      (page) => page.items?.map((i) => {
-        // Check if item is restricted (has entityType 'unknown' or missing name)
-        if (!i || i.entityType === RESTRICTED_ENTITY_TYPE || !i.name) {
-          return buildRestrictedItem(i)
-        }
-        return i
-      }) || [],
+      (page) =>
+        page.items?.map((i) => {
+          // Check if item is restricted (has entityType 'unknown' or missing name)
+          if (!i || i.entityType === RESTRICTED_ENTITY_TYPE || !i.name) {
+            return buildRestrictedItem(i)
+          }
+          return i
+        }) || [],
     )
   }, [itemsInfiniteData?.pages])
 

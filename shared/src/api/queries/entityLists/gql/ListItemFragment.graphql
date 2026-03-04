@@ -17,6 +17,9 @@ fragment ListItemFragment on BaseNode {
       path
       folderType
     }
+    subtasks {
+      ...SubTaskFragment
+    }
   }
   ... on FolderNode {
     label

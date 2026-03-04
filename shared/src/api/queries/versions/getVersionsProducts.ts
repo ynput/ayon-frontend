@@ -21,7 +21,6 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import {
-  VpFolderFragment,
   GetProductsQuery,
   GetProductsQueryVariables,
   GetVersionsByProductIdQueryVariables,
@@ -29,6 +28,7 @@ import {
   GetVersionsQueryVariables,
   gqlApi,
   PageInfo,
+  VpFolderFragment,
 } from '@shared/api/generated'
 import {
   parseGQLErrorMessage,
@@ -39,6 +39,99 @@ import {
   transformProductsResponse,
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
+import { PubSub } from '@shared/util'
+
+// SHARED CACHE UPDATE HELPERS
+// These helpers are used by PubSub handlers to update cached data in real-time
+
+/**
+ * Finds the correct insertion index for a new item in a sorted array
+ * Used when adding new items to maintain sort order
+ */
+function findSortedInsertIndex<T>(items: T[], newItem: T, sortBy: keyof T, desc: boolean): number {
+  for (let i = 0; i < items.length; i++) {
+    const newValue = newItem[sortBy]
+    const currentValue = items[i][sortBy]
+    const shouldInsert = desc ? newValue > currentValue : newValue < currentValue
+
+    if (shouldInsert) {
+      return i
+    }
+  }
+  return items.length
+}
+
+/**
+ * Updates a paginated cache (draft.pages[].items[]) with a new/updated/deleted item
+ * Handles: update existing, delete if not in response, add at sorted position
+ *
+ * @param pages - Array of page objects containing items arrays
+ * @param entityId - ID of the entity to update/delete/add
+ * @param updatedItem - The updated item, or undefined if deleted
+ * @param itemsKey - Key to access items array in each page ('versions' or 'products')
+ * @param sortBy - Property to sort by when inserting new items
+ * @param desc - Sort direction (true = descending)
+ */
+function updatePagedCache<T extends { id: string }>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pages: any[],
+  entityId: string,
+  updatedItem: T | undefined,
+  itemsKey: string,
+  sortBy: keyof T,
+  desc: boolean,
+): void {
+  // Search for existing item in all pages
+  for (const page of pages) {
+    const items = page[itemsKey] as T[]
+    const index = items.findIndex((item) => item.id === entityId)
+
+    if (index !== -1) {
+      if (updatedItem) {
+        // Update existing item
+        items[index] = updatedItem
+      } else {
+        // Item no longer exists or doesn't match filters - remove it
+        items.splice(index, 1)
+      }
+      return
+    }
+  }
+
+  // Item not found in cache - add at correct sorted position in first page
+  if (updatedItem && pages.length > 0) {
+    const items = pages[0][itemsKey] as T[]
+    const insertIndex = findSortedInsertIndex(items, updatedItem, sortBy, desc)
+    items.splice(insertIndex, 0, updatedItem)
+  }
+}
+
+/**
+ * Updates a flat cache (draft.items[]) with a new/updated/deleted item
+ * Handles: update existing, delete if not in response, add new
+ */
+function updateFlatCache<T extends { id: string }>(
+  items: T[],
+  entityId: string,
+  updatedItem: T | undefined,
+): { index: number; action: 'updated' | 'deleted' | 'added' | 'none' } {
+  const index = items.findIndex((item) => item.id === entityId)
+
+  if (index !== -1) {
+    if (updatedItem) {
+      items[index] = updatedItem
+      return { index, action: 'updated' }
+    } else {
+      items.splice(index, 1)
+      return { index, action: 'deleted' }
+    }
+  } else if (updatedItem) {
+    items.push(updatedItem)
+    return { index: items.length - 1, action: 'added' }
+  }
+
+  return { index: -1, action: 'none' }
+}
 
 // Query result types
 export type FolderAttribNode = VpFolderFragment & {
@@ -242,6 +335,56 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForVersionsInfinite,
+        // Subscribes to version entity changes and updates cache accordingly
+        // Handles: create, update, delete operations
+        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+            try {
+              const entityId = message.summary?.entityId
+              if (!entityId) return
+
+              // Re-fetch the specific version with current filters to check if it still matches
+              // If version was deleted or no longer matches filters, result will be empty
+              const result = await dispatch(
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                  {
+                    projectName: arg.projectName,
+                    versionFilter: arg.versionFilter,
+                    productFilter: arg.productFilter,
+                    taskFilter: arg.taskFilter,
+                    folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                    versionIds: [entityId],
+                    first: 1,
+                  },
+                  {
+                    forceRefetch: true,
+                  },
+                ),
+              )
+
+              if (result.error) return
+
+              // Update the cache: update existing, delete if not found, or add new
+              updateCachedData((draft) => {
+                const updatedVersion = result.data?.versions?.[0]
+                updatePagedCache(
+                  draft.pages,
+                  entityId,
+                  updatedVersion,
+                  'versions',
+                  (arg.sortBy || 'createdAt') as keyof VersionNode,
+                  arg.desc || false,
+                )
+              })
+            } catch (error) {
+              // Silently handle errors to prevent UI disruption
+            }
+          })
+
+          // Cleanup: unsubscribe when cache entry is removed
+          await cacheEntryRemoved
+          PubSub.unsubscribe(token)
+        },
       },
     ),
 
@@ -357,6 +500,53 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           },
         }
       },
+      // Subscribes to version entity changes for expanded products
+      // Only updates versions that belong to currently expanded products
+      onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+          try {
+            const entityId = message.summary?.entityId
+            const parentId = message.summary?.parentId // parentId is the product ID
+            if (!entityId || !parentId) return
+
+            // Only handle versions belonging to currently expanded products
+            // This prevents unnecessary updates for versions in collapsed products
+            if (!arg.productIds.includes(parentId)) return
+
+            // Re-fetch the specific version using GetVersions (supports versionIds filter)
+            // Uses same filters as the base query to ensure consistency
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                {
+                  projectName: arg.projectName,
+                  productIds: [parentId],
+                  versionIds: [entityId],
+                  versionFilter: arg.versionFilter,
+                  taskFilter: arg.taskFilter,
+                  first: 1,
+                  ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
+                  ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
+                },
+                { forceRefetch: true },
+              ),
+            )
+
+            if (result.error) return
+
+            // Update flat versions array: update existing, delete if not found, or add new
+            updateCachedData((draft) => {
+              const updatedVersion = result.data?.versions?.[0]
+              updateFlatCache(draft.versions, entityId, updatedVersion)
+            })
+          } catch (error) {
+            // Silently handle errors to prevent UI disruption
+          }
+        })
+
+        // Cleanup: unsubscribe when cache entry is removed
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
+      },
       providesTags: provideTagsForVersionsResult,
     }),
 
@@ -444,6 +634,93 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
         },
         providesTags: provideTagsForProductsInfinite,
+
+        // Subscribes to product entity changes and updates cache accordingly
+        // Handles: create, update, delete operations
+        // Often triggered together with version changes (new product + version)
+
+        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          // Helper to refetch and update a product in cache
+          const refetchProduct = async (productId: string) => {
+            const queryParams: any = {
+              projectName: arg.projectName,
+              productIds: [productId],
+              productFilter: arg.productFilter,
+              versionFilter: arg.versionFilter,
+              taskFilter: arg.taskFilter,
+              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              first: 1,
+            }
+
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+
+            if (result.error) return
+
+            // Update the cache: update existing, delete if not found, or add new
+            updateCachedData((draft) => {
+              const updatedProduct = result.data?.products?.[0]
+              updatePagedCache(
+                draft.pages,
+                productId,
+                updatedProduct,
+                'products',
+                (arg.sortBy || 'createdAt') as keyof ProductNode,
+                arg.desc || false,
+              )
+            })
+          }
+
+          // Subscribe to product entity changes from websocket
+          const productToken = PubSub.subscribe(
+            'entity.product',
+            async (_topic: string, message: any) => {
+              try {
+                const entityId = message.summary?.entityId
+                if (!entityId) return
+
+                await refetchProduct(entityId)
+              } catch (error) {
+                // Silently handle errors to prevent UI disruption
+              }
+            },
+          )
+
+          // Subscribe to version entity changes - refetch parent product when version changes
+          // This ensures product's versions list and featuredVersion stay up-to-date
+          const versionToken = PubSub.subscribe(
+            'entity.version',
+            async (_topic: string, message: any) => {
+              try {
+                const parentId = message.summary?.parentId // parentId is the product ID
+                if (!parentId) return
+
+                // Check if the product exists in our cache before refetching
+                // This prevents unnecessary API calls for products not in our view
+                let productExistsInCache = false
+                updateCachedData((draft) => {
+                  productExistsInCache = draft.pages.some((page) =>
+                    page.products.some((product: ProductNode) => product.id === parentId),
+                  )
+                })
+
+                if (!productExistsInCache) return
+
+                await refetchProduct(parentId)
+              } catch (error) {
+                // Silently handle errors to prevent UI disruption
+              }
+            },
+          )
+
+          // Cleanup: unsubscribe when cache entry is removed
+          await cacheEntryRemoved
+          PubSub.unsubscribe(productToken)
+          PubSub.unsubscribe(versionToken)
+        },
       },
     ),
 
@@ -543,6 +820,99 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
         }
       },
       providesTags: provideTagsForVersionsResult,
+      // Subscribes to version entity changes and updates cache accordingly
+      // Handles: create, update, delete operations for grouped versions view
+      onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+          try {
+            const entityId = message.summary?.entityId
+            if (!entityId) return
+
+            // Re-fetch the specific version with current filters to check if it still matches
+            // If version was deleted or no longer matches filters, result will be empty
+
+            const baseFilters = {
+              projectName: arg.projectName,
+              versionFilter: arg.versionFilter,
+              productFilter: arg.productFilter,
+              taskFilter: arg.taskFilter,
+              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              versionIds: [entityId],
+              first: 1,
+              ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
+              ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
+            }
+
+            // Track which groups the version belongs to after the update
+            const matchedGroups: { value: string; hasNextPage: undefined }[] = []
+            let latestVersionData: VersionNode | null = null
+
+            for (const group of arg.groups) {
+              const result = await dispatch(
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                  {
+                    ...baseFilters,
+                    [arg.groupFilterKey as string]: group.filter, // group-specific filter
+                    versionIds: [entityId],
+                  },
+                  { forceRefetch: true }, // Force fresh data to detect group membership changes
+                ),
+              )
+
+              const fetchedVersion = result.data?.versions?.[0]
+              if (fetchedVersion) {
+                // Version matches this group's filter
+                matchedGroups.push({ value: group.value, hasNextPage: undefined })
+                latestVersionData = fetchedVersion
+              }
+            }
+
+            // Now update the cache based on collected results
+            updateCachedData((draft) => {
+              const index = draft.versions.findIndex((v) => v.id === entityId)
+              const versionExistsInCache = index !== -1
+
+              if (matchedGroups.length === 0) {
+                // Version was deleted or no longer matches any group filter - remove it
+                if (versionExistsInCache) {
+                  draft.versions.splice(index, 1)
+                }
+              } else if (latestVersionData) {
+                // Version matches at least one group
+                if (versionExistsInCache) {
+                  const originalGroups = draft.versions[index].groups || []
+                  // Check if group membership has changed (comparing group values)
+                  const originalGroupValues = originalGroups.map((g) => g.value).sort()
+                  const matchedGroupValues = matchedGroups.map((g) => g.value).sort()
+                  const groupsChanged =
+                    originalGroupValues.length !== matchedGroupValues.length ||
+                    originalGroupValues.some((v, i) => v !== matchedGroupValues[i])
+
+                  if (groupsChanged) {
+                    // Group membership changed - use new matched groups (version moved to different group)
+                    draft.versions[index] = { ...latestVersionData, groups: matchedGroups }
+                  } else {
+                    // Same groups - preserve original groups (keeps pagination state like hasNextPage)
+                    draft.versions[index] = { ...latestVersionData, groups: originalGroups }
+                  }
+                } else {
+                  // New version not in cache yet - add at sorted position with matched groups
+                  const newVersion = { ...latestVersionData, groups: matchedGroups }
+                  const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
+                  const insertIndex = findSortedInsertIndex(draft.versions, newVersion, sortKey, arg.desc || false)
+                  draft.versions.splice(insertIndex, 0, newVersion)
+                }
+              }
+            })
+          } catch (error) {
+            // Silently handle errors to prevent UI disruption
+          }
+        })
+
+        // Cleanup: unsubscribe when cache entry is removed
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
+      },
     }),
   }),
 })

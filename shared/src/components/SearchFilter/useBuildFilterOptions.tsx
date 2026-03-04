@@ -578,9 +578,15 @@ const getSubTypes = (
             type: 'string',
             label: taskType.name,
             icon: taskType.icon,
+            color: taskType.color,
             inverted: false,
             values: [],
             allowsCustomValues: false,
+            pt: {
+              style:{
+                color: 'inherit'
+              }
+            }
           })
         }
       })
@@ -596,9 +602,15 @@ const getSubTypes = (
             type: 'string',
             label: folderType.name,
             icon: folderType.icon,
+            color: folderType.color,
             inverted: false,
             values: [],
             allowsCustomValues: false,
+            pt: {
+              style:{
+                color: 'inherit'
+              }
+            }
           })
         }
       })
@@ -872,6 +884,9 @@ const getAttributeOptions = (
         values: [],
         icon: enumItem.icon,
         color: enumItem.color,
+        pt:{
+          style:{color:'inherit'}
+        }
       })
     })
   }

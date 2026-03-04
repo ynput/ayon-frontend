@@ -6,17 +6,19 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import { useLocalStorage } from '@shared/hooks'
-import type { UserModel } from '@shared/api'
-import { DetailsPanelEntityType } from '@shared/api'
+import { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
 import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useURIContext } from './UriContext'
+import { useLocalStorage } from '@shared/hooks'
+import type { SubtasksManagerProps } from '@shared/components'
 
-export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
+// High-level tabs for the details panel
+export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
 
-export type DetailsPanelTab = FeedFilters | 'details' | 'files'
+// Filters within the feed tab
+export type FeedFilter = QueryFilter
 
 export type SlideOut = {
   entityId: string
@@ -46,6 +48,11 @@ export interface TabStateByScope {
   [scope: string]: DetailsPanelTab
 }
 
+const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'files']
+
+const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
+  typeof tab === 'string' && DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab)
+
 // these props get forwarded to the details panel value
 // it's mainly redux callbacks that cannot be used in shared library
 export interface DetailsPanelContextProps {
@@ -68,6 +75,8 @@ export interface DetailsPanelContextProps {
   useSearchParams: typeof useSearchParams
   feedAnnotationsEnabled?: boolean
   hasLicense?: boolean
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
   // debugging used to simulate different values
   debug?: {
     isDeveloperMode?: boolean
@@ -128,7 +137,7 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   children,
-  defaultTab = 'activity',
+  defaultTab = 'feed',
   hasLicense: hasLicenseProp,
   debug = {},
   ...forwardedProps
@@ -182,8 +191,9 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const getTabForScope = useCallback(
     (scope: string): DetailsPanelTab => {
       // Check if we have a saved preference for this scope
-      if (tabsByScope[scope]) {
-        return tabsByScope[scope]
+      const tab = tabsByScope[scope]
+      if (isDetailsPanelTab(tab)) {
+        return tab
       }
 
       // Fall back to default
@@ -292,13 +302,13 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
       setEntities(newEntities)
 
-      // if there is an activity param, open the activity tab
+      // if there is an activity param, open the feed tab (activity is shown by default)
 
       if (activity) {
         setHighlightedActivities([activity])
         setTabByScope({
           ...tabsByScope,
-          overview: 'activity',
+          overview: 'feed',
         })
       }
     }
@@ -357,7 +367,10 @@ export const useScopedDetailsPanel = (scope: string) => {
     {},
   )
 
-  const [tab, setTab] = useState<DetailsPanelTab>(() => tabsByScope[scope] ?? getTabForScope(scope))
+  const [currentTab, setTab] = useState<DetailsPanelTab>(() => {
+    const tab = tabsByScope[scope]
+    return isDetailsPanelTab(tab) ? tab : getTabForScope(scope)
+  })
 
   // Keep localStorage and local state in sync
   const updateTab = useCallback(
@@ -368,8 +381,7 @@ export const useScopedDetailsPanel = (scope: string) => {
     [scope, setTabsByScope],
   )
 
-  const currentTab = tab
-  const isFeed = ['activity', 'comments', 'versions', 'checklists'].includes(currentTab)
+  const isFeed = currentTab === 'feed'
 
   return {
     isOpen: getOpenForScope(scope),

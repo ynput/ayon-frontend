@@ -174,7 +174,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     // Create an invisible anchor element
     const a = document.createElement('a')
     a.href = url
-    a.download = fileName
+    a.target = "_blank"
     document.body.appendChild(a)
 
     // Trigger a click event on the anchor element

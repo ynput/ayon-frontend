@@ -55,12 +55,15 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
     const payload = {
       data: {},
       attrib: {},
-      name: formData.Username,
+      name: formData.Username?.trim(),
       password: password ? password : undefined,
     }
 
     attributes.forEach(({ name }) => {
-      if (formData[name]) payload.attrib[name] = formData[name]
+      if (formData[name]) {
+        const value = formData[name]
+        payload.attrib[name] = typeof value === 'string' ? value.trim() : value
+      }
     })
 
     if (formData.userLevel === 'admin') payload.data.isAdmin = true

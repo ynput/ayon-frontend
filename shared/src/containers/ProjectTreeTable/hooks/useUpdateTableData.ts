@@ -61,7 +61,7 @@ export type UpdateTableEntity = (
   { includeSelection }: { includeSelection: boolean },
 ) => Promise<void>
 
-export type OperationWithRowId = OperationModel & { rowId: string; meta?: Record<string, any> }
+export type OperationWithRowId = OperationModel & { meta?: Record<string, any> }
 
 interface UseUpdateTableDataProps {
   pushHistory?: UseHistoryReturn['pushHistory']
@@ -227,7 +227,6 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         } else {
           // Add new operation
           operations.push({
-            rowId: entity.rowId,
             entityType: entityType,
             entityId: entityId,
             type: 'update',
@@ -373,7 +372,6 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
 
         // Add new operation this is what's sent to the server and is actually updated in the DB
         operations.push({
-          rowId: entity.rowId,
           entityType: entityType,
           entityId: entity.entityId,
           type: 'update',

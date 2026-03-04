@@ -7,14 +7,21 @@ import { useProjectFoldersContext } from '@shared/context'
 type Props = {
   projectName: string | null
   folderTypes: FolderType[]
+  includeColors?: boolean
 }
 
-export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
+export const useHierarchyTable = ({ projectName, folderTypes, includeColors = false }: Props) => {
   const { folders, isLoading } = useProjectFoldersContext()
 
   const getFolderIcon = (type: string) => {
     const folderType = folderTypes.find((folderType) => folderType.name === type)
     return folderType?.icon || 'folder'
+  }
+
+  const getFolderColor = (type: string) => {
+    if (!includeColors) return undefined
+    const folderType = folderTypes.find((folderType) => folderType.name === type)
+    return folderType?.color
   }
 
   const folderToTableRow = (folder: FolderListItem): Omit<SimpleTableRow, 'subRows'> => ({
@@ -23,6 +30,7 @@ export const useHierarchyTable = ({ projectName, folderTypes }: Props) => {
     name: folder.name,
     label: folder.label || folder.name,
     icon: getFolderIcon(folder.folderType),
+    iconColor: getFolderColor(folder.folderType),
     img: null,
     data: {
       id: folder.id,

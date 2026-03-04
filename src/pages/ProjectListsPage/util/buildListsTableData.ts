@@ -1,10 +1,6 @@
 import { EntityList, EntityListFolderModel, EntityListModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import {
-  getEntityTypeIcon,
-  buildHierarchicalTableRows,
-  HierarchicalFolderNode,
-} from '@shared/util'
+import { getEntityTypeIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
 import { FOLDER_ICON } from '../hooks/useListContextMenu'
 
 export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
@@ -171,7 +167,6 @@ export const buildListsTableData = (
   const rootListRows = sortedRootLists.map((list) => createListRow(list))
 
   // Combine in the specified order: folder hierarchy first, then root lists
-  console.log(folderRows)
   return [...folderRows, ...rootListRows]
 }
 

@@ -8,6 +8,7 @@ import { DateWidget, DateWidgetProps } from './DateWidget'
 import { EnumWidget, EnumWidgetProps } from './EnumWidget'
 import { TextWidget, TextWidgetProps, TextWidgetType } from './TextWidget'
 import { isLinkEditable, LinksWidget, LinkWidgetData } from './LinksWidget'
+import { SubtasksWidget, SubtasksWidgetData } from './SubtasksWidget'
 
 // Contexts
 import { useCellEditing } from '../context/CellEditingContext'
@@ -49,7 +50,7 @@ const Cell = styled.div`
 // use this class to trigger the editing mode on a single click
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
-type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' }
+type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' | 'subtasks' }
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -205,6 +206,20 @@ export const CellWidget: FC<EditorCellProps> = ({
         )
       }
 
+      case type === 'subtasks': {
+        const subtasksValue = valueData as SubtasksWidgetData | undefined
+
+        return (
+          <SubtasksWidget
+            value={subtasksValue}
+            cellId={cellId}
+            projectName={projectName}
+            disabled={isReadOnly}
+            {...sharedProps}
+          />
+        )
+      }
+
       case !!options.length: {
         const enumValue = Array.isArray(value) ? value : [value]
         if (isReadOnly) {
@@ -229,6 +244,7 @@ export const CellWidget: FC<EditorCellProps> = ({
               isReadOnly
               hasMultipleValues={enumValue.length > 1}
               isMultiSelect={type?.includes('list')}
+              {...pt?.enum?.pt?.template}
             />
           )
         }

@@ -8,7 +8,6 @@ import { Column } from 'primereact/column'
 import { DetailsDialog, useVersionUploadContext } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
-import { CellWithIcon } from '@components/icons'
 import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@state/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
@@ -17,6 +16,7 @@ import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { CellWithIcon } from '@components/icons'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)

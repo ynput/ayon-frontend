@@ -7,7 +7,6 @@ import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
-import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import clsx from 'clsx'
 import { useURIContext } from '@shared/context'
@@ -117,6 +116,21 @@ const KanBanColumn = forwardRef(
       setOpen(open)
     }
 
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        // Check if the focus is on an input field
+        const focusedElement = document.activeElement
+        const isInputFocused =
+          focusedElement?.tagName === 'INPUT' ||
+          focusedElement?.tagName === 'TEXTAREA' ||
+          focusedElement?.contentEditable === 'true'
+
+        if (!isInputFocused) {
+          onTogglePanel(true)
+        }
+      }
+    }
+
     // return 5 fake loading events if loading
     const loadingTasks = useMemo(() => getFakeTasks(), [])
 
@@ -156,7 +170,7 @@ const KanBanColumn = forwardRef(
                             } else handleDoubleClick(e, task)
                           }}
                           onTitleClick={(e) => handleTaskClick(e, task.id, undefined, true)}
-                          onKeyDown={(e) => e.key === 'Escape' && onTogglePanel(true)}
+                          onKeyDown={handleKeyDown}
                           onMouseOver={() => handlePrefetch(task)}
                           isActive={selectedTasks.includes(task.id)}
                           isDraggingActive={active}
@@ -172,7 +186,15 @@ const KanBanColumn = forwardRef(
             </Fragment>
           ),
         ),
-      [groupedTasks, handleTaskClick, handlePrefetch, selectedTasks, active, handleContextMenu],
+      [
+        groupedTasks,
+        handleTaskClick,
+        handleKeyDown,
+        handlePrefetch,
+        selectedTasks,
+        active,
+        handleContextMenu,
+      ],
     )
 
     // used to load more tasks when scrolling

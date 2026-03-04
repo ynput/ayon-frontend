@@ -23,5 +23,8 @@ export * from './buildHierarchicalTableRows'
 export * from './folderHierarchy'
 export * from './folderOperations'
 
+import isHTMLElement from './isHTMLElement'
+export { isHTMLElement }
+
 import PubSub from './pubsub'
 export { PubSub }

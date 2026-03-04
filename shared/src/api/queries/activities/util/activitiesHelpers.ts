@@ -1,7 +1,7 @@
 import { ActivityFragmentFragment, GetEntitiesChecklistsQuery, PageInfo } from '@shared/api'
 import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
 import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
-import { DetailsPanelTab, FeedFilters } from '@shared/context'
+import { FeedFilter } from '@shared/context'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
@@ -206,19 +206,47 @@ export const taskProvideTags = (result: Task[], type = 'task', entityType = 'tas
       ]
     : [{ type, id: entityType.toUpperCase() + 'S' }]
 
-export const filterActivityTypes: Record<FeedFilters, string[]> = {
+export const filterActivityTypes: Record<string, string[]> = {
   activity: ['comment', 'version.publish', 'status.change', 'assignee.add', 'assignee.remove'],
   comments: ['comment'],
   versions: ['version.publish'],
+  updates: ['status.change', 'assignee.add', 'assignee.remove'],
   checklists: ['checklist'],
 }
 
-export const getFilterActivityTypes = (tab: DetailsPanelTab): string[] | null => {
-  // check if the tab is in the filterActivityTypes object1
-  if (tab in filterActivityTypes) {
-    // @ts-expect-error
-    return filterActivityTypes[tab]
+export const getFilterActivityTypes = (filter: any): string[] | null => {
+  // If it's a string, it's one of the legacy pre-set filters
+  if (typeof filter === 'string') {
+    if (filter in filterActivityTypes) {
+      return filterActivityTypes[filter]
+    }
+    return null
   }
-  // if not, return null
-  return null
+
+  // Handle QueryFilter object
+  if (filter && typeof filter === 'object' && filter.conditions) {
+    const activeTypes: string[] = []
+    let hasExplicitTypeFilter = false
+
+    filter.conditions.forEach((condition: any) => {
+      // Check if it's a simple condition for one of our known activity types
+      if (condition && condition.key && condition.value === true) {
+        if (condition.key in filterActivityTypes) {
+          activeTypes.push(...filterActivityTypes[condition.key])
+          hasExplicitTypeFilter = true
+        }
+      }
+    })
+
+    // If no specific activity type filters are selected, return "activity" (all)
+    if (!hasExplicitTypeFilter) {
+      return filterActivityTypes.activity
+    }
+
+    // Return unique set of activity types
+    return Array.from(new Set(activeTypes))
+  }
+
+  // fallback to all activity
+  return filterActivityTypes.activity
 }

@@ -118,7 +118,8 @@ const ActivityComment = ({
   const menuId = `activity-comment-menu-${activityId}-${isSlideOut ? 'slideout' : 'normal'}`
   const isMenuOpen = menuOpen === menuId
 
-  const { onGoToFrame, setHighlightedActivities } = useDetailsPanelContext()
+  const { onGoToFrame, setHighlightedActivities, user } = useDetailsPanelContext()
+  const canDelete = isOwner || user?.data?.isAdmin
 
   const handleEditComment = () => {
     setEditingId(activityId)
@@ -288,6 +289,7 @@ const ActivityComment = ({
                       // @ts-ignore
                       aTag(props, {
                         entityId,
+                        userName,
                         projectName,
                         projectInfo,
                         onReferenceClick,
@@ -368,7 +370,7 @@ const ActivityComment = ({
         }}
       >
         <ActivityCommentMenu
-          onDelete={isOwner && onDelete ? deleteConfirmation : undefined}
+          onDelete={canDelete && onDelete ? deleteConfirmation : undefined}
           onEdit={isOwner && handleEditComment}
           activityId={activityId}
           onSelect={() => toggleMenuOpen(false)}

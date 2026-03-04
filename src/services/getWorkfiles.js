@@ -3,7 +3,7 @@ import api from '@shared/api'
 const WORKFILES_QUERY = `
 query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
   project(name: $projectName) {
-    workfiles(taskIds:$taskIds) {
+    workfiles(taskIds:$taskIds, first: 1000) {
       edges {
         node {
           id

@@ -17,7 +17,7 @@ interface ActivityItemProps {
   projectInfo: Record<string, any>
   createdAts?: string[]
   editProps?: Record<string, any>
-  filter: string
+  filter: any
   readOnly: boolean
   statuses: Status[]
   projectName: string

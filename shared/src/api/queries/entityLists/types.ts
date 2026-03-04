@@ -54,6 +54,7 @@ type ItemNodeData = {
   label?: string
   ownAttrib: string[]
   parents?: string[]
+  subtasks?: string[]
   folder?: {
     folderType: string
   }

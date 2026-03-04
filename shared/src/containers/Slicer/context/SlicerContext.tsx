@@ -67,15 +67,40 @@ const SlicerContext = createContext<SlicerContextValue | undefined>(undefined)
 
 interface SlicerProviderProps {
   children: ReactNode
+  rowSelection?: RowSelectionState
+  setRowSelection?: React.Dispatch<React.SetStateAction<RowSelectionState>>
+  onRowSelectionChange?: OnRowSelectionChange
+  expanded?: ExpandedState
+  setExpanded?: React.Dispatch<React.SetStateAction<ExpandedState>>
+  onExpandedChange?: (expanded: ExpandedState) => void
+  sliceType?: SliceType
+  onSliceTypeChange?: OnSliceTypeChange
 }
 
-export const SlicerProvider = ({ children }: SlicerProviderProps) => {
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+export const SlicerProvider = ({
+  children,
+  rowSelection: rowSelectionProp,
+  setRowSelection: setRowSelectionProp,
+  onRowSelectionChange: onRowSelectionChangeProp,
+  expanded: expandedProp,
+  setExpanded: setExpandedProp,
+  onExpandedChange: onExpandedChangeProp,
+  sliceType: sliceTypeProp,
+  onSliceTypeChange: onSliceTypeChangeProp,
+}: SlicerProviderProps) => {
+  const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
+  const [internalExpanded, setInternalExpanded] = useState<ExpandedState>({})
+  const [internalSliceType, setInternalSliceType] = useState<SliceType>('hierarchy')
+
+  const rowSelection = rowSelectionProp ?? internalRowSelection
+  const setRowSelection = setRowSelectionProp ?? setInternalRowSelection
+  const expanded = expandedProp ?? internalExpanded
+  const setExpanded = setExpandedProp ?? setInternalExpanded
+  const sliceType = sliceTypeProp ?? internalSliceType
+
   const [rowSelectionData, setRowSelectionData] = useState<SelectionData>({})
   // if there is a need to leavePersistentSlice row selection data between slice changes (like the hierarchy)
   const [persistentRowSelectionData, setPersistentRowSelectionData] = useState<SelectionData>({})
-  const [expanded, setExpanded] = useState<ExpandedState>({})
-  const [sliceType, setSliceType] = useState<SliceType>('hierarchy')
   const config: SlicerConfig = {
     progress: {
       fields: [
@@ -133,19 +158,27 @@ export const SlicerProvider = ({ children }: SlicerProviderProps) => {
     // get selection data
     const selectionData = getSelectionData(selection, data)
     setRowSelectionData(selectionData)
+    // call prop
+    onRowSelectionChangeProp?.(selection, data)
   }
 
-  const handleExpandedChange = (_expanded: ExpandedState) => {}
+  const handleExpandedChange = (expanded: ExpandedState) => {
+    onExpandedChangeProp?.(expanded)
+  }
 
   const handleSliceTypeChange: OnSliceTypeChange = (
-    sliceType,
+    newSliceType,
     leavePersistentSlice,
     returnToPersistentSlice,
   ) => {
     // reset selection
     setRowSelection({})
     // set slice type
-    setSliceType(sliceType)
+    if (onSliceTypeChangeProp) {
+      onSliceTypeChangeProp(newSliceType, leavePersistentSlice, returnToPersistentSlice)
+    } else {
+      setInternalSliceType(newSliceType)
+    }
     // reset selection data
     setRowSelectionData({})
     // set persistent selection data

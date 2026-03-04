@@ -16,6 +16,7 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   const {
     columns = [],
     groupBy: groupByField,
+    groupSortByDesc,
     showEmptyGroups,
     sortBy,
     sortDesc,
@@ -55,11 +56,11 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   // Handle grouping
   let groupBy: TableGroupBy | undefined
   if (typeof groupByField === 'string' && groupByField.length > 0) {
-    groupBy = { id: groupByField, desc: false }
+    groupBy = { id: groupByField, desc: groupSortByDesc ?? false }
   } else if (Array.isArray(groupByField)) {
     const first = groupByField.find((v) => typeof v === 'string' && v.length > 0)
     if (first) {
-      groupBy = { id: first, desc: false }
+      groupBy = { id: first, desc: groupSortByDesc ?? false }
     } else {
       groupBy = undefined
     }
@@ -214,8 +215,10 @@ export function convertTanstackStatesToColumnConfig(
   if (groupBy) {
     const id = Array.isArray(groupBy.id) ? groupBy.id[0] : groupBy.id
     result.groupBy = id || undefined
+    result.groupSortByDesc = groupBy.desc ?? false
   } else {
     result.groupBy = undefined
+    result.groupSortByDesc = undefined
   }
 
   if (groupByConfig?.showEmpty !== undefined) {
