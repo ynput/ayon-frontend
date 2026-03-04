@@ -33,7 +33,10 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
             parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID && parseCellId(cellId)?.rowId,
         )
         .map((cellId) => parseCellId(cellId)?.rowId)
-        .filter((rowId): rowId is string => rowId !== undefined && gridMap.rowIdToIndex.has(rowId)),
+        .filter((rowId): rowId is string =>
+          rowId !== undefined
+          // in case the grid map hasn't been initialised, we ignore it
+          && (gridMap.rowIdToIndex.size === 0 || gridMap.rowIdToIndex.has(rowId))),
     [selectedCells, gridMap],
   )
 
