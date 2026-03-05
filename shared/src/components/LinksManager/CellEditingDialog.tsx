@@ -92,7 +92,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     let pos: { left?: number; right?: number } = {}
     pos.left = cellRect.left
 
-    setMaxWidth(cellRect.width)
+    setMaxWidth(Math.max(minWidthThreshold, cellRect.width))
 
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
     const spaceAbove = cellRect.top - screenPadding
@@ -133,7 +133,12 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
       const handlePointerUp = () => {
         document.body.classList.remove('column-resizing')
-        updatePosition()
+        // Defer to next frames so React can re-render with updated column widths
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            updatePosition()
+          })
+        })
         document.removeEventListener('pointerup', handlePointerUp)
       }
       document.addEventListener('pointerup', handlePointerUp)
