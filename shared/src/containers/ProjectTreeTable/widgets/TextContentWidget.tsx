@@ -225,6 +225,16 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       const quill = quillRef.current.getEditor()
       const html = quill.root.innerHTML
       const [markdown] = convertToMarkdown(html)
+
+      // Guard against saving unchanged content (e.g. click-outside before Quill initializes)
+      if (
+        trigger !== 'Enter' &&
+        markdown.trim() === originalValueRef.current.trim()
+      ) {
+        onCancelEdit?.()
+        return
+      }
+
       onChange?.(markdown, trigger)
     },
     [convertPlainValue, editingValue, isRichText, onChange, onCancelEdit, onEditingDraftChange],

@@ -171,6 +171,9 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     const [isOverflowing, setIsOverflowing] = useState(false)
 
     const textRef = useRef<HTMLSpanElement>(null)
+    const showTimerRef = useRef<ReturnType<typeof setTimeout>>()
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+    const showPreviewRef = useRef(false)
     const isAnythingHovered = isHoveredOnCell || isHoveredOnPreview
 
     const displayText = option?.label || value
@@ -184,21 +187,30 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       const el = textRef.current
       if (!el) return
 
+      let rafId: number | null = null
       const checkOverflow = () => {
-        if (isDescriptionColumn) {
-          // Vertical overflow (text wraps but exceeds cell height)
-          setIsOverflowing(el.scrollHeight > el.clientHeight + 1)
-        } else {
-          // Horizontal overflow (text is truncated with ellipsis)
-          setIsOverflowing(el.scrollWidth > el.clientWidth + 1)
-        }
+        // Debounce via rAF so rapid resize events don't toggle state every frame
+        if (rafId !== null) cancelAnimationFrame(rafId)
+        rafId = requestAnimationFrame(() => {
+          rafId = null
+          if (isDescriptionColumn) {
+            // Vertical overflow (text wraps but exceeds cell height)
+            setIsOverflowing(el.scrollHeight > el.clientHeight + 1)
+          } else {
+            // Horizontal overflow (text is truncated with ellipsis)
+            setIsOverflowing(el.scrollWidth > el.clientWidth + 1)
+          }
+        })
       }
 
       const observer = new ResizeObserver(checkOverflow)
       observer.observe(el)
       checkOverflow()
 
-      return () => observer.disconnect()
+      return () => {
+        if (rafId !== null) cancelAnimationFrame(rafId)
+        observer.disconnect()
+      }
     }, [textValue, isDescriptionColumn])
 
     // ── Hover tracking on parent <td>
@@ -222,57 +234,58 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     }, [])
 
     // ── Preview show/hide logic
+    // Keep ref in sync so timers can check current visibility without re-triggering the effect
+    const updatePreview = useCallback((value: boolean) => {
+      showPreviewRef.current = value
+      setShowPreview(value)
+    }, [])
+
     useEffect(() => {
-      // Close preview when editing starts
+      clearTimeout(showTimerRef.current)
+      clearTimeout(closeTimerRef.current)
+
       if (isEditing) {
-        setShowPreview(false)
-        return
+        updatePreview(false)
+      } else if (!isAnythingHovered) {
+        // Grace period before closing (handles cell→popup mouse transition)
+        closeTimerRef.current = setTimeout(() => updatePreview(false), 300)
+      } else if (showPreviewRef.current) {
+        // Preview already visible — keep it open regardless of overflow changes
+        // (overflow can toggle during column resize; don't flicker)
+      } else if (isOverflowing && cellId) {
+        // Start delay timer to show preview
+        showTimerRef.current = setTimeout(() => {
+          if (showPreviewRef.current) return // double-check, already visible
+          updatePreview(true)
+          previewDelayController.markShown()
+          window.dispatchEvent(new CustomEvent(PREVIEW_OPEN_EVENT, { detail: { cellId } }))
+        }, previewDelayController.getDelay())
       }
 
-      // Grace period before closing (handles cell→popup mouse transition)
-      if (!isAnythingHovered) {
-        if (showPreview) {
-          const timer = setTimeout(() => setShowPreview(false), 100)
-          return () => clearTimeout(timer)
-        }
-        return
+      return () => {
+        clearTimeout(showTimerRef.current)
+        clearTimeout(closeTimerRef.current)
       }
-
-      // Don't show preview if text doesn't overflow or no cellId
-      if (!isOverflowing || !cellId) return
-
-      // Already showing, don't restart delay
-      if (showPreview) return
-
-      const delay = previewDelayController.getDelay()
-      const timer = setTimeout(() => {
-        setShowPreview(true)
-        previewDelayController.markShown()
-        // Signal other previews to close
-        window.dispatchEvent(new CustomEvent(PREVIEW_OPEN_EVENT, { detail: { cellId } }))
-      }, delay)
-
-      return () => clearTimeout(timer)
-    }, [isAnythingHovered, isOverflowing, isEditing, showPreview, cellId])
+    }, [isAnythingHovered, isOverflowing, isEditing, cellId, updatePreview])
 
     // ── Listen for other previews opening → close this one ───────
     useEffect(() => {
       const handler = (e: Event) => {
         const detail = (e as CustomEvent).detail
         if (detail?.cellId !== cellId) {
-          setShowPreview(false)
+          updatePreview(false)
         }
       }
 
       window.addEventListener(PREVIEW_OPEN_EVENT, handler)
       return () => window.removeEventListener(PREVIEW_OPEN_EVENT, handler)
-    }, [cellId])
+    }, [cellId, updatePreview])
 
     // ── Preview click → start editing
     const handlePreviewClick = useCallback(() => {
-      setShowPreview(false)
+      updatePreview(false)
       if (cellId) setEditingCellId(cellId)
-    }, [cellId, setEditingCellId])
+    }, [cellId, setEditingCellId, updatePreview])
 
     // For description columns, Ctrl+Enter should save and close — not jump to next row.
     // Remap 'Enter' → 'Click' so CellWidget doesn't call moveToNextRow.
@@ -430,7 +443,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             variant="preview"
             allowMarkdown={true}
             onChange={onChange}
-            onCancelEdit={() => setShowPreview(false)}
+            onCancelEdit={() => updatePreview(false)}
             onPreviewClick={handlePreviewClick}
             onPreviewMouseEnter={() => setIsHoveredOnPreview(true)}
             onPreviewMouseLeave={() => setIsHoveredOnPreview(false)}
@@ -442,7 +455,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
           <CellEditingDialog
             isEditing={true}
             anchorId={cellId}
-            onClose={() => setShowPreview(false)}
+            onClose={() => updatePreview(false)}
             closeOnOutsideClick={false}
             closeOnScroll={false}
           >

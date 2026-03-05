@@ -133,17 +133,23 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     updatePosition()
   }, [isEditing, anchorElement])
 
-  // Watch for anchor element and table container resize
+  // Watch for anchor element and table container resize (debounced to avoid flicker)
   useLayoutEffect(() => {
     if (!isEditing) return
+    let timerId: ReturnType<typeof setTimeout> | null = null
     const resizeObserver = new ResizeObserver(() => {
-      updatePosition()
+      if (timerId !== null) clearTimeout(timerId)
+      timerId = setTimeout(() => {
+        updatePosition()
+        timerId = null
+      }, 60)
     })
 
     if (tableContainer) resizeObserver.observe(tableContainer as Element)
     if (anchorElement) resizeObserver.observe(anchorElement)
 
     return () => {
+      if (timerId !== null) clearTimeout(timerId)
       resizeObserver.disconnect()
     }
   }, [isEditing, tableContainer, anchorElement])
