@@ -71,6 +71,7 @@ export interface TextContentWidgetProps extends WidgetBaseProps {
   // Enable or disable markdown editing features
   allowMarkdown?: boolean
   valueType?: 'string' | 'integer' | 'float'
+  draftValue?: string | null
   onEditingDraftChange?: (value: string | null) => void
   onDismissWithoutSave?: () => void
   onPreviewMouseEnter?: () => void
@@ -87,13 +88,15 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   onPreviewClick,
   allowMarkdown = true,
   valueType = 'string',
+  draftValue,
   onEditingDraftChange,
   onDismissWithoutSave,
   onPreviewMouseEnter,
   onPreviewMouseLeave,
 }) => {
-  const [editingValue, setEditingValue] = useState('')
-  const [descriptionHtml, setDescriptionHtml] = useState('')
+  const hasDraftRef = useRef(draftValue != null)
+  const [editingValue, setEditingValue] = useState(draftValue ?? '')
+  const [descriptionHtml, setDescriptionHtml] = useState(draftValue ?? '')
   const quillRef = useRef<any>(null)
   const markdownRef = useRef<HTMLDivElement>(null)
   const isPreview = variant === 'preview'
@@ -106,8 +109,14 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     originalValueRef.current = normalizedValue
   }, [normalizedValue])
 
+  const updateEditingValue = useCallback((newValue: string) => {
+    setEditingValue(newValue)
+    onEditingDraftChange?.(newValue)
+  }, [onEditingDraftChange])
+
   // Parse markdown to HTML to initialize the editor content for edit and preview
   useEffect(() => {
+    if (hasDraftRef.current) { hasDraftRef.current = false; return }
     if (!isEditing && !isPreview) return
     if (!isRichText) {
       setEditingValue(normalizedValue)
@@ -335,7 +344,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
                 toolbar: false,
               }}
               readOnly={isPreview}
-              onChange={setEditingValue}
+              onChange={updateEditingValue}
             />
           ) : isPreview ? (
             <PlainPreview>{normalizedValue}</PlainPreview>
@@ -343,7 +352,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
             <PlainTextarea
               ref={plainTextAreaRef}
               value={editingValue}
-              onChange={(e) => setEditingValue(e.target.value)}
+              onChange={(e) => updateEditingValue(e.target.value)}
               onKeyDown={(event) => {
                 if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
                   event.preventDefault()

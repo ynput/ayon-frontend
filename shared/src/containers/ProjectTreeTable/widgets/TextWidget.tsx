@@ -164,7 +164,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     },
     ref,
   ) => {
-    const { setEditingCellId } = useCellEditing()
+    const { setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
 
     const [isHoveredOnCell, setIsHoveredOnCell] = useState(false)
     const [isHoveredOnPreview, setIsHoveredOnPreview] = useState(false)
@@ -432,6 +432,8 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             onChange={handleDescriptionChange}
             onCancelEdit={onCancelEdit}
             onDismissWithoutSave={onCancelEdit}
+            draftValue={getEditingDraft()}
+            onEditingDraftChange={setEditingDraft}
           />
         )}
 

@@ -172,6 +172,10 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
       const target = event.target as HTMLElement
 
+      // If the clicked element was removed from the DOM during a React re-render
+      // (e.g. cell content replaced when entering edit mode), ignore this event.
+      if (!document.contains(target)) return
+
       if (
         popupRef.current &&
         !popupRef.current.contains(target) &&
@@ -219,6 +223,8 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
     const handleScroll = () => {
       if (!activated) return
+      // Don't close while a column is being resized — the scroll is a layout side-effect
+      if (document.body.classList.contains('column-resizing')) return
       const currentScrollTop = (tableContainer as HTMLElement).scrollTop
       // Only close on vertical scroll, ignore horizontal
       if (Math.abs(currentScrollTop - lastScrollTop) > 1) {
@@ -237,6 +243,15 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
       tableContainer.removeEventListener('scroll', handleScroll)
     }
   }, [isEditing, closeOnScroll, anchorElement, onClose, onDismissWithoutSave])
+
+  // Reposition dialog during scroll when it stays open (closeOnScroll = false)
+  useLayoutEffect(() => {
+    if (!isEditing || closeOnScroll || !tableContainer) return
+
+    const handleScroll = () => updatePosition()
+    tableContainer.addEventListener('scroll', handleScroll, { passive: true })
+    return () => tableContainer.removeEventListener('scroll', handleScroll)
+  }, [isEditing, closeOnScroll])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     // check we are not inside an input or textarea
