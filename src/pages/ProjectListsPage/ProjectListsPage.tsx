@@ -309,6 +309,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
             >
               {selectedList && (
                 <Toolbar>
+                  <OpenReviewSessionButton
+                    projectName={projectName}
+                    disabled={listItemsData.length === 0}
+                  />
                   {
                     view === "cards" && (
                       <ReviewSessionCardsControlsLeft />
@@ -358,10 +362,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )
                   }
                   <CustomizeButton />
-                  <OpenReviewSessionButton
-                    projectName={projectName}
-                    disabled={listItemsData.length === 0}
-                  />
                 </Toolbar>
               )}
               <Splitter
