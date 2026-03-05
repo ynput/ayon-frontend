@@ -10,6 +10,11 @@ const StyledPopUp = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  body.column-resizing & {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
 `
 
 type Position = {
@@ -73,6 +78,10 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
 
     const cellRect = anchorElement.getBoundingClientRect()
 
+    const containerRect = tableContainer.getBoundingClientRect()
+    const containerRight = containerRect.right
+    const containerToRightOfScreen = window.innerWidth - containerRect.right
+
     const screenPadding = 24
     const minHeightThreshold = 250
     const minWidthThreshold = 400
@@ -80,29 +89,10 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
 
-    // Width matches anchor element width (min 400px)
-    const anchorWidth = cellRect.width
-    let dialogWidth = Math.max(minWidthThreshold, anchorWidth)
-
-    // Position horizontally: try to align with the anchor element
     let pos: { left?: number; right?: number } = {}
-    const spaceToRight = screenWidth - cellRect.left - screenPadding
-    if (spaceToRight >= dialogWidth) {
-      // Enough space to the right
-      pos.left = cellRect.left
-    } else {
-      // Try anchoring to the right side
-      const spaceToLeft = cellRect.right - screenPadding
-      if (spaceToLeft >= dialogWidth) {
-        pos.right = screenWidth - cellRect.right
-      } else {
-        // Not enough space on either side, center and use available width
-        pos.left = screenPadding
-        dialogWidth = screenWidth - 2 * screenPadding
-      }
-    }
+    pos.left = cellRect.left
 
-    setMaxWidth(dialogWidth)
+    setMaxWidth(cellRect.width)
 
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
     const spaceAbove = cellRect.top - screenPadding
@@ -133,32 +123,31 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     updatePosition()
   }, [isEditing, anchorElement])
 
-  // Watch for anchor element and table container resize (debounced to avoid flicker)
+  // Hide dialog while a column is being resized (capture phase to bypass stopPropagation)
   useLayoutEffect(() => {
-    if (!isEditing) return
-    let timerId: ReturnType<typeof setTimeout> | null = null
-    const resizeObserver = new ResizeObserver(() => {
-      if (timerId !== null) clearTimeout(timerId)
-      timerId = setTimeout(() => {
+    if (!isEditing || !tableContainer) return
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (!(e.target as HTMLElement).closest('.resize-handle')) return
+      document.body.classList.add('column-resizing')
+
+      const handlePointerUp = () => {
+        document.body.classList.remove('column-resizing')
         updatePosition()
-        timerId = null
-      }, 60)
-    })
-
-    if (tableContainer) resizeObserver.observe(tableContainer as Element)
-    if (anchorElement) resizeObserver.observe(anchorElement)
-
-    return () => {
-      if (timerId !== null) clearTimeout(timerId)
-      resizeObserver.disconnect()
+        document.removeEventListener('pointerup', handlePointerUp)
+      }
+      document.addEventListener('pointerup', handlePointerUp)
     }
-  }, [isEditing, tableContainer, anchorElement])
+
+    tableContainer.addEventListener('pointerdown', handlePointerDown as EventListener, true)
+    return () => {
+      tableContainer.removeEventListener('pointerdown', handlePointerDown as EventListener, true)
+    }
+  }, [isEditing, tableContainer])
 
   // Close the dialog when clicking outside of it
   useLayoutEffect(() => {
     if (!isEditing || !closeOnOutsideClick) return
-
-    const controller = new AbortController()
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
@@ -189,9 +178,9 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside, { signal: controller.signal })
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      controller.abort()
+      document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isEditing, closeOnOutsideClick, onClose, onSave, anchorElement])
 
@@ -199,7 +188,6 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
   useLayoutEffect(() => {
     if (!isEditing || !closeOnScroll || !tableContainer) return
 
-    const controller = new AbortController()
     let lastScrollTop = (tableContainer as HTMLElement).scrollTop
     let activated = false
 
@@ -222,16 +210,13 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
       }
     }
 
-    tableContainer.addEventListener('scroll', handleScroll, {
-      passive: true,
-      signal: controller.signal,
-    })
+    tableContainer.addEventListener('scroll', handleScroll, { passive: true })
 
     return () => {
       clearTimeout(timer)
-      controller.abort()
+      tableContainer.removeEventListener('scroll', handleScroll)
     }
-  }, [isEditing, closeOnScroll, tableContainer, onClose, onDismissWithoutSave])
+  }, [isEditing, closeOnScroll, anchorElement, onClose, onDismissWithoutSave])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     // check we are not inside an input or textarea
@@ -258,7 +243,6 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
         width: maxWidth ? `${maxWidth}px` : 'auto',
-        maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
         ...style,
       }}
