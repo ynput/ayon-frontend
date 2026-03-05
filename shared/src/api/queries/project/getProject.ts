@@ -33,7 +33,6 @@ export const {
   useGetProjectQuery,
   useListProjectsQuery,
   useGetProjectAnatomyQuery,
-  useGetProductTypesQuery,
 } = enhancedProject
 
 export default enhancedProject

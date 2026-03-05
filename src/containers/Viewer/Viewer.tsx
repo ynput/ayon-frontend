@@ -5,7 +5,6 @@ import { useFullScreenHandle } from 'react-full-screen'
 import { Button } from '@ynput/ayon-react-components'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
-import ReviewablesSelector from '@components/ReviewablesSelector'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
@@ -15,7 +14,7 @@ import { ViewerProvider } from '@context/ViewerContext'
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
-import { getGroupedReviewables } from '@shared/components'
+import { getGroupedReviewables, ReviewablesSelector } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
 import { useLocalStorage } from '@shared/hooks'
@@ -356,7 +355,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
                   onChange={handleProductChange}
                   valueProps={{ className: 'product-dropdown' }}
                   tooltip="Select a product to view its versions reviewables"
-                  shortcut={''}
                   valueIcon={selectedProduct?.icon || ''}
                   valueColor={selectedProduct?.color}
                 />

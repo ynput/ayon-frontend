@@ -6,7 +6,7 @@ import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
 import { EntityPanelUploader, StackedThumbnails } from '@shared/components'
 import { Actions, DetailsPanelProps } from '@shared/containers'
 // shared
-import { useGetEntitiesChecklistsQuery, useGetAttributeConfigQuery, Status } from '@shared/api'
+import { useGetAttributeConfigQuery, Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedStatuses, useEntityUpdate } from '@shared/hooks'
@@ -23,7 +23,6 @@ export type EntityTypeIcons = {
   task: Record<string, string>
   product: Record<string, string>
 }
-
 
 type DetailsPanelHeaderProps = {
   entityType: 'folder' | 'task' | 'version' | 'representation'
@@ -98,7 +97,7 @@ const DetailsPanelHeader = ({
       attrib: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      path: ''
+      path: '',
     }
   }
 
@@ -107,19 +106,6 @@ const DetailsPanelHeader = ({
   const entityIds = entities
     .filter((e) => e.projectName === firstEntity?.projectName && e.id)
     .map((entity) => entity.id)
-
-  // get checklists count
-  const { data: checklistCount } = useGetEntitiesChecklistsQuery(
-    {
-      projectName: firstEntity?.projectName,
-      entityIds,
-    },
-    { skip: !firstEntity?.projectName || !entityIds.length },
-  )
-  let checklistsLabel
-  if (checklistCount?.total && checklistCount.total > 0) {
-    checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
-  }
 
   // get priorities
   // get priority attribute so we know the colors and icons for each priority

@@ -139,6 +139,7 @@ export const EntityPanelUploader = ({
         folderId: folderId,
         name: sanitizedName,
         productType: 'review', // default product type for uploaded files
+        productBaseType: 'review',
       })
 
       // Close dialog and proceed with version upload

@@ -7,11 +7,8 @@ import KanBanCardDraggable from '../KanBanCard/KanBanCardDraggable'
 import KanBanCard from '../KanBanCard/KanBanCard'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { InView, useInView } from 'react-intersection-observer'
-import 'react-perfect-scrollbar/dist/css/styles.css'
 import KanBanColumnDropzone from './KanBanColumnDropzone'
 import clsx from 'clsx'
-import { useURIContext } from '@shared/context'
-import { getTaskRoute } from '@helpers/routes'
 import { useScopedDetailsPanel } from '@shared/context'
 import { useNavigate } from 'react-router-dom'
 
@@ -82,20 +79,13 @@ const KanBanColumn = forwardRef(
     // we keep track of the ids that have been pre-fetched to avoid fetching them again
     const handlePrefetch = usePrefetchEntity(dispatch, projectsInfo, 500, 'dashboard')
 
-    const { setUri } = useURIContext()
-    const openInBrowser = async (task) => {
-      const taskUri = getTaskRoute(task)
-      setUri(taskUri)
-
-      // // navigate to browser page with uri as query param
-      if (taskUri) {
-        navigate(`/projects/${task.projectName}/browser?uri=${encodeURIComponent(taskUri)}`)
-      }
+    const openInOverview = (task) => {
+      navigate(`/projects/${task.projectName}/overview?project=${task.projectName}&type=task&id=${task.id}`)
     }
 
     // CONTEXT MENU
     const { handleContextMenu, closeContext } = useGetTaskContextMenu(tasks, dispatch, {
-      onOpenInBrowser: openInBrowser,
+      onOpenInOverview: openInOverview,
     })
 
     // HANDLE TASK CLICK
@@ -104,7 +94,7 @@ const KanBanColumn = forwardRef(
     const handleDoubleClick = (e, task) => {
       if (e.metaKey || e.ctrlKey) {
         // get the task
-        openInBrowser(task)
+        openInOverview(task)
       } else {
         onTogglePanel(true)
       }

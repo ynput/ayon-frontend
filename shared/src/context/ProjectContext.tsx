@@ -1,15 +1,14 @@
-import { createContext, useContext, useCallback, useMemo } from 'react'
-import { useGetProjectQuery, useGetProductTypesQuery, useGetProjectAnatomyQuery } from '@shared/api'
+import { createContext, useContext, useCallback } from 'react'
+import { useGetProjectQuery, useGetProjectAnatomyQuery } from '@shared/api'
+import { getEntityTypeIcon } from '@shared/util'
 
 import type {
   FolderType,
   TaskType,
   ProductTypeListItem,
-  DefaultProductType,
   ProjectModel,
   Anatomy,
 } from '@shared/api'
-import { getEntityTypeIcon } from '@shared/util'
 
 export type ProjectModelWithProducts = ProjectModel & {
   // Extend project with product types
@@ -41,7 +40,6 @@ export interface ProjectContextValue extends ProjectModelWithProducts {
   isSuccess: boolean
   isUninitialized: boolean
   error: any
-  defaultProductType?: DefaultProductType
   anatomy: Anatomy
   refetch: () => void
   getProductType: (productType: string) => {
@@ -78,11 +76,6 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
     error,
     refetch: refetchProject,
   } = useGetProjectQuery({ projectName }, { skip: !projectName })
-  // PRODUCT TYPES
-  const { data: productTypesData, refetch: refetchProductTypes } = useGetProductTypesQuery(
-    { projectName },
-    { skip: !projectName },
-  )
   // ANATOMY
   const { data: anatomy = {}, refetch: refetchAnatomy } = useGetProjectAnatomyQuery(
     { projectName },
@@ -92,8 +85,14 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
   // Shorthands to access project data and type casting
   // (we're referencing nested objects. no need to use useMemo for these)
 
-  const productTypes = productTypesData?.productTypes || []
-  const defaultProductType = productTypesData?.default
+  const defaultProductType = anatomy.product_base_types?.default
+  const productTypes: ProductTypeListItem[] = (anatomy.product_base_types?.definitions || []).map(
+    (t) => ({
+      name: t.name || '',
+      icon: t.icon,
+      color: t.color,
+    }),
+  )
   //
   // Magic functions
   //
@@ -120,10 +119,10 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
 
   const getProductType = useCallback(
     (productType: string) => {
-      const type = productTypes.find((t) => t.name === productType) || defaultProductType
+      const type = productTypes.find((t) => t.name === productType)
       return {
-        icon: type?.icon || getEntityTypeIcon('product'),
-        color: type?.color,
+        icon: type?.icon || defaultProductType?.icon || getEntityTypeIcon('product'),
+        color: type?.color || defaultProductType?.color,
       }
     },
     [productTypes, defaultProductType],
@@ -138,17 +137,16 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
     const result = productTypes.map((type) => ({
       value: type.name,
       label: type.name,
-      icon: type.icon || defaultProductType?.icon || '',
+      icon: type.icon || defaultProductType?.icon || getEntityTypeIcon('product'),
       color: type.color || defaultProductType?.color || '',
     }))
     return result
-  }, [productTypes])
+  }, [productTypes, defaultProductType])
 
   const refetch = useCallback(() => {
     refetchProject()
-    refetchProductTypes()
     refetchAnatomy()
-  }, [refetchProject, refetchProductTypes, refetchAnatomy])
+  }, [refetchProject, refetchAnatomy])
 
   //
   // Put everything together
@@ -170,7 +168,6 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
         projectName,
         productTypes: productTypes,
         anatomy,
-        defaultProductType,
         isLoading: isLoading || isFetching,
         isSuccess: isSuccess,
         isUninitialized,

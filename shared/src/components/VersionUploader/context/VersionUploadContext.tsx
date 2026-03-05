@@ -200,6 +200,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
               folderId,
               name: data.name,
               productType: data.productType || 'review',
+              productBaseType: data.productType || 'review',
             },
             {
               version: data.version,

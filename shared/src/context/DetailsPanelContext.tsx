@@ -48,6 +48,11 @@ export interface TabStateByScope {
   [scope: string]: DetailsPanelTab
 }
 
+const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'files']
+
+const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
+  typeof tab === 'string' && DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab)
+
 // these props get forwarded to the details panel value
 // it's mainly redux callbacks that cannot be used in shared library
 export interface DetailsPanelContextProps {
@@ -186,8 +191,9 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const getTabForScope = useCallback(
     (scope: string): DetailsPanelTab => {
       // Check if we have a saved preference for this scope
-      if (tabsByScope[scope]) {
-        return tabsByScope[scope]
+      const tab = tabsByScope[scope]
+      if (isDetailsPanelTab(tab)) {
+        return tab
       }
 
       // Fall back to default
@@ -235,7 +241,12 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   const { uriType, uri, entity, getUriEntities } = useURIContext()
   const [searchParams] = forwardedProps.useSearchParams()
 
-  // on first load, check if there is a uri or URL params and open details panel if present
+  const project = searchParams.get('project')
+  const type = searchParams.get('type')
+  const id = searchParams.get('id')
+  const activity = searchParams.get('activity')
+
+  // on first load or URL param change, check if there is a uri or URL params and open details panel if present
   useEffect(() => {
     // Priority 1: Check for 'uri' parameter (ayon+entity://...)
     if (uriType === 'entity' && entity && entity.entityType !== 'product') {
@@ -277,11 +288,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     }
 
     // Priority 2: Check for URL params (project, type, id)
-    const project = searchParams.get('project')
-    const type = searchParams.get('type')
-    const id = searchParams.get('id')
-    const activity = searchParams.get('activity')
-
     if (project && type && id) {
       const newEntities: Entities = {
         entityType: type as DetailsPanelEntityType,
@@ -306,7 +312,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
         })
       }
     }
-  }, [])
+  }, [project, type, id])
 
   const value = {
     // open state for the panel by scope
@@ -361,7 +367,10 @@ export const useScopedDetailsPanel = (scope: string) => {
     {},
   )
 
-  const [tab, setTab] = useState<DetailsPanelTab>(() => tabsByScope[scope] ?? getTabForScope(scope))
+  const [currentTab, setTab] = useState<DetailsPanelTab>(() => {
+    const tab = tabsByScope[scope]
+    return isDetailsPanelTab(tab) ? tab : getTabForScope(scope)
+  })
 
   // Keep localStorage and local state in sync
   const updateTab = useCallback(
@@ -372,7 +381,6 @@ export const useScopedDetailsPanel = (scope: string) => {
     [scope, setTabsByScope],
   )
 
-  const currentTab = tab
   const isFeed = currentTab === 'feed'
 
   return {

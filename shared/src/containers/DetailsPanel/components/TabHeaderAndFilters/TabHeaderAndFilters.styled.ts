@@ -7,7 +7,6 @@ export const HeaderContainer = styled.div`
   align-items: center;
   padding: 4px 8px;
   gap: var(--base-gap-small);
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 `
 
 export const HeaderLabel = styled.span`

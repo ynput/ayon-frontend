@@ -31,6 +31,11 @@ export const MeOrUserSwitchContainer = styled.div`
     border-radius: var(--border-radius) 0 0 var(--border-radius);
     border: 1px solid var(--md-sys-color-outline-variant);
     border-right: none;
+
+    &:only-child {
+      border-radius: var(--border-radius);
+      border-right: 1px solid var(--md-sys-color-outline-variant);
+    }
   }
 
   .dropdown {

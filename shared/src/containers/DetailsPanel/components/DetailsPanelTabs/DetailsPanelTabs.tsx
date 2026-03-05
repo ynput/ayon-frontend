@@ -38,6 +38,7 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           onClick={() => onTabChange('feed')}
           data-tooltip="Activity Feed"
           data-tooltip-delay={0}
+          variant="text"
         />
       )}
       {showSubtasksTab && (
@@ -47,6 +48,7 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           onClick={() => onTabChange('subtasks')}
           data-tooltip="Subtasks"
           data-tooltip-delay={0}
+          variant="text"
         />
       )}
       <Spacer />
@@ -57,12 +59,14 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           selected={currentTab === 'files'}
           data-tooltip="Version files"
           data-tooltip-delay={0}
+          variant="text"
         />
       )}
       <Button
         onClick={() => onTabChange('details')}
         selected={currentTab === 'details'}
         style={{ padding: '6px 8px' }}
+        variant="text"
       >
         Details
       </Button>

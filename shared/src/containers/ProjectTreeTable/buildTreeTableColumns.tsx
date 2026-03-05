@@ -45,6 +45,16 @@ const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
 
 const naturalSortCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
+const withNameTieBreaker = (sortFn: SortingFn<any>): SortingFn<any> => {
+  return (rowA, rowB, ...args) => {
+    const result = sortFn(rowA, rowB, ...args)
+    if (result !== 0) return result
+    const labelA = rowA.original.label || rowA.original.name || ''
+    const labelB = rowB.original.label || rowB.original.name || ''
+    return naturalSortCollator.compare(labelA, labelB)
+  }
+}
+
 const pathSort: SortingFn<any> = (rowA, rowB) => {
   const labelA = rowA.original.label || rowA.original.path || rowA.original.name || ''
   const labelB = rowB.original.label || rowB.original.path || rowB.original.name || ''
@@ -68,7 +78,7 @@ const attribSort: AttribSortingFn = (rowA, rowB, columnId, attrib) => {
   if (attrib && attrib.enum) {
     const indexA = attrib.enum.findIndex((o) => o.value === valueA)
     const indexB = attrib.enum.findIndex((o) => o.value === valueB)
-    return indexB - indexA < 0 ? 1 : -1
+    return indexA - indexB
   } else if (attrib?.type === 'datetime') {
     return sortingFns.datetime(rowA, rowB, columnId)
   } else if (attrib?.type === 'boolean') {
@@ -324,9 +334,9 @@ const buildTreeTableColumns = ({
       accessorKey: 'status',
       minSize: COLUMN_MIN_SIZE,
       header: 'Status',
-      sortingFn: withLoadingStateSort((a, b, c) =>
+      sortingFn: withLoadingStateSort(withNameTieBreaker((a, b, c) =>
         attribSort(a, b, c, { enum: options.status, type: 'string' }),
-      ),
+      )),
       sortDescFirst: true,
       enableSorting: canSort('status'),
       enableResizing: true,
@@ -384,7 +394,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort(sortingFns.alphanumeric),
+      sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.alphanumeric)),
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
@@ -413,9 +423,9 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort((a, b, c) =>
+      sortingFn: withLoadingStateSort(withNameTieBreaker((a, b, c) =>
         attribSort(a, b, c, { enum: [...options.folderType, ...options.taskType], type: 'string' }),
-      ),
+      )),
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
@@ -480,7 +490,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort(valueLengthSort),
+      sortingFn: withLoadingStateSort(withNameTieBreaker(valueLengthSort)),
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
@@ -663,7 +673,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort(valueLengthSort),
+      sortingFn: withLoadingStateSort(withNameTieBreaker(valueLengthSort)),
       cell: ({ row, column, table }) => {
         const meta = table.options.meta
         const { value, id, type } = getValueIdType(row, column.id)
@@ -701,7 +711,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort(sortingFns.datetime),
+      sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.datetime)),
       cell: ({ row, column }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
@@ -731,7 +741,7 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort(sortingFns.datetime),
+      sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.datetime)),
       cell: ({ row, column }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
@@ -808,7 +818,7 @@ const buildTreeTableColumns = ({
         header: attrib.data.title || attrib.name,
         minSize: COLUMN_MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
-        sortingFn: withLoadingStateSort((a, b, c) => attribSort(a, b, c, attrib.data)),
+        sortingFn: withLoadingStateSort(withNameTieBreaker((a, b, c) => attribSort(a, b, c, attrib.data))),
         enableSorting: canSort(attrib.name) && canSort('attrib'),
         enableResizing: true,
         enablePinning: true,

@@ -59,11 +59,10 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
     approved: approvedVersion,
     hero: heroVersion,
   }
-  const selectRef = useRef(null)
 
   const toolsRef = useRef(null)
 
-  useReviewShortcuts({ allVersions, onChange, toolsRef, selectRef })
+  useReviewShortcuts({ allVersions, onChange, toolsRef })
 
   if (selectedIndex === -1) return
 
@@ -88,12 +87,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         beforeContent={<Icon icon="chevron_left" />}
         shortcut={{ children: 'A' }}
       />
-      <ReviewVersionDropdown
-        options={options}
-        value={selected}
-        onChange={onChange}
-        selectRef={selectRef}
-      />
+      <ReviewVersionDropdown options={options} value={selected} onChange={onChange} />
       <NavButton
         version={allVersions.next}
         className="next"

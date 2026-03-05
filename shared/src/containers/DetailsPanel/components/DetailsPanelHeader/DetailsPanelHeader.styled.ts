@@ -153,7 +153,7 @@ export const LabelWrapper = styled.div`
   flex-direction: column;
 `
 interface StatusSelectProps {
-  $textColor: string;
+  $textColor: string
 }
 export const StatusSelect = styled(StatusSelectComponent)<StatusSelectProps>`
   width: fit-content;
@@ -164,7 +164,7 @@ export const StatusSelect = styled(StatusSelectComponent)<StatusSelectProps>`
     padding-right: 8px;
     width: calc(100% - 1px);
     margin-bottom: 2px;
-    color: ${props => props.$textColor};
+    color: ${(props) => props.$textColor};
   }
 `
 

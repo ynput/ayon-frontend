@@ -18,6 +18,10 @@ const Container = styled.div`
   padding: var(--padding-m);
 `
 
+const Section = styled.div`
+  flex-grow: 0;
+`
+
 const TableContainer = styled.div`
   flex: 1;
   overflow: auto;
