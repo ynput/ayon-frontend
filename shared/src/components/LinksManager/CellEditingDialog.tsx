@@ -86,7 +86,6 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     const screenPadding = 24
     const minHeightThreshold = 250
     const minWidthThreshold = 400
-    const maxMaxHeight = 600
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
 
@@ -111,7 +110,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     }
 
     // Set max height to prevent dialog from going off screen
-    setMaxHeight(Math.min(Math.max(200, availableHeight), maxMaxHeight)) // Minimum 200px height
+    setMaxHeight(Math.max(200, availableHeight)) // Minimum 200px height
 
     setPosition({
       top,
@@ -123,6 +122,14 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
   useLayoutEffect(() => {
     updatePosition()
   }, [isEditing, anchorElement])
+
+  // Recalculate on window resize so maxHeight stays within the new viewport
+  useLayoutEffect(() => {
+    if (!isEditing) return
+    const handleResize = () => updatePosition()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isEditing])
 
   // Hide dialog while a column is being resized (capture phase to bypass stopPropagation)
   useLayoutEffect(() => {
@@ -160,6 +167,9 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     if (!isEditing || !closeOnOutsideClick) return
 
     const handleClickOutside = (event: MouseEvent) => {
+      // Don't close/save while a column is being resized
+      if (document.body.classList.contains('column-resizing')) return
+
       const target = event.target as HTMLElement
 
       if (

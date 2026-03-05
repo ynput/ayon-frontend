@@ -58,7 +58,8 @@ const StyledPreviewContent = styled.div`
   white-space: pre-wrap;
   word-break: break-word;
   min-height: 40px;
-  max-height: 500px;
+  max-height: none;
+  flex: 1;
   overflow: auto;
   border: 2px solid transparent;
   cursor: pointer;

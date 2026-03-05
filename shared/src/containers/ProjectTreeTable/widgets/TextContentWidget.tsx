@@ -21,7 +21,8 @@ const StyledDialog = styled.div`
   max-width: 100%;
   height: auto;
   min-height: 88px;
-  max-height: 500px;
+  max-height: none;
+  flex: 1;
   overflow: auto;
   border: 2px solid transparent;
 
