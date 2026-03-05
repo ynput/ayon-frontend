@@ -1,4 +1,5 @@
 import { FC, useRef, useLayoutEffect, useState, CSSProperties } from 'react'
+import { flushSync } from 'react-dom'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
@@ -132,11 +133,15 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
       document.body.classList.add('column-resizing')
 
       const handlePointerUp = () => {
-        document.body.classList.remove('column-resizing')
-        // Defer to next frames so React can re-render with updated column widths
+        // Wait 2 frames for column widths to settle in the DOM
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            updatePosition()
+            // flushSync forces React to render new dimensions synchronously,
+            // so when we remove the CSS class next, the dialog is already correct
+            flushSync(() => {
+              updatePosition()
+            })
+            document.body.classList.remove('column-resizing')
           })
         })
         document.removeEventListener('pointerup', handlePointerUp)
