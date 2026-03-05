@@ -60,12 +60,13 @@ const Paragraph = ({ children, node: _node, ...props }: ParagraphProps) => {
 }
 
 // Preserve multiple blank lines by replacing sequences of 3+ newlines
-// with interleaved &nbsp; lines so ReactMarkdown renders empty paragraphs
+// with interleaved EMPTY_PARAGRAPH_TOKEN lines so ReactMarkdown renders empty paragraphs.
+// This handles content stored before the EMPTY_PARAGRAPH_TOKEN approach was used.
 const preserveBlankLines = (text: string): string => {
   return text.replace(/\n{3,}/g, (match) => {
     // Number of extra blank lines beyond the standard paragraph break
     const extraLines = Math.floor(match.length / 2) - 1
-    return '\n\n' + '&nbsp;\n\n'.repeat(extraLines)
+    return '\n\n' + `${EMPTY_PARAGRAPH_TOKEN}\n\n`.repeat(extraLines)
   })
 }
 
