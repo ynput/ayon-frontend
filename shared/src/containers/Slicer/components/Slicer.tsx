@@ -41,6 +41,7 @@ export const Slicer: FC<SlicerProps> = ({
     isLoading: isLoadingSliceTableData,
   } = useTableDataBySlice({ sliceFields, entityTypes })
 
+
   const handleSelectionChange = (s: RowSelectionState) => {
     setRowSelection(s)
     onRowSelectionChange?.(s, sliceMap)
@@ -84,6 +85,7 @@ export const Slicer: FC<SlicerProps> = ({
           setExpanded,
           onExpandedChange,
           data: sliceMap,
+          menuItems:['expand-collapse']
         }}
       >
         <SimpleTable
