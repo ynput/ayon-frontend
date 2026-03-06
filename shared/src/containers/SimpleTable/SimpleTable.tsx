@@ -212,7 +212,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
     rowPinning,
     onRowPinningChange,
     onContextMenu,
-    handleAltClick,
+    expandAllForRow,
   } = useSimpleTableContext()
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
@@ -376,7 +376,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
           const cellMeta = cellTableInstance.options.meta
 
           const handleCellClick = (event: ReactMouseEvent<HTMLElement, MouseEvent>) => {
-            // Alt+Click is handled by handleAltClick on the row for expand/collapse
+            // Alt+Click is handled by the RowExpander for expand/collapse
             if (event.altKey) return
 
             // Prevent row selection if clicking on an interactive element within the cell
@@ -427,6 +427,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             isRowExpanded: row.getIsExpanded(),
             isTableExpandable: cellMeta?.isExpandable,
             onExpandClick: row.getToggleExpandedHandler(),
+            onAltExpandClick: () => expandAllForRow?.(row.id),
             startContent: row.original.startContent,
             endContent: row.original.endContent,
             isDisabled: row.original.isDisabled,
@@ -451,6 +452,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
+      expandAllForRow,
     ], // include enableClickToDeselect for completeness
   )
 
@@ -598,7 +600,6 @@ const SimpleTable: FC<SimpleTableProps> = ({
                   id={row.id}
                   {...pt?.row}
                   onContextMenu={onContextMenu}
-                  onClick={handleAltClick}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                     ...pt?.row?.style, // custom styles to be passed

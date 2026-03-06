@@ -52,7 +52,7 @@ interface SimpleTableContextValue {
   data?: any
   menuItems: (SimpleTableContextMenuItemConstructor | string)[]
   onContextMenu?: (e: React.MouseEvent<HTMLElement>) => void
-  handleAltClick?: (e: React.MouseEvent<HTMLElement>) => void
+  expandAllForRow?: (rowId: string) => void
 }
 
 const SimpleTableContext = createContext<SimpleTableContextValue | undefined>(undefined)
@@ -245,28 +245,21 @@ export const SimpleTableProvider = ({
     [inputMenuItems, rowSelection, builtInMenuItems, cellContextMenuShow, tableData, expanded],
   )
 
-  const handleAltClick = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      if (e.altKey) {
-        e.preventDefault()
-        e.stopPropagation()
+  const expandAllForRow = useCallback(
+    (rowId: string) => {
+      if (!rowId) return
 
-        // Get the row ID from the event target
-        const rowId = e.currentTarget.id
-        if (!rowId) return
+      // Check if this row is in the current selection
+      const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
+      const isInSelection = selectedIds.includes(rowId)
 
-        // Check if this row is in the current selection
-        const selectedIds = Object.keys(rowSelection).filter((id) => rowSelection[id])
-        const isInSelection = selectedIds.includes(rowId)
+      // If the clicked row is in the selection, use all selected rows, otherwise just the clicked row
+      const idsToToggle = isInSelection ? selectedIds : [rowId]
 
-        // If the clicked row is in the selection, use all selected rows, otherwise just the clicked row
-        const idsToToggle = isInSelection ? selectedIds : [rowId]
+      // Check if the clicked row is expanded
+      const isExpanded = expanded && (expanded as Record<string, boolean>)[rowId]
 
-        // Check if the clicked row is expanded
-        const isExpanded = expanded && (expanded as Record<string, boolean>)[rowId]
-
-        toggleExpandAll(idsToToggle, !isExpanded)
-      }
+      toggleExpandAll(idsToToggle, !isExpanded)
     },
     [rowSelection, expanded, toggleExpandAll],
   )
@@ -278,7 +271,7 @@ export const SimpleTableProvider = ({
         rowSelection,
         menuItems: inputMenuItems || [],
         onContextMenu,
-        handleAltClick,
+        expandAllForRow,
       }}
     >
       {children}
