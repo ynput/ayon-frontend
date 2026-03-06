@@ -2,11 +2,26 @@
 
 import TurndownService from 'turndown'
 
+export const EMPTY_PARAGRAPH_TOKEN = 'AYON_EMPTY_PARAGRAPH'
+
 // override the escaping of markdown characters
 // https://github.com/mixmark-io/turndown?tab=readme-ov-file#escaping-markdown-characters
 TurndownService.prototype.escape = (string) => string
 
 var turndownService = new TurndownService()
+
+turndownService.addRule('emptyParagraph', {
+  filter: function (node) {
+    if (node.nodeName !== 'P') return false
+    const childNodes = node.childNodes || []
+    if (childNodes.length !== 1) return false
+    const childNode = childNodes[0]
+    return childNode?.nodeName === 'BR'
+  },
+  replacement: function () {
+    return `\n\n${EMPTY_PARAGRAPH_TOKEN}\n\n`
+  },
+})
 
 // support lists with checkboxes
 turndownService.addRule('taskListItems', {
@@ -144,15 +159,9 @@ export const getTextRefs = (text = '') => {
 export const convertToMarkdown = (value) => {
   const codeBlocksParsed = parseCodeBlocks(value)
 
-  // Preserve empty paragraphs (blank lines) by inserting a zero-width space
-  // so Turndown treats them as non-empty and doesn't collapse them
-  const blankLinesPreserved = codeBlocksParsed.replace(/<p><br><\/p>/g, '<p>\u200B</p>')
-
-  // convert to markdown
-  let markdown = turndownService.turndown(blankLinesPreserved)
-
-  // Strip the zero-width space markers, leaving the blank lines intact
-  markdown = markdown.replace(/\u200B/g, '')
+  // convert to markdown — the emptyParagraph Turndown rule handles <p><br></p>
+  // by converting it to EMPTY_PARAGRAPH_TOKEN, which InputMarkdownConvert restores
+  let markdown = turndownService.turndown(codeBlocksParsed)
 
   const quotesParsedMarkdown = parseQuotes(markdown)
 
