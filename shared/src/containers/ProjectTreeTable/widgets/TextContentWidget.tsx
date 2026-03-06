@@ -261,7 +261,9 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase()
         const format = quill.getFormat()
-        const handledKeys = new Set(['d', 'o', 'l', 'b', 'i', 'u', 'h', 'enter', 'escape'])
+        // b, i, u are handled natively by Quill's built-in keyboard bindings,
+        // so we only intercept the non-standard shortcuts here to avoid double-toggling.
+        const handledKeys = new Set(['d', 'o', 'l', 'h', 'enter', 'escape'])
 
         if (!handledKeys.has(key)) return
 
@@ -277,15 +279,6 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
           case 'l':
             quill.format('list', format.list === 'bullet' ? false : 'bullet')
             return
-          case 'b':
-            quill.format('bold', !quill.getFormat().bold)
-            break
-          case 'i':
-            quill.format('italic', !quill.getFormat().italic)
-            break
-          case 'u':
-            quill.format('underline', !quill.getFormat().underline)
-            break
           case 'h':
             const isH2 = format.header === 2
             quill.format('header', isH2 ? false : 2)
