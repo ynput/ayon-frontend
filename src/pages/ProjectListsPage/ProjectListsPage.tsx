@@ -234,6 +234,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
     outdated: reviewSessionCardsOutdated,
+    allModulesLoaded: reviewModulesLoaded,
   } = useReviewSessionCardsModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
@@ -314,7 +315,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     disabled={listItemsData.length === 0}
                   />
                   {
-                    view === "cards" && (
+                    reviewModulesLoaded && view === "cards" && (
                       <ReviewSessionCardsControlsLeft />
                     )
                   }
@@ -328,7 +329,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )
                   }
                   {
-                    isReview && (
+                    isReview && reviewModulesLoaded && (
                       <>
                         <Spacer />
                         <ReviewSessionCardsControlsRight groupingDisabled={view === "table"} />
@@ -381,7 +382,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     <SplitterPanel size={70}>
                       {
                         selectedList && isReview && view === "cards"
-                        ? <ReviewSessionCards />
+                        ? (reviewModulesLoaded && <ReviewSessionCards />)
                         : (
                           <ListItemsTable
                             extraColumns={extraColumns}
