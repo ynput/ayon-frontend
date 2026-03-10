@@ -332,7 +332,9 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                 />
                 {matchedProduct && (
                   <MatchNote>
-                    Matched existing product (latest: {versionString})
+                    {matchedProduct.latestVersion
+                      ? <>Matched existing product (latest: {versionString})</>
+                      : 'Matched existing product (no versions)'}
                   </MatchNote>
                 )}
                 {!matchedProduct && shouldShowRecommendation() && (
