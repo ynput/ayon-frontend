@@ -36,6 +36,7 @@ import { confirmDelete } from '@shared/util'
 import EditReviewableDialog from './EditReviewableDialog'
 import ReviewableUpload from './ReviewablesUpload'
 import { useDetailsPanelContext } from '@shared/context'
+import { useGetMyProjectPermissionsQuery } from '@shared/api'
 
 interface ReviewablesListProps {
   projectName: string
@@ -53,6 +54,18 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   scope,
 }) => {
   const { onOpenViewer, user, viewer, dispatch } = useDetailsPanelContext()
+
+  // check activities permission for reviewable uploads
+  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+  const canUploadReviewable =
+    user.data?.isManager ||
+    user.data?.isAdmin ||
+    !projectPermissions?.activities?.enabled ||
+    !!projectPermissions?.activities?.activities?.includes('reviewable')
+
   // returns all reviewables for a product
   const {
     data: versionReviewables,
@@ -262,6 +275,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
         taskId={viewer?.taskId}
         folderId={viewer?.folderId}
         dispatch={dispatch}
+        readOnly={!canUploadReviewable}
       >
         {isLoading ? (
           Array.from({ length: 3 }).map((_, index) => (

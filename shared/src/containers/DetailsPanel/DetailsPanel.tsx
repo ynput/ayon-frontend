@@ -4,7 +4,11 @@ import useDetailsPanelURLSync from './hooks/useDetailsPanelURLSync'
 import * as Styled from './DetailsPanel.styled'
 
 // shared
-import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
+import {
+  useGetEntitiesDetailsPanelQuery,
+  detailsPanelEntityTypes,
+  useGetMyProjectPermissionsQuery,
+} from '@shared/api'
 import type { Tag, DetailsPanelEntityType, DetailsPanelEntityData } from '@shared/api'
 import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
 import { usePiPWindow } from '@shared/context/pip/PiPProvider'
@@ -231,6 +235,12 @@ DetailsPanelProps) => {
   // get the first project name and info to be used in the feed.
   const firstProject = activeProjectNames[0]
   const firstProjectInfo = projectsInfo[firstProject] || {}
+
+  // fetch project permissions for activities access control
+  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
+    { projectName: firstProject },
+    { skip: !firstProject },
+  )
   const firstEntityData = entityDetailsData[0] || {}
   // Use the last entity for URI sync
   const lastEntityData = entityDetailsData[entityDetailsData.length - 1]
@@ -334,6 +344,15 @@ DetailsPanelProps) => {
   const isCommentingEnabled = () => {
     // cannot comment on multiple projects
     if (activeProjectNames.length > 1) return false
+    // check activities permission (managers/admins bypass)
+    if (
+      !user.data?.isManager &&
+      !user.data?.isAdmin &&
+      projectPermissions?.activities?.enabled &&
+      !projectPermissions.activities.activities?.includes('comment')
+    ) {
+      return false
+    }
     if (isGuest) {
       // Guest can only comment in review sessions (for now)
       if (!entityListId) return false
