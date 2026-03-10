@@ -2,8 +2,6 @@
 
 import TurndownService from 'turndown'
 
-export const EMPTY_PARAGRAPH_TOKEN = 'AYON_EMPTY_PARAGRAPH'
-
 // override the escaping of markdown characters
 // https://github.com/mixmark-io/turndown?tab=readme-ov-file#escaping-markdown-characters
 TurndownService.prototype.escape = (string) => string
@@ -19,7 +17,7 @@ turndownService.addRule('emptyParagraph', {
     return childNode?.nodeName === 'BR'
   },
   replacement: function () {
-    return `\n\n${EMPTY_PARAGRAPH_TOKEN}\n\n`
+    return `\n\n<br>\n\n`
   },
 })
 
@@ -159,8 +157,6 @@ export const getTextRefs = (text = '') => {
 export const convertToMarkdown = (value) => {
   const codeBlocksParsed = parseCodeBlocks(value)
 
-  // convert to markdown — the emptyParagraph Turndown rule handles <p><br></p>
-  // by converting it to EMPTY_PARAGRAPH_TOKEN, which InputMarkdownConvert restores
   let markdown = turndownService.turndown(codeBlocksParsed)
 
   const quotesParsedMarkdown = parseQuotes(markdown)

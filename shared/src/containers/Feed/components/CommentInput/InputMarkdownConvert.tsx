@@ -1,7 +1,7 @@
-import { Children, isValidElement, type ComponentProps } from 'react'
+import { type ComponentProps } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { EMPTY_PARAGRAPH_TOKEN } from './quillToMarkdown'
+import rehypeRaw from 'rehype-raw'
 
 interface TypeOptions {
   [key: string]: { id: string }
@@ -25,48 +25,24 @@ const urlToMention = (href: string | null, options: TypeOptions) => {
   return { href: newHref, type: typeSymbol }
 }
 
-const isEmptyParagraphContent = (value: unknown): boolean => {
-  if (typeof value === 'string') return value.trim() === EMPTY_PARAGRAPH_TOKEN
-  if (!value) return false
-  if (isValidElement(value)) {
-    const childValue = (value.props as { children?: unknown })?.children
-    return isEmptyParagraphContent(childValue)
-  }
-  if (Array.isArray(value)) return value.every((item) => isEmptyParagraphContent(item))
-  return false
-}
-
 const convertStringToBlockquotes = (text: string) =>
   text.split('\n').map((line, index) => (
     <p key={index}>
       {`> `}
-      {line.trim() === EMPTY_PARAGRAPH_TOKEN ? <br /> : line}
+      {line}
     </p>
   ))
 
 type ParagraphProps = ComponentProps<'p'> & { node?: unknown }
 
-const Paragraph = ({ children, node: _node, ...props }: ParagraphProps) => {
-  const nodes = Children.toArray(children)
-  if (nodes.length === 0) return <p {...props} />
-  if (nodes.length === 1 && isEmptyParagraphContent(nodes[0])) {
-    return (
-      <p {...props}>
-        <br />
-      </p>
-    )
-  }
-  return <p {...props}>{children}</p>
-}
+const Paragraph = ({ node: _node, ...props }: ParagraphProps) => <p {...props} />
 
 // Preserve multiple blank lines by replacing sequences of 3+ newlines
-// with interleaved EMPTY_PARAGRAPH_TOKEN lines so ReactMarkdown renders empty paragraphs.
-// This handles content stored before the EMPTY_PARAGRAPH_TOKEN approach was used.
+// with interleaved <br> tags so ReactMarkdown renders empty paragraphs.
 const preserveBlankLines = (text: string): string => {
   return text.replace(/\n{3,}/g, (match) => {
-    // Number of extra blank lines beyond the standard paragraph break
     const extraLines = Math.floor(match.length / 2) - 1
-    return '\n\n' + `${EMPTY_PARAGRAPH_TOKEN}\n\n`.repeat(extraLines)
+    return '\n\n' + `<br>\n\n`.repeat(extraLines)
   })
 }
 
@@ -76,6 +52,7 @@ const InputMarkdownConvert = ({ typeOptions, initValue }: InputMarkdownConvertPr
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
       urlTransform={(url) => url}
       components={{
         p: Paragraph,
