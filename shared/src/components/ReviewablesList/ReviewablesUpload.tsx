@@ -142,6 +142,13 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
         className={clsx(className, variant, { dragging: isDraggingFile })}
         {...props}
         onDragEnter={() => !readOnly && setIsDraggingFile(true)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          if (readOnly) {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+        }}
       >
         <>
           {children}

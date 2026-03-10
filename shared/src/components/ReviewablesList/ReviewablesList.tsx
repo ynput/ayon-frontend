@@ -56,14 +56,19 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   const { onOpenViewer, user, viewer, dispatch } = useDetailsPanelContext()
 
   // check activities permission for reviewable uploads
-  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
+  const {
+    data: projectPermissions,
+    isLoading: isLoadingPermissions,
+  } = useGetMyProjectPermissionsQuery(
     { projectName },
     { skip: !projectName },
   )
   const canUploadReviewable =
     user.data?.isManager ||
-    !projectPermissions?.activities?.enabled ||
-    !!projectPermissions?.activities?.activities?.includes('reviewable')
+    user.data?.isAdmin ||
+    (!isLoadingPermissions &&
+      (!projectPermissions?.activities?.enabled ||
+        !!projectPermissions?.activities?.activities?.includes('reviewable')))
 
   // returns all reviewables for a product
   const {
