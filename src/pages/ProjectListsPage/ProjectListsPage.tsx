@@ -1,5 +1,5 @@
 import { parseCellId, ProjectDataProvider, ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
@@ -219,7 +219,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
     setAnchorCell,
     clearSelection
   } = useSelectionCellsContext()
-  const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -238,18 +237,13 @@ const ProjectLists: FC<ProjectListsProps> = ({
   } = useReviewSessionCardsModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
+  const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
 
-  if (reviewSessionCardsOutdated) {
-    return (
-      <EmptyPlaceholder
-        message={
-          `The Review addon version (${reviewSessionCardsOutdated.current}) is out of date.`
-        }
-      >
-        Please update to version {reviewSessionCardsOutdated.required} or newer.
-      </EmptyPlaceholder>
-    )
-  }
+  // if the addon is outdated, make sure we land in table view
+  useEffect(() => {
+    if (!reviewSessionCardsOutdated) return
+    setView("table")
+  }, [reviewSessionCardsOutdated])
 
   return (
     <main style={{ gap: 4 }}>
@@ -355,7 +349,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     align="right"
                   />
                   {
-                    isReview && (
+                    !reviewSessionCardsOutdated && isReview && (
                       <TableGridSwitch
                         showGrid={view === "cards"}
                         onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
@@ -386,7 +380,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         : (
                           <ListItemsTable
                             extraColumns={extraColumns}
-                            isReview={isReview}
+                            isReview={isReview && !reviewSessionCardsOutdated}
                             dndActiveId={dndActiveId} // Pass prop
                             viewOnly={(selectedList?.accessLevel || 0) < 20}
                           />
