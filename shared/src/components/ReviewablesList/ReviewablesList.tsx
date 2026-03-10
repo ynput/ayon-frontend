@@ -62,7 +62,6 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   )
   const canUploadReviewable =
     user.data?.isManager ||
-    user.data?.isAdmin ||
     !projectPermissions?.activities?.enabled ||
     !!projectPermissions?.activities?.activities?.includes('reviewable')
 
