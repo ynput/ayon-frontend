@@ -8,6 +8,7 @@ import { upperFirst } from 'lodash'
 import { LinkManagerItem } from './LinkManagerItem'
 import { Button } from '@ynput/ayon-react-components'
 import { useGlobalContext } from '@shared/context'
+import { groupLinksByEntity, GroupedLink } from './utils/groupLinks'
 
 export type LinkEntity = {
   linkId: string
@@ -63,16 +64,36 @@ export const LinksManager: FC<LinksManagerProps> = ({
 
   const [searchType, setSearchType] = useState<LinkSearchType>(null)
 
-  const handleRemove = (e: React.MouseEvent<HTMLButtonElement>, link: LinkEntity) => {
-    // prevent clicks higher up
+  const groupedLinks = groupLinksByEntity(links)
+
+  const handleRemoveGroup = (e: React.MouseEvent<HTMLButtonElement>, group: GroupedLink) => {
     e.stopPropagation()
 
-    linksUpdater.remove([
-      {
-        id: link.linkId,
-        target: { entityId: link.entityId, entityType: link.entityType },
-      },
-    ])
+    linksUpdater.remove(
+      group.linkIds.map((id) => ({
+        id,
+        target: { entityId: group.entityId, entityType: group.representative.entityType },
+      })),
+    )
+  }
+
+  const handleCountChange = (group: GroupedLink, newCount: number) => {
+    const diff = newCount - group.count
+    if (diff > 0) {
+      // Add more links
+      const newLinks = Array.from({ length: diff }, () => ({
+        targetEntityId: group.entityId,
+        linkId: getEntityId(),
+      }))
+      linksUpdater.add(newLinks)
+    } else if (diff < 0) {
+      // Remove links from the end
+      const linksToRemove = group.linkIds.slice(diff).map((id) => ({
+        id,
+        target: { entityId: group.entityId, entityType: group.representative.entityType },
+      }))
+      linksUpdater.remove(linksToRemove)
+    }
   }
 
   return (
@@ -90,13 +111,15 @@ export const LinksManager: FC<LinksManagerProps> = ({
           />
         </Styled.Header>
         <Styled.LinksList>
-          {links?.map((link) => (
+          {groupedLinks.map((group) => (
             <LinkManagerItem
-              key={link.linkId}
-              link={link}
-              isSelected={selectedEntityIds.includes(link.entityId)}
+              key={group.representative.linkId}
+              link={group.representative}
+              count={group.count}
+              isSelected={selectedEntityIds.includes(group.entityId)}
               onEntityClick={onEntityClick}
-              onRemove={handleRemove}
+              onRemove={(e) => handleRemoveGroup(e, group)}
+              onCountChange={(newCount) => handleCountChange(group, newCount)}
               isManager={isManager}
             />
           ))}

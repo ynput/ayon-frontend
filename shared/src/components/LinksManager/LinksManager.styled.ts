@@ -1,4 +1,4 @@
-import { Button, InputText } from '@ynput/ayon-react-components'
+import { Button, InputText, InputNumber } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export const Container = styled.div`
@@ -134,6 +134,34 @@ export const LinkItem = styled.li`
       background-color: var(--md-sys-color-surface-container-highest-hover);
     }
   }
+`
+
+export const CountBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--border-radius-m);
+  padding: 0 6px;
+  font-size: 0.8em;
+  font-weight: 600;
+  min-width: 24px;
+  height: 20px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
+`
+
+export const CountInput = styled(InputNumber)`
+  width: 56px;
+  height: 20px;
+  font-size: 0.8em;
+  text-align: center;
+  flex-shrink: 0;
 `
 
 export const AddLinksContainer = styled.div`
