@@ -1,4 +1,4 @@
-import { FC, Fragment, useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from 'react'
+import { FC, Fragment, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import { detailsPanelEntityTypes } from '@shared/api'
 import * as Styled from './LinksManager.styled'
@@ -27,14 +27,6 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
 }) => {
   const [isEditingCount, setIsEditingCount] = useState(false)
   const [editValue, setEditValue] = useState(count)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (isEditingCount && inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [isEditingCount])
 
   const handleBadgeClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -44,21 +36,22 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
   }
 
   const commitCount = () => {
-    setIsEditingCount(false)
     const newCount = Math.max(1, editValue)
     if (newCount !== count) {
       onCountChange?.(newCount)
     }
+    setIsEditingCount(false)
   }
 
   const cancelEdit = () => {
-    setIsEditingCount(false)
     setEditValue(count)
+    setIsEditingCount(false)
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation()
     if (e.key === 'Enter') {
-      commitCount()
+      e.currentTarget.blur()
     } else if (e.key === 'Escape') {
       cancelEdit()
     }
@@ -68,8 +61,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
   const isClickable = entityTypeSupported && !link.isRestricted
   return (
     <Styled.LinkItem
-      key={link.linkId}
-      onClick={() => isClickable && onEntityClick?.(link.entityId, link.entityType)}
+      onClick={() => !isEditingCount && isClickable && onEntityClick?.(link.entityId, link.entityType)}
       data-tooltip={
         link.isRestricted
           ? isManager
@@ -103,14 +95,15 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
       {!link.isRestricted && (
         isEditingCount ? (
           <Styled.CountInput
-            ref={inputRef}
             value={editValue}
             min={1}
-            step={1}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setEditValue(parseInt(e.target.value) || 1)}
+            autoFocus
+            style={{ width: `${Math.max(2, String(editValue).length) + 1}ch` }}
+            onChange={(e) => setEditValue(parseInt(e.target.value) || 1)}
+            onFocus={(e) => e.target.select()}
             onBlur={commitCount}
             onKeyDown={handleKeyDown}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           />
         ) : (
           <Styled.CountBadge
@@ -127,7 +120,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
           variant="text"
           className="remove"
           onClick={(e) => onRemove(e, link)}
-          data-tooltip={'Remove all links'}
+          data-tooltip={count > 1 ? `Remove all ${count} links` : 'Remove link'}
         />
       )}
     </Styled.LinkItem>

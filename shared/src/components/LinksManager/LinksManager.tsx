@@ -63,8 +63,19 @@ export const LinksManager: FC<LinksManagerProps> = ({
   })
 
   const [searchType, setSearchType] = useState<LinkSearchType>(null)
+  // Optimistic counts for immediate UI feedback (creates are not optimistic in the cache)
+  const [optimisticCounts, setOptimisticCounts] = useState<Record<string, number>>({})
 
   const groupedLinks = groupLinksByEntity(links)
+
+  // Get display count: use optimistic value until real data catches up
+  const getDisplayCount = (group: GroupedLink) => {
+    const optimistic = optimisticCounts[group.entityId]
+    if (optimistic !== undefined && optimistic !== group.count) {
+      return optimistic
+    }
+    return group.count
+  }
 
   const handleRemoveGroup = (e: React.MouseEvent<HTMLButtonElement>, group: GroupedLink) => {
     e.stopPropagation()
@@ -78,6 +89,9 @@ export const LinksManager: FC<LinksManagerProps> = ({
   }
 
   const handleCountChange = (group: GroupedLink, newCount: number) => {
+    // Set optimistic count immediately for instant UI feedback
+    setOptimisticCounts((prev) => ({ ...prev, [group.entityId]: newCount }))
+
     const diff = newCount - group.count
     if (diff > 0) {
       // Add more links
@@ -87,7 +101,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
       }))
       linksUpdater.add(newLinks)
     } else if (diff < 0) {
-      // Remove links from the end
+      // Remove links from the end (diff is negative, so slice(-3) takes last 3)
       const linksToRemove = group.linkIds.slice(diff).map((id) => ({
         id,
         target: { entityId: group.entityId, entityType: group.representative.entityType },
@@ -98,7 +112,14 @@ export const LinksManager: FC<LinksManagerProps> = ({
 
   return (
     <>
-      <Styled.Container>
+      <Styled.Container
+        onMouseDown={(e) => {
+          // Blur active input when clicking anywhere in the dialog (so count input commits)
+          if (e.target !== document.activeElement && document.activeElement instanceof HTMLInputElement) {
+            document.activeElement.blur()
+          }
+        }}
+      >
         <Styled.Header>
           {upperFirst(linkTypeLabel)} links ({direction})
           <Button
@@ -115,7 +136,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
             <LinkManagerItem
               key={group.representative.linkId}
               link={group.representative}
-              count={group.count}
+              count={getDisplayCount(group)}
               isSelected={selectedEntityIds.includes(group.entityId)}
               onEntityClick={onEntityClick}
               onRemove={(e) => handleRemoveGroup(e, group)}
