@@ -1,5 +1,5 @@
 import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { ViewType, WORKING_VIEW_ID } from '../index'
+import { type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
 import {
   GetDefaultViewApiResponse,
   useGetWorkingViewQuery,
@@ -12,11 +12,11 @@ import {
   ShareOption,
   useGetBaseViewQuery,
 } from '@shared/api'
-import useBuildViewMenuItems, { BASE_VIEW_ID } from '../hooks/useBuildViewMenuItems'
+import useBuildViewMenuItems from '../hooks/useBuildViewMenuItems'
 import { ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { useGlobalContext, usePowerpack } from '@shared/context'
 import { useSelectedView } from '../hooks/useSelectedView'
-import { UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
+import { type UseViewMutations, useViewsMutations } from '../hooks/useViewsMutations'
 import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
@@ -349,8 +349,5 @@ export const useViewsContext = (): ViewsContextValue => {
   return context
 }
 
-export const isViewStudioScope = (viewId: string | undefined, viewsList: ViewListItemModel[]) => {
-  if (!viewId) return true
-  const view = viewsList.find((v) => v.id === viewId)
-  return view?.scope === 'studio'
-}
+import { isViewStudioScope } from '../utils/isViewStudioScope'
+export { isViewStudioScope }

@@ -1,9 +1,8 @@
 import { createContext, useContext } from 'react'
 import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
-import { UseNewListReturn } from '../hooks/useNewList'
-
-import { UseDeleteListReturn } from '../hooks/useDeleteList'
-import { UseUpdateListReturn } from '../hooks/useUpdateList'
+import type { UseNewListReturn } from '../hooks/useNewList'
+import type { UseDeleteListReturn } from '../hooks/useDeleteList'
+import type { UseUpdateListReturn } from '../hooks/useUpdateList'
 import { EntityList } from '@shared/api'
 import { ListFolderFormData } from '../components/ListFolderFormDialog'
 

@@ -1,5 +1,5 @@
 import { ProgressTask } from '@queries/tasksProgress/getTasksProgress'
-import { Operation } from '../TasksProgress'
+import type { Operation } from '../TasksProgress'
 
 export const getStatusChangeOperations = (
   tasks: ProgressTask[],

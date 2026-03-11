@@ -1,6 +1,4 @@
-import { GetViewApiResponse } from '@shared/api'
-import { AccessLevel } from '@shared/components'
-
+export * from './types'
 export * from './Views'
 export * from './context/ViewsContext'
 export * from './ViewsButton/ViewsButton'
@@ -27,19 +25,3 @@ export { Views } from './Views'
 // Re-export constants
 export { WORKING_VIEW_ID, NEW_VIEW_ID } from './ViewsMenuContainer/ViewsMenuContainer'
 
-// types
-export type ViewFormData = Required<
-  Pick<GetViewApiResponse, 'label' | 'scope' | 'visibility' | 'owner' | 'accessLevel'> & {
-    access: Record<string, AccessLevel>
-  }
->
-
-export const viewTypes = [
-  'overview',
-  'taskProgress',
-  'versions',
-  'lists',
-  'reviews',
-  'reports',
-] as const
-export type ViewType = (typeof viewTypes)[number] | string
