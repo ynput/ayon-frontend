@@ -5,6 +5,7 @@ import { createContext, PropsWithChildren, useContext } from "react"
 function FallbackReviewCardsProvider({ children }: RemoteAddonProjectProps & PropsWithChildren & {
   onSelectionChange: (versionIds: string[]) => void
   onOpenDetails: (versionId: string) => void
+  onItemsChanged?: () => void
   onOpenInViewer?: (state: {
     versionId: string
     productId: string

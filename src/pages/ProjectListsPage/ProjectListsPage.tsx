@@ -3,7 +3,7 @@ import { FC, useEffect, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import { ListsDataProvider } from './context/ListsDataContext'
+import { ListsDataProvider, useListsDataContext } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
@@ -210,7 +210,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
-  const { listItemsData, deleteListItemAction } = useListItemsDataContext()
+  const { refetch: refetchLists } = useListsDataContext()
+  const {
+    listItemsData,
+    deleteListItemAction,
+    refetch: refetchListItems,
+  } = useListItemsDataContext()
 
   const {
     selectedCells,
@@ -300,6 +305,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
               }}
               onOpenInViewer={(state) => {
                 handleOpenPlayer(state, { quickView: true })
+              }}
+              onItemsChanged={() => {
+                refetchListItems()
+                refetchLists()
               }}
             >
               {selectedList && (

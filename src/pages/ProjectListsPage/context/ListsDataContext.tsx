@@ -24,6 +24,7 @@ interface ListsDataContextValue {
   // show archived
   showArchived: boolean
   setShowArchived: (show: boolean) => void
+  refetch: () => void
 }
 
 const ListsDataContext = createContext<ListsDataContextValue | undefined>(undefined)
@@ -85,6 +86,7 @@ export const ListsDataProvider = ({
     isFetchingNextPage,
     isError,
     fetchNextPage,
+    refetch,
   } = useGetListsData({
     projectName,
     filters: listsFilters,
@@ -124,6 +126,7 @@ export const ListsDataProvider = ({
         // show archived
         showArchived,
         setShowArchived,
+        refetch,
       }}
     >
       {children}

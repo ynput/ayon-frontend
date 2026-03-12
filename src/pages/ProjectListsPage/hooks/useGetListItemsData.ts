@@ -30,6 +30,7 @@ export interface UseGetListItemsDataReturn {
   isFetchingNextPage: boolean
   isError: boolean
   fetchNextPage: () => void
+  refetch: () => void
 }
 
 const useGetListItemsData = ({
@@ -71,6 +72,7 @@ const useGetListItemsData = ({
     fetchNextPage,
     hasNextPage,
     isError,
+    refetch,
   } = useGetListItemsInfiniteInfiniteQuery(
     {
       projectName,
@@ -184,6 +186,7 @@ const useGetListItemsData = ({
     isFetchingNextPage,
     isError,
     fetchNextPage: handleFetchNextPage,
+    refetch,
   }
 }
 
