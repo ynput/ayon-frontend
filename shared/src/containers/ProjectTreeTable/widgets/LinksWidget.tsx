@@ -1,13 +1,13 @@
-import { Chips, ChipValue, LinkEntity, LinksManager } from '@shared/components'
+import { Chips, LinkEntity, LinksManager } from '@shared/components'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
-import { createPortal } from 'react-dom'
 import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
 import { useSelectedRowsContext } from '../context/SelectedRowsContext'
-import { Container } from '@shared/components/LinksManager/LinksManager.styled'
+import { Container, CountBadge } from '@shared/components/LinksManager/LinksManager.styled'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useGlobalContext } from '@shared/context'
+import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
 
 export const sortEntityLinksByPath = (links: LinkEntity[]) => {
   return [...links].sort((a, b) => {
@@ -113,20 +113,32 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
   }
 
   const sortedLinks = value?.links ? sortEntityLinksByPath(value.links) : []
+  const groupedLinks = groupLinksByEntity(sortedLinks)
 
   return (
     <>
       <Chips
         values={
-          sortedLinks.map((v) => ({
-            label: v.isRestricted ? (isManager ? 'Unknown' : 'Restricted') : v.label,
-            tooltip: v.isRestricted
+          groupedLinks.map((group) => {
+            const v = group.representative
+            const label = v.isRestricted ? (isManager ? 'Unknown' : 'Restricted') : v.label
+            const tooltip = v.isRestricted
               ? isManager
                 ? 'Unknown Link - Entity not found'
                 : 'Access Restricted - Insufficient Permissions to Entity'
-              : v.parents.join('/') + '/' + v.label,
-            icon: v.isRestricted ? (isManager ? 'help' : 'lock') : undefined,
-          })) || []
+              : v.parents.join('/') + '/' + v.label + (group.count > 1 ? ` (x${group.count})` : '')
+            return {
+              label,
+              tooltip,
+              icon: v.isRestricted ? (isManager ? 'help' : 'lock') : undefined,
+              suffix:
+                group.count > 1 ? (
+                  <CountBadge as="span" style={{ cursor: 'default', pointerEvents: 'none' }}>
+                    x{group.count}
+                  </CountBadge>
+                ) : undefined,
+            }
+          }) || []
         }
         pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
         disabled={disabled}
