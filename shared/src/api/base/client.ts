@@ -119,6 +119,7 @@ const tagTypes = [
   'linkSearchItem',
   'guest',
   'category',
+  'oauthClients',
 ]
 
 const prepareHeaders = (headers: any) => {
