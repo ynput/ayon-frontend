@@ -50,6 +50,7 @@ export interface ListItemsDataContextValue {
   reorderListItem: UseReorderListItemReturn['reorderListItem']
   // reset filters
   resetFilters: () => void
+  refetch: () => void
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -101,6 +102,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     isFetchingNextPage,
     isError,
     fetchNextPage,
+    refetch,
   } = useGetListItemsData({
     projectName,
     entityType: selectedList?.entityType,
@@ -200,6 +202,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         // reorder list item
         reorderListItem,
         resetFilters,
+        refetch,
       }}
     >
       {children}
