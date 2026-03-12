@@ -47,6 +47,32 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       }}
       extraColumns={[
         {
+          position: 9,
+          column: {
+            id: 'productBaseType',
+            accessorKey: 'productBaseType',
+            header: 'Bbase type',
+            minSize: COLUMN_MIN_SIZE,
+            enableResizing: true,
+            enablePinning: true,
+            enableHiding: true,
+            cell: ({ row, column }) => {
+              const { value, id, type } = getValueIdType(row, column.id)
+              if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+              return (
+                <CellWidget
+                  rowId={id}
+                  className={clsx('productBaseType', { loading: row.original.isLoading })}
+                  columnId={column.id}
+                  value={value}
+                  attributeData={{ type: 'string' }}
+                  isReadOnly={true}
+                />
+              )
+            },
+          },
+        },
+        {
           position: 10,
           column: {
             id: 'taskType',

@@ -43,6 +43,7 @@ export type TableRow = {
   folder?: string // parent folder name
   product?: string // product name of product and version parent
   productType?: string // product name of product and version parent
+  productBaseType?: string // product base type category
   taskType?: string // linked task type
   taskLabel?: string // linked task label/name
   subRows?: TableRow[]
