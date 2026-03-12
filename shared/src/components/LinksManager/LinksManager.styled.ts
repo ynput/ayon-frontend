@@ -136,15 +136,17 @@ export const LinkItem = styled.li`
   }
 `
 
-export const CountBadge = styled.span`
+export const CountBadge = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background-color: var(--md-sys-color-surface-container);
+  border: none;
   border-radius: var(--border-radius-m);
   padding: 0 6px;
   font-size: 0.8em;
   font-weight: 600;
+  color: inherit;
   min-width: 24px;
   height: 20px;
   cursor: pointer;

@@ -131,7 +131,12 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
               label,
               tooltip,
               icon: v.isRestricted ? (isManager ? 'help' : 'lock') : undefined,
-              suffix: group.count > 1 ? <CountBadge>x{group.count}</CountBadge> : undefined,
+              suffix:
+                group.count > 1 ? (
+                  <CountBadge as="span" style={{ cursor: 'default' }}>
+                    x{group.count}
+                  </CountBadge>
+                ) : undefined,
             }
           }) || []
         }

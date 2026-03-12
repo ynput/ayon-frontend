@@ -70,7 +70,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
 
   // Get display count: use optimistic value until real data catches up
   const getDisplayCount = (group: GroupedLink) => {
-    const optimistic = optimisticCounts[group.entityId]
+    const optimistic = optimisticCounts[group.groupKey]
     if (optimistic !== undefined && optimistic !== group.count) {
       return optimistic
     }
@@ -89,10 +89,11 @@ export const LinksManager: FC<LinksManagerProps> = ({
   }
 
   const handleCountChange = (group: GroupedLink, newCount: number) => {
+    const currentCount = getDisplayCount(group)
     // Set optimistic count immediately for instant UI feedback
-    setOptimisticCounts((prev) => ({ ...prev, [group.entityId]: newCount }))
+    setOptimisticCounts((prev) => ({ ...prev, [group.groupKey]: newCount }))
 
-    const diff = newCount - group.count
+    const diff = newCount - currentCount
     if (diff > 0) {
       // Add more links
       const newLinks = Array.from({ length: diff }, () => ({

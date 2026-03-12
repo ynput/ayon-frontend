@@ -1,6 +1,7 @@
-import { LinkEntity } from '../LinksManager'
+import type { LinkEntity } from '../LinksManager'
 
 export type GroupedLink = {
+  groupKey: string
   entityId: string
   count: number
   linkIds: string[]
@@ -27,6 +28,7 @@ export const groupLinksByEntity = (links: LinkEntity[]): GroupedLink[] => {
     } else {
       order.push(key)
       groupMap.set(key, {
+        groupKey: key,
         entityId: link.entityId,
         count: 1,
         linkIds: [link.linkId],
