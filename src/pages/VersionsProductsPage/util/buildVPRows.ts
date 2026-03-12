@@ -26,7 +26,7 @@ export const buildProductRow = (
   attrib: { ...product.attrib },
   ownAttrib: Object.keys(product.attrib || {}),
   subType: product.productType,
- productBaseType: product.productBaseType || '',
+  productBaseType: product.productBaseType || '',
   version: product.featuredVersion?.version || null,
   versionsCount: product.versions.length,
   versionName: product.featuredVersion?.name || '',
