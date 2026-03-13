@@ -118,6 +118,7 @@ export const SlicerProvider = ({
         { value: 'type' },
         { value: 'taskType' },
         { value: 'attributes' },
+        { value: 'entityList' },
       ],
     },
     versions: {
@@ -128,6 +129,7 @@ export const SlicerProvider = ({
         { value: 'author', label: 'Version author' },
         { value: 'productType' },
         { value: 'taskType' },
+        { value: 'entityList' },
       ],
     },
   }

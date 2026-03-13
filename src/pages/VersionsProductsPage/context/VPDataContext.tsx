@@ -39,7 +39,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext } from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
@@ -110,6 +110,8 @@ export const useVersionsDataContext = () => {
 export type QueryArguments = {
   projectName: string
   folderIds: string[]
+  versionIds?: string[]
+  productIds?: string[]
   versionFilter?: string
   productFilter?: string
   taskFilter?: string
@@ -203,11 +205,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       },
     )
   }, [sliceFilter, showProducts])
+  // Resolve entity list selections to IDs
+  const { entityIds } = useSelectedEntityIds()
+
   // get selected folders from slicer
   const slicerFolderIds = useSelectedFolders({
     rowSelection,
     sliceType,
     persistentRowSelectionData,
+    entityListFolderIds: entityIds.folderIds,
   })
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
@@ -232,6 +238,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productFilter: combinedProductFilter.filterString,
       taskFilter: combinedTaskFilter.filterString,
       folderIds: slicerFolderIds,
+      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
+      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
       sortBy: resolvedSortBy,
       desc: sortDesc,
     }),
@@ -241,6 +249,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       combinedProductFilter.filterString,
       combinedTaskFilter.filterString,
       slicerFolderIds,
+      entityIds.versionIds,
+      entityIds.productIds,
       resolvedSortBy,
       sortDesc,
     ],
