@@ -22,10 +22,13 @@ import { usePowerpack, useProjectContext } from '@shared/context'
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
   encode: (rowSelection: RowSelectionState | null | undefined) => {
     if (!rowSelection || Object.keys(rowSelection).length === 0) return undefined
-    // Convert to array of selected row ids
+    // Convert to array of selected row ids, excluding folder row IDs
+    // to prevent folder IDs from leaking into URL params where addons may read them as session IDs
     const selectedIds = Object.entries(rowSelection)
       .filter(([_, selected]) => selected)
+      .filter(([id]) => !parseListFolderRowId(id))
       .map(([id]) => id)
+    if (selectedIds.length === 0) return undefined
     return selectedIds.join(',')
   },
   decode: (input: string | (string | null)[] | null | undefined) => {
