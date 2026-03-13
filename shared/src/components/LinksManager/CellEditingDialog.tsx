@@ -1,4 +1,5 @@
-import { FC, useRef, useLayoutEffect, useState } from 'react'
+import { FC, useRef, useLayoutEffect, useState, CSSProperties } from 'react'
+import { flushSync } from 'react-dom'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
@@ -10,6 +11,11 @@ const StyledPopUp = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  body.column-resizing & {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
 `
 
 type Position = {
@@ -19,19 +25,31 @@ type Position = {
   showAbove?: boolean
 }
 
-export interface LinksManagerDialogProps {
+export interface CellEditingDialogProps {
   isEditing: boolean
   anchorId: string
   containerClassName?: string
   onClose?: () => void
+  onSave?: () => void
+  closeOnOutsideClick?: boolean
+  closeOnScroll?: boolean
+  onDismissWithoutSave?: () => void
+  className?: string
+  style?: CSSProperties
   children?: React.ReactNode
 }
 
-export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
+export const CellEditingDialog: FC<CellEditingDialogProps> = ({
   isEditing,
   anchorId,
   containerClassName = 'table-container',
   onClose,
+  onSave,
+  closeOnOutsideClick = true,
+  closeOnScroll = true,
+  onDismissWithoutSave,
+  className,
+  style,
   children,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
@@ -68,36 +86,13 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     const screenPadding = 24
     const minHeightThreshold = 250
     const minWidthThreshold = 400
-    const maxMaxHeight = 600
     const screenWidth = window.innerWidth
     const screenHeight = window.innerHeight
 
-    // Check if we have enough space to the right of the cell
-    const spaceToRight = containerRight - cellRect.left
-    let position: { left?: number; right?: number } = {}
-    let dialogWidth = minWidthThreshold
+    let pos: { left?: number; right?: number } = {}
+    pos.left = cellRect.left
 
-    if (spaceToRight < minWidthThreshold) {
-      // Not enough space to the right, anchor to the right side of the cell
-      const spaceToLeft = cellRect.right - screenPadding
-      if (spaceToLeft >= minWidthThreshold) {
-        // Anchor to the right side of the cell
-        position.right = Math.max(
-          screenWidth - cellRect.right,
-          screenPadding + containerToRightOfScreen,
-        )
-      } else {
-        // Not enough space on either side, center and use available width
-        position.left = screenPadding
-        dialogWidth = screenWidth - 2 * screenPadding
-      }
-    } else {
-      // Enough space to the right, position normally
-      position.left = cellRect.left
-      dialogWidth = Math.max(minWidthThreshold, spaceToRight)
-    }
-
-    setMaxWidth(dialogWidth)
+    setMaxWidth(Math.max(minWidthThreshold, cellRect.width))
 
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
     const spaceAbove = cellRect.top - screenPadding
@@ -115,11 +110,11 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     }
 
     // Set max height to prevent dialog from going off screen
-    setMaxHeight(Math.min(Math.max(200, availableHeight), maxMaxHeight)) // Minimum 200px height
+    setMaxHeight(Math.max(200, availableHeight)) // Minimum 200px height
 
     setPosition({
       top,
-      ...position,
+      ...pos,
       showAbove,
     })
   }
@@ -128,21 +123,58 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     updatePosition()
   }, [isEditing, anchorElement])
 
-  // watch for when the tableContainer width changes
+  // Recalculate on window resize so maxHeight stays within the new viewport
   useLayoutEffect(() => {
-    if (tableContainer) {
-      const resizeObserver = new ResizeObserver(() => {
-        updatePosition()
-      })
-      resizeObserver.observe(tableContainer)
-      return () => resizeObserver.disconnect()
-    }
-  }, [tableContainer, anchorElement])
+    if (!isEditing) return
+    const handleResize = () => updatePosition()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isEditing])
 
-  // close the dialog when clicking outside of it
+  // Hide dialog while a column is being resized (capture phase to bypass stopPropagation)
   useLayoutEffect(() => {
+    if (!isEditing || !tableContainer) return
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (!(e.target as HTMLElement).closest('.resize-handle')) return
+      document.body.classList.add('column-resizing')
+
+      const handlePointerUp = () => {
+        // Wait 2 frames for column widths to settle in the DOM
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // flushSync forces React to render new dimensions synchronously,
+            // so when we remove the CSS class next, the dialog is already correct
+            flushSync(() => {
+              updatePosition()
+            })
+            document.body.classList.remove('column-resizing')
+          })
+        })
+        document.removeEventListener('pointerup', handlePointerUp)
+      }
+      document.addEventListener('pointerup', handlePointerUp)
+    }
+
+    tableContainer.addEventListener('pointerdown', handlePointerDown as EventListener, true)
+    return () => {
+      tableContainer.removeEventListener('pointerdown', handlePointerDown as EventListener, true)
+    }
+  }, [isEditing, tableContainer])
+
+  // Close the dialog when clicking outside of it
+  useLayoutEffect(() => {
+    if (!isEditing || !closeOnOutsideClick) return
+
     const handleClickOutside = (event: MouseEvent) => {
+      // Don't close/save while a column is being resized
+      if (document.body.classList.contains('column-resizing')) return
+
       const target = event.target as HTMLElement
+
+      // If the clicked element was removed from the DOM during a React re-render
+      // (e.g. cell content replaced when entering edit mode), ignore this event.
+      if (!document.contains(target)) return
 
       if (
         popupRef.current &&
@@ -161,7 +193,12 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         !target.closest('.p-datepicker') &&
         !target.closest('.' + BLOCK_DIALOG_CLOSE_CLASS)
       ) {
-        onClose?.()
+        // Call onSave before closing (auto-save on click outside)
+        if (onSave) {
+          onSave()
+        } else {
+          onClose?.()
+        }
       }
     }
 
@@ -169,7 +206,52 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [onClose, anchorElement])
+  }, [isEditing, closeOnOutsideClick, onClose, onSave, anchorElement])
+
+  // Close dialog on vertical scroll (with 150ms activation delay for virtualized auto-scroll)
+  useLayoutEffect(() => {
+    if (!isEditing || !closeOnScroll || !tableContainer) return
+
+    let lastScrollTop = (tableContainer as HTMLElement).scrollTop
+    let activated = false
+
+    // 150ms delay before activating scroll detection
+    const timer = setTimeout(() => {
+      activated = true
+      lastScrollTop = (tableContainer as HTMLElement).scrollTop
+    }, 150)
+
+    const handleScroll = () => {
+      if (!activated) return
+      // Don't close while a column is being resized — the scroll is a layout side-effect
+      if (document.body.classList.contains('column-resizing')) return
+      const currentScrollTop = (tableContainer as HTMLElement).scrollTop
+      // Only close on vertical scroll, ignore horizontal
+      if (Math.abs(currentScrollTop - lastScrollTop) > 1) {
+        if (onDismissWithoutSave) {
+          onDismissWithoutSave()
+        } else {
+          onClose?.()
+        }
+      }
+    }
+
+    tableContainer.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      clearTimeout(timer)
+      tableContainer.removeEventListener('scroll', handleScroll)
+    }
+  }, [isEditing, closeOnScroll, anchorElement, onClose, onDismissWithoutSave])
+
+  // Reposition dialog during scroll when it stays open (closeOnScroll = false)
+  useLayoutEffect(() => {
+    if (!isEditing || closeOnScroll || !tableContainer) return
+
+    const handleScroll = () => updatePosition()
+    tableContainer.addEventListener('scroll', handleScroll, { passive: true })
+    return () => tableContainer.removeEventListener('scroll', handleScroll)
+  }, [isEditing, closeOnScroll])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     // check we are not inside an input or textarea
@@ -195,11 +277,14 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         right: position?.right,
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
-        maxWidth: maxWidth ? `${maxWidth}px` : 'none',
+        width: maxWidth ? `${maxWidth}px` : 'auto',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
+        ...style,
       }}
-      className="links-widget-popup"
+      className={className ? `links-widget-popup ${className}` : 'links-widget-popup'}
       onKeyDown={handleKeyDown}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       {children}
     </StyledPopUp>,
