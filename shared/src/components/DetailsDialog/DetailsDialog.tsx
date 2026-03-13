@@ -40,7 +40,6 @@ export const DetailsDialog = ({
     try {
       return JSON.stringify(data, null, 2)
     } catch {
-      // Fallback to string representation
       return String(data)
     }
   }, [data])
@@ -48,9 +47,6 @@ export const DetailsDialog = ({
   // Keep the early return after hooks to ensure hooks are called on every render in the same order
   if (!visible || (Array.isArray(data) ? data.length < 1 : false)) return null
 
-  // TODO: Create a dedicate CodeBlock component that allows to pick the
-  //  code language (or a Markdown component that supports code blocks
-  //  with language syntax highlighting)
   return (
     <Dialog
       isOpen={true}
@@ -63,16 +59,16 @@ export const DetailsDialog = ({
         .details-dialog__code { position: relative; }
         .details-dialog__copy { position: absolute; right: 12px; top: 24px; z-index: 10; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 6px; cursor: pointer; display: none; align-items: center; justify-content: center; }
         .details-dialog__code:hover .details-dialog__copy, .details-dialog__code:focus-within .details-dialog__copy { display: flex; }
-          .w-tc-editor .token.property { color: #c9a5f7 !important; }
-          .w-tc-editor .token.string { color: #6bc985 !important; }
-          .w-tc-editor .token.number { color: #e5a66b !important; }
-          .w-tc-editor .token.boolean { color: #e5a66b !important; }
-          .w-tc-editor .token.null { color: #7a8a99 !important; }
-          .w-tc-editor .token.punctuation { color: #b0bec5 !important; }
-          .w-tc-editor .token.operator { color: #b0bec5 !important; }
+        .w-tc-editor .token.property { color: #c9a5f7 !important; }
+        .w-tc-editor .token.string { color: #6bc985 !important; }
+        .w-tc-editor .token.number { color: #e5a66b !important; }
+        .w-tc-editor .token.boolean { color: #e5a66b !important; }
+        .w-tc-editor .token.null { color: #7a8a99 !important; }
+        .w-tc-editor .token.punctuation { color: #b0bec5 !important; }
+        .w-tc-editor .token.operator { color: #b0bec5 !important; }
+        .details-dialog__code .w-tc-editor textarea { display: none !important; }
       `}</style>
       <div className="details-dialog__code">
-        {/* If loading or error, render plain text */}
         {isLoading || isError ? (
           <pre>{isLoading ? 'loading...' : 'error...'}</pre>
         ) : (
