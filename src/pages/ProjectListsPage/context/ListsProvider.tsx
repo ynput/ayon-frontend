@@ -91,7 +91,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     [JSON.stringify(rowSelection)],
   )
 
-  const selectedLists = selectedRows.map((id) => listsMap.get(id)).filter((list) => !!list)
+  const selectedLists = selectedRows.filter((id) => !parseListFolderRowId(id)).map((id) => listsMap.get(id)).filter((list) => !!list)
 
   // we can only ever fetch one list at a time
   const selectedList = selectedLists[0]
