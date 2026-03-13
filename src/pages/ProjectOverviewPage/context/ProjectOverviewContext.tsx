@@ -32,7 +32,7 @@ import {
 } from '@shared/containers'
 
 // Local context and hooks
-import { useSlicerContext } from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
@@ -142,10 +142,14 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     config: { searchKey: 'name' },
   })
 
+  // Resolve entity list selections to IDs
+  const { entityIds } = useSelectedEntityIds()
+
   const selectedFolders = useSelectedFolders({
     rowSelection,
     sliceType,
     persistentRowSelectionData,
+    entityListFolderIds: entityIds.folderIds,
   })
 
   // DATA FETCHING
@@ -161,6 +165,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
+    taskIds: entityIds.taskIds,
     taskFilters: {
       filter: combinedTaskFilter.filter,
       filterString: combinedTaskFilter.filterString,

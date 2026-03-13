@@ -30,6 +30,7 @@ export const createFilterFromSlicer: CreateFilterFromSlicer = ({
     productType: 'string',
     author: 'string',
     hierarchy: undefined,
+    entityList: undefined,
     ...attribFields.reduce((acc, field) => {
       // @ts-ignore
       acc['attrib.' + field.name] = field.data.type

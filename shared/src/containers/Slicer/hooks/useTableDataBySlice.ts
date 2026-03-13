@@ -7,6 +7,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { SliceType } from '@shared/containers/Slicer'
 import { useSlicerContext } from '../context/SlicerContext'
 import useSlicerAttributesData from './useSlicerAttributesData'
+import { useEntityListsSlice } from './useEntityListsSlice'
 import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
 import { useProjectContext } from '@shared/context'
 
@@ -73,6 +74,11 @@ export const defaultSliceOptions: SliceTypeField[] = [
     value: 'author' as SliceType,
     icon: 'attribution',
   },
+  {
+    label: 'Lists',
+    value: 'entityList' as SliceType,
+    icon: 'list_alt',
+  },
 ]
 
 const useTableDataBySlice = ({
@@ -133,6 +139,10 @@ const useTableDataBySlice = ({
     projectName,
     useExtraSlices,
   })
+  //   Entity Lists
+  const { getData: getEntityListsData, isLoading: isLoadingLists } = useEntityListsSlice({
+    entityTypes,
+  })
   const isLoadingData = isLoadingHierarchy || isLoadingProject || isUsersLoading
 
   const builtInSlices: Record<SliceType, SliceData> = {
@@ -171,6 +181,11 @@ const useTableDataBySlice = ({
     productType: {
       getData: getProductTypes,
       isLoading: false,
+      isExpandable: false,
+    },
+    entityList: {
+      getData: getEntityListsData,
+      isLoading: isLoadingLists,
       isExpandable: false,
     },
   }
