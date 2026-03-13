@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useListsDataContext } from '../context/ListsDataContext'
-import { ListsContextType } from '../context'
+import type { ListsContextType } from '../context/ListsContext'
 import {
   EntityListFolderData,
   EntityListFolderPatchModel,
@@ -12,7 +12,7 @@ import {
 } from '@shared/api'
 import { useCallback } from 'react'
 import { useAppSelector } from '@state/store'
-import { parseListFolderRowId } from '../util'
+import { parseListFolderRowId } from '../util/buildListsTableData'
 import { getEntityId, getErrorMessage, handleDeleteFolders } from '@shared/util'
 import { usePowerpack } from '@shared/context'
 import { toast } from 'react-toastify'

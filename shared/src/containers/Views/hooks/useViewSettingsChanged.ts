@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { ViewType } from '..'
+import type { ViewType } from '../types'
 
 type Props = {
   viewType: ViewType

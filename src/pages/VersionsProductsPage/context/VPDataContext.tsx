@@ -23,7 +23,7 @@ import {
   determineLoadingVP,
   extractFilters,
 } from '../util'
-import { useBuildVersionsTableData } from '../hooks'
+import { useBuildVersionsTableData } from '../hooks/useBuildVersionsTableData'
 import {
   createFilterFromSlicer,
   TableRow,

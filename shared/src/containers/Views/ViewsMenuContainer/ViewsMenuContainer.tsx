@@ -16,9 +16,8 @@ const PowerIcon = styled(Icon)`
   font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
 `
 
-// constants
-export const WORKING_VIEW_ID = '_working_' as const
-export const NEW_VIEW_ID = '_new_view_' as const
+import { WORKING_VIEW_ID, NEW_VIEW_ID } from '../types'
+export { WORKING_VIEW_ID, NEW_VIEW_ID }
 
 export const ViewsMenuContainer: FC = () => {
   const {

@@ -1,7 +1,7 @@
 import { EntityList, EntityListFolderModel, EntityListModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { getEntityTypeIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
-import { FOLDER_ICON } from '../hooks/useListContextMenu'
+const FOLDER_ICON = 'snippet_folder'
 
 export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
 export const buildListFolderRowId = (folderId: string) => `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
