@@ -495,7 +495,7 @@ export const useFetchOverviewData = ({
       }
     }
 
-    for (const folderId of [...relevantFolderIds]) {
+    for (const folderId of relevantFolderIds) {
       addParents(folderId)
     }
 
