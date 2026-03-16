@@ -13,12 +13,9 @@ import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
-import { CollapsedViewState } from '../context/ViewsContext'
-
-// constants
-export const WORKING_VIEW_ID = '_working_' as const
-export const NEW_VIEW_ID = '_new_view_' as const
-export const BASE_VIEW_ID = '__base__' as const
+import type { CollapsedViewState } from '../context/ViewsContext'
+import { WORKING_VIEW_ID, NEW_VIEW_ID, BASE_VIEW_ID } from '../types'
+export { WORKING_VIEW_ID, NEW_VIEW_ID, BASE_VIEW_ID }
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
   highlighted?: 'save' | 'edit'

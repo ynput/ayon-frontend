@@ -13,7 +13,7 @@ import {
 import { getGroupByDataType } from '@shared/util'
 import { useMemo } from 'react'
 import { useVPViewsContext } from '../context/VPViewsContext'
-import { QueryArguments } from '../context/VPDataContext'
+import type { QueryArguments } from '../context/VPDataContext'
 import {
   isGroupId,
   GROUP_BY_ID,

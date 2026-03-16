@@ -10,7 +10,7 @@ import {
 import { useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
-import { ViewData } from '../context/ViewsContext'
+import type { ViewData } from '../context/ViewsContext'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 

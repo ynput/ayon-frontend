@@ -7,13 +7,11 @@ import styled from 'styled-components'
 import './TaskProgressTable.scss'
 
 // Components
-import {
-  FolderBody,
-  TaskColumnHeader,
-  TasksProgressLoadingTable,
-  TaskStatusBar,
-  TaskTypeCell,
-} from '..'
+import { FolderBody } from '../FolderBody/FolderBody'
+import { TaskColumnHeader } from '../TaskColumnHeader/TaskColumnHeader'
+import { TasksProgressLoadingTable } from '../TasksProgressLoadingTable/TasksProgressLoadingTable'
+import { TaskStatusBar } from '../TaskStatusBar/TaskStatusBar'
+import { TaskTypeCell } from '../TaskTypeCell/TaskTypeCell'
 import ParentBody from '../ParentBody/ParentBody'
 import { Body } from '../FolderBody/FolderBody.styled'
 

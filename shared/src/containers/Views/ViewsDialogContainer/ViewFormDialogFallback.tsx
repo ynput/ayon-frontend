@@ -1,5 +1,6 @@
 import { FC } from 'react'
-import { ViewFormData, ViewsContextValue, ViewSettings, ViewType } from '..'
+import type { ViewFormData, ViewType } from '../types'
+import type { ViewsContextValue, ViewSettings } from '../context/ViewsContext'
 import { ShareOption, UserModel } from '@shared/api'
 
 export interface ViewFormDialogProps {
