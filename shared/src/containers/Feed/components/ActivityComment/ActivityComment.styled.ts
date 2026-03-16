@@ -65,6 +65,7 @@ export const Body = styled.div`
   padding: var(--padding-m);
   padding: 12px 10px;
   position: relative;
+  min-width: 0;
 
   /* remove first and last margins */
   /* + * because tools is actual first */
