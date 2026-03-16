@@ -22,10 +22,13 @@ import { usePowerpack, useProjectContext } from '@shared/context'
 const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
   encode: (rowSelection: RowSelectionState | null | undefined) => {
     if (!rowSelection || Object.keys(rowSelection).length === 0) return undefined
-    // Convert to array of selected row ids
+    // Convert to array of selected row ids, excluding folder row IDs
+    // to prevent folder IDs from leaking into URL params where addons may read them as session IDs
     const selectedIds = Object.entries(rowSelection)
       .filter(([_, selected]) => selected)
+      .filter(([id]) => !parseListFolderRowId(id))
       .map(([id]) => id)
+    if (selectedIds.length === 0) return undefined
     return selectedIds.join(',')
   },
   decode: (input: string | (string | null)[] | null | undefined) => {
@@ -91,7 +94,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     [JSON.stringify(rowSelection)],
   )
 
-  const selectedLists = selectedRows.map((id) => listsMap.get(id)).filter((list) => !!list)
+  const selectedLists = selectedRows.filter((id) => !parseListFolderRowId(id)).map((id) => listsMap.get(id)).filter((list) => !!list)
 
   // we can only ever fetch one list at a time
   const selectedList = selectedLists[0]
