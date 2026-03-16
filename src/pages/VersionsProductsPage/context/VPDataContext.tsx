@@ -274,9 +274,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         ? featuredVersionOrder
         : DEFAULT_FEATURED_ORDER
 
+      const { versionIds, productIds, ...restQueryArgs } = queryArgs
       const args: any = {
-        ...queryArgs,
+        ...restQueryArgs,
         sortBy: modifiedSortBy,
+        ...(entityType === 'version' && versionIds ? { versionIds } : {}),
+        ...(entityType === 'product' && productIds ? { productIds } : {}),
       }
 
       if (entityType === 'product') {

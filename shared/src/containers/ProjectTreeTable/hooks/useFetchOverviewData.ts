@@ -305,7 +305,7 @@ export const useFetchOverviewData = ({
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
-      folderIds: tasksFolderIdsParams,
+      folderIds: taskIds?.length ? undefined : tasksFolderIdsParams,
       taskIds: taskIds?.length ? taskIds : undefined,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,

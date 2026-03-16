@@ -15,9 +15,9 @@ export const useSelectedFolders = ({
   entityListFolderIds,
 }: UseSelectedFoldersProps): string[] => {
   return useMemo(() => {
-    // When entity list slice has folder IDs, use those directly
-    if (sliceType === 'entityList' && entityListFolderIds?.length) {
-      return entityListFolderIds
+    // When entity list slice is active, use folder IDs directly (or empty array if none)
+    if (sliceType === 'entityList') {
+      return entityListFolderIds?.length ? entityListFolderIds : []
     }
 
     let selection: RowSelectionState = {}
