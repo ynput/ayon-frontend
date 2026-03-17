@@ -110,14 +110,20 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     originalValueRef.current = normalizedValue
   }, [normalizedValue])
 
-  const updateEditingValue = useCallback((newValue: string) => {
-    setEditingValue(newValue)
-    onEditingDraftChange?.(newValue)
-  }, [onEditingDraftChange])
+  const updateEditingValue = useCallback(
+    (newValue: string) => {
+      setEditingValue(newValue)
+      onEditingDraftChange?.(newValue)
+    },
+    [onEditingDraftChange],
+  )
 
   // Parse markdown to HTML to initialize the editor content for edit and preview
   useEffect(() => {
-    if (hasDraftRef.current) { hasDraftRef.current = false; return }
+    if (hasDraftRef.current) {
+      hasDraftRef.current = false
+      return
+    }
     if (!isEditing && !isPreview) return
     if (!isRichText) {
       setEditingValue(normalizedValue)
@@ -238,10 +244,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
       const [markdown] = convertToMarkdown(html)
 
       // Guard against saving unchanged content (e.g. click-outside before Quill initializes)
-      if (
-        trigger !== 'Enter' &&
-        markdown.trim() === originalValueRef.current.trim()
-      ) {
+      if (trigger !== 'Enter' && markdown.trim() === originalValueRef.current.trim()) {
         onCancelEdit?.()
         return
       }
@@ -417,8 +420,6 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
           onClose={onCancelEdit}
           onSave={isPreview ? undefined : () => handleSave('Click')}
           closeOnOutsideClick={isPreview ? false : true}
-          closeOnScroll={!isPreview}
-          onDismissWithoutSave={isPreview ? undefined : onDismissWithoutSave}
           className={clsx('text-editing-dialog', {
             editing: !isPreview,
             preview: isPreview,

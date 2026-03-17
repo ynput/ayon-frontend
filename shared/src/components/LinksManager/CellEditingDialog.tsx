@@ -1,20 +1,15 @@
-import { FC, useRef, useLayoutEffect, useState, CSSProperties } from 'react'
-import { flushSync } from 'react-dom'
+import { FC, useRef, useLayoutEffect, useState } from 'react'
 import styled from 'styled-components'
 import { createPortal } from 'react-dom'
 
 export const BLOCK_DIALOG_CLOSE_CLASS = 'block-dialog-close'
 
 const StyledPopUp = styled.div`
-  z-index: 50;
+  position: fixed;
+  z-index: 310;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-
-  body.column-resizing & {
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
 `
 
 type Position = {
@@ -24,31 +19,19 @@ type Position = {
   showAbove?: boolean
 }
 
-export interface CellEditingDialogProps {
+export interface LinksManagerDialogProps {
   isEditing: boolean
   anchorId: string
   containerClassName?: string
   onClose?: () => void
-  onSave?: () => void
-  closeOnOutsideClick?: boolean
-  closeOnScroll?: boolean
-  onDismissWithoutSave?: () => void
-  className?: string
-  style?: CSSProperties
   children?: React.ReactNode
 }
 
-export const CellEditingDialog: FC<CellEditingDialogProps> = ({
+export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   isEditing,
   anchorId,
   containerClassName = 'table-container',
   onClose,
-  onSave,
-  closeOnOutsideClick = true,
-  closeOnScroll = true,
-  onDismissWithoutSave,
-  className,
-  style,
   children,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
@@ -77,40 +60,66 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     }
 
     const cellRect = anchorElement.getBoundingClientRect()
-    const containerRect = tableContainer.getBoundingClientRect()
-    const containerEl = tableContainer as HTMLElement
 
+    const containerRect = tableContainer.getBoundingClientRect()
+    const containerRight = containerRect.right
+    const containerToRightOfScreen = window.innerWidth - containerRect.right
+
+    const screenPadding = 24
     const minHeightThreshold = 250
     const minWidthThreshold = 400
+    const maxMaxHeight = 600
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
 
-    // Convert viewport coordinates to container-relative (for position: absolute)
-    const left = cellRect.left - containerRect.left + containerEl.scrollLeft
+    // Check if we have enough space to the right of the cell
+    const spaceToRight = containerRight - cellRect.left
+    let position: { left?: number; right?: number } = {}
+    let dialogWidth = minWidthThreshold
 
-    setMaxWidth(Math.max(minWidthThreshold, cellRect.width))
+    if (spaceToRight < minWidthThreshold) {
+      // Not enough space to the right, anchor to the right side of the cell
+      const spaceToLeft = cellRect.right - screenPadding
+      if (spaceToLeft >= minWidthThreshold) {
+        // Anchor to the right side of the cell
+        position.right = Math.max(
+          screenWidth - cellRect.right,
+          screenPadding + containerToRightOfScreen,
+        )
+      } else {
+        // Not enough space on either side, center and use available width
+        position.left = screenPadding
+        dialogWidth = screenWidth - 2 * screenPadding
+      }
+    } else {
+      // Enough space to the right, position normally
+      position.left = cellRect.left
+      dialogWidth = Math.max(minWidthThreshold, spaceToRight)
+    }
 
-    // Use container bounds so the popup stays within the table area
-    // and doesn't extend into the header/slicer above or below
-    const spaceBelow = containerRect.bottom - cellRect.bottom
-    const spaceAbove = cellRect.top - containerRect.top
+    setMaxWidth(dialogWidth)
+
+    const spaceBelow = screenHeight - cellRect.bottom - screenPadding
+    const spaceAbove = cellRect.top - screenPadding
     let top: number
     let showAbove = false
     let availableHeight: number
 
     if (spaceBelow < minHeightThreshold && spaceAbove > spaceBelow) {
       showAbove = true
-      top = cellRect.top - containerRect.top + containerEl.scrollTop - 4
+      top = cellRect.top - 4
       availableHeight = spaceAbove - 4
     } else {
-      top = cellRect.bottom - containerRect.top + containerEl.scrollTop + 4
+      top = cellRect.bottom + 4
       availableHeight = spaceBelow - 4
     }
 
     // Set max height to prevent dialog from going off screen
-    setMaxHeight(Math.min(400, Math.max(0, availableHeight)))
+    setMaxHeight(Math.min(Math.max(200, availableHeight), maxMaxHeight)) // Minimum 200px height
 
     setPosition({
       top,
-      left,
+      ...position,
       showAbove,
     })
   }
@@ -119,58 +128,21 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     updatePosition()
   }, [isEditing, anchorElement])
 
-  // Recalculate on window resize so maxHeight stays within the new viewport
+  // watch for when the tableContainer width changes
   useLayoutEffect(() => {
-    if (!isEditing) return
-    const handleResize = () => updatePosition()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [isEditing])
-
-  // Hide dialog while a column is being resized (capture phase to bypass stopPropagation)
-  useLayoutEffect(() => {
-    if (!isEditing || !tableContainer) return
-
-    const handlePointerDown = (e: PointerEvent) => {
-      if (!(e.target as HTMLElement).closest('.resize-handle')) return
-      document.body.classList.add('column-resizing')
-
-      const handlePointerUp = () => {
-        // Wait 2 frames for column widths to settle in the DOM
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            // flushSync forces React to render new dimensions synchronously,
-            // so when we remove the CSS class next, the dialog is already correct
-            flushSync(() => {
-              updatePosition()
-            })
-            document.body.classList.remove('column-resizing')
-          })
-        })
-        document.removeEventListener('pointerup', handlePointerUp)
-      }
-      document.addEventListener('pointerup', handlePointerUp)
+    if (tableContainer) {
+      const resizeObserver = new ResizeObserver(() => {
+        updatePosition()
+      })
+      resizeObserver.observe(tableContainer)
+      return () => resizeObserver.disconnect()
     }
+  }, [tableContainer, anchorElement])
 
-    tableContainer.addEventListener('pointerdown', handlePointerDown as EventListener, true)
-    return () => {
-      tableContainer.removeEventListener('pointerdown', handlePointerDown as EventListener, true)
-    }
-  }, [isEditing, tableContainer])
-
-  // Close the dialog when clicking outside of it
+  // close the dialog when clicking outside of it
   useLayoutEffect(() => {
-    if (!isEditing || !closeOnOutsideClick) return
-
     const handleClickOutside = (event: MouseEvent) => {
-      // Don't close/save while a column is being resized
-      if (document.body.classList.contains('column-resizing')) return
-
       const target = event.target as HTMLElement
-
-      // If the clicked element was removed from the DOM during a React re-render
-      // (e.g. cell content replaced when entering edit mode), ignore this event.
-      if (!document.contains(target)) return
 
       if (
         popupRef.current &&
@@ -189,12 +161,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
         !target.closest('.p-datepicker') &&
         !target.closest('.' + BLOCK_DIALOG_CLOSE_CLASS)
       ) {
-        // Call onSave before closing (auto-save on click outside)
-        if (onSave) {
-          onSave()
-        } else {
-          onClose?.()
-        }
+        onClose?.()
       }
     }
 
@@ -202,53 +169,7 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isEditing, closeOnOutsideClick, onClose, onSave, anchorElement])
-
-  // Close dialog when anchor cell scrolls out of view (with 150ms activation delay for virtualized auto-scroll)
-  useLayoutEffect(() => {
-    if (!isEditing || !closeOnScroll || !tableContainer || !anchorElement) return
-
-    let activated = false
-
-    // 150ms delay before activating scroll detection
-    const timer = setTimeout(() => {
-      activated = true
-    }, 150)
-
-    const handleScroll = () => {
-      if (!activated) return
-      // Don't close while a column is being resized — the scroll is a layout side-effect
-      if (document.body.classList.contains('column-resizing')) return
-
-      // Close only when the anchor cell is no longer visible in the container
-      const cellRect = anchorElement.getBoundingClientRect()
-      const containerRect = tableContainer.getBoundingClientRect()
-
-      if (cellRect.bottom < containerRect.top || cellRect.top > containerRect.bottom) {
-        if (onDismissWithoutSave) {
-          onDismissWithoutSave()
-        } else {
-          onClose?.()
-        }
-      }
-    }
-
-    tableContainer.addEventListener('scroll', handleScroll, { passive: true })
-
-    return () => {
-      clearTimeout(timer)
-      tableContainer.removeEventListener('scroll', handleScroll)
-    }
-  }, [isEditing, closeOnScroll, anchorElement, onClose, onDismissWithoutSave])
-
-  // Reposition dialog during scroll when it stays open (closeOnScroll = false)
-  useLayoutEffect(() => {
-    if (!isEditing || closeOnScroll || !tableContainer) return
-
-    const handleScroll = () => updatePosition()
-    tableContainer.addEventListener('scroll', handleScroll, { passive: true })
-    return () => tableContainer.removeEventListener('scroll', handleScroll)
-  }, [isEditing, closeOnScroll])
+  }, [onClose, anchorElement])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     // check we are not inside an input or textarea
@@ -265,31 +186,23 @@ export const CellEditingDialog: FC<CellEditingDialogProps> = ({
   }
 
   if (!isEditing) return null
-
-  const portalTarget = (tableContainer as HTMLElement) || document.body
-  const positionType = tableContainer ? 'absolute' : 'fixed'
-
   return createPortal(
     <StyledPopUp
       ref={popupRef}
       style={{
-        position: positionType,
         top: position?.top,
         left: position?.left,
         right: position?.right,
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
-        width: maxWidth ? `${maxWidth}px` : 'auto',
+        maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
-        ...style,
       }}
-      className={className ? `links-widget-popup ${className}` : 'links-widget-popup'}
+      className="links-widget-popup"
       onKeyDown={handleKeyDown}
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
     >
       {children}
     </StyledPopUp>,
-    portalTarget,
+    document.body,
   )
 }
