@@ -21,7 +21,7 @@ const StyledDialog = styled.div`
   max-width: 100%;
   height: auto;
   min-height: 88px;
-  max-height: none;
+  max-height: inherit;
   flex: 1;
   overflow: auto;
   border: 2px solid transparent;
@@ -103,6 +103,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   const isRichText = allowMarkdown
   const plainTextAreaRef = useRef<HTMLTextAreaElement>(null)
   const hasAutoFocusedRef = useRef(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const normalizedValue = typeof value === 'string' ? value : value == null ? '' : String(value)
   const originalValueRef = useRef(normalizedValue)
   useEffect(() => {
@@ -250,7 +251,39 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     [convertPlainValue, editingValue, isRichText, onChange, onCancelEdit, onEditingDraftChange],
   )
 
-  // Handle keyboard shortcuts
+  // Refs for capture-phase keyboard handler (avoids stale closures)
+  const handleSaveRef = useRef(handleSave)
+  handleSaveRef.current = handleSave
+  const onCancelEditRef = useRef(onCancelEdit)
+  onCancelEditRef.current = onCancelEdit
+
+  // Capture-phase listener to intercept Enter/Escape before Quill processes them
+  useEffect(() => {
+    if (isPreview || !isRichText) return
+    const el = dialogRef.current
+    if (!el) return
+
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        onCancelEditRef.current?.()
+        return
+      }
+      // Enter (without Shift) saves; Shift+Enter falls through for newline
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        e.stopPropagation()
+        handleSaveRef.current('Enter')
+        return
+      }
+    }
+
+    el.addEventListener('keydown', handler, true)
+    return () => el.removeEventListener('keydown', handler, true)
+  }, [isPreview, isRichText])
+
+  // Handle Ctrl+key formatting shortcuts (bubble phase is fine for these)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (isPreview || !isRichText) return
@@ -263,7 +296,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
         const format = quill.getFormat()
         // b, i, u are handled natively by Quill's built-in keyboard bindings,
         // so we only intercept the non-standard shortcuts here to avoid double-toggling.
-        const handledKeys = new Set(['d', 'o', 'l', 'h', 'enter', 'escape'])
+        const handledKeys = new Set(['d', 'o', 'l', 'h'])
 
         if (!handledKeys.has(key)) return
 
@@ -283,20 +316,15 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
             const isH2 = format.header === 2
             quill.format('header', isH2 ? false : 2)
             break
-          case 'enter':
-            handleSave('Enter')
-            break
-          case 'escape':
-            onCancelEdit?.()
-            break
         }
       }
     },
-    [handleSave, isPreview, isRichText, onCancelEdit],
+    [isPreview, isRichText],
   )
 
   const dialogContent = (
     <StyledDialog
+      ref={dialogRef}
       className={isPreview ? 'preview' : 'editing'}
       onKeyDown={handleKeyDown}
       onMouseDown={(e) => {
@@ -347,9 +375,15 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
               value={editingValue}
               onChange={(e) => updateEditingValue(e.target.value)}
               onKeyDown={(event) => {
-                if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                if (event.key === 'Escape') {
+                  event.preventDefault()
+                  onCancelEdit?.()
+                  return
+                }
+                if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
                   handleSave('Enter')
+                  return
                 }
               }}
               spellCheck={false}
