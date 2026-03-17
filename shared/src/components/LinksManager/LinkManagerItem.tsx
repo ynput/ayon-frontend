@@ -108,6 +108,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
         ) : (
           <Styled.CountBadge
             onClick={handleBadgeClick}
+            tabIndex={0}
             data-tooltip="Click to edit count"
           >
             x{count}

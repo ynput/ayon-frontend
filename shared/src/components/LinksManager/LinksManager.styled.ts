@@ -136,11 +136,10 @@ export const LinkItem = styled.li`
   }
 `
 
-export const CountBadge = styled.button`
+export const CountBadge = styled.span`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--md-sys-color-surface-container);
   border: none;
   border-radius: var(--border-radius-m);
   padding: 0 6px;
@@ -154,27 +153,19 @@ export const CountBadge = styled.button`
   flex-shrink: 0;
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-highest);
+    background-color: var(--md-sys-color-surface-container-low-hover);
   }
 `
 
-export const CountInput = styled.input.attrs({ type: 'number' })`
-  height: 32px;
-  min-width: 32px;
+export const CountInput = styled(InputText).attrs({ type: 'number' })`
+  height: 20px;
+  min-width: 24px;
   font-size: 0.8em;
   font-weight: 600;
   text-align: center;
   flex-shrink: 0;
-  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container);
-  color: inherit;
   padding: 0 4px;
-  outline: none;
-
-  &:focus {
-    border-color: var(--md-sys-color-primary);
-  }
 
   /* Hide spinner arrows */
   -moz-appearance: textfield;
