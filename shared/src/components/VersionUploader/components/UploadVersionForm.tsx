@@ -300,22 +300,6 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
       onKeyDown={handleKeyDown}
     >
       <StyledFormLayout>
-        {!hidden.includes('productType') && (
-          <FormRow label="Product Type">
-            <Dropdown
-              ref={dropdownRef}
-              options={productTypeOptions}
-              value={[formData.productType]}
-              onChange={handleProductTypeChange}
-              widthExpand
-              multiSelect={false}
-              aria-label="Product Type"
-              search
-              disabled={isFormSubmitted}
-            />
-          </FormRow>
-        )}
-
         {!hidden.includes('name') && (
           <FormRow label="Product Name">
             <NameInputRow>
@@ -370,6 +354,22 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                 />
               )}
             </NameInputRow>
+          </FormRow>
+        )}
+
+        {!hidden.includes('productType') && (
+          <FormRow label="Product Type">
+            <Dropdown
+              ref={dropdownRef}
+              options={productTypeOptions}
+              value={[formData.productType]}
+              onChange={handleProductTypeChange}
+              widthExpand
+              multiSelect={false}
+              aria-label="Product Type"
+              search
+              disabled={isFormSubmitted}
+            />
           </FormRow>
         )}
 

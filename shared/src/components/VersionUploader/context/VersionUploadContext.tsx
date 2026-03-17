@@ -14,6 +14,7 @@ import React, {
   useMemo,
   useCallback,
   useEffect,
+  useRef,
 } from 'react'
 import { extractVersionFromFilename } from '@shared/util'
 import { toast } from 'react-toastify'
@@ -106,6 +107,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview?: string }>>([])
   const [form, setForm] = useState<FormData>(defaultFormData)
+  // Remember the last used product name so it persists across dialog open/close
+  const lastProductNameRef = useRef<string>(defaultFormData.name)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string>('')
   const [createdProductId, setCreatedProductId] = useState<string | null>(null)
@@ -158,10 +161,12 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       setLatestVersionNumber(latestVersionNumber)
       setLatestVersionId(latestVersionId)
 
-      // If we already know the latest version number, set the form immediately
-      if (latestVersionNumber != null) {
-        setForm((prev) => ({ ...prev, version: latestVersionNumber + 1 }))
-      }
+      // Set initial form state in a single update
+      setForm((prev) => ({
+        ...prev,
+        ...(!productId && lastProductNameRef.current ? { name: lastProductNameRef.current } : {}),
+        ...(latestVersionNumber != null ? { version: latestVersionNumber + 1 } : {}),
+      }))
       setIsOpen(true)
     },
     [],
@@ -175,6 +180,10 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       }
     })
     setPendingFiles([])
+    // Remember product name before resetting (only if non-empty)
+    if (form.name.trim()) {
+      lastProductNameRef.current = form.name
+    }
     setForm(defaultFormData)
     setCreatedProductId(null)
     setCreatedVersionId(null)
@@ -275,14 +284,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       ...prev,
       [key]: value,
     }))
+    // Clear any previous validation error when user edits the form
+    setError('')
   }, [])
-
-  const validateFormData = () => {
-    const validation = validateFormDataHelper(form, latestVersion, !effectiveProductId)
-    if (!validation.isValid) {
-      throw validation.error
-    }
-  }
 
   // Handle form submission
   const handleFormSubmit = useCallback(
@@ -292,7 +296,10 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         setError('')
 
         // validate the form data
-        validateFormData()
+        const validation = validateFormDataHelper(formData, latestVersion, !effectiveProductId)
+        if (!validation.isValid) {
+          throw validation.error
+        }
 
         const response = await onUploadVersion(formData)
 
@@ -313,7 +320,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         setIsSubmitting(false)
       }
     },
-    [onUploadVersion, pendingFiles.length, onCloseVersionUpload],
+    [onUploadVersion, pendingFiles.length, onCloseVersionUpload, latestVersion, effectiveProductId],
   )
 
   // Update form when version data changes (only when query is used as fallback)
@@ -331,7 +338,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     }
   }, [isOpen, version, latestVersionNumber])
 
-  // Auto-set version and productType when a matched product is found, reset when match is lost
+  // Auto-set version and productType when a matched product is found, reset version when match is lost
   useEffect(() => {
     if (!isOpen || productId) return
 
