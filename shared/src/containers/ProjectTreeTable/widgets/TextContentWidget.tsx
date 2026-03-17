@@ -369,6 +369,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
               }}
               readOnly={isPreview}
               onChange={updateEditingValue}
+              className="block-shortcuts"
             />
           ) : isPreview ? (
             <PlainPreview>{normalizedValue}</PlainPreview>
