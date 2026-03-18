@@ -80,7 +80,11 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     let position: { left?: number; right?: number } = {}
     let dialogWidth = minWidthThreshold
 
-    if (spaceToRight < minWidthThreshold) {
+    if (matchAnchorWidth) {
+      // Match the anchor cell width, but at least minWidthThreshold
+      position.left = cellRect.left
+      dialogWidth = Math.max(minWidthThreshold, cellRect.width)
+    } else if (spaceToRight < minWidthThreshold) {
       // Not enough space to the right, anchor to the right side of the cell
       const spaceToLeft = cellRect.right - screenPadding
       if (spaceToLeft >= minWidthThreshold) {
@@ -198,6 +202,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         right: position?.right,
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
+        ...(matchAnchorWidth && maxWidth ? { width: `${maxWidth}px` } : {}),
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
       }}

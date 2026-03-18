@@ -419,6 +419,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
           isEditing={Boolean(isEditing || isPreview)}
           anchorId={cellId}
           onClose={onCancelEdit}
+          matchAnchorWidth
         >
           {dialogContent}
         </CellEditingDialog>
