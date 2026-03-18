@@ -93,18 +93,38 @@ export const usePreserveChildSelectionByName = ({
   // Effect 3 — When child data finishes loading and there are pending names, auto-select matches
   useEffect(() => {
     const state = stateRef.current
+    // Track types processed in THIS run so child types wait for the next render
+    // (the parent's state update hasn't propagated yet, so child data is still stale)
+    const processedInThisRun = new Set<PickerEntityType>()
 
     for (const type of entityHierarchy) {
       const pendingNames = state.pendingNameMatches[type]
       if (!pendingNames?.size) continue
+
+      // Don't consume child pending matches while a parent type is still pending
+      // or was just processed in this same run (its state update hasn't propagated yet).
+      const typeIndex = entityHierarchy.indexOf(type)
+      const hasParentPending = entityHierarchy
+        .slice(0, typeIndex)
+        .some(
+          (parentType) =>
+            state.pendingNameMatches[parentType]?.size || processedInThisRun.has(parentType),
+        )
+      if (hasParentPending) continue
 
       const { isLoading, data } = entityData[type]
       if (isLoading) continue
 
       // Clear pending once loading completes — even if data is empty (no children under this parent)
       delete state.pendingNameMatches[type]
+      processedInThisRun.add(type)
 
-      if (!data?.length) continue
+      if (!data?.length) {
+        // No children under this parent, clear stale selection
+        state.skipDetection = true
+        setEntityRowSelection({}, type)
+        continue
+      }
 
       const newSelection: RowSelectionState = {}
       for (const entity of data) {
@@ -113,10 +133,8 @@ export const usePreserveChildSelectionByName = ({
         }
       }
 
-      if (Object.keys(newSelection).length > 0) {
-        state.skipDetection = true
-        setEntityRowSelection(newSelection, type)
-      }
+      state.skipDetection = true
+      setEntityRowSelection(newSelection, type)
     }
   }, [entityHierarchy, entityData, setEntityRowSelection])
 }
