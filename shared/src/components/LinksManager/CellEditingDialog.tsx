@@ -104,6 +104,27 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
       dialogWidth = Math.max(minWidthThreshold, spaceToRight)
     }
 
+    // Clamp horizontal position so the dialog stays within the table container
+    const minLeft = containerRect.left
+    const maxRight = containerRect.right
+
+    if (position.left !== undefined) {
+      // If dialog overflows right edge of container, shift it left
+      if (position.left + dialogWidth > maxRight) {
+        position.left = Math.max(minLeft, maxRight - dialogWidth)
+      }
+      // Ensure it doesn't go past left edge of container
+      position.left = Math.max(minLeft, position.left)
+    }
+    if (position.right !== undefined) {
+      // Clamp so dialog doesn't overflow left edge of container
+      const rightFromScreen = screenWidth - maxRight
+      if (position.right + dialogWidth > screenWidth - minLeft) {
+        position.right = Math.max(rightFromScreen, screenWidth - minLeft - dialogWidth)
+      }
+      position.right = Math.max(rightFromScreen, position.right)
+    }
+
     setMaxWidth(dialogWidth)
 
     const spaceBelow = screenHeight - cellRect.bottom - screenPadding
