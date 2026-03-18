@@ -64,27 +64,29 @@ export const MappersTableBodyCell = styled.td`
 `
 
 export const MappersTableColumnName = styled.th`
+  border-bottom: solid 1px var(--md-sys-color-surface);
   padding: var(--padding-m) var(--padding-l);
   position: relative;
   text-align: left;
 
   &::before {
     content: "";
-    border-left: solid 3px;
+    border-bottom: inherit;
     height: 100%;
+    width: 3px;
     position: absolute;
     left: 0;
     top: 0;
   }
 
   &.unresolved::before {
-    border-left-color: var(--md-sys-color-primary);
+    background-color: var(--md-sys-color-primary);
   }
   &.resolved::before {
-    border-left-color: var(--md-sys-color-tertiary);
+    background-color: var(--md-sys-color-tertiary);
   }
   &.error::before {
-    border-left-color: var(--md-sys-color-error-container);
+    background-color: var(--md-sys-color-error-container);
   }
 `
 
@@ -96,9 +98,17 @@ export const MappersTableErrorHandling = styled(MappersTableBodyCell)`
   padding-right: var(--padding-s);
 `
 
-export const PickActionDropdown = styled(Dropdown)`
-  background: none;
+export const MappersTableActionCol = styled.col`
+  width: calc(var(--padding-l) * 2 + 14ch);
+`
+
+export const MapperDropdown = styled(Dropdown)`
   width: 100%;
+`
+
+export const PickActionDropdown = styled(MapperDropdown)`
+  background: none;
+  height: auto;
 
   button, button:hover {
     background: var(--md-sys-color-surface-container-highest);
