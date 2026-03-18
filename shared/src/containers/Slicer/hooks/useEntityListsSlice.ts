@@ -3,11 +3,7 @@ import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { useGetListsInfiniteInfiniteQuery } from '@shared/api/queries/entityLists/getLists'
 import { useProjectContext } from '@shared/context'
 
-interface UseEntityListsSliceProps {
-  entityTypes: string[]
-}
-
-export const useEntityListsSlice = ({ entityTypes }: UseEntityListsSliceProps) => {
+export const useEntityListsSlice = () => {
   const { projectName } = useProjectContext()
 
   const {
@@ -27,12 +23,7 @@ export const useEntityListsSlice = ({ entityTypes }: UseEntityListsSliceProps) =
 
     const allLists = listsData.pages.flatMap((page) => page.lists)
 
-    // Filter lists to only those whose entityType matches the page context
-    const filteredLists = entityTypes.length
-      ? allLists.filter((list) => entityTypes.includes(list.entityType))
-      : allLists
-
-    return filteredLists.map((list) => ({
+    return allLists.map((list) => ({
       id: list.id,
       name: list.label,
       label: `${list.label} (${list.entityType})`,
@@ -46,7 +37,7 @@ export const useEntityListsSlice = ({ entityTypes }: UseEntityListsSliceProps) =
         listId: list.id,
       },
     }))
-  }, [listsData, entityTypes])
+  }, [listsData])
 
   const getData = useCallback(async () => {
     return tableData

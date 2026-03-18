@@ -4,13 +4,12 @@ import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { entityListsApi, type EntityListEnities } from '@shared/api/generated'
 import { useSlicerContext } from '@shared/containers'
 import { useProjectContext } from '@shared/context'
+import {
+  resolveEntityParents,
+  type SelectedEntityIds,
+} from '@shared/api/queries/entityLists/resolveEntityParents'
 
-export interface SelectedEntityIds {
-  folderIds: string[]
-  taskIds: string[]
-  versionIds: string[]
-  productIds: string[]
-}
+export type { SelectedEntityIds }
 
 const EMPTY_IDS: SelectedEntityIds = {
   folderIds: [],
@@ -46,8 +45,8 @@ const collectEntityIds = (results: EntityListEnities[]): SelectedEntityIds => {
 
 /**
  * Resolves entity list slicer selections to actual entity IDs.
- * When sliceType is 'entityList', fetches entity IDs from each selected list
- * and groups them by entity type.
+ * When sliceType is 'entityList', fetches entity IDs from each selected list,
+ * then resolves cross-entity parent references (e.g. task → folder, version → folder/task).
  */
 export const useSelectedEntityIds = (): {
   entityIds: SelectedEntityIds
@@ -77,6 +76,7 @@ export const useSelectedEntityIds = (): {
 
     const fetchEntityIds = async () => {
       try {
+        // Step 1: Get raw entity IDs from each selected list
         const results = await Promise.all(
           selectedListIds.map((listId) =>
             dispatch(
@@ -85,8 +85,13 @@ export const useSelectedEntityIds = (): {
           ),
         )
 
+        const rawIds = collectEntityIds(results)
+
+        // Step 2: Resolve cross-entity parent references
+        const resolvedIds = await resolveEntityParents(rawIds, projectName, dispatch)
+
         if (!cancelled) {
-          setEntityIds(collectEntityIds(results))
+          setEntityIds(resolvedIds)
         }
       } catch (err) {
         console.error('Error fetching entity list IDs:', err)
