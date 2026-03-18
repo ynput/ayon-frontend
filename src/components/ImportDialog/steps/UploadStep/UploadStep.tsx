@@ -1,8 +1,8 @@
-import { StepProps } from "./common";
+import { StepProps } from "../common";
 import { Button, FileUpload, FileUploadProps, getFileSizeString, Icon, Panel } from "@ynput/ayon-react-components";
 import { useEffect, useRef, useState } from "react";
-import { StepNavButtons } from "./common.styled";
-import { ImportData, parseCSV } from "../utils";
+import { StepNavButtons } from "../common.styled";
+import { ImportData, parseCSV } from "../../utils";
 import styled from "styled-components";
 
 type Props = StepProps<ImportData>

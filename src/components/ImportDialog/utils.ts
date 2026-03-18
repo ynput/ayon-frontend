@@ -5,6 +5,7 @@ type ParseAsyncConfig = Omit<ParseLocalConfig, "complete">
 export type CSVRow = Record<string, any>
 
 export type ImportData = {
+  fileName: string
   columns: string[]
   rows: CSVRow[]
 }
@@ -38,7 +39,7 @@ export const parseCSV = async (file: File) => {
   const rows = await parseAsync(file, parseConfig)
   const keys = rows.map((r) => Object.keys(r)).flat()
   const columns = Array.from(new Set(keys))
-  const result = { columns, rows }
+  const result = { columns, rows, fileName: file.name }
   fileCache.set(file, result)
 
   return result

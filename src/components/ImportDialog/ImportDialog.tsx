@@ -1,9 +1,9 @@
-import { Button, Dialog } from "@ynput/ayon-react-components";
-import { useState } from "react";
-import UploadStep from "./steps/UploadStep";
-import { DialogHeading, ImportContextWrapper } from "./ImportDialog.styled";
+import { Button, DialogProps } from "@ynput/ayon-react-components";
+import { useCallback, useState } from "react";
+import UploadStep from "./steps/UploadStep/UploadStep";
+import { DialogContainer, DialogHeading, ImportContextWrapper } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
-import MapColumnsStep from "./steps/MapColumnsStep";
+import MapColumnsStep from "./steps/MapColumnsStep/MapColumnsStep";
 import { ColumnMappings, ImportContext, ImportStep } from "./steps/common";
 import { upperFirst } from "lodash";
 
@@ -17,12 +17,25 @@ const dialogHeaderForStep: Record<ImportStep, string> = {
   [ImportStep.REVIEW_VALUES]: "Review Values",
   [ImportStep.PREVIEW]: "Preview Result",
 }
+const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
+  [ImportStep.UPLOAD]: "lg",
+  [ImportStep.MAP_COLUMNS]: "full",
+  [ImportStep.REVIEW_VALUES]: "full",
+  [ImportStep.PREVIEW]: "full",
+}
 
 export default function ImportDialog({ importContext }: Props) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<ImportStep>(ImportStep.UPLOAD)
   const [data, setData] = useState<ImportData | null>(null)
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | null>(null)
+
+  const closeDialog = useCallback(() => {
+    setOpen(false)
+    setStep(ImportStep.UPLOAD)
+    setData(null)
+    setColumnMappings(null)
+  }, [])
 
   return (
     <>
@@ -31,14 +44,21 @@ export default function ImportDialog({ importContext }: Props) {
         label="Import CSV"
         onClick={() => setOpen(true)}
       />
-      <Dialog
+      <DialogContainer
         isOpen={open}
-        onClose={() => setOpen(false)}
-        size="lg"
+        onClose={closeDialog}
+        size={dialogSizeForStep[step]}
         header={(
           <DialogHeading>
             {dialogHeaderForStep[step]}
-            <ImportContextWrapper>{upperFirst(importContext)}</ImportContextWrapper>
+            <ImportContextWrapper>
+              {upperFirst(importContext)}
+              {
+                data
+                  ? ` - ${data.fileName}`
+                  : ''
+              }
+            </ImportContextWrapper>
           </DialogHeading>
         )}
       >
@@ -46,7 +66,7 @@ export default function ImportDialog({ importContext }: Props) {
           step === ImportStep.UPLOAD && (
             <UploadStep
               importContext={importContext}
-              onBack={() => setOpen(false)}
+              onBack={closeDialog}
               onNext={(d) => {
                 setData(d)
                 setStep(ImportStep.MAP_COLUMNS)
@@ -67,7 +87,7 @@ export default function ImportDialog({ importContext }: Props) {
             />
           )
         }
-      </Dialog>
+      </DialogContainer>
     </>
   )
 }

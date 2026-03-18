@@ -1,4 +1,8 @@
+import { Dialog } from "@ynput/ayon-react-components";
 import styled from "styled-components";
+
+export const DialogContainer = styled(Dialog)`
+`
 
 export const DialogHeading = styled.h1`
   margin: 0;

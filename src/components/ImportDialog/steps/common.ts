@@ -1,3 +1,5 @@
+import { Column } from "primereact/column"
+
 export type ImportContext = "hierarchy" | "users" | "list"
 
 export enum ImportStep {
@@ -5,6 +7,11 @@ export enum ImportStep {
   MAP_COLUMNS,
   REVIEW_VALUES,
   PREVIEW,
+}
+
+export enum ColumnAction {
+  MAP = "map",
+  SKIP = "skip",
 }
 
 export enum ErrorHandlingMode {
@@ -20,8 +27,9 @@ export type StepProps<R> = {
 }
 
 export type ColumnMapping = {
-  targetColumn: string
-  errorHandlingMode: ErrorHandlingMode
+  action: ColumnAction
+  targetColumn?: string
+  errorHandlingMode?: ErrorHandlingMode
 }
 
 export type ColumnMappings = Record<string, ColumnMapping>
