@@ -1,6 +1,6 @@
 import { FC, useRef, useEffect, useCallback, useState, Suspense, type ChangeEvent } from 'react'
 import styled from 'styled-components'
-import clsx from 'clsx'
+
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import type { WidgetBaseProps } from './CellWidget'
 import ReactQuill from 'react-quill-ayon'
@@ -419,13 +419,6 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
           isEditing={Boolean(isEditing || isPreview)}
           anchorId={cellId}
           onClose={onCancelEdit}
-          onSave={isPreview ? undefined : () => handleSave('Click')}
-          closeOnOutsideClick={isPreview ? false : true}
-          className={clsx('text-editing-dialog', {
-            editing: !isPreview,
-            preview: isPreview,
-            'block-shortcuts': isEditing && !isPreview,
-          })}
         >
           {dialogContent}
         </CellEditingDialog>

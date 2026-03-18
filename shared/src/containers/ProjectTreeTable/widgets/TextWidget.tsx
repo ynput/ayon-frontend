@@ -459,8 +459,6 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             isEditing={true}
             anchorId={cellId}
             onClose={() => updatePreview(false)}
-            closeOnOutsideClick={false}
-            closeOnScroll={false}
           >
             <StyledPreviewContent
               onClick={handlePreviewClick}

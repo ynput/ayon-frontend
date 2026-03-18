@@ -25,6 +25,8 @@ export interface LinksManagerDialogProps {
   containerClassName?: string
   onClose?: () => void
   children?: React.ReactNode
+  /** When true, dialog width matches the anchor cell width exactly (no 400px minimum). */
+  matchAnchorWidth?: boolean
 }
 
 export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
@@ -33,6 +35,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   containerClassName = 'table-container',
   onClose,
   children,
+  matchAnchorWidth,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
