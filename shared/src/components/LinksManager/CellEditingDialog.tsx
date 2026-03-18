@@ -154,7 +154,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
 
   useLayoutEffect(() => {
     updatePosition()
-  }, [isEditing, anchorElement])
+  }, [isEditing, anchorElement, matchAnchorWidth])
 
   // watch for when the tableContainer width changes
   useLayoutEffect(() => {

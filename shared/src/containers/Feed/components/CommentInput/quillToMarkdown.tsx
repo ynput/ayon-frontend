@@ -81,6 +81,14 @@ turndownService.addRule('orderedList', {
   },
 })
 
+// preserve underline as raw HTML (markdown has no native underline syntax)
+turndownService.addRule('underline', {
+  filter: ['u'],
+  replacement: function (content) {
+    return `<u>${content}</u>`
+  },
+})
+
 // convert mention tags to links
 turndownService.addRule('mention', {
   filter: function (node) {

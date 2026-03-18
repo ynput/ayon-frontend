@@ -140,15 +140,6 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     setEditingValue(html)
   }, [isEditing, isPreview, normalizedValue, isRichText])
 
-  useEffect(() => {
-    if (!isEditing && !isPreview) return
-    if (!isRichText) {
-      setEditingValue(normalizedValue)
-      return
-    }
-    if (descriptionHtml) setEditingValue(descriptionHtml)
-  }, [isEditing, isPreview, descriptionHtml, normalizedValue, isRichText])
-
   // Autofocus editor when dialog opens
   useEffect(() => {
     if (isPreview || !isEditing) {
