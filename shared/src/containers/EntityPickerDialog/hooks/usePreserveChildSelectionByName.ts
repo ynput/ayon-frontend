@@ -61,12 +61,22 @@ export const usePreserveChildSelectionByName = ({
       const prevKey = state.prevParentKeys[parentType]
 
       if (prevKey !== undefined && prevKey !== currentKeys[parentType]) {
-        // Parent changed — capture names for every descendant level
-        for (let j = i + 1; j < entityHierarchy.length; j++) {
-          const childType = entityHierarchy[j]
-          const names = state.selectedNames[childType]
-          if (names?.length) {
-            state.pendingNameMatches[childType] = new Set(names)
+        const parentDeselected = currentKeys[parentType] === ''
+
+        if (parentDeselected) {
+          // Parent fully deselected — clear all descendant selections
+          for (let j = i + 1; j < entityHierarchy.length; j++) {
+            state.skipDetection = true
+            setEntityRowSelection({}, entityHierarchy[j])
+          }
+        } else {
+          // Parent switched — capture names for every descendant level
+          for (let j = i + 1; j < entityHierarchy.length; j++) {
+            const childType = entityHierarchy[j]
+            const names = state.selectedNames[childType]
+            if (names?.length) {
+              state.pendingNameMatches[childType] = new Set(names)
+            }
           }
         }
         break // only handle the highest-level parent change
