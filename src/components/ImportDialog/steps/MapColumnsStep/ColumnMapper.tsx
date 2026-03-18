@@ -9,7 +9,7 @@ import {
   MappersTableErrorHandling,
   PickActionDropdown
 } from "./MapColumnsStep.styled"
-import { ColumnAction } from "../common"
+import { ColumnAction, ErrorHandlingMode } from "../common"
 import clsx from "clsx"
 
 export enum MappingState {
@@ -28,6 +28,8 @@ type Props = {
   errorHandlingOptions: DropdownProps["options"]
   onClick: () => void
   onActionChange: (action: ColumnAction) => void
+  onTargetChange: (target: string) => void
+  onErrorHandlingChange: (mode: ErrorHandlingMode) => void
 }
 
 export default function ColumnMapper({
@@ -40,6 +42,8 @@ export default function ColumnMapper({
   errorHandlingOptions,
   onClick,
   onActionChange,
+  onTargetChange,
+  onErrorHandlingChange,
 }: Props) {
   const selectedActionOption = useMemo(
     () => actions.find(({ value }) => value === action?.[0]),
@@ -53,7 +57,7 @@ export default function ColumnMapper({
       className={clsx({ selected })}
       onClick={() => onClick()}
     >
-      <MappersTableColumnName className={clsx([state])}>
+      <MappersTableColumnName className={clsx([state])} scope="row">
         {column}
       </MappersTableColumnName>
       <MappersTableBodyCell>
@@ -78,6 +82,7 @@ export default function ColumnMapper({
           disabled={skipping}
           value={[]}
           options={attributeOptions}
+          onChange={([value]) => onTargetChange(value)}
           placeholder={
             skipping
               ? "Will be skipped"
@@ -90,6 +95,7 @@ export default function ColumnMapper({
           disabled={skipping}
           value={[]}
           options={errorHandlingOptions}
+          onChange={([value]) => onErrorHandlingChange(value as ErrorHandlingMode)}
           placeholder={
             skipping
             ? "Will be skipped"

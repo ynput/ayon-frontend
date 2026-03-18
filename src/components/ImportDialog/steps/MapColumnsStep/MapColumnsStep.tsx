@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ColumnMappings, StepProps } from "../common"
+import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, StepProps } from "../common"
 import { StepNavButtons } from "../common.styled"
 import DataPreview from "../../components/DataPreview"
 import {
@@ -13,7 +13,8 @@ import {
     MappersTableHeader,
     MappersTableHeaderCell,
     MappersTableBody, Preview,
-    PreviewHeading
+    PreviewHeading,
+    MappersTableHeaderErrorHandling
 } from "./MapColumnsStep.styled"
 import ColumnMapper, { MappingState } from "./ColumnMapper"
 
@@ -34,6 +35,21 @@ const actionOptions = [
   },
 ]
 
+const errorHandlingOptions = [
+  {
+    value: ErrorHandlingMode.SKIP,
+    label: "Skip Row",
+  },
+  {
+    value: ErrorHandlingMode.DEFAULT,
+    label: "Set to default value",
+  },
+  {
+    value: ErrorHandlingMode.ABORT,
+    label: "Abort Import",
+  },
+]
+
 const getMapperState = (column: string, mappings: ColumnMappings = {}) => {
   const mapping = mappings[column]
   if (mapping && mapping.targetColumn) {
@@ -47,6 +63,12 @@ const getMapperAction = (column: string, mappings: ColumnMappings = {}) => {
   return [mappings[column].action]
 }
 
+const mappingUpdater = (column: string, update: Partial<ColumnMapping>) => (old: ColumnMappings | undefined) => {
+  const base = old ?? {}
+  const mapping = Object.assign(base[column] ?? {}, update)
+  return { ...base, [column]: mapping }
+}
+
 export default function MapColumnsStep({ data, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(undefined)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
@@ -58,10 +80,17 @@ export default function MapColumnsStep({ data, onBack, onNext }: Props) {
           <Mappers>
             <MappersTableHeader>
               <tr>
-                <MappersTableHeaderCell>File column</MappersTableHeaderCell>
-                <MappersTableHeaderCell></MappersTableHeaderCell>
-                <MappersTableHeaderCell>Attribute</MappersTableHeaderCell>
-                <MappersTableHeaderCell>On error</MappersTableHeaderCell>
+                <MappersTableHeaderCell scope="col">
+                  File column
+                </MappersTableHeaderCell>
+                <MappersTableHeaderCell scope="col">
+                </MappersTableHeaderCell>
+                <MappersTableHeaderCell scope="col">
+                  Attribute
+                </MappersTableHeaderCell>
+                <MappersTableHeaderErrorHandling scope="col">
+                  On error
+                </MappersTableHeaderErrorHandling>
               </tr>
             </MappersTableHeader>
             <MappersTableBody>
@@ -74,7 +103,7 @@ export default function MapColumnsStep({ data, onBack, onNext }: Props) {
                   action={getMapperAction(column, mappings)}
                   actions={actionOptions}
                   attributeOptions={[]}
-                  errorHandlingOptions={[]}
+                  errorHandlingOptions={errorHandlingOptions}
                   selected={previewColumn === column}
                   onClick={() => {
                     if (previewColumn === column) {
@@ -83,11 +112,13 @@ export default function MapColumnsStep({ data, onBack, onNext }: Props) {
                     setPreviewColumn(column)
                   }}
                   onActionChange={(action) => {
-                    setMappings((old) => {
-                      const base = old ?? {}
-                      const mapping = Object.assign(base[column] ?? {}, { action })
-                      return { ...base, [column]: mapping }
-                    })
+                    setMappings(mappingUpdater(column, { action }))
+                  }}
+                  onTargetChange={(targetColumn) => {
+                    setMappings(mappingUpdater(column, { targetColumn }))
+                  }}
+                  onErrorHandlingChange={(errorHandlingMode) => {
+                    setMappings(mappingUpdater(column, { errorHandlingMode }))
                   }}
                 />
               ))

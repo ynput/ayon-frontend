@@ -36,6 +36,10 @@ export const MappersTableHeaderCell = styled.th`
   font-weight: bold;
   text-align: left;
 `
+export const MappersTableHeaderErrorHandling = styled(MappersTableHeaderCell)`
+  padding-left: var(--padding-s);
+`
+
 export const MappersTableBody = styled.tbody`
   background: var(--md-sys-color-surface-container-low);
 `
