@@ -29,13 +29,12 @@ export const MappersTableHeader = styled.thead`
   background: var(--md-sys-color-surface-container);
   position: sticky;
   top: 0;
-  // account for body row border overflowing
-  translate: -2px 0;
   z-index: 100;
 `
-export const MappersTableHeaderCell = styled.td`
-  padding: var(--padding-m) calc(2px + var(--padding-l));
+export const MappersTableHeaderCell = styled.th`
+  padding: var(--padding-m) var(--padding-l);
   font-weight: bold;
+  text-align: left;
 `
 export const MappersTableBody = styled.tbody`
   background: var(--md-sys-color-surface-container-low);
@@ -60,16 +59,27 @@ export const MappersTableBodyCell = styled.td`
   }
 `
 
-export const MappersTableColumnName = styled(MappersTableBodyCell)`
-  border-left: solid 3px;
+export const MappersTableColumnName = styled.th`
+  padding: var(--padding-m) var(--padding-l);
+  position: relative;
+  text-align: left;
 
-  &.unresolved {
+  &::before {
+    content: "";
+    border-left: solid 3px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  &.unresolved::before {
     border-left-color: var(--md-sys-color-primary);
   }
-  &.resolved {
+  &.resolved::before {
     border-left-color: var(--md-sys-color-tertiary);
   }
-  &.error {
+  &.error::before {
     border-left-color: var(--md-sys-color-error-container);
   }
 `
@@ -81,8 +91,10 @@ export const MappersTableErrorHandling = styled(MappersTableBodyCell)`
   padding-left: var(--padding-s);
   padding-right: var(--padding-s);
 `
+
 export const PickActionDropdown = styled(Dropdown)`
   background: none;
+  width: 100%;
 
   button, button:hover {
     background: var(--md-sys-color-surface-container-highest);
