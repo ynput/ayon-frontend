@@ -1,30 +1,113 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ResolvedColumnMappings, ResolvedValueMappings, StepProps } from "../common"
+import { ColumnAction, ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison } from "../common"
 import {
-  MappersContainer,
   Mappers,
   MappersTableHeader,
   MappersTableHeaderCell,
-  MappersTableBody,
-  MappersTableHeaderErrorHandling,
-  MappersTableActionCol,
+  MappersTableBody, MappersTableActionCol,
   StepNavButtons,
+  StepNavStats,
+  StepNavStatsRequired
 } from "../common.styled"
-import { StepContainer, Container, ColumnsListWrapper, Heading, ColumnsList } from "./ReviewValuesStep.styled"
+import {
+  StepContainer,
+  Container,
+  ColumnsListWrapper,
+  Heading,
+  ColumnsList,
+  ColumnsListButton,
+  ValueMappersContainer,
+  ColumnsListItemStats,
+} from "./ReviewValuesStep.styled"
 import testImportSchema from "../test_import_schema"
-import { useMemo, useState } from "react"
-import ColumnMapper from "../ColumnMapper"
+import { useEffect, useMemo, useState } from "react"
+import ColumnMapper, { MappingState } from "../ColumnMapper"
 
-type Props = StepProps<ResolvedValueMappings> & {
+type Props = StepProps<ValueMappings> & {
   data: ImportData
   importSchema: typeof testImportSchema
   columnMappings: ResolvedColumnMappings
+  mappings?: ValueMappings
 }
 
-export default function ReviewValuesStep({ data, importSchema, columnMappings, onBack, onNext }: Props) {
-  const [activeColumn, setActiveColumn] = useState<string | null>()
+const actionOptions = [
+  {
+    value: ColumnAction.MAP,
+    label: "Map",
+    icon: "line_end_arrow",
+  },
+  {
+    value: ColumnAction.SKIP,
+    label: "Skip",
+    icon: "block",
+  },
+  {
+    value: ColumnAction.CREATE,
+    label: "Create",
+    icon: "add",
+  },
+]
+
+const inferMapping = (value: string, settings: (typeof testImportSchema)["0"]): ValueMapping | null => {
+  const normalisedValue = normaliseForComparison(value)
+
+  const inferredEnum = settings.enumItems?.find((e) =>
+    normalisedValue === normaliseForComparison(e.value) ||
+    normalisedValue === normaliseForComparison(e.label)
+  )
+
+  if (!inferredEnum) return null
+
+  return {
+    targetValue: inferredEnum.value,
+    action: ColumnAction.MAP,
+  }
+}
+
+const getMapperState = (column: string | null, value: string, mappings: ValueMappings = {}) => {
+  if (!column) return MappingState.UNRESOLVED
+
+  const mapping = mappings[column]?.[value]
+  if (!mapping) return MappingState.UNRESOLVED
+
+  const resolvedToMap = mapping.action === ColumnAction.MAP && mapping.targetValue
+  const resolvedToSkip = mapping.action === ColumnAction.SKIP
+  const resolvedToCreate = mapping.action === ColumnAction.CREATE
+  if (resolvedToMap || resolvedToSkip || resolvedToCreate) {
+    return mapping.userResolved ? MappingState.RESOLVED : MappingState.AUTO_RESOLVED
+  }
+
+  return MappingState.UNRESOLVED
+}
+
+const mappingUpdater = (
+  column: string,
+  value: string,
+  update: Partial<ValueMapping>,
+  fallback: Partial<ValueMapping> = {},
+) => (old: ValueMappings | undefined) => {
+  const base = old ?? {}
+  const columnBase = base[column] ?? {}
+  const mapping = {
+    ...fallback,
+    ...(columnBase[value] ?? { }),
+    ...update,
+    userResolved: true,
+  }
+
+  return {
+    ...base,
+    [column]: {
+      ...columnBase,
+      [value]: mapping,
+    },
+  }
+}
+
+export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
+  const [mappings, setMappings] = useState<ValueMappings | undefined>(defaultMappings)
 
   const enumSchemaColumns = useMemo(
     () => importSchema.filter(
@@ -38,14 +121,92 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, o
     [importSchema]
   )
 
-  const columnsToReview = useMemo(
-    () => Object.values(columnMappings)
-      .filter(({ targetColumn }) => enumSchemaColumns.some(
+  const mappingsToReview = useMemo(
+    () => Object.fromEntries(Object.entries(columnMappings)
+      .filter(([, { targetColumn }]) => enumSchemaColumns.some(
         ({ key }) => targetColumn === key,
-      ))
-      .map((columnSchema) => columnSchema),
+      ))),
     [columnMappings, enumSchemaColumns]
   )
+
+  // default to the first reviewable target
+  const [activeTarget, setActiveTarget] = useState<string>(
+    Object.values(mappingsToReview)[0].targetColumn,
+  )
+
+  const [activeColumn, activeMapping] = useMemo(() => {
+    const entry = Object.entries(mappingsToReview)
+      .find(([, { targetColumn }]) => targetColumn === activeTarget)
+
+    return entry ?? [null, null]
+  }, [mappingsToReview, activeTarget])
+
+  const uniqueValuesForColumn = useMemo(
+    () => Object.fromEntries(
+      data.columns.map((column) => [
+        column,
+        Array.from(new Set(data.rows.map((row) => `${row[column]}`)))
+      ])
+    ),
+    [data.columns, data.rows],
+  )
+
+  const currentUniqueValues = useMemo(() => {
+    if (!activeColumn) return []
+    return uniqueValuesForColumn[activeColumn]
+  }, [activeColumn, uniqueValuesForColumn])
+
+  const targetValueOptions = useMemo(() => {
+    if (!activeMapping) return []
+
+    const { enumItems } = columnSettings[activeMapping.targetColumn]
+    if (!enumItems) return []
+
+    return enumItems
+  }, [activeMapping, columnSettings])
+
+  const currentMappings = useMemo(
+    () => mappings && activeColumn ? mappings[activeColumn] : null,
+    [mappings, activeColumn],
+  )
+
+  const unresolvedValues = useMemo(
+    () => Object.fromEntries(
+      Object.entries(uniqueValuesForColumn).map(([column, uniqueValues]) => {
+        const valuesSet = new Set(uniqueValues)
+        if (!mappings) return [column, valuesSet]
+
+        const resolvedValuesSet = new Set(uniqueValues
+          .map((value) => [value, getMapperState(column, value, mappings)])
+          .filter(([, state]) => state !== MappingState.UNRESOLVED)
+          .map(([c]) => c),
+        )
+
+        return [column, valuesSet.difference(resolvedValuesSet)]
+      })
+    ),
+    [data.columns, mappings],
+  )
+
+  const resolvedColumns = useMemo(
+    () => Object
+      .keys(mappingsToReview)
+      .filter((column) => unresolvedValues[column].size === 0),
+    [mappingsToReview, unresolvedValues],
+  )
+
+  useEffect(() => {
+    if (!columnSettings || Boolean(currentMappings) || !activeColumn) return
+    // infer mappings based on the schema
+    setMappings((old) => ({
+      ...old,
+      [activeColumn]: Object.fromEntries(
+        currentUniqueValues
+          .map((value) => [value, inferMapping(value, columnSettings[activeTarget])])
+          .filter(([, mapping]) => !!mapping)
+      ),
+    }))
+  }, [columnSettings, currentMappings, activeColumn, currentUniqueValues, activeTarget])
 
   return (
     <StepContainer>
@@ -54,25 +215,38 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, o
           <Heading>Columns</Heading>
           <ColumnsList>
             {
-              columnsToReview.map(({ targetColumn }) => (
+              Object.entries(mappingsToReview).map(([column, { targetColumn }]) => (
                 <li key={targetColumn}>
-                  <Button
+                  <ColumnsListButton
                     variant="text"
-                    selected={activeColumn === targetColumn}
-                    label={columnSettings[targetColumn].label}
-                    onClick={() => setActiveColumn(targetColumn)}
-                  />
+                    icon={resolvedColumns.includes(column) ? "check" : ""}
+                    iconProps={{
+                      style: { color: "var(--md-sys-color-tertiary)" }
+                    }}
+                    selected={activeTarget === targetColumn}
+                    onClick={() => setActiveTarget(targetColumn)}
+                  >
+                    {
+                      columnSettings[targetColumn].label
+                    }
+                    <ColumnsListItemStats>
+                      {
+                        uniqueValuesForColumn[column].length - unresolvedValues[column].size
+                      } / {
+                        uniqueValuesForColumn[column].length
+                      }
+                    </ColumnsListItemStats>
+                  </ColumnsListButton>
                 </li>
               ))
             }
           </ColumnsList>
         </ColumnsListWrapper>
-        <MappersContainer>
+        <ValueMappersContainer>
           <Mappers>
             <colgroup>
               <col />
               <MappersTableActionCol />
-              <col />
               <col />
             </colgroup>
             <MappersTableHeader>
@@ -86,63 +260,58 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, o
                 <MappersTableHeaderCell scope="col">
                   Mapped Value
                 </MappersTableHeaderCell>
-                <MappersTableHeaderErrorHandling scope="col">
-                  On error
-                </MappersTableHeaderErrorHandling>
               </tr>
             </MappersTableHeader>
             <MappersTableBody>
-            {/*{
-              data.columns.map((column) => (
+            {
+              currentUniqueValues.map((uniqueDataValue) => (
                 <ColumnMapper
-                  key={column}
-                  state={getMapperState(column, mappings)}
-                  column={column}
-                  action={mappings?.[column]?.action}
+                  key={uniqueDataValue}
+                  state={getMapperState(activeColumn, uniqueDataValue, mappings)}
+                  column={uniqueDataValue}
+                  action={currentMappings?.[uniqueDataValue]?.action}
                   actions={actionOptions}
-                  target={mappings?.[column]?.targetColumn}
-                  targetOptions={targetOptions}
-                  errorHandling={mappings?.[column]?.errorHandlingMode}
-                  errorHandlingOptions={errorHandlingOptions}
-                  selected={previewColumn === column}
-                  onClick={() => {
-                    if (previewColumn === column) {
-                      return setPreviewColumn(null)
-                    }
-                    setPreviewColumn(column)
-                  }}
+                  target={currentMappings?.[uniqueDataValue]?.targetValue}
+                  targetOptions={targetValueOptions}
+                  errorHandling={undefined}
+                  errorHandlingOptions={[]}
+                  errorHandlingEnabled={false}
+                  selected={false}
+                  onPointerEnter={() => {}}
                   onActionChange={(action) => {
-                    setMappings(mappingUpdater(column, { action }))
+                    if (!activeColumn) return
+                    setMappings(mappingUpdater(activeColumn, uniqueDataValue, { action }))
                   }}
-                  onTargetChange={(targetColumn) => {
+                  onTargetChange={(targetValue) => {
+                    if (!activeColumn) return
                     setMappings(mappingUpdater(
-                      column,
+                      activeColumn,
+                      uniqueDataValue,
                       {
-                        targetColumn,
+                        targetValue,
                         action: ColumnAction.MAP,
-                      },
-                      {
-                        errorHandlingMode: columnSettings[targetColumn].errorHandlingModes[0] as ErrorHandlingMode
                       },
                     ))
                   }}
-                  onErrorHandlingChange={(errorHandlingMode) => {
-                    setMappings(mappingUpdater(column, { errorHandlingMode }))
-                  }}
+                  onErrorHandlingChange={() => {}}
                 />
               ))
-            }*/}
+            }
             </MappersTableBody>
           </Mappers>
-        </MappersContainer>
+        </ValueMappersContainer>
       </Container>
       <StepNavButtons>
+        <StepNavStats>
+          {resolvedColumns.length} / {Object.keys(mappingsToReview).length} columns resolved.
+        </StepNavStats>
         <Button
           variant="nav"
           label="Back"
           onClick={onBack}
         />
         <Button
+          disabled={resolvedColumns.length !== Object.keys(mappingsToReview).length}
           variant="filled"
           label="Continue"
           onClick={() => {

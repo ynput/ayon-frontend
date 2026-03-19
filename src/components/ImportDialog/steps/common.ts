@@ -12,6 +12,7 @@ export enum ImportStep {
 export enum ColumnAction {
   MAP = "map",
   SKIP = "skip",
+  CREATE = "create",
 }
 
 export enum ErrorHandlingMode {
@@ -41,4 +42,14 @@ export type ResolvedColumnMapping = ColumnMapping & {
 export type ColumnMappings = Record<string, ColumnMapping>
 export type ResolvedColumnMappings = Record<string, ResolvedColumnMapping>
 
-export type ResolvedValueMappings = {}
+export type ValueMapping = {
+  action: ColumnAction
+  targetValue: string
+  userResolved?: boolean
+}
+
+export type ValueMappings = Record<string, Record<string, ValueMapping>>
+
+// can be applied to two strings to compare them with some tolerance
+// e.g. case-insensitive and ignoring certain characters
+export const normaliseForComparison = (name: string) => name.replace(/_\.\s/g, '').toLowerCase();

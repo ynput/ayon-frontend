@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button, Dropdown, Icon } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ResolvedColumnMappings, StepProps } from "../common"
+import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
 import { StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "../../components/DataPreview"
 import {
@@ -58,17 +58,15 @@ const errorHandlingOptions = [
   },
 ]
 
-const normaliseColumnName = (name: string) => name.replace(/_\.\s/g, '').toLowerCase();
-
 const inferErrorHandling = (columnSchema: (typeof testImportSchema)["0"]) => {
   return columnSchema.errorHandlingModes[0] as ErrorHandlingMode
 }
 
 const inferMapping = (column: string, schema: typeof testImportSchema): ColumnMapping | null => {
-  const normalisedColumn = normaliseColumnName(column)
+  const normalisedColumn = normaliseForComparison(column)
   const columnSchema = schema.find((s) =>
-    normalisedColumn === normaliseColumnName(s.key) ||
-    normalisedColumn === normaliseColumnName(s.label)
+    normalisedColumn === normaliseForComparison(s.key) ||
+    normalisedColumn === normaliseForComparison(s.label)
   )
 
   if (!columnSchema) return null

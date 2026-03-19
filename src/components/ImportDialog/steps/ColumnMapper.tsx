@@ -26,6 +26,7 @@ type Props = {
   actions: DropdownProps["options"]
   target: string | undefined
   targetOptions: DropdownProps["options"]
+  errorHandlingEnabled?: boolean
   errorHandling: ErrorHandlingMode | undefined
   errorHandlingOptions: DropdownProps["options"]
   onPointerEnter: () => void
@@ -46,6 +47,7 @@ export default function ColumnMapper({
   targetOptions,
   errorHandling,
   errorHandlingOptions,
+  errorHandlingEnabled = true,
   onPointerEnter,
   onActionChange,
   onTargetChange,
@@ -61,6 +63,7 @@ export default function ColumnMapper({
   )
 
   const skipping = action === ColumnAction.SKIP
+  const creating = action === ColumnAction.CREATE
 
   return (
     <MappersTableBodyRow
@@ -89,8 +92,8 @@ export default function ColumnMapper({
       </MappersTableBodyCell>
       <MappersTableAttribute>
         <MapperDropdown
-          disabled={skipping}
-          value={target && !skipping ? [target] : []}
+          disabled={skipping || creating}
+          value={target && !(skipping || creating) ? [target] : []}
           options={targetOptions}
           onChange={([value]) => onTargetChange(value)}
           valueTemplate={(value, selected, isOpen) => (
@@ -101,7 +104,9 @@ export default function ColumnMapper({
               placeholder={
                 skipping
                   ? "Will be skipped"
-                  : "Select a target..."
+                  : creating
+                    ? "A new value will be created"
+                    : "Select a target..."
               }
             >
               {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
@@ -109,19 +114,23 @@ export default function ColumnMapper({
           )}
         />
       </MappersTableAttribute>
-      <MappersTableErrorHandling>
-        <MapperDropdown
-          disabled={skipping || !target}
-          value={errorHandling && !skipping ? [errorHandling] : []}
-          options={errorHandlingOptions}
-          onChange={([value]) => onErrorHandlingChange(value as ErrorHandlingMode)}
-          placeholder={
-            skipping
-            ? "Will be skipped"
-            : "Choose error handling..."
-          }
-        />
-      </MappersTableErrorHandling>
+      {
+        errorHandlingEnabled && (
+          <MappersTableErrorHandling>
+            <MapperDropdown
+              disabled={skipping || creating || !target}
+              value={errorHandling && !skipping ? [errorHandling] : []}
+              options={errorHandlingOptions}
+              onChange={([value]) => onErrorHandlingChange(value as ErrorHandlingMode)}
+              placeholder={
+                skipping
+                ? "Will be skipped"
+                : creating ? "A new value will be created" : "Choose error handling..."
+              }
+            />
+          </MappersTableErrorHandling>
+        )
+      }
     </MappersTableBodyRow>
   )
 }

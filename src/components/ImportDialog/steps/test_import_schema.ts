@@ -604,7 +604,48 @@ export default [
         "required": true,
         "valueType": "string",
         "defaultValue": "",
-        "enumItems": null,
+        "enumItems": [
+          {
+            "value": "Generic",
+            "label": "Generic",
+          },
+          {
+            "value": "Lookdev",
+            "label": "Lookdev",
+          },
+          {
+            "value": "Modeling",
+            "label": "Modeling",
+          },
+          {
+            "value": "Rigging",
+            "label": "Rigging",
+          },
+          {
+            "value": "Texture",
+            "label": "Texture",
+          },
+          {
+            "value": "FX",
+            "label": "FX",
+          },
+          {
+            "value": "Setdress",
+            "label": "Setdress",
+          },
+          {
+            "value": "Animation",
+            "label": "Animation",
+          },
+          {
+            "value": "Layout",
+            "label": "Layout",
+          },
+          {
+            "value": "Lighting",
+            "label": "Lighting",
+          }
+        ],
         "errorHandlingModes": [
             "skip",
             "abort"
