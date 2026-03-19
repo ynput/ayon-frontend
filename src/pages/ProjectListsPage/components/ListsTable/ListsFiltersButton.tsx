@@ -1,6 +1,6 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
-import { HeaderButton } from '@shared/SimpleTable'
+import { HeaderButton } from '@shared/containers/SimpleTable'
 import { ButtonProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef } from 'react'

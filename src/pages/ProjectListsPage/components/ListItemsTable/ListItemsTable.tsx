@@ -8,22 +8,26 @@ import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
 import { UniqueIdentifier } from '@dnd-kit/core'
+import { useProjectContext } from '@shared/context'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
   isLoading?: boolean
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
+  viewOnly?: boolean
 }
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
   extraColumns,
   isLoading,
-  isReview: _,
+  isReview,
   dndActiveId, // Destructure new prop
+  viewOnly,
 }) => {
+  const { projectName } = useProjectContext()
   const { selectedLists, selectedList } = useListsContext()
-  const { isError, projectName, fetchNextPage, resetFilters } = useListItemsDataContext()
+  const { isError, fetchNextPage, resetFilters } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = useMemo(
@@ -49,12 +53,12 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         scope={scope}
         sliceId={''}
         // pagination
-        fetchMoreOnBottomReached={fetchNextPage}
+        onScrollBottom={fetchNextPage}
         readOnly={readOnly}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         isLoading={isLoading}
-        sortableRows
+        sortableRows={!viewOnly && !isReview}
         dndActiveId={dndActiveId} // Pass prop
       />
       <ListItemsShortcuts />

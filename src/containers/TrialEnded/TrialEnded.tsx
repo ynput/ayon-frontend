@@ -2,11 +2,12 @@ import getSubscribeLink from '@components/TrialBanner/helpers/getSubscribeLink'
 import { Button, Toolbar } from '@ynput/ayon-react-components'
 import { FC, useEffect } from 'react'
 import * as Styled from './TrialEnded.styled'
-import useCustomerlyChat from '@hooks/useCustomerly'
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@state/store'
 import { useGetActiveUsersCountQuery } from '@shared/api'
 import { useLogoutMutation } from '@queries/auth/logout'
+import { useFeedback } from '@shared/components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 interface TrialEndedProps {
   orgName?: string
@@ -16,7 +17,7 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const user = useAppSelector((state) => state.user)
   const canManage = user.data.isAdmin || user.data.isManager
   const navigate = useNavigate()
-  const { open } = useCustomerlyChat({ enabled: canManage })
+  const { openSupport } = useFeedback()
 
   //   redirect to '/trialend' if not already there
   useEffect(() => {
@@ -32,7 +33,9 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
   const [logout] = useLogoutMutation()
 
   return (
-    <Styled.TrialEndContainer>
+    <>
+      <DocumentTitle title="Trial end • AYON" />
+      <Styled.TrialEndContainer>
       <Toolbar>
         <Styled.Logo src="/AYON.svg" />
         <Button className="logout" variant="text" onClick={() => logout()}>
@@ -43,24 +46,34 @@ const TrialEnded: FC<TrialEndedProps> = ({ orgName }) => {
         <h1>Your free trial has ended!</h1>
         {canManage ? (
           <>
-            <p>
-              AYON simplifies your VFX pipeline and boosts efficiency. Need help? Our{' '}
-              <u onClick={open}>support team</u> is here for you if required.
-            </p>
+            <p>AYON simplifies your VFX pipeline and boosts efficiency.</p>
             <p>Subscribe to keep using AYON and protect your data!</p>
-            <a
-              href={orgName ? getSubscribeLink(activeUsersCount, orgName) : ''}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button variant="tertiary">Subscribe now</Button>
-            </a>
+            <Styled.Buttons>
+              <Button
+                label="Support"
+                variant="tonal"
+                onClick={() =>
+                  openSupport(
+                    'NewMessage',
+                    'My free trial has ended and I would like to continue using AYON.',
+                  )
+                }
+              />
+              <a
+                href={orgName ? getSubscribeLink(activeUsersCount, orgName) : ''}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button variant="tertiary">Subscribe now</Button>
+              </a>
+            </Styled.Buttons>
           </>
         ) : (
           <p>Please ask your administrator to subscribe to AYON.</p>
         )}
       </Styled.TrialEndCard>
     </Styled.TrialEndContainer>
+    </>
   )
 }
 

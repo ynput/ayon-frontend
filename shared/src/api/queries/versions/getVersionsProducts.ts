@@ -1,0 +1,931 @@
+// QUERIES FOR THE VERSIONS PAGE, FETCHING AND UPDATING DATA
+// Uses a separate graphqlVersionsApi for increased IDE speed
+
+// There are 4 main fetch requests:
+
+// Versions Only:
+// 1. GetVersions - fetches all versions in the project for given filtering and with pagination
+
+// Products and Versions (stacked):
+// 2. GetProducts - fetches all products in the project based on product and version filtering
+// 3. GetVersionsByProducts - when a product is expanded, fetches all versions for the products that are expanded. Uses getVersionsByProductId for each parent id. (uses queryFn)
+// 4. GetVersionsByProductId - get all versions for a specific product. Used by getVersionsByProducts only.
+
+// VersionFragment is used in all version queries to ensure consistent data structure
+
+import {
+  DefinitionsFromApi,
+  FetchBaseQueryError,
+  InfiniteData,
+  OverrideResultType,
+  TagTypesFromApi,
+} from '@reduxjs/toolkit/query'
+import {
+  GetProductsQuery,
+  GetProductsQueryVariables,
+  GetVersionsByProductIdQueryVariables,
+  GetVersionsQuery,
+  GetVersionsQueryVariables,
+  gqlApi,
+  PageInfo,
+  VpFolderFragment,
+} from '@shared/api/generated'
+import {
+  parseGQLErrorMessage,
+  provideTagsForProductsInfinite,
+  provideTagsForProductsResult,
+  provideTagsForVersionsInfinite,
+  provideTagsForVersionsResult,
+  transformProductsResponse,
+  transformVersionsResponse,
+} from './getVersionsProductsUtils'
+import { PubSub } from '@shared/util'
+
+// SHARED CACHE UPDATE HELPERS
+// These helpers are used by PubSub handlers to update cached data in real-time
+
+/**
+ * Finds the correct insertion index for a new item in a sorted array
+ * Used when adding new items to maintain sort order
+ */
+function findSortedInsertIndex<T>(items: T[], newItem: T, sortBy: keyof T, desc: boolean): number {
+  for (let i = 0; i < items.length; i++) {
+    const newValue = newItem[sortBy]
+    const currentValue = items[i][sortBy]
+    const shouldInsert = desc ? newValue > currentValue : newValue < currentValue
+
+    if (shouldInsert) {
+      return i
+    }
+  }
+  return items.length
+}
+
+/**
+ * Updates a paginated cache (draft.pages[].items[]) with a new/updated/deleted item
+ * Handles: update existing, delete if not in response, add at sorted position
+ *
+ * @param pages - Array of page objects containing items arrays
+ * @param entityId - ID of the entity to update/delete/add
+ * @param updatedItem - The updated item, or undefined if deleted
+ * @param itemsKey - Key to access items array in each page ('versions' or 'products')
+ * @param sortBy - Property to sort by when inserting new items
+ * @param desc - Sort direction (true = descending)
+ */
+function updatePagedCache<T extends { id: string }>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pages: any[],
+  entityId: string,
+  updatedItem: T | undefined,
+  itemsKey: string,
+  sortBy: keyof T,
+  desc: boolean,
+): void {
+  // Search for existing item in all pages
+  for (const page of pages) {
+    const items = page[itemsKey] as T[]
+    const index = items.findIndex((item) => item.id === entityId)
+
+    if (index !== -1) {
+      if (updatedItem) {
+        // Update existing item
+        items[index] = updatedItem
+      } else {
+        // Item no longer exists or doesn't match filters - remove it
+        items.splice(index, 1)
+      }
+      return
+    }
+  }
+
+  // Item not found in cache - add at correct sorted position in first page
+  if (updatedItem && pages.length > 0) {
+    const items = pages[0][itemsKey] as T[]
+    const insertIndex = findSortedInsertIndex(items, updatedItem, sortBy, desc)
+    items.splice(insertIndex, 0, updatedItem)
+  }
+}
+
+/**
+ * Updates a flat cache (draft.items[]) with a new/updated/deleted item
+ * Handles: update existing, delete if not in response, add new
+ */
+function updateFlatCache<T extends { id: string }>(
+  items: T[],
+  entityId: string,
+  updatedItem: T | undefined,
+): { index: number; action: 'updated' | 'deleted' | 'added' | 'none' } {
+  const index = items.findIndex((item) => item.id === entityId)
+
+  if (index !== -1) {
+    if (updatedItem) {
+      items[index] = updatedItem
+      return { index, action: 'updated' }
+    } else {
+      items.splice(index, 1)
+      return { index, action: 'deleted' }
+    }
+  } else if (updatedItem) {
+    items.push(updatedItem)
+    return { index: items.length - 1, action: 'added' }
+  }
+
+  return { index: -1, action: 'none' }
+}
+
+// Query result types
+export type FolderAttribNode = VpFolderFragment & {
+  attrib: Record<string, any> // parsed from allAttrib JSON string
+}
+export type VersionNodeRAW = GetVersionsQuery['project']['versions']['edges'][0]['node']
+export type VersionNode = VersionNodeRAW & {
+  attrib: Record<string, any> // parsed from allAttrib JSON string
+  product: VersionNodeRAW['product'] & {
+    attrib: Record<string, any> // parsed from allAttrib JSON string
+    folder: FolderAttribNode // folder with parsed attribs
+  }
+  groups?: { value?: string; hasNextPage?: string }[] // grouping metadata
+}
+export type ProductNodeRAW = GetProductsQuery['project']['products']['edges'][0]['node']
+export type ProductNode = Omit<ProductNodeRAW, 'versions'> & {
+  attrib: Record<string, any> // parsed from allAttrib JSON string
+  featuredVersion?: VersionNode | null // added separately
+  folder: FolderAttribNode // folder with parsed attribs
+  versions: {
+    id: string
+    name: string
+    version: number
+    heroVersionId?: string | null
+  }[] // versions with isHero flag
+}
+
+export type GetVersionsResult = {
+  pageInfo?: PageInfo
+  versions: VersionNode[]
+  errors?: Array<{ productId: string; error: string }>
+}
+
+// for infinite query args
+export type GetVersionsArgs = Omit<GetVersionsQueryVariables, 'cursor'> & {
+  desc?: boolean // sort direction
+}
+
+// for paginated queries in infinite query
+type VersionsPageParam = {
+  cursor: string
+  desc?: boolean
+}
+
+export type GetProductsArgs = Omit<GetProductsQueryVariables, 'cursor' | 'versionIds'> & {
+  desc?: boolean // sort direction
+}
+
+type ProductsPageParam = {
+  cursor: string
+  desc?: boolean
+}
+
+type GetVersionsByProductsArgs = GetVersionsByProductIdQueryVariables & {
+  productIds: string[]
+  desc?: boolean
+}
+
+export type GetGroupedVersionsListArgs = {
+  projectName: string
+  groups: { filter: string; count?: number | null; value: string }[]
+  groupFilterKey?: string
+  versionFilter?: string
+  productFilter?: string
+  taskFilter?: string
+  folderIds?: string[]
+  desc?: boolean
+  sortBy?: string
+  featuredOnly?: string[]
+  hasReviewables?: boolean
+}
+
+export type GetGroupedVersionsListResult = {
+  versions: VersionNode[]
+}
+
+export type VersionInfiniteResult = InfiniteData<GetVersionsResult, VersionsPageParam> | undefined
+
+export type ProductInfiniteResult = InfiniteData<GetProductsResult, ProductsPageParam> | undefined
+
+export type GetProductsResult = {
+  pageInfo: PageInfo
+  products: ProductNode[]
+}
+
+type Definitions = DefinitionsFromApi<typeof gqlApi>
+type TagTypes = TagTypesFromApi<typeof gqlApi>
+// update the definitions to include the new types
+type UpdatedDefinitions = Omit<Definitions, 'GetVersions'> & {
+  GetVersions: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
+  GetVersionsByProductId: OverrideResultType<Definitions['GetVersions'], GetVersionsResult>
+  GetProducts: OverrideResultType<Definitions['GetProducts'], GetProductsResult>
+}
+
+const enhancedVersionsPageApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
+  endpoints: {
+    // used by both stacked and non-stacked views
+    GetVersions: {
+      transformResponse: transformVersionsResponse,
+      providesTags: provideTagsForVersionsResult,
+    },
+    // used by getVersionsByProducts only
+    GetVersionsByProductId: {
+      transformResponse: transformVersionsResponse,
+      providesTags: provideTagsForVersionsResult,
+    },
+    // used by getProductsInfinite only
+    GetProducts: {
+      transformResponse: transformProductsResponse,
+      providesTags: provideTagsForProductsResult,
+    },
+  },
+})
+
+export const VP_INFINITE_QUERY_COUNT = 250 // Number of items to fetch per page
+const VERSIONS_BY_PRODUCT_ID_QUERY_COUNT = 1000 // max number of versions to fetch per product id
+const MAX_PAGES_PER_PRODUCT = 10 // Hard cutoff to prevent infinite loops
+
+const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
+  endpoints: (build) => ({
+    // enhance GetVersions with an infinite query
+    getVersionsInfinite: build.infiniteQuery<GetVersionsResult, GetVersionsArgs, VersionsPageParam>(
+      {
+        infiniteQueryOptions: {
+          initialPageParam: { cursor: '', desc: false },
+          // Calculate the next page param based on current page response and params
+          getNextPageParam: (lastPage, _allPages, lastPageParam, _allPageParams) => {
+            // Use the endCursor from the query as the next page param
+            const pageInfo = lastPage.pageInfo
+            const desc = lastPageParam.desc
+            const hasNextPage = desc ? pageInfo?.hasPreviousPage : pageInfo?.hasNextPage
+
+            if (!hasNextPage || !pageInfo?.endCursor) return undefined
+
+            return {
+              cursor: pageInfo?.endCursor,
+              desc: lastPageParam.desc,
+            }
+          },
+        },
+        queryFn: async ({ queryArg, pageParam }, api) => {
+          try {
+            const { sortBy, desc, folderIds, ...rest } = queryArg
+            const { cursor } = pageParam
+
+            // Build the query parameters for GetVersions query
+            const queryParams: any = {
+              ...rest,
+            }
+
+            // Add cursor-based pagination
+            if (sortBy) {
+              queryParams.sortBy = sortBy
+              if (desc) {
+                queryParams.before = cursor || undefined
+                queryParams.last = VP_INFINITE_QUERY_COUNT
+              } else {
+                queryParams.after = cursor || undefined
+                queryParams.first = VP_INFINITE_QUERY_COUNT
+              }
+            } else {
+              queryParams.after = cursor || undefined
+              queryParams.first = VP_INFINITE_QUERY_COUNT
+            }
+
+            // if folderIds have a length, add them to the query params
+            if (folderIds && folderIds.length) {
+              queryParams.folderIds = folderIds
+            }
+
+            // Call the existing GetVersions gql query
+            const result = await api.dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+
+            if (result.error) throw result.error
+            const fallback = {
+              versions: [],
+              pageInfo: {
+                hasNextPage: false,
+                endCursor: null,
+                startCursor: null,
+                hasPreviousPage: false,
+              },
+            }
+
+            // Return the versions directly as required by the infinite query format
+            return {
+              data: result.data || fallback,
+            }
+          } catch (e: any) {
+            console.error('Error in getVersionsInfiniteQuery queryFn:', e)
+            return {
+              error: {
+                status: 'FETCH_ERROR',
+                error: parseGQLErrorMessage(e.message),
+              } as FetchBaseQueryError,
+            }
+          }
+        },
+        providesTags: provideTagsForVersionsInfinite,
+        // Subscribes to version entity changes and updates cache accordingly
+        // Handles: create, update, delete operations
+        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+            try {
+              const entityId = message.summary?.entityId
+              if (!entityId) return
+
+              // Re-fetch the specific version with current filters to check if it still matches
+              // If version was deleted or no longer matches filters, result will be empty
+              const result = await dispatch(
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                  {
+                    projectName: arg.projectName,
+                    versionFilter: arg.versionFilter,
+                    productFilter: arg.productFilter,
+                    taskFilter: arg.taskFilter,
+                    folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+                    versionIds: [entityId],
+                    first: 1,
+                  },
+                  {
+                    forceRefetch: true,
+                  },
+                ),
+              )
+
+              if (result.error) return
+
+              // Update the cache: update existing, delete if not found, or add new
+              updateCachedData((draft) => {
+                const updatedVersion = result.data?.versions?.[0]
+                updatePagedCache(
+                  draft.pages,
+                  entityId,
+                  updatedVersion,
+                  'versions',
+                  (arg.sortBy || 'createdAt') as keyof VersionNode,
+                  arg.desc || false,
+                )
+              })
+            } catch (error) {
+              // Silently handle errors to prevent UI disruption
+            }
+          })
+
+          // Cleanup: unsubscribe when cache entry is removed
+          await cacheEntryRemoved
+          PubSub.unsubscribe(token)
+        },
+      },
+    ),
+
+    // custom query function that fetches versions by multiple parent ids -not infinite and gets 1000 versions max
+    getVersionsByProducts: build.query<GetVersionsResult, GetVersionsByProductsArgs>({
+      queryFn: async (args, { dispatch, forced }) => {
+        const { productIds = [], desc, ...rest } = args
+
+        // Helper function to fetch a page of versions
+        const fetchVersionsPage = async (productId: string, cursor?: string) => {
+          const queryParams: GetVersionsByProductIdQueryVariables = {
+            ...rest,
+            productIds: [productId],
+          }
+
+          if (desc) {
+            if (cursor) queryParams.before = cursor
+            queryParams.last = VERSIONS_BY_PRODUCT_ID_QUERY_COUNT
+          } else {
+            if (cursor) queryParams.after = cursor
+            queryParams.first = VERSIONS_BY_PRODUCT_ID_QUERY_COUNT
+          }
+
+          return dispatch(
+            enhancedVersionsPageApi.endpoints.GetVersionsByProductId.initiate(queryParams, {
+              forceRefetch: forced,
+            }),
+          )
+        }
+
+        // for each product id, call getVersionsByProductId
+        const promises = productIds.map((productId) => fetchVersionsPage(productId))
+
+        // wait for all requests to settle (either fulfilled or rejected)
+        const settledResults = await Promise.allSettled(promises)
+
+        // Collect all versions from initial queries
+        const allVersions: VersionNode[] = []
+        const errors: Array<{ productId: string; error: any }> = []
+
+        // Check each result for additional pages and fetch them if needed
+        for (let i = 0; i < settledResults.length; i++) {
+          const settledResult = settledResults[i]
+          const productId = productIds[i]
+
+          // Handle rejected promises
+          if (settledResult.status === 'rejected') {
+            console.error(`Error fetching versions for product ${productId}:`, settledResult.reason)
+            errors.push({ productId, error: parseGQLErrorMessage(settledResult.reason) })
+            continue
+          }
+
+          // Handle errors in fulfilled promises
+          const result = settledResult.value
+          if (result.error) {
+            console.error(`Error fetching versions for product ${productId}:`, result.error)
+            errors.push({
+              productId,
+              // @ts-expect-error - message
+              error: parseGQLErrorMessage(result.error?.message || 'Unknown error'),
+            })
+            continue
+          }
+
+          if (!result.data) continue
+
+          // Add initial page versions
+          allVersions.push(...result.data.versions)
+
+          // Check if there are more pages to fetch
+          let pageInfo = result.data.pageInfo
+          let pageCount = 1
+
+          while (pageInfo && pageCount < MAX_PAGES_PER_PRODUCT) {
+            const hasNextPage = desc ? pageInfo.hasPreviousPage : pageInfo.hasNextPage
+            const cursor = pageInfo.endCursor
+
+            if (!hasNextPage || !cursor) break
+
+            // Fetch next page
+            const nextPageResult = await fetchVersionsPage(productId, cursor)
+
+            if (nextPageResult.error) {
+              console.error(
+                `Error fetching versions page ${pageCount + 1} for product ${productId}:`,
+                nextPageResult.error,
+              )
+              errors.push({ productId, error: nextPageResult.error })
+              break
+            }
+
+            if (!nextPageResult.data) break
+
+            allVersions.push(...nextPageResult.data.versions)
+            pageInfo = nextPageResult.data.pageInfo
+            pageCount++
+          }
+        }
+
+        // If some requests failed but we have data, log warning but return successful data
+        if (errors.length > 0) {
+          console.warn(
+            `Partial success: ${errors.length} of ${productIds.length} products failed to fetch versions`,
+            errors,
+          )
+        }
+
+        return {
+          data: {
+            versions: allVersions,
+            pageInfo: undefined, // pageInfo is undefined as we've flattened multiple queries
+            errors: errors.length > 0 ? errors : undefined,
+          },
+        }
+      },
+      // Subscribes to version entity changes for expanded products
+      // Only updates versions that belong to currently expanded products
+      onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+          try {
+            const entityId = message.summary?.entityId
+            const parentId = message.summary?.parentId // parentId is the product ID
+            if (!entityId || !parentId) return
+
+            // Only handle versions belonging to currently expanded products
+            // This prevents unnecessary updates for versions in collapsed products
+            if (!arg.productIds.includes(parentId)) return
+
+            // Re-fetch the specific version using GetVersions (supports versionIds filter)
+            // Uses same filters as the base query to ensure consistency
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                {
+                  projectName: arg.projectName,
+                  productIds: [parentId],
+                  versionIds: [entityId],
+                  versionFilter: arg.versionFilter,
+                  taskFilter: arg.taskFilter,
+                  first: 1,
+                  ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
+                  ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
+                },
+                { forceRefetch: true },
+              ),
+            )
+
+            if (result.error) return
+
+            // Update flat versions array: update existing, delete if not found, or add new
+            updateCachedData((draft) => {
+              const updatedVersion = result.data?.versions?.[0]
+              updateFlatCache(draft.versions, entityId, updatedVersion)
+            })
+          } catch (error) {
+            // Silently handle errors to prevent UI disruption
+          }
+        })
+
+        // Cleanup: unsubscribe when cache entry is removed
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
+      },
+      providesTags: provideTagsForVersionsResult,
+    }),
+
+    // enhance GetProducts with an infinite query
+    getProductsInfinite: build.infiniteQuery<GetProductsResult, GetProductsArgs, ProductsPageParam>(
+      {
+        infiniteQueryOptions: {
+          initialPageParam: { cursor: '', desc: false },
+          // Calculate the next page param based on current page response and params
+          getNextPageParam: (lastPage, _allPages, lastPageParam, _allPageParams) => {
+            // Use the endCursor from the query as the next page param
+            const pageInfo = lastPage.pageInfo
+            const desc = lastPageParam.desc
+            const hasNextPage = desc ? pageInfo?.hasPreviousPage : pageInfo?.hasNextPage
+
+            if (!hasNextPage || !pageInfo?.endCursor) return undefined
+
+            return {
+              cursor: pageInfo?.endCursor,
+              desc: lastPageParam.desc,
+            }
+          },
+        },
+        queryFn: async ({ queryArg, pageParam }, api) => {
+          let result
+          try {
+            const { sortBy, desc, folderIds, ...rest } = queryArg
+            const { cursor } = pageParam
+
+            // Build the query parameters for GetProducts query
+            const queryParams: any = {
+              ...rest,
+            }
+
+            // Add cursor-based pagination
+            if (sortBy) {
+              queryParams.sortBy = sortBy
+              if (desc) {
+                queryParams.before = cursor || undefined
+                queryParams.last = VP_INFINITE_QUERY_COUNT
+              } else {
+                queryParams.after = cursor || undefined
+                queryParams.first = VP_INFINITE_QUERY_COUNT
+              }
+            } else {
+              queryParams.after = cursor || undefined
+              queryParams.first = VP_INFINITE_QUERY_COUNT
+            }
+
+            // if folderIds have a length, add them to the query params
+            if (folderIds && folderIds.length) {
+              queryParams.folderIds = folderIds
+            }
+
+            // Call the existing GetProducts gql query
+            result = await api.dispatch(
+              enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+
+            if (result.error) throw result.error
+            const fallback = {
+              products: [],
+              pageInfo: {
+                hasNextPage: false,
+                endCursor: null,
+                startCursor: null,
+                hasPreviousPage: false,
+              },
+            }
+
+            // Return the products directly as required by the infinite query format
+            return {
+              data: result.data || fallback,
+            }
+          } catch (e: any) {
+            console.error('Error in getProductsInfiniteQuery queryFn:', e)
+            return {
+              error: {
+                status: 'FETCH_ERROR',
+                error: parseGQLErrorMessage(e.message),
+              } as FetchBaseQueryError,
+            }
+          }
+        },
+        providesTags: provideTagsForProductsInfinite,
+
+        // Subscribes to product entity changes and updates cache accordingly
+        // Handles: create, update, delete operations
+        // Often triggered together with version changes (new product + version)
+
+        onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+          // Helper to refetch and update a product in cache
+          const refetchProduct = async (productId: string) => {
+            const queryParams: any = {
+              projectName: arg.projectName,
+              productIds: [productId],
+              productFilter: arg.productFilter,
+              versionFilter: arg.versionFilter,
+              taskFilter: arg.taskFilter,
+              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              first: 1,
+            }
+
+            const result = await dispatch(
+              enhancedVersionsPageApi.endpoints.GetProducts.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+
+            if (result.error) return
+
+            // Update the cache: update existing, delete if not found, or add new
+            updateCachedData((draft) => {
+              const updatedProduct = result.data?.products?.[0]
+              updatePagedCache(
+                draft.pages,
+                productId,
+                updatedProduct,
+                'products',
+                (arg.sortBy || 'createdAt') as keyof ProductNode,
+                arg.desc || false,
+              )
+            })
+          }
+
+          // Subscribe to product entity changes from websocket
+          const productToken = PubSub.subscribe(
+            'entity.product',
+            async (_topic: string, message: any) => {
+              try {
+                const entityId = message.summary?.entityId
+                if (!entityId) return
+
+                await refetchProduct(entityId)
+              } catch (error) {
+                // Silently handle errors to prevent UI disruption
+              }
+            },
+          )
+
+          // Subscribe to version entity changes - refetch parent product when version changes
+          // This ensures product's versions list and featuredVersion stay up-to-date
+          const versionToken = PubSub.subscribe(
+            'entity.version',
+            async (_topic: string, message: any) => {
+              try {
+                const parentId = message.summary?.parentId // parentId is the product ID
+                if (!parentId) return
+
+                // Check if the product exists in our cache before refetching
+                // This prevents unnecessary API calls for products not in our view
+                let productExistsInCache = false
+                updateCachedData((draft) => {
+                  productExistsInCache = draft.pages.some((page) =>
+                    page.products.some((product: ProductNode) => product.id === parentId),
+                  )
+                })
+
+                if (!productExistsInCache) return
+
+                await refetchProduct(parentId)
+              } catch (error) {
+                // Silently handle errors to prevent UI disruption
+              }
+            },
+          )
+
+          // Cleanup: unsubscribe when cache entry is removed
+          await cacheEntryRemoved
+          PubSub.unsubscribe(productToken)
+          PubSub.unsubscribe(versionToken)
+        },
+      },
+    ),
+
+    // Grouped versions query - fetches versions for multiple group filters
+    getGroupedVersionsList: build.query<GetGroupedVersionsListResult, GetGroupedVersionsListArgs>({
+      queryFn: async (
+        {
+          projectName,
+          groups,
+          groupFilterKey = 'versionFilter',
+          versionFilter, // most of the time overridden by group filters
+          productFilter,
+          taskFilter,
+          folderIds,
+          desc,
+          sortBy,
+          featuredOnly,
+          hasReviewables,
+        },
+        api,
+      ) => {
+        try {
+          const promises = []
+          for (const group of groups) {
+            const count = group.count || 500
+
+            const queryParams: GetVersionsQueryVariables = {
+              projectName,
+              // base filters
+              productFilter,
+              taskFilter,
+              versionFilter,
+              // specific group filter
+              [groupFilterKey]: group.filter,
+              folderIds: folderIds?.length ? folderIds : undefined,
+              sortBy: sortBy,
+              featuredOnly,
+              hasReviewables,
+              // @ts-expect-error - group param used later on
+              group: group.value,
+            }
+
+            if (desc) {
+              queryParams.last = count
+            } else {
+              queryParams.first = count
+            }
+
+            const promise = api.dispatch(
+              enhancedVersionsPageApi.endpoints.GetVersions.initiate(queryParams, {
+                forceRefetch: true,
+              }),
+            )
+            promises.push(promise)
+          }
+
+          const result = await Promise.all(promises)
+          const versions: VersionNode[] = []
+
+          for (const res of result) {
+            if (res.error) throw res.error
+
+            // get group value
+            // @ts-expect-error - we know group does exist on res.originalArgs
+            const groupValue = res.originalArgs?.group as string
+
+            const hasNextPage =
+              res.data?.pageInfo?.hasNextPage || res.data?.pageInfo?.hasPreviousPage || false
+
+            const groupVersions =
+              res.data?.versions.map((version, i, a) => ({
+                ...version,
+                groups: [
+                  {
+                    value: groupValue,
+                    hasNextPage: i === a.length - 1 && hasNextPage ? groupValue : undefined,
+                  },
+                ],
+              })) || []
+
+            versions.push(...groupVersions)
+          }
+
+          return {
+            data: {
+              versions,
+            },
+          }
+        } catch (error: any) {
+          console.error('Error in getGroupedVersionsList queryFn:', error)
+          return {
+            error: {
+              status: 'FETCH_ERROR',
+              error: parseGQLErrorMessage(error.message),
+            } as FetchBaseQueryError,
+          }
+        }
+      },
+      providesTags: provideTagsForVersionsResult,
+      // Subscribes to version entity changes and updates cache accordingly
+      // Handles: create, update, delete operations for grouped versions view
+      onCacheEntryAdded: async (arg, { updateCachedData, cacheEntryRemoved, dispatch }) => {
+        const token = PubSub.subscribe('entity.version', async (_topic: string, message: any) => {
+          try {
+            const entityId = message.summary?.entityId
+            if (!entityId) return
+
+            // Re-fetch the specific version with current filters to check if it still matches
+            // If version was deleted or no longer matches filters, result will be empty
+
+            const baseFilters = {
+              projectName: arg.projectName,
+              versionFilter: arg.versionFilter,
+              productFilter: arg.productFilter,
+              taskFilter: arg.taskFilter,
+              folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
+              versionIds: [entityId],
+              first: 1,
+              ...(arg.featuredOnly && { featuredOnly: arg.featuredOnly }),
+              ...(arg.hasReviewables !== undefined && { hasReviewables: arg.hasReviewables }),
+            }
+
+            // Track which groups the version belongs to after the update
+            const matchedGroups: { value: string; hasNextPage: undefined }[] = []
+            let latestVersionData: VersionNode | null = null
+
+            for (const group of arg.groups) {
+              const result = await dispatch(
+                enhancedVersionsPageApi.endpoints.GetVersions.initiate(
+                  {
+                    ...baseFilters,
+                    [arg.groupFilterKey as string]: group.filter, // group-specific filter
+                    versionIds: [entityId],
+                  },
+                  { forceRefetch: true }, // Force fresh data to detect group membership changes
+                ),
+              )
+
+              const fetchedVersion = result.data?.versions?.[0]
+              if (fetchedVersion) {
+                // Version matches this group's filter
+                matchedGroups.push({ value: group.value, hasNextPage: undefined })
+                latestVersionData = fetchedVersion
+              }
+            }
+
+            // Now update the cache based on collected results
+            updateCachedData((draft) => {
+              const index = draft.versions.findIndex((v) => v.id === entityId)
+              const versionExistsInCache = index !== -1
+
+              if (matchedGroups.length === 0) {
+                // Version was deleted or no longer matches any group filter - remove it
+                if (versionExistsInCache) {
+                  draft.versions.splice(index, 1)
+                }
+              } else if (latestVersionData) {
+                // Version matches at least one group
+                if (versionExistsInCache) {
+                  const originalGroups = draft.versions[index].groups || []
+                  // Check if group membership has changed (comparing group values)
+                  const originalGroupValues = originalGroups.map((g) => g.value).sort()
+                  const matchedGroupValues = matchedGroups.map((g) => g.value).sort()
+                  const groupsChanged =
+                    originalGroupValues.length !== matchedGroupValues.length ||
+                    originalGroupValues.some((v, i) => v !== matchedGroupValues[i])
+
+                  if (groupsChanged) {
+                    // Group membership changed - use new matched groups (version moved to different group)
+                    draft.versions[index] = { ...latestVersionData, groups: matchedGroups }
+                  } else {
+                    // Same groups - preserve original groups (keeps pagination state like hasNextPage)
+                    draft.versions[index] = { ...latestVersionData, groups: originalGroups }
+                  }
+                } else {
+                  // New version not in cache yet - add at sorted position with matched groups
+                  const newVersion = { ...latestVersionData, groups: matchedGroups }
+                  const sortKey = (arg.sortBy || 'createdAt') as keyof VersionNode
+                  const insertIndex = findSortedInsertIndex(draft.versions, newVersion, sortKey, arg.desc || false)
+                  draft.versions.splice(insertIndex, 0, newVersion)
+                }
+              }
+            })
+          } catch (error) {
+            // Silently handle errors to prevent UI disruption
+          }
+        })
+
+        // Cleanup: unsubscribe when cache entry is removed
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
+      },
+    }),
+  }),
+})
+
+// export gql endpoints
+export const { useGetVersionsQuery } = enhancedVersionsPageApi
+// export custom queries
+export const {
+  useGetVersionsInfiniteInfiniteQuery: useGetVersionsInfiniteQuery,
+  useGetVersionsByProductsQuery,
+  useGetProductsInfiniteInfiniteQuery: useGetProductsInfiniteQuery,
+  useGetGroupedVersionsListQuery,
+} = injectedVersionsPageApi
+
+// export API instances for cache manipulation
+export { enhancedVersionsPageApi, injectedVersionsPageApi }

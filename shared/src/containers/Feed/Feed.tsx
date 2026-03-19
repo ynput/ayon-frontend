@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
 import * as Styled from './Feed.styled'
@@ -15,21 +15,55 @@ import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPrev
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext } from '@shared/context'
-import { DetailsPanelEntityType } from '@shared/api'
+import { useDetailsPanelContext, FeedFilter } from '@shared/context'
+import { DetailsPanelEntityType, useGetMyProjectPermissionsQuery } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
+import TabHeaderAndFilters, {
+  FilterItem,
+} from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
 
 // number of activities to get
 export const activitiesLast = 30
 
+const feedFilters: FilterItem<string>[] = [
+  {
+    id: 'comments',
+    tooltip: 'Comments',
+    icon: 'chat',
+  },
+  {
+    id: 'checklists',
+    tooltip: 'Checklists',
+    icon: 'checklist',
+  },
+  {
+    id: 'versions',
+    tooltip: 'Published versions',
+    icon: 'layers',
+  },
+  {
+    id: 'updates',
+    tooltip: 'Entity updates',
+    icon: 'arrow_circle_right',
+  },
+]
+
 export type FeedProps = {
-  isMultiProjects: boolean
+  disabled?: boolean
   readOnly: boolean
   statuses: Status[]
+  entityListId?: string | undefined
+  isSlideOut?: boolean
 }
 
-export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) => {
+export const Feed = ({
+  disabled,
+  readOnly,
+  statuses = [],
+  entityListId,
+  isSlideOut,
+}: FeedProps) => {
   const {
     projectName,
     entities,
@@ -44,7 +78,8 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     loadNextPage,
     hasNextPage,
     users,
-    currentTab,
+    feedFilter,
+    setFeedFilter,
   } = useFeedContext()
 
   const {
@@ -53,10 +88,36 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     setHighlightedActivities,
     onOpenImage,
     setFeedAnnotations,
+    user,
   } = useDetailsPanelContext()
 
-  // hide comment input for specific filters
-  const hideCommentInput = ['versions'].includes(currentTab)
+  const isVersionsFilter = feedFilter.conditions?.some(
+    (c) => 'key' in c && c.key === 'versions' && c.value === true,
+  )
+  const hasActiveFilters = feedFilter.conditions?.some(
+    (c) => 'key' in c && ['comments', 'checklists', 'versions', 'updates'].includes(c.key) && c.value === true,
+  )
+  const hasCommentLikeFilter = feedFilter.conditions?.some(
+    (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
+  )
+
+  // check activities permission for commenting
+  const {
+    data: projectPermissions,
+    isLoading: isLoadingPermissions,
+  } = useGetMyProjectPermissionsQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+  const isCommentRestricted =
+    !user.data?.isManager &&
+    !user.data?.isAdmin &&
+    !isLoadingPermissions &&
+    projectPermissions?.activities?.enabled &&
+    !projectPermissions?.activities?.activities?.includes('comment')
+
+  // hide comment input for specific filters or when restricted by permissions
+  const hideCommentInput = isCommentRestricted || (hasActiveFilters && !hasCommentLikeFilter)
 
   const activitiesWithMergedAnnotations = useMemo(
     () => mergeAnnotationAttachments(activitiesData),
@@ -92,6 +153,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
     projectInfo,
     entityType,
     userName,
+    feedFilter,
   ) as any[]
 
   // REFS
@@ -105,27 +167,45 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
   useSaveScrollPos({
     entities,
     feedRef,
-    filter: currentTab,
+    filter: feedFilter,
     disabled: !!highlightedActivities.length,
     isLoading: isLoadingNew,
   })
-
   // try and scroll to highlightedActivities activity
   useScrollToHighlighted({
     feedRef,
     highlighted: highlightedActivities,
-    isLoading: isLoadingNew,
+    isLoading: isLoadingNew || isLoadingNextPage,
     loadNextPage,
     hasNextPage: !!loadNextPage,
+    activities: activitiesData,
   })
 
   // comment mutations here!
-  const { submitComment, updateComment, deleteComment, isSaving } = useCommentMutations({
+  const {
+    submitComment: submitCommentMutation,
+    updateComment,
+    deleteComment,
+    isSaving,
+  } = useCommentMutations({
     projectName,
     entityType: entityType,
     entities,
-    filter: currentTab,
+    filter: feedFilter,
+    entityListId,
   })
+
+  // wrap submitComment to scroll to bottom
+  const submitComment = useCallback(
+    async (value: string, files: any[] = [], data: any = {}) => {
+      await submitCommentMutation(value, files, data)
+      // scroll to bottom (scrollTop 0 is bottom because of column-reverse)
+      if (feedRef.current) {
+        ;(feedRef.current as any).scrollTo({ top: 0 })
+      }
+    },
+    [submitCommentMutation, feedRef],
+  )
 
   // When a checkbox is clicked, update the body to add/remove "x" in [ ] markdown
   // Then update comment with new body
@@ -214,10 +294,6 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
 
   let warningMessage
 
-  // only viewing activities from one project
-  if (isMultiProjects)
-    warningMessage = `You are only viewing activities from one project: ${projectName}.`
-
   return (
     <>
       <Styled.FeedContainer className="feed">
@@ -227,6 +303,13 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
             {warningMessage}
           </Styled.Warning>
         )}
+        <TabHeaderAndFilters
+          label="Activity Feed"
+          filters={feedFilters}
+          currentFilter={feedFilter}
+          onFilterChange={setFeedFilter}
+          isLoading={isLoadingNew}
+        />
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders
@@ -236,8 +319,8 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
                   activity={activity}
                   onCheckChange={handleCommentChecked}
                   onDelete={deleteComment}
-                  onUpdate={async (value, files, _refs) =>
-                    await updateComment(activity, value, files)
+                  onUpdate={async (value, files, _refs, data) =>
+                    await updateComment(activity, value, files, data)
                   }
                   projectInfo={projectInfo}
                   projectName={projectName}
@@ -246,7 +329,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
                   createdAts={entities.map((e) => e.createdAt)}
                   onFileExpand={handleFileExpand}
                   showOrigin={entities.length > 1}
-                  filter={currentTab}
+                  filter={feedFilter}
                   editProps={{
                     projectName,
                     entities: entities,
@@ -255,10 +338,11 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
                   isHighlighted={highlightedActivities.includes(activity.activityId)}
                   readOnly={readOnly}
                   statuses={statuses}
+                  isSlideOut={isSlideOut}
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 1 && currentTab === 'versions' && !isLoadingNew && (
+          {transformedActivitiesData.length === 1 && isVersionsFilter && !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
           {hasNextPage && loadNextPage && (
@@ -280,7 +364,7 @@ export const Feed = ({ isMultiProjects, readOnly, statuses = [] }: FeedProps) =>
             isOpen={editingId === FEED_NEW_COMMENT}
             onClose={() => setEditingId(null)}
             onOpen={() => setEditingId(FEED_NEW_COMMENT)}
-            disabled={isMultiProjects}
+            disabled={disabled}
             isLoading={isLoadingNew || !entities.length || isSaving}
           />
         )}

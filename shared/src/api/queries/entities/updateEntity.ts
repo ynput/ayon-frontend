@@ -2,10 +2,10 @@
 
 import api from './getEntity'
 import { detailsPanelQueries } from '@shared/api/queries'
-import { patchDetailsPanelEntity } from '@shared/api'
 import { toast } from 'react-toastify'
 import { dashboardQueries, getKanbanTasks } from '@shared/api/queries/userDashboard'
 import { patchOverviewFolders, patchOverviewTasks } from '@shared/api/queries/overview'
+import { patchDetailsPanel } from './patchDetailsPanel'
 
 const patchKanban = (
   { assignees = [], projects = [] },
@@ -104,8 +104,18 @@ const patchProgressView = ({ operations = [], state, dispatch, entityType }) => 
             } else if (entityType === 'folder') {
               const folder = draft.find((folder) => folder.id === entityId)
               if (!folder) throw new Error('Patching progress view: folder not found')
+
+              // If name is being updated, also update the path
+              let updatedPatch = { ...patch }
+              if (patch.name && folder.path) {
+                // Construct new path by replacing the last segment with the new name
+                const pathParts = folder.path.split('/')
+                pathParts[pathParts.length - 1] = patch.name
+                updatedPatch.path = pathParts.join('/')
+              }
+
               // update folder
-              const newFolder = { ...folder, ...patch }
+              const newFolder = { ...folder, ...updatedPatch }
               // update query
               const folderIndex = draft.findIndex((f) => f.id === entityId)
               draft[folderIndex] = newFolder
@@ -131,6 +141,16 @@ const updateEntity = api.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
+      invalidatesTags: (result, error, { entityId, entityType }) => {
+        const tags = []
+        if (entityType === 'product') {
+          tags.push({ type: 'product', id: entityId })
+        }
+        if (entityType === 'version') {
+          tags.push({ type: 'version', id: entityId })
+        }
+        return tags
+      },
       async onQueryStarted(
         { projectName, entityId, data, currentAssignees, entityType },
         { dispatch, queryFulfilled, getState },
@@ -267,31 +287,7 @@ const updateEntity = api.injectEndpoints({
         }
 
         // get all details panel caches that would be affected by this update
-        const detailsPanelTags = [
-          {
-            type: 'entities',
-            id: entityId,
-          },
-        ]
-
-        const detailsPanelEntries = api.util.selectInvalidatedBy(state, detailsPanelTags)
-
-        for (const entry of detailsPanelEntries) {
-          // patch any entity details panels in dashboard
-          let entityDetailsResult = dispatch(
-            detailsPanelQueries.util.updateQueryData(
-              'getEntitiesDetailsPanel',
-              entry.originalArgs,
-              (draft) => {
-                for (const entity of draft) {
-                  patchDetailsPanelEntity([{ entityId, data, entityType }], entity)
-                }
-              },
-            ),
-          )
-
-          patchResults.push(entityDetailsResult)
-        }
+        patchDetailsPanel([{ entityId, data, entityType }], { state, dispatch }, patchResults)
 
         try {
           await queryFulfilled
@@ -385,9 +381,20 @@ const updateEntity = api.injectEndpoints({
           return { error }
         }
       },
-      invalidatesTags: (result, error, { operations }) => [
-        ...operations.map((o) => ({ id: o.id, type: 'review' })),
-      ],
+      invalidatesTags: (result, error, { operations, entityType }) => {
+        const tags = operations.map((o) => ({ id: o.id, type: 'review' }))
+
+        if (entityType === 'product') {
+          tags.push({ type: 'product', id: 'LIST' }, { type: 'version', id: 'LIST' })
+          operations.forEach((o) => tags.push({ type: 'product', id: o.id }))
+        }
+        if (entityType === 'version') {
+          tags.push({ type: 'version', id: 'LIST' }, { type: 'product', id: 'LIST' })
+          operations.forEach((o) => tags.push({ type: 'version', id: o.id }))
+        }
+
+        return tags
+      },
     }),
   }),
   overrideExisting: true,

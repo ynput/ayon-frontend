@@ -9,6 +9,7 @@ import UserAccessForm from './UserAccessForm'
 import styled from 'styled-components'
 import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
 import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
+import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -54,13 +55,15 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
     const payload = {
       data: {},
       attrib: {},
-      name: formData.Username,
+      name: formData.Username?.trim(),
       password: password ? password : undefined,
-      isGuest: formData.isGuest ? true : undefined,
     }
 
     attributes.forEach(({ name }) => {
-      if (formData[name]) payload.attrib[name] = formData[name]
+      if (formData[name]) {
+        const value = formData[name]
+        payload.attrib[name] = typeof value === 'string' ? value.trim() : value
+      }
     })
 
     if (formData.userLevel === 'admin') payload.data.isAdmin = true
@@ -131,6 +134,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         width: '90vw',
         maxWidth: 700,
       }}
+      enableBackdropClose={false}
       header={'Create New User'}
       onClose={handleClose}
       footer={
@@ -139,14 +143,14 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
             label="Create user"
             onClick={() => handleSubmit(false)}
             disabled={!formData.Username}
-            data-shortcut="Shift+Enter"
+            data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Shift])}
           ></Button>
           <SaveButton
             onClick={() => handleSubmit(true)}
             label="Create and close"
             disabled={!formData.Username}
             saving={isCreatingUser}
-            data-shortcut="Ctrl/Cmd+Enter"
+            data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
           />
         </>
       }

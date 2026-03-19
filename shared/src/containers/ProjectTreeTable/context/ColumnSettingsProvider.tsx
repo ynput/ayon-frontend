@@ -6,16 +6,18 @@ import {
   OnChangeFn,
   VisibilityState,
   ColumnSizingState,
+  SortingState,
 } from '@tanstack/react-table'
 import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
+import { isEqual } from 'lodash'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
   config?: Record<string, any>
-  onChange: (config: ColumnsConfig) => void
+  onChange: (config: ColumnsConfig, allColumnIds?: string[]) => void
 }
 
 export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
@@ -23,17 +25,56 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   config,
   onChange,
 }) => {
+  const allColumnsRef = React.useRef<string[]>([])
+  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const rowHeightTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const columnOrderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const prevRowHeightRef = React.useRef<number | undefined>(undefined)
+  const lockedAspectRatioRef = React.useRef<number | null>(null)
+  // Internal state for immediate updates (similar to column sizing)
+  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
+  const [internalRowHeight, setInternalRowHeight] = useState<number | null>(null)
+  const [internalColumnOrder, setInternalColumnOrder] = useState<ColumnOrderState | null>(null)
+
+  const setAllColumns = (allColumnIds: string[]) => {
+    allColumnsRef.current = Array.from(new Set(allColumnIds))
+  }
+  const onChangeWithColumns = (next: ColumnsConfig) => onChange(next, allColumnsRef.current)
   const columnsConfig = config as ColumnsConfig
+
   const {
     columnOrder: columnOrderInit = [],
     columnPinning: columnPinningInit = {},
     columnVisibility: columnVisibilityInit = {},
     columnSizing: columnsSizingExternal = {},
+    sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
-  } = columnsConfig
+    rowHeight: configRowHeight = 34,
+  } = columnsConfig || {}
 
-  const columnOrder = [...columnOrderInit]
+  // Clear internal row height when config changes (e.g., when switching views)
+  // This happens during render, before the component uses the value
+  if (prevRowHeightRef.current !== configRowHeight && prevRowHeightRef.current !== undefined) {
+    // Config changed, clear internal state
+    if (internalRowHeight !== null) {
+      setInternalRowHeight(null)
+    }
+    // Clear any pending timeout
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
+      rowHeightTimeoutRef.current = null
+    }
+  }
+  prevRowHeightRef.current = configRowHeight
+
+  // Use internal row height during adjustments, otherwise use config value
+  const rowHeight = internalRowHeight ?? configRowHeight
+
+  const sorting = [...sortingInit]
+  // Use internal column order for immediate UI updates, otherwise use config value
+  const columnOrderBase = internalColumnOrder ?? [...columnOrderInit]
+  const columnOrder = [...columnOrderBase]
   const columnPinning = { ...columnPinningInit }
   const defaultOrder = ['thumbnail', 'name', 'subType', 'status', 'tags']
   // for each default column, if it is not in the columnOrder, find the index of the column before it, if none, add to beginning
@@ -91,32 +132,28 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
   // DIRECT STATE UPDATES - no side effects
   const setColumnVisibility = (visibility: VisibilityState) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnVisibility: visibility,
     })
   }
 
   const setColumnOrder = (order: ColumnOrderState) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnOrder: order,
     })
   }
 
   const setColumnPinning = (pinning: ColumnPinningState) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnPinning: pinning,
     })
   }
 
-  const [internalColumnSizing, setInternalColumnSizing] = useState<ColumnSizingState | null>(null)
-
   // use internalColumnSizing if it exists, otherwise use the external column sizing
   const columnSizing = internalColumnSizing || columnsSizingExternal
-
-  const resizingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
 
   const setColumnSizing = (sizing: ColumnSizingState) => {
     setInternalColumnSizing(sizing)
@@ -129,7 +166,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     resizingTimeoutRef.current = setTimeout(() => {
       // we have finished resizing now!
       // update the external column sizing
-      onChange({
+      onChangeWithColumns({
         ...columnsConfig,
         columnSizing: sizing,
       })
@@ -176,7 +213,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   // UPDATE METHODS WITH SIDE EFFECTS
   const updateColumnVisibility = (visibility: VisibilityState) => {
     const newPinning = togglePinningOnVisibilityChange(visibility)
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnVisibility: visibility,
       columnPinning: newPinning,
@@ -184,32 +221,58 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
   }
 
   const updateColumnOrder = (order: ColumnOrderState) => {
-    const newPinning = updatePinningOrderOnOrderChange(order)
-    onChange({
-      ...columnsConfig,
-      columnOrder: order,
-      columnPinning: newPinning,
-    })
+    // Filter out special columns that are added dynamically
+    const filteredOrder = order.filter(
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+    )
+
+    const newPinning = updatePinningOrderOnOrderChange(filteredOrder)
+
+    // Update UI immediately (optimistic)
+    setInternalColumnOrder(filteredOrder)
+
+    // Clear any existing timeout to debounce API calls
+    if (columnOrderTimeoutRef.current) {
+      clearTimeout(columnOrderTimeoutRef.current)
+    }
+
+    // Debounce API call to avoid excessive requests
+    columnOrderTimeoutRef.current = setTimeout(() => {
+      onChangeWithColumns({
+        ...columnsConfig,
+        columnOrder: filteredOrder,
+        columnPinning: newPinning,
+      })
+      // Clear internal state after persistence
+      setInternalColumnOrder(null)
+    }, 300)
   }
 
   const updateColumnPinning = (pinning: ColumnPinningState) => {
     const newOrder = updateOrderOnPinningChange(pinning)
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       columnOrder: newOrder,
       columnPinning: pinning,
     })
   }
 
+  const updateSorting = (sortingState: SortingState) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      sorting: sortingState,
+    })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       groupBy: groupBy,
     })
   }
 
   const updateGroupByConfig = (config: GroupByConfig) => {
-    onChange({
+    onChangeWithColumns({
       ...columnsConfig,
       groupByConfig: {
         ...groupByConfig,
@@ -218,57 +281,135 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
-  // UPDATER FUNCTIONS
-  const columnVisibilityUpdater: OnChangeFn<VisibilityState> = (columnVisibilityUpdater) => {
-    const newVisibility = functionalUpdate(columnVisibilityUpdater, columnVisibility)
-    updateColumnVisibility(newVisibility)
+  // Update row height for immediate UI feedback (no API call)
+  const updateRowHeight = React.useCallback((newRowHeight: number) => {
+    // Lock the aspect ratio on first call if not already locked
+    if (lockedAspectRatioRef.current === null) {
+      const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
+      const currentRowHeight = configRowHeight || 34
+      lockedAspectRatioRef.current = currentThumbnailWidth / currentRowHeight
+    }
+    const newThumbnailWidth = lockedAspectRatioRef.current * newRowHeight
+
+    setInternalRowHeight(newRowHeight)
+    setInternalColumnSizing({
+      ...(internalColumnSizing || columnsSizingExternal),
+      thumbnail: newThumbnailWidth
+    })
+  }, [columnsSizingExternal, configRowHeight])
+
+  // Update row height and persist to API
+  const updateRowHeightWithPersistence = React.useCallback((newRowHeight: number) => {
+    const currentThumbnailWidth = columnsSizingExternal.thumbnail || 63
+    const currentRowHeight = configRowHeight || 34
+    const currentRatio = currentThumbnailWidth / currentRowHeight
+
+    const newThumbnailWidth = currentRatio * newRowHeight
+
+    // Update UI immediately
+    setInternalRowHeight(newRowHeight)
+    setInternalColumnSizing({
+      ...(internalColumnSizing || columnsSizingExternal),
+      thumbnail: newThumbnailWidth
+    })
+
+    // Clear any existing timeout to debounce API calls
+    if (rowHeightTimeoutRef.current) {
+      clearTimeout(rowHeightTimeoutRef.current)
+    }
+
+    // Debounce API call to avoid excessive requests
+    rowHeightTimeoutRef.current = setTimeout(() => {
+      // Persist to API
+      onChangeWithColumns({
+        ...columnsConfig,
+        rowHeight: newRowHeight,
+        columnSizing: {
+          ...columnsSizingExternal,
+          thumbnail: newThumbnailWidth
+        }
+      })
+
+      // Clean up internal state after API call completes
+      setInternalRowHeight(null)
+      setInternalColumnSizing(null)
+      lockedAspectRatioRef.current = null
+    }, 300)
+  }, [columnsConfig, onChangeWithColumns, columnsSizingExternal, configRowHeight, internalColumnSizing])
+
+  // Remove redundant local updater functions in favor of unified updaters with all columns
+
+  // ON-CHANGE HANDLERS (TanStack-compatible)
+  const columnVisibilityOnChange: OnChangeFn<VisibilityState> = (updater) => {
+    const newVisibility = functionalUpdate(updater, columnVisibility)
+    if (isEqual(newVisibility, columnVisibility)) return
+    setColumnVisibility(newVisibility)
   }
 
-  const columnOrderUpdater: OnChangeFn<ColumnOrderState> = (columnOrderUpdater) => {
-    const newOrder = functionalUpdate(columnOrderUpdater, columnOrder)
-    updateColumnOrder(newOrder)
+  const columnPinningOnChange: OnChangeFn<ColumnPinningState> = (updater) => {
+    const newPinning = functionalUpdate(updater, columnPinning)
+    if (isEqual(newPinning, columnPinning)) return
+    setColumnPinning(newPinning)
   }
 
-  const columnPinningUpdater: OnChangeFn<ColumnPinningState> = (columnPinningUpdater) => {
-    const newPinning = functionalUpdate(columnPinningUpdater, columnPinning)
-    updateColumnPinning(newPinning)
+  const columnOrderOnChange: OnChangeFn<ColumnOrderState> = (updater) => {
+    const newOrder = functionalUpdate(updater, columnOrder)
+    if (isEqual(newOrder, columnOrder)) return
+    setColumnOrder(newOrder)
   }
 
-  const columnSizingUpdater: OnChangeFn<ColumnSizingState> = (sizingUpdater) => {
-    const newSizing = functionalUpdate(sizingUpdater, columnSizing)
+  const columnSizingOnChange: OnChangeFn<ColumnSizingState> = (updater) => {
+    const newSizing = functionalUpdate(updater, columnSizing)
+    if (isEqual(newSizing, columnSizing)) return
     setColumnSizing(newSizing)
+  }
+
+  const sortingOnChange: OnChangeFn<SortingState> = (updater) => {
+    const newSorting = functionalUpdate(updater, sorting)
+    if (isEqual(newSorting, sorting)) return
+    updateSorting(newSorting)
   }
 
   return (
     <ColumnSettingsContext.Provider
       value={{
+        // all columns ref
+        setAllColumns,
         // column visibility
         columnVisibility,
         setColumnVisibility,
         updateColumnVisibility,
-        columnVisibilityUpdater,
+        columnVisibilityOnChange,
         // column pinning
         columnPinning,
         setColumnPinning,
         updateColumnPinning,
-        columnPinningUpdater,
+        columnPinningOnChange,
         // column order
         columnOrder,
         setColumnOrder,
         updateColumnOrder,
-        columnOrderUpdater,
+        columnOrderOnChange,
         // column sizing
         columnSizing,
         setColumnSizing,
-        columnSizingUpdater,
+        columnSizingOnChange,
+        // sorting
+        sorting,
+        updateSorting,
+        sortingOnChange,
         // group by
         groupBy,
         updateGroupBy,
         groupByConfig,
         updateGroupByConfig,
+        // row height
+        rowHeight,
+        updateRowHeight,
+        updateRowHeightWithPersistence,
 
         // global change
-        setColumnsConfig: onChange,
+        setColumnsConfig: (config: ColumnsConfig) => onChangeWithColumns(config),
       }}
     >
       {children}

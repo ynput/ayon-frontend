@@ -5,6 +5,9 @@ const userSlice = createSlice({
   name: 'user',
   initialState: {
     name: '',
+    redirectUrl: null,
+    avatarKey: '',
+    uiExposureLevel: 0,
     data: {
       frontendPreferences: {
         notifications: false,
@@ -18,6 +21,7 @@ const userSlice = createSlice({
       isAdmin: false,
       isManager: false,
       isUser: true,
+      isGuest: false,
     },
     attrib: {
       fullName: '',
@@ -40,6 +44,10 @@ const userSlice = createSlice({
       if (user.data) {
         if (user.data.isAdmin || user.data.isManager) isUser = false
         user.data.isUser = isUser
+      }
+
+      if (action.payload.redirectUrl) {
+        user.redirectUrl = action.payload.redirectUrl
       }
 
       return user
@@ -69,6 +77,9 @@ const userSlice = createSlice({
         ...action.payload,
       }
     },
+    updateAvatarKey: (state) => {
+      state.avatarKey = `?${Date.now()}`
+    },
   },
 })
 
@@ -79,5 +90,6 @@ export const {
   updateUserData,
   updateUserPreferences,
   toggleDevMode,
+  updateAvatarKey,
 } = userSlice.actions
 export default userSlice.reducer

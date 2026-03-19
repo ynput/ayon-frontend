@@ -7,6 +7,7 @@ import Hierarchy from '@containers/hierarchy'
 import TaskList from '@containers/taskList'
 import useAddonContextResend from '@hooks/useAddonContextResend'
 import LoadingPage from './LoadingPage'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const AddonWrapper = styled.iframe`
   flex-grow: 1;
@@ -118,7 +119,7 @@ const RequestModal = ({ onClose, callback = () => {}, requestType = null, ...pro
   }
 }
 
-const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
+const ProjectAddon = ({ addonName, addonVersion, sidebar, addonTitle, ...props }) => {
   const addonRef = useRef(null)
   const [loading, setLoading] = useState(true)
   const [requestModal, setRequestModal] = useState(false)
@@ -194,8 +195,12 @@ const ProjectAddon = ({ addonName, addonVersion, sidebar, ...props }) => {
     setTimeout(() => pushContext(), 20)
   }
 
+  // Generate title for the project addon
+  const pageTitle = addonTitle ? `${addonTitle} • ${projectName}` : addonName ? `${addonName} • ${projectName}` : `Addon • ${projectName}`
+
   return (
     <main {...props}>
+      <DocumentTitle title={pageTitle} />
       {sidebarComponent}
       <Section>
         <RequestModal {...requestModal} onClose={() => setRequestModal(null)} />

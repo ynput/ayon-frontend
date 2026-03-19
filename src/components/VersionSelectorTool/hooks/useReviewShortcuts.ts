@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import isHTMLElement from '@helpers/isHTMLElement'
-import { VersionReviewablesModel } from '@/api/rest/review'
+import { isHTMLElement } from '@shared/util'
+import { VersionReviewablesModel } from '@shared/api'
 
 type VersionButtonKey = 'selected' | 'previous' | 'next' | 'latest' | 'approved' | 'hero'
 
@@ -13,12 +13,7 @@ interface isReviewShortcutsProps {
   selectRef: any
 }
 
-const useReviewShortcuts = ({
-  allVersions,
-  onChange,
-  toolsRef,
-  selectRef,
-}: isReviewShortcutsProps) => {
+const useReviewShortcuts = ({ allVersions, onChange, toolsRef }: isReviewShortcutsProps) => {
   const handleShortcut = (action: VersionButtonKey) => {
     const version = allVersions[action]
 
@@ -37,32 +32,17 @@ const useReviewShortcuts = ({
     }, 150)
   }
 
-  const openSelectDropdown = () => {
-    const options = selectRef.current.getOptions()
-    if (!options) selectRef.current?.open()
-    else selectRef.current?.close()
-
-    // focus on the dropdown
-    const el = selectRef.current?.getElement()
-    const buttonEl = el?.querySelector('button')
-    if (buttonEl) buttonEl.focus()
-  }
-
   const shortcuts = [
     {
       key: 'a', //select previous version
       action: () => handleShortcut('previous'),
     },
     {
-      key: 'q', //select any version (dropdown)
-      action: () => openSelectDropdown(),
-    },
-    {
       key: 'd', //select next version
       action: () => handleShortcut('next'),
     },
     {
-      key: 'f', //select latest version
+      key: 'r', //select latest version
       action: () => handleShortcut('latest'),
     },
     {

@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useMemo, useEffect } from 'react'
 import { ActionContext, useExecuteActionMutation, useGetActionsFromContextQuery } from '@shared/api'
-import { ActionsDropdown } from './ActionsDropdown'
+import { ActionsDropdown, ActionsDropdownProps } from './ActionsDropdown'
 import ActionIcon from './ActionIcon'
 import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
 import { ActionConfigDialog } from './ActionConfigDialog'
@@ -25,6 +25,11 @@ interface ActionsProps extends ActionTriggersProps {
   isLoadingEntity: boolean
   projectActionsProjectName?: string
   featuredCount?: number
+  isDeveloperMode: boolean
+  align?: ActionsDropdownProps['align']
+  pt?: {
+    dropdown?: Partial<ActionsDropdownProps>
+  }
 }
 
 export const Actions = ({
@@ -35,8 +40,11 @@ export const Actions = ({
   projectActionsProjectName,
   searchParams,
   featuredCount = 2,
+  isDeveloperMode,
   onNavigate,
   onSetSearchParams,
+  align,
+  pt,
 }: ActionsProps) => {
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers({ onNavigate, onSetSearchParams, searchParams })
@@ -44,7 +52,7 @@ export const Actions = ({
   const [interactiveForm, setInteractiveForm] = useState<any>(null)
 
   const context: ActionContext | null = useMemo(() => {
-    if (projectActionsProjectName){
+    if (projectActionsProjectName) {
       return {
         entityType: 'project',
         projectName: projectActionsProjectName,
@@ -144,6 +152,7 @@ export const Actions = ({
         label: action.groupLabel ? action.groupLabel + ' ' + action.label : action.label,
         icon: action.icon,
         hasConfig: !!action.configFields,
+        description: action.description,
       }))
 
       options.push(...groupOptions)
@@ -297,12 +306,11 @@ export const Actions = ({
   const featuredActionsToDisplay = isLoading ? loadingActions : featuredActions
 
   return (
-    <Styled.Actions className="actions">
+    <Styled.Actions className={clsx('actions', { loading: isLoading })}>
       {featuredActionsToDisplay.map((action, i) => (
         <Styled.FeaturedAction
           key={action.identifier + '-' + i}
           className={clsx('action', {
-            loading: isLoading,
             isPlaceholder: action.isPlaceholder,
           })}
           data-tooltip={action.groupLabel ? action.groupLabel + ' ' + action.label : action.label}
@@ -318,6 +326,9 @@ export const Actions = ({
         isLoading={isLoading && featuredCount > 0}
         onAction={handleExecuteAction}
         onConfig={handleConfigureAction}
+        isDeveloperMode={isDeveloperMode}
+        align={align}
+        {...pt?.dropdown}
       />
       <ActionConfigDialog
         action={actionBeingConfigured}

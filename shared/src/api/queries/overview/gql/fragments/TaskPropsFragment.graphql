@@ -8,10 +8,13 @@ fragment TaskPropsFragment on TaskNode {
   tags
   taskType
   updatedAt
+  createdAt
   active
   assignees
   allAttrib
-  folder {
-    path
+  hasReviewables
+  parents
+  subtasks {
+    ...SubTaskFragment
   }
 }

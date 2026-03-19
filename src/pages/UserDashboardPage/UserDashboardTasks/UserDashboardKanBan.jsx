@@ -46,7 +46,21 @@ const UserDashboardKanBan = ({
   const [view, setView] = useQueryParam('view', withDefault(StringParam, 'kanban'))
 
   const selectedTasks = useSelector((state) => state.dashboard.tasks.selected)
-  const setSelectedTasks = (ids, types) => dispatch(onTaskSelected({ ids, types }))
+  const setSelectedTasks = (ids, types, data) => {
+    const selectedData = data || tasks.filter((t) => ids.includes(t.id))
+    dispatch(
+      onTaskSelected({
+        ids,
+        types,
+        data: selectedData.map((t) => ({
+          id: t.id,
+          projectName: t.projectName,
+          taskType: t.taskType,
+          name: t.name,
+        })),
+      }),
+    )
+  }
 
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
 
@@ -177,7 +191,13 @@ const UserDashboardKanBan = ({
 
   // DND Stuff
   const touchSensor = useSensor(TouchSensor)
-  const keyboardSensor = useSensor(KeyboardSensor)
+  const keyboardSensor = useSensor(KeyboardSensor, {
+    keyboardCodes: {
+      start: ['Enter'],
+      cancel: ['Escape'],
+      end: ['Enter'],
+    },
+  })
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: {
       distance: 1,
@@ -207,8 +227,13 @@ const UserDashboardKanBan = ({
     if (!selectedTasks.includes(event.active.id)) {
       // get the task
       const task = tasks.find((t) => t.id === event.active.id)
-      setSelectedTasks([event.active.id], [task.taskType])
+      setSelectedTasks([event.active.id], [task.taskType], [task])
     }
+  }
+
+  const handleDragCancel = (event) => {
+    dispatch(onDraggingEnd())
+    setActiveDraggingId(null)
   }
 
   const handleDragEnd = async (event) => {
@@ -263,11 +288,12 @@ const UserDashboardKanBan = ({
   return (
     <>
       <Section style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden' }}>
-        <DashboardTasksToolbar {...{ view, setView, isLoadingProjectUsers }} />
+        <DashboardTasksToolbar {...{ view, setView, isLoadingProjectUsers, projectUsers }} />
         {view === 'kanban' && (
           <DndContext
             sensors={sensors}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
             onDragStart={handleDragStart}
             autoScroll={false}
           >

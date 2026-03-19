@@ -32,6 +32,7 @@ interface ATagProps {
 interface ATagOptions {
   entityId?: string
   projectName?: string
+  userName?: string
   onReferenceClick: (data: {
     entityId: string
     entityType: string
@@ -46,11 +47,22 @@ interface ATagOptions {
     name: string
     pos: any
   }) => void
+  categoryPrimary?: string
+  categorySecondary?: string
 }
 
 export const aTag = (
   { children, href }: ATagProps,
-  { entityId, projectName, onReferenceClick, activityId, onReferenceTooltip }: ATagOptions,
+  {
+    entityId,
+    userName,
+    projectName,
+    onReferenceClick,
+    activityId,
+    onReferenceTooltip,
+    categoryPrimary,
+    categorySecondary,
+  }: ATagOptions,
 ): React.ReactNode => {
   const { url, type, id } = sanitizeURL(href)
 
@@ -74,18 +86,20 @@ export const aTag = (
   }
 
   const label = (children && children.toString().replace('@', '')) || ''
-  // is this ref the same as the current task id
-  const isEntity = id === entityId
+  // is this ref the same as the current task id or the user is mentioning themselves
+  const isHighlighted = id === entityId || (type === 'user' && id === userName)
 
   return (
     <ActivityReference
       {...{ type, id: id.replaceAll('.', '-') }}
-      variant={isEntity ? 'filled' : 'surface'}
+      variant={isHighlighted ? 'filled' : 'surface'}
       onClick={() =>
         type !== 'user' &&
         onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
       }
       onMouseEnter={(e, pos) => onReferenceTooltip({ type, id, label, name: id, pos })}
+      categoryPrimary={categoryPrimary}
+      categorySecondary={categorySecondary}
     >
       {label}
     </ActivityReference>

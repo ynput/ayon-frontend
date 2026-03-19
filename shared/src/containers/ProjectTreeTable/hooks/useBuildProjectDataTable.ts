@@ -10,9 +10,10 @@ import { ExpandedState } from '@tanstack/react-table'
 import { generateLoadingRows } from '../utils/loadingUtils'
 const TASKS_INFINITE_QUERY_COUNT = 100
 import { LoadingTasks } from '../types'
-import { ProjectModel } from '../types/project'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { TableGroupBy } from '../context'
+import { linksToTableData } from '../utils'
+import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
 
 type Params = {
   foldersMap: FolderNodeMap
@@ -20,7 +21,6 @@ type Params = {
   tasksByFolderMap: TasksByFolderMap
   rows?: TableRow[]
   expanded: ExpandedState
-  projectInfo?: ProjectModel
   showHierarchy: boolean
   loadingTasks?: LoadingTasks
   isLoadingMore?: boolean
@@ -33,12 +33,12 @@ export default function useBuildProjectDataTable({
   rows,
   tasksByFolderMap,
   expanded,
-  projectInfo,
   showHierarchy,
   loadingTasks = {},
   isLoadingMore = false,
 }: Params): TableRow[] {
-  const getEntityTypeData = useGetEntityTypeData({ projectInfo })
+  const project = useProjectContext()
+  const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
   // Convert expanded object to a stable string for memoization comparison
   const expandedKey = useMemo(() => JSON.stringify(expanded), [expanded])
@@ -120,10 +120,14 @@ export default function useBuildProjectDataTable({
     // Helper function to create a task row
     const createTaskRow = (task: EditorTaskNode, parentId?: string): TableRow => {
       const typeData = getEntityTypeData('task', task.taskType)
+
+      const links = linksToTableData(task.links, 'task', project.anatomy)
+
       return {
         id: task.id,
         entityType: 'task',
         parentId: parentId || task.folderId,
+        folderId: task.folderId,
         name: task.name || '',
         label: task.label || task.name || '',
         icon: typeData?.icon || null,
@@ -136,8 +140,14 @@ export default function useBuildProjectDataTable({
         subType: task.taskType || null,
         attrib: task.attrib,
         ownAttrib: task.ownAttrib,
-        path: task.folder.path,
+        parents: task.parents || [],
+        path: task.parents.join('/') || null, // todo: probably remove this and just use parents
+        folder: task.parents[task.parents.length - 1] || undefined,
         updatedAt: task.updatedAt,
+        createdAt: task.createdAt,
+        hasReviewables: task.hasReviewables || false,
+        links: links,
+        subtasks: task.subtasks || [],
       }
     }
 
@@ -158,14 +168,10 @@ export default function useBuildProjectDataTable({
 
       // if we are loading more tasks, add loading rows
       if (isLoadingMore) {
-        const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
-        const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
-          name: key,
-        }))
         // number of tasks we loading with the infinite query
         const count = TASKS_INFINITE_QUERY_COUNT
         if (count > 0) {
-          const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
+          const loadingTaskRows = generateLoadingRows(count, {
             type: 'task',
           })
 
@@ -185,15 +191,20 @@ export default function useBuildProjectDataTable({
       const folder = foldersMap.get(folderId)
       if (!folder) continue
 
+      const links = linksToTableData(folder.links, 'folder', project.anatomy)
+
+      const folderTypeData = getEntityTypeData('folder', folder.folderType)
+
       // Create row with minimal required properties
       const row: TableRow = {
         id: folderId,
         entityType: 'folder',
         parentId: folder.parentId || undefined,
+        folderId: folderId || null, // root folders have no folderId
         name: folder.name || '',
         label: folder.label || folder.name || '',
-        icon: getEntityTypeData('folder', folder.folderType)?.icon || null,
-        color: null,
+        icon: folderTypeData?.icon || null,
+        color: folderTypeData?.color || null,
         img: null,
         subRows: [],
         status: folder.status,
@@ -201,9 +212,14 @@ export default function useBuildProjectDataTable({
         subType: folder.folderType || null,
         ownAttrib: folder.ownAttrib || [],
         path: folder.path,
+        folder: folder.parents[folder.parents.length - 1] || undefined,
         attrib: folder.attrib || {},
         childOnlyMatch: folder.childOnlyMatch || false,
         updatedAt: folder.updatedAt,
+        createdAt: folder.createdAt,
+        hasReviewables: folder.hasReviewables || false,
+        hasVersions: folder.hasVersions || false,
+        links: links,
       }
 
       rowsById.set(folderId, row)
@@ -231,16 +247,9 @@ export default function useBuildProjectDataTable({
 
           // Add loading rows if applicable
           if (loadingTasks[folderId]) {
-            const firstTaskAttrib = tasksMap.entries().next()?.value?.[1]?.attrib || {}
-            const loadingAttribs = Object.keys(firstTaskAttrib).map((key) => ({
-              name: key,
-            }))
             const count = loadingTasks[folderId]
             if (count > 0) {
-              const loadingTaskRows = generateLoadingRows(loadingAttribs, count, {
-                type: 'task',
-                parentId: folderId,
-              })
+              const loadingTaskRows = generateLoadingRows(count, { parentId: folderId })
 
               taskRows.push(...loadingTaskRows)
             }
@@ -262,7 +271,7 @@ export default function useBuildProjectDataTable({
       if (!childRow || !parentRow) continue
 
       // Add folder to its parent's subRows
-      parentRow.subRows.push(childRow)
+      parentRow.subRows?.push(childRow)
     }
 
     // Add any extra rows to the root rows

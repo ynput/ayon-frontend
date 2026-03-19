@@ -6,6 +6,7 @@ import { toast } from 'react-toastify'
 import { useState, useMemo, useEffect } from 'react'
 import * as Styled from '@pages/LoginPage/LoginPage.styled'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const RequestPage = () => {
   const [email, setEmail] = useState('')
@@ -15,7 +16,7 @@ const RequestPage = () => {
     e.preventDefault()
 
     const payload = {
-      email,
+      email: email.trim(),
       url: `${window.location.origin}/passwordReset`,
     }
     axios
@@ -53,7 +54,7 @@ const RequestPage = () => {
           name="email"
           aria-label="Email address"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
         />
         <Button label={<strong>Send Reset Link</strong>} type="submit" />
       </form>
@@ -149,7 +150,9 @@ const PasswordResetPage = () => {
   }, [token])
 
   return (
-    <main className="center">
+    <>
+      <DocumentTitle title="Password reset • AYON" />
+      <main className="center">
       <Styled.LoginForm>
         <Panel>
           {mainComponent}
@@ -157,6 +160,7 @@ const PasswordResetPage = () => {
         </Panel>
       </Styled.LoginForm>
     </main>
+    </>
   )
 }
 

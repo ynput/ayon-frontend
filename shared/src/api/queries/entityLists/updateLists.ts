@@ -1,6 +1,6 @@
 import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
-import { current } from '@reduxjs/toolkit'
+import { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
 
 const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {
@@ -21,6 +21,8 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           .filter((e) => e.endpointName === 'getListsInfinite')
 
         let patchResults: any[] = []
+
+        // Update getListsInfinite cache (GraphQL)
         for (const entry of infiniteEntries) {
           const patchResult = dispatch(
             gqlApi.util.updateQueryData('getListsInfinite', entry.originalArgs, (draft) => {
@@ -38,6 +40,26 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           // Store the patch result to undo it later if needed
           patchResults.push(patchResult)
         }
+
+        // Update getEntityList cache (REST API)
+        const entityListEntries = entityListsApi.util
+          .selectInvalidatedBy(state, tags)
+          .filter((e) => e.endpointName === 'getEntityList' && e.originalArgs.listId === listId)
+
+        for (const entry of entityListEntries) {
+          const patchResult = dispatch(
+            entityListsApi.util.updateQueryData('getEntityList', entry.originalArgs, (draft) => {
+              // Update the entity list with the new data
+              Object.assign(draft, {
+                ...draft,
+                ...entityListPatchModel,
+              })
+            }),
+          )
+          // Store the patch result to undo it later if needed
+          patchResults.push(patchResult)
+        }
+
         try {
           await queryFulfilled
         } catch {
@@ -47,6 +69,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
+      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: (_s, _e, { listId }) => {
         const tags = [{ type: 'entityList', id: listId }]
         return tags
@@ -115,7 +138,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                 // Collect all items from all pages for this specific cache entry
                 let allItems = draft.pages.flatMap((page) => page.items)
 
-                // Sort all items based on position
+                // Sort all items based on position, using updated positions from the map
                 allItems.sort((a, b) => {
                   const posA = typeof a.position === 'number' ? a.position : Infinity
                   const posB = typeof b.position === 'number' ? b.position : Infinity
@@ -147,6 +170,18 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         }
       },
       invalidatesTags: (_s, _e, { listId, entityListMultiPatchModel: { items } }) => {
+        // Check if this is a position-only update (reordering)
+        const isReorderingOnly = items?.every((item) =>
+          Object.keys(item).every((key) => key === 'id' || key === 'position'),
+        )
+
+        // Don't invalidate cache for reordering - the optimistic update is sufficient
+        // This prevents the cache refetch from overwriting client-side positions of restricted entities
+        if (isReorderingOnly) {
+          return []
+        }
+
+        // For other updates, invalidate as normal
         const tags = [
           { type: 'entityList', id: listId },
           { type: 'entityListItem', id: listId },
@@ -158,6 +193,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         ]
         return tags
       },
+      transformErrorResponse: (error: any) => error.data.detail,
     },
     updateEntityListItem: {
       async onQueryStarted(
@@ -205,6 +241,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
+      invalidatesTags: (_s, _e, { listId, listItemId }) => [
+        { type: 'entityListItem', id: listId },
+        { type: 'entityListItem', id: listItemId },
+      ],
     },
     createEntityListItem: {
       invalidatesTags: (_s, _e, { listId }) => [
@@ -221,6 +261,24 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   },
 })
 
+// inject review addon endpoint Create Session From List
+const updateListsInjectedApi = updateListsEnhancedApi.injectEndpoints({
+  endpoints: (build) => ({
+    createSessionFromList: build.mutation<
+      CreateSessionFromListApiResponse,
+      CreateSessionFromListApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/addons/review/${queryArg.addonVersion}/${queryArg.projectName}/sessions/fromList`,
+        method: 'POST',
+        body: queryArg.sessionFromListRequest,
+      }),
+      transformErrorResponse: (error: any) => error.data.detail,
+      invalidatesTags: () => [{ type: 'entityList', id: 'LIST' }],
+    }),
+  }),
+})
+
 export const {
   // LIST MUTATIONS
   useCreateEntityListMutation,
@@ -231,5 +289,7 @@ export const {
   useUpdateEntityListItemMutation,
   useCreateEntityListItemMutation,
   useDeleteEntityListItemMutation,
-} = updateListsEnhancedApi
-export { updateListsEnhancedApi as entityListsQueriesRest, gqlApi as entityListsQueriesGql }
+  // REVIEW SESSION MUTATIONS
+  useCreateSessionFromListMutation,
+} = updateListsInjectedApi
+export { updateListsInjectedApi as entityListsQueriesRest, gqlApi as entityListsQueriesGql }

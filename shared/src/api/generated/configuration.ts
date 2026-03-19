@@ -78,6 +78,12 @@ export type CustomizationModel = {
   studio_logo?: string
   /** The message that is displayed to users on the login page. Markdown syntax is supported. */
   motd?: string
+  /** A list of flags that will be passed to the frontend. These can be used to enable or disable frontend features. */
+  frontend_flags?: string[]
+}
+export type AuthenticationModel = {
+  /** If enabled, password authentication will be hidden from the login page. */
+  hide_password_auth?: boolean
 }
 export type ProjectOptionsModel = {
   /** A regular expression that is used to create project code from the project name. */
@@ -90,8 +96,10 @@ export type ChangelogSettingsModel = {
 export type ServerConfigModel = {
   /** The name of the studio */
   studio_name?: string
-  /** Customization options for the login page */
+  /** Customization options for the web interface */
   customization?: CustomizationModel
+  /** Settings related to user authentication */
+  authentication?: AuthenticationModel
   project_options?: ProjectOptionsModel
   /** Settings for the changelog feature */
   changelog?: ChangelogSettingsModel

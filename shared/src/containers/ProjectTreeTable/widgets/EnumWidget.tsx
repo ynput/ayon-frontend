@@ -1,92 +1,10 @@
-import { Dropdown, DropdownProps, DropdownRef, Icon } from '@ynput/ayon-react-components'
+import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { WidgetBaseProps } from './CellWidget'
+import type { WidgetBaseProps } from './CellWidget'
 import { AttributeData, AttributeEnumItem } from '../types'
-
-const StyledWidget = styled.div`
-  display: flex;
-  gap: var(--base-gap-small);
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: var(--border-radius-m);
-  padding: 0 2px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-high-hover);
-  }
-
-  &.item {
-    padding: 4px 2px;
-    border-radius: 0;
-
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-hover);
-    }
-  }
-
-  &.selected {
-    background-color: var(--md-sys-color-primary-container);
-
-    &:hover {
-      background-color: var(--md-sys-color-primary-container-hover);
-    }
-  }
-`
-
-const StyledValuesContainer = styled.div`
-  display: flex;
-  gap: var(--base-gap-small);
-  align-items: center;
-  overflow: hidden;
-  border-radius: var(--border-radius-m);
-`
-
-const StyledValueWrapper = styled.div`
-  display: flex;
-  gap: var(--base-gap-small);
-  align-items: center;
-
-  overflow: hidden;
-  max-width: 100%;
-  min-width: 20px;
-`
-
-const StyledValue = styled.span`
-  /* push expand icon to the end */
-  flex: 1;
-  overflow: hidden;
-  white-space: nowrap;
-  width: 100%;
-  text-overflow: ellipsis;
-  text-align: left;
-  border-radius: var(--border-radius-m);
-  padding: 0px 2px;
-  text-align: center;
-
-  &.placeholder {
-    color: var(--md-sys-color-outline);
-  }
-`
-
-const StyledImg = styled.img`
-  width: 20px;
-  height: 20px;
-  object-fit: cover;
-
-  &.avatar {
-    border-radius: 50%;
-  }
-`
-
-const StyledExpandIcon = styled(Icon)`
-  margin-left: auto;
-  transition: rotate 0.2s;
-`
+import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
 const StyledDropdown = styled(Dropdown)`
   height: 100%;
@@ -108,18 +26,6 @@ export interface EnumWidgetProps
   onOpen?: () => void
   onNext?: () => void
 }
-
-const checkForImgSrc = (icon: string | undefined = ''): boolean => {
-  return (
-    icon.startsWith('/') ||
-    icon.startsWith('./') ||
-    icon.startsWith('../') ||
-    icon.startsWith('http://') ||
-    icon.startsWith('https://')
-  )
-}
-
-const checkAvatarImg = (src: string): boolean => src.includes('avatar')
 
 export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
   (
@@ -147,33 +53,27 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     )
 
     // Check if all values are present in options, if not, add a warning
+    const invalidOptions: AttributeEnumItem[] = []
     valueAsStrings.forEach((val) => {
       if (!options.find((option) => option.value === val)) {
-        selectedOptions = [
-          ...selectedOptions,
-          {
-            label: val,
-            value: val,
-            color: enableCustomValues
-              ? 'var(--md-sys-color-surface-container)'
-              : 'var(--md-sys-color-error)',
-            icon: enableCustomValues ? undefined : 'warning',
-          },
-        ]
+        const invalidOption = {
+          label: val,
+          value: val,
+          color: enableCustomValues
+            ? 'var(--md-sys-color-surface-container)'
+            : 'var(--md-sys-color-error)',
+          icon: enableCustomValues ? undefined : 'warning',
+        }
+        selectedOptions = [...selectedOptions, invalidOption]
+        invalidOptions.push(invalidOption)
       }
     })
     const hasMultipleValues = selectedOptions.length > 1
 
-    const dropdownRef = useRef<DropdownRef>(null)
+    // Merge valid options with invalid options for the dropdown
+    const allOptions = [...options, ...invalidOptions]
 
-    const handleClosedClick = (e: React.MouseEvent<HTMLSpanElement>) => {
-      // if we click on the chevron icon, then we open the dropdown spright away (put it into editing mode)
-      if (e.target instanceof HTMLElement && e.target.closest('.expand') && onOpen && !isReadOnly) {
-        onOpen()
-        // stop the event from propagating to the parent element because a single click on the cell would close the dropdown
-        e.stopPropagation()
-      }
-    }
+    const dropdownRef = useRef<DropdownRef>(null)
 
     const [dropdownOpen, setDropdownOpen] = useState(false)
     useEffect(() => {
@@ -187,7 +87,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
 
     // when the dropdown is open, focus the first item
     useEffect(() => {
-      if (dropdownOpen) {
+      if (dropdownOpen && !dropdownProps.search && allOptions.length < 20) {
         const optionsUlEl = dropdownRef.current?.getOptions() as HTMLUListElement
         const firstItem = optionsUlEl?.querySelector('li')
         if (firstItem) {
@@ -196,27 +96,30 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           firstItem.style.outline = 'none'
         }
       }
-    }, [dropdownOpen])
+    }, [dropdownOpen, dropdownProps.search, allOptions.length])
 
     const isMultiSelect = !!type?.includes('list')
 
-    const handleChange = (value: string[]) => {
-      const filteredValue = enableCustomValues
-        ? value
-        : value.filter((v) => options.find((o) => o.value === v))
+    const handleChange = (newValue: string[]) => {
+      let filteredValue: string | string[] = enableCustomValues
+        ? newValue
+        : newValue.filter((v) => options.find((o) => o.value === v))
 
       if (type?.includes('list')) {
         onChange(filteredValue, 'Click')
       } else {
+        // check if the value is an array or a string and for arrays take the first value only
+        filteredValue = Array.isArray(filteredValue) ? filteredValue[0] : filteredValue
+
         // take first value as the type is not list]
-        onChange(filteredValue[0], 'Click')
+        onChange(filteredValue, 'Click')
       }
     }
 
     if (isEditing) {
       return (
         <StyledDropdown
-          options={options}
+          options={allOptions}
           value={valueAsStrings}
           ref={dropdownRef}
           valueTemplate={(_value, selected, isOpen) => (
@@ -248,9 +151,11 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           disableOpen={isReadOnly}
           disabled={isReadOnly}
           sortBySelected
+          searchOnNumber={10}
           {...dropdownProps}
           onChange={handleChange}
           onClose={onCancelEdit}
+          editable={enableCustomValues}
         />
       )
     }
@@ -259,7 +164,6 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       <EnumCellValue
         selectedOptions={selectedOptions}
         hasMultipleValues={hasMultipleValues}
-        onClick={handleClosedClick}
         isMultiSelect={isMultiSelect}
         isReadOnly={isReadOnly}
         {...pt?.template}
@@ -269,92 +173,3 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     )
   },
 )
-
-interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement> {
-  selectedOptions: AttributeEnumItem[]
-  placeholder?: string
-  hasMultipleValues: boolean
-  isMultiSelect: boolean
-  isOpen?: boolean
-  isItem?: boolean
-  isSelected?: boolean
-  isReadOnly?: boolean
-}
-
-const EnumCellValue = ({
-  selectedOptions,
-  placeholder,
-  hasMultipleValues,
-  isMultiSelect,
-  isOpen,
-  isItem,
-  isSelected,
-  isReadOnly,
-  className,
-  ...props
-}: EnumTemplateProps) => {
-  // Check if all options have icons
-  const allOptionsHaveIcon = selectedOptions.every((option) => option.icon)
-
-  // Determine if we should show labels based on the requirements
-  const showLabels = !hasMultipleValues || !allOptionsHaveIcon
-  // Show the colors be backgrounds instead of the text
-  const backgroundColor = !allOptionsHaveIcon && isMultiSelect && !isItem
-
-  const isPlaceholder = !selectedOptions.length && placeholder
-  if (isPlaceholder) {
-    selectedOptions = [
-      {
-        label: placeholder,
-        value: '',
-      },
-    ]
-  }
-
-  return (
-    <StyledWidget className={clsx(className, { selected: isSelected, item: isItem })} {...props}>
-      <StyledValuesContainer>
-        {selectedOptions.map((option, i) => (
-          <StyledValueWrapper key={option.value.toString() + i}>
-            {option.icon && checkForImgSrc(option.icon) ? (
-              <StyledImg
-                src={option.icon}
-                className={clsx({ avatar: checkAvatarImg(option.icon) })}
-              />
-            ) : option.icon ? (
-              <Icon icon={option.icon} style={{ color: option.color }} />
-            ) : null}
-
-            {(showLabels || !option.icon) && (
-              <StyledValue
-                style={{
-                  color: backgroundColor ? 'inherit' : option.color,
-                  backgroundColor: backgroundColor
-                    ? option.color || 'var(--md-sys-color-surface-container)'
-                    : 'transparent',
-                }}
-                className={clsx({ placeholder: isPlaceholder })}
-              >
-                {option.label}
-              </StyledValue>
-            )}
-          </StyledValueWrapper>
-        ))}
-      </StyledValuesContainer>
-      {!isItem && !isReadOnly && (
-        <StyledExpandIcon
-          className="expand"
-          icon="expand_more"
-          style={{ rotate: isOpen ? '180deg' : '0' }}
-        />
-      )}
-      {isItem && isSelected && isMultiSelect && (
-        <Icon
-          icon="close"
-          style={{ marginLeft: 'auto', marginRight: 4 }}
-          aria-label="Deselect item"
-        />
-      )}
-    </StyledWidget>
-  )
-}

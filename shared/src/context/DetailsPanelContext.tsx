@@ -1,14 +1,24 @@
-import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react'
-import { useLocalStorage } from '@shared/hooks'
-import { DetailsPanelEntityType } from '@shared/api'
-import type { UserModel } from '@shared/api'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
+import { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
+import { PowerpackFeature, usePowerpack } from './PowerpackContext'
+import { useURIContext } from './UriContext'
+import { useLocalStorage } from '@shared/hooks'
+import type { SubtasksManagerProps } from '@shared/components'
 
-export type FeedFilters = 'activity' | 'comments' | 'versions' | 'checklists'
+// High-level tabs for the details panel
+export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
 
-export type DetailsPanelTab = FeedFilters | 'attribs' | 'files'
+// Filters within the feed tab
+export type FeedFilter = QueryFilter
 
 export type SlideOut = {
   entityId: string
@@ -22,6 +32,13 @@ export type DetailsPanelPip = {
   scope: string
 }
 
+export type Entities = {
+  entityType: DetailsPanelEntityType
+  entities: { id: string; projectName: string }[]
+  entitySubTypes?: string[]
+  source?: 'uri' | 'url' | 'related' // uri = ayon+entity://..., url = ?project=...&type=...&id=...
+}
+
 export interface OpenStateByScope {
   [scope: string]: boolean
 }
@@ -30,6 +47,11 @@ export interface OpenStateByScope {
 export interface TabStateByScope {
   [scope: string]: DetailsPanelTab
 }
+
+const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'files']
+
+const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
+  typeof tab === 'string' && DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab)
 
 // these props get forwarded to the details panel value
 // it's mainly redux callbacks that cannot be used in shared library
@@ -52,10 +74,22 @@ export interface DetailsPanelContextProps {
   useLocation: typeof useLocation
   useSearchParams: typeof useSearchParams
   feedAnnotationsEnabled?: boolean
+  hasLicense?: boolean
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
+  // debugging used to simulate different values
+  debug?: {
+    isDeveloperMode?: boolean
+    isGuest?: boolean
+    hasLicense?: boolean
+  }
 }
 
 // Interface for our simplified context
 export interface DetailsPanelContextType extends DetailsPanelContextProps {
+  // user
+  isDeveloperMode: boolean
+  isGuest: boolean
   // Open state for the panel by scope
   panelOpenByScope: OpenStateByScope
   getOpenForScope: (scope: string) => boolean
@@ -65,7 +99,6 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // Tab preferences by scope
   tabsByScope: TabStateByScope
   getTabForScope: (scope: string) => DetailsPanelTab
-  setTab: (scope: string, tab: DetailsPanelTab) => void
 
   // Slide out state
   slideOut: null | SlideOut
@@ -81,9 +114,16 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   openPip: (pip: DetailsPanelPip) => void
   closePip: () => void
 
+  // Entities state
+  entities: Entities | null
+  setEntities: (entities: Entities | null) => void
+
   // Annotations
   feedAnnotations: SavedAnnotationMetadata[]
   setFeedAnnotations: (annotations: SavedAnnotationMetadata[]) => void
+
+  // powerpack
+  onPowerFeature: (feature: PowerpackFeature) => void
 }
 
 // Create the context
@@ -97,9 +137,23 @@ export interface DetailsPanelProviderProps extends DetailsPanelContextProps {
 
 export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   children,
-  defaultTab = 'activity',
+  defaultTab = 'feed',
+  hasLicense: hasLicenseProp,
+  debug = {},
   ...forwardedProps
 }) => {
+  const user = forwardedProps.user
+  const isDeveloperMode =
+    'isDeveloperMode' in debug
+      ? (debug.isDeveloperMode as boolean)
+      : user?.attrib?.developerMode ?? false
+  const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : user?.data?.isGuest
+
+  // get license from powerpack or forwarded down from props
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const hasLicense =
+    'hasLicense' in debug ? (debug.hasLicense as boolean) : !!powerLicense || hasLicenseProp
+
   // keep track of the currently open panel by scope
   const [panelOpenByScope, setPanelOpenByScope] = useState<OpenStateByScope>({})
   const [feedAnnotations, setFeedAnnotations] = useState<SavedAnnotationMetadata[]>([])
@@ -131,17 +185,15 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Use localStorage to persist tab preferences by scope
-  const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
-    'details/tabs-by-scope',
-    {},
-  )
+  const [tabsByScope, setTabByScope] = useLocalStorage<TabStateByScope>('details/tabs-by-scope', {})
 
   // Get the current tab for a specific scope
   const getTabForScope = useCallback(
     (scope: string): DetailsPanelTab => {
       // Check if we have a saved preference for this scope
-      if (tabsByScope[scope]) {
-        return tabsByScope[scope]
+      const tab = tabsByScope[scope]
+      if (isDetailsPanelTab(tab)) {
+        return tab
       }
 
       // Fall back to default
@@ -151,17 +203,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   )
 
   // Set tab for a scope
-  const setTab = useCallback(
-    (scope: string, tab: DetailsPanelTab) => {
-      // Create a new state object based on current tabsByScope
-      const newState = { ...tabsByScope }
-      newState[scope] = tab
-
-      // Update the state with the new object
-      setTabsByScope(newState)
-    },
-    [tabsByScope, setTabsByScope],
-  )
 
   // is the slide out open?
   const [slideOut, setSlideOut] = useState<null | SlideOut>(null)
@@ -174,8 +215,15 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   // close the slide out
   const closeSlideOut = useCallback(() => {
     setSlideOut(null)
-    setHighlightedActivities([])
+    if (slideOut) {
+      setHighlightedActivities([])
+    }
   }, [])
+
+  // close slide out whenever the page changes
+  useEffect(() => {
+    closeSlideOut()
+  }, [forwardedProps.useLocation().pathname])
 
   const [pip, setPip] = useState<DetailsPanelPip | null>(null)
 
@@ -186,7 +234,85 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     setPip(null)
   }, [])
 
+  const [entities, setEntities] = useState<Entities | null>(null)
+
   const [highlightedActivities, setHighlightedActivities] = useState<string[]>([])
+
+  const { uriType, uri, entity, getUriEntities } = useURIContext()
+  const [searchParams] = forwardedProps.useSearchParams()
+
+  const project = searchParams.get('project')
+  const type = searchParams.get('type')
+  const id = searchParams.get('id')
+  const activity = searchParams.get('activity')
+
+  // on first load or URL param change, check if there is a uri or URL params and open details panel if present
+  useEffect(() => {
+    // Priority 1: Check for 'uri' parameter (ayon+entity://...)
+    if (uriType === 'entity' && entity && entity.entityType !== 'product') {
+      getUriEntities()
+        .then((result) => {
+          if (result.length === 0) return
+
+          const entityUriData = result.find((r) => r.uri === uri)
+          const entityData = entityUriData?.entities?.[0]
+
+          if (!entityUriData || !entityData) return
+          const projectName = entityData?.projectName || entity.projectName || ''
+          const id =
+            entityData.representationId ||
+            entityData.versionId ||
+            entityData.productId ||
+            entityData.taskId ||
+            entityData.folderId
+
+          if (!projectName || !id) return
+
+          const newEntities: Entities = {
+            entityType: entity.entityType as DetailsPanelEntityType,
+            entities: [
+              {
+                id: id,
+                projectName: projectName,
+              },
+            ],
+            source: 'uri',
+          }
+
+          setEntities(newEntities)
+        })
+        .catch((err) => {
+          console.warn('Failed to get URI entities:', err)
+        })
+      return
+    }
+
+    // Priority 2: Check for URL params (project, type, id)
+    if (project && type && id) {
+      const newEntities: Entities = {
+        entityType: type as DetailsPanelEntityType,
+        entities: [
+          {
+            id,
+            projectName: project,
+          },
+        ],
+        source: 'url',
+      }
+
+      setEntities(newEntities)
+
+      // if there is an activity param, open the feed tab (activity is shown by default)
+
+      if (activity) {
+        setHighlightedActivities([activity])
+        setTabByScope({
+          ...tabsByScope,
+          overview: 'feed',
+        })
+      }
+    }
+  }, [project, type, id])
 
   const value = {
     // open state for the panel by scope
@@ -197,7 +323,6 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     // tab preferences
     tabsByScope,
     getTabForScope,
-    setTab,
     // slide out state
     slideOut,
     openSlideOut,
@@ -209,8 +334,15 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     pip,
     openPip,
     closePip,
+    // entities state
+    entities,
+    setEntities,
     feedAnnotations,
     setFeedAnnotations,
+    isDeveloperMode,
+    isGuest,
+    hasLicense,
+    onPowerFeature: setPowerpackDialog,
     ...forwardedProps,
   }
 
@@ -221,20 +353,41 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 export const useDetailsPanelContext = (): DetailsPanelContextType => {
   const context = useContext(DetailsPanelContext)
   if (context === undefined) {
-    throw new Error('useDetailsPanel must be used within a DetailsProvider')
+    throw new Error('useDetailsPanel must be used within a DetailsPanelProvider')
   }
   return context
 }
 
 // Add a specialized hook for using a panel in a specific scope
 export const useScopedDetailsPanel = (scope: string) => {
-  const { getTabForScope, setTab, getOpenForScope, setPanelOpen } = useDetailsPanelContext()
+  const { getOpenForScope, setPanelOpen, getTabForScope } = useDetailsPanelContext()
+
+  const [tabsByScope, setTabsByScope] = useLocalStorage<TabStateByScope>(
+    'details/tabs-by-scope',
+    {},
+  )
+
+  const [currentTab, setTab] = useState<DetailsPanelTab>(() => {
+    const tab = tabsByScope[scope]
+    return isDetailsPanelTab(tab) ? tab : getTabForScope(scope)
+  })
+
+  // Keep localStorage and local state in sync
+  const updateTab = useCallback(
+    (newTab: DetailsPanelTab) => {
+      setTab(newTab)
+      setTabsByScope({ ...tabsByScope, [scope]: newTab })
+    },
+    [scope, setTabsByScope],
+  )
+
+  const isFeed = currentTab === 'feed'
 
   return {
     isOpen: getOpenForScope(scope),
     setOpen: (isOpen: boolean) => setPanelOpen(scope, isOpen),
-    currentTab: getTabForScope(scope),
-    setTab: (tab: DetailsPanelTab) => setTab(scope, tab),
-    isFeed: ['activity', 'comments', 'versions', 'checklists'].includes(getTabForScope(scope)),
+    currentTab,
+    setTab: updateTab,
+    isFeed,
   }
 }

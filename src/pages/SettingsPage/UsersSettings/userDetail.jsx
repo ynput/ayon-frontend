@@ -64,17 +64,17 @@ const fields = [
     },
   },
   {
+    name: 'disablePasswordLogin',
+    label: 'Disable Password Login',
+    data: {
+      type: 'boolean',
+    },
+  },
+  {
     name: 'userLevel',
     label: 'User Level',
     data: {
       type: 'string',
-    },
-  },
-  {
-    name: 'isGuest',
-    label: 'Guest',
-    data: {
-      type: 'boolean',
     },
   },
   {
@@ -112,6 +112,11 @@ const mergeMultipleUsers = (users = [], defaultForm = {}, initForm = {}) => {
     if (index !== 0 && initForm.userActive !== user.active)
       initForm.userActive = defaultForm.userActive
     else initForm.userActive = user.active
+
+    // disablePasswordLogin
+    if (index !== 0 && initForm.disablePasswordLogin !== user.disablePasswordLogin)
+      initForm.disablePasswordLogin = defaultForm.disablePasswordLogin
+    else initForm.disablePasswordLogin = user.disablePasswordLogin
 
     // userPool
     if (index !== 0 && initForm.userPool !== user.userPool) {
@@ -302,7 +307,10 @@ const UserDetail = ({
         } else if (field === 'isDeveloper') {
           data.isDeveloper = formData.isDeveloper && formData.userLevel === 'admin'
         } else if (singleUserEdit && attributes.find((a) => a.name === field)) {
-          attrib[field] = formData[field]
+          const value = formData[field]
+          attrib[field] = typeof value === 'string' ? value.trim() : value
+        } else if (field === 'disablePasswordLogin') {
+          data.disablePasswordLogin = formData.disablePasswordLogin
         }
       }
 
@@ -331,9 +339,8 @@ const UserDetail = ({
         type: toast.TYPE.SUCCESS,
       })
     } catch (error) {
-      console.error(error)
       toast.update(toastId.current, {
-        render: `Error updating ${usersString}.`,
+        render: `Error updating ${usersString}: ${error?.detail}`,
         type: toast.TYPE.ERROR,
       })
     }

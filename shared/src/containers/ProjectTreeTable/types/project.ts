@@ -83,14 +83,13 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
 }
 export type FolderType = {
   name: string
   original_name?: string
   shortName?: string
   icon?: string
+  color?: string
 }
 export type TaskType = {
   name: string

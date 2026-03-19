@@ -11,7 +11,7 @@ const StyledButton = styled(Button)`
   border-radius: var(--border-radius-xl);
 
   &.filled {
-    background-color: var(--md-sys-color-tertiary);
+    background-color: var(--md-sys-color-tertiary) !important;
     color: var(--md-sys-color-on-tertiary);
   }
 

@@ -9,17 +9,19 @@ import { filterProjectStatuses } from '@shared/hooks'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedDetailsPanel } from '@shared/context'
 import { EmptyPlaceholder } from '@shared/components'
+import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
-import { onAssigneesChanged } from '@state/dashboard'
+import { onAssigneesChanged, onTaskSelected } from '@state/dashboard'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { getIntersectionFields, getMergedFields } from '../util'
-import { setUri } from '@state/context'
 import transformKanbanTasks from './transformKanbanTasks'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { openViewer } from '@state/viewer'
+import RelatedTasksModule from './RelatedTasks'
+import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -52,14 +54,18 @@ export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, 
 const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const dispatch = useDispatch()
   const selectedProjects = useSelector((state) => state.dashboard.selectedProjects)
-  const { isOpen: isPanelOpen } = useScopedDetailsPanel('dashboard')
+  // Filter out folder IDs - only actual project names should be used for API queries
+  const selectedProjectNames = useMemo(
+    () => selectedProjects.filter((id) => !parseProjectFolderRowId(id)),
+    [selectedProjects],
+  )
+  let { isOpen: isPanelOpen } = useScopedDetailsPanel('dashboard')
 
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
   const draggingIds = useSelector((state) => state.dashboard.tasks.draggingIds)
   const isDragging = draggingIds.length > 0
-  // Only admins and managers can see task of other users
 
   const handleOpenViewer = (args) => dispatch(openViewer(args))
 
@@ -101,29 +107,13 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     isError,
     error,
   } = useGetKanbanQuery(
-    { assignees: assignees, projects: selectedProjects },
-    { skip: !assignees.length || !selectedProjects?.length },
+    { assignees: assignees, projects: selectedProjectNames },
+    { skip: !assignees.length || !selectedProjectNames?.length },
   )
 
   // get priority attribute so we know the colors and icons for each priority
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task') || []
-
-  // update the uri breadcrumbs when the selected tasks change
-  useEffect(() => {
-    if (selectedTasks.length && !isLoadingTasks) {
-      // first find task
-      const task = tasks.find((t) => t.id === selectedTasks[0])
-      if (task) {
-        // updates the breadcrumbs
-        let uri = `ayon+entity://${task.projectName}/${task.folderPath}?task=${task.name}`
-        dispatch(setUri(uri))
-        return
-      }
-    }
-    // no tasks in current project or selected tasks NOT in current project
-    dispatch(setUri(null))
-  }, [selectedTasks, isLoadingTasks, tasks])
 
   // add extra fields to tasks like: icons, thumbnailUrl, shortPath
   const transformedTasks = useMemo(
@@ -135,6 +125,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
     () => transformedTasks.filter((task) => selectedTasks.includes(task.id)),
     [selectedTasks, transformedTasks],
   )
+
+  isPanelOpen = selectedTasksData.length && isPanelOpen
 
   // for selected tasks, get flat list of projects
   const selectedTasksProjects = useMemo(
@@ -176,8 +168,8 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   const { data: projectUsers = [], isLoading: isLoadingProjectUsers } =
     useGetKanbanProjectUsersQuery(
-      { projects: selectedProjects },
-      { skip: !selectedProjects?.length },
+      { projects: selectedProjectNames },
+      { skip: !selectedProjectNames?.length },
     )
 
   // for selected projects, make sure user is on all
@@ -198,8 +190,34 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
   const { setOpen } = useScopedDetailsPanel('dashboard')
 
+  // when there is a task open in the panel through the uri, try to select the task
+  const handleUri = (entity) => {
+    // check entity is a task
+    if (entity?.entityType !== 'task') return
+    // check entity id is in tasks
+    const task = transformedTasks.find((t) => t.id === entity.id)
+    if (task) {
+      // select the task
+      dispatch(
+        onTaskSelected({
+          ids: [task.id],
+          types: [task.taskType],
+          data: [
+            {
+              id: task.id,
+              projectName: task.projectName,
+              taskType: task.taskType,
+              name: task.name,
+            },
+          ],
+        }),
+      )
+      // open the panel
+      setOpen(true)
+    }
+  }
+
   const handlePanelClose = () => {
-    dispatch(setUri(null))
     setOpen(false)
   }
 
@@ -211,7 +229,7 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   if (isError) return <EmptyPlaceholder error={error} />
 
   return (
-    <StyledSplitter
+    <DetailsPanelSplitter
       layout="horizontal"
       style={{
         height: '100%',
@@ -223,10 +241,20 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
       }}
       stateKey="user-dashboard-tasks"
       className="dashboard-tasks"
-      gutterSize={selectedTasks.length ? 6 : 0}
+      gutterSize={6}
     >
       <SplitterPanel
-        style={{ height: '100%', zIndex: 10, padding: 0, overflow: 'hidden', marginRight: -6 }}
+        style={{
+          height: '100%',
+          zIndex: 10,
+          padding: 0,
+          overflow: 'hidden',
+          marginRight: -6,
+
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
         size={4}
       >
         <UserDashboardKanBan
@@ -241,40 +269,46 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           projectUsers={projectUsers}
           isLoadingProjectUsers={isLoadingProjectUsers}
         />
+        <RelatedTasksModule
+          isPanelOpen={isPanelOpen}
+          projectsInfo={projectsInfo}
+          priorities={priorities}
+          onOpenViewer={handleOpenViewer}
+          outsideSelection={selectedTasks}
+        />
       </SplitterPanel>
-      {selectedTasksData.length && isPanelOpen ? (
-        <SplitterPanel
-          size={1}
-          className={clsx('details-panel-splitter', { dragging: isDragging })}
-          style={{
-            maxWidth: isDragging
-              ? 0
-              : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-            minWidth: isDragging ? 0 : detailsMinWidth,
-          }}
-        >
-          <DetailsPanel
-            onClose={handlePanelClose}
-            entitiesData={selectedTasksData}
-            disabledStatuses={disabledStatuses}
-            tagsOptions={tagsOptions}
-            projectUsers={projectUsers}
-            activeProjectUsers={activeProjectUsers}
-            disabledProjectUsers={disabledProjectUsers}
-            selectedTasksProjects={selectedTasksProjects}
-            projectsInfo={projectsInfo}
-            projectNames={selectedTasksProjects}
-            entityType="task"
-            entitySubTypes={taskTypes}
-            scope="dashboard"
-            onOpenViewer={handleOpenViewer}
-          />
-          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
-        </SplitterPanel>
-      ) : (
-        <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>
-      )}
-    </StyledSplitter>
+
+      <SplitterPanel
+        size={1}
+        className={clsx('details-panel-splitter', 'details', { dragging: isDragging })}
+        style={{
+          maxWidth: isDragging
+            ? 0
+            : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+          minWidth: isDragging ? 0 : detailsMinWidth,
+        }}
+      >
+        <DetailsPanel
+          isOpen={isPanelOpen}
+          onClose={handlePanelClose}
+          entitiesData={selectedTasksData}
+          disabledStatuses={disabledStatuses}
+          tagsOptions={tagsOptions}
+          projectUsers={projectUsers}
+          activeProjectUsers={activeProjectUsers}
+          disabledProjectUsers={disabledProjectUsers}
+          selectedTasksProjects={selectedTasksProjects}
+          projectsInfo={projectsInfo}
+          projectNames={selectedTasksProjects}
+          entityType="task"
+          entitySubTypes={taskTypes}
+          scope="dashboard"
+          onOpenViewer={handleOpenViewer}
+          onUriOpen={handleUri}
+        />
+        <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
+      </SplitterPanel>
+    </DetailsPanelSplitter>
   )
 }
 

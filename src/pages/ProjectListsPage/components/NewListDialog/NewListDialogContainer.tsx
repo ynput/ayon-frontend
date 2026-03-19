@@ -1,35 +1,61 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import { NewListDialog } from './NewListDialog'
-import { Dialog } from '@ynput/ayon-react-components'
+import NewReviewSessionDialog from '../NewReviewSessionDialog/NewReviewSessionDialog'
 
 interface NewListDialogContainerProps {}
 
 const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
-  const { closeNewList, newList, setNewList, isCreatingList, createNewList, isReview } =
-    useListsContext()
+  const {
+    closeNewList,
+    newList,
+    setNewList,
+    isCreatingList,
+    createNewList,
+    createReviewSessionList,
+    isReview,
+  } = useListsContext()
 
-  if (isReview) {
+  // Track whether to show list selection or label input for empty review
+  const [showLabelInput, setShowLabelInput] = useState(false)
+
+  const handleClose = () => {
+    setShowLabelInput(false)
+    closeNewList()
+  }
+
+  // Show list selection dialog for review sessions (unless showing label input)
+  if (isReview && newList && !showLabelInput) {
     return (
-      <Dialog
-        isOpen={!!newList}
-        onClose={closeNewList}
-        header="Create New Review Session"
+      <NewReviewSessionDialog
+        isOpen={true}
+        onClose={handleClose}
+        onSubmit={(id) => createReviewSessionList?.(id, { showToast: true })}
+        onCreateEmpty={() => setShowLabelInput(true)}
+        submitLoading={isCreatingList}
+        header="Select a version list to create a review session"
         size="md"
-      >
-        Create new review sessions by selecting multiple versions and running the action "Create
-        Review Session".
-      </Dialog>
+      />
     )
+  }
+
+  const handleSubmit = async () => {
+    try {
+      await createNewList()
+      setShowLabelInput(false)
+    } catch (error) {
+      // Error handling is already done in createNewList
+      throw error
+    }
   }
 
   return (
     <NewListDialog
       isOpen={!!newList}
-      onClose={closeNewList}
+      onClose={handleClose}
       form={newList}
       onChange={setNewList}
-      onSubmit={createNewList}
+      onSubmit={handleSubmit}
       submitLoading={isCreatingList}
       dialogTitle={isReview ? 'Create New Review Session' : 'Create New List'}
       labels={{

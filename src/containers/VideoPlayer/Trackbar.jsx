@@ -206,13 +206,13 @@ const Trackbar = ({
     // ctx.moveTo(markInX, height - 1)
     // ctx.lineTo(markOutX, height - 1)
     // ctx.stroke()
-  }, [currentFrame, frameCount, markIn, markOut, isPlaying, highlighted])
+  }, [currentFrame, frameCount, markIn, markOut, isPlaying, highlighted, bufferedRanges, primaryColor, primaryContainer, onPrimaryContainer, containerLow, containerLowest])
 
   // Events
 
   useEffect(() => {
     drawSlider()
-  }, [currentFrame, frameCount, markIn, markOut, isPlaying, highlighted])
+  }, [drawSlider])
 
   // Dragging
 

@@ -2,7 +2,9 @@
 query GetTasksList(
   $projectName: String!
   $folderIds: [String!]
+  $taskIds: [String!]
   $filter: String
+  $folderFilter: String
   $search: String
   $after: String
   $first: Int
@@ -14,6 +16,7 @@ query GetTasksList(
     name
     tasks(
       filter: $filter
+      folderFilter: $folderFilter
       search: $search
       folderIds: $folderIds
       after: $after
@@ -21,6 +24,7 @@ query GetTasksList(
       before: $before
       last: $last
       sortBy: $sortBy
+      ids: $taskIds
     ) {
       pageInfo {
         startCursor

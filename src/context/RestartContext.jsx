@@ -44,7 +44,8 @@ function RestartProvider(props) {
 
   // tell the server that a restart is required
   const restartRequired = async ({ callback } = {}) => {
-    setCallback(callback)
+    console.log('setting callback', callback)
+    setCallback(() => callback)
   }
 
   const isRestartRequired = restartData?.required

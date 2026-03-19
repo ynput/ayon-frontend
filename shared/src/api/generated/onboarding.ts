@@ -31,11 +31,11 @@ export type UserAttribModel = {
   email?: string
   avatarUrl?: string
   developerMode?: boolean
-  freelancer?: boolean
 }
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
+  uiExposureLevel?: number
   attrib?: UserAttribModel
   data?: Record<string, any>
   /** Whether the user is active */
@@ -47,10 +47,13 @@ export type UserModel = {
   updatedAt?: string
 }
 export type LoginResponseModel = {
+  /** Text message, which may be displayed to the user */
   detail?: string
   error?: string
   token?: string
   user?: UserModel
+  /** URL to redirect the user after login */
+  redirectUrl?: string
 }
 export type ValidationError = {
   loc: (string | number)[]

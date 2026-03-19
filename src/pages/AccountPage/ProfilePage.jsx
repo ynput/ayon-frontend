@@ -112,9 +112,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   }, [formData, initData])
 
   const onSave = async () => {
+    const trimmedFormData = Object.fromEntries(
+      Object.entries(formData).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value]),
+    )
     const attrib = {
       ...user.attrib,
-      ...formData,
+      ...trimmedFormData,
       developerMode: !!user.attrib.developerMode,
     }
 
@@ -131,6 +134,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       // reset form
       setInitData(formData)
       setChangesMade(false)
+      toast.success('Profile updated')
     } catch (error) {
       console.log(error)
       toast.error('Unable to update profile')
@@ -227,9 +231,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const handleSaveAll = async () => {
     if (changesMade) await onSave()
     if (preferenceChanges) await onSavePreferences()
-
-    // success toast
-    toast.success('Profile updated')
   }
 
   const notificationsDisabled =
@@ -256,6 +257,8 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               attributes={attributes}
               showAvatarUrl={false}
             />
+
+            {!user?.data?.disablePasswordLogin && (
             <FormRow label="Password" key="Password">
               <LockedInput
                 label="Password"
@@ -264,6 +267,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 onEdit={() => setShowSetPassword(true)}
               />
             </FormRow>
+            )}
 
             <FormRow label="Desktop Notifications" key="notifications">
               <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>

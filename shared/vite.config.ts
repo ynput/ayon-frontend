@@ -42,6 +42,9 @@ export default defineConfig({
         ProjectTreeTable: resolve(__dirname, 'src/containers/ProjectTreeTable/index.ts'),
         RepresentationsList: resolve(__dirname, 'src/containers/RepresentationsList/index.ts'),
         Slicer: resolve(__dirname, 'src/containers/Slicer/index.ts'),
+        Views: resolve(__dirname, 'src/containers/Views/index.ts'),
+        SimpleTable: resolve(__dirname, 'src/containers/SimpleTable/index.ts'),
+        EntityPickerDialog: resolve(__dirname, 'src/containers/EntityPickerDialog/index.ts'),
       },
       name: 'AyonFrontendShared',
       formats: ['es', 'cjs'],
@@ -71,7 +74,7 @@ export default defineConfig({
     },
     sourcemap: true,
     emptyOutDir: true,
-    minify: false, // TODO: set to true for production builds
+    minify: true,
     cssCodeSplit: true,
   },
 })

@@ -1,16 +1,17 @@
-import React, { useState, useCallback, useMemo, ReactNode, useRef } from 'react'
+import React, { ReactNode, useCallback, useMemo, useRef, useState } from 'react'
 import {
+  BorderPosition,
   CellId,
-  RowId,
-  ColId,
   CellPosition,
+  ColId,
+  getBorderClasses,
   getCellId,
   parseCellId,
-  BorderPosition,
-  getBorderClasses,
+  RowId,
 } from '../utils/cellUtils'
 import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
-import { SelectionCellsContext, GridMap, ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
+import { GridMap, ROW_SELECTION_COLUMN_ID, SelectionCellsContext } from './SelectionCellsContext'
+import { useCheckSelectedCellsVisible } from '../hooks'
 
 export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedCells, setSelectedCells] = useState<Set<CellId>>(new Set())
@@ -50,6 +51,13 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
     [selectedCells],
   )
 
+  useCheckSelectedCellsVisible({
+    selectedCells,
+    setSelectedCells,
+    focusedCellId,
+    setFocusedCellId,
+  })
+  const isAdditiveSelectionRef = useRef<boolean>(false)
   // Register grid structure for range selections
   const registerGrid = useCallback((rows: RowId[], columns: ColId[]) => {
     const rowIdToIndex = new Map<RowId, number>()
@@ -130,6 +138,7 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
       if (!position) return
 
       setSelectionInProgress(true)
+      isAdditiveSelectionRef.current = additive
       // Store whether the initial cell was selected to determine drag behavior
       initialCellSelected.current = selectedCells.has(cellId)
 
@@ -204,8 +213,9 @@ export const SelectionCellsProvider: React.FC<{ children: ReactNode }> = ({ chil
           return newSelection
         })
       } else {
-        // For normal cells, use the range selection behavior
-        const newSelection = selectCellRange(anchorCell, currentPosition, false)
+        if (isAdditiveSelectionRef.current) return
+        // For normal cells - ALWAYS does range selection
+        const newSelection = selectCellRange(anchorCell, currentPosition, isAdditiveSelectionRef.current,)
         updateSelection(newSelection, currentPosition)
       }
     },

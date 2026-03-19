@@ -1,7 +1,8 @@
-import { ReactNode, useCallback, useMemo, useRef } from 'react'
+import { ReactNode, useCallback, useMemo, useRef, useEffect } from 'react'
 import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './SelectionCellsContext'
 import { CellId, getCellId, parseCellId, RowId } from '../utils/cellUtils'
 import { SelectedRowsContext } from './SelectedRowsContext'
+import { useDetailsPanelEntityContext } from './DetailsPanelEntityContext'
 
 interface SelectedRowsProviderProps {
   children: ReactNode
@@ -10,9 +11,20 @@ interface SelectedRowsProviderProps {
 export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) => {
   const { selectedCells, gridMap, setSelectedCells, setFocusedCellId, setAnchorCell } =
     useSelectionCellsContext()
+
+  // Try to get the entity context, but it might not exist
+  let clearSelectedEntity: (() => void) | undefined
+  try {
+    const entityContext = useDetailsPanelEntityContext()
+    clearSelectedEntity = entityContext.clearSelectedEntity
+  } catch {
+    // Context not available, that's fine
+    clearSelectedEntity = undefined
+  }
+
   const prevSelectedRowsRef = useRef<string[]>([])
 
-  // Calculate the current selected rows
+  // Calculate the current selected rows, filtering out rows that no longer exist in the grid
   const currentSelectedRows = useMemo(
     () =>
       Array.from(selectedCells)
@@ -20,8 +32,12 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
           (cellId) =>
             parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID && parseCellId(cellId)?.rowId,
         )
-        .map((cellId) => parseCellId(cellId)?.rowId) as string[],
-    [selectedCells],
+        .map((cellId) => parseCellId(cellId)?.rowId)
+        .filter((rowId): rowId is string =>
+          rowId !== undefined
+          // in case the grid map hasn't been initialised, we ignore it
+          && (gridMap.rowIdToIndex.size === 0 || gridMap.rowIdToIndex.has(rowId))),
+    [selectedCells, gridMap],
   )
 
   // Memoize the selected rows with a stable reference
@@ -44,6 +60,13 @@ export const SelectedRowsProvider = ({ children }: SelectedRowsProviderProps) =>
     // Return the previous reference if no change
     return prevSelectedRowsRef.current
   }, [currentSelectedRows])
+
+  // Clear entity details when rows are selected
+  useEffect(() => {
+    if (selectedRows.length > 0 && clearSelectedEntity) {
+      clearSelectedEntity()
+    }
+  }, [selectedRows.length, clearSelectedEntity])
 
   // Select all rows in the grid
   const selectAllRows = useCallback(() => {

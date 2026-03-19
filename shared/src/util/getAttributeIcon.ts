@@ -11,6 +11,7 @@ export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
   } = {
     status: 'arrow_circle_right',
     assignees: 'person',
+    author: 'person',
     tags: 'local_offer',
     priority: 'keyboard_double_arrow_up',
     fps: '30fps_select',

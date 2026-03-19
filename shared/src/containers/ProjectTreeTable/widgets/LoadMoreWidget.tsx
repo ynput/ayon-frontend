@@ -15,7 +15,7 @@ const LoadMore = styled.div`
 
 interface LoadMoreWidgetProps {
   id: string | undefined
-  label: string
+  label?: string
   onLoadMore: (id?: string) => void
 }
 
@@ -25,7 +25,6 @@ const LoadMoreWidget: FC<LoadMoreWidgetProps> = ({ label = 'Load more', id, onLo
       <Button
         label={label}
         onClick={(e) => {
-          e.stopPropagation()
           onLoadMore(id)
         }}
         variant="tonal"

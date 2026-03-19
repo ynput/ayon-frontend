@@ -7,6 +7,12 @@ const updateUserApi = usersApi.enhanceEndpoints({
       transformErrorResponse: (res) => res.data,
       invalidatesTags: () => [{ type: 'user', id: 'LIST' }],
     },
+    deleteAvatar: {
+      invalidatesTags: (_result, _error, { userName }) => [
+        { type: 'user', id: userName },
+        { type: 'user', id: 'LIST' },
+      ],
+    },
     setFrontendPreferences: {
       // @ts-expect-error - disableInvalidations is not in the api
       invalidatesTags: (_result, _error, { userName, disableInvalidations }) =>
@@ -137,6 +143,7 @@ export const {
   useUpdateUserPasswordMutation,
   useAddUserMutation,
   useDeleteUserMutation,
+  useDeleteAvatarMutation,
   useUpdateUserAPIKeyMutation,
   useInvalidateUserSessionMutation,
   useSetFrontendPreferencesMutation,

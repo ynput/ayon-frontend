@@ -7,6 +7,7 @@ export const Form = styled.form`
 `
 
 export const Row = styled.div`
+  padding-top: var(--padding-s);
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-small);

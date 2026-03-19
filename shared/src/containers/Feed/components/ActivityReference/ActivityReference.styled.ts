@@ -1,6 +1,10 @@
 import styled, { css } from 'styled-components'
 
-export const Reference = styled.span<{ $variant: 'surface' | 'filled' | 'text' }>`
+export const Reference = styled.span<{
+  $variant: 'surface' | 'filled' | 'text'
+  $categoryPrimary?: string
+  $categorySecondary?: string
+}>`
   gap: 2px;
   display: inline-flex;
   border-radius: var(--border-radius-m);
@@ -16,20 +20,27 @@ export const Reference = styled.span<{ $variant: 'surface' | 'filled' | 'text' }
 
   &,
   .icon {
-    color: var(--md-sys-color-primary);
+    color: ${({ $categoryPrimary }) => $categoryPrimary || 'var(--md-sys-color-primary)'};
   }
 
   .icon {
     font-size: 20px;
   }
 
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: ${({ $categorySecondary }) =>
+    $categorySecondary || 'var(--md-sys-color-surface-container-high)'};
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-high-hover);
+    background-color: ${({ $categorySecondary }) =>
+      $categorySecondary
+        ? `color-mix(in srgb, ${$categorySecondary} 85%, white)`
+        : 'var(--md-sys-color-surface-container-high-hover)'};
   }
   &:active {
-    background-color: var(--md-sys-color-surface-container-high-active);
+    background-color: ${({ $categorySecondary }) =>
+      $categorySecondary
+        ? `color-mix(in srgb, ${$categorySecondary} 70%, white)`
+        : 'var(--md-sys-color-surface-container-high-active)'};
   }
 
   ${({ $variant }) =>
@@ -38,22 +49,26 @@ export const Reference = styled.span<{ $variant: 'surface' | 'filled' | 'text' }
       background-color: unset;
     `}
 
-  ${({ $variant }) =>
+  ${({ $variant, $categoryPrimary }) =>
     $variant === 'filled' &&
     css`
-      background-color: var(--md-sys-color-primary);
+      background-color: ${$categoryPrimary || 'var(--md-sys-color-primary)'};
 
       &,
       .icon {
-        color: var(--md-sys-color-on-primary);
+        color: ${$categoryPrimary ? 'white' : 'var(--md-sys-color-on-primary)'};
       }
 
       &:hover {
-        background-color: var(--md-sys-color-primary-hover);
+        background-color: ${$categoryPrimary
+          ? `color-mix(in srgb, ${$categoryPrimary} 85%, white)`
+          : 'var(--md-sys-color-primary-hover)'};
       }
 
       &:active {
-        background-color: var(--md-sys-color-primary-active);
+        background-color: ${$categoryPrimary
+          ? `color-mix(in srgb, ${$categoryPrimary} 70%, white)`
+          : 'var(--md-sys-color-primary-active)'};
       }
     `}
 

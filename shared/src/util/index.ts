@@ -1,5 +1,3 @@
-import productTypes from './productTypes'
-
 export * from './platform'
 export * from './confirmDelete'
 export * from './getEntityTypeIcon'
@@ -8,7 +6,25 @@ export * from './getPriorityOptions'
 export * from './copyToClipboard'
 export * from './getMixedState'
 export * from './getAttributeIcon'
+export * from './getEntityId'
+export * from './extractVersionFromFilename'
+export * from './versionUploadHelpers'
+export * from './columnConfigConverter'
+export * from './checkName'
+export * from './humanizeFieldName'
+export * from './parseHtmlToPlainTextWithLinks'
+export * from './colorUtils'
+export * from './getGroupByDataType'
+export * from './uriUtils'
+export * from './extractEntityHierarchyFromParents'
+export * from './errorHandling'
+export * from './keyboardShortcuts'
+export * from './buildHierarchicalTableRows'
+export * from './folderHierarchy'
+export * from './folderOperations'
 
-export { productTypes }
+import isHTMLElement from './isHTMLElement'
+export { isHTMLElement }
+
 import PubSub from './pubsub'
 export { PubSub }

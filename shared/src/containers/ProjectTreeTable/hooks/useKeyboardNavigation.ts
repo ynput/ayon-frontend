@@ -3,19 +3,30 @@ import { useSelectionCellsContext } from '../context/SelectionCellsContext'
 import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
 import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectDataContext } from '../context/ProjectDataContext'
+import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
+import { getEntityViewierIds } from '../utils'
+import { isEntityRestricted } from '../utils/restrictedEntity'
 
 export default function useKeyboardNavigation() {
-  const { attribFields } = useProjectTableContext()
+  const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
+  const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
+  const canOpenRenameDialog = canWriteLabelPermission || canWriteNamePermission
 
   const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
     useSelectionCellsContext()
 
   const { setEditingCellId, editingCellId } = useCellEditing()
+  const { setSelectedEntity } = useDetailsPanelEntityContext()
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (!target?.closest('table')) return
+      // is target inside table or not body?
+      // NOTE: we must check for body because there is a bug that means the active element goes to body not the table td
+      if (!target?.closest('table') && !target.closest('body')) {
+        return
+      }
 
       // Skip if event target is an input element or contentEditable
       if (
@@ -28,6 +39,10 @@ export default function useKeyboardNavigation() {
         return
       }
 
+      // allow keyboard and up and down only if the player is open
+      if (playerOpen && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+
+      // Don't handle keyboard events if we are currently editing a cell
       if (editingCellId) return
 
       // Don't handle keyboard events if we don't have a focused cell
@@ -46,6 +61,17 @@ export default function useKeyboardNavigation() {
         colId.startsWith('attrib_') &&
         attribFields.find((a) => a.name === colId.replace('attrib_', ''))?.readOnly
 
+      const openPlayer = (entityId: string) => {
+        // try to open the player if onOpenPlayer is defined
+        if (onOpenPlayer) {
+          const entity = getEntityById(entityId)
+          if (entity) {
+            const targetIds = getEntityViewierIds(entity)
+            onOpenPlayer(targetIds, { quickView: true })
+          }
+        }
+      }
+
       // Handle different keys
       switch (e.key) {
         case 'ArrowUp': {
@@ -56,6 +82,11 @@ export default function useKeyboardNavigation() {
               const newCellId = getCellId(newRowId, colId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
               focusCell(newCellId)
+
+              // if the player is open, update with new selected cell
+              if (playerOpen) {
+                openPlayer(newRowId)
+              }
             }
           }
           break
@@ -67,6 +98,11 @@ export default function useKeyboardNavigation() {
             const newCellId = getCellId(newRowId, colId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
             focusCell(newCellId)
+
+            // if the player is open, update with new selected cell
+            if (playerOpen) {
+              openPlayer(newRowId)
+            }
           }
           break
         }
@@ -94,9 +130,27 @@ export default function useKeyboardNavigation() {
         }
         case 'Enter': {
           e.preventDefault()
-          if (isReadOnly) return
-          // Start editing the currently focused cell
-          setEditingCellId(focusedCellId)
+          // Only open details panel for name column on folders/tasks
+          if (colId === 'name') {
+            const entity = getEntityById(rowId)
+            // Check if entity is restricted - prevent opening details panel
+            const isRestricted = entity && isEntityRestricted(entity.entityType)
+            if (
+              entity &&
+              (entity.entityType === 'folder' || entity.entityType === 'task') &&
+              !isRestricted
+            ) {
+              setSelectedEntity({
+                entityId: rowId,
+                entityType: entity.entityType,
+              })
+            }
+          } else {
+            // For all other columns, start editing the cell (if not read-only)
+            if (!isReadOnly) {
+              setEditingCellId(focusedCellId)
+            }
+          }
           break
         }
         case 'Escape': {
@@ -139,6 +193,29 @@ export default function useKeyboardNavigation() {
           }
           break
         }
+        case ' ': {
+          e.preventDefault()
+          // attempt to open the player
+          openPlayer(rowId)
+          break
+        }
+        case 'r':
+        case 'R': {
+          // Don't prevent default if Ctrl/Cmd is held (allow page reload)
+          if (e.ctrlKey || e.metaKey) {
+            return
+          }
+          e.preventDefault()
+          // Check if focused cell is name column on folder/task and user has rename permissions
+          if (colId === 'name' && canOpenRenameDialog) {
+            const entity = getEntityById(rowId)
+            if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
+              const nameCellId = getCellId(rowId, 'name')
+              setEditingCellId(nameCellId)
+            }
+          }
+          break
+        }
       }
     },
     [
@@ -149,6 +226,10 @@ export default function useKeyboardNavigation() {
       clearSelection,
       setEditingCellId,
       editingCellId,
+      getEntityById,
+      playerOpen,
+      setSelectedEntity,
+      canOpenRenameDialog,
     ],
   )
 
@@ -169,6 +250,8 @@ export default function useKeyboardNavigation() {
     clearSelection,
     setEditingCellId,
     editingCellId,
+    playerOpen,
+    setSelectedEntity,
   ])
   return {
     handleKeyDown,

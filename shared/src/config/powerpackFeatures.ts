@@ -1,0 +1,89 @@
+import { PowerpackDialogType } from '@shared/context'
+
+export type PowerpackFeature =
+  | 'slicer'
+  | 'annotations'
+  | 'releases'
+  | 'advancedFilters'
+  | 'listAttributes'
+  | 'listFolders'
+  | 'listAccess'
+  | 'groupAttributes'
+  | 'sharedViews'
+  | 'commentCategories'
+  | 'projectFolders'
+
+export const powerpackFeatureOrder: PowerpackFeature[] = [
+  'annotations',
+  'sharedViews',
+  'listFolders',
+  'groupAttributes',
+  'listAccess',
+  'slicer',
+  'projectFolders',
+  'releases',
+  'advancedFilters',
+  'listAttributes',
+  'commentCategories',
+]
+
+export const powerpackFeatures: {
+  [key in PowerpackFeature]: Omit<PowerpackDialogType, 'priority'>
+} = {
+  annotations: {
+    label: 'Annotations',
+    description: 'Create detailed visual feedback directly on media files.',
+    bullet: 'Advanced media review tools',
+  },
+  projectFolders: {
+    label: 'Project Folders',
+    description: 'Organize your projects into folders for a cleaner and more structured view.',
+    bullet: 'Organize projects into folders',
+  },
+  sharedViews: {
+    label: 'Shared Views',
+    description: 'Save custom views and share them with team members for better collaboration.',
+    bullet: 'Save and share custom views',
+  },
+  listFolders: {
+    label: 'List Folders',
+    description: 'Organize your lists into folders for a cleaner and more structured view.',
+    bullet: 'Organize lists into folders',
+  },
+  groupAttributes: {
+    label: 'Group Attributes',
+    description: 'Group tasks by assignees, status, or other attributes for better organization.',
+    bullet: 'Group tasks by attributes',
+  },
+  commentCategories: {
+    label: 'Comment Categories',
+    description:
+      'Organize comments with categories, assign permissions, and use colors for better distinction. Set visibility rules to control who can view specific comments.',
+    bullet: 'Enhanced comment organization, permissions, and visibility',
+  },
+  slicer: {
+    label: 'Slicer',
+    description: 'Advanced filtering system for project organization.',
+    bullet: 'Powerful project filtering tools',
+  },
+  releases: {
+    label: 'Release History',
+    description: 'Access and download the complete archive of releases',
+    bullet: 'Full release archive access',
+  },
+  advancedFilters: {
+    label: 'Advanced Filters',
+    description: 'Customize your view and find your data with powerful filtering options',
+    bullet: 'Advanced filtering options',
+  },
+  listAttributes: {
+    label: 'List Attributes',
+    description: 'Add custom attributes to your lists for better collaboration and organization.',
+    bullet: 'Custom attributes for lists',
+  },
+  listAccess: {
+    label: 'List Access',
+    description: 'Manage and control access to your lists with advanced sharing options.',
+    bullet: 'Advanced list sharing options',
+  },
+}

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -16,6 +16,7 @@ import {
   Header,
   HeaderGroup,
   RowData,
+  ExpandedState,
 } from '@tanstack/react-table'
 
 // Utility imports
@@ -27,12 +28,13 @@ import type { TableRow } from './types/table'
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
-import HeaderActionButton from './components/HeaderActionButton'
-import RowDragHandleCellContent from './components/RowDragHandleCellContent' // Added import
+import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
+import HeaderActionButton from './components/HeaderActionButton'
 
 // Context imports
 import { useCellEditing } from './context/CellEditingContext'
@@ -40,42 +42,68 @@ import { ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from './context/Sel
 import { ClipboardProvider } from './context/ClipboardContext'
 import { useSelectedRowsContext } from './context/SelectedRowsContext'
 import { useColumnSettingsContext } from './context/ColumnSettingsContext'
+import { useMenuContext } from '../../context/MenuContext'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
 import usePrefetchFolderTasks from './hooks/usePrefetchFolderTasks'
-import useCellContextMenu, { HeaderLabel } from './hooks/useCellContextMenu'
+import useCellContextMenu, {
+  HeaderLabel,
+  ContextMenuItemConstructors,
+} from './hooks/useCellContextMenu'
 import useColumnVirtualization from './hooks/useColumnVirtualization'
 import useKeyboardNavigation from './hooks/useKeyboardNavigation'
+import useDynamicRowHeight from './hooks/useDynamicRowHeight'
+
+// EntityPickerDialog import
+import { EntityPickerDialog } from '../EntityPickerDialog/EntityPickerDialog'
+// Move entity hook
+import { useMoveEntities } from './hooks/useMoveEntities'
+import { useProjectDataContext } from '@shared/containers'
 
 // Utility function imports
-import { getCellId } from './utils/cellUtils'
+import { CellId, getCellId, parseCellId } from './utils/cellUtils'
 import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUtils'
+import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import { getReadOnlyLists, getTableFieldOptions } from './utils'
-import { UpdateTableEntities } from './hooks/useUpdateTableData'
+import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
+import { EntityUpdate } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
 import {
   DragOverlay,
+  useDndContext,
   type UniqueIdentifier,
   // Removed: DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, DragEndEvent, DragStartEvent, Active, Over, useSensor, useSensors
 } from '@dnd-kit/core'
 // import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy, useSortable, horizontalListSortingStrategy, } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { isGroupId } from './hooks'
+
+import { useProjectContext } from '@shared/context'
+import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
+import { toast } from 'react-toastify'
+import { EntityMoveData } from '@shared/context/MoveEntityContext'
+import { upperFirst } from 'lodash'
+import { ColumnsConfig } from './types/columnConfig'
+
+type CellUpdate = (
+  entity: Omit<EntityUpdate, 'id'>,
+  config?: { selection?: string[] },
+) => Promise<void>
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
     readOnly?: ProjectTreeTableProps['readOnly']
     projectName?: string
-    updateEntities?: UpdateTableEntities
+    updateEntities?: CellUpdate
     toggleExpandAll?: ToggleExpandAll
+    selection?: string[]
+    columnsConfig?: ColumnsConfig
   }
 }
 
@@ -106,16 +134,22 @@ export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
   sliceId: string
-  fetchMoreOnBottomReached: (element: HTMLDivElement | null) => void
+  onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
   onOpenNew?: (type: 'folder' | 'task') => void
   readOnly?: (DefaultColumns | string)[]
   excludedColumns?: (DefaultColumns | string)[]
+  excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
+  includeLinks?: boolean
   isLoading?: boolean
+  isExpandable?: boolean // if true, show the expand/collapse icons
   clientSorting?: boolean
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
+  columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
+  onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
+  contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -125,34 +159,44 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
 export const ProjectTreeTable = ({
   scope,
   sliceId,
-  fetchMoreOnBottomReached,
+  onScroll,
+  onScrollBottom, // when the user scrolls to the bottom of the table, this callback is called
   onOpenNew,
   readOnly,
   excludedColumns,
+  excludedSorting,
   extraColumns,
+  includeLinks,
   isLoading: isLoadingProp,
+  isExpandable,
   clientSorting = false,
   sortableRows = false,
   onRowReorder,
   dndActiveId, // Destructure new prop
+  columnsConfig,
+  onScrollBottomGroupBy, // Destructure new prop for group-by load more
+  contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   pt,
   ...props
 }: ProjectTreeTableProps) => {
   const {
     columnVisibility,
-    columnVisibilityUpdater,
     columnPinning,
-    columnPinningUpdater,
     columnOrder,
-    columnOrderUpdater,
     columnSizing,
-    columnSizingUpdater,
+    setAllColumns,
+    sorting,
+    sortingOnChange,
+    columnPinningOnChange,
+    columnSizingOnChange,
+    columnVisibilityOnChange,
+    columnOrderOnChange,
     groupBy,
   } = useColumnSettingsContext()
   const isGrouping = !!groupBy
+  const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
   const {
-    projectInfo,
     tableData,
     attribFields,
     entitiesMap,
@@ -161,19 +205,26 @@ export const ProjectTreeTable = ({
     error,
     isInitialized,
     expanded,
-    projectName,
     updateExpanded,
     toggleExpandAll,
-    sorting,
-    updateSorting,
     showHierarchy,
     fetchNextPage,
-    scopes,
+    scopes, // or entityTypes
+    getEntityById,
+    onResetView,
   } = useProjectTableContext()
+
+  const { writableFields } = useProjectDataContext()
 
   const isLoading = isLoadingProp || isLoadingData
 
-  const { statuses = [], folderTypes = [], taskTypes = [], tags = [] } = projectInfo || {}
+  const {
+    statuses = [],
+    folderTypes = [],
+    taskTypes = [],
+    tags = [],
+    linkTypes = [],
+  } = projectInfo || {}
   const options: BuiltInFieldOptions = useMemo(
     () =>
       getTableFieldOptions({
@@ -181,10 +232,11 @@ export const ProjectTreeTable = ({
         statuses,
         folderTypes,
         taskTypes,
+        productTypes,
         tags,
         scopes,
       }),
-    [users, statuses, folderTypes, taskTypes],
+    [users, statuses, folderTypes, taskTypes, scopes, tags],
   )
 
   //The virtualizer needs to know the scrollable container element
@@ -201,7 +253,6 @@ export const ProjectTreeTable = ({
     const tableRowsCount = tableContainerRef.current?.querySelectorAll('tbody tr').length || 0
     const loadingAttrib = generateDummyAttributes()
     const loadingRows = generateLoadingRows(
-      attribFields,
       showHierarchy && tableData.length > 0
         ? Math.min(tableRowsCount, 50)
         : groupBy
@@ -216,24 +267,81 @@ export const ProjectTreeTable = ({
 
   // Format readonly columns and attributes
   const { readOnlyColumns, readOnlyAttribs } = useMemo(
-    () => getReadOnlyLists(attribFields, readOnly),
-    [attribFields, readOnly],
+    () => getReadOnlyLists(attribFields, writableFields, readOnly),
+    [attribFields, writableFields, readOnly],
   )
 
+  const { selectedCells } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
+
+  const handleCellUpdate: CellUpdate = useCallback(
+    async (entity, config) => {
+      const { selection = [] } = config || {}
+      const entitiesToUpdate: EntityUpdate[] = []
+      if (!selection?.length) {
+        entitiesToUpdate.push({ ...entity, id: entity.rowId })
+      } else {
+        // if includeSelection is true, update all the selected cells with the same columnId
+        const { field, value, isAttrib } = entity
+        for (const cellId of selectedCells) {
+          const { colId, rowId } = parseCellId(cellId) || {}
+
+          // ignore row selection column
+          if (colId === ROW_SELECTION_COLUMN_ID) continue
+
+          const entity = getEntityById(rowId || '')
+          if (!entity) {
+            console.warn(`Entity with ID ${rowId} not found for cell update.`)
+            continue
+          }
+
+          if ((!colId?.includes('attrib_') || colId?.replace('attrib_', '') === field) && rowId) {
+            entitiesToUpdate.push({
+              field: field,
+              rowId: rowId,
+              id: entity.entityId,
+              value: value,
+              isAttrib: isAttrib,
+              type: entity.entityType,
+            })
+          }
+        }
+      }
+
+      if (!entitiesToUpdate.length) {
+        console.warn('No entities to update, skipping updateEntities call.')
+        toast.warn('No entities to update.')
+        return
+      }
+
+      await updateEntities(entitiesToUpdate, true)
+    },
+    [updateEntities, getEntityById, selectedCells],
+  )
 
   const columnAttribs = useMemo(
     () => (isInitialized ? attribFields : loadingAttrib),
     [attribFields, loadingAttrib, isInitialized],
   )
+
+  const getNameLabelHeader = () => {
+    if (scopes.includes('version')) return 'Product / Version'
+    return scopes.map((s) => upperFirst(s)).join(' / ')
+  }
+
   const columns = useMemo(() => {
     const baseColumns = buildTreeTableColumns({
+      scopes,
       attribs: columnAttribs,
+      links: linkTypes,
+      includeLinks,
       showHierarchy,
       options,
       extraColumns,
       excluded: excludedColumns,
+      excludedSorting,
       groupBy,
+      nameLabel: getNameLabelHeader(),
     })
 
     if (sortableRows) {
@@ -254,7 +362,25 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [columnAttribs, showHierarchy, options, extraColumns, excludedColumns, sortableRows])
+  }, [
+    scopes,
+    columnAttribs,
+    showHierarchy,
+    isExpandable,
+    options,
+    linkTypes,
+    includeLinks,
+    extraColumns,
+    excludedColumns,
+    excludedSorting,
+    sortableRows,
+  ])
+
+  // Keep ColumnSettingsProvider's allColumns ref up to date
+  useEffect(() => {
+    const ids = columns.map((c) => c.id!).filter(Boolean)
+    setAllColumns(ids)
+  }, [columns, setAllColumns])
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -267,7 +393,7 @@ export const ProjectTreeTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: () => true,
+    getRowCanExpand: () => !!isExpandable || showHierarchy || isGrouping,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -275,13 +401,16 @@ export const ProjectTreeTable = ({
     // EXPANDABLE
     onExpandedChange: updateExpanded,
     // SORTING
-    getSortedRowModel: clientSorting ? getSortedRowModel() : undefined,
-    onSortingChange: updateSorting,
+    enableSorting: true,
+    getSortedRowModel: getSortedRowModel(),
+    sortDescFirst: false,
+    manualSorting: !clientSorting,
+    onSortingChange: sortingOnChange,
     columnResizeMode: 'onChange',
-    onColumnPinningChange: columnPinningUpdater,
-    onColumnSizingChange: columnSizingUpdater,
-    onColumnVisibilityChange: columnVisibilityUpdater,
-    onColumnOrderChange: columnOrderUpdater,
+    onColumnPinningChange: columnPinningOnChange,
+    onColumnSizingChange: columnSizingOnChange,
+    onColumnVisibilityChange: columnVisibilityOnChange,
+    onColumnOrderChange: columnOrderOnChange,
     // @ts-ignore
     filterFns,
     state: {
@@ -311,14 +440,15 @@ export const ProjectTreeTable = ({
       columnVisibility,
       columnOrder,
     },
-    enableSorting: true,
     meta: {
       projectName,
       options,
       readOnly: readOnlyColumns,
-      updateEntities,
+      updateEntities: handleCellUpdate,
       toggleExpandAll,
-      loadMoreTasks: fetchNextPage,
+      loadMoreRows: fetchNextPage,
+      selection: Array.from(selectedCells),
+      columnsConfig,
     },
   })
 
@@ -353,9 +483,14 @@ export const ProjectTreeTable = ({
     visibleColumns,
     tableContainerRef,
     columnPinning,
+    columnSizing,
+    columnOrder,
   })
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
+
+  // Calculate dynamic row height based on user setting from Customize panel
+  const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
     return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
@@ -367,24 +502,108 @@ export const ProjectTreeTable = ({
   }, [attribFields])
 
   const rowOrderIds = useMemo(() => tableData.map((row) => row.id), [tableData])
+  // Get column IDs for drag-and-drop from context columnOrder (exclude non-draggable columns)
+  // This ensures SortableContext items match what the drag handlers use
+  const columnOrderIds = useMemo(() => {
+    return columnOrder.filter(
+      (id) => id !== DRAG_HANDLE_COLUMN_ID && id !== ROW_SELECTION_COLUMN_ID
+    )
+  }, [columnOrder])
+
   const draggedRowData = useMemo(() => {
     if (!dndActiveId || !sortableRows) return null // Use dndActiveId
     return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
   }, [dndActiveId, tableData, sortableRows])
+
+  const combinedScrollHandler: UIEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      // Call the original onScroll if provided
+      onScroll?.(e)
+
+      if (onScrollBottom) {
+        const containerRefElement = e.currentTarget
+        if (containerRefElement && !showHierarchy && !groupBy) {
+          const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+          //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
+          if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
+            onScrollBottom(e)
+          }
+        }
+      }
+
+      // Handle scroll-to-bottom for grouped data
+      if (onScrollBottomGroupBy && groupBy) {
+        const containerRefElement = e.currentTarget
+        // look for a load more button
+        const loadMoreButton = containerRefElement?.querySelector('.load-more')
+        // get load more button id
+        const loadMoreButtonId = loadMoreButton?.getAttribute('id')
+        const groupValue = loadMoreButtonId?.split('-')[2] // assuming the id is in the format 'load-more-groupValue'
+        if (groupValue) {
+          onScrollBottomGroupBy(groupValue)
+        }
+      }
+    },
+    [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
+  )
+
+  // Get move entity functions for the dialog
+  const {
+    isEntityPickerOpen,
+    handleMoveSubmit,
+    closeMoveDialog,
+    movingEntities,
+    handleMoveToRoot,
+    getDisabledFolderIds,
+    getDisabledMessage,
+  } = useMoveEntities({
+    projectName,
+  })
+
+  const handleMoveSubmitWithExpand = (selection: string[]) => {
+    handleMoveSubmit(selection)
+    const folderIdToExpand = selection[0]
+
+    updateExpanded((prevExpanded: ExpandedState) => {
+      if (typeof prevExpanded === 'boolean') {
+        if (prevExpanded) {
+          return prevExpanded
+        }
+        return { [folderIdToExpand]: true }
+      }
+
+      if (prevExpanded[folderIdToExpand]) {
+        return prevExpanded
+      }
+
+      return {
+        ...prevExpanded,
+        [folderIdToExpand]: true,
+      }
+    })
+  }
 
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
       columnEnums={{ ...options, ...attribByField }}
       columnReadOnly={readOnlyAttribs}
+      visibleColumns={visibleColumns}
     >
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}
           style={{ height: '100%', padding: 0 }}
-          onScroll={(e) => fetchMoreOnBottomReached(e.currentTarget)}
+          onScroll={combinedScrollHandler}
           {...pt?.container}
-          className={clsx('table-container', pt?.container?.className)}
+          data-column-dnd-container
+          className={clsx(
+            'table-container',
+            {
+              resizing: table.getState().columnSizingInfo.isResizingColumn,
+            },
+            pt?.container?.className,
+          )}
         >
           <table
             style={{
@@ -393,6 +612,7 @@ export const ProjectTreeTable = ({
               userSelect: 'none',
               ...columnSizeVars,
               width: table.getTotalSize(),
+              cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
             }}
           >
             <TableHead
@@ -403,6 +623,7 @@ export const ProjectTreeTable = ({
               isLoading={isLoading}
               readOnlyColumns={readOnlyColumns}
               sortableRows={sortableRows}
+              columnOrderIds={columnOrderIds}
               {...pt?.head}
             />
             <TableBody
@@ -417,11 +638,34 @@ export const ProjectTreeTable = ({
               rowOrderIds={rowOrderIds}
               sortableRows={sortableRows}
               error={error}
+              isLoading={isLoading}
               isGrouping={isGrouping}
+              getRowHeight={getRowHeight}
+              defaultRowHeight={defaultRowHeight}
+              onResetView={onResetView}
+              contextMenuItems={propsContextMenuItems}
             />
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>
+      {/* Render EntityPickerDialog alongside table content */}
+      {isEntityPickerOpen &&
+        projectName &&
+        movingEntities?.entities &&
+        movingEntities.entities.length > 0 && (
+          <EntityPickerDialog
+            projectName={projectName}
+            entityType="folder"
+            onSubmit={handleMoveSubmitWithExpand}
+            onClose={closeMoveDialog}
+            showMoveToRoot={movingEntities.entities.every(
+              (entity: EntityMoveData) => entity.entityType === 'folder',
+            )}
+            onMoveToRoot={handleMoveToRoot}
+            disabledIds={getDisabledFolderIds()}
+            getDisabledMessage={getDisabledMessage}
+          />
+        )}
     </ClipboardProvider>
   )
 
@@ -462,22 +706,22 @@ export const ProjectTreeTable = ({
                           width: getColumnWidth(overlayRowInstance.id, cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
-                          height: 40,
+                          height: defaultRowHeight,
                         }
 
                         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
                           return (
-                            <Styled.TableCell
+                            <Styled.TD
                               key={`overlay-drag-${cell.id}`}
                               style={{ ...cellStyleBase, justifyContent: 'center' }}
                               className={clsx(cell.column.id)}
                             >
                               <Icon icon="drag_handle" /> {/* Static icon */}
-                            </Styled.TableCell>
+                            </Styled.TD>
                           )
                         }
                         return (
-                          <TableCellMemo
+                          <TD
                             cell={cell}
                             cellId={`overlay-${getCellId(overlayRowInstance.id, cell.column.id)}`}
                             rowId={overlayRowInstance.id}
@@ -504,11 +748,63 @@ export const ProjectTreeTable = ({
       <>
         {tableUiContent}
         {dragOverlayPortal}
+        <ColumnDragOverlay table={table} />
       </>
     )
   } else {
-    return tableUiContent
+    return (
+      <>
+        {tableUiContent}
+        <ColumnDragOverlay table={table} />
+      </>
+    )
   }
+}
+
+/**
+ * Isolated component for column drag overlay.
+ * This prevents the entire table from re-rendering on every drag frame.
+ */
+interface ColumnDragOverlayProps {
+  table: Table<TableRow>
+}
+
+const ColumnDragOverlay = ({ table }: ColumnDragOverlayProps) => {
+  const { active } = useDndContext()
+
+  // Only process if dragging a column
+  const isColumnDrag = active?.data?.current?.type === 'column'
+  const activeColumnId = isColumnDrag ? (active?.id as string) : null
+
+  const draggedColumnHeader = useMemo(() => {
+    if (!activeColumnId) return null
+    return table.getHeaderGroups()[0]?.headers.find((h) => h.id === activeColumnId) || null
+  }, [activeColumnId, table])
+
+  if (!activeColumnId || !draggedColumnHeader) return null
+
+  return createPortal(
+    <DragOverlay dropAnimation={null}>
+      <Styled.HeaderCell
+        style={{
+          width: draggedColumnHeader.column.getSize(),
+          backgroundColor: 'var(--md-sys-color-surface-container-high)',
+          boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          minHeight: 34,
+        }}
+      >
+        <Styled.TableCellContent className="bold header">
+          {flexRender(
+            draggedColumnHeader.column.columnDef.header,
+            draggedColumnHeader.getContext(),
+          )}
+        </Styled.TableCellContent>
+      </Styled.HeaderCell>
+    </DragOverlay>,
+    document.body,
+  )
 }
 
 interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
@@ -519,6 +815,7 @@ interface TableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   isLoading: boolean
   readOnlyColumns?: string[]
   sortableRows?: boolean
+  columnOrderIds: string[]
 }
 
 const TableHead = ({
@@ -529,6 +826,7 @@ const TableHead = ({
   isLoading,
   readOnlyColumns,
   sortableRows,
+  columnOrderIds,
   ...props
 }: TableHeadProps) => {
   return (
@@ -543,6 +841,7 @@ const TableHead = ({
           isLoading={isLoading}
           readOnlyColumns={readOnlyColumns}
           sortableRows={sortableRows}
+          columnOrderIds={columnOrderIds}
         />
       ))}
     </Styled.TableHeader>
@@ -557,6 +856,7 @@ interface TableHeadRowProps {
   isLoading: boolean
   readOnlyColumns?: string[]
   sortableRows?: boolean
+  columnOrderIds: string[]
 }
 
 const TableHeadRow = ({
@@ -567,32 +867,45 @@ const TableHeadRow = ({
   isLoading,
   readOnlyColumns,
   sortableRows,
+  columnOrderIds,
 }: TableHeadRowProps) => {
   const virtualColumns = columnVirtualizer.getVirtualItems()
+  const { active } = useDndContext()
+  const isColumnDrag = active?.data?.current?.type === 'column'
+  const isDraggedColumnPinned = isColumnDrag && (active?.data?.current?.isPinned ?? false)
+
   return (
     <Styled.ColumnHeader key={headerGroup.id} style={{ display: 'flex' }}>
       {virtualPaddingLeft ? (
         //fake empty column to the left for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingLeft }} />
       ) : null}
-      {virtualColumns.map((virtualColumn) => {
-        const header = headerGroup.headers[virtualColumn.index]
+      <SortableContext items={columnOrderIds} strategy={horizontalListSortingStrategy}>
+        {virtualColumns.map((virtualColumn) => {
+          const header = headerGroup.headers[virtualColumn.index]
+          // Exclude certain columns from being draggable
+          const isDraggable =
+            header.id !== DRAG_HANDLE_COLUMN_ID && header.id !== ROW_SELECTION_COLUMN_ID
 
-        return (
-          <TableHeadCell
-            key={header.id}
-            header={header}
-            isLoading={isLoading}
-            isReadOnly={readOnlyColumns?.includes(header.id)}
-            canSort={header.column.getCanSort()}
-            canFilter={header.column.getCanFilter()}
-            canHide={header.column.getCanHide()}
-            canPin={header.column.getCanPin()}
-            canResize={header.column.getCanResize()}
-            sortableRows={sortableRows}
-          />
-        )
-      })}
+          return (
+            <TableHeadCell
+              key={header.id}
+              header={header}
+              isLoading={isLoading}
+              isReadOnly={readOnlyColumns?.includes(header.id)}
+              canSort={header.column.getCanSort()}
+              canFilter={header.column.getCanFilter()}
+              canHide={header.column.getCanHide()}
+              canPin={header.column.getCanPin()}
+              canResize={header.column.getCanResize()}
+              sortableRows={sortableRows}
+              isDraggable={isDraggable}
+              isColumnDrag={isColumnDrag}
+              isDraggedColumnPinned={isDraggedColumnPinned}
+            />
+          )
+        })}
+      </SortableContext>
       {virtualPaddingRight ? (
         //fake empty column to the right for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingRight }} />
@@ -611,6 +924,9 @@ interface TableHeadCellProps {
   canResize?: boolean
   isReadOnly?: boolean
   sortableRows?: boolean
+  isDraggable?: boolean
+  isColumnDrag?: boolean
+  isDraggedColumnPinned?: boolean
 }
 
 const TableHeadCell = ({
@@ -623,61 +939,108 @@ const TableHeadCell = ({
   canResize,
   isReadOnly,
   sortableRows,
+  isDraggable = true,
+  isColumnDrag,
+  isDraggedColumnPinned,
 }: TableHeadCellProps) => {
   const { column } = header
+  const sorting = column.getIsSorted()
+  const menuId = `column-header-menu-${column.id}`
+  const { menuOpen } = useMenuContext()
+  const isOpen = menuOpen === menuId
+  const { columnPinning } = useColumnSettingsContext()
+
+  // Check if this column is pinned
+  const isThisColumnPinned = columnPinning.left?.includes(column.id) || false
+
+  // useSortable for column drag-and-drop
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: column.id,
+    data: { type: 'column', isPinned: isThisColumnPinned },
+    disabled: !isDraggable,
+  })
+
+  const isDraggingInSameSection = isColumnDrag && isDraggedColumnPinned === isThisColumnPinned
+
+  // Build drag styles
+  const getDragStyle = (): CSSProperties => {
+    if (isDragging) {
+      return { transform: CSS.Translate.toString(transform!), transition, visibility: 'hidden', zIndex: 200 }
+    }
+    if (isDraggingInSameSection && transform) {
+      // For pinned columns, temporarily remove sticky positioning during drag animation
+      const pinnedOverride = isThisColumnPinned ? { position: 'relative' as const, left: 'auto' } : {}
+      return { transform: CSS.Translate.toString(transform), transition, ...pinnedOverride }
+    }
+    return {}
+  }
+
+  // Prevent drag when clicking action buttons
+  const preventDragFromActions = {
+    onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
+    onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
+  }
 
   return (
     <Styled.HeaderCell
+      ref={setNodeRef}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
+        resizing: column.getIsResizing(),
+        dragging: isDragging,
+        draggable: isDraggable,
       })}
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
         width: getColumnWidth('', column.id),
+        ...getDragStyle(),
       }}
     >
       {header.isPlaceholder ? null : (
-        <Styled.TableCellContent className={clsx('bold', 'header')}>
+        <Styled.TableCellContent className={clsx('bold', 'header')}  {...(isDraggable ? { ...attributes, ...listeners } : {})}>
           {flexRender(column.columnDef.header, header.getContext())}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
           )}
 
-          <Styled.HeaderButtons className="actions">
-            {/* COLUMN HIDING */}
-            {canHide && (
-              <HeaderActionButton
-                icon="visibility_off"
-                selected={!column.getIsVisible()}
-                onClick={column.getToggleVisibilityHandler()}
-              />
-            )}
-            {/* COLUMN PINNING */}
-            {canPin && (
-              <HeaderActionButton
-                icon="push_pin"
-                selected={header.column.getIsPinned() === 'left'}
-                onClick={() => {
-                  if (header.column.getIsPinned() === 'left') {
-                    header.column.pin(false)
-                  } else {
-                    header.column.pin('left')
-                  }
-                }}
+          <Styled.HeaderButtons className="actions" $isOpen={isOpen} {...preventDragFromActions}>
+            {/* Column drag handle */}
+
+            {(canHide || canPin || canSort) && (
+              <ColumnHeaderMenu
+                className="header-menu"
+                header={header}
+                canHide={canHide}
+                canPin={canPin}
+                canSort={canSort}
+                isResizing={column.getIsResizing()}
+                menuId={menuId}
+                isOpen={isOpen}
               />
             )}
 
             {/* COLUMN SORTING */}
             {canSort && (
               <HeaderActionButton
-                icon={'sort'}
+                icon="sort"
+                className={clsx('sort-button', { visible: sorting })}
                 style={{
-                  transform: (column.getIsSorted() as string) === 'asc' ? 'scaleY(-1)' : undefined,
+                  transform: sorting === 'asc' ? 'rotate(180deg) scaleX(-1)' : 'none',
                 }}
                 onClick={column.getToggleSortingHandler()}
                 selected={!!column.getIsSorted()}
+              />
+            )}
+
+            {/* COLUMN PINNING - only show on pinned columns (exclude selection column) */}
+            {column.getIsPinned() && column.id !== ROW_SELECTION_COLUMN_ID && (
+              <HeaderActionButton
+                icon="push_pin"
+                className={clsx('pin-button', 'visible')}
+                onClick={() => column.pin(false)}
+                selected
               />
             )}
           </Styled.HeaderButtons>
@@ -685,8 +1048,12 @@ const TableHeadCell = ({
             <Styled.ResizedHandler
               {...{
                 onDoubleClick: () => column.resetSize(),
-                onMouseDown: header.getResizeHandler(),
+                onMouseDown: (e: React.MouseEvent) => {
+                  e.stopPropagation()
+                  header.getResizeHandler()(e)
+                },
                 onTouchStart: header.getResizeHandler(),
+                onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
                 className: clsx('resize-handle', {
                   resizing: column.getIsResizing(),
                 }),
@@ -711,7 +1078,12 @@ interface TableBodyProps {
   rowOrderIds: UniqueIdentifier[]
   sortableRows: boolean
   error?: string
+  isLoading: boolean
   isGrouping: boolean
+  getRowHeight: (row: TableRow) => number
+  defaultRowHeight: number
+  onResetView?: () => void
+  contextMenuItems?: ContextMenuItemConstructors
 }
 
 const TableBody = ({
@@ -726,7 +1098,12 @@ const TableBody = ({
   rowOrderIds,
   sortableRows,
   error,
+  isLoading,
   isGrouping,
+  getRowHeight,
+  defaultRowHeight,
+  onResetView,
+  contextMenuItems,
 }: TableBodyProps) => {
   const headerLabels = useMemo(() => {
     const allColumns = table.getAllColumns()
@@ -744,7 +1121,14 @@ const TableBody = ({
     return headers as HeaderLabel[]
   }, [table.getAllColumns()])
 
-  const { handleTableBodyContextMenu } = useCellContextMenu({ attribs, onOpenNew, headerLabels })
+  const cellContextMenuHook = useCellContextMenu({
+    attribs,
+    onOpenNew,
+    headerLabels,
+    contextMenuItems,
+  })
+
+  const handleTableBodyContextMenu = cellContextMenuHook.handleTableBodyContextMenu
 
   const { handlePreFetchTasks } = usePrefetchFolderTasks()
 
@@ -752,7 +1136,11 @@ const TableBody = ({
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
-    estimateSize: () => 40, //estimate row height for accurate scrollbar dragging
+    estimateSize: (index) => {
+      // Calculate dynamic row height based on specific row data
+      const row = rows[index]
+      return row ? getRowHeight(row.original) : defaultRowHeight
+    },
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -809,6 +1197,7 @@ const TableBody = ({
             offsetTop={virtualRow.start}
             sortableRows={sortableRows}
             isGrouping={isGrouping}
+            rowHeight={getRowHeight(row.original)}
           />
         )
       })}
@@ -819,7 +1208,39 @@ const TableBody = ({
     return (
       tableContainerRef.current &&
       createPortal(
-        <EmptyPlaceholder message="No items found" error={error} />,
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found" error={error}>
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
+        tableContainerRef.current,
+      )
+    )
+  }
+
+  if (!rows.length && !isLoading) {
+    return (
+      tableContainerRef.current &&
+      createPortal(
+        <Styled.AnimatedEmptyPlaceholder>
+          <EmptyPlaceholder message="No items found">
+            {onResetView && (
+              <Button
+                variant="filled"
+                label="Reset working view"
+                icon="restart_alt"
+                onClick={onResetView}
+              />
+            )}
+          </EmptyPlaceholder>
+        </Styled.AnimatedEmptyPlaceholder>,
         tableContainerRef.current,
       )
     )
@@ -848,6 +1269,7 @@ interface TableBodyRowProps {
   offsetTop: number
   sortableRows: boolean
   isGrouping: boolean
+  rowHeight: number
 }
 
 const TableBodyRow = ({
@@ -862,6 +1284,7 @@ const TableBodyRow = ({
   offsetTop,
   sortableRows,
   isGrouping = false,
+  rowHeight,
 }: TableBodyRowProps) => {
   const sortable = sortableRows ? useSortable({ id: row.id }) : null
 
@@ -885,7 +1308,7 @@ const TableBodyRow = ({
     top: offsetTop, // Position based on virtualizer's calculation (virtualRow.start)
     left: 0, // Span full width of the relative parent (tbody)
     right: 0, // Span full width
-    height: 40, // Explicit height can be beneficial for absolute positioning
+    height: rowHeight, // Use dynamic row height
     zIndex: sortable && sortable.isDragging ? 0 : 1, // Ensure dragged item is above others
     display: 'flex', // Styled.TR is display:flex
     transform:
@@ -913,7 +1336,7 @@ const TableBodyRow = ({
 
         if (cell.column.id === DRAG_HANDLE_COLUMN_ID) {
           return (
-            <Styled.TableCell
+            <Styled.TD
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
@@ -921,7 +1344,9 @@ const TableBodyRow = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: 40,
+                height: rowHeight,
+                pointerEvents: 'all',
+                cursor: 'grab',
               }}
               className={clsx(cell.column.id, {
                 'last-pinned-left':
@@ -929,7 +1354,6 @@ const TableBodyRow = ({
               })}
               onMouseDown={(e) => e.stopPropagation()} // Prevent selection interference
               onMouseOver={(e) => e.stopPropagation()}
-              // Removed onMouseUp stopPropagation to allow dnd-kit to handle it
               onDoubleClick={(e) => e.stopPropagation()}
               onContextMenu={(e) => {
                 e.preventDefault()
@@ -940,17 +1364,18 @@ const TableBodyRow = ({
                 attributes={sortable?.attributes}
                 listeners={sortable?.listeners}
               />
-            </Styled.TableCell>
+            </Styled.TD>
           )
         }
         return (
-          <TableCellMemo
+          <TD
             cell={cell}
             cellId={cellId}
             rowId={row.id}
             key={cell.id + i.toString()}
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
+            rowHeight={rowHeight}
           />
         )
       })}
@@ -970,17 +1395,21 @@ interface TableCellProps {
   className?: string
   showHierarchy: boolean
   sortableRows?: boolean
+  rowHeight?: number
 }
 
-const TableCell = ({
+const TD = ({
   cell,
   rowId,
   cellId,
   className,
   showHierarchy,
   sortableRows,
+  rowHeight,
   ...props
 }: TableCellProps) => {
+  const { getEntityById, onOpenPlayer } = useProjectTableContext()
+
   const {
     isCellSelected,
     isCellFocused,
@@ -988,13 +1417,18 @@ const TableCell = ({
     extendSelection,
     endSelection,
     selectCell,
+    focusCell,
     getCellBorderClasses,
     clearSelection,
+    selectedCells,
+    setSelectedCells,
+    setAnchorCell,
+    setFocusedCellId,
   } = useSelectionCellsContext()
 
   const { isRowSelected } = useSelectedRowsContext()
 
-  const { isEditing } = useCellEditing()
+  const { isEditing, setEditingCellId, editingCellId } = useCellEditing()
 
   const borderClasses = getCellBorderClasses(cellId)
 
@@ -1002,9 +1436,10 @@ const TableCell = ({
   const isLastLeftPinnedColumn = isPinned === 'left' && cell.column.getIsLastColumn('left')
   const isRowSelectionColumn = cell.column.id === ROW_SELECTION_COLUMN_ID
   const isGroup = cell.row.original.entityType === 'group'
+  const isMultipleSelected = selectedCells.size > 1
 
   return (
-    <Styled.TableCell
+    <Styled.TD
       {...props}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
@@ -1016,7 +1451,9 @@ const TableCell = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
-          task: cell.row.original.entityType === 'task',
+          expandable:
+            !!cell.row.originalSubRows && isEntityExpandable(cell.row.original.entityType),
+          'multiple-selected': isMultipleSelected,
         },
         className,
         ...borderClasses,
@@ -1024,30 +1461,124 @@ const TableCell = ({
       style={{
         ...getCommonPinningStyles(cell.column),
         width: getColumnWidth(cell.row.id, cell.column.id),
-        height: 40,
+        height: rowHeight,
       }}
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks
         if (e.button !== 0) return
 
+        const target = e.target as HTMLElement
+
         // check we are not clicking on expander
-        if ((e.target as HTMLElement).closest('.expander')) return
+        if (target.closest('.expander')) return
+
+        // check we are not clicking in a dropdown
+        if (target.closest('.options')) return
+
+        // Handle double-click via e.detail (browser's native click count).
+        // We handle it here in mousedown instead of relying on the dblclick event,
+        // because the 1st mousedown triggers React state updates that can replace
+        // the DOM node, preventing the native dblclick event from firing.
+        if (e.detail === 2) {
+          const isReadOnly = isTargetReadOnly(e)
+          if (isReadOnly || isEntityRestricted(cell.row.original.entityType) || isGroup) {
+            e.preventDefault()
+            return
+          }
+
+          // name column: select row to open details panel
+          if (cell.column.id === 'name' && !target.closest('.expander')) {
+            const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
+            const additive = e.metaKey || e.ctrlKey
+            const position = parseCellId(rowSelectionCellId)
+
+            setSelectedCells((prev) => {
+              const newSelection = additive ? new Set(prev) : new Set<CellId>()
+              newSelection.add(rowSelectionCellId)
+              newSelection.add(cellId)
+              return newSelection
+            })
+            if (position) {
+              setAnchorCell(position)
+              setFocusedCellId(rowSelectionCellId)
+            }
+          }
+          // thumbnail: open viewer
+          else if (cell.column.id === 'thumbnail') {
+            if (onOpenPlayer) {
+              const entity = getEntityById(cell.row.original.entityId || cell.row.id)
+              if (entity) {
+                const targetIds = getEntityViewierIds(entity)
+                onOpenPlayer(targetIds, { quickView: true })
+              }
+            }
+          }
+          // other cells: start editing
+          else {
+            setEditingCellId(cellId)
+          }
+
+          e.preventDefault()
+          return
+        }
 
         // only name column can be selected for group rows
         if (isGroup && cell.column.id !== 'name') return clearSelection()
 
-        const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
-        if (e.shiftKey) {
-          // Shift+click extends selection from anchor cell
-          selectCell(cellId, additive, true) // true for range selection
-        } else {
-          // Normal click starts a new selection
-          startSelection(cellId, additive)
+        // check if this is a restricted entity - prevent editing
+        const isRestricted = isEntityRestricted(cell.row.original.entityType)
+
+        // if clicking on an edit trigger, start editing
+        if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
+          // Select the cell first if not already selected
+          if (!isCellSelected(cellId)) {
+            selectCell(cellId, false, false)
+            focusCell(cellId)
+          }
+          setEditingCellId(cellId)
+          return
+        }
+
+        // If there's an active edit on a different cell, blur it first to save changes
+        if (editingCellId && editingCellId !== cellId) {
+          // Find the currently editing input and blur it
+          const editingInput = document.querySelector(
+            `#${editingCellId} input, #${editingCellId} [role="textbox"]`,
+          ) as HTMLElement
+          if (editingInput) {
+            editingInput.blur()
+            // Wait a tick for the blur event to process and save
+            setTimeout(() => {
+              proceedWithSelection()
+            }, 0)
+            return
+          }
+        }
+
+        proceedWithSelection()
+
+        function proceedWithSelection() {
+          const additive = e.metaKey || e.ctrlKey || isRowSelectionColumn
+          if (e.shiftKey) {
+            // Shift+click extends selection from anchor cell
+            selectCell(cellId, additive, true) // true for range selection
+          } else {
+            startSelection(cellId, additive)
+          }
+
+          // Prevent default browser behavior to ensure focus stays on the cell
+          e.preventDefault()
         }
       }}
       onMouseOver={(e) => {
         if (e.buttons === 1) {
+          // check not selecting am edit trigger
+          const target = e.target as HTMLElement
+          if (target.closest('.' + EDIT_TRIGGER_CLASS)) return
+
           // Left button is pressed during mouse move - drag selection
+          // Note: extendSelection is always called to allow drag to continue through cells
+          // Restricted cells will be filtered out later
           extendSelection(cellId, isRowSelectionColumn)
         }
       }}
@@ -1055,18 +1586,9 @@ const TableCell = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        if (
-          cell.column.id === 'name' &&
-          !(e.target as HTMLElement).closest('.expander') &&
-          !isGroup
-        ) {
-          // select the row by selecting the row-selection cell
-          const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
-          if (!isCellSelected(rowSelectionCellId)) {
-            const additive = e.metaKey || e.ctrlKey
-            selectCell(rowSelectionCellId, additive, false)
-          }
-        }
+        // Double-click is primarily handled in onMouseDown via e.detail == 2.
+        // This is a fallback for cases where the native dblclick event does fire.
+        e.preventDefault()
       }}
       onContextMenu={(e) => {
         e.preventDefault()
@@ -1075,10 +1597,11 @@ const TableCell = ({
           selectCell(cellId, false, false)
         }
       }}
+      onKeyDown={() => {
+        // keyboard events are handled in useKeyboardNavigation hook
+      }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </Styled.TableCell>
+    </Styled.TD>
   )
 }
-
-const TableCellMemo = memo(TableCell)

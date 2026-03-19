@@ -1,15 +1,14 @@
 import styled from 'styled-components'
 
 export const FeedContainer = styled.section`
-  padding: 4px;
-  padding-top: 0;
+  padding-bottom: 4px;
   overflow: hidden;
   position: relative;
 
   height: 100%;
 
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: auto 1fr auto;
   background-color: var(--md-sys-color-surface-container-low);
 `
 
@@ -37,7 +36,8 @@ export const Warning = styled.div`
 export const FeedContent = styled.ul`
   gap: var(--base-gap-large);
   overflow-y: auto;
-  padding: 0;
+  padding: 24px 0;
+  margin: 0;
   padding-bottom: 40px;
   scrollbar-gutter: stable;
 

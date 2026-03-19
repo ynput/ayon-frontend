@@ -1,11 +1,24 @@
 import { Button, theme } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
+import { categoryColorCss, CommentProps } from '../CommentInput/CommentInput.styled'
 
 export const CommentWrapper = styled.div`
   border-radius: var(--border-radius-m);
 `
 
-export const Comment = styled.li`
+export const Comment = styled.li<CommentProps>`
+  /* VARS */
+  --background-color: var(--md-sys-color-surface-container);
+  --button-color-secondary: var(--md-sys-color-surface-container-high);
+  --border-color: transparent;
+
+  /* only apply category colours if category classname is present */
+  &.category {
+    /* CATEGORY */
+    ${({ $categoryPrimary, $categorySecondary, $categoryTertiary }) =>
+      categoryColorCss($categoryPrimary, $categorySecondary, $categoryTertiary)}
+  }
+
   /* reset default */
   list-style: none;
   margin: 0;
@@ -19,25 +32,25 @@ export const Comment = styled.li`
   padding: var(--padding-m);
   border-radius: var(--border-radius-m);
 
-  /* hide date and show tools */
-  &.isOwner {
-    /* by default hide menu */
+  /* by default hide menu */
 
-    .tools {
-      opacity: 0;
-    }
+  .isEditing {
+    z-index: 1000;
+  }
 
-    .isEditing {
-      z-index: 1000;
-    }
-
-    :not(.isEditing) {
-      /* on hover show menu and hide date */
-      &:hover {
-        .tools {
-          opacity: 1;
-        }
+  :not(.isEditing) {
+    /* on hover show menu and hide date */
+    &:hover {
+      .tools {
+        opacity: 1;
       }
+    }
+  }
+
+  /* keep tools visible when menu is open */
+  &.menuOpen {
+    .tools {
+      opacity: 1;
     }
   }
 
@@ -47,16 +60,17 @@ export const Comment = styled.li`
 `
 
 export const Body = styled.div`
-  background-color: var(--md-sys-color-surface-container);
+  background-color: var(--background-color);
   border-radius: var(--border-radius-m);
   padding: var(--padding-m);
   padding: 12px 10px;
   position: relative;
+  min-width: 0;
 
   /* remove first and last margins */
   /* + * because tools is actual first */
-  & > *:first-child + * {
-    margin-top: 0;
+  & > *:nth-child(2) + * {
+    margin-top: 8px;
   }
 
   & > *:not(.tools):not(h1) {
@@ -149,6 +163,14 @@ export const Body = styled.div`
     }
   }
 
+  /* Inline code elements (not in pre blocks) */
+  code:not(pre code) {
+    font-family: monospace;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    padding: 2px 4px;
+    border-radius: 2px;
+  }
+
   &.isEditing {
     padding: 0;
     border-radius: var(--border-radius-l);
@@ -226,10 +248,17 @@ export const BlockCode = styled.pre`
   padding: var(--padding-m);
   border-radius: var(--padding-s);
   background-color: var(--md-sys-color-surface-container-lowest);
+  font-family: monospace;
+  font-size: var(--md-sys-typescale-body-small-font-size);
 
   line-break: anywhere;
   word-break: break-word;
   overflow: hidden;
+
+  /* Ensure all child elements use monospace font */
+  * {
+    font-family: monospace !important;
+  }
 `
 
 export const Tools = styled.div`
@@ -237,13 +266,26 @@ export const Tools = styled.div`
   position: absolute;
   right: 4px;
   top: 4px;
-  background-color: var(--md-sys-color-surface-container-highest);
+  background-color: var(--button-color-secondary);
   border-radius: var(--border-radius-m);
   z-index: 50;
+  padding: 2px;
+  gap: var(--base-gap-small);
+
+  /* by default hidden */
+  opacity: 0;
 `
 
 export const ToolButton = styled(Button)`
-  padding: 4px;
+  &.hasIcon {
+    padding: 4px;
+  }
+  background-color: unset;
+
+  &:hover {
+    background-color: var(--button-color-secondary);
+    filter: brightness(1.2);
+  }
 
   [icon='edit_square'] {
     position: relative;

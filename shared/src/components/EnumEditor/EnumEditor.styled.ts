@@ -41,6 +41,7 @@ export const EnumItemWrapper = styled.div`
   justify-content: stretch;
   border-radius: 4px;
   overflow: hidden;
+  background-color: var(--md-sys-color-surface-container-high);
   &.dragged {
     opacity: 0;
   }
@@ -101,7 +102,6 @@ export const EnumItemBodyExpander = styled.div`
 
 export const EnumItemBody = styled.div`
   ${centeredContentFlexColumn}
-  background-color: var(--md-sys-color-surface-container-high);
   align-items: stretch;
   padding: 0 8px;
   min-height: 0;
@@ -137,6 +137,7 @@ export const LabelColor = styled.div`
 
 export const IconSelect = styled(BaseIconSelect)`
   flex-grow: 1;
+  width: 100%;
   button div {
     width: 100%;
   }
@@ -160,6 +161,7 @@ export const PlaceholderWrapper = styled.div`
   justify-content: start;
   flex-grow: 1;
   gap: var(--base-gap-small);
+  width: 100%;
 `
 export const Placeholder = styled.div`
   ${inputLikeColorsAndBorder}

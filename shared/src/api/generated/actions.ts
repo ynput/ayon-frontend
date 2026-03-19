@@ -11,6 +11,7 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.actionContext,
         params: {
           mode: queryArg.mode,
+          variant: queryArg.variant,
         },
       }),
     }),
@@ -35,6 +36,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/actions/execute`,
         method: 'POST',
         body: queryArg.actionContext,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
         params: {
           addonName: queryArg.addonName,
           addonVersion: queryArg.addonVersion,
@@ -61,6 +66,7 @@ export type ListAvailableActionsForContextApiResponse =
   /** status 200 Successful Response */ AvailableActionsListModel
 export type ListAvailableActionsForContextApiArg = {
   mode?: 'simple' | 'dynamic' | 'all'
+  variant?: string
   actionContext: ActionContext
 }
 export type ListAllActionsApiResponse = /** status 200 Successful Response */ BaseActionManifest[]
@@ -79,6 +85,8 @@ export type ExecuteActionApiArg = {
   addonVersion: string
   variant?: string
   identifier: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   actionContext: ActionContext
 }
 export type TakeActionApiResponse = /** status 200 Successful Response */ TakeResponseModel
@@ -107,7 +115,7 @@ export type FormSelectOption = {
   badges?: string[]
 }
 export type SimpleFormField = {
-  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label'
+  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label' | 'file'
   name: string
   label?: string
   placeholder?: any
@@ -119,12 +127,15 @@ export type SimpleFormField = {
   highlight?: 'info' | 'warning' | 'error'
   min?: number | number
   max?: number | number
+  valid_extensions?: string[]
 }
 export type BaseActionManifest = {
   /** The identifier of the action */
   identifier: string
   /** Human-friendly name of the action */
   label: string
+  /** A short description of the action */
+  description?: string
   /** The label of the group the action belongs to */
   groupLabel?: string
   /** Action category */
@@ -133,6 +144,10 @@ export type BaseActionManifest = {
   order?: number
   /** An icon for the action */
   icon?: IconModel
+  /** If true, the action is only available to admin users */
+  adminOnly?: boolean
+  /** If true, the action is only available to manager users */
+  managerOnly?: boolean
   /** List of fields to be displayed in the action settings */
   configFields?: SimpleFormField[]
   /** Sort icon to the top */
@@ -159,16 +174,16 @@ export type HttpValidationError = {
 export type ActionContext = {
   /** The name of the project. If not provided, use global actions, the rest of the fields are ignored. */
   projectName?: string
-  /** The type of the entity. If not specified, project-lever or global actions are used. */
+  /** The type of the entity. Either a project level entity, 'list' or 'project' for project-wide actions. or None for global actions. */
   entityType?:
+    | 'project'
+    | 'list'
     | 'folder'
+    | 'task'
     | 'product'
     | 'version'
     | 'representation'
-    | 'task'
     | 'workfile'
-    | 'list'
-    | 'project'
   /** List of subtypes present in the entity list */
   entitySubtypes?: string[]
   /** The IDs of the entities */
@@ -179,8 +194,16 @@ export type ActionContext = {
 export type ActionConfig = {
   /** The name of the project. If not provided, use global actions, the rest of the fields are ignored. */
   projectName?: string
-  /** The type of the entity. If not specified, project-lever or global actions are used. */
-  entityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  /** The type of the entity. Either a project level entity, 'list' or 'project' for project-wide actions. or None for global actions. */
+  entityType?:
+    | 'project'
+    | 'list'
+    | 'folder'
+    | 'task'
+    | 'product'
+    | 'version'
+    | 'representation'
+    | 'workfile'
   /** List of subtypes present in the entity list */
   entitySubtypes?: string[]
   /** The IDs of the entities */

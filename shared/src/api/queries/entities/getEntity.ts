@@ -1,11 +1,12 @@
 // @ts-nocheck
-import { gqlApi } from '@shared/api/generated'
+import { GetSearchedTasksQuery, gqlApi } from '@shared/api/generated'
 import {
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,
   VERSION_TILE_FRAGMENT,
   TASK_TILE_FRAGMENT,
 } from './entityQueries'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 const buildEventTileQuery = (type) => {
   return `
@@ -171,5 +172,6 @@ export const {
   useGetEntityQuery,
   useLazyGetEntityQuery,
   useGetProductVersionsQuery,
+  useGetSearchedEntitiesInfiniteQuery,
 } = getEntityApi
 export default getEntityApi

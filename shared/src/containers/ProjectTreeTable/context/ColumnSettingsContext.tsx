@@ -5,6 +5,7 @@ import {
   OnChangeFn,
   VisibilityState,
   ColumnSizingState,
+  SortingState,
 } from '@tanstack/react-table'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
 
@@ -18,41 +19,56 @@ export type ColumnsConfig = {
   columnOrder: ColumnOrderState
   columnPinning: ColumnPinningState
   columnSizing: ColumnSizingState
+  sorting?: SortingState
   groupBy?: TableGroupBy
   groupByConfig?: {
     showEmpty?: boolean
   }
+  rowHeight?: number
 }
 
 export interface ColumnSettingsContextType {
+  // All column IDs reference
+  setAllColumns: (allColumnIds: string[]) => void
+
   // Column Visibility
   columnVisibility: VisibilityState
   setColumnVisibility: (columnVisibility: VisibilityState) => void
   updateColumnVisibility: (columnVisibility: VisibilityState) => void
-  columnVisibilityUpdater: OnChangeFn<VisibilityState>
+  columnVisibilityOnChange: OnChangeFn<VisibilityState>
 
   // Column Pinning
   columnPinning: ColumnPinningState
   setColumnPinning: (columnPinning: ColumnPinningState) => void
   updateColumnPinning: (columnPinning: ColumnPinningState) => void
-  columnPinningUpdater: OnChangeFn<ColumnPinningState>
+  columnPinningOnChange: OnChangeFn<ColumnPinningState>
 
   // Column Order
   columnOrder: ColumnOrderState
   setColumnOrder: (columnOrder: ColumnOrderState) => void
   updateColumnOrder: (columnOrder: ColumnOrderState) => void
-  columnOrderUpdater: OnChangeFn<ColumnOrderState>
+  columnOrderOnChange: OnChangeFn<ColumnOrderState>
 
   // Column Sizing
   columnSizing: ColumnSizingState
   setColumnSizing: (columnSizing: ColumnSizingState) => void
-  columnSizingUpdater: OnChangeFn<ColumnSizingState>
+  columnSizingOnChange: OnChangeFn<ColumnSizingState>
+
+  // Sorting
+  sorting: SortingState
+  updateSorting: (sorting: SortingState) => void
+  sortingOnChange: OnChangeFn<SortingState>
 
   // groupBy
   groupBy?: TableGroupBy
   updateGroupBy: (groupBy: TableGroupBy | undefined) => void
   groupByConfig: GroupByConfig
   updateGroupByConfig: (config: GroupByConfig) => void
+
+  // Row height
+  rowHeight?: number
+  updateRowHeight: (rowHeight: number) => void
+  updateRowHeightWithPersistence: (rowHeight: number) => void
 
   // Global change
   setColumnsConfig: (config: ColumnsConfig) => void

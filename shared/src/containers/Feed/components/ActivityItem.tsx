@@ -11,23 +11,25 @@ interface ActivityItemProps {
     activityType: string
     items?: any[]
     [key: string]: any
+    authorName: string
   }
   fromGroup?: boolean
   projectInfo: Record<string, any>
   createdAts?: string[]
   editProps?: Record<string, any>
-  filter: string
+  filter: any
   readOnly: boolean
   statuses: Status[]
   projectName: string
   entityType: string
+  isSlideOut?: boolean
   onReferenceClick?: (arg: any) => void
   onFileExpand?: (arg: any) => void
   showOrigin?: boolean
   isHighlighted?: boolean
   onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
-  onUpdate?: (value: any, files: any, refs?: any) => Promise<void>
+  onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
 }
 
 const ActivityItem: React.FC<ActivityItemProps> = ({
@@ -39,13 +41,17 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
   filter,
   readOnly,
   statuses,
+  isSlideOut,
   ...props
 }) => {
   switch (activity.activityType) {
     case 'comment':
       return (
         // @ts-expect-error
-        <ActivityComment {...{ activity, projectInfo, editProps, readOnly, statuses }} {...props} />
+        <ActivityComment
+          {...{ activity, projectInfo, editProps, readOnly, statuses, isSlideOut }}
+          {...props}
+        />
       )
     case 'status.change':
       return <ActivityStatusChange activity={activity} {...props} />

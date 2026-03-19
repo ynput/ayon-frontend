@@ -1,0 +1,20 @@
+fragment VersionExtended on VersionNode {
+  ...VersionBase
+  task {
+    id
+    taskType
+    label
+    name
+  }
+  product {
+    id
+    name
+    productType
+    productBaseType
+    allAttrib
+    folder {
+      id
+      ...VPFolder
+    }
+  }
+}

@@ -39,6 +39,12 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getActivityCategories: build.query<
+      GetActivityCategoriesApiResponse,
+      GetActivityCategoriesApiArg
+    >({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/activityCategories` }),
+    }),
     createReactionToActivity: build.mutation<
       CreateReactionToActivityApiResponse,
       CreateReactionToActivityApiArg
@@ -100,6 +106,7 @@ export type PostProjectActivityApiResponse =
   /** status 201 Successful Response */ CreateActivityResponseModel
 export type PostProjectActivityApiArg = {
   projectName: string
+  /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
   'x-sender'?: string
@@ -120,6 +127,11 @@ export type PatchProjectActivityApiArg = {
   'x-sender'?: string
   'x-sender-type'?: string
   activityPatchModel: ActivityPatchModel
+}
+export type GetActivityCategoriesApiResponse =
+  /** status 200 Successful Response */ ActivityCategoriesResponseModel
+export type GetActivityCategoriesApiArg = {
+  projectName: string
 }
 export type CreateReactionToActivityApiResponse = /** status 201 Successful Response */ any
 export type CreateReactionToActivityApiArg = {
@@ -146,12 +158,14 @@ export type SuggestEntityMentionApiArg = {
 export type GetEntityWatchersApiResponse = /** status 200 Successful Response */ WatchersModel
 export type GetEntityWatchersApiArg = {
   projectName: string
+  /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
 }
 export type SetEntityWatchersApiResponse = /** status 201 Successful Response */ any
 export type SetEntityWatchersApiArg = {
   projectName: string
+  /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
   'x-sender'?: string
@@ -197,6 +211,9 @@ export type ActivityPatchModel = {
   /** When true, append files to the existing ones. replace them otherwise */
   appendFiles?: boolean
   data?: Record<string, any>
+}
+export type ActivityCategoriesResponseModel = {
+  categories: object[]
 }
 export type CreateReactionModel = {
   /** The reaction to be created */

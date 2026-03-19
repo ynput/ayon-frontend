@@ -1,4 +1,10 @@
-import { DefaultValueTemplate, Button, Spacer, DropdownRef } from '@ynput/ayon-react-components'
+import {
+  DefaultValueTemplate,
+  Button,
+  Spacer,
+  DropdownRef,
+  DropdownProps,
+} from '@ynput/ayon-react-components'
 import { DropdownHeader, DropdownItem, StyledDropdown } from './ActionsDropdown.styled'
 import clsx from 'clsx'
 import { useRef } from 'react'
@@ -33,6 +39,7 @@ type ActionsDropdownItemProps = {
   icon?: IconModel
   header?: boolean
   hasConfig?: boolean
+  description?: string
   onConfig?: (value: string) => void
 }
 
@@ -42,6 +49,7 @@ export const ActionsDropdownItem = ({
   icon,
   header,
   hasConfig,
+  description,
   onConfig,
 }: ActionsDropdownItemProps) => {
   if (header) return <DropdownHeader>{upperFirst(label)}</DropdownHeader>
@@ -54,7 +62,7 @@ export const ActionsDropdownItem = ({
 
   return (
     <DropdownItem>
-      <ActionItemContainer>
+      <ActionItemContainer data-tooltip={description || ''} data-tooltip-delay={0}>
         <ActionIcon icon={icon} />
         <span>{label}</span>
         <Spacer />
@@ -71,9 +79,10 @@ export const ActionsDropdownItem = ({
   )
 }
 
-export type ActionsDropdownProps = {
+export interface ActionsDropdownProps extends Omit<DropdownProps, 'value'> {
   options: ActionsDropdownItemProps[]
   isLoading?: boolean
+  isDeveloperMode: boolean
   onAction: (value: string) => void
   onConfig: (e: any) => void
 }
@@ -81,8 +90,10 @@ export type ActionsDropdownProps = {
 export const ActionsDropdown = ({
   options,
   isLoading,
+  isDeveloperMode,
   onAction,
   onConfig,
+  ...props
 }: ActionsDropdownProps) => {
   const dropdownRef = useRef<DropdownRef>(null)
 
@@ -90,12 +101,11 @@ export const ActionsDropdown = ({
     dropdownRef.current?.close()
     onConfig(e)
   }
-
   return (
     <StyledDropdown
       ref={dropdownRef}
       disabled={isLoading}
-      className={clsx('more', { loading: isLoading })}
+      className={clsx('more', { dev: isDeveloperMode })}
       options={options}
       maxOptionsShown={100}
       value={[]}
@@ -103,8 +113,12 @@ export const ActionsDropdown = ({
       itemTemplate={(option) => <ActionsDropdownItem {...option} onConfig={handleConfigClick} />}
       valueTemplate={() => <DefaultValueTemplate placeholder="" value={[]} dropIcon={'category'} />}
       onChange={(v) => onAction(v[0])}
-      // @ts-expect-error
-      buttonProps={{ ['data-tooltip']: 'Actions', ['data-tooltip-delay']: 0 }}
+      buttonProps={{
+        // @ts-expect-error
+        ['data-tooltip']: isDeveloperMode ? 'Actions (dev bundle)' : 'Actions',
+        ['data-tooltip-delay']: 0,
+      }}
+      {...props}
     />
   )
 }

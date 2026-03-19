@@ -24,6 +24,7 @@ const SCOPE_OPTIONS = [
   { value: 'version', label: 'Version' },
   { value: 'representation', label: 'Representation' },
   { value: 'user', label: 'User' },
+  { value: 'list', label: 'List' },
 ]
 
 // Define types for constants
@@ -37,7 +38,10 @@ const GLOBAL_FIELDS: GlobalFieldEntry[] = [
   { value: 'example', scope: null },
   // @ts-expect-error - project is not a scope?
   { value: 'default', scope: ['project'] },
-  { value: 'inherit', scope: null },
+  {
+    value: 'inherit',
+    scope: ['project', 'folder', 'task', 'product', 'version', 'representation', 'user'],
+  },
 ]
 
 interface TypeOptionDef {
@@ -77,6 +81,11 @@ const TYPE_OPTIONS: TypeOptionsMap = {
     label: 'Boolean',
     fields: [],
     exclude: ['example'],
+  },
+  datetime: {
+    value: 'datetime',
+    label: 'Datetime',
+    fields: [],
   },
 }
 
@@ -141,7 +150,6 @@ const buildInitFormData = (excludes: Excludes, data?: Partial<AttributeForm>) =>
     // Merge top-level fields
     Object.keys(data).forEach((key) => {
       const typedKey = key as keyof AttributeForm
-      if (typedKey !== 'data' && excludes.includes(typedKey)) return
 
       if (typedKey === 'data' && data.data && formData.data) {
         // Deep merge of data fields
@@ -158,6 +166,7 @@ const buildInitFormData = (excludes: Excludes, data?: Partial<AttributeForm>) =>
 
 export interface AttributeEditorProps {
   attribute: AttributeForm | null
+  defaultData?: Partial<AttributeForm>
   existingNames: string[]
   error?: string
   isUpdating?: boolean
@@ -169,6 +178,7 @@ export interface AttributeEditorProps {
 
 export const AttributeEditor: FC<AttributeEditorProps> = ({
   attribute,
+  defaultData,
   existingNames,
   error = '',
   isUpdating,
@@ -177,8 +187,22 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const initForm = buildInitFormData(excludes, { position: existingNames.length })
-  const [formData, setFormData] = useState<AttributeForm | null>(attribute || initForm)
+  const resolvedDefaultData = defaultData
+    ? {
+        ...defaultData,
+        name:
+          defaultData.name ||
+          (defaultData.data?.title ? camelCase(defaultData.data.title) : undefined),
+      }
+    : undefined
+
+  const [formData, setFormData] = useState<AttributeForm | null>(
+    attribute ||
+      buildInitFormData(excludes, {
+        position: existingNames.length,
+        ...resolvedDefaultData,
+      }),
+  )
 
   useEffect(() => {
     if (!!attribute) setFormData(attribute)
@@ -308,6 +332,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
       isOpen={true}
       style={{ width: 700, zIndex: 999 }}
       size="full"
+      enableBackdropClose={false}
       onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
           e.preventDefault()
@@ -348,9 +373,20 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
             <FormRow label="Type">
               <Dropdown
                 value={[formData?.data?.type]}
-                disabled={formData.builtin}
+                disabled={formData.builtin || !isNew}
                 options={Object.values(TYPE_OPTIONS)}
-                onChange={(v) => setData('type', v[0] as AttributeData['type'])}
+                onChange={(v) => {
+                  const newType = v[0] as AttributeData['type']
+                  // Check if regex is supported for the new type
+                  const typeOpt = TYPE_OPTIONS[newType]
+                  const supportsRegex = typeOpt?.fields?.includes('regex')
+
+                  setData('type', newType)
+                  // Clear regex if not supported by the new type
+                  if (!supportsRegex && formData?.data?.regex) {
+                    setData('regex', '')
+                  }
+                }}
                 minSelected={1}
                 widthExpand
               />

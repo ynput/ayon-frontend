@@ -89,7 +89,6 @@ export const useLoadModule = <T>({
       from: 'runtime',
     })
       .then((remote) => {
-        console.log('loaded remote', module)
         setIsLoaded(module)
         setIsLoading(false)
         if (remote) loadedRemote.current = remote.default
@@ -108,7 +107,7 @@ export const useLoadModule = <T>({
       outdated: isOutdated
         ? {
             current: modules.find((m) => m.addonName === addon)?.addonVersion || 'unknown',
-            required: minVersion || 'unknown',
+            required: minVersion?.replace('-dev', '') || 'unknown',
           }
         : undefined,
     },

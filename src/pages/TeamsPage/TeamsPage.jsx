@@ -23,6 +23,7 @@ import styled from 'styled-components'
 import useSearchFilter from '@hooks/useSearchFilter'
 import { useSearchParams } from 'react-router-dom'
 import { confirmDelete } from '@shared/util'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 const SectionStyled = styled(Section)`
   align-items: start;
@@ -414,8 +415,11 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
   const isLoading = isLoadingUsers || isLoadingTeams || isUpdating
 
+  const pageTitle = projectName ? `Teams • ${projectName}` : 'Teams • AYON'
+
   return (
     <>
+      <DocumentTitle title={pageTitle} />
       <Dialog
         isOpen={duplicateTeamNameVisible}
         onClose={onCancelDuplicate}

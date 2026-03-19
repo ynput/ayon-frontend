@@ -66,7 +66,8 @@ const ActivityHeader: React.FC<ActivityHeaderProps> = ({
   const boldString = isMention ? `mentioned` : 'commented'
   const entityTypeString = isMention ? ` ${entityType} on` : 'on'
 
-  const noUser = activity.author?.deleted || !activity.author?.active
+  const isGuest = name?.startsWith('guest.')
+  const noUser = (activity.author?.deleted || !activity.author?.active) && !isGuest
   return (
     <Styled.Header>
       <Styled.Body>

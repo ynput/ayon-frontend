@@ -10,13 +10,20 @@ query GetLists($projectName: String!, $first: Int!, $after: String, $filter: Str
           id
           label
           entityListType
+          entityListFolderId
           tags
           data
+          allAttrib
           entityType
           active
           createdAt
           updatedAt
+          updatedBy
+          active
+          projectName
           owner
+          accessLevel
+          access
           count
         }
       }

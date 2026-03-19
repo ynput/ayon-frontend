@@ -1,17 +1,14 @@
 // React imports
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 
 // Third-party libraries
-import { ExpandedState, SortingState } from '@tanstack/react-table'
-import { isEmpty } from 'lodash'
+import { ExpandedState } from '@tanstack/react-table'
 
 // Shared components and hooks
-import { Filter } from '@ynput/ayon-react-components'
-import { useLocalStorage, useUserProjectConfig } from '@shared/hooks'
+import { useLocalStorage, useGetEntityGroups } from '@shared/hooks'
 
 // Shared ProjectTreeTable
 import {
-  TableGroupBy,
   useProjectDataContext,
   useFetchOverviewData,
   useQueryFilters,
@@ -19,32 +16,44 @@ import {
   useSelectedFolders,
   useScopedAttributeFields,
   useExpandedState,
-  useColumnSorting,
   createLocalStorageKey,
   extractErrorMessage,
-  useGetTaskGroups,
   ProjectOverviewContextType,
   ProjectOverviewProviderProps,
+  useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable'
 
+// Views hooks
+import {
+  createFilterFromSlicer,
+  useOverviewViewSettings,
+  useViewsContext,
+  useViewUpdateHelper,
+} from '@shared/containers'
+
 // Local context and hooks
-import { useSlicerContext } from '@context/SlicerContext'
-import useFilterBySlice from '@containers/TasksProgress/hooks/useFilterBySlice'
+import { useSlicerContext } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
+import { useProjectContext } from '@shared/context'
+import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 
 const ProjectOverviewContext = createContext<ProjectOverviewContextType | undefined>(undefined)
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
   // Get project data from the new context
-  const {
-    projectName,
-    projectInfo,
-    attribFields,
-    users,
-    isInitialized,
-    isLoading: isLoadingData,
-  } = useProjectDataContext()
-  const { filter: sliceFilter } = useFilterBySlice()
+  const { projectName, ...projectInfo } = useProjectContext()
+  const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
+
+  const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
+    useSlicerContext()
+
+  const { groupBy, sorting } = useColumnSettingsContext()
+
+  const sliceFilter = createFilterFromSlicer({
+    type: sliceType,
+    selection: rowSelectionData,
+    attribFields: attribFields,
+  })
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({
@@ -65,53 +74,78 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     setExpanded,
   })
 
-  // Get column sorting
-  const [pageConfig, updatePageConfig, { isSuccess: isConfigReady }] = useUserProjectConfig({
-    selectors: ['overview', projectName],
-  })
+  // view context and update helper
+  const { viewSettings } = useViewsContext()
+  const { updateViewSettings } = useViewUpdateHelper()
 
-  const [filters, setFilters] = useLocalStorage<Filter[]>(
-    createLocalStorageKey(page, 'filters', projectName),
-    [],
-  )
-  const [showHierarchy, updateShowHierarchy] = useLocalStorage<boolean>(
-    createLocalStorageKey(page, 'showHierarchy', projectName),
-    true,
-  )
-
-  let { columnSorting = [], groupBy } = pageConfig as {
-    columnSorting: SortingState
-    groupBy?: TableGroupBy
-  }
+  const {
+    showHierarchy,
+    onUpdateHierarchy: updateShowHierarchy,
+    filters: queryFilters,
+    onUpdateFilters: setQueryFilters,
+  } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
   // GET GROUPING
-  const { taskGroups, error: groupingError } = useGetTaskGroups({
+  const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
     groupBy,
     projectName,
+    entityType: 'task',
   })
 
-  // Use the shared hook to handle filter logic
-  const { combinedFilters, ...queryFilters } = useQueryFilters({
-    filters,
+  // Stable default filter to prevent unnecessary re-renders
+  const EMPTY_FILTER = useMemo(() => ({ conditions: [] }), [])
+
+  // Separate the combined filters into task and folder filters
+  const { task: taskFilter = EMPTY_FILTER, folder: folderFilter = EMPTY_FILTER } = useMemo(() => {
+    return splitFiltersByScope(
+      queryFilters,
+      ['task', 'folder'],
+      { fallbackScope: 'task' },
+      {
+        // Map filter IDs that don't have scope prefix to their scope
+        taskType: 'task',
+        assignees: 'task',
+        folderType: 'folder',
+      },
+    )
+  }, [queryFilters])
+
+  // Separate slicer filters into different types
+  const {
+    task: [slicerTaskFilter],
+    folder: [slicerFolderFilter],
+  } = useMemo(() => {
+    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, ['task', 'folder'], {
+      status: 'task', // status defaults to task for overview
+      taskType: 'task',
+      assignees: 'task',
+      folderType: 'folder',
+    })
+  }, [sliceFilter])
+
+  // Combine slicer filters with task/folder filters
+  const combinedTaskFilter = useQueryFilters({
+    queryFilters: taskFilter,
+    sliceFilter: slicerTaskFilter,
+    config: { searchKey: 'name' },
+  })
+  const combinedFolderFilter = useQueryFilters({
+    queryFilters: folderFilter,
+    sliceFilter: slicerFolderFilter,
+    config: { searchKey: 'name' },
+  })
+
+  // Use the shared hook to handle filter logic (for backward compatibility)
+  const queryFiltersResult = useQueryFilters({
+    queryFilters,
     sliceFilter,
+    config: { searchKey: 'name' },
   })
-
-  const { updateSorting } = useColumnSorting({
-    updatePageConfig,
-    columnSorting,
-  })
-
-  const { rowSelection, sliceType, persistentRowSelectionData } = useSlicerContext()
-
-  // filter out by slice
-  const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
-    ? null
-    : persistentRowSelectionData
 
   const selectedFolders = useSelectedFolders({
     rowSelection,
     sliceType,
-    persistentRowSelectionData: persistedHierarchySelection,
+    persistentRowSelectionData,
   })
 
   // DATA FETCHING
@@ -127,10 +161,18 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
-    filters: combinedFilters,
-    queryFilters,
+    taskFilters: {
+      filter: combinedTaskFilter.filter,
+      filterString: combinedTaskFilter.filterString,
+      search: combinedTaskFilter.search,
+    },
+    folderFilters: {
+      filter: combinedFolderFilter.filter,
+      filterString: combinedFolderFilter.filterString,
+      search: combinedFolderFilter.search,
+    },
     expanded,
-    sorting: columnSorting,
+    sorting: sorting,
     groupBy,
     taskGroups,
     showHierarchy,
@@ -146,7 +188,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   return (
     <ProjectOverviewContext.Provider
       value={{
-        isInitialized: isInitialized && isConfigReady,
+        isInitialized: isInitialized,
         isLoading: isLoadingAll || isLoadingData,
         isLoadingMore,
         loadingTasks,
@@ -162,10 +204,27 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         fetchNextPage,
         reloadTableData,
         taskGroups,
-        // filters
-        filters,
-        setFilters,
-        queryFilters,
+        // Separate task and folder filters
+        taskFilters: {
+          filter: combinedTaskFilter.filter,
+          filterString: combinedTaskFilter.filterString,
+          search: combinedTaskFilter.search,
+        },
+        folderFilters: {
+          filter: combinedFolderFilter.filter,
+          filterString: combinedFolderFilter.filterString,
+          search: combinedFolderFilter.search,
+        },
+        // Backward compatibility for ProjectTableProvider (uses taskFilters)
+        queryFilters: {
+          filter: combinedTaskFilter.filter,
+          filterString: combinedTaskFilter.filterString,
+          search: combinedTaskFilter.search,
+        },
+        setQueryFilters,
+        // Additional filter contexts for dual filtering system
+        combinedFilters: queryFiltersResult.combinedFilters,
+        displayFilters: queryFiltersResult.displayFilters,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
@@ -175,9 +234,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         toggleExpanded,
         updateExpanded,
         setExpanded,
-        // sorting
-        sorting: columnSorting,
-        updateSorting,
         // context menu item
         contextMenuItems,
       }}

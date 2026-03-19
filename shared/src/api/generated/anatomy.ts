@@ -87,6 +87,12 @@ export type AnatomyPresetListModel = {
   version: string
   presets?: AnatomyPresetListItem[]
 }
+export type EntityNaming = {
+  /** How to capitalize the entity names */
+  capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
+  /** Character to separate different parts of the name */
+  separator?: '' | '_' | '-' | '.'
+}
 export type Root = {
   name: string
   windows?: string
@@ -154,13 +160,12 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
 }
 export type FolderType = {
   name: string
   original_name?: string
   shortName?: string
+  color?: string
   icon?: string
 }
 export type TaskType = {
@@ -192,7 +197,23 @@ export type Tag = {
   original_name?: string
   color?: string
 }
+export type DefaultProductBaseType = {
+  color?: string
+  icon?: string
+}
+export type ProductBaseType = {
+  name?: string
+  color?: string
+  icon?: string
+}
+export type ProductBaseTypes = {
+  /** Default appearance for product types */
+  default?: DefaultProductBaseType
+  definitions?: ProductBaseType[]
+}
 export type Anatomy = {
+  /** Settings for automatic entity name generation */
+  entity_naming?: EntityNaming
   /** Setup root paths for the project */
   roots?: Root[]
   /** Path templates configuration */
@@ -209,6 +230,7 @@ export type Anatomy = {
   statuses?: Status[]
   /** Tags configuration */
   tags?: Tag[]
+  product_base_types?: ProductBaseTypes
 }
 export type ValidationError = {
   loc: (string | number)[]

@@ -80,6 +80,26 @@ const injectedRtkApi = api.injectEndpoints({
     getProjectTeams: build.query<GetProjectTeamsApiResponse, GetProjectTeamsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/dashboard/users` }),
     }),
+    getProjectFolders: build.query<GetProjectFoldersApiResponse, GetProjectFoldersApiArg>({
+      query: () => ({ url: `/api/projectFolders` }),
+    }),
+    createProjectFolder: build.mutation<CreateProjectFolderApiResponse, CreateProjectFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projectFolders`,
+        method: 'POST',
+        body: queryArg.projectFolderPostModel,
+      }),
+    }),
+    deleteProjectFolder: build.mutation<DeleteProjectFolderApiResponse, DeleteProjectFolderApiArg>({
+      query: (queryArg) => ({ url: `/api/projectFolders/${queryArg.folderId}`, method: 'DELETE' }),
+    }),
+    updateProjectFolder: build.mutation<UpdateProjectFolderApiResponse, UpdateProjectFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projectFolders/${queryArg.folderId}`,
+        method: 'PATCH',
+        body: queryArg.projectFolderPatchModel,
+      }),
+    }),
     getProjectAnatomy: build.query<GetProjectAnatomyApiResponse, GetProjectAnatomyApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/anatomy` }),
     }),
@@ -94,7 +114,7 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    setProjectBundle: build.mutation<SetProjectBundleApiResponse, SetProjectBundleApiArg>({
+    setProjectBundles: build.mutation<SetProjectBundlesApiResponse, SetProjectBundlesApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/bundles`,
         method: 'POST',
@@ -102,6 +122,41 @@ const injectedRtkApi = api.injectEndpoints({
         headers: {
           'x-sender': queryArg['x-sender'],
           'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    getProjectBundleInfo: build.query<GetProjectBundleInfoApiResponse, GetProjectBundleInfoApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundle`,
+        params: {
+          variant: queryArg.variant,
+        },
+      }),
+    }),
+    setProjectBundle: build.mutation<SetProjectBundleApiResponse, SetProjectBundleApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundle`,
+        method: 'POST',
+        body: queryArg.projectBundle,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+        params: {
+          variant: queryArg.variant,
+        },
+      }),
+    }),
+    unsetProjectBundle: build.mutation<UnsetProjectBundleApiResponse, UnsetProjectBundleApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundle`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+        params: {
+          variant: queryArg.variant,
         },
       }),
     }),
@@ -125,6 +180,25 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'POST',
         body: queryArg.deployProjectRequestModel,
       }),
+    }),
+    listGuestUsers: build.query<ListGuestUsersApiResponse, ListGuestUsersApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/guests` }),
+    }),
+    addGuestUser: build.mutation<AddGuestUserApiResponse, AddGuestUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/guests`,
+        method: 'POST',
+        body: queryArg.addGuestUserModel,
+      }),
+    }),
+    removeGuestUser: build.mutation<RemoveGuestUserApiResponse, RemoveGuestUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/guests/${queryArg.email}`,
+        method: 'DELETE',
+      }),
+    }),
+    getProductTypes: build.query<GetProductTypesApiResponse, GetProductTypesApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/productTypes` }),
     }),
     getProject: build.query<GetProjectApiResponse, GetProjectApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}` }),
@@ -214,17 +288,6 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.getUrisRequest,
       }),
     }),
-    planner010DevGetProjectPlannerStatus: build.query<
-      Planner010DevGetProjectPlannerStatusApiResponse,
-      Planner010DevGetProjectPlannerStatusApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/planner/0.1.0-dev/setup`,
-        params: {
-          project: queryArg.project,
-        },
-      }),
-    }),
   }),
   overrideExisting: false,
 })
@@ -292,6 +355,22 @@ export type GetProjectTeamsApiResponse =
 export type GetProjectTeamsApiArg = {
   projectName: string
 }
+export type GetProjectFoldersApiResponse =
+  /** status 200 Successful Response */ ProjectFoldersResponseModel
+export type GetProjectFoldersApiArg = void
+export type CreateProjectFolderApiResponse = /** status 200 Successful Response */ EntityIdResponse
+export type CreateProjectFolderApiArg = {
+  projectFolderPostModel: ProjectFolderPostModel
+}
+export type DeleteProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type DeleteProjectFolderApiArg = {
+  folderId: string
+}
+export type UpdateProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type UpdateProjectFolderApiArg = {
+  folderId: string
+  projectFolderPatchModel: ProjectFolderPatchModel
+}
 export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ Anatomy
 export type GetProjectAnatomyApiArg = {
   projectName: string
@@ -303,16 +382,37 @@ export type SetProjectAnatomyApiArg = {
   'x-sender-type'?: string
   anatomy: Anatomy
 }
-export type SetProjectBundleApiResponse = unknown
-export type SetProjectBundleApiArg = {
+export type SetProjectBundlesApiResponse = unknown
+export type SetProjectBundlesApiArg = {
   projectName: string
   'x-sender'?: string
   'x-sender-type'?: string
   projectBundleModel: ProjectBundleModel
 }
+export type GetProjectBundleInfoApiResponse = /** status 200 Successful Response */ ProjectBundle
+export type GetProjectBundleInfoApiArg = {
+  projectName: string
+  variant?: 'production' | 'staging'
+}
+export type SetProjectBundleApiResponse = /** status 200 Successful Response */ any
+export type SetProjectBundleApiArg = {
+  projectName: string
+  variant?: 'production' | 'staging'
+  'x-sender'?: string
+  'x-sender-type'?: string
+  projectBundle: ProjectBundle
+}
+export type UnsetProjectBundleApiResponse = unknown
+export type UnsetProjectBundleApiArg = {
+  projectName: string
+  variant?: 'production' | 'staging'
+  'x-sender'?: string
+  'x-sender-type'?: string
+}
 export type ListProjectsApiResponse =
   /** status 200 Successful Response */ ListProjectsResponseModel
 export type ListProjectsApiArg = {
+  /** Page number, starting from 1 */
   page?: number
   /** If not provided, the result will not be limited */
   length?: number
@@ -320,6 +420,7 @@ export type ListProjectsApiArg = {
   library?: boolean
   /** If not provided, return projects regardless the flag */
   active?: boolean
+  /** Attribute to order the list by */
   order?: 'name' | 'createdAt' | 'updatedAt'
   desc?: boolean
   /** Limit the result to project with the matching name,
@@ -329,6 +430,24 @@ export type ListProjectsApiArg = {
 export type DeployProjectApiResponse = /** status 201 Successful Response */ any
 export type DeployProjectApiArg = {
   deployProjectRequestModel: DeployProjectRequestModel
+}
+export type ListGuestUsersApiResponse = /** status 200 Successful Response */ GuestUsersListModel
+export type ListGuestUsersApiArg = {
+  projectName: string
+}
+export type AddGuestUserApiResponse = /** status 200 Successful Response */ any
+export type AddGuestUserApiArg = {
+  projectName: string
+  addGuestUserModel: AddGuestUserModel
+}
+export type RemoveGuestUserApiResponse = /** status 200 Successful Response */ any
+export type RemoveGuestUserApiArg = {
+  email: string
+  projectName: string
+}
+export type GetProductTypesApiResponse = /** status 200 Successful Response */ ProductTypesList
+export type GetProductTypesApiArg = {
+  projectName: string
 }
 export type GetProjectApiResponse = /** status 200 Successful Response */ ProjectModel
 export type GetProjectApiArg = {
@@ -405,11 +524,6 @@ export type GetProjectEntityUrisApiResponse = /** status 200 Successful Response
 export type GetProjectEntityUrisApiArg = {
   projectName: string
   getUrisRequest: GetUrisRequest
-}
-export type Planner010DevGetProjectPlannerStatusApiResponse =
-  /** status 200 Successful Response */ PlannerProjectStatus
-export type Planner010DevGetProjectPlannerStatusApiArg = {
-  project?: string
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -490,6 +604,43 @@ export type ProjectTeamsResponseModel = {
     [key: string]: number
   }
 }
+export type ProjectFolderData = {
+  /** Hex color code */
+  color?: string
+  /** Icon name */
+  icon?: string
+}
+export type ProjectFolderModel = {
+  id: string
+  label: string
+  parentId?: string
+  position?: number
+  data?: ProjectFolderData
+}
+export type ProjectFoldersResponseModel = {
+  folders?: ProjectFolderModel[]
+}
+export type EntityIdResponse = {
+  /** Entity ID */
+  id: string
+}
+export type ProjectFolderPostModel = {
+  id?: string
+  label: string
+  parentId?: string
+  data?: ProjectFolderData
+}
+export type ProjectFolderPatchModel = {
+  label?: string
+  parentId?: string
+  data?: ProjectFolderData
+}
+export type EntityNaming = {
+  /** How to capitalize the entity names */
+  capitalization?: 'lower' | 'upper' | 'keep' | 'pascal' | 'camel'
+  /** Character to separate different parts of the name */
+  separator?: '' | '_' | '-' | '.'
+}
 export type Root = {
   name: string
   windows?: string
@@ -557,21 +708,12 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
-  shotgridPush?: boolean
 }
 export type FolderType = {
   name: string
   original_name?: string
   shortName?: string
+  color?: string
   icon?: string
 }
 export type TaskType = {
@@ -603,7 +745,23 @@ export type Tag = {
   original_name?: string
   color?: string
 }
+export type DefaultProductBaseType = {
+  color?: string
+  icon?: string
+}
+export type ProductBaseType = {
+  name?: string
+  color?: string
+  icon?: string
+}
+export type ProductBaseTypes = {
+  /** Default appearance for product types */
+  default?: DefaultProductBaseType
+  definitions?: ProductBaseType[]
+}
 export type Anatomy = {
+  /** Settings for automatic entity name generation */
+  entity_naming?: EntityNaming
   /** Setup root paths for the project */
   roots?: Root[]
   /** Path templates configuration */
@@ -620,15 +778,62 @@ export type Anatomy = {
   statuses?: Status[]
   /** Tags configuration */
   tags?: Tag[]
+  product_base_types?: ProductBaseTypes
 }
 export type ProjectBundleModel = {
   production?: string
   staging?: string
 }
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for type material-symbols) */
+  name?: string
+  /** The color of the icon (for type material-symbols) */
+  color?: string
+  /** The URL of the icon (for type url) */
+  url?: string
+}
+export type EnumItem = {
+  value: string | number | number | boolean
+  label: string
+  description?: string
+  fulltext?: string[]
+  group?: string
+  /** Icon name (material symbol) or IconModel object */
+  icon?: string | IconModel
+  color?: string
+  /** Enum item is visible, but not selectable */
+  disabled?: boolean
+  /** Message to show when the option is disabled */
+  disabledMessage?: string
+}
+export type AddonMetadata = {
+  name: string
+  label: string
+  options: EnumItem[]
+}
+export type ProjectBundle = {
+  /** Dictionary of addon names and their versions. Use `null` to disable an addon. */
+  addons: {
+    [key: string]: string
+  }
+  installerVersion?: string
+  dependencyPackages?: {
+    [key: string]: string
+  }
+  addonMetadata?: AddonMetadata[]
+  installerOptions?: string[]
+  dependencyPackageOptions?: {
+    [key: string]: string[]
+  }
+}
 export type ListProjectsItemModel = {
   name: string
   code: string
-  active: boolean
+  active?: boolean
+  library?: boolean
+  pinned?: boolean
+  projectFolder?: string
   createdAt: string
   updatedAt: string
 }
@@ -650,6 +855,32 @@ export type DeployProjectRequestModel = {
   library?: boolean
   /** Assign default users to the project */
   assignUsers?: boolean
+}
+export type GuestUserModel = {
+  email: string
+  fullName?: string
+  status?: 'pending' | 'active'
+}
+export type GuestUsersListModel = {
+  users?: GuestUserModel[]
+}
+export type AddGuestUserModel = {
+  email: string
+  fullName?: string
+}
+export type ProductTypeListItem = {
+  name: string
+  baseType?: string
+  color?: string
+  icon?: string
+}
+export type DefaultProductType = {
+  color: string
+  icon: string
+}
+export type ProductTypesList = {
+  productTypes?: ProductTypeListItem[]
+  default: DefaultProductType
 }
 export type LinkTypeModel = {
   /** Name of the link type */
@@ -684,16 +915,6 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  applications?: string[]
-  tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
-  shotgridPush?: boolean
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -762,13 +983,4 @@ export type GetUrisResponse = {
 export type GetUrisRequest = {
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   ids?: string[]
-}
-export type PlannerProjectStatusItem = {
-  name: string
-  code: string
-  initialized: boolean
-}
-export type PlannerProjectStatus = {
-  projects?: PlannerProjectStatusItem[]
-  initialized: boolean
 }

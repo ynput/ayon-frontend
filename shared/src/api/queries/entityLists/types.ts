@@ -1,8 +1,16 @@
-import { GetListItemsQuery, GetListsQuery } from '@shared/api/generated'
+import {
+  GetListItemsQuery,
+  GetListsItemsForReviewSessionQuery,
+  GetListsQuery,
+} from '@shared/api/generated'
 
 // Define the type for our transformed lists data
 type QueryEntityList = GetListsQuery['project']['entityLists']['edges'][number]['node']
-export type EntityList = QueryEntityList & { entityType: 'folder' | 'version' | 'task' | 'product' }
+export type EntityList = Omit<QueryEntityList, 'data'> & {
+  entityType: 'folder' | 'version' | 'task' | 'product'
+  data: Record<string, any>
+  attrib: Record<string, any>
+}
 
 // Define the result type for lists query
 export type GetListsResult = {
@@ -18,6 +26,17 @@ export type ListsPageParam = {
   cursor: string
 }
 
+export type QueryEntityListsItemsForReviewSession =
+  GetListsItemsForReviewSessionQuery['project']['entityLists']['edges'][number]['node']
+
+export type GetListsItemsForReviewSessionResult = {
+  pageInfo: {
+    hasNextPage: boolean
+    endCursor?: string | null
+  }
+  lists: QueryEntityListsItemsForReviewSession[]
+}
+
 // Extra types from the query
 type QueryEntityListItemEdge =
   GetListItemsQuery['project']['entityLists']['edges'][number]['node']['items']['edges'][number]
@@ -29,25 +48,25 @@ type ItemNodeData = {
   taskType?: string
   folderType?: string
   productType?: string
+  parentId?: string
+  folderId?: string
   assignees?: string[]
   label?: string
   ownAttrib: string[]
-  // different paths to folder
-  path?: string
+  parents?: string[]
+  subtasks?: string[]
   folder?: {
-    path: string
     folderType: string
   }
   product?: {
-    name: string
+    folderId?: string
     productType: string
     folder: {
-      path: string
       folderType: string
     }
   }
   task?: {
-    name: string
+    folderId?: string
     taskType: string
   }
 }
@@ -81,4 +100,26 @@ export type ListItemMessage = {
     entityId?: string
     label: string
   }
+}
+
+export type CreateSessionFromListApiResponse =
+  /** status 200 Successful Response */ SessionFromListResponse
+export type CreateSessionFromListApiArg = {
+  projectName: string
+  addonVersion: string
+  sessionFromListRequest: SessionFromListRequest
+}
+export type SessionFromListRequest = {
+  /** Entity list ID to create the session from */
+  listId: string
+  /** Optional session ID for the new session */
+  sessionId?: string
+  /** Name/label for the review session */
+  label?: string
+}
+export type SessionFromListResponse = {
+  /** ID of the created review session */
+  sessionId: string
+  /** Name/label of the created review session */
+  label: string
 }

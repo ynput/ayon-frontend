@@ -2,31 +2,40 @@ import { FC } from 'react'
 import {
   ColumnSettingsProvider,
   ProjectDataProvider,
-  useProjectTableModules,
+  ColumnDndProvider,
 } from '@shared/containers/ProjectTreeTable'
-import { SettingsPanelProvider } from '@shared/context'
+import { useGroupByRemoteModules } from '@shared/hooks'
+import { SettingsPanelProvider, MoveEntityProvider } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import { ProjectOverviewProvider } from '../context/ProjectOverviewContext'
-import { useUserProjectConfig } from '@shared/hooks'
 import ProjectOverviewTableProvider from './ProjectOverviewTableProvider'
+import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'
 
 const ProjectOverviewDataProvider: FC = () => {
   const projectName = useAppSelector((state) => state.project.name) || ''
 
-  const [pageConfig, updatePageConfig] = useUserProjectConfig({
-    selectors: ['overview', projectName],
+  // view context and update helper
+  const { viewSettings } = useViewsContext()
+  const { updateViewSettings } = useViewUpdateHelper()
+  const { columns, onUpdateColumns } = useOverviewViewSettings({
+    viewSettings,
+    updateViewSettings,
   })
 
-  const modules = useProjectTableModules()
+  const modules = useGroupByRemoteModules()
 
   return (
     <ProjectDataProvider projectName={projectName}>
-      <ColumnSettingsProvider config={pageConfig} onChange={updatePageConfig}>
-        <ProjectOverviewProvider modules={modules}>
-          <SettingsPanelProvider>
-            <ProjectOverviewTableProvider modules={modules} />
-          </SettingsPanelProvider>
-        </ProjectOverviewProvider>
+      <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
+        <ColumnDndProvider>
+          <MoveEntityProvider>
+            <ProjectOverviewProvider modules={modules}>
+              <SettingsPanelProvider>
+                <ProjectOverviewTableProvider modules={modules} />
+              </SettingsPanelProvider>
+            </ProjectOverviewProvider>
+          </MoveEntityProvider>
+        </ColumnDndProvider>
       </ColumnSettingsProvider>
     </ProjectDataProvider>
   )

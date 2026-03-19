@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 export const TooltipWidget = styled.div`
   position: fixed;
-  z-index: 3000;
+  z-index: 10001;
 
   transition: opacity 300ms;
   /* how far up the tooltip us */
@@ -33,8 +33,11 @@ export const TooltipInner = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   white-space: break-spaces;
+  overflow-wrap: break-word;
+
+  /* only break words aggressively when content overflows */
+  word-break: ${(props) => (props.$hasOverflow ? 'break-word' : 'normal')};
 
   /* box shadow */
-  box-shadow: 0 0 10px 0px rgba(0, 0, 0, 0.4);
   z-index: 1200;
 `

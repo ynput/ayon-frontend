@@ -6,7 +6,6 @@ const addonsManagerSlice = createSlice({
     selectedAddons: [],
     selectedVersions: [],
     selectedBundles: [],
-    deletedVersions: [],
   },
   reducers: {
     onSelectedAddons: (state, action) => {
@@ -18,13 +17,10 @@ const addonsManagerSlice = createSlice({
     onSelectedBundles: (state, action) => {
       state.selectedBundles = action.payload
     },
-    onDeletedVersions: (state, action) => {
-      state.deletedVersions = action.payload
-    },
   },
 })
 
-export const { onSelectedAddons, onSelectedVersions, onSelectedBundles, onDeletedVersions } =
+export const { onSelectedAddons, onSelectedVersions, onSelectedBundles } =
   addonsManagerSlice.actions
 
 export default addonsManagerSlice.reducer

@@ -5,6 +5,10 @@ import { useGetSettingsAddonsQuery } from '@shared/api'
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useSelector } from 'react-redux'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import useTitle from '@hooks/useTitle'
+import HelpButton from '@components/HelpButton/HelpButton'
+import { useGlobalContext } from '@shared/context'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -19,7 +23,9 @@ const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
-  const isManager = useSelector((state) => state.user.data.isManager)
+  const { user } = useGlobalContext()
+  const { uiExposureLevel: level = 0 } = user || {}
+  const isManager = level === 700
 
   const {
     data: addonsData,
@@ -161,12 +167,24 @@ const SettingsPage = () => {
         accessLevels: ['manager'],
       })
     }
+    result.push({ node: 'spacer' })
 
+    const addonTitle =
+      addonName && addonsData
+        ? addonsData.find((addon) => addon.name === addonName)?.title
+        : undefined
+
+    result.push({
+      node: <HelpButton module={addonName || module} pageName={addonTitle} />,
+    })
     return result
   }, [addonsData, isManager])
 
+  const title = useTitle(addonName || module, links, '', '')
+  const revertedTitle = title === 'Studio settings' ? title : title + ' • Studio settings'
   return (
     <>
+      <DocumentTitle title={revertedTitle} />
       <AppNavLinks links={links} />
       {moduleComponent}
     </>

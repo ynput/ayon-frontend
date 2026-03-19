@@ -5,11 +5,12 @@ query GetTasksByParent(
   $projectName: String!
   $parentIds: [String!]!
   $filter: String
+  $folderFilter: String
   $search: String
 ) {
   project(name: $projectName) {
     name
-    tasks(folderIds: $parentIds, filter: $filter, search: $search) {
+    tasks(folderIds: $parentIds, filter: $filter, folderFilter: $folderFilter, search: $search) {
       edges {
         node {
           ...TaskPropsFragment

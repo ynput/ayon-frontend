@@ -82,8 +82,23 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
         if (isValid(parsed)) {
           const dateWithZeroTime = new Date(parsed)
           dateWithZeroTime.setUTCHours(0, 0, 0, 0)
-          onChange(dateWithZeroTime.toISOString(), event)
-          return true
+          const newISOValue = dateWithZeroTime.toISOString()
+
+          // For Click/Blur: only save if value changed
+          // For Enter: always save
+          if (event === 'Enter') {
+            onChange(newISOValue, event)
+            return true
+          } else if (event === 'Click') {
+            // Check if value actually changed
+            const initialDateISO = initialValue ? parseISO(initialValue).toISOString() : ''
+            if (newISOValue !== initialDateISO) {
+              onChange(newISOValue, event)
+              return true
+            }
+            // Value didn't change, cancel edit
+            return false
+          }
         }
       }
       return false

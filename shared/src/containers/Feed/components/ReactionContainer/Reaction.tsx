@@ -9,9 +9,19 @@ type Props = {
   isActive?: boolean
   variant?: ReactionComponentVariant
   onClick: MouseEventHandler
+  categoryPrimary?: string
+  categorySecondary?: string
+  categoryTertiary?: string
 }
 
-const Reaction = ({ reaction, variant = 'standard', onClick }: Props) => {
+const Reaction = ({
+  reaction,
+  variant = 'standard',
+  onClick,
+  categoryPrimary,
+  categorySecondary,
+  categoryTertiary,
+}: Props) => {
   const users = reaction.users?.join(', ') || undefined
 
   return (
@@ -19,11 +29,12 @@ const Reaction = ({ reaction, variant = 'standard', onClick }: Props) => {
       className={clsx(variant, { active: reaction.isActive })}
       onClick={onClick}
       data-tooltip={users}
+      $categoryPrimary={categoryPrimary}
+      $categorySecondary={categorySecondary}
+      $categoryTertiary={categoryTertiary}
     >
-      <span className="emoji">
-        {reactionMappingObj[reaction.type]}
-      </span>
-        {reaction.users && <span>{reaction.users.length}</span>}
+      <span className="emoji">{reactionMappingObj[reaction.type]}</span>
+      {reaction.users && <span>{reaction.users.length}</span>}
     </Styled.Reaction>
   )
 }

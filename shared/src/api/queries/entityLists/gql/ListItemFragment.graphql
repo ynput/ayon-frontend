@@ -1,44 +1,57 @@
 fragment ListItemFragment on BaseNode {
+  active
+  name
+  updatedAt
+  createdAt
+  parents
   ... on TaskNode {
-    name
     label
     status
     tags
     taskType
     assignees
     ownAttrib
+    hasReviewables
+    folderId
     folder {
       path
       folderType
     }
+    subtasks {
+      ...SubTaskFragment
+    }
   }
   ... on FolderNode {
-    name
     label
     status
     tags
     folderType
     path
     ownAttrib
+    hasReviewables
+    folderId: id
   }
   ... on ProductNode {
-    name
     status
     tags
     productType
+    folderId
     folder {
       path
       folderType
     }
   }
   ... on VersionNode {
-    name
     status
     tags
+    hasReviewables
     product {
+      id
       name
       productType
+      folderId
       folder {
+        id
         path
         folderType
       }

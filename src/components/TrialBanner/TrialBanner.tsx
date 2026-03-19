@@ -3,13 +3,11 @@ import * as Styled from './TrialBanner.styled'
 import clsx from 'clsx'
 import getTrialDates from './helpers/getTrialDates'
 import getSubscribeLink from './helpers/getSubscribeLink'
-import { useGetYnputCloudInfoQuery } from '@queries/cloud/cloud'
 import { useAppSelector } from '@state/store'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { useGetActiveUsersCountQuery } from '@shared/api'
+import { useGetActiveUsersCountQuery, useGetYnputCloudInfoQuery } from '@shared/api'
 import { useLocalStorage } from '@shared/hooks'
 import { createPortal } from 'react-dom'
-import { useCustomerly } from 'react-live-chat-customerly'
 
 interface TrialBannerProps {}
 
@@ -36,8 +34,6 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
     { skip: !isTrialing || !canManage },
   )
 
-  const { show, hide } = useCustomerly()
-
   //   check if there is a sub
   if (!connect?.instanceId) return null
 
@@ -50,15 +46,11 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
     const snoozeUntil = now + snoozeTimeHours * 60 * 60 * 1000
 
     setSnooze(snoozeUntil)
-    // hide customerly
-    hide()
   }
 
   const handleShowBanner = () => {
     // show banner
     setSnooze(null)
-    // show customerly
-    show()
   }
 
   // toast.warn('Your free trial is ending soon. Subscribe to keep your data.', { autoClose: false })
@@ -84,7 +76,7 @@ const TrialBanner: FC<TrialBannerProps> = ({}) => {
         <>
           <span>-</span>
           <a
-            href={getSubscribeLink(activeUsersCount, connect.orgName)}
+            href={getSubscribeLink(activeUsersCount, connect?.orgName || '')}
             target="_blank"
             rel="noreferrer"
           >

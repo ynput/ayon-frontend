@@ -67,6 +67,7 @@ export const FeaturesList = styled.div`
     }
     .green {
       margin-right: 4px;
+      padding-left: 4px;
     }
   }
 
@@ -86,12 +87,26 @@ export const FeaturesList = styled.div`
   }
 `
 
+export const ShowAll = styled.div`
+  cursor: pointer;
+  text-align: center;
+  margin-top: 16px;
+  color: var(--md-sys-color-tertiary);
+  ${theme.bodyMedium}
+
+  &:hover {
+    text-decoration: underline;
+  }
+`
+
 export const MoreButton = styled(Button)`
   background-color: var(--md-sys-color-tertiary);
   color: var(--md-sys-color-on-tertiary);
   padding: 12px 20px;
   border-radius: var(--border-radius-l);
   margin-bottom: 16px;
+
+  ${theme.titleMedium}
 
   &:hover {
     background-color: var(--md-sys-color-tertiary-hover);

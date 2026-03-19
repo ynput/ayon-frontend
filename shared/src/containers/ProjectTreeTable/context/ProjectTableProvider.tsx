@@ -17,12 +17,12 @@
  *    - **Groups Mode**: Groups entities by specified criteria (entity type, custom groups)
  *
  * The context also provides utility functions for entity relationships, expansion state
- * management, filtering, sorting, and folder inheritance operations.
+ * management, filtering,  and folder inheritance operations.
  */
 import { ReactNode, useCallback, useMemo } from 'react'
-import { ExpandedState, OnChangeFn, SortingState } from '@tanstack/react-table'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../hooks/useBuildProjectDataTable'
-import { Filter } from '@ynput/ayon-react-components'
 import {
   EntitiesMap,
   EntityMap,
@@ -31,26 +31,21 @@ import {
   TaskNodeMap,
   TasksByFolderMap,
 } from '../types/table'
-import useFolderRelationships, {
-  FindInheritedValueFromAncestors,
-  GetAncestorsOf,
-  GetInheritedDependents,
-  FindNonInheritedValues,
-} from '../hooks/useFolderRelationships'
-import { RowId } from '../utils/cellUtils'
+import useFolderRelationships from '../hooks/useFolderRelationships'
 import { ProjectModel } from '../types/project'
 import { ProjectTableAttribute, LoadingTasks } from '../types'
 import { QueryFilter } from '../types/folders'
 import { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
-import { AttributeModel, EntityGroup } from '@shared/api'
+import { EntityGroup } from '@shared/api'
 import useBuildGroupByTableData, {
   GroupByEntityType,
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
-import { PowerpackContextType } from '@shared/context'
+import { PowerpackContextType, useProjectContext } from '@shared/context'
 import { useColumnSettingsContext } from './ColumnSettingsContext'
-import { ProjectTableModulesType } from '../hooks'
+import { ProjectTableModulesType } from '@shared/hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
+import type { SubtasksManagerProps } from '@shared/components'
 
 export const parseRowId = (rowId: string) => rowId?.split(ROW_ID_SEPARATOR)[0] || rowId
 
@@ -68,9 +63,6 @@ export interface ProjectTableProviderProps {
   isLoadingMore: boolean
   loadingTasks?: LoadingTasks
   error?: string
-  // Project Info
-  projectInfo?: ProjectModel
-  projectName: string
   users: TableUser[]
   // Attributes
   attribFields: ProjectTableAttribute[]
@@ -84,15 +76,14 @@ export interface ProjectTableProviderProps {
   tableRows?: TableRow[] // any extra rows that we want to add to the table
 
   // grouping
-  taskGroups: EntityGroup[]
+  groups: EntityGroup[]
+  groupRowFunc?: (node: any) => TableRow
 
   // data functions
   fetchNextPage: (value?: string) => void
   reloadTableData: () => void
 
   // Filters
-  filters: Filter[]
-  setFilters: (filters: Filter[]) => void
   queryFilters: {
     filter: QueryFilter | undefined
     filterString?: string
@@ -107,11 +98,7 @@ export interface ProjectTableProviderProps {
   expanded: ExpandedState
   toggleExpanded: (id: string) => void
   updateExpanded: OnChangeFn<ExpandedState>
-  setExpanded: (expanded: ExpandedState) => void
-
-  // Sorting
-  sorting: SortingState
-  updateSorting: OnChangeFn<SortingState>
+  setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
 
   // context menu
   contextMenuItems: ContextMenuItemConstructors
@@ -125,6 +112,28 @@ export interface ProjectTableProviderProps {
   groupByConfig?: {
     entityType?: GroupByEntityType
   }
+
+  // SubtasksManager component
+  SubtasksManager?: React.ComponentType<SubtasksManagerProps>
+
+  // player
+  playerOpen?: boolean
+  onOpenPlayer?: (
+    targetIds: {
+      taskId?: string
+      folderId?: string
+      productId?: string
+      versionId?: string
+    },
+    config?: { quickView?: boolean },
+  ) => void
+  // views
+  onResetView?: () => void
+  // router hooks
+  useParams?: typeof useParams
+  useNavigate?: typeof useNavigate
+  useLocation?: typeof useLocation
+  useSearchParams?: typeof useSearchParams
 }
 
 export const ProjectTableProvider = ({
@@ -135,26 +144,21 @@ export const ProjectTableProvider = ({
   entitiesMap,
   tasksByFolderMap,
   expanded,
-  projectInfo,
   showHierarchy,
   loadingTasks,
   isLoadingMore,
   isLoading,
   error,
   isInitialized,
-  projectName,
   users,
   attribFields,
   scopes,
-  taskGroups,
-  filters,
-  setFilters,
+  groups,
+  groupRowFunc,
   queryFilters,
   updateShowHierarchy,
   toggleExpanded,
   updateExpanded,
-  sorting,
-  updateSorting,
   fetchNextPage,
   reloadTableData,
   setExpanded,
@@ -162,7 +166,18 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  SubtasksManager,
+  // player
+  playerOpen,
+  onOpenPlayer,
+  // views
+  onResetView,
+  useParams,
+  useNavigate,
+  useLocation,
+  useSearchParams,
 }: ProjectTableProviderProps) => {
+  const { attrib: projectAttrib } = useProjectContext()
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
     foldersMap,
@@ -170,33 +185,38 @@ export const ProjectTableProvider = ({
     rows: tableRows,
     tasksByFolderMap,
     expanded,
-    projectInfo,
     showHierarchy,
     loadingTasks,
     isLoadingMore,
   })
+
   const { groupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
     useColumnSettingsContext()
 
   const buildGroupByTableData = useBuildGroupByTableData({
     entities: entitiesMap,
-    entityType: groupByConfig?.entityType,
-    groups: taskGroups,
-    project: projectInfo,
+    entityType: groupByConfig?.entityType || 'unknown',
+    groups: groups,
     attribFields,
     showEmpty: showEmptyGroups,
+    groupRowFunc,
   })
+
+  const attribFieldsScoped = useMemo(
+    () => attribFields.filter((attrib) => attrib.scope?.some((scope) => scopes.includes(scope))),
+    [attribFields, scopes],
+  )
 
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
     () => !!groupBy && buildGroupByTableData(groupBy),
-    [groupBy, entitiesMap, taskGroups],
+    [groupBy, entitiesMap, groups],
   )
 
   const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
-    (id: string): EntityMap | undefined => {
+    (id: string, field: string = 'entityId'): EntityMap | undefined => {
       // defensive check to ensure id is a string
       if (typeof id !== 'string') {
         console.warn('getEntityById called with non-string id:', id)
@@ -211,6 +231,13 @@ export const ProjectTableProvider = ({
         return tasksMap.get(parsedId)
       } else if (entitiesMap.has(parsedId)) {
         return entitiesMap.get(parsedId)
+      }
+
+      // if we have not found the entity at all, double check through the maps using field (entityId)
+      for (const [_, entity] of entitiesMap) {
+        if (entity[field as keyof EntityMap] === parsedId) {
+          return entity
+        }
       }
 
       // Return undefined if not found
@@ -231,7 +258,7 @@ export const ProjectTableProvider = ({
     tasksMap,
     tasksByFolderMap,
     getEntityById,
-    projectAttrib: projectInfo?.attrib,
+    projectAttrib,
     attribFields: attribFields,
   })
 
@@ -296,33 +323,27 @@ export const ProjectTableProvider = ({
         isInitialized,
         isLoading,
         error,
-        projectInfo,
         attribFields,
+        attribFieldsScoped,
         scopes,
         users,
-        projectName,
         tasksMap,
         foldersMap,
         entitiesMap,
         fetchNextPage,
         reloadTableData,
-        taskGroups,
-        // filters
-        filters,
-        setFilters,
+        groups,
         queryFilters,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
         // expanded state
         expanded,
+        setExpanded,
         toggleExpanded,
         updateExpanded,
         toggleExpandAll,
         toggleExpands,
-        // sorting
-        sorting,
-        updateSorting,
         getEntityById,
         // folder relationships
         getInheritedDependents,
@@ -334,6 +355,18 @@ export const ProjectTableProvider = ({
         // powerpack context
         powerpack,
         modules,
+        // SubtasksManager
+        SubtasksManager,
+        // player
+        playerOpen,
+        onOpenPlayer,
+        // views
+        onResetView,
+        // router hooks
+        useParams,
+        useNavigate,
+        useLocation,
+        useSearchParams,
       }}
     >
       {children}

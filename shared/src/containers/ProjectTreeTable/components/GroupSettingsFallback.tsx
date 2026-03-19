@@ -18,11 +18,12 @@ const FieldButton = styled(Button)`
 
 export type GroupByConfig = {
   showEmpty?: boolean
+  entityType: string
 }
 
 export interface GroupSettingsProps {
   fields: SettingsPanelItem[]
-  config?: GroupByConfig
+  config: GroupByConfig
   onChange?: ColumnSettingsContextType['updateGroupBy']
   groupBy?: ColumnSettingsContextType['groupBy']
   updateGroupBy?: ColumnSettingsContextType['updateGroupBy']

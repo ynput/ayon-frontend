@@ -17,6 +17,16 @@ export const filterEntityAnnotations = (
   entityId: string,
   filesUploading: File[],
 ): AnnotationPreview[] => {
+  if (!entityId) {
+    console.warn('filterEntityAnnotations: entityId is empty')
+  }
+  // Check if any annotation has empty versionId
+  Object.values(annotations).forEach((annotation) => {
+    if (!annotation.versionId) {
+      console.warn('filterEntityAnnotations: annotation.versionId is empty', annotation)
+    }
+  })
+
   return Object.values(annotations)
     .filter(
       (annotation) =>

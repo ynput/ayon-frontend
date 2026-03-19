@@ -56,7 +56,7 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
 
   if (skip || isError) return <span>Event Not Found</span>
 
-  const { name = '', status = '', updatedAt } = data
+  const { name = '', status = '', updatedAt } = data || {}
 
   return (
     <PanelStyled onClick={onClick} disableHover={disableHover}>

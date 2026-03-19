@@ -81,13 +81,14 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
           const FOLDER_WITH_CHILDREN_CODE = 'delete-folder-with-children'
           // check if the error is because of child tasks, products
           if (error?.errorCodes?.includes(FOLDER_WITH_CHILDREN_CODE)) {
-            // try again but with force
-            confirmDelete({
-              label: 'folders and tasks',
-              message: `This folder has child tasks or products that will also be deleted. Are you sure you want to delete ${entityLabel} and all of it's dependencies?`,
-              accept: () => deleteEntities(true),
-              deleteLabel: 'Delete all (dangerous)',
-            })
+            const confirmForce = window.confirm(
+              `Are you really sure you want to delete ${entityLabel} and all of its dependencies? This cannot be undone. (NOT RECOMMENDED)`,
+            )
+            if (confirmForce) {
+              deleteEntities(true)
+            } else {
+              console.log('User cancelled forced delete')
+            }
           }
         },
         deleteLabel: 'Delete forever',

@@ -4,6 +4,7 @@ import {
   GetKanbanQuery,
   ProjectModel,
   KanbanNode,
+  Anatomy,
 } from '@shared/api/generated'
 import { projectQueries } from '@shared/api/queries/project'
 import { PubSub } from '@shared/util'
@@ -233,31 +234,61 @@ export const { useGetKanbanQuery, useGetKanbanProjectUsersQuery } = enhancedDash
 
 type GetProjectsInfoParams = {
   projects: string[]
+  anatomy?: boolean
 }
 
-export type GetProjectsInfoResponse = { [projectName: string]: ProjectModel | undefined }
+export type ProjectModeWithAnatomy = ProjectModel & { anatomy?: Anatomy }
+
+export type GetProjectsInfoResponse = { [projectName: string]: ProjectModeWithAnatomy | undefined }
 
 const injectedDashboardRestApi = enhancedDashboardGraphqlApi.injectEndpoints({
   endpoints: (build) => ({
     getProjectsInfo: build.query<GetProjectsInfoResponse, GetProjectsInfoParams>({
-      async queryFn({ projects = [] }, { dispatch }) {
+      async queryFn({ projects = [], anatomy = true }, { dispatch }) {
         try {
           // get project info for each project
-          const projectInfo: Record<string, ProjectModel | undefined> = {}
+          const projectInfo: Record<string, ProjectModeWithAnatomy | undefined> = {}
           for (const project of projects) {
+            const projectName = project as string
             // hopefully this will be cached
             // it also allows for different combination of projects but still use the cache
-            const response = await dispatch(
-              projectQueries.endpoints.getProject.initiate(
-                { projectName: project },
-                { forceRefetch: true },
-              ),
-            )
+            const responses = [
+              dispatch(
+                projectQueries.endpoints.getProject.initiate(
+                  { projectName },
+                  { forceRefetch: true },
+                ),
+              ).unwrap(),
+              ...(anatomy
+                ? [
+                    dispatch(
+                      projectQueries.endpoints.getProjectAnatomy.initiate(
+                        { projectName },
+                        { forceRefetch: true },
+                      ),
+                    ).unwrap(),
+                  ]
+                : []),
+            ]
 
-            if (response.status === 'rejected') {
-              throw 'No projects found'
+            const settled = await Promise.allSettled(responses)
+
+            const projectDataResult = settled[0]
+            const projectData =
+              projectDataResult.status === 'fulfilled'
+                ? (projectDataResult.value as ProjectModel)
+                : undefined
+            const anatomyData =
+              anatomy && settled[1]?.status === 'fulfilled'
+                ? (settled[1].value as Anatomy)
+                : undefined
+
+            if (projectData) {
+              projectInfo[projectName] = {
+                ...projectData,
+                anatomy: anatomyData,
+              } as ProjectModeWithAnatomy
             }
-            projectInfo[project] = response.data
           }
 
           return { data: projectInfo, meta: undefined, error: undefined }

@@ -1,6 +1,5 @@
-import { productTypes } from '@shared/util'
 import { BuiltInFieldOptions } from '../types'
-import { FolderType, Status, Tag, TaskType } from '../types/project'
+import { FolderType, Status, Tag, TaskType, ProductType} from '../types/project'
 
 type Params = {
   users: {
@@ -10,6 +9,7 @@ type Params = {
   statuses: Status[]
   folderTypes: FolderType[]
   taskTypes: TaskType[]
+  productTypes: ProductType[]
   tags: Tag[]
   scopes: string[]
 }
@@ -19,6 +19,7 @@ export const getTableFieldOptions = ({
   statuses,
   folderTypes,
   taskTypes,
+  productTypes,
   tags,
   scopes,
 }: Params): BuiltInFieldOptions => ({
@@ -37,11 +38,9 @@ export const getTableFieldOptions = ({
       scope,
     })),
   tag: tags.map(({ name, color }) => ({ value: name, label: name, color })),
-  folderType: folderTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
-  taskType: taskTypes.map(({ name, icon }) => ({ value: name, label: name, icon })),
-  productType: Object.entries(productTypes).map(([key, value]) => ({
-    value: key,
-    label: value.name,
-    icon: value.icon,
-  })),
+  folderType: folderTypes.map(({ name, icon, color }) => ({ value: name, label: name, icon, color })),
+  taskType: taskTypes.map(({ name, icon, color }) => ({ value: name, label: name, icon, color })),
+  productType: productTypes.map(({name, icon, color}) => ({value: name, label: name, icon, color})),
+
+
 })

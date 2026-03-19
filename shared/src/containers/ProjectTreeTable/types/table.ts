@@ -1,4 +1,7 @@
+import { GetTasksByParentQuery } from '@shared/api'
+import type { EntityLink, SubTaskNode } from '@shared/api'
 import { GroupData } from '../hooks/useBuildGroupByTableData'
+import { LinkValue } from '../utils'
 
 export type FolderListItem = {
   id: string
@@ -16,36 +19,10 @@ export type FolderListItem = {
   attrib?: Record<string, any>
   ownAttrib?: string[]
   updatedAt: string
-}
-
-export type GetTasksByParentQuery = {
-  __typename?: 'Query'
-  project: {
-    __typename?: 'ProjectNode'
-    name: string
-    tasks: {
-      __typename?: 'TasksConnection'
-      edges: Array<{
-        __typename?: 'TaskEdge'
-        node: {
-          __typename?: 'TaskNode'
-          id: string
-          folderId: string
-          label?: string | null
-          name: string
-          ownAttrib: Array<string>
-          status: string
-          tags: Array<string>
-          taskType: string
-          updatedAt: any
-          active: boolean
-          assignees: Array<string>
-          allAttrib: string
-          folder: { __typename?: 'FolderNode'; path?: string | null }
-        }
-      }>
-    }
-  }
+  createdAt: string
+  hasReviewables?: boolean
+  hasVersions?: boolean
+  links: EntityLink[]
 }
 
 export type TableRow = {
@@ -59,18 +36,42 @@ export type TableRow = {
   tags?: string[]
   status?: string
   updatedAt?: string
+  createdAt?: string
   parentId?: string
-  subRows: TableRow[]
+  folderId?: string | null // all entities have a folder except root folders which will be null
+  parents?: string[]
+  folder?: string // parent folder name
+  product?: string // product name of product and version parent
+  productType?: string // product name of product and version parent
+  productBaseType?: string // product base type category
+  taskType?: string // linked task type
+  taskLabel?: string // linked task label/name
+  subRows?: TableRow[]
   icon?: string | null
   color?: string | null
   img?: string | null
+  hasReviewables?: boolean
+  hasVersions?: boolean
+  version?: number | null // for versions
+  versionsCount?: number // for products
+  versionName?: string // for versions
   startContent?: JSX.Element
   assignees?: string[]
+  author?: string
   attrib?: Record<string, any>
+  links?: Record<string, LinkValue> // links to other entities, e.g. tasks, versions, products
+  subtasks?: SubTaskNode[]
   childOnlyMatch?: boolean // when true, only children of this folder match the filter and not the folder itself (shots a dot)
   subType?: string | null
   isLoading?: boolean
+  metaType?: 'empty' | 'error' // signals the row is a meta row (empty or error state)
   group?: GroupData // signals it is a group row and has some extra data like label, color, icon
+  thumbnail?: {
+    // if you want to use a thumbnail from a different entity, e.g. latest version of a product
+    entityId: string
+    entityType: string
+    updatedAt: string | undefined
+  }
 }
 
 export type MatchingFolder = FolderListItem & {
@@ -80,14 +81,16 @@ export type MatchingFolder = FolderListItem & {
 }
 export type FolderNodeMap = Map<string, MatchingFolder>
 type TaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node']
-export type EditorTaskNode = TaskNode & {
+export type EditorTaskNode = Omit<TaskNode, 'links'> & {
   attrib: Record<string, any>
   entityId: string
   entityType: 'task'
   groups?: { value: string; hasNextPage?: string }[]
+  links: EntityLink[]
+  hasVersions?: boolean
 }
 
-type EditorVersionNode = {
+export type EditorVersionNode = {
   id: string
   entityId: string
   entityType: 'version'
@@ -99,10 +102,20 @@ type EditorVersionNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
+  product?: {
+    id: string
+    folder?: {
+      id: string
+    }
+  }
+  productType: string
+  links: EntityLink[]
+  hasVersions?: boolean
 }
 
 type EditorProductNode = {
@@ -117,10 +130,13 @@ type EditorProductNode = {
   tags: Array<string>
   taskType: string
   updatedAt: any
+  createdAt?: string
   active: boolean
   assignees: Array<string>
   allAttrib: string
   attrib?: Record<string, any>
+  links: EntityLink[]
+  hasVersions?: boolean
 }
 
 export type TaskNodeMap = Map<string, EditorTaskNode>

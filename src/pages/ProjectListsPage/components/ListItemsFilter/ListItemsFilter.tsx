@@ -3,6 +3,7 @@ import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFil
 import { ListEntityType } from '../NewListDialog/NewListDialog'
 import { BuildFilterOptions } from '@shared/components'
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import { useProjectContext } from '@shared/context'
 
 interface ListItemsFilterProps {
   entityType: ListEntityType
@@ -10,11 +11,12 @@ interface ListItemsFilterProps {
 }
 
 const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) => {
-  const { listItemsFilters, setListItemsFilters, projectInfo } = useListItemsDataContext()
+  const { ...projectInfo } = useProjectContext()
+  const { listItemsFilters, setListItemsFilters } = useListItemsDataContext()
 
   return (
     <SearchFilterWrapper
-      filters={listItemsFilters}
+      queryFilters={listItemsFilters}
       onChange={setListItemsFilters}
       scope={entityType}
       projectNames={[projectName]}

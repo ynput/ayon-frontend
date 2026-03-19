@@ -155,19 +155,20 @@ const ColumnsWrapper = ({
     }
   }, [active, selectedTasks, wasDragging, isOpen])
 
-  const shortcuts = useTaskSpacebarViewer({
+  const handleSpacebar = useTaskSpacebarViewer({
     tasks: allTasks,
   })
 
   return (
     <>
-      {shortcuts}
       <StyledWrapper
         style={{
           cursor: active && 'grabbing',
         }}
         direction="row"
         ref={sectionRef}
+        onKeyDown={handleSpacebar}
+        tabIndex={-1}
       >
         {fieldsColumns.flatMap((column) => {
           const { id, isCollapsed, items, collapsed } = column

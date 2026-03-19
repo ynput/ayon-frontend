@@ -3,11 +3,12 @@ import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
 
-export interface ThumbnailProps extends HTMLAttributes<HTMLDivElement> {
+export interface ThumbnailProps extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
   projectName?: string
   entityType?: string
   entityId?: string
   icon?: string | null
+  color?: string | null
   entityUpdatedAt?: string
   isLoading?: boolean
   shimmer?: boolean
@@ -23,6 +24,7 @@ export const Thumbnail = ({
   entityType = '',
   entityId = '',
   icon,
+  color,
   entityUpdatedAt,
   isLoading,
   shimmer,
@@ -87,7 +89,7 @@ export const Thumbnail = ({
       {...props}
     >
       {(!isLoading || !loaded) && !disabled && (
-        <Icon icon={icon || 'image'} className="type-icon" />
+        <Icon style={{ color: color || undefined }} icon={icon || 'image'} className="type-icon" />
       )}
       {entityType && projectName && !(isWrongEntity || !entityId) && (
         <Styled.Image alt={`Entity thumbnail ${entityId}`} src={url} />

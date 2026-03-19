@@ -1,5 +1,5 @@
 import { upperFirst } from 'lodash'
-import { confirmDialog, ConfirmDialogOptions } from 'primereact/confirmdialog'
+import { confirmDialog, ConfirmDialog, ConfirmDialogOptions } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 
 export interface ConfirmDeleteOptions extends Omit<ConfirmDialogOptions, 'accept'> {
@@ -76,3 +76,5 @@ export const confirmDelete = ({
     ...props,
   })
 }
+
+export { ConfirmDialog }

@@ -1,7 +1,9 @@
-import { useMemo } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Column } from '@tanstack/react-table'
+import { Column, ColumnOrderState, ColumnSizingState } from '@tanstack/react-table'
 import { TableRow } from '../types/table'
+import { throttle } from 'lodash'
+import { useDndMonitor } from '@dnd-kit/core'
 
 interface UseColumnVirtualizationProps {
   visibleColumns: Column<TableRow, unknown>[]
@@ -9,6 +11,8 @@ interface UseColumnVirtualizationProps {
   columnPinning: {
     left?: string[]
   }
+  columnSizing: ColumnSizingState
+  columnOrder: ColumnOrderState
 }
 
 interface UseColumnVirtualizationResult {
@@ -21,11 +25,29 @@ const useColumnVirtualization = ({
   visibleColumns,
   tableContainerRef,
   columnPinning,
+  columnSizing,
+  columnOrder,
 }: UseColumnVirtualizationProps): UseColumnVirtualizationResult => {
   // Extract pinned column indexes for virtualization
   const leftPinnedIndexes = useMemo(() => {
     return visibleColumns.filter((col) => col.getIsPinned() === 'left').map((col) => col.getIndex())
   }, [visibleColumns, columnPinning])
+  const [activeColumnIndex, setActiveColumnIndex] = useState<number | null>(null)
+
+  useDndMonitor({
+    onDragStart(event) {
+      if (event.active.data?.current?.type === 'column') {
+        const idx = visibleColumns.findIndex((col) => col.id === event.active.id)
+        if (idx !== -1) setActiveColumnIndex(idx)
+      }
+    },
+    onDragEnd() {
+      setActiveColumnIndex(null)
+    },
+    onDragCancel() {
+      setActiveColumnIndex(null)
+    },
+  })
 
   // Find highest pinned index and include all columns between 0 and that index
   const pinnedColumnIndexes: number[] = []
@@ -42,15 +64,18 @@ const useColumnVirtualization = ({
     estimateSize: (index) => visibleColumns[index].getSize(), //estimate width of each column for accurate scrollbar dragging
     getScrollElement: () => tableContainerRef.current,
     horizontal: true,
-    overscan: 0, //how many columns to render on each side off screen each way (adjust this for performance)
+    overscan: 1, //how many columns to render on each side off screen each way (adjust this for performance)
     rangeExtractor: (range) => {
       const start = range.startIndex
       const end = range.endIndex
       const overscan = range.overscan
 
+      // During column drag, render all columns to prevent glitchy mount/unmount during scroll
+      const effectiveOverscan = activeColumnIndex !== null ? visibleColumns.length : overscan
+
       // Calculate the base visible range with overscan
       const baseIndexes = []
-      for (let i = start - overscan; i <= end + overscan; i++) {
+      for (let i = start - effectiveOverscan; i <= end + effectiveOverscan; i++) {
         if (i >= 0 && i < visibleColumns.length) {
           baseIndexes.push(i)
         }
@@ -60,12 +85,26 @@ const useColumnVirtualization = ({
       const allIndexes = new Set([
         ...pinnedColumnIndexes, // All columns up to the highest pinned column
         ...baseIndexes, // Visible columns in the current range
+        ...(activeColumnIndex !== null && activeColumnIndex !== -1 ? [activeColumnIndex] : []),
       ])
 
       // Sort indexes to maintain column order
       return Array.from(allIndexes).sort((a, b) => a - b)
     },
   })
+
+  const throttledMeasure = useMemo(
+    () =>
+      throttle(() => {
+        columnVirtualizer.measure()
+      }, 1000),
+    [columnVirtualizer],
+  )
+
+  // HACK: we must remeasure the column widths when the column sizing or ordering changes
+  useLayoutEffect(() => {
+    throttledMeasure()
+  }, [throttledMeasure, columnSizing, columnOrder])
 
   const virtualColumnsResult = columnVirtualizer.getVirtualItems()
 

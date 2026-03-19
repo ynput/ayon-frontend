@@ -2,11 +2,12 @@ import {
   gqlApi,
   GetTasksByParentQuery,
   GetTasksListQuery,
-  tasksApi,
-  QueryTasksFoldersApiArg,
+  foldersApi,
+  SearchFoldersApiArg,
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
-import { EditorTaskNode, TableGroupBy } from '@shared/containers/ProjectTreeTable'
+import { PubSub } from '@shared/util'
+import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -36,6 +37,7 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
       attrib: parseAllAttribs(taskNode.allAttrib),
       entityId: taskNode.id,
       entityType: 'task',
+      links: [],
     })
   }
 
@@ -49,12 +51,12 @@ const getOverviewTaskTags = (
 ) => {
   const taskTags = result?.map((task) => ({ type: 'overviewTask', id: task.id })) || []
 
-  if (!parentIds) return taskTags
-
-  const parentTags = (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
-    type: 'overviewTask',
-    id,
-  }))
+  const parentTags = parentIds
+    ? (Array.isArray(parentIds) ? parentIds : [parentIds]).map((id) => ({
+        type: 'overviewTask',
+        id,
+      }))
+    : []
 
   return [
     ...taskTags,
@@ -72,6 +74,7 @@ export type GetTasksListResult = {
 export type GetTasksListArgs = {
   projectName: string
   filter?: string
+  folderFilter?: string
   search?: string
   folderIds?: string[]
   desc?: boolean
@@ -86,9 +89,11 @@ export type GetGroupedTasksListArgs = {
   projectName: string
   groups: { filter: string; count: number; value: string }[]
   search?: string
+  folderFilter?: string
   folderIds?: string[]
   desc?: boolean
   sortBy?: string
+  groupCount?: number // optional override for all groups
 }
 
 // Define the page param type for infinite query
@@ -127,9 +132,9 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
 })
 
 // REST FOLDERS API
-const foldersApiEnhanced = tasksApi.enhanceEndpoints({
+const foldersApiEnhanced = foldersApi.enhanceEndpoints({
   endpoints: {
-    queryTasksFolders: {},
+    searchFolders: {},
   },
 })
 
@@ -144,9 +149,18 @@ const injectedApi = enhancedApi.injectEndpoints({
     // This also solves the pagination issue of getting all tasks in one query, splitting it up in multiple queries to avoid pagination limits
     getOverviewTasksByFolders: build.query<
       EditorTaskNode[],
-      { projectName: string; parentIds: string[]; filter?: string; search?: string }
+      {
+        projectName: string
+        parentIds: string[]
+        filter?: string
+        folderFilter?: string
+        search?: string
+      }
     >({
-      async queryFn({ projectName, parentIds, filter, search }, { dispatch, forced }) {
+      async queryFn(
+        { projectName, parentIds, filter, folderFilter, search },
+        { dispatch, forced },
+      ) {
         try {
           // Process parent IDs in sequential batches
           const BATCH_SIZE = 20 // Process x parentIds at a time
@@ -165,6 +179,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                       projectName,
                       parentIds: [parentId],
                       filter,
+                      folderFilter,
                       search,
                     },
                     { forceRefetch: forced },
@@ -199,16 +214,95 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
+      async onCacheEntryAdded(
+        { projectName, parentIds, filter, search },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+      ) {
+        let token: any
+        const pendingTaskIds = new Set<string>()
+        const MAX_BATCH = 100
+        const INTERVAL = 500
+        let scheduled = false
+
+        const schedule = () => {
+          if (scheduled) return
+          scheduled = true
+          setTimeout(flush, INTERVAL)
+        }
+
+        const flush = async () => {
+          scheduled = false
+          if (!pendingTaskIds.size) return
+          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
+          batchIds.forEach((id) => pendingTaskIds.delete(id))
+          try {
+            const res = await dispatch(
+              enhancedApi.endpoints.GetTasksList.initiate(
+                {
+                  projectName,
+                  taskIds: batchIds,
+                } as any,
+                { forceRefetch: true },
+              ),
+            ).unwrap()
+            const returned = res.tasks || []
+            const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
+
+            updateCachedData((draft: EditorTaskNode[]) => {
+              // update or add
+              for (const task of returned) {
+                const idx = draft.findIndex((t) => t.id === task.id)
+                if (idx > -1) draft[idx] = task
+                else draft.push(task)
+              }
+              // remove missing
+              for (const id of batchIds) {
+                if (!returnedMap.has(id)) {
+                  const idx = draft.findIndex((t) => t.id === id)
+                  if (idx > -1) draft.splice(idx, 1)
+                }
+              }
+            })
+          } catch (err) {
+            console.error('Realtime overview batch update failed', err)
+          } finally {
+            if (pendingTaskIds.size) schedule()
+          }
+        }
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            const taskId = message?.summary?.entityId
+            const parentId = message?.summary?.parentId
+            if (!taskId || !parentId) return
+            // Only react if the parent folder is part of the current expanded set
+            if (!parentIds.includes(parentId)) return
+            pendingTaskIds.add(taskId)
+            schedule()
+          }
+
+          // Subscribe to task entity updates
+          // NOTE: backend emits topics like 'entity.task.assignees_changed'.
+          // Assuming PubSub supports prefix matching when subscribing without the suffix.
+          token = PubSub.subscribe('entity.task', handlePubSub)
+        } catch (e) {
+          // cache entry removed before loaded - ignore
+        }
+
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
+      },
     }),
-    // queryTasksFolders is a post so it's a bit annoying to consume
+    // searchFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook
-    getQueryTasksFolders: build.query<string[], QueryTasksFoldersApiArg>({
-      async queryFn({ projectName, tasksFoldersQuery }, { dispatch }) {
+    getSearchFolders: build.query<string[], SearchFoldersApiArg>({
+      async queryFn({ projectName, folderSearchRequest }, { dispatch }) {
         try {
           const result = await dispatch(
-            foldersApiEnhanced.endpoints.queryTasksFolders.initiate({
+            foldersApiEnhanced.endpoints.searchFolders.initiate({
               projectName,
-              tasksFoldersQuery,
+              folderSearchRequest,
             }),
           )
 
@@ -247,13 +341,14 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, filter, search, folderIds, sortBy, desc } = queryArg
+          const { projectName, filter, folderFilter, search, folderIds, sortBy, desc } = queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetTasksList
           const queryParams: any = {
             projectName,
             filter,
+            folderFilter,
             search,
             folderIds,
           }
@@ -300,17 +395,119 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
+      async onCacheEntryAdded(
+        arg,
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+      ) {
+        let token: any
+        const pendingTaskIds = new Set<string>()
+        const MAX_BATCH = 100
+        const INTERVAL = 500
+        let scheduled = false
+
+        const schedule = () => {
+          if (scheduled) return
+          scheduled = true
+          setTimeout(flush, INTERVAL)
+        }
+
+        const flush = async () => {
+          scheduled = false
+          if (!pendingTaskIds.size) return
+          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
+          batchIds.forEach((id) => pendingTaskIds.delete(id))
+          try {
+            const res = await dispatch(
+              enhancedApi.endpoints.GetTasksList.initiate(
+                {
+                  projectName: arg.projectName,
+                  taskIds: batchIds,
+                  folderIds: arg.folderIds,
+                } as any,
+                { forceRefetch: true },
+              ),
+            ).unwrap()
+
+            const returned = res.tasks || []
+            const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
+
+            updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
+              // update/insert
+              for (const task of returned) {
+                let located = false
+                for (const page of draft.pages) {
+                  const idx = page.tasks.findIndex((t) => t.id === task.id)
+                  if (idx !== -1) {
+                    page.tasks[idx] = task
+                    located = true
+                    break
+                  }
+                }
+                if (!located) {
+                  if (draft.pages.length) draft.pages[0].tasks.unshift(task)
+                  else
+                    draft.pages.push({
+                      tasks: [task],
+                      pageInfo: {
+                        startCursor: null,
+                        endCursor: null,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                      },
+                    })
+                }
+              }
+              // remove any requested but missing tasks
+              for (const id of batchIds) {
+                if (returnedMap.has(id)) continue
+                for (const page of draft.pages) {
+                  const idx = page.tasks.findIndex((t) => t.id === id)
+                  if (idx !== -1) {
+                    page.tasks.splice(idx, 1)
+                    break
+                  }
+                }
+              }
+            })
+          } catch (err) {
+            console.error('Realtime infinite tasks batch update failed', err)
+          } finally {
+            if (pendingTaskIds.size) schedule()
+          }
+        }
+        try {
+          await cacheDataLoaded
+
+          const handlePubSub = async (_topic: string, message: any) => {
+            const taskId = message?.summary?.entityId
+            if (!taskId) return
+            pendingTaskIds.add(taskId)
+            schedule()
+          }
+
+          token = PubSub.subscribe('entity.task', handlePubSub)
+        } catch (_) {
+          // ignore
+        }
+        await cacheEntryRemoved
+        if (token) PubSub.unsubscribe(token)
+      },
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
-      queryFn: async ({ projectName, groups, search, folderIds, desc, sortBy }, api) => {
+      queryFn: async (
+        { projectName, groups, search, folderFilter, folderIds, desc, sortBy, groupCount },
+        api,
+      ) => {
         try {
           let promises = []
           for (const group of groups) {
-            const count = group.count || 500
+            // Determine count for this group - use argument override, else group count, else default
+            const count = groupCount || group.count || 500
 
             const queryParams: GetTasksListQueryVariables = {
               projectName,
               filter: group.filter,
+              folderFilter, // Passed but not yet supported by backend
               search,
               folderIds,
               sortBy: sortBy,
@@ -372,7 +569,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 
 export const {
   useGetOverviewTasksByFoldersQuery,
-  useGetQueryTasksFoldersQuery,
+  useGetSearchFoldersQuery,
   useGetTasksListQuery,
   useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,

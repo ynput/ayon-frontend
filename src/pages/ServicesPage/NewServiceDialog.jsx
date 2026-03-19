@@ -73,6 +73,8 @@ const ServiceDialog = ({ onHide, editService = null }) => {
   const [selectedHost, setSelectedHost] = useState(null)
   const [settingsVariant, setSettingsVariant] = useState('production')
   const [storages, setStorages] = useState('')
+  const [ports, setPorts] = useState('')
+  const [envVars, setEnvVars] = useState('')
 
   const { data: addonData = [] } = useGetServiceAddonsQuery({})
   const { data: hostsData } = useListHostsQuery()
@@ -100,6 +102,22 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       const volumes = editService.data?.volumes
       if (volumes && volumes.length) {
         setStorages(volumes.join('\n'))
+      }
+
+      // Set ports if available
+      const ports = editService.data?.ports
+      if (ports && ports.length) {
+        setPorts(ports.join('\n'))
+      }
+
+      // Set envVars if available
+      const envVars = editService.data?.env
+      if (envVars && Object.keys(envVars).length) {
+        setEnvVars(
+          Object.entries(envVars)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('\n'),
+        )
       }
     }
   }, [isEditMode, editService, addonData])
@@ -167,6 +185,20 @@ const ServiceDialog = ({ onHide, editService = null }) => {
 
     if (storages) {
       serviceConfig.volumes = storages.split('\n').map((s) => s.trim())
+    }
+
+    if (ports) {
+      serviceConfig.ports = ports.split('\n').map((s) => s.trim())
+    }
+
+    if (envVars) {
+      serviceConfig.env = envVars.split('\n').reduce((acc, line) => {
+        const [key, value] = line.split('=')
+        if (key && value) {
+          acc[key.trim()] = value.trim()
+        }
+        return acc
+      }, {})
     }
 
     const serviceData = {
@@ -256,7 +288,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       header={isEditMode ? 'Edit service' : 'Spawn a new service'}
       onClose={onHide}
       footer={footer}
-      style={{ width: 550, maxHeight: '600px', zIndex: 999 }}
+      style={{ width: 550, maxHeight: '80vh', zIndex: 999 }}
       size="lg"
     >
       <FormLayout>
@@ -339,6 +371,25 @@ const ServiceDialog = ({ onHide, editService = null }) => {
             onChange={(e) => setStorages(e.target.value)}
             placeholder="/local/path:/container/path"
           />
+        </FormRow>
+
+        <FormRow label="Ports">
+          <InputTextarea
+            value={ports}
+            style={{ minHeight: 40 }}
+            onChange={(e) => setPorts(e.target.value)}
+            placeholder="8080:8080"
+          />
+          Add multiple ports by adding them on a new line.
+        </FormRow>
+        <FormRow label="Environment">
+          <InputTextarea
+            value={envVars}
+            style={{ minHeight: 40 }}
+            onChange={(e) => setEnvVars(e.target.value)}
+            placeholder="LOGLEVEL=INFO"
+          />
+          Add multiple environment variables by adding them on a new line.
         </FormRow>
       </FormLayout>
     </Dialog>

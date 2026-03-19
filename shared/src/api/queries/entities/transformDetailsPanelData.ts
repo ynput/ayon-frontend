@@ -41,6 +41,8 @@ export type DetailsPanelEntityData = {
   attrib: Record<string, string | number>
   hasReviewables?: boolean
   thumbnailId?: string | null | undefined
+  path: string
+  parents: string[]
   // extra metadata
   entityType: string
   entitySubType?: string
@@ -76,6 +78,8 @@ export const transformDetailsPanelQueriesData = ({
         attrib: parseAllAttribs(task.allAttrib),
         hasReviewables: task.hasReviewables,
         thumbnailId: task.thumbnailId,
+        path: (task.folder?.path || '') + '/' + task.name,
+        parents: task.parents,
         folder: task.folder,
         task: {
           id: task.id,
@@ -83,6 +87,7 @@ export const transformDetailsPanelQueriesData = ({
           label: task.label,
           assignees: task.assignees,
           taskType: task.taskType,
+          subtasks: task.subtasks,
         },
         product: undefined,
         version: task.versions?.edges?.[0]?.node,
@@ -103,6 +108,9 @@ export const transformDetailsPanelQueriesData = ({
         attrib: parseAllAttribs(version.allAttrib),
         hasReviewables: version.hasReviewables,
         thumbnailId: version.thumbnailId,
+        path:
+          (version.product?.folder?.path || '') + '/' + version.product.name + '/' + version.name,
+        parents: version.parents,
         folder: version.product?.folder,
         task: version.task ?? undefined,
         product: {
@@ -137,6 +145,8 @@ export const transformDetailsPanelQueriesData = ({
         attrib: parseAllAttribs(folder.allAttrib),
         hasReviewables: folder.hasReviewables,
         thumbnailId: folder.thumbnailId,
+        path: folder.path || '',
+        parents: folder.parents,
         folder: {
           id: folder.id,
           name: folder.name,
@@ -163,6 +173,15 @@ export const transformDetailsPanelQueriesData = ({
         attrib: parseAllAttribs(representation.allAttrib),
         hasReviewables: undefined,
         thumbnailId: undefined,
+        path:
+          (representation.version?.product?.folder?.path || '') +
+          '/' +
+          (representation.version?.product?.name || '') +
+          '/' +
+          representation.version?.version +
+          '/' +
+          representation.name,
+        parents: representation.parents,
         version: representation.version,
         product: representation.version.product,
         task: representation.version.task || undefined,

@@ -22,12 +22,20 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/links`,
         method: 'POST',
         body: queryArg.createLinkRequestModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     deleteEntityLink: build.mutation<DeleteEntityLinkApiResponse, DeleteEntityLinkApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/links/${queryArg.linkId}`,
         method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
   }),
@@ -52,12 +60,16 @@ export type DeleteLinkTypeApiArg = {
 export type CreateEntityLinkApiResponse = /** status 200 Successful Response */ EntityIdResponse
 export type CreateEntityLinkApiArg = {
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   createLinkRequestModel: CreateLinkRequestModel
 }
 export type DeleteEntityLinkApiResponse = unknown
 export type DeleteEntityLinkApiArg = {
   projectName: string
   linkId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type LinkTypeModel = {
   /** Name of the link type */
@@ -72,7 +84,7 @@ export type LinkTypeModel = {
   data?: Record<string, any>
 }
 export type LinkTypeListResponse = {
-  /** List of link types */
+  /** List of link types defined in the project. */
   types: LinkTypeModel[]
 }
 export type ValidationError = {
@@ -84,7 +96,7 @@ export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type CreateLinkTypeRequestModel = {
-  /** Link data */
+  /** Additional link type data (appearance, description, etc.). */
   data?: Record<string, any>
 }
 export type EntityIdResponse = {
@@ -92,16 +104,18 @@ export type EntityIdResponse = {
   id: string
 }
 export type CreateLinkRequestModel = {
+  /** ID of the link to create. If not provided, will be generated. */
+  id?: string
   /** The ID of the input entity. */
   input: string
   /** The ID of the output entity. */
   output: string
   /** The name of the link. */
   name?: string
-  /** Link type to create. This is deprecated. Use linkType instead. */
-  link?: string
   /** Link type to create. */
   linkType?: string
-  /** Link data */
+  /** Additional data for the link. */
   data?: Record<string, any>
+  /** Link type to create. This is deprecated. Use linkType instead. */
+  link?: string
 }

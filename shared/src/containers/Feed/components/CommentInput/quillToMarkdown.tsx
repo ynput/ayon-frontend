@@ -48,13 +48,23 @@ turndownService.addRule('doubleBackslash', {
   },
 })
 
-// ordered list for both ul and ol
+// unordered list
 turndownService.addRule('unOrderedList', {
   filter: function (node) {
     return node.nodeName === 'LI' && node.getAttribute('data-list') === 'bullet'
   },
   replacement: function (content) {
     return '- ' + content + '\n'
+  },
+})
+
+// ordered list
+turndownService.addRule('orderedList', {
+  filter: function (node) {
+    return node.nodeName === 'LI' && node.getAttribute('data-list') === 'ordered'
+  },
+  replacement: function (content) {
+    return '1. ' + content + '\n'
   },
 })
 
@@ -134,8 +144,15 @@ export const getTextRefs = (text = '') => {
 export const convertToMarkdown = (value) => {
   const codeBlocksParsed = parseCodeBlocks(value)
 
+  // Preserve empty paragraphs (blank lines) by inserting a zero-width space
+  // so Turndown treats them as non-empty and doesn't collapse them
+  const blankLinesPreserved = codeBlocksParsed.replace(/<p><br><\/p>/g, '<p>\u200B</p>')
+
   // convert to markdown
-  let markdown = turndownService.turndown(codeBlocksParsed)
+  let markdown = turndownService.turndown(blankLinesPreserved)
+
+  // Strip the zero-width space markers, leaving the blank lines intact
+  markdown = markdown.replace(/\u200B/g, '')
 
   const quotesParsedMarkdown = parseQuotes(markdown)
 

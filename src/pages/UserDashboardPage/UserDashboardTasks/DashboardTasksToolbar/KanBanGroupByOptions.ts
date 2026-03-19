@@ -7,7 +7,7 @@ type GroupByOption = {
 
 const groupByOptions: GroupByOption[] = [
   { id: 'folderName', label: 'Folder', sortOrder: true },
-  { id: 'status', label: 'Status', sortOrder: true },
+  { id: 'status', label: 'Status', sortOrder: true, sortByEnumOrder: true },
   { id: 'priority', label: 'Priority', sortOrder: true, sortByEnumOrder: true },
   { id: 'taskType', label: 'Type', sortOrder: true },
   { id: 'projectName', label: 'Project', sortOrder: true },

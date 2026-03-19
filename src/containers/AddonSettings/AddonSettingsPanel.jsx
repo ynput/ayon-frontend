@@ -7,8 +7,8 @@ import {
   useGetAddonSettingsOverridesQuery,
 } from '@queries/addonSettings'
 
-import { setUri } from '@state/context'
 import SettingsEditor from '@containers/SettingsEditor'
+import { useURIContext } from '@shared/context'
 
 const AddonSettingsPanel = ({
   addon,
@@ -106,18 +106,20 @@ const AddonSettingsPanel = ({
     return currentSelection.path
   }, [currentSelection])
 
+  const { setUri } = useURIContext()
+
   useEffect(() => {
     let uri = `ayon+settings://${addon.name}`
     //if (addon.version) uri += `:${addon.version}`
     if (currentSelection?.path) uri += `/${currentSelection.path.join('/')}`
     if (projectName) uri += `?project=${projectName}`
     if (siteId) uri += `&site=${siteId}`
-    dispatch(setUri(uri))
+    setUri(uri)
   }, [currentSelection, addon.name, addon.version])
 
   useEffect(() => {
     return () => {
-      dispatch(setUri(null))
+      setUri(null)
     }
   }, [])
 
@@ -151,7 +153,17 @@ const AddonSettingsPanel = ({
         context={context}
       />
     )
-  }, [schema, localData, overrides, breadcrumbs, schemaLoading, settingsLoading, overridesLoading, searchText, filterKeys])
+  }, [
+    schema,
+    localData,
+    overrides,
+    breadcrumbs,
+    schemaLoading,
+    settingsLoading,
+    overridesLoading,
+    searchText,
+    filterKeys,
+  ])
 
   // if (schemaLoading || settingsLoading || overridesLoading) {
   //   return `Loading... ${projectName}`

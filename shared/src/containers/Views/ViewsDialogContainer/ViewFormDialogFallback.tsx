@@ -1,0 +1,30 @@
+import { FC } from 'react'
+import type { ViewFormData, ViewType } from '../types'
+import type { ViewsContextValue, ViewSettings } from '../context/ViewsContext'
+import { ShareOption, UserModel } from '@shared/api'
+
+export interface ViewFormDialogProps {
+  editingView: Partial<ViewFormData> & { viewId?: string }
+  setEditingView: (viewId: string | null) => void
+  isLoading: boolean
+  viewType: ViewType
+  viewSettings?: ViewSettings
+  currentUser?: UserModel
+  projectName?: string
+  setSelected: (viewId: string) => void
+  // data
+  shareOptions?: ShareOption[]
+  // data mutations
+  onCreateView: ViewsContextValue['onCreateView']
+  onUpdateView: ViewsContextValue['onUpdateView']
+  onDeleteView: ViewsContextValue['onDeleteView']
+  api: ViewsContextValue['api']
+  dispatch: any
+  pt?: {
+    dialog?: Partial<React.HTMLAttributes<HTMLDivElement>>
+  }
+}
+
+const ViewFormDialogFallback: FC<ViewFormDialogProps> = () => null
+
+export default ViewFormDialogFallback

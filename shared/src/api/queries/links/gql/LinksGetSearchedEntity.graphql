@@ -1,0 +1,221 @@
+# Gets all tasks with pagination and search filtering
+query GetSearchedFolders(
+  $projectName: String!
+  $search: String
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    folders(
+      search: $search
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: "name"
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...OverviewEntityLinkNodeFragment
+          subType: folderType
+          label
+        }
+      }
+    }
+  }
+}
+
+# Gets all tasks with pagination and search filtering
+query GetSearchedProducts(
+  $projectName: String!
+  $search: String
+  $parentIds: [String!]
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    products(
+      search: $search
+      folderIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: "name"
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...OverviewEntityLinkNodeFragment
+          subType: productType
+        }
+      }
+    }
+  }
+}
+
+# Gets all tasks with pagination and search filtering
+query GetSearchedRepresentations(
+  $projectName: String!
+  $search: String
+  $parentIds: [String!]
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    representations(
+      search: $search
+      versionIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...OverviewEntityLinkNodeFragment
+        }
+      }
+    }
+  }
+}
+
+# Gets all tasks with pagination and search filtering
+query GetSearchedTasks(
+  $projectName: String!
+  $search: String
+  $parentIds: [String!]
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    tasks(
+      search: $search
+      folderIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+      sortBy: "name"
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...OverviewEntityLinkNodeFragment
+          label
+          subType: taskType
+        }
+      }
+    }
+  }
+}
+
+# Gets all tasks with pagination and search filtering
+query GetSearchedVersions(
+  $projectName: String!
+  $search: String
+  $parentIds: [String!]
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    versions(
+      search: $search
+      productIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...OverviewEntityLinkNodeFragment
+        }
+      }
+    }
+  }
+}
+
+# Gets all tasks with pagination and search filtering
+query GetSearchedWorkfiles(
+  $projectName: String!
+  $search: String
+  $parentIds: [String!]
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  project(name: $projectName) {
+    name
+    workfiles(
+      search: $search
+      taskIds: $parentIds
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          ...OverviewEntityLinkNodeFragment
+        }
+      }
+    }
+  }
+}

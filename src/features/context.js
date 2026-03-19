@@ -28,10 +28,7 @@ const initialState = {
   reload: {},
   breadcrumbs: { scope: '' },
   share: { name: null, data: null, link: null, img: null },
-  uri: null,
-  uriChanged: 0,
   uploadProgress: 0, // percentage 0 - 100
-  menuOpen: false,
   activeReactionPopup: null,
   previewFiles: [],
   previewFilesProjectName: '',
@@ -254,11 +251,6 @@ const reducers = {
       payload: 'products',
     },
   },
-  setUri: {
-    uri: {
-      payload: true,
-    },
-  },
   onUriNavigate: {
     'focused.folders': {
       payload: 'folders',
@@ -373,9 +365,6 @@ const contextSlice = createSlice({
     setUri: (state, action) => {
       updateStateWithReducer(reducers.setUri, state, action)
     },
-    setUriChanged: (state) => {
-      state.uriChanged = state.uriChanged + 1
-    },
     onUriNavigate: (state, action) => {
       updateStateWithReducer(reducers.onUriNavigate, state, action)
     },
@@ -421,17 +410,6 @@ const contextSlice = createSlice({
     onUploadFinished: (state) => {
       state.uploadProgress = 0
     },
-    setMenuOpen: (state, action) => {
-      state.menuOpen = action.payload
-    },
-    toggleMenuOpen: (state, action) => {
-      // no payload means toggle off
-      if (!action.payload) action.payload = false
-      // if payload is same as current state, toggle off
-      else if (action.payload === state.menuOpen) state.menuOpen = false
-      // else set payload
-      else state.menuOpen = action.payload
-    },
     onCommentImageOpen: (state, action) => {
       // set the preview file
       state.previewFiles = action.payload.files
@@ -471,7 +449,6 @@ export const {
   setReload,
   setFocusedType,
   setUri,
-  setUriChanged,
   productSelected,
   projectSelected,
   onShare,
@@ -480,8 +457,6 @@ export const {
   onFocusChanged,
   onUploadProgress,
   onUploadFinished,
-  setMenuOpen,
-  toggleMenuOpen,
   onUriNavigate,
   updateBrowserFilters,
   onCommentImageOpen,

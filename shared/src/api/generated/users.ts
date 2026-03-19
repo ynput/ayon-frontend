@@ -209,18 +209,15 @@ export type PasswordResetApiArg = {
 }
 export type GetMyPermissionsApiResponse = /** status 200 Successful Response */ UserPermissionsModel
 export type GetMyPermissionsApiArg = void
-export type GetMyProjectPermissionsApiResponse =
-  /** status 200 Successful Response */ ProjectPermissions
+export type GetMyProjectPermissionsApiResponse = /** status 200 Successful Response */ Permissions
 export type GetMyProjectPermissionsApiArg = {
   projectName: string
 }
-export type GetUserStudioPermissionsApiResponse =
-  /** status 200 Successful Response */ StudioPermissions
+export type GetUserStudioPermissionsApiResponse = /** status 200 Successful Response */ Permissions
 export type GetUserStudioPermissionsApiArg = {
   userName: string
 }
-export type GetUserProjectPermissionsApiResponse =
-  /** status 200 Successful Response */ ProjectPermissions
+export type GetUserProjectPermissionsApiResponse = /** status 200 Successful Response */ Permissions
 export type GetUserProjectPermissionsApiArg = {
   projectName: string
   userName: string
@@ -299,6 +296,7 @@ export type UserPoolModel = {
   exp: number
   max: number
   used: number
+  meta?: object
 }
 export type ApiKeyModel = {
   id: string
@@ -326,7 +324,6 @@ export type ApiKeyPatchModel = {
 }
 export type PasswordResetRequestModel = {
   email: string
-  url: string
 }
 export type UserAttribModel = {
   fullName?: string
@@ -337,6 +334,7 @@ export type UserAttribModel = {
 export type UserModel = {
   /** Name is an unique id of the {entity_name} */
   name: string
+  uiExposureLevel?: number
   attrib?: UserAttribModel
   data?: Record<string, any>
   /** Whether the user is active */
@@ -348,10 +346,13 @@ export type UserModel = {
   updatedAt?: string
 }
 export type LoginResponseModel = {
+  /** Text message, which may be displayed to the user */
   detail?: string
   error?: string
   token?: string
   user?: UserModel
+  /** URL to redirect the user after login */
+  redirectUrl?: string
 }
 export type PasswordResetModel = {
   token: string
@@ -387,12 +388,30 @@ export type AttributeReadAccessList = {
 export type AttributeWriteAccessList = {
   enabled?: boolean
   attributes?: string[]
+  fields?: string[]
+}
+export type ActivitiesAccessList = {
+  enabled?: boolean
+  activities?: string[]
+}
+export type ActionsAccessList = {
+  enabled?: boolean
+  actions?: string[]
+}
+export type EntityLinksAccessList = {
+  enabled?: boolean
+  link_types?: string[]
 }
 export type EndpointsAccessList = {
   enabled?: boolean
   endpoints?: string[]
 }
-export type ProjectPermissions = {
+export type ProjectAdvancedPermissions = {
+  /** If a user can access a task through the 'Assigned' permission, enabling this will also show all sibling tasks in the same folder. When disabled, only the assigned task is visible. */
+  show_sibling_tasks?: boolean
+}
+export type Permissions = {
+  studio?: StudioManagementPermissions
   project?: ProjectManagementPermissions
   /** Whitelist folders a user can create */
   create?: FolderAccessList
@@ -408,8 +427,15 @@ export type ProjectPermissions = {
   attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
   attrib_write?: AttributeWriteAccessList
+  /** Whitelist activities a user can perform */
+  activities?: ActivitiesAccessList
+  /** Whitelist actions a user can perform */
+  actions?: ActionsAccessList
+  /** Whitelist link types a user can create between entities */
+  links?: EntityLinksAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
+  advanced?: ProjectAdvancedPermissions
 }
 export type UserPermissionsModel = {
   user_level?: 'admin' | 'manager' | 'user'
@@ -417,11 +443,8 @@ export type UserPermissionsModel = {
   studio?: StudioManagementPermissions
   /** Permissions for individual projects */
   projects?: {
-    [key: string]: ProjectPermissions
+    [key: string]: Permissions
   }
-}
-export type StudioPermissions = {
-  studio?: StudioManagementPermissions
 }
 export type NewUserModel = {
   attrib?: UserAttribModel

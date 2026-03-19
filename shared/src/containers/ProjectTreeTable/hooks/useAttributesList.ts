@@ -1,20 +1,27 @@
-import { useGetSiteInfoQuery, useGetMyProjectPermissionsQuery, AttributeModel } from '@shared/api'
+import { AttributeModel, Permissions } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
 export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean
 }
 
-const useAttributeFields = ({ projectName }: { projectName: string }) => {
-  const { data: info, isSuccess, isFetching } = useGetSiteInfoQuery({ full: true })
-  const { attributes = [] } = info || {}
+interface UseAttributeFieldsParams {
+  projectPermissions?: Permissions
+}
 
-  const { data: projectPermissions } = useGetMyProjectPermissionsQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) => {
+  const {
+    attributes,
+    isLoading: { siteInfo: isLoading },
+  } = useGlobalContext()
+
   const { attrib_read, attrib_write } = projectPermissions || {}
   const { enabled: attribReadEnabled, attributes: attribReadAttributes } = attrib_read || {}
-  const { enabled: attribWriteEnabled, attributes: attribWriteAttributes } = attrib_write || {}
+  const {
+    enabled: attribWriteEnabled,
+    attributes: attribWriteAttributes,
+    fields: writableFields,
+  } = attrib_write || {}
 
   //   filter out scopes and filter out attributes that do not have read access
   const attribFields: ProjectTableAttribute[] = attributes
@@ -24,7 +31,7 @@ const useAttributeFields = ({ projectName }: { projectName: string }) => {
       readOnly: attribWriteEnabled ? !attribWriteAttributes?.includes(a.name) : false,
     }))
 
-  return { attribFields, isSuccess, isFetching }
+  return { attribFields, writableFields, isLoading }
 }
 
 export default useAttributeFields

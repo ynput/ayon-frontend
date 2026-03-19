@@ -2,7 +2,12 @@ import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     getAccessGroupSchema: build.query<GetAccessGroupSchemaApiResponse, GetAccessGroupSchemaApiArg>({
-      query: () => ({ url: `/api/accessGroups/_schema` }),
+      query: (queryArg) => ({
+        url: `/api/accessGroups/_schema`,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
     }),
     getAccessGroups: build.query<GetAccessGroupsApiResponse, GetAccessGroupsApiArg>({
       query: (queryArg) => ({ url: `/api/accessGroups/${queryArg.projectName}` }),
@@ -28,12 +33,22 @@ const injectedRtkApi = api.injectEndpoints({
     setProjectsAccess: build.mutation<SetProjectsAccessApiResponse, SetProjectsAccessApiArg>({
       query: (queryArg) => ({ url: `/api/access`, method: 'POST', body: queryArg.payload }),
     }),
+    getShareOptions: build.query<GetShareOptionsApiResponse, GetShareOptionsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/share`,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
 export type GetAccessGroupSchemaApiResponse = /** status 200 Successful Response */ any
-export type GetAccessGroupSchemaApiArg = void
+export type GetAccessGroupSchemaApiArg = {
+  projectName?: string
+}
 export type GetAccessGroupsApiResponse = /** status 200 Successful Response */ AccessGroupObject[]
 export type GetAccessGroupsApiArg = {
   projectName: string
@@ -62,11 +77,9 @@ export type SetProjectsAccessApiArg = {
     }
   }
 }
-export type AccessGroupObject = {
-  /** Name of the access group */
-  name: string
-  /** Whether the access group is project level */
-  isProjectLevel: boolean
+export type GetShareOptionsApiResponse = /** status 200 Successful Response */ ShareOptions
+export type GetShareOptionsApiArg = {
+  projectName?: string
 }
 export type ValidationError = {
   loc: (string | number)[]
@@ -75,6 +88,12 @@ export type ValidationError = {
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type AccessGroupObject = {
+  /** Name of the access group */
+  name: string
+  /** Whether the access group is project level */
+  isProjectLevel: boolean
 }
 export type StudioManagementPermissions = {
   /** Allow users to create new projects */
@@ -106,10 +125,27 @@ export type AttributeReadAccessList = {
 export type AttributeWriteAccessList = {
   enabled?: boolean
   attributes?: string[]
+  fields?: string[]
+}
+export type ActivitiesAccessList = {
+  enabled?: boolean
+  activities?: string[]
+}
+export type ActionsAccessList = {
+  enabled?: boolean
+  actions?: string[]
+}
+export type EntityLinksAccessList = {
+  enabled?: boolean
+  link_types?: string[]
 }
 export type EndpointsAccessList = {
   enabled?: boolean
   endpoints?: string[]
+}
+export type ProjectAdvancedPermissions = {
+  /** If a user can access a task through the 'Assigned' permission, enabling this will also show all sibling tasks in the same folder. When disabled, only the assigned task is visible. */
+  show_sibling_tasks?: boolean
 }
 export type Permissions = {
   studio?: StudioManagementPermissions
@@ -128,6 +164,23 @@ export type Permissions = {
   attrib_read?: AttributeReadAccessList
   /** Whitelist attributes a user can write */
   attrib_write?: AttributeWriteAccessList
+  /** Whitelist activities a user can perform */
+  activities?: ActivitiesAccessList
+  /** Whitelist actions a user can perform */
+  actions?: ActionsAccessList
+  /** Whitelist link types a user can create between entities */
+  links?: EntityLinksAccessList
   /** Whitelist REST endpoints a user can access */
   endpoints?: EndpointsAccessList
+  advanced?: ProjectAdvancedPermissions
+}
+export type ShareOption = {
+  shareType: string
+  value: string
+  name: string
+  label: string
+  attribute?: string
+}
+export type ShareOptions = {
+  options: ShareOption[]
 }

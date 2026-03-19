@@ -3,29 +3,79 @@ import {
   detailsPanelQueries,
   operationsApi,
   entityListsQueriesGql,
+  api,
 } from '@shared/api'
 import type { OperationsResponseModel, OperationModel, OperationsApiArg } from '@shared/api'
 import getOverviewApi from './getOverview'
-import { DetailsPanelEntityData, DetailsPanelEntityType } from '@shared/api/queries/entities'
+import {
+  DetailsPanelEntityData,
+  DetailsPanelEntityType,
+  patchDetailsPanel,
+  patchDetailsPanelEntity,
+} from '@shared/api/queries/entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import { getUpdatedEntityIds } from './filterRefetchUtils'
+import {
+  refetchTasksForCacheEntry,
+  refetchOverviewTasksForCacheEntry,
+} from './refetchFilteredEntities'
+import { patchVersions } from './patchVersions'
+import { patchProducts } from './patchProducts'
 // these operations are dedicated to the overview page
 // this mean cache updates are custom for the overview page here
 
 // Helper function to update entities with operation data
 const updateEntityWithOperation = (entity: any, operationData: any) => {
-  const newData = {
-    ...entity,
-    ...operationData,
-    attrib: {
+  // Update top-level properties directly
+  Object.keys(operationData).forEach((key) => {
+    if (key === 'attrib' || key === 'links' || key === 'deleteLinks') return
+    entity[key] = operationData[key]
+  })
+
+  // Handle attrib merging
+  if (operationData.attrib) {
+    entity.attrib = {
       ...entity.attrib,
-      ...(operationData?.attrib || {}),
-    },
+      ...operationData.attrib,
+    }
   }
 
-  // patch data onto the entity
-  Object.assign(entity, newData)
+  // Handle links merging
+  if (operationData.links) {
+    const existingLinks = entity.links || []
+    const newLinks = operationData.links || []
+
+    // Ensure links structure exists
+    if (!entity.links) entity.links = []
+
+    // Process links directly
+    entity.links = [...existingLinks]
+
+    newLinks.forEach((newLink: any) => {
+      const existingIndex = entity.links.findIndex((link: any) => link.id === newLink.id)
+
+      if (existingIndex !== -1) {
+        entity.links[existingIndex] = { ...entity.links[existingIndex], ...newLink }
+      } else {
+        entity.links.push(newLink)
+      }
+    })
+  }
+
+  // Handle links deletion
+  if (operationData.deleteLinks) {
+    const linksToDelete = operationData.deleteLinks || []
+
+    // Ensure links structure exists
+    if (!entity.links) entity.links = []
+
+    // Remove links by ID
+    linksToDelete.forEach((linkId: string) => {
+      entity.links = entity.links.filter((link: any) => link.id !== linkId)
+    })
+  }
 }
 
 const getOverviewTaskTags = (tasks: Pick<OperationModel, 'entityId' | 'data'>[]) => {
@@ -59,6 +109,64 @@ export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'd
   type?: OperationModel['type']
 }
 
+// Helper function to create a patch operation for deleting links
+export const createLinkDeletionPatch = (
+  entityId: string,
+  entityType: OperationModel['entityType'],
+  linkIds: string[],
+): PatchOperation => {
+  return {
+    entityId,
+    entityType,
+    type: 'update',
+    data: { deleteLinks: linkIds },
+  }
+}
+
+// Utility function to delete specific links by ID from entities
+export const deleteLinksFromEntities = (
+  entities: { entityId: string; entityType: OperationModel['entityType'] }[],
+  linkIds: string[],
+): PatchOperation[] => {
+  return entities.map((entity) =>
+    createLinkDeletionPatch(entity.entityId, entity.entityType, linkIds),
+  )
+}
+
+// Generic helper function to patch entities based on their type
+export const patchOverviewEntities = (
+  entities: PatchOperation[],
+  {
+    state,
+    dispatch,
+  }: {
+    state: RootState<any, any, 'restApi'>
+    dispatch: ThunkDispatch<any, any, UnknownAction>
+  },
+  patches?: any[],
+) => {
+  // Group entities by type
+  const entitiesByType = entities.reduce((acc, entity) => {
+    if (!acc[entity.entityType]) {
+      acc[entity.entityType] = []
+    }
+    acc[entity.entityType].push(entity)
+    return acc
+  }, {} as Record<string, PatchOperation[]>)
+
+  // Patch each entity type using the appropriate function
+  if (entitiesByType.task) {
+    patchOverviewTasks(entitiesByType.task, { state, dispatch }, patches)
+  }
+  if (entitiesByType.folder) {
+    patchOverviewFolders(entitiesByType.folder, { state, dispatch }, patches)
+  }
+  // Add more entity types as needed
+  // if (entitiesByType.product) { ... }
+  // if (entitiesByType.version) { ... }
+  // etc.
+}
+
 export const patchOverviewTasks = (
   tasks: PatchOperation[],
   {
@@ -87,6 +195,7 @@ export const patchOverviewTasks = (
             } else {
               // Iterate through all pages in the infinite query
               for (const page of draft.pages) {
+                // TODO: task is not found here, why?
                 const task = page.tasks.find((task) => task.id === taskOperation.entityId)
                 if (task) {
                   updateEntityWithOperation(task, taskOperation.data)
@@ -112,7 +221,7 @@ export const patchOverviewTasks = (
               if (
                 taskOperation.type === 'create' &&
                 taskOperation.data &&
-                entry.originalArgs.parentIds.includes(taskOperation.data.folderId)
+                entry.originalArgs.parentIds?.includes(taskOperation.data.folderId)
               ) {
                 const patchTask = (tasksArrayDraft: EditorTaskNode[]) => {
                   // @ts-expect-error
@@ -213,117 +322,6 @@ export const patchOverviewFolders = (
   }
 }
 
-type DeepPartial<T> = T extends object
-  ? {
-      [P in keyof T]?: DeepPartial<T[P]>
-    }
-  : T
-
-const operationDataToDetailsData = (
-  data: Record<string, any>,
-  entityType: DetailsPanelEntityType,
-): DeepPartial<DetailsPanelEntityData> => {
-  const sharedData: DeepPartial<DetailsPanelEntityData> = {
-    name: data.name,
-    attrib: data.attrib,
-    status: data.status,
-    tags: data.tags,
-    label: data.label,
-    updatedAt: data.updatedAt,
-    createdAt: data.createdAt,
-    hasReviewables: data.hasReviewables,
-    thumbnailId: data.thumbnailId,
-  }
-
-  switch (entityType) {
-    case 'task':
-      return {
-        ...sharedData,
-        task: {
-          assignees: data.assignees,
-          label: data.label,
-          name: data.name,
-          taskType: data.taskType,
-        },
-      }
-    case 'folder':
-      return {
-        ...sharedData,
-        folder: {
-          id: data.id,
-          name: data.name,
-          label: data.label,
-          folderType: data.folderType,
-        },
-      }
-    case 'version':
-      return {
-        ...sharedData,
-        version: {
-          id: data.id,
-          name: data.name,
-        },
-      }
-    case 'representation':
-      return {
-        ...sharedData,
-      }
-  }
-}
-
-export const patchDetailsPanelEntity = (
-  operations: PatchOperation[] = [],
-  draft: DetailsPanelEntityData,
-) => {
-  // find the entity we are updating from the draft
-  const operation = operations.find((op) => op.entityId === draft.id)
-  const operationData = operation?.data
-
-  if (!operationData || operation.entityType === 'product' || operation.entityType === 'workfile')
-    return console.warn('No operation data found or entity type not supported')
-
-  // transform the data to match the details panel entity data
-  const detailsPanelData = operationDataToDetailsData(operationData, operation.entityType)
-
-  // helper to deep‐clean undefined values
-  function cleanUndefined(obj: any): void {
-    Object.entries(obj).forEach(([key, val]) => {
-      if (val === undefined) {
-        delete obj[key]
-      } else if (val !== null && typeof val === 'object') {
-        cleanUndefined(val)
-      }
-    })
-  }
-
-  // remove all undefineds at root and nested levels
-  cleanUndefined(detailsPanelData as Record<string, any>)
-
-  const newData: DeepPartial<DetailsPanelEntityData> = {
-    ...draft,
-    ...detailsPanelData,
-    attrib: {
-      ...(draft?.attrib || {}),
-      ...detailsPanelData.attrib,
-    },
-    folder: {
-      ...(draft?.folder || {}),
-      ...detailsPanelData.folder,
-    },
-    task: {
-      ...(draft?.task || {}),
-      ...detailsPanelData.task,
-    },
-    version: {
-      ...(draft?.version || {}),
-      ...detailsPanelData.version,
-    },
-  }
-
-  // patch data onto the entity
-  Object.assign(draft, newData)
-}
-
 const patchListItems = (
   entities: PatchOperation[],
   {
@@ -402,6 +400,11 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         try {
           const result = await dispatch(operationsEnhanced.endpoints.operations.initiate(arg))
 
+          // Check if the network request itself failed (offline, timeout, etc.)
+          if (result.error) {
+            return { error: result.error as FetchBaseQueryError }
+          }
+
           const data = result.data
           // check for any errors in the result
           const uniqueErrors = new Set()
@@ -434,7 +437,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         }
       },
       async onQueryStarted(
-        { operationsRequestModel, patchOperations = [] },
+        { operationsRequestModel, patchOperations = [], projectName },
         { dispatch, queryFulfilled, getState },
       ) {
         if (!operationsRequestModel.operations?.length) return
@@ -507,6 +510,16 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         // patch the list items
         patchListItems([...operations, ...patchOperations], { state, dispatch }, patches)
 
+        // patch versions
+        if (operationsByType.version?.length) {
+          patchVersions(operationsByType.version, { state, dispatch }, patches)
+        }
+
+        // patch products
+        if (operationsByType.product?.length) {
+          patchProducts(operationsByType.product, { state, dispatch }, patches)
+        }
+
         // try to patch any details panels
         // first we patch the individual entities
         // then we patch the details panel cache
@@ -556,6 +569,66 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
         try {
           await queryFulfilled
+
+          // Background refetch logic - runs after successful mutation
+          // This ensures calculated attributes are up-to-date and entities are correctly filtered
+
+          const taskOperations = operationsByType.task || []
+          const folderOperations = operationsByType.folder || []
+
+          // Early exit if no operations
+          if (taskOperations.length === 0 && folderOperations.length === 0) {
+            return
+          }
+
+          // Extract updated entity IDs (always needed for refetch)
+          const updatedTaskIds = getUpdatedEntityIds(taskOperations)
+          const updatedFolderIds = getUpdatedEntityIds(folderOperations)
+
+          // Get all active task list cache entries
+          const overviewTaskTags = updatedTaskIds.map((id) => ({ type: 'overviewTask', id }))
+          const tasksListInfiniteEntries = getOverviewApi.util
+            .selectInvalidatedBy(state, overviewTaskTags)
+            .filter((entry) => entry.endpointName === 'getTasksListInfinite')
+
+          // Requirement: "refetch the full data for the specific entity/entities"
+          // For each cache with its own filter, fetch entities and update that cache
+          if (updatedTaskIds.length > 0 && projectName) {
+            // Process getTasksListInfinite caches
+            for (const entry of tasksListInfiniteEntries) {
+              await refetchTasksForCacheEntry({
+                dispatch,
+                projectName,
+                updatedTaskIds,
+                cacheEntry: entry,
+              })
+            }
+
+            // Process getOverviewTasksByFolders caches
+            // Use selectInvalidatedBy to get only caches that contain the updated tasks
+            const overviewTasksEntries = getOverviewApi.util
+              .selectInvalidatedBy(state, overviewTaskTags)
+              .filter((entry) => entry.endpointName === 'getOverviewTasksByFolders')
+
+            for (const entry of overviewTasksEntries) {
+              await refetchOverviewTasksForCacheEntry({
+                dispatch,
+                projectName,
+                updatedTaskIds,
+                cacheEntry: entry,
+              })
+            }
+          }
+
+          // Always refetch folders if they were updated (for calculated attributes)
+          // Not conditional on affectsFilter - requirement says "always refetch entities"
+          // Only invalidate if we haven't already done so for delete operations
+          const hasDeleteOps = (operationsByType.folder || []).some(
+            (op: OperationModel) => op.type === 'delete',
+          )
+          if (updatedFolderIds.length > 0 && projectName && !hasDeleteOps) {
+            dispatch(foldersQueries.util.invalidateTags([{ type: 'folder', id: 'LIST' }]))
+          }
         } catch (error) {
           // undo all patches if there is an error
           for (const patch of patches) {
@@ -569,9 +642,28 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           }
         }
       },
+      invalidatesTags: (_r, _e, { operationsRequestModel, projectName }) => {
+        type Tags = { id: string; type: string }[]
+        const userDashboardTags: Tags = [{ type: 'kanban', id: 'project-' + projectName }],
+          taskProgressTags: Tags = [],
+          entityListItemTags: Tags = []
+
+        operationsRequestModel.operations?.forEach((op) => {
+          const { entityId } = op
+          if (entityId) {
+            taskProgressTags.push({ type: 'progress', id: entityId })
+            // Invalidate list item cache for this entity to trigger background refetch
+            entityListItemTags.push({ type: 'entityListItem', id: entityId })
+          } else {
+            // new entity created, so we should invalidate everything
+            taskProgressTags.push({ type: 'progress', id: 'LIST' })
+          }
+        })
+
+        return [...userDashboardTags, ...taskProgressTags, ...entityListItemTags]
+      },
     }),
   }),
 })
 
 export const { useUpdateOverviewEntitiesMutation } = operationsApiEnhancedInjected
-export { operationsApiEnhancedInjected as overviewQueries }

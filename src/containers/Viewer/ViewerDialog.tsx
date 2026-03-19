@@ -4,19 +4,19 @@ import { closeViewer } from '@state/viewer'
 import { useEffect } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
-import isHTMLElement from '@helpers/isHTMLElement'
+import { isHTMLElement } from '@shared/util'
 import { useDetailsPanelContext } from '@shared/context'
 
 const StyledDialog = styled(Dialog)`
-  /* dnd overlay must offset this 64px by 32px */
-  width: calc(100% - 64px);
-  height: calc(99% - 64px);
+  /* dnd overlay must offset this 32px by 16px */
+  width: calc(100% - 32px);
+  height: calc(99% - 32px);
   max-height: unset;
   max-width: unset;
 
   .body {
     overflow: hidden;
-    padding: var(--padding-m);
+    padding: var(--padding-s);
   }
   &:focus-visible {
     outline: none;
@@ -75,7 +75,7 @@ const ViewerDialog = () => {
 
   return (
     <>
-      <StyledDialog isOpen hideCancelButton size="full" onClose={() => {}}>
+      <StyledDialog isOpen hideCancelButton size="full" onClose={() => {}} id="viewer-dialog">
         <Viewer onClose={handleClose} />
       </StyledDialog>
     </>

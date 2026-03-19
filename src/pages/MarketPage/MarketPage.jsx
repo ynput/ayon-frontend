@@ -2,6 +2,7 @@ import { Section } from '@ynput/ayon-react-components'
 import MarketFilters, { getMarketFilter } from './MarketFilters'
 import { useEffect, useMemo, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
 import {
   useMarketAddonListQuery,
@@ -10,7 +11,6 @@ import {
   useLazyMarketAddonDetailQuery,
 } from '@queries/market/getMarket'
 import MarketAddonsList from './MarketAddonsList'
-import 'react-perfect-scrollbar/dist/css/styles.css'
 import AddonDetails from './MarketDetails/AddonDetails'
 import { useListAddonsQuery } from '@shared/api'
 import { mergeAddonWithDownloaded } from './mergeAddonsData'
@@ -392,12 +392,13 @@ const MarketPage = () => {
 
   return (
     <>
+      <DocumentTitle title="Market • AYON" />
       <ConnectDialog
         visible={showConnectDialog}
         onHide={() => setShowConnectDialog(false)}
         redirect={`/market?addon=${selectedItemId}`}
       />
-      <main style={{ flexDirection: 'column', overflow: 'hidden' }}>
+      <main style={{ flexDirection: 'column' }}>
         <Section style={{ overflow: 'hidden', flexDirection: 'row', justifyContent: 'center' }}>
           <MarketFilters
             filterType={filterType}

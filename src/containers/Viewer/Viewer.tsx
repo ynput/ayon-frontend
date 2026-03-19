@@ -1,11 +1,10 @@
 import { compareDesc } from 'date-fns'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useFullScreenHandle } from 'react-full-screen'
 import { Button } from '@ynput/ayon-react-components'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
-import ReviewablesSelector from '@components/ReviewablesSelector'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
@@ -13,18 +12,20 @@ import * as Styled from './Viewer.styled'
 import { ViewerProvider } from '@context/ViewerContext'
 
 // shared
-import { useGetViewerReviewablesQuery } from '@shared/api'
+import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
-import { productTypes } from '@shared/util'
-import { getGroupedReviewables } from '@shared/components'
-import { useDetailsPanelContext } from '@shared/context'
+import { getGroupedReviewables, ReviewablesSelector } from '@shared/components'
+import { useScopedDetailsPanel } from '@shared/context'
+import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
+import { useLocalStorage } from '@shared/hooks'
 
 interface ViewerProps {
   onClose?: () => void
   canOpenInNew?: boolean
 }
 
-const Viewer = ({ onClose }: ViewerProps) => {
+const ViewerBody = ({ onClose }: ViewerProps) => {
+  const [theater, setTheater] = useLocalStorage('viewer-theater-mode', false)
   const {
     productId,
     taskId,
@@ -37,6 +38,7 @@ const Viewer = ({ onClose }: ViewerProps) => {
     selectedProductId,
   } = useAppSelector((state) => state.viewer)
 
+  const project = useProjectContext()
   const dispatch = useAppDispatch()
 
   // new query: returns all reviewables for a product
@@ -57,8 +59,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
     return Array.from(uniqueProductIds)
   }, [allVersionsAndReviewables])
 
-  type ProductTypeKey = keyof typeof productTypes
-
   const productOptions = useMemo(() => {
     return [...uniqueProducts]
       .map((id) => {
@@ -66,9 +66,8 @@ const Viewer = ({ onClose }: ViewerProps) => {
         return {
           value: id,
           label: product?.productName || 'Unknown product',
-          icon:
-            (product?.productType && productTypes[product.productType as ProductTypeKey]?.icon) ||
-            'inventory_2',
+          icon: product?.productType && project.getProductType(product.productType).icon,
+          color: product?.productType && project.getProductType(product.productType).color,
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -132,7 +131,6 @@ const Viewer = ({ onClose }: ViewerProps) => {
       }
     }
   }, [allVersionsAndReviewables, selectedProductId])
-
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
     if (hasMultipleProducts && !selectedProductId && !isFetchingReviewables) {
@@ -152,6 +150,45 @@ const Viewer = ({ onClose }: ViewerProps) => {
     () => versionsAndReviewables.find((v) => v.id === versionIds[0]),
     [versionIds, versionsAndReviewables],
   )
+
+  // Determine entity type and ID for the query
+  // Always prioritize version if available, as we need it to get the product name
+  const { entityType, entityId } = useMemo(() => {
+    if (versionIds[0]) {
+      return { entityType: 'version' as const, entityId: versionIds[0] }
+    } else if (taskId && !productId) {
+      return { entityType: 'task' as const, entityId: taskId }
+    } else if (folderId && !taskId && !productId) {
+      return { entityType: 'folder' as const, entityId: folderId }
+    }
+    return { entityType: null, entityId: null }
+  }, [folderId, taskId, productId, versionIds])
+
+  // Fetch entity details to get folder, product, and version information
+  const { data: entityDetails = [] } = useGetEntitiesDetailsPanelQuery(
+    {
+      entityType: entityType!,
+      entities: entityId && projectName ? [{ id: entityId, projectName }] : [],
+    },
+    { skip: !entityId || !projectName || !entityType },
+  )
+
+  const versionPath = useMemo(() => {
+    if (!entityDetails[0]) return ''
+
+    const entity = entityDetails[0]
+
+    // Get the immediate parent folder (last folder in the hierarchy)
+    const folderLabel = entity.folder?.label || entity.folder?.name || ''
+
+    // Get product and version names separately
+    const productName = entity.product?.name || ''
+    const versionName = entity.name || ''
+
+    // Build path: folder / product / version
+    return [folderLabel, productName, versionName].filter(Boolean).join(' / ')
+  }, [entityDetails])
+
   // if no versionIds are provided, select the last version and update the state
   useEffect(() => {
     if ((!versionIds.length || !selectedVersion) && !isFetchingReviewables) {
@@ -216,13 +253,13 @@ const Viewer = ({ onClose }: ViewerProps) => {
     dispatch(updateSelection({ reviewableIds: [reviewableId] }))
   }
 
-  const { setTab } = useDetailsPanelContext()
+  const { setTab } = useScopedDetailsPanel('review')
 
   const handleUploadAction =
     (toggleNativeFileUpload = false) =>
     () => {
       // switch to files tab
-      setTab('review', 'files')
+      setTab('files')
       // open the file dialog
       if (toggleNativeFileUpload) {
         dispatch(toggleUpload(true))
@@ -247,42 +284,102 @@ const Viewer = ({ onClose }: ViewerProps) => {
     }
   }
 
+  const toggleTheater = useCallback(() => {
+    setTheater(!theater)
+  }, [theater, setTheater])
+
+  const cycleViewMode = useCallback(() => {
+    if (fullscreen) {
+      // Cycle: Fullscreen -> Default
+      dispatch(toggleFullscreen({ fullscreen: false }))
+      setTheater(false)
+    } else if (theater) {
+      // Cycle: Theater -> Fullscreen
+      setTheater(false)
+      dispatch(toggleFullscreen({ fullscreen: true }))
+    } else {
+      // Cycle: Default -> Theater
+      setTheater(true)
+    }
+  }, [fullscreen, theater, dispatch, setTheater])
+
+  // Handle keyboard shortcut for view mode cycle (F key)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // abort if modifier keys are pressed
+      if (e.ctrlKey || e.altKey || e.metaKey) return
+
+      // check shortcut isn't inside an input field
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return
+
+      // check shortcut isn't inside a contenteditable element
+      if ((e.target as HTMLElement).isContentEditable) return
+
+      // Cycle view mode on 'f' key
+      if (e.key.toLowerCase() === 'f') {
+        console.log('cycle mode')
+        cycleViewMode()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [cycleViewMode])
+
   const reviewables = selectedVersion?.reviewables || []
 
-  const { optimized, unoptimized } = useMemo(
-    () => getGroupedReviewables(reviewables as any),
-    [reviewables],
-  )
-
-  const shownOptions = [...optimized, ...unoptimized]
+  const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
-  // todo: noVersions modal smaller
   return (
     <ViewerProvider selectedVersionId={selectedVersion?.id}>
-      <Styled.Container>
-        <Styled.PlayerToolbar>
-          <VersionSelectorTool
-            versions={versionsAndReviewables}
-            selected={versionIds[0]}
-            onChange={handleVersionChange}
-          />
-          {hasMultipleProducts && (
-            <ReviewVersionDropdown
-              options={productOptions}
-              placeholder="Select a product"
-              prefix="Product: "
-              value={selectedProductId}
-              onChange={handleProductChange}
-              valueProps={{ className: 'product-dropdown' }}
-              tooltip="Select a product to view its versions reviewables"
-              shortcut={''}
-              valueIcon={selectedProduct?.icon || ''}
-            />
-          )}
-        </Styled.PlayerToolbar>
-        {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+      <Styled.Container className={theater ? 'grid minimized' : 'grid'}>
+        {!theater && (
+          <Styled.PlayerToolbar>
+            <>
+              <VersionSelectorTool
+                versions={versionsAndReviewables}
+                selected={versionIds[0]}
+                onChange={handleVersionChange}
+              />
+              {hasMultipleProducts && (
+                <ReviewVersionDropdown
+                  options={productOptions}
+                  placeholder="Select a product"
+                  prefix="Product: "
+                  value={selectedProductId}
+                  onChange={handleProductChange}
+                  valueProps={{ className: 'product-dropdown' }}
+                  tooltip="Select a product to view its versions reviewables"
+                  valueIcon={selectedProduct?.icon || ''}
+                  valueColor={selectedProduct?.color}
+                />
+              )}
+            </>
+          </Styled.PlayerToolbar>
+        )}
+
+        <Styled.MinimizedToolbar className={theater ? '' : 'minimized'}>
+          {theater && versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
+          <Styled.ButtonGroup>
+            <Button
+              icon={'aspect_ratio'}
+              data-tooltip={'Hide surrounding panels to maximize viewer size'}
+              data-tooltip-position="bottom"
+              data-shortcut={'F'}
+              onClick={toggleTheater}
+              selected={theater}
+            >
+              Theater
+            </Button>
+            {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
+          </Styled.ButtonGroup>
+        </Styled.MinimizedToolbar>
+
         <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
           <ViewerComponent
             projectName={projectName}
@@ -297,19 +394,42 @@ const Viewer = ({ onClose }: ViewerProps) => {
             onUpload={handleUploadAction}
           />
         </Styled.FullScreenWrapper>
-        <Styled.RightToolBar style={{ zIndex: 1100 }}>
-          <ReviewablesSelector
-            reviewables={shownOptions}
-            selected={reviewableIds}
-            onChange={handleReviewableChange}
-            onUpload={handleUploadAction(true)}
+        {!theater && (
+          <Styled.RightToolBar style={{ zIndex: 1100 }}>
+            <ReviewablesSelector
+              reviewables={playable}
+              selected={reviewableIds}
+              onChange={handleReviewableChange}
+              projectName={projectName}
+              onUpload={handleUploadAction(true)}
+            />
+            <div id="annotation-tools" style={{ position: 'relative' }}></div>
+          </Styled.RightToolBar>
+        )}
+        {!theater && (
+          <ViewerDetailsPanel
+            versionIds={versionIds}
             projectName={projectName}
+            noVersions={noVersions}
           />
-          <div id="annotation-tools" style={{ position: 'relative' }}></div>
-        </Styled.RightToolBar>
-        {!noVersions && <ViewerDetailsPanel versionIds={versionIds} projectName={projectName} />}
+        )}
       </Styled.Container>
     </ViewerProvider>
+  )
+}
+
+const Viewer = ({ onClose }: ViewerProps) => {
+  const { projectName } = useAppSelector((state) => state.viewer)
+
+  if (!projectName) {
+    console.error('No project name provided to Viewer')
+    return null
+  }
+
+  return (
+    <ProjectContextProvider projectName={projectName}>
+      <ViewerBody onClose={onClose} />
+    </ProjectContextProvider>
   )
 }
 

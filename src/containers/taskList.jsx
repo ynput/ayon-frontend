@@ -8,7 +8,6 @@ import { Column } from 'primereact/column'
 import { DetailsDialog, useVersionUploadContext } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
-import { CellWithIcon } from '@components/icons'
 import { setFocusedTasks, setPairing, setUri, updateBrowserFilters } from '@state/context'
 import { toast } from 'react-toastify'
 import { useGetTasksQuery } from '@queries/getTasks'
@@ -17,6 +16,7 @@ import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { CellWithIcon } from '@components/icons'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const tasksTypes = useSelector((state) => state.project.tasks)
@@ -150,6 +150,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     buildListMenuItem,
     newListMenuItem,
     tasks: tasksLists,
+    buildHierarchicalMenuItems,
   } = useEntityListsContext()
 
   // CONTEXT MENU
@@ -182,7 +183,11 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
         command: () => handleFilterProductsBySelected(selected),
       },
       buildAddToListMenu([
-        ...tasksLists.data.map((list) => buildListMenuItem(list, selectedEntities)),
+        ...buildHierarchicalMenuItems(
+          tasksLists,
+          selectedEntities,
+          () => false, // icons optional - hide for compactness
+        ),
         newListMenuItem('task', selectedEntities),
       ]),
       {
@@ -261,17 +266,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     return <>Error</>
   }
 
-  // updates the URI on focus change
-  const onFocus = (event) => {
-    const id = extractIdFromClassList(event.target.classList)
-    if (!id) return
-    const node = tasksData.find((s) => s.key === id)?.data
-    if (!node) return
-    let uri = `ayon+entity://${projectName}/${node.folderPath}`
-    uri += `?task=${node.name}`
-    dispatch(setUri(uri))
-  }
-
   const handleDeselect = (e) => {
     const tableRefElement = tableRef.current?.getElement()
 
@@ -328,7 +322,6 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             pt={{
               root: {
                 onKeyDown: handleKeyDown,
-                onFocus: onFocus,
                 onClick: handleDeselect,
               },
             }}

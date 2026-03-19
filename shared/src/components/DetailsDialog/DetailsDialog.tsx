@@ -1,6 +1,9 @@
+import { useMemo } from 'react'
 import { toast } from 'react-toastify'
 import { useGetEntityQuery } from '@shared/api'
-import { Dialog } from '@ynput/ayon-react-components'
+import { Dialog, Icon } from '@ynput/ayon-react-components'
+import CodeEditor from '@uiw/react-textarea-code-editor'
+import { copyToClipboard } from '@shared/util'
 
 export interface DetailsDialogProps {
   projectName?: string
@@ -23,16 +26,26 @@ export const DetailsDialog = ({
     isError,
     error,
   } = useGetEntityQuery(
-    { projectName, entityType: entityType, entityId: entityIds[0] },
+    { projectName, entityType: entityType, entityId: entityIds?.[0] },
     { skip: !visible },
   )
 
-  if (isLoading)
-    if (isError) {
-      toast.error(`Unable to load detail. ${error}`)
-    }
+  // Show error toast if the query errored
+  if (isError) {
+    toast.error(`Unable to load detail. ${error}`)
+  }
 
-  if (!visible || data.length < 1) return null
+  // Raw pretty JSON for copying and highlighting
+  const rawJson = useMemo(() => {
+    try {
+      return JSON.stringify(data, null, 2)
+    } catch {
+      return String(data)
+    }
+  }, [data])
+
+  // Keep the early return after hooks to ensure hooks are called on every render in the same order
+  if (!visible || (Array.isArray(data) ? data.length < 1 : false)) return null
 
   return (
     <Dialog
@@ -42,11 +55,43 @@ export const DetailsDialog = ({
       style={{ width: '50vw' }}
       header={`${entityType} detail`}
     >
-      <pre>
-        {!isLoading && !isError && JSON.stringify(data, null, 2)}
-        {isLoading && 'loading...'}
-        {isError && 'error...'}
-      </pre>
+      <style>{`
+        .details-dialog__code { position: relative; }
+        .details-dialog__copy { position: absolute; right: 12px; top: 24px; z-index: 10; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 6px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+        .details-dialog__code:hover .details-dialog__copy, .details-dialog__code:focus-within .details-dialog__copy { display: flex; }
+        .w-tc-editor .token.property { color: #c9a5f7 !important; }
+        .w-tc-editor .token.string { color: #6bc985 !important; }
+        .w-tc-editor .token.number { color: #e5a66b !important; }
+        .w-tc-editor .token.boolean { color: #e5a66b !important; }
+        .w-tc-editor .token.null { color: #7a8a99 !important; }
+        .w-tc-editor .token.punctuation { color: #b0bec5 !important; }
+        .w-tc-editor .token.operator { color: #b0bec5 !important; }
+        .details-dialog__code .w-tc-editor textarea { display: none !important; }
+      `}</style>
+      <div className="details-dialog__code">
+        {isLoading || isError ? (
+          <pre>{isLoading ? 'loading...' : 'error...'}</pre>
+        ) : (
+          <>
+            <div
+              role="button"
+              aria-label="Copy JSON"
+              onClick={() => copyToClipboard(rawJson)}
+              className="details-dialog__copy"
+            >
+              <Icon icon={'content_copy'} data-tooltip="Copy to clipboard" />
+            </div>
+            <CodeEditor
+              wrap={'off'}
+              value={rawJson}
+              language="json"
+              placeholder="Please enter JS code."
+              readOnly
+              data-color-mode={'dark'}
+            />
+          </>
+        )}
+      </div>
     </Dialog>
   )
 }

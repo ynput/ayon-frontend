@@ -5,6 +5,7 @@ import styled from 'styled-components'
 export const PanelContainer = styled(Panel)`
   height: 100%;
   flex-wrap: wrap;
+  overflow-x: auto;
 
   flex: 1;
   max-width: 800px;
@@ -13,6 +14,11 @@ export const PanelContainer = styled(Panel)`
 
   &.noData {
     background-color: unset;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: var(--base-gap-large);
   }
 `
 
@@ -34,6 +40,12 @@ export const Left = styled.div`
       width: 100%;
     }
   }
+
+  @media (max-width: 768px) {
+    min-width: 100%;
+    width: 100%;
+    height: auto;
+  }
 `
 
 // contains buttons like install, update, etc
@@ -45,9 +57,17 @@ export const Right = styled.div`
   gap: var(--base-gap-large);
   flex: 1;
   max-width: 300px;
-  min-width: 200px;
+  min-width: 250px;
+  overflow-y: auto;
+  flex-shrink: 0;
 
   & > button {
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+    min-width: 100%;
     width: 100%;
   }
 `

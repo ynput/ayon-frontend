@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import styled from 'styled-components'
 
 import VideoOverlay from './VideoOverlay'
@@ -8,6 +8,14 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import clsx from 'clsx'
 import useGoToFrame from './hooks/useGoToFrame'
 import { useViewer } from '@context/ViewerContext'
+
+import usePlayerPreferences from './hooks/usePlayerPreferences'
+import useVideoPlayback from './hooks/useVideoPlayback'
+import useVideoSeeking from './hooks/useVideoSeeking'
+import useVideoSourceTransition from './hooks/useVideoSourceTransition'
+import useVideoDimensions from './hooks/useVideoDimensions'
+
+import './utils/videoFrameCallbackPolyfill'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -71,141 +79,83 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
 
   const videoRef = useRef(null)
   const videoRowRef = useRef(null)
+  const isTransitioning = useRef(false)
 
-  const initialPosition = useRef(0) // in seconds
-  const seekedToInitialPosition = useRef(false)
-
-  const [currentTime, setCurrentTime] = useState(0) // in seconds
-  const [duration, setDuration] = useState(0) // in seconds
-  const [bufferedRanges, setBufferedRanges] = useState([]) // here we use frames
-
-  const [isPlaying, setIsPlaying] = useState(false)
   const [loadError, setLoadError] = useState(null)
-  const [actualSource, setActualSource] = useState(src)
-  const [showStill, setShowStill] = useState(false)
+  const [bufferedRanges, setBufferedRanges] = useState([])
 
-  // user preferences (persist somewhere?)
-  const [showOverlay, setShowOverlay] = useState(false)
-  const [loop, setLoop] = useState(true)
-  const [muted, setMuted] = useState(false)
+  // 1. Preferences (independent)
+  const { showOverlay, setShowOverlay, loop, setLoop, muted, setMuted } = usePlayerPreferences()
 
-  const [videoDimensions, setVideoDimensions] = useState({
-    width: null,
-    height: null,
-  })
-  // used to set intrinsic size for the Annotations canvas
-  const [actualVideoDimensions, setActualVideoDimensions] = useState(null)
+  // 2. Playback (needs refs)
+  const { currentTime, setCurrentTime, duration, setDuration, isPlaying, setIsPlaying, currentFrame, frameCount } =
+    useVideoPlayback(videoRef, frameRate, isTransitioning)
+
+  // 3. Seeking (needs playback setters)
+  const {
+    seekToFrame,
+    handleScrub,
+    handlePause,
+    seekPreferredInitialPosition,
+    initialPosition,
+    seekedToInitialPosition,
+  } = useVideoSeeking(videoRef, frameRate, isTransitioning, { setIsPlaying })
+
+  // 5. Dimensions (needs showStill from transition)
+  // Declared before transition so we can pass setters via onMetadataLoaded
+  const { videoDimensions, setVideoDimensions, actualVideoDimensions, setActualVideoDimensions } =
+    useVideoDimensions(videoRowRef, aspectRatio, false) // showStill handled by transition re-triggering resize
+
+  // 4. Source transition (needs seekPreferredInitialPosition + dimension setters)
+  const { actualSource, showStill, setShowStill } = useVideoSourceTransition(
+    src,
+    videoRef,
+    isTransitioning,
+    {
+      seekPreferredInitialPosition,
+      setCurrentTime,
+      initialPosition,
+      onMetadataLoaded: ({ duration, dimensions, actualDimensions, isPaused }) => {
+        setDuration(duration)
+        setVideoDimensions(dimensions)
+        setActualVideoDimensions(actualDimensions)
+        setIsPlaying(!isPaused)
+        setBufferedRanges([])
+      },
+    },
+  )
 
   useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
 
   const { annotations } = useAnnotations()
 
   const annotatedFrames = useMemo(() => {
-    const annotatedFrames = Object.values(annotations).flatMap(({ range }) => range)
-    return Array.from(new Set(annotatedFrames))
+    const frames = Object.values(annotations).flatMap(({ range }) => range)
+    return Array.from(new Set(frames))
   }, [annotations])
-
-  //
-  // Video size handling
-  //
-
-  useEffect(() => {
-    if (!videoRowRef.current || showStill) return
-
-    const updateVideoDimensions = () => {
-      const clientWidth = videoRowRef.current?.clientWidth
-      const clientHeight = videoRowRef.current?.clientHeight
-
-      if (clientWidth / clientHeight > aspectRatio) {
-        const width = Math.round(clientHeight * aspectRatio)
-        const height = clientHeight
-        setVideoDimensions({ width, height })
-      } else {
-        const width = clientWidth
-        const height = Math.round(clientWidth / aspectRatio)
-        setVideoDimensions({ width, height })
-      }
-    }
-
-    updateVideoDimensions()
-
-    const resizeObserver = new ResizeObserver(updateVideoDimensions)
-    resizeObserver.observe(videoRowRef.current)
-    return () => {
-      if (!videoRowRef.current) return
-      resizeObserver.unobserve(videoRowRef.current)
-    }
-  }, [videoRowRef, aspectRatio, showStill])
-
-  //
-  // Player initialization / video loading
-  //
-
-  useEffect(() => {
-    const videoElement = videoRef.current
-    if (!videoElement) return
-
-    const handleLoadedMetadata = () => {
-      console.debug('VideoPlayer: Metadata loaded. Duration: ', videoElement.duration)
-      setDuration(videoRef.current?.duration)
-      const width = videoRef.current?.clientWidth
-      const height = videoRef.current?.clientHeight
-      setVideoDimensions({ width, height })
-      setActualVideoDimensions({
-        width: videoRef.current?.videoWidth,
-        height: videoRef.current?.videoHeight,
-      })
-      setIsPlaying(!videoRef.current?.paused)
-      setBufferedRanges([])
-    }
-
-    const handleCanPlay = () => {
-      seekPreferredInitialPosition()
-      setShowStill(false)
-    }
-
-    // Attach event listeners
-    videoElement.addEventListener('loadedmetadata', handleLoadedMetadata)
-    videoElement.addEventListener('canplay', handleCanPlay)
-
-    // Cleanup event listeners on unmount
-    return () => {
-      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      videoElement.removeEventListener('canplay', handleCanPlay)
-    }
-  }, [videoRef.current])
-
-  useEffect(() => {
-    // Obscure the video element with a still image,
-    // so the transition to the new video is not visible
-    console.debug('VideoPlayer: source changed to', src)
-    if (!videoRef.current) return
-    setShowStill(true)
-    // Give the overlay some time to show up
-    setTimeout(() => setActualSource(src), 20)
-  }, [src, videoRef])
 
   const handleLoad = () => {
     console.debug('VideoPlayer: handleLoad')
     if (autoplay) {
       setMuted(true)
-      // mute the video
       videoRef.current.muted = true
       videoRef.current.play()
     } else {
       setMuted(false)
-      // mute the video
       videoRef.current.muted = false
       setIsPlaying(false)
     }
-    setCurrentTime(0)
+    if (videoRef.current?.duration < currentTime) {
+      const lastFrameTime = Math.max(0, videoRef.current.duration - 1 / frameRate)
+      setCurrentTime(lastFrameTime)
+      initialPosition.current = lastFrameTime
+    }
     setBufferedRanges([])
     setLoadError(null)
     seekedToInitialPosition.current = false
   }
 
   const handleLoadError = (e) => {
-    // check if the video is 404
     const code = e.target.error.code
     if (code === 4) {
       setLoadError({ code, message: 'No review for this version' })
@@ -216,151 +166,31 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   }
 
   const handleProgress = (e) => {
-    // create a list of buffered time ranges
+    if (isTransitioning.current) return
     const buffered = e.target.buffered
     if (!buffered.length) return
-    const bufferedRanges = []
-    // buffered returns time ranges in seconds,
-    // but we are passing it to the trackbar component,
-    // that uses frames internally, so we convert it here
-    for (var i = 0; i < buffered.length; i++) {
-      const r = { start: buffered.start(i) * frameRate, end: buffered.end(i) * frameRate }
-      bufferedRanges.push(r)
+    const ranges = []
+    for (let i = 0; i < buffered.length; i++) {
+      ranges.push({ start: buffered.start(i) * frameRate, end: buffered.end(i) * frameRate })
     }
-    setBufferedRanges(bufferedRanges)
+    setBufferedRanges(ranges)
   }
-
-  //
-  // Video position / currentTime handling
-  //
 
   const handleOnPlay = () => {
     onPlay && onPlay()
     setIsPlaying(true)
   }
 
-  // Track the current frame
-
-  const updateCurrentTime = (now, metadataInfo) => {
-    setCurrentTime(metadataInfo.mediaTime)
-    const video = videoRef.current
-    if (!video) return
-    video.requestVideoFrameCallback(updateCurrentTime)
-  }
-
-  useEffect(() => {
-    if (!videoRef.current) return
-    const video = videoRef.current
-    video.requestVideoFrameCallback(updateCurrentTime)
-  }, [videoRef.current])
-
-  // I guess using useMemo here would cause much higher overhead :)
-
-  const currentFrame = Math.round(currentTime * frameRate)
-  const frameCount = Math.round(duration * frameRate)
-
-  // Get the video duration
-
-  useEffect(() => {
-    if (!videoRef.current) return
-    const actualDuration = videoRef.current?.duration
-    if (actualDuration !== duration) {
-      setDuration(actualDuration)
-    }
-  }, [videoRef, isPlaying, duration])
-
-  const seekPreferredInitialPosition = () => {
-    // This is called when verison is changed
-    // It maintains the position of the video after switching
-    // so the user can compare two frames
-    if (seekedToInitialPosition.current) return
-    const newTime = initialPosition.current
-
-    if (newTime >= videoRef.current?.duration) return
-    if (isNaN(newTime)) return
-
-    if (videoRef.current?.currentTime > 0 || newTime === 0) {
-      seekedToInitialPosition.current = true
-      return
-    }
-    if (videoRef.current?.currentTime === newTime) {
-      seekedToInitialPosition.current = true
-      return
-    }
-
-    console.debug(
-      'VideoPlayer: Setting initial position',
-      newTime,
-      'from',
-      videoRef.current?.currentTime,
-    )
-    seekToTime(newTime)
-    seekedToInitialPosition.current = true
-  }
-
-  const seekToTime = (newTime) => {
-    // seek to time specified in seconds.
-    // this is not used directly (as we use seekToFrame)
-    const videoElement = videoRef.current
-    if (newTime === videoRef.current?.currentTime) return
-    if (videoElement.readyState >= 3) {
-      // HAVE_FUTURE_DATA
-      videoElement.currentTime = newTime
-    } else {
-      const onCanPlay = () => {
-        videoElement.currentTime = newTime
-        videoElement.removeEventListener('canplay', onCanPlay)
-      }
-      videoElement.addEventListener('canplay', onCanPlay)
-    }
-    initialPosition.current = newTime
-  }
-
-  const seekToFrame = (newFrame) => {
-    const newTime = newFrame / frameRate
-    seekToTime(newTime)
-  }
-
-  const handleScrub = (newFrame) => {
-    videoRef.current?.pause()
-    seekToFrame(newFrame)
-  }
-
-  // When user pauses the video
-  // We need to land on the frame that was paused at
-  // (this is a hack to ensure reported position is accurate)
-
-  const handlePause = () => {
-    initialPosition.current = videoRef.current?.currentTime
-    seekToTime(initialPosition.current)
-    setTimeout(() => {
-      if (videoRef.current?.paused) {
-        seekToTime(initialPosition.current)
-        console.debug('VideoPlayer: Paused')
-        setIsPlaying(false)
-      }
-    }, 10)
-  }
-
-  // User reached the end of the video
-  // if loop mode is enabled, start over
-
   const handleEnded = () => {
-    if (!isPlaying) {
-      if (loop) videoRef.current.currentTime = 0
-      return
-    }
     if (loop) {
       console.debug('VideoPlayer: Ended, looping')
       videoRef.current.currentTime = 0
       videoRef.current.play()
-    } else {
-      console.debug('VideoPlayer: Ended, not looping')
-      setIsPlaying(false)
+      return
     }
+    console.debug('VideoPlayer: Ended, not looping')
+    setIsPlaying(false)
   }
-
-  // User clicked play/pause button
 
   const handlePlayPause = () => {
     if (videoRef.current.paused) {
@@ -374,10 +204,6 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     setMuted(value)
     videoRef.current.muted = value
   }
-
-  //
-  // Render
-  //
 
   return (
     <VideoPlayerContainer>

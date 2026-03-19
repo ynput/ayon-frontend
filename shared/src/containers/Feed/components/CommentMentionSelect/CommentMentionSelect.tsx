@@ -10,6 +10,7 @@ interface CommentMentionSelectProps {
     label: string
     type: string
     icon?: string
+    color?: string
     context?: string
     suffix?: string
   }[]
@@ -20,6 +21,7 @@ interface CommentMentionSelectProps {
   noneFound?: boolean
   noneFoundAtAll?: boolean
   error?: string
+  isGuest?: boolean
 }
 
 const CommentMentionSelect = ({
@@ -32,8 +34,16 @@ const CommentMentionSelect = ({
   noneFound,
   noneFoundAtAll,
   error,
+  isGuest,
 }: CommentMentionSelectProps) => {
   if (!mention || noneFound) return null
+
+  if (isGuest)
+    return (
+      <Styled.MentionSelect tabIndex={0}>
+        <Styled.MentionItem>Mentions not supported for guest users</Styled.MentionItem>
+      </Styled.MentionSelect>
+    )
 
   // const hasSameLabel = new Set(labels).size < labels.length
   let formattedOptions = [...options]
@@ -66,7 +76,9 @@ const CommentMentionSelect = ({
               {option.type === 'user' ? (
                 <UserImage size={20} name={option.id} className="image" />
               ) : (
-                option.icon && <Icon icon={option.icon} className="image" />
+                option.icon && (
+                  <Icon icon={option.icon} className="image" style={{ color: option.color }} />
+                )
               )}
               {option.context && <Styled.MentionPrefix>{option.context} - </Styled.MentionPrefix>}
               <Styled.MentionName>{option.label}</Styled.MentionName>

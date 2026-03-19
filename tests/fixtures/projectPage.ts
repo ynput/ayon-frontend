@@ -1,13 +1,10 @@
-import {expect, test as base } from '@playwright/test'
-import type {Page } from '@playwright/test'
+import { expect, test as base } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-const getProjectName = prefix => browser => prefix + '_' + browser
+const getProjectName = (prefix) => (browser) => prefix + '_' + browser
 
 class ProjectPage {
-  constructor(
-    public readonly page: Page,
-    public readonly browserName: String,
-  ) {}
+  constructor(public readonly page: Page, public readonly browserName: string) {}
 
   async goto() {
     await this.page.goto('/manageProjects')
@@ -25,10 +22,10 @@ class ProjectPage {
 
   async deleteProject(name) {
     await this.page.goto('/manageProjects')
-    const projectCell = await this.page.getByRole('cell', { name  })
+    const projectCell = await this.page.getByRole('cell', { name })
     const projectCellText = await this.page.getByText(name, { exact: true })
     await projectCell.click({ button: 'right' })
-    await this.page.getByRole('menuitem', { name: 'archive Deactivate Project' }).click()
+    await this.page.getByRole('menuitem', { name: 'archive Archive Project' }).click()
     await expect(projectCellText).toHaveCSS('font-style', 'italic')
     await projectCell.click({ button: 'right' })
     await this.page.getByRole('menuitem', { name: 'delete Delete Project' }).click()
@@ -40,10 +37,10 @@ class ProjectPage {
 
 const test = base.extend<{ projectPage: ProjectPage }>({
   projectPage: async ({ page, browserName }, use) => {
-    const projectPage = new ProjectPage(page, browserName);
-    await use(projectPage);
+    const projectPage = new ProjectPage(page, browserName)
+    await use(projectPage)
   },
-});
+})
 
 export default ProjectPage
 export { getProjectName, test as projectTest }

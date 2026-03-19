@@ -3,7 +3,7 @@ import api from '@shared/api'
 const WORKFILES_QUERY = `
 query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
   project(name: $projectName) {
-    workfiles(taskIds:$taskIds) {
+    workfiles(taskIds:$taskIds, first: 1000) {
       edges {
         node {
           id
@@ -40,7 +40,7 @@ const getWorkfiles = api.injectEndpoints({
           path: edge.node.path,
         })),
       transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
-      providesTags: () => ['workfile'],
+      providesTags: () => [{ type: 'workfile', id: 'LIST' }],
     }),
     getWorkfileById: build.query({
       query: ({ projectName, id }) => ({
@@ -54,3 +54,4 @@ const getWorkfiles = api.injectEndpoints({
 })
 
 export const { useGetWorkfileListQuery, useGetWorkfileByIdQuery } = getWorkfiles
+export default getWorkfiles

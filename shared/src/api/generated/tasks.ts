@@ -148,20 +148,6 @@ export type TaskAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  tools?: string[]
-  ftrackId?: string
-  ftrackPath?: string
-  jiraCurrentPhase?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Is this some really hard work? */
-  hard?: boolean
-  distances?: string[]
-  nickname?: string
-  taskOnly?: string
-  weather?: 'sunny' | 'rain' | 'snow'
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */
@@ -174,6 +160,7 @@ export type TaskModel = {
   assignees?: string[]
   /** Folder ID */
   folderId?: string
+  path?: string
   attrib?: TaskAttribModel
   data?: Record<string, any>
   /** Whether the task is active */
@@ -183,6 +170,10 @@ export type TaskModel = {
   status?: string
   /** Tags assigned to the the task */
   tags?: string[]
+  /** Who created the task */
+  createdBy?: string
+  /** Who last updated the task */
+  updatedBy?: string
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -209,6 +200,10 @@ export type TaskPatchModel = {
   status?: string
   /** Tags assigned to the the task */
   tags?: string[]
+  /** Who created the task */
+  createdBy?: string
+  /** Who last updated the task */
+  updatedBy?: string
   attrib?: TaskAttribModel
   data?: Record<string, any>
   /** Whether the task is active */
@@ -233,6 +228,10 @@ export type TaskPostModel = {
   status?: string
   /** Tags assigned to the the task */
   tags?: string[]
+  /** Who created the task */
+  createdBy?: string
+  /** Who last updated the task */
+  updatedBy?: string
   attrib?: TaskAttribModel
   data?: Record<string, any>
   /** Whether the task is active */
