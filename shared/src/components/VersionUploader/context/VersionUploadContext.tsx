@@ -10,6 +10,7 @@ import React, {
   createContext,
   useContext,
   useState,
+  useRef,
   ReactNode,
   useMemo,
   useCallback,
@@ -115,6 +116,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [latestVersionNumber, setLatestVersionNumber] = useState<number | undefined>(undefined)
   // Stores the latest version ID so we can fetch its task when not already known
   const [latestVersionId, setLatestVersionId] = useState<string | undefined>(undefined)
+  // Tracks whether the current task was auto-linked from a matched product (not explicitly user-chosen)
+  const isTaskAutoLinkedRef = useRef(false)
 
   // Fetch products for the folder (only when no productId — Overview/Browser flow)
   const { data: folderProducts = [], isLoading: isFolderProductsLoading } =
@@ -186,6 +189,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     setFolderId('')
     setUserTaskId(null)
     setLinkedTask(null)
+    isTaskAutoLinkedRef.current = false
     setLatestVersionNumber(undefined)
     setLatestVersionId(undefined)
   }, [pendingFiles])
@@ -356,9 +360,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         }),
       }))
 
-      // Auto-link task from matched product's latest version (only if user hasn't explicitly set/cleared one)
       const matchedTask = matchedProduct.latestVersion?.task
-      if (matchedTask && userTaskId === null) {
+      if (matchedTask && (userTaskId === null || isTaskAutoLinkedRef.current)) {
+        // Auto-link task from matched product's latest version
         setUserTaskId(matchedTask.id)
         setLinkedTask({
           id: matchedTask.id,
@@ -366,19 +370,31 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
           label: matchedTask.label,
           taskType: matchedTask.taskType,
         })
+        isTaskAutoLinkedRef.current = true
+      } else if (!matchedTask && isTaskAutoLinkedRef.current) {
+        // Matched product has no task — clear the auto-linked one
+        setUserTaskId(null)
+        setLinkedTask(null)
+        isTaskAutoLinkedRef.current = false
       }
     } else {
       // Match lost — reset version back to default for new product
       setForm((prev) => ({ ...prev, version: defaultFormData.version }))
       // Clear auto-linked task (only if it was auto-set, not user-chosen)
-      if (userTaskId === null) {
+      if (userTaskId === null || isTaskAutoLinkedRef.current) {
+        setUserTaskId(null)
         setLinkedTask(null)
+        isTaskAutoLinkedRef.current = false
       }
     }
   }, [isOpen, productId, matchedProduct])
 
   // Wrap setUserTaskId so consumers use a simple string setter
-  const setTaskId = useCallback((id: string) => setUserTaskId(id), [])
+  // Any explicit user action (pick or clear) marks the task as not auto-linked
+  const setTaskId = useCallback((id: string) => {
+    setUserTaskId(id)
+    isTaskAutoLinkedRef.current = false
+  }, [])
 
   const value = useMemo(
     () => ({
