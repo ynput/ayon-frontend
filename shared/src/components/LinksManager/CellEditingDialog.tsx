@@ -172,6 +172,13 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
 
+      // When the dialog opens, React may re-render the cell content
+      // synchronously during the same mousedown event, detaching the original
+      // target from the DOM. In that case anchorElement.contains(target) would
+      // wrongly return false and close the dialog immediately. Skip detached
+      // targets to avoid this.
+      if (!target.isConnected) return
+
       if (
         popupRef.current &&
         !popupRef.current.contains(target) &&
@@ -193,14 +200,8 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
       }
     }
 
-    // Defer registration so the current mousedown event (which may have
-    // triggered this dialog to open) finishes bubbling before we start
-    // listening.  Otherwise the same event closes the dialog immediately.
-    const frameId = requestAnimationFrame(() => {
-      document.addEventListener('mousedown', handleClickOutside)
-    })
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      cancelAnimationFrame(frameId)
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [onClose, anchorElement])
