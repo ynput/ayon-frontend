@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Dropdown } from "@ynput/ayon-react-components"
+import { Button, Dropdown, Icon } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ResolvedColumnMappings, StepProps } from "../common"
-import { StepNavButtons, StepNavStats } from "../common.styled"
+import { StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "../../components/DataPreview"
 import {
     StepContainer,
@@ -26,6 +26,7 @@ import { confirmDialog } from "primereact/confirmdialog"
 
 type Props = StepProps<ResolvedColumnMappings> & {
   data: ImportData
+  mappings?: ColumnMappings
   importSchema: typeof testImportSchema
 }
 
@@ -80,11 +81,23 @@ const inferMapping = (column: string, schema: typeof testImportSchema): ColumnMa
 }
 
 type Option = { value: string, label: string }
-const targetOptionCompareFn = (columnForTarget: Record<string, string>) => (o1: Option, o2: Option) => {
+const targetOptionCompareFn = (columnForTarget: Record<string, string>, columnSettings: Record<string, typeof testImportSchema["0"]>) => (
+  o1: Option,
+  o2: Option,
+) => {
   const bothMapped = columnForTarget[o1.value] && columnForTarget[o2.value]
   const neitherMapped = !columnForTarget[o1.value] && !columnForTarget[o2.value]
   if (bothMapped || neitherMapped) {
-    return o1.label.localeCompare(o2.label)
+    const bothRequired = columnSettings[o1.value].required && columnSettings[o2.value].required
+    const neitherRequired = !columnSettings[o1.value].required && !columnSettings[o2.value].required
+    if (bothRequired || neitherRequired) {
+      return o1.label.localeCompare(o2.label)
+    }
+    // push required targets to the very top
+    if (columnSettings[o1.value].required) {
+      return -1
+    }
+    return 1
   }
 
   return columnForTarget[o1.value] ? 1 : -1
@@ -118,8 +131,8 @@ const mappingUpdater = (
   return { ...base, [column]: mapping }
 }
 
-export default function MapColumnsStep({ data, importSchema, onBack, onNext }: Props) {
-  const [mappings, setMappings] = useState<ColumnMappings | undefined>(undefined)
+export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
+  const [mappings, setMappings] = useState<ColumnMappings | undefined>(defaultMappings)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
 
   const columnSettings = useMemo(
@@ -137,11 +150,32 @@ export default function MapColumnsStep({ data, importSchema, onBack, onNext }: P
       }, {})
   }, [mappings])
 
+  const unmappedRequiredTargets = useMemo(
+    () => {
+      return importSchema
+        .filter(({ key, required }) => {
+          if (!required) return false
+          return !Object
+            .values(mappings ?? {})
+            .some(({ targetColumn, action }) => (
+              action === ColumnAction.MAP &&
+              targetColumn === key
+            ))
+        })
+    },
+    [mappings, importSchema, columnForTarget]
+  )
+
   const targetOptions = useMemo(
     () => importSchema
-      .map(({ key, label }) => {
+      .map(({ key, label, required }) => {
         const column = columnForTarget[key]
-        if (!column) return { value: key, label }
+        if (!column) return {
+          value: key,
+          label: required ? `${label} (required)` : label,
+          icon: required ? "warning" : undefined,
+          color: "var(--md-sys-color-warning)",
+        }
 
         const state = getMapperState(column, mappings)
         return {
@@ -153,8 +187,8 @@ export default function MapColumnsStep({ data, importSchema, onBack, onNext }: P
           label: `${label}${TARGET_OPTION_MAPPING_SEPARATOR}mapped to "${column}"`,
         }
       })
-      .sort(targetOptionCompareFn(columnForTarget)),
-    [columnForTarget, mappings],
+      .sort(targetOptionCompareFn(columnForTarget, columnSettings)),
+    [columnForTarget, columnSettings, mappings],
   )
 
   const unresolvedColumns = useMemo(
@@ -173,7 +207,7 @@ export default function MapColumnsStep({ data, importSchema, onBack, onNext }: P
   )
 
   useEffect(() => {
-    if (!columnSettings) return
+    if (!columnSettings || Boolean(mappings)) return
 
     // infer mappings based on the schema
     setMappings(Object.fromEntries(
@@ -215,7 +249,7 @@ export default function MapColumnsStep({ data, importSchema, onBack, onNext }: P
     } else {
       setMappings(updater)
     }
-  }, [])
+  }, [mappings, targetOptions, columnForTarget, columnSettings])
 
   return (
     <StepContainer>
@@ -278,7 +312,19 @@ export default function MapColumnsStep({ data, importSchema, onBack, onNext }: P
       </Container>
       <StepNavButtons>
         <StepNavStats>
-          {Object.keys(columnForTarget).length} / {data.columns.length} columns mapped
+          {data.columns.length - unresolvedColumns.size} / {data.columns.length} columns resolved.
+          {
+            unmappedRequiredTargets.length > 0 && (
+              <StepNavStatsRequired>
+                <Icon icon="warning" style={{ color: "inherit" }} />
+                {unmappedRequiredTargets.length} required target{
+                  unmappedRequiredTargets.length === 1 ? "" : "s"
+                } must be mapped: {
+                  unmappedRequiredTargets.map(({ label }) => label).join(", ")
+                }
+              </StepNavStatsRequired>
+            )
+          }
         </StepNavStats>
         <Button
           variant="nav"
@@ -288,7 +334,7 @@ export default function MapColumnsStep({ data, importSchema, onBack, onNext }: P
         <Button
           variant="filled"
           label="Continue"
-          disabled={unresolvedColumns.size > 0}
+          disabled={unresolvedColumns.size > 0 || unmappedRequiredTargets.length > 0}
           data-tooltip={
             unresolvedColumns.size > 0
               ? `Please resolve the following columns: ${Array.from(unresolvedColumns).join(', ')}`

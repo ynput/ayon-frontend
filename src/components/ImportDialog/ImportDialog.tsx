@@ -30,7 +30,7 @@ export default function ImportDialog({ importContext }: Props) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<ImportStep>(ImportStep.UPLOAD)
   const [data, setData] = useState<ImportData | null>(null)
-  const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | null>(null)
+  const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>(undefined)
 
   // TODO: get this from the API
   const importSchema = testImportSchema
@@ -39,7 +39,7 @@ export default function ImportDialog({ importContext }: Props) {
     setOpen(false)
     setStep(ImportStep.UPLOAD)
     setData(null)
-    setColumnMappings(null)
+    setColumnMappings(undefined)
   }, [])
 
   return (
@@ -83,6 +83,7 @@ export default function ImportDialog({ importContext }: Props) {
           data && step === ImportStep.MAP_COLUMNS && (
             <MapColumnsStep
               data={data}
+              mappings={columnMappings}
               importContext={importContext}
               importSchema={importSchema}
               onBack={() => setStep(ImportStep.UPLOAD)}
@@ -100,7 +101,7 @@ export default function ImportDialog({ importContext }: Props) {
               columnMappings={columnMappings}
               importContext={importContext}
               importSchema={importSchema}
-              onBack={() => setStep(ImportStep.REVIEW_VALUES)}
+              onBack={() => setStep(ImportStep.MAP_COLUMNS)}
               onNext={() => {
                 setStep(ImportStep.PREVIEW)
               }}

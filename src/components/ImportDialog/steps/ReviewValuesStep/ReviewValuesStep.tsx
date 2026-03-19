@@ -78,12 +78,13 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, o
             <MappersTableHeader>
               <tr>
                 <MappersTableHeaderCell scope="col">
-                  File column
+                  Raw Data
                 </MappersTableHeaderCell>
                 <MappersTableHeaderCell scope="col">
+                  Action
                 </MappersTableHeaderCell>
                 <MappersTableHeaderCell scope="col">
-                  Target
+                  Mapped Value
                 </MappersTableHeaderCell>
                 <MappersTableHeaderErrorHandling scope="col">
                   On error

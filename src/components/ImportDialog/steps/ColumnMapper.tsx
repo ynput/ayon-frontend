@@ -93,17 +93,16 @@ export default function ColumnMapper({
           value={target && !skipping ? [target] : []}
           options={targetOptions}
           onChange={([value]) => onTargetChange(value)}
-          placeholder={
-            skipping
-              ? "Will be skipped"
-              : "Select a target..."
-          }
           valueTemplate={(value, selected, isOpen) => (
             <DefaultValueTemplate
               value={value}
               displayIcon={undefined}
               isOpen={isOpen}
-              placeholder="Select a target..."
+              placeholder={
+                skipping
+                  ? "Will be skipped"
+                  : "Select a target..."
+              }
             >
               {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
             </DefaultValueTemplate>

@@ -13,6 +13,16 @@ export const StepNavStats = styled.span`
   margin-left: 0;
   margin-right: auto;
   color: var(--md-sys-color-outline);
+  display: flex;
+  gap: var(--base-gap-small);
+`
+
+export const StepNavStatsRequired = styled.span`
+  margin-left: 1ch;
+  color: var(--md-sys-color-warning);
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
 `
 
 export const MappersContainer = styled.div`
