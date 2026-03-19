@@ -161,6 +161,10 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         !target.closest('.p-datepicker') &&
         !target.closest('.' + BLOCK_DIALOG_CLOSE_CLASS)
       ) {
+        // Blur active element first so inputs can commit their values before unmount
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
         onClose?.()
       }
     }
