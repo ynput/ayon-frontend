@@ -26,7 +26,7 @@ export type EntityQueryResult = {
   error?: string
 }
 
-type EntityPickerDataReturn = {
+export type EntityPickerDataReturn = {
   folder: EntityQueryResult
   task: EntityQueryResult
   product: EntityQueryResult
