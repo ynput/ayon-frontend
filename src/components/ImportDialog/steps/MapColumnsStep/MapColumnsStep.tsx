@@ -1,27 +1,32 @@
-import { useEffect, useMemo, useState } from "react"
-import { Button } from "@ynput/ayon-react-components"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Button, Dropdown } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, StepProps } from "../common"
+import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ResolvedColumnMappings, StepProps } from "../common"
 import { StepNavButtons } from "../common.styled"
 import DataPreview from "../../components/DataPreview"
 import {
     StepContainer,
     Container,
-    MappersContainer,
-    Mappers,
-    MappersTableHeader,
-    MappersTableHeaderCell,
-    MappersTableBody, Preview,
     PreviewHeading,
-    MappersTableHeaderErrorHandling,
-    MappersTableActionCol
+    Preview,
 } from "./MapColumnsStep.styled"
-import ColumnMapper, { MappingState } from "./ColumnMapper"
-import testImportSchema from "./test_import_schema"
+import {
+  MappersContainer,
+  Mappers,
+  MappersTableHeader,
+  MappersTableHeaderCell,
+  MappersTableBody,
+  MappersTableHeaderErrorHandling,
+  MappersTableActionCol
+} from "../common.styled"
+import ColumnMapper, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../ColumnMapper"
+import testImportSchema from "../test_import_schema"
+import { confirmDialog } from "primereact/confirmdialog"
 
-type Props = StepProps<ColumnMappings> & {
+type Props = StepProps<ResolvedColumnMappings> & {
   data: ImportData
+  importSchema: typeof testImportSchema
 }
 
 const actionOptions = [
@@ -52,7 +57,11 @@ const errorHandlingOptions = [
   },
 ]
 
-const normaliseColumnName = (name: string) => name.replace(/_\./g, '').toLowerCase();
+const normaliseColumnName = (name: string) => name.replace(/_\.\s/g, '').toLowerCase();
+
+const inferErrorHandling = (columnSchema: (typeof testImportSchema)["0"]) => {
+  return columnSchema.errorHandlingModes[0] as ErrorHandlingMode
+}
 
 const inferMapping = (column: string, schema: typeof testImportSchema): ColumnMapping | null => {
   const normalisedColumn = normaliseColumnName(column)
@@ -66,8 +75,19 @@ const inferMapping = (column: string, schema: typeof testImportSchema): ColumnMa
   return {
     targetColumn: columnSchema.key,
     action: ColumnAction.MAP,
-    errorHandlingMode: columnSchema.errorHandlingModes[0] as ErrorHandlingMode
+    errorHandlingMode: inferErrorHandling(columnSchema)
   }
+}
+
+type Option = { value: string, label: string }
+const targetOptionCompareFn = (columnForTarget: Record<string, string>) => (o1: Option, o2: Option) => {
+  const bothMapped = columnForTarget[o1.value] && columnForTarget[o2.value]
+  const neitherMapped = !columnForTarget[o1.value] && !columnForTarget[o2.value]
+  if (bothMapped || neitherMapped) {
+    return o1.label.localeCompare(o2.label)
+  }
+
+  return columnForTarget[o1.value] ? 1 : -1
 }
 
 const getMapperState = (column: string, mappings: ColumnMappings = {}) => {
@@ -77,7 +97,7 @@ const getMapperState = (column: string, mappings: ColumnMappings = {}) => {
   const resolvedToMap = mapping.action === ColumnAction.MAP && mapping.targetColumn
   const resolvedToSkip = mapping.action === ColumnAction.SKIP
   if (resolvedToMap || resolvedToSkip) {
-    return MappingState.RESOLVED
+    return mapping.userResolved ? MappingState.RESOLVED : MappingState.AUTO_RESOLVED
   }
 
   return MappingState.UNRESOLVED
@@ -93,25 +113,48 @@ const mappingUpdater = (
     ...fallback,
     ...(base[column] ?? {}),
     ...update,
+    userResolved: true,
   }
   return { ...base, [column]: mapping }
 }
 
-export default function MapColumnsStep({ data, onBack, onNext }: Props) {
+export default function MapColumnsStep({ data, importSchema, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(undefined)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
-
-  // TODO: get this from the API
-  const importSchema = testImportSchema
 
   const columnSettings = useMemo(
     () => Object.fromEntries(importSchema.map((col) => [col.key, col])),
     [importSchema]
   )
 
+  // lookup table for which data column a target is mapped to
+  const columnForTarget: Record<string, string> = useMemo(() => {
+    if (!mappings) return {}
+    return Object.entries(mappings)
+      .reduce((dict, [column, mapping]) => {
+        if (!mapping.targetColumn) return dict
+        return { ...dict, [mapping.targetColumn]: column }
+      }, {})
+  }, [mappings])
+
   const targetOptions = useMemo(
-    () => importSchema.map(({ key, label }) => ({ value: key, label })),
-    [],
+    () => importSchema
+      .map(({ key, label }) => {
+        const column = columnForTarget[key]
+        if (!column) return { value: key, label }
+
+        const state = getMapperState(column, mappings)
+        return {
+          value: key,
+          icon: "check",
+          color: state === MappingState.AUTO_RESOLVED
+            ? 'var(--md-sys-color-tertiary)'
+            : 'var(--md-sys-color-primary)',
+          label: `${label}${TARGET_OPTION_MAPPING_SEPARATOR}mapped to "${column}"`,
+        }
+      })
+      .sort(targetOptionCompareFn(columnForTarget)),
+    [columnForTarget, mappings],
   )
 
   const unresolvedColumns = useMemo(
@@ -121,7 +164,7 @@ export default function MapColumnsStep({ data, onBack, onNext }: Props) {
 
       const resolvedColumnsSet = new Set(data.columns
         .map((c) => [c, getMapperState(c, mappings)])
-        .filter(([, state]) => state === MappingState.RESOLVED)
+        .filter(([, state]) => state !== MappingState.UNRESOLVED)
         .map(([c]) => c),
       )
       return columnsSet.difference(resolvedColumnsSet)
@@ -139,6 +182,40 @@ export default function MapColumnsStep({ data, onBack, onNext }: Props) {
         .filter(([, mapping]) => !!mapping)
     ))
   }, [importSchema])
+
+  const onTargetChange = useCallback((column: string) => (targetColumn: string) => {
+    const updater = mappingUpdater(
+      column,
+      { targetColumn, action: ColumnAction.MAP },
+      { errorHandlingMode: inferErrorHandling(columnSettings[targetColumn]) },
+    )
+
+    if (mappings && columnForTarget[targetColumn]) {
+      const targetName = targetOptions.find(({ value }) => value === targetColumn)?.label
+
+      confirmDialog({
+        header: `"${targetName}" already has a mapping from "${columnForTarget[targetColumn]}"`,
+        message: (
+          <>
+            <p>If you proceed, the mapping will be removed from "{columnForTarget[targetColumn]}".</p>
+            <p>Are you sure you want to proceed?</p>
+          </>
+        ),
+        accept: () => {
+          // first, delete the existing mapping
+          setMappings((old) => {
+            if (!old) return old
+            const updated = { ...old }
+            delete updated[columnForTarget[targetColumn]]
+            return updated
+          })
+          setMappings(updater)
+        },
+      })
+    } else {
+      setMappings(updater)
+    }
+  }, [])
 
   return (
     <StepContainer>
@@ -180,26 +257,10 @@ export default function MapColumnsStep({ data, onBack, onNext }: Props) {
                   errorHandling={mappings?.[column]?.errorHandlingMode}
                   errorHandlingOptions={errorHandlingOptions}
                   selected={previewColumn === column}
-                  onClick={() => {
-                    if (previewColumn === column) {
-                      return setPreviewColumn(null)
-                    }
-                    setPreviewColumn(column)
-                  }}
+                  onPointerEnter={() => setPreviewColumn(column)}
+                  onTargetChange={onTargetChange(column)}
                   onActionChange={(action) => {
                     setMappings(mappingUpdater(column, { action }))
-                  }}
-                  onTargetChange={(targetColumn) => {
-                    setMappings(mappingUpdater(
-                      column,
-                      {
-                        targetColumn,
-                        action: ColumnAction.MAP,
-                      },
-                      {
-                        errorHandlingMode: columnSettings[targetColumn].errorHandlingModes[0] as ErrorHandlingMode
-                      },
-                    ))
                   }}
                   onErrorHandlingChange={(errorHandlingMode) => {
                     setMappings(mappingUpdater(column, { errorHandlingMode }))
@@ -231,8 +292,8 @@ export default function MapColumnsStep({ data, onBack, onNext }: Props) {
               : undefined
           }
           onClick={() => {
-            if (!data) return
-            onNext({})
+            if (!mappings || unresolvedColumns.size > 0) return
+            onNext(mappings as ResolvedColumnMappings)
           }}
         />
       </StepNavButtons>

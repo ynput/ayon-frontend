@@ -107,7 +107,62 @@ export default [
         "required": false,
         "valueType": "string",
         "defaultValue": "",
-        "enumItems": null,
+        "enumItems": [
+          {
+              "value": "Not ready",
+              "label": "Not ready",
+              "icon": "fiber_new",
+              "color": "#3d444f"
+          },
+          {
+              "value": "Ready to start",
+              "label": "Ready to start",
+              "icon": "timer",
+              "color": "#bababa"
+          },
+          {
+              "value": "In progress",
+              "label": "In progress",
+              "icon": "play_arrow",
+              "color": "#5bb8f5"
+          },
+          {
+              "value": "Pending review",
+              "label": "Pending review",
+              "icon": "visibility",
+              "color": "#ffcd19"
+          },
+          {
+              "value": "Reviewed",
+              "label": "Reviewes",
+              "icon": "do_not_disturb_on",
+              "color": "#756db0"
+          },
+          {
+              "value": "Approved",
+              "label": "Approved",
+              "icon": "task_alt",
+              "color": "#08f094"
+          },
+          {
+              "value": "On hold",
+              "label": "On hold",
+              "icon": "back_hand",
+              "color": "#fa6e47"
+          },
+          {
+              "value": "Omitted",
+              "label": "Omitted",
+              "icon": "block",
+              "color": "#cb1a1a"
+          },
+          {
+              "value": "data",
+              "label": "data",
+              "icon": "hard_drive",
+              "color": "#cacac a"
+          }
+        ],
         "errorHandlingModes": [
             "skip",
             "abort",

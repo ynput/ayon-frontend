@@ -30,6 +30,15 @@ export type ColumnMapping = {
   action: ColumnAction
   targetColumn?: string
   errorHandlingMode?: ErrorHandlingMode
+  userResolved?: boolean
+}
+
+export type ResolvedColumnMapping = ColumnMapping & {
+  targetColumn: string
+  errorHandlingMode: ErrorHandlingMode
 }
 
 export type ColumnMappings = Record<string, ColumnMapping>
+export type ResolvedColumnMappings = Record<string, ResolvedColumnMapping>
+
+export type ResolvedValueMappings = {}

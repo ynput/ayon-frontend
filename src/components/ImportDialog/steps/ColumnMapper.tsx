@@ -1,6 +1,5 @@
-import { DefaultValueTemplate, Dropdown, DropdownProps } from "@ynput/ayon-react-components"
+import { DefaultValueTemplate, DropdownProps } from "@ynput/ayon-react-components"
 import { useMemo } from "react"
-
 import {
   MappersTableBodyRow,
   MappersTableBodyCell,
@@ -9,14 +8,14 @@ import {
   MappersTableErrorHandling,
   PickActionDropdown,
   MapperDropdown
-} from "./MapColumnsStep.styled"
-import { ColumnAction, ErrorHandlingMode } from "../common"
+} from "./common.styled"
+import { ColumnAction, ErrorHandlingMode } from "./common"
 import clsx from "clsx"
 
 export enum MappingState {
   UNRESOLVED = "unresolved",
   RESOLVED = "resolved",
-  ERROR = "error",
+  AUTO_RESOLVED = "autoresolved",
 }
 
 type Props = {
@@ -29,11 +28,13 @@ type Props = {
   targetOptions: DropdownProps["options"]
   errorHandling: ErrorHandlingMode | undefined
   errorHandlingOptions: DropdownProps["options"]
-  onClick: () => void
+  onPointerEnter: () => void
   onActionChange: (action: ColumnAction) => void
   onTargetChange: (target: string) => void
   onErrorHandlingChange: (mode: ErrorHandlingMode) => void
 }
+
+export const TARGET_OPTION_MAPPING_SEPARATOR = ' - '
 
 export default function ColumnMapper({
   state,
@@ -45,7 +46,7 @@ export default function ColumnMapper({
   targetOptions,
   errorHandling,
   errorHandlingOptions,
-  onClick,
+  onPointerEnter,
   onActionChange,
   onTargetChange,
   onErrorHandlingChange,
@@ -54,13 +55,17 @@ export default function ColumnMapper({
     () => actions.find(({ value }) => value === action),
     [actions, action]
   )
+  const selectedTargetOption = useMemo(
+    () => targetOptions.find(({ value }) => value === target),
+    [targetOptions, target]
+  )
 
   const skipping = action === ColumnAction.SKIP
 
   return (
     <MappersTableBodyRow
       className={clsx({ selected })}
-      onClick={() => onClick()}
+      onPointerEnter={() => onPointerEnter()}
     >
       <MappersTableColumnName className={clsx([state])} scope="row">
         {column}
@@ -93,6 +98,16 @@ export default function ColumnMapper({
               ? "Will be skipped"
               : "Select a target..."
           }
+          valueTemplate={(value, selected, isOpen) => (
+            <DefaultValueTemplate
+              value={value}
+              displayIcon={undefined}
+              isOpen={isOpen}
+              placeholder="Select a target..."
+            >
+              {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
+            </DefaultValueTemplate>
+          )}
         />
       </MappersTableAttribute>
       <MappersTableErrorHandling>

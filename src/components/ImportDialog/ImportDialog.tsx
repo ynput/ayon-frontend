@@ -4,8 +4,10 @@ import UploadStep from "./steps/UploadStep/UploadStep";
 import { DialogContainer, DialogHeading, ImportContextWrapper } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
 import MapColumnsStep from "./steps/MapColumnsStep/MapColumnsStep";
-import { ColumnMappings, ImportContext, ImportStep } from "./steps/common";
+import { ImportContext, ImportStep, ResolvedColumnMappings } from "./steps/common";
 import { upperFirst } from "lodash";
+import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
+import testImportSchema from "./steps/test_import_schema";
 
 type Props = {
   importContext: ImportContext
@@ -28,7 +30,10 @@ export default function ImportDialog({ importContext }: Props) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<ImportStep>(ImportStep.UPLOAD)
   const [data, setData] = useState<ImportData | null>(null)
-  const [columnMappings, setColumnMappings] = useState<ColumnMappings | null>(null)
+  const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | null>(null)
+
+  // TODO: get this from the API
+  const importSchema = testImportSchema
 
   const closeDialog = useCallback(() => {
     setOpen(false)
@@ -79,10 +84,25 @@ export default function ImportDialog({ importContext }: Props) {
             <MapColumnsStep
               data={data}
               importContext={importContext}
+              importSchema={importSchema}
               onBack={() => setStep(ImportStep.UPLOAD)}
               onNext={(mappings) => {
                 setColumnMappings(mappings)
                 setStep(ImportStep.REVIEW_VALUES)
+              }}
+            />
+          )
+        }
+        {
+          data && columnMappings && step === ImportStep.REVIEW_VALUES && (
+            <ReviewValuesStep
+              data={data}
+              columnMappings={columnMappings}
+              importContext={importContext}
+              importSchema={importSchema}
+              onBack={() => setStep(ImportStep.REVIEW_VALUES)}
+              onNext={() => {
+                setStep(ImportStep.PREVIEW)
               }}
             />
           )
