@@ -103,12 +103,13 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
             onBlur={commitCount}
             onKeyDown={handleKeyDown}
             onClick={(e) => e.stopPropagation()}
+            data-tooltip="Number of links to this entity."
           />
         ) : (
           <Styled.CountBadge
             onClick={handleBadgeClick}
             tabIndex={0}
-            data-tooltip="Click to edit count"
+            data-tooltip="Number of links to this entity."
           >
             x{count}
           </Styled.CountBadge>
