@@ -29,7 +29,7 @@ type Props = StepProps<ValueMappings> & {
   data: ImportData
   importSchema: typeof testImportSchema
   columnMappings: ResolvedColumnMappings
-  mappings?: ValueMappings
+  mappings: ValueMappings | null
 }
 
 const actionOptions = [
@@ -66,8 +66,8 @@ const inferMapping = (value: string, settings: (typeof testImportSchema)["0"]): 
   }
 }
 
-const getMapperState = (column: string | null, value: string, mappings: ValueMappings = {}) => {
-  if (!column) return MappingState.UNRESOLVED
+const getMapperState = (column: string | null, value: string, mappings: ValueMappings | null) => {
+  if (!column || !mappings) return MappingState.UNRESOLVED
 
   const mapping = mappings[column]?.[value]
   if (!mapping) return MappingState.UNRESOLVED
@@ -87,7 +87,7 @@ const mappingUpdater = (
   value: string,
   update: Partial<ValueMapping>,
   fallback: Partial<ValueMapping> = {},
-) => (old: ValueMappings | undefined) => {
+) => (old: ValueMappings | null) => {
   const base = old ?? {}
   const columnBase = base[column] ?? {}
   const mapping = {
@@ -107,7 +107,7 @@ const mappingUpdater = (
 }
 
 export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
-  const [mappings, setMappings] = useState<ValueMappings | undefined>(defaultMappings)
+  const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
 
   const enumSchemaColumns = useMemo(
     () => importSchema.filter(
@@ -196,17 +196,19 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
   )
 
   useEffect(() => {
-    if (!columnSettings || Boolean(currentMappings) || !activeColumn) return
+    if (!columnSettings || Boolean(mappings)) return
     // infer mappings based on the schema
-    setMappings((old) => ({
-      ...old,
-      [activeColumn]: Object.fromEntries(
-        currentUniqueValues
-          .map((value) => [value, inferMapping(value, columnSettings[activeTarget])])
-          .filter(([, mapping]) => !!mapping)
-      ),
-    }))
-  }, [columnSettings, currentMappings, activeColumn, currentUniqueValues, activeTarget])
+    setMappings(Object.fromEntries(
+      Object.entries(mappingsToReview).map(([column, { targetColumn }]) => [
+        column,
+        Object.fromEntries(
+          uniqueValuesForColumn[column]
+            .map((value) => [`${value}`, inferMapping(`${value}`, columnSettings[targetColumn])])
+            .filter(([, mapping]) => !!mapping)
+        ),
+      ])
+    ))
+  }, [columnSettings])
 
   return (
     <StepContainer>
@@ -315,8 +317,8 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
           variant="filled"
           label="Continue"
           onClick={() => {
-            if (!data) return
-            onNext({})
+            if (!mappings) return
+            onNext(mappings)
           }}
         />
       </StepNavButtons>

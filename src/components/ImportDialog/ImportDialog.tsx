@@ -8,6 +8,7 @@ import { ImportContext, ImportStep, ResolvedColumnMappings, ValueMappings } from
 import { upperFirst } from "lodash";
 import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
 import testImportSchema from "./steps/test_import_schema";
+import PreviewStep from "./steps/PreviewStep/PreviewStep";
 
 type Props = {
   importContext: ImportContext
@@ -30,8 +31,8 @@ export default function ImportDialog({ importContext }: Props) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<ImportStep>(ImportStep.UPLOAD)
   const [data, setData] = useState<ImportData | null>(null)
-  const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>()
-  const [valueMappings, setValueMappings] = useState<ValueMappings | undefined>()
+  const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>(undefined)
+  const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
 
   // TODO: get this from the API
   const importSchema = testImportSchema
@@ -108,6 +109,18 @@ export default function ImportDialog({ importContext }: Props) {
                 setValueMappings(mappings)
                 setStep(ImportStep.PREVIEW)
               }}
+            />
+          )
+        }
+        {
+          data && columnMappings && valueMappings && step === ImportStep.PREVIEW && (
+            <PreviewStep
+              data={data}
+              columnMappings={columnMappings}
+              mappings={valueMappings}
+              importContext={importContext}
+              onBack={() => setStep(ImportStep.REVIEW_VALUES)}
+              onNext={() => {}}
             />
           )
         }
