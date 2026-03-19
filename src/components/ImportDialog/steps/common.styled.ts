@@ -6,6 +6,13 @@ export const StepNavButtons = styled.div`
   gap: var(--base-gap-small);
   justify-content: end;
   margin: var(--padding-l) 0 0;
+  align-items: center;
+`
+
+export const StepNavStats = styled.span`
+  margin-left: 0;
+  margin-right: auto;
+  color: var(--md-sys-color-outline);
 `
 
 export const MappersContainer = styled.div`

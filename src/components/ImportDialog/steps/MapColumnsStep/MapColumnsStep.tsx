@@ -3,7 +3,7 @@ import { Button, Dropdown } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ResolvedColumnMappings, StepProps } from "../common"
-import { StepNavButtons } from "../common.styled"
+import { StepNavButtons, StepNavStats } from "../common.styled"
 import DataPreview from "../../components/DataPreview"
 import {
     StepContainer,
@@ -277,6 +277,9 @@ export default function MapColumnsStep({ data, importSchema, onBack, onNext }: P
         </Preview>
       </Container>
       <StepNavButtons>
+        <StepNavStats>
+          {Object.keys(columnForTarget).length} / {data.columns.length} columns mapped
+        </StepNavStats>
         <Button
           variant="nav"
           label="Restart"
