@@ -92,7 +92,7 @@ export default function ColumnMapper({
       </MappersTableBodyCell>
       <MappersTableAttribute>
         <MapperDropdown
-          disabled={skipping || creating}
+          disabled={skipping || creating || targetOptions.length === 0}
           value={target && !(skipping || creating) ? [target] : []}
           options={targetOptions}
           onChange={([value]) => onTargetChange(value)}
@@ -106,7 +106,9 @@ export default function ColumnMapper({
                   ? "Will be skipped"
                   : creating
                     ? "A new value will be created"
-                    : "Select a target..."
+                    : targetOptions.length === 0
+                      ? "Nothing to map. Try choosing the Create or Skip action."
+                      : "Select a target..."
               }
             >
               {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}

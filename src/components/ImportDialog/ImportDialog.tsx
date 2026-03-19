@@ -104,7 +104,10 @@ export default function ImportDialog({ importContext }: Props) {
               mappings={valueMappings}
               importContext={importContext}
               importSchema={importSchema}
-              onBack={() => setStep(ImportStep.MAP_COLUMNS)}
+              onBack={(mappings) => {
+                setValueMappings(mappings ?? null)
+                setStep(ImportStep.MAP_COLUMNS)
+              }}
               onNext={(mappings) => {
                 setValueMappings(mappings)
                 setStep(ImportStep.PREVIEW)

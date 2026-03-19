@@ -23,7 +23,7 @@ export enum ErrorHandlingMode {
 
 export type StepProps<R> = {
   importContext: ImportContext
-  onBack: () => void
+  onBack: (result?: R) => void
   onNext: (result: R) => void
 }
 

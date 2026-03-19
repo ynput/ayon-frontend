@@ -1,6 +1,6 @@
 import { Button } from "@ynput/ayon-react-components"
 
-import { ImportData } from "../../utils"
+import { CSVRow, ImportData } from "../../utils"
 import { ColumnAction, ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison } from "../common"
 import {
   Mappers,
@@ -106,12 +106,60 @@ const mappingUpdater = (
   }
 }
 
+const possibleDelimiters = [
+  ",",
+  ";",
+  "/",
+  " ",
+]
+
+const tryParseJSONArray = (text: string) => {
+  const array = JSON.parse(text)
+  if (!Array.isArray(array)) throw new Error()
+  return array
+}
+
+const extractListOfStrings = (text: string) => {
+  try {
+    let array = []
+    try {
+      array = tryParseJSONArray(text)
+    } catch {
+      array = tryParseJSONArray(text.replaceAll("'", '"'))
+    }
+    return array
+  } catch {
+    for (const delimiter of possibleDelimiters) {
+      const parts = text.split(delimiter)
+      if (parts.length === 0) continue
+
+      return parts.map((p) => p.trim())
+    }
+  }
+
+  return text
+}
+
+// Returns all values found in `data` for a given column based on its settings.
+// For columns of type `list_of_string`, it tries to parse each value as a JSON array,
+// then a plain list with various separators.
+const getValuesForColumn = (data: ImportData, column: string, settings: typeof testImportSchema["0"]) => {
+  if (settings.valueType === "list_of_string") {
+    return data.rows
+      .map((row) => extractListOfStrings(`${row[column]}`))
+      .flat()
+  }
+  return data.rows.map((row) => `${row[column]}`)
+}
+
 export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
 
   const enumSchemaColumns = useMemo(
     () => importSchema.filter(
-      ({ valueType, enumItems }) => valueType === "string" && !!enumItems,
+      ({ valueType, enumItems }) =>
+        valueType === "list_of_string" ||
+        (valueType === "string" && !!enumItems),
     ),
     [importSchema],
   )
@@ -143,12 +191,20 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
 
   const uniqueValuesForColumn = useMemo(
     () => Object.fromEntries(
-      data.columns.map((column) => [
-        column,
-        Array.from(new Set(data.rows.map((row) => `${row[column]}`)))
-      ])
+      data.columns.map((column) => {
+        const values = getValuesForColumn(
+          data,
+          column,
+          columnSettings[columnMappings[column].targetColumn],
+        )
+
+        return [
+          column,
+          Array.from(new Set(values))
+        ]
+      })
     ),
-    [data.columns, data.rows],
+    [data.columns, data.rows, columnSettings, columnMappings],
   )
 
   const currentUniqueValues = useMemo(() => {
@@ -310,7 +366,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
         <Button
           variant="nav"
           label="Back"
-          onClick={onBack}
+          onClick={() => onBack(mappings ?? undefined)}
         />
         <Button
           disabled={resolvedColumns.length !== Object.keys(mappingsToReview).length}

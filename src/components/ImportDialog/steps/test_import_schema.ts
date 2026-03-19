@@ -173,7 +173,7 @@ export default [
         "key": "tags",
         "label": "Folder tags",
         "required": false,
-        "valueType": "string",
+        "valueType": "list_of_string",
         "defaultValue": "",
         "enumItems": null,
         "errorHandlingModes": [

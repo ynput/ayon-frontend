@@ -327,7 +327,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
         <Button
           variant="nav"
           label="Restart"
-          onClick={onBack}
+          onClick={() => onBack()}
         />
         <Button
           variant="filled"

@@ -17,7 +17,7 @@ export default function PreviewStep({ onBack, onNext }: Props) {
         <Button
           variant="nav"
           label="Back"
-          onClick={onBack}
+          onClick={() => onBack()}
         />
         <Button
           variant="filled"
