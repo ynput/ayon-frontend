@@ -1,5 +1,7 @@
+import { type ComponentProps } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 
 interface TypeOptions {
   [key: string]: { id: string }
@@ -23,22 +25,24 @@ const urlToMention = (href: string | null, options: TypeOptions) => {
   return { href: newHref, type: typeSymbol }
 }
 
-function convertStringToBlockquotes(text: string) {
-  return text.split('\n').map((line, index) => (
+const convertStringToBlockquotes = (text: string) =>
+  text.split('\n').map((line, index) => (
     <p key={index}>
       {`> `}
       {line}
     </p>
   ))
-}
+
+type ParagraphProps = ComponentProps<'p'> & { node?: unknown }
+
+const Paragraph = ({ node: _node, ...props }: ParagraphProps) => <p {...props} />
 
 // Preserve multiple blank lines by replacing sequences of 3+ newlines
-// with interleaved &nbsp; lines so ReactMarkdown renders empty paragraphs
+// with interleaved <br> tags so ReactMarkdown renders empty paragraphs.
 const preserveBlankLines = (text: string): string => {
   return text.replace(/\n{3,}/g, (match) => {
-    // Number of extra blank lines beyond the standard paragraph break
     const extraLines = Math.floor(match.length / 2) - 1
-    return '\n\n' + '&nbsp;\n\n'.repeat(extraLines)
+    return '\n\n' + `<br>\n\n`.repeat(extraLines)
   })
 }
 
@@ -48,8 +52,10 @@ const InputMarkdownConvert = ({ typeOptions, initValue }: InputMarkdownConvertPr
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
       urlTransform={(url) => url}
       components={{
+        p: Paragraph,
         a: ({ children, href }) => {
           // @ts-ignore
           const { href: newHref, type } = urlToMention(href, typeOptions)

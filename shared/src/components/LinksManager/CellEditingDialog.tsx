@@ -25,6 +25,8 @@ export interface LinksManagerDialogProps {
   containerClassName?: string
   onClose?: () => void
   children?: React.ReactNode
+  /** When true, dialog width matches the anchor cell width exactly (no 400px minimum). */
+  matchAnchorWidth?: boolean
 }
 
 export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
@@ -33,6 +35,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   containerClassName = 'table-container',
   onClose,
   children,
+  matchAnchorWidth,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null)
 
@@ -77,7 +80,11 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
     let position: { left?: number; right?: number } = {}
     let dialogWidth = minWidthThreshold
 
-    if (spaceToRight < minWidthThreshold) {
+    if (matchAnchorWidth) {
+      // Match the anchor cell width, but at least minWidthThreshold
+      position.left = cellRect.left
+      dialogWidth = Math.max(minWidthThreshold, cellRect.width)
+    } else if (spaceToRight < minWidthThreshold) {
       // Not enough space to the right, anchor to the right side of the cell
       const spaceToLeft = cellRect.right - screenPadding
       if (spaceToLeft >= minWidthThreshold) {
@@ -95,6 +102,27 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
       // Enough space to the right, position normally
       position.left = cellRect.left
       dialogWidth = Math.max(minWidthThreshold, spaceToRight)
+    }
+
+    // Clamp horizontal position so the dialog stays within the table container
+    const minLeft = containerRect.left
+    const maxRight = containerRect.right
+
+    if (position.left !== undefined) {
+      // If dialog overflows right edge of container, shift it left
+      if (position.left + dialogWidth > maxRight) {
+        position.left = Math.max(minLeft, maxRight - dialogWidth)
+      }
+      // Ensure it doesn't go past left edge of container
+      position.left = Math.max(minLeft, position.left)
+    }
+    if (position.right !== undefined) {
+      // Clamp so dialog doesn't overflow left edge of container
+      const rightFromScreen = screenWidth - maxRight
+      if (position.right + dialogWidth > screenWidth - minLeft) {
+        position.right = Math.max(rightFromScreen, screenWidth - minLeft - dialogWidth)
+      }
+      position.right = Math.max(rightFromScreen, position.right)
     }
 
     setMaxWidth(dialogWidth)
@@ -126,7 +154,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
 
   useLayoutEffect(() => {
     updatePosition()
-  }, [isEditing, anchorElement])
+  }, [isEditing, anchorElement, matchAnchorWidth])
 
   // watch for when the tableContainer width changes
   useLayoutEffect(() => {
@@ -143,6 +171,13 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
   useLayoutEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
+
+      // When the dialog opens, React may re-render the cell content
+      // synchronously during the same mousedown event, detaching the original
+      // target from the DOM. In that case anchorElement.contains(target) would
+      // wrongly return false and close the dialog immediately. Skip detached
+      // targets to avoid this.
+      if (!target.isConnected) return
 
       if (
         popupRef.current &&
@@ -199,6 +234,7 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
         right: position?.right,
         ...(position?.showAbove && { transform: 'translateY(-100%)' }),
         visibility: position ? 'visible' : 'hidden',
+        ...(matchAnchorWidth && maxWidth ? { width: `${maxWidth}px` } : {}),
         maxWidth: maxWidth ? `${maxWidth}px` : 'none',
         maxHeight: maxHeight ? `${maxHeight}px` : 'none',
       }}

@@ -245,12 +245,10 @@ export const StyledEditor = styled.div`
         margin-bottom: 8px;
       }
 
-      h2 {
-        a,
-        em,
-        strong {
-          font-size: 20px;
-        }
+      h2  {
+        a, em, strong, u {
+        font-size: 24px;
+      }
 
         p {
           word-break: break-word;
@@ -397,10 +395,9 @@ export const StyledMarkdown = styled.div`
     h2 {
       a,
       em,
-      strong {
-        font-size: 20px;
-        margin-top: 16px;
-        margin-bottom: 8px;
+      strong,
+      u {
+        font-size: 24px;
       }
     }
   }

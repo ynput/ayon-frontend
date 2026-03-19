@@ -471,6 +471,7 @@ export const TableWrapper = styled.div`
 `
 
 export const TableContainer = styled.div`
+  position: relative;
   display: flex;
 
   height: 100%;

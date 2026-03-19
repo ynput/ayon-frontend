@@ -1586,8 +1586,8 @@ const TD = ({
         endSelection(cellId)
       }}
       onDoubleClick={(e) => {
-        // Double-click is primarily handled in onMouseDown via e.detail == 2.
-        // This is a fallback for cases where the native dblclick event does fire.
+        // Double-click is primarily handled in onMouseDown via e.detail === 2.
+        // Prevent default to avoid text selection on double-click.
         e.preventDefault()
       }}
       onContextMenu={(e) => {
