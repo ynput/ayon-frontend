@@ -98,7 +98,6 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
             value={editValue}
             min={1}
             autoFocus
-            style={{ width: `${Math.max(2, String(editValue).length) + 1}ch` }}
             onChange={(e) => setEditValue(parseInt(e.target.value) || 1)}
             onFocus={(e) => e.target.select()}
             onBlur={commitCount}
