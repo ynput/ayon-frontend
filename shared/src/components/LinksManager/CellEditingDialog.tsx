@@ -193,8 +193,14 @@ export const CellEditingDialog: FC<LinksManagerDialogProps> = ({
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    // Defer registration so the current mousedown event (which may have
+    // triggered this dialog to open) finishes bubbling before we start
+    // listening.  Otherwise the same event closes the dialog immediately.
+    const frameId = requestAnimationFrame(() => {
+      document.addEventListener('mousedown', handleClickOutside)
+    })
     return () => {
+      cancelAnimationFrame(frameId)
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [onClose, anchorElement])
