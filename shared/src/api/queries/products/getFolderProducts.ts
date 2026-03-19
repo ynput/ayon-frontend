@@ -7,6 +7,12 @@ export interface FolderProduct {
   latestVersion: {
     id: string
     version: number
+    task: {
+      id: string
+      name: string
+      label: string | null
+      taskType: string
+    } | null
   } | null
 }
 
@@ -22,6 +28,12 @@ query GetFolderProducts($projectName: String!, $folderId: String!) {
           latestVersion {
             id
             version
+            task {
+              id
+              name
+              label
+              taskType
+            }
           }
         }
       }
@@ -55,7 +67,13 @@ const getFolderProductsApi = api.injectEndpoints({
           id: edge.node.id,
           name: edge.node.name,
           productType: edge.node.productType,
-          latestVersion: edge.node.latestVersion || null,
+          latestVersion: edge.node.latestVersion
+            ? {
+                id: edge.node.latestVersion.id,
+                version: edge.node.latestVersion.version,
+                task: edge.node.latestVersion.task || null,
+              }
+            : null,
         }))
       },
       providesTags: (result, _e, { folderId }) =>

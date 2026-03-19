@@ -14,7 +14,6 @@ import React, {
   useMemo,
   useCallback,
   useEffect,
-  useRef,
 } from 'react'
 import { extractVersionFromFilename } from '@shared/util'
 import { toast } from 'react-toastify'
@@ -107,8 +106,6 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview?: string }>>([])
   const [form, setForm] = useState<FormData>(defaultFormData)
-  // Remember the last used product name so it persists across dialog open/close
-  const lastProductNameRef = useRef<string>(defaultFormData.name)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string>('')
   const [createdProductId, setCreatedProductId] = useState<string | null>(null)
@@ -164,7 +161,6 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       // Set initial form state in a single update
       setForm((prev) => ({
         ...prev,
-        ...(!productId && lastProductNameRef.current ? { name: lastProductNameRef.current } : {}),
         ...(latestVersionNumber != null ? { version: latestVersionNumber + 1 } : {}),
       }))
       setIsOpen(true)
@@ -180,10 +176,6 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       }
     })
     setPendingFiles([])
-    // Remember product name before resetting (only if non-empty)
-    if (form.name.trim()) {
-      lastProductNameRef.current = form.name
-    }
     setForm(defaultFormData)
     setCreatedProductId(null)
     setCreatedVersionId(null)
@@ -214,6 +206,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
 
           // select the new version
           onVersionCreated(effectiveProductId, versionRes.id)
+
+          toast.success('Created new version')
 
           return {
             productId: effectiveProductId,
@@ -338,7 +332,18 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     }
   }, [isOpen, version, latestVersionNumber])
 
-  // Auto-set version and productType when a matched product is found, reset version when match is lost
+  // Default product name to the last folder product when products load (most recently created)
+  useEffect(() => {
+    if (!isOpen || productId || folderProducts.length === 0) return
+
+    const lastProduct = folderProducts[folderProducts.length - 1]
+    // Only auto-fill if user hasn't changed the name from default
+    if (lastProduct && form.name === defaultFormData.name) {
+      setForm((prev) => ({ ...prev, name: lastProduct.name }))
+    }
+  }, [isOpen, productId, folderProducts])
+
+  // Auto-set version, productType, and task when a matched product is found, reset when match is lost
   useEffect(() => {
     if (!isOpen || productId) return
 
@@ -350,9 +355,25 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
           version: matchedProduct.latestVersion.version + 1,
         }),
       }))
+
+      // Auto-link task from matched product's latest version (only if user hasn't explicitly set/cleared one)
+      const matchedTask = matchedProduct.latestVersion?.task
+      if (matchedTask && userTaskId === null) {
+        setUserTaskId(matchedTask.id)
+        setLinkedTask({
+          id: matchedTask.id,
+          name: matchedTask.name,
+          label: matchedTask.label,
+          taskType: matchedTask.taskType,
+        })
+      }
     } else {
       // Match lost — reset version back to default for new product
       setForm((prev) => ({ ...prev, version: defaultFormData.version }))
+      // Clear auto-linked task (only if it was auto-set, not user-chosen)
+      if (userTaskId === null) {
+        setLinkedTask(null)
+      }
     }
   }, [isOpen, productId, matchedProduct])
 
