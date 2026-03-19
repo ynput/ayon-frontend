@@ -1,6 +1,6 @@
 import { Button } from "@ynput/ayon-react-components"
 
-import { CSVRow, ImportData } from "../../utils"
+import { ImportData } from "../../utils"
 import { ColumnAction, ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison } from "../common"
 import {
   Mappers,
@@ -9,7 +9,6 @@ import {
   MappersTableBody, MappersTableActionCol,
   StepNavButtons,
   StepNavStats,
-  StepNavStatsRequired
 } from "../common.styled"
 import {
   StepContainer,
@@ -110,6 +109,9 @@ const possibleDelimiters = [
   ",",
   ";",
   "/",
+  "|",
+  "\t",
+  "\n",
   " ",
 ]
 
