@@ -118,6 +118,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [latestVersionId, setLatestVersionId] = useState<string | undefined>(undefined)
   // Tracks whether the current task was auto-linked from a matched product (not explicitly user-chosen)
   const isTaskAutoLinkedRef = useRef(false)
+  // Remember the last submitted product name per folder so we can prefill on reopen
+  const lastSubmittedRef = useRef<{ folderId: string; productName: string } | null>(null)
 
   // Fetch products for the folder (only when no productId — Overview/Browser flow)
   const { data: folderProducts = [], isLoading: isFolderProductsLoading } =
@@ -301,6 +303,11 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
 
         const response = await onUploadVersion(formData)
 
+        // Remember last submitted product name for this folder so we can prefill on reopen
+        if (folderId) {
+          lastSubmittedRef.current = { folderId, productName: formData.name }
+        }
+
         // Extract productId and versionId from response
         if (response?.productId) {
           setCreatedProductId(response.productId)
@@ -336,13 +343,25 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     }
   }, [isOpen, version, latestVersionNumber])
 
-  // Default product name to the last folder product when products load (most recently created)
+  // Default product name: prefer last submitted name for same folder, else last folder product
   useEffect(() => {
     if (!isOpen || productId || folderProducts.length === 0) return
-
-    const lastProduct = folderProducts[folderProducts.length - 1]
     // Only auto-fill if user hasn't changed the name from default
-    if (lastProduct && form.name === defaultFormData.name) {
+    if (form.name !== defaultFormData.name) return
+
+    // Prefer the product name from the last successful submit on this folder
+    const lastSubmitted = lastSubmittedRef.current
+    if (lastSubmitted && lastSubmitted.folderId === folderId) {
+      const exists = folderProducts.some((p) => p.name === lastSubmitted.productName)
+      if (exists) {
+        setForm((prev) => ({ ...prev, name: lastSubmitted.productName }))
+        return
+      }
+    }
+
+    // Fallback: use the last product in the folder list
+    const lastProduct = folderProducts[folderProducts.length - 1]
+    if (lastProduct) {
       setForm((prev) => ({ ...prev, name: lastProduct.name }))
     }
   }, [isOpen, productId, folderProducts])
