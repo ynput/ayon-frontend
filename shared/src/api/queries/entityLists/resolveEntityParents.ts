@@ -53,7 +53,7 @@ export const resolveEntityParents = async (
     )
   }
 
-  // Versions → resolve parent folderIds and taskIds
+  // Versions → resolve parent folderIds, taskIds, and productIds
   // Note: GetVersions has transformResponse that returns { versions, pageInfo }
   if (entityIds.versionIds.length) {
     promises.push(
@@ -69,6 +69,9 @@ export const resolveEntityParents = async (
           for (const version of result.versions) {
             if (version.task?.id) {
               taskIds.add(version.task.id)
+            }
+            if (version.product?.id) {
+              productIds.add(version.product.id)
             }
             if (version.product?.folder?.id) {
               folderIds.add(version.product.folder.id)
