@@ -155,7 +155,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   })
 
   // Resolve entity list selections to IDs
-  const { entityIds } = useSelectedEntityIds()
+  const { entityIds, rawEntityIds } = useSelectedEntityIds()
 
   const selectedFolders = useSelectedFolders({
     rowSelection,
@@ -177,7 +177,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
-    taskIds: entityIds.taskIds,
+    taskIds: rawEntityIds.taskIds,
     taskFilters: {
       filter: combinedTaskFilter.filter,
       filterString: combinedTaskFilter.filterString,

@@ -218,7 +218,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     )
   }, [sliceFilter, showProducts, attribScopeMap])
   // Resolve entity list selections to IDs
-  const { entityIds } = useSelectedEntityIds()
+  const { entityIds, rawEntityIds } = useSelectedEntityIds()
 
   // get selected folders from slicer
   const slicerFolderIds = useSelectedFolders({
@@ -241,6 +241,26 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     sliceFilter: slicerTaskFilter,
   })
 
+  // When entity list has task IDs, merge them into the task filter
+  const entityListTaskFilterString = useMemo(() => {
+    if (!rawEntityIds.taskIds.length) return combinedTaskFilter.filterString
+
+    const taskIdCondition = {
+      key: 'id',
+      operator: 'in',
+      value: rawEntityIds.taskIds,
+    }
+
+    const existingFilter = combinedTaskFilter.filterString
+      ? JSON.parse(combinedTaskFilter.filterString)
+      : { conditions: [], operator: 'and' }
+
+    return JSON.stringify({
+      conditions: [...(existingFilter.conditions || []), taskIdCondition],
+      operator: 'and',
+    })
+  }, [rawEntityIds.taskIds, combinedTaskFilter.filterString])
+
   const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
 
   const queryArgs = useMemo(
@@ -248,7 +268,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       projectName,
       versionFilter: combinedVersionFilter.filterString,
       productFilter: combinedProductFilter.filterString,
-      taskFilter: combinedTaskFilter.filterString,
+      taskFilter: entityListTaskFilterString,
       folderIds: slicerFolderIds,
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
@@ -259,7 +279,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       projectName,
       combinedVersionFilter.filterString,
       combinedProductFilter.filterString,
-      combinedTaskFilter.filterString,
+      entityListTaskFilterString,
       slicerFolderIds,
       entityIds.versionIds,
       entityIds.productIds,
@@ -290,8 +310,20 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const args: any = {
         ...restQueryArgs,
         sortBy: modifiedSortBy,
-        ...(entityType === 'version' && versionIds ? { versionIds } : {}),
-        ...(entityType === 'product' && productIds ? { productIds } : {}),
+      }
+
+      if (entityType === 'version') {
+        if (versionIds) {
+          args.versionIds = versionIds
+          args.folderIds = []
+        } else if (productIds) {
+          args.productIds = productIds
+          args.folderIds = []
+        }
+      }
+      if (entityType === 'product' && productIds) {
+        args.productIds = productIds
+        args.folderIds = []
       }
 
       if (entityType === 'product') {

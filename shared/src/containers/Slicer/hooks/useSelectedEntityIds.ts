@@ -50,17 +50,20 @@ const collectEntityIds = (results: EntityListEnities[]): SelectedEntityIds => {
  */
 export const useSelectedEntityIds = (): {
   entityIds: SelectedEntityIds
+  rawEntityIds: SelectedEntityIds
   isLoading: boolean
 } => {
   const dispatch = useDispatch<ThunkDispatch<unknown, unknown, UnknownAction>>()
   const { rowSelectionData, sliceType } = useSlicerContext()
   const { projectName } = useProjectContext()
   const [entityIds, setEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
+  const [rawEntityIds, setRawEntityIds] = useState<SelectedEntityIds>(EMPTY_IDS)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (sliceType !== 'entityList' || !projectName) {
       setEntityIds(EMPTY_IDS)
+      setRawEntityIds(EMPTY_IDS)
       return
     }
 
@@ -89,6 +92,7 @@ export const useSelectedEntityIds = (): {
 
     if (!selectedListIds.length) {
       setEntityIds(EMPTY_IDS)
+      setRawEntityIds(EMPTY_IDS)
       return
     }
 
@@ -108,6 +112,10 @@ export const useSelectedEntityIds = (): {
 
         const rawIds = collectEntityIds(results)
 
+        if (!cancelled) {
+          setRawEntityIds(rawIds)
+        }
+
         // Step 2: Resolve cross-entity parent references
         const resolvedIds = await resolveEntityParents(rawIds, projectName, dispatch)
 
@@ -116,7 +124,10 @@ export const useSelectedEntityIds = (): {
         }
       } catch (err) {
         console.error('Error fetching entity list IDs:', err)
-        if (!cancelled) setEntityIds(EMPTY_IDS)
+        if (!cancelled) {
+          setEntityIds(EMPTY_IDS)
+          setRawEntityIds(EMPTY_IDS)
+        }
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -129,5 +140,5 @@ export const useSelectedEntityIds = (): {
     }
   }, [sliceType, rowSelectionData, projectName, dispatch])
 
-  return { entityIds, isLoading }
+  return { entityIds, rawEntityIds, isLoading }
 }

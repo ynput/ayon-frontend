@@ -107,14 +107,14 @@ export const useEntityListsSlice = () => {
       const createListRow = (list: EntityList, _parentType?: string, parents: string[] = []): SimpleTableRow => ({
         id: list.id,
         name: list.label,
-        label: list.label,
+        label: `${list.label} (${list.entityType})`,
         ...(parents.length > 0 && { parents }),
         icon: getListIcon(list),
         subRows: [],
         data: {
           id: list.id,
           name: list.label,
-          label: list.label,
+          label: `${list.label} (${list.entityType})`,
           entityType: list.entityType,
           listId: list.id,
         },
