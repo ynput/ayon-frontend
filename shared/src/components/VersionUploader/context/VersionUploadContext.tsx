@@ -3,11 +3,14 @@ import {
   useCreateProductMutation,
   useGetLatestProductVersionQuery,
   useGetVersionQuery,
+  useGetFolderProductsQuery,
 } from '@shared/api'
+import type { FolderProduct } from '@shared/api'
 import React, {
   createContext,
   useContext,
   useState,
+  useRef,
   ReactNode,
   useMemo,
   useCallback,
@@ -67,6 +70,9 @@ interface VersionUploadContextType {
   onUploadVersion: (data: FormData) => Promise<{ productId: string; versionId: string }>
   handleFormChange: (key: keyof FormData, value: string | number) => void
   handleFormSubmit: (formData: FormData) => Promise<void>
+  folderProducts: FolderProduct[]
+  isFolderProductsLoading: boolean
+  matchedProduct: FolderProduct | undefined
   // pass through
   dispatch: any
 }
@@ -110,6 +116,25 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const [latestVersionNumber, setLatestVersionNumber] = useState<number | undefined>(undefined)
   // Stores the latest version ID so we can fetch its task when not already known
   const [latestVersionId, setLatestVersionId] = useState<string | undefined>(undefined)
+  // Tracks whether the current task was auto-linked from a matched product (not explicitly user-chosen)
+  const isTaskAutoLinkedRef = useRef(false)
+  // Remember the last submitted product name per folder so we can prefill on reopen
+  const lastSubmittedRef = useRef<{ folderId: string; productName: string } | null>(null)
+
+  // Fetch products for the folder (only when no productId — Overview/Browser flow)
+  const { data: folderProducts = [], isLoading: isFolderProductsLoading } =
+    useGetFolderProductsQuery(
+      { projectName, folderId },
+      { skip: !folderId || !isOpen || !!productId },
+    )
+
+  // Match typed product name against existing folder products
+  const matchedProduct = useMemo(() => {
+    if (productId || !form.name || folderProducts.length === 0) return undefined
+    return folderProducts.find((p) => p.name === form.name)
+  }, [productId, form.name, folderProducts])
+
+  const effectiveProductId = productId || matchedProduct?.id || ''
 
   const { currentData: version } = useGetLatestProductVersionQuery(
     {
@@ -138,10 +163,11 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       setLatestVersionNumber(latestVersionNumber)
       setLatestVersionId(latestVersionId)
 
-      // If we already know the latest version number, set the form immediately
-      if (latestVersionNumber != null) {
-        setForm((prev) => ({ ...prev, version: latestVersionNumber + 1 }))
-      }
+      // Set initial form state in a single update
+      setForm((prev) => ({
+        ...prev,
+        ...(latestVersionNumber != null ? { version: latestVersionNumber + 1 } : {}),
+      }))
       setIsOpen(true)
     },
     [],
@@ -165,6 +191,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     setFolderId('')
     setUserTaskId(null)
     setLinkedTask(null)
+    isTaskAutoLinkedRef.current = false
     setLatestVersionNumber(undefined)
     setLatestVersionId(undefined)
   }, [pendingFiles])
@@ -175,19 +202,21 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const onUploadVersion = useCallback<VersionUploadContextType['onUploadVersion']>(
     async (data: FormData) => {
       try {
-        if (productId) {
-          // product already exists, create new version for it
+        if (effectiveProductId) {
+          // product already exists (either passed directly or matched by name)
           const versionRes = await createVersionHelper(createVersion, projectName, {
-            productId,
+            productId: effectiveProductId,
             version: data.version,
             taskId: taskId || undefined,
           })
 
           // select the new version
-          onVersionCreated(productId, versionRes.id)
+          onVersionCreated(effectiveProductId, versionRes.id)
+
+          toast.success('Created new version')
 
           return {
-            productId,
+            productId: effectiveProductId,
             versionId: versionRes.id,
           }
         } else {
@@ -223,13 +252,13 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         throw error.message || error
       }
     },
-    [onCloseVersionUpload, productId, folderId, taskId, projectName],
+    [onCloseVersionUpload, effectiveProductId, folderId, taskId, projectName],
   )
 
   const extractAndSetVersionFromFiles = useCallback(
     (files: File[]) => {
       // Only extract version if we don't already have a product (new product workflow)
-      if (productId) return
+      if (effectiveProductId) return
 
       // Try to extract version from the first file
       const firstFile = files[0]
@@ -243,10 +272,11 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         }
       }
     },
-    [productId, form.version],
+    [effectiveProductId, form.version],
   )
 
-  const latestVersion = version?.version ?? latestVersionNumber
+  // Fallback order: (1) queried from productId, (2) passed by caller, (3) from matched product name
+  const latestVersion = version?.version ?? latestVersionNumber ?? matchedProduct?.latestVersion?.version
 
   // Handle form changes
   const handleFormChange = useCallback((key: keyof FormData, value: string | number) => {
@@ -254,14 +284,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       ...prev,
       [key]: value,
     }))
+    // Clear any previous validation error when user edits the form
+    setError('')
   }, [])
-
-  const validateFormData = () => {
-    const validation = validateFormDataHelper(form, latestVersion, !productId)
-    if (!validation.isValid) {
-      throw validation.error
-    }
-  }
 
   // Handle form submission
   const handleFormSubmit = useCallback(
@@ -271,9 +296,17 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         setError('')
 
         // validate the form data
-        validateFormData()
+        const validation = validateFormDataHelper(formData, latestVersion, !effectiveProductId)
+        if (!validation.isValid) {
+          throw validation.error
+        }
 
         const response = await onUploadVersion(formData)
+
+        // Remember last submitted product name for this folder so we can prefill on reopen
+        if (folderId) {
+          lastSubmittedRef.current = { folderId, productName: formData.name }
+        }
 
         // Extract productId and versionId from response
         if (response?.productId) {
@@ -292,7 +325,7 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
         setIsSubmitting(false)
       }
     },
-    [onUploadVersion, pendingFiles.length, onCloseVersionUpload],
+    [onUploadVersion, pendingFiles.length, onCloseVersionUpload, latestVersion, effectiveProductId],
   )
 
   // Update form when version data changes (only when query is used as fallback)
@@ -310,8 +343,77 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
     }
   }, [isOpen, version, latestVersionNumber])
 
+  // Default product name: prefer last submitted name for same folder, else last folder product
+  useEffect(() => {
+    if (!isOpen || productId || folderProducts.length === 0) return
+    // Only auto-fill if user hasn't changed the name from default
+    if (form.name !== defaultFormData.name) return
+
+    // Prefer the product name from the last successful submit on this folder
+    const lastSubmitted = lastSubmittedRef.current
+    if (lastSubmitted && lastSubmitted.folderId === folderId) {
+      const exists = folderProducts.some((p) => p.name === lastSubmitted.productName)
+      if (exists) {
+        setForm((prev) => ({ ...prev, name: lastSubmitted.productName }))
+        return
+      }
+    }
+
+    // Fallback: use the last product in the folder list
+    const lastProduct = folderProducts[folderProducts.length - 1]
+    if (lastProduct) {
+      setForm((prev) => ({ ...prev, name: lastProduct.name }))
+    }
+  }, [isOpen, productId, folderProducts])
+
+  // Auto-set version, productType, and task when a matched product is found, reset when match is lost
+  useEffect(() => {
+    if (!isOpen || productId) return
+
+    if (matchedProduct) {
+      setForm((prev) => ({
+        ...prev,
+        productType: matchedProduct.productType,
+        ...(matchedProduct.latestVersion && {
+          version: matchedProduct.latestVersion.version + 1,
+        }),
+      }))
+
+      const matchedTask = matchedProduct.latestVersion?.task
+      if (matchedTask && (userTaskId === null || isTaskAutoLinkedRef.current)) {
+        // Auto-link task from matched product's latest version
+        setUserTaskId(matchedTask.id)
+        setLinkedTask({
+          id: matchedTask.id,
+          name: matchedTask.name,
+          label: matchedTask.label,
+          taskType: matchedTask.taskType,
+        })
+        isTaskAutoLinkedRef.current = true
+      } else if (!matchedTask && isTaskAutoLinkedRef.current) {
+        // Matched product has no task — clear the auto-linked one
+        setUserTaskId(null)
+        setLinkedTask(null)
+        isTaskAutoLinkedRef.current = false
+      }
+    } else {
+      // Match lost — reset version back to default for new product
+      setForm((prev) => ({ ...prev, version: defaultFormData.version }))
+      // Clear auto-linked task (only if it was auto-set, not user-chosen)
+      if (userTaskId === null || isTaskAutoLinkedRef.current) {
+        setUserTaskId(null)
+        setLinkedTask(null)
+        isTaskAutoLinkedRef.current = false
+      }
+    }
+  }, [isOpen, productId, matchedProduct])
+
   // Wrap setUserTaskId so consumers use a simple string setter
-  const setTaskId = useCallback((id: string) => setUserTaskId(id), [])
+  // Any explicit user action (pick or clear) marks the task as not auto-linked
+  const setTaskId = useCallback((id: string) => {
+    setUserTaskId(id)
+    isTaskAutoLinkedRef.current = false
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -341,6 +443,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       createdVersionId,
       handleFormChange,
       handleFormSubmit,
+      folderProducts,
+      isFolderProductsLoading,
+      matchedProduct,
       dispatch,
     }),
     [
@@ -369,6 +474,9 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       createdVersionId,
       handleFormChange,
       handleFormSubmit,
+      folderProducts,
+      isFolderProductsLoading,
+      matchedProduct,
       dispatch,
     ],
   )

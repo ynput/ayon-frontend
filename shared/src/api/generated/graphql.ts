@@ -1753,6 +1753,14 @@ export type SubTaskFragmentFragment = { __typename?: 'SubTaskNode', id: string, 
 
 export type TaskPropsFragmentFragment = { __typename?: 'TaskNode', id: string, folderId: string, label?: string | null, name: string, ownAttrib: Array<string>, status: string, tags: Array<string>, taskType: string, updatedAt: any, createdAt: any, active: boolean, assignees: Array<string>, allAttrib: string, hasReviewables: boolean, parents: Array<string>, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> };
 
+export type GetFolderProductsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  folderId: Scalars['String']['input'];
+}>;
+
+
+export type GetFolderProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', products: { __typename?: 'ProductsConnection', edges: Array<{ __typename?: 'ProductEdge', node: { __typename?: 'ProductNode', id: string, name: string, productType: string, latestVersion?: { __typename?: 'VersionNode', id: string, version: number, task?: { __typename?: 'TaskNode', id: string, name: string, label?: string | null, taskType: string } | null } | null } }> } } };
+
 export type GetProjectLatestQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
 }>;
@@ -2676,6 +2684,31 @@ export const GetTasksListDocument = `
   }
 }
     ${TaskPropsFragmentFragmentDoc}`;
+export const GetFolderProductsDocument = `
+    query GetFolderProducts($projectName: String!, $folderId: String!) {
+  project(name: $projectName) {
+    products(folderIds: [$folderId], first: 1000) {
+      edges {
+        node {
+          id
+          name
+          productType
+          latestVersion {
+            id
+            version
+            task {
+              id
+              name
+              label
+              taskType
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
 export const GetProjectLatestDocument = `
     query GetProjectLatest($projectName: String!) {
   project(name: $projectName) {
@@ -3064,6 +3097,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetTasksList: build.query<GetTasksListQuery, GetTasksListQueryVariables>({
       query: (variables) => ({ document: GetTasksListDocument, variables })
+    }),
+    GetFolderProducts: build.query<GetFolderProductsQuery, GetFolderProductsQueryVariables>({
+      query: (variables) => ({ document: GetFolderProductsDocument, variables })
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })
