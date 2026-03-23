@@ -77,7 +77,6 @@ export const useFetchOverviewData = ({
     refetch: refetchFolders,
   } = useProjectFoldersContext()
 
-  // console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
     .filter(([, isExpanded]) => isExpanded)
     .filter(([id]) => !isGroupId(id)) // filter out the root folder
@@ -421,11 +420,9 @@ export const useFetchOverviewData = ({
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
       if (group && group in groupPageCounts) {
-        console.log('fetching next page for group:', group)
         incrementPageCount(group)
       }
     } else if (hasNextPage) {
-      console.log('fetching next page')
       fetchNextPage()
     }
   }

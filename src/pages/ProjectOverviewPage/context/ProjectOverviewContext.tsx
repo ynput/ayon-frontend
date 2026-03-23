@@ -111,17 +111,29 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   }, [queryFilters])
 
   // Separate slicer filters into different types
+  const validScopes: ('task' | 'folder')[] = ['task', 'folder']
+  const attribScopeMap = useMemo(
+    () =>
+      attribFields.reduce<Record<string, string>>((acc, field) => {
+        const scope = validScopes.find((s) => field.scope?.includes(s))
+        if (scope) acc[`attrib.${field.name}`] = scope
+        return acc
+      }, {}),
+    [attribFields],
+  )
+
   const {
     task: [slicerTaskFilter],
     folder: [slicerFolderFilter],
   } = useMemo(() => {
-    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, ['task', 'folder'], {
+    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, validScopes, {
       status: 'task', // status defaults to task for overview
       taskType: 'task',
       assignees: 'task',
       folderType: 'folder',
+      ...attribScopeMap,
     })
-  }, [sliceFilter])
+  }, [sliceFilter, attribScopeMap])
 
   // Combine slicer filters with task/folder filters
   const combinedTaskFilter = useQueryFilters({

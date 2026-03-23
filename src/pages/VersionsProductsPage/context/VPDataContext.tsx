@@ -188,6 +188,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // Separate slicer filters into different types
+  const vpValidScopes: ('version' | 'product' | 'task')[] = ['version', 'product', 'task']
+  const attribScopeMap = useMemo(
+    () =>
+      attribFields.reduce<Record<string, string>>((acc, field) => {
+        const scope = vpValidScopes.find((s) => field.scope?.includes(s))
+        if (scope) acc[`attrib.${field.name}`] = scope
+        return acc
+      }, {}),
+    [attribFields],
+  )
+
   const {
     version: [slicerVersionFilter],
     product: [slicerProductFilter],
@@ -195,16 +206,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   } = useMemo(() => {
     return splitClientFiltersByScope(
       sliceFilter ? [sliceFilter] : null,
-      ['version', 'product', 'task'],
+      vpValidScopes,
       {
         status: 'version',
         taskType: 'task',
         productType: 'product',
         assignees: 'task',
         author: 'version',
+        ...attribScopeMap,
       },
     )
-  }, [sliceFilter, showProducts])
+  }, [sliceFilter, showProducts, attribScopeMap])
   // Resolve entity list selections to IDs
   const { entityIds } = useSelectedEntityIds()
 
