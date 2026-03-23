@@ -32,6 +32,7 @@ export const resolveEntityParents = async (
   const promises: Promise<void>[] = []
 
   // Tasks → resolve parent folderIds
+  // Note: GetTasksList has transformResponse that returns { tasks, pageInfo }
   if (entityIds.taskIds.length) {
     promises.push(
       dispatch(
@@ -42,10 +43,10 @@ export const resolveEntityParents = async (
         }),
       )
         .unwrap()
-        .then((result) => {
-          for (const edge of result.project.tasks.edges) {
-            if (edge.node.folderId) {
-              folderIds.add(edge.node.folderId)
+        .then((result: any) => {
+          for (const task of result.tasks) {
+            if (task.folderId) {
+              folderIds.add(task.folderId)
             }
           }
         }),
@@ -53,6 +54,7 @@ export const resolveEntityParents = async (
   }
 
   // Versions → resolve parent folderIds and taskIds
+  // Note: GetVersions has transformResponse that returns { versions, pageInfo }
   if (entityIds.versionIds.length) {
     promises.push(
       dispatch(
@@ -63,14 +65,13 @@ export const resolveEntityParents = async (
         }),
       )
         .unwrap()
-        .then((result) => {
-          for (const edge of result.project.versions.edges) {
-            const node = edge.node
-            if (node.task?.id) {
-              taskIds.add(node.task.id)
+        .then((result: any) => {
+          for (const version of result.versions) {
+            if (version.task?.id) {
+              taskIds.add(version.task.id)
             }
-            if (node.product?.folder?.id) {
-              folderIds.add(node.product.folder.id)
+            if (version.product?.folder?.id) {
+              folderIds.add(version.product.folder.id)
             }
           }
         }),
@@ -78,6 +79,7 @@ export const resolveEntityParents = async (
   }
 
   // Products → resolve parent folderIds
+  // Note: GetProducts has transformResponse that returns { products, pageInfo }
   if (entityIds.productIds.length) {
     promises.push(
       dispatch(
@@ -88,10 +90,10 @@ export const resolveEntityParents = async (
         }),
       )
         .unwrap()
-        .then((result) => {
-          for (const edge of result.project.products.edges) {
-            if (edge.node.folderId) {
-              folderIds.add(edge.node.folderId)
+        .then((result: any) => {
+          for (const product of result.products) {
+            if (product.folderId) {
+              folderIds.add(product.folderId)
             }
           }
         }),

@@ -64,7 +64,28 @@ export const useSelectedEntityIds = (): {
       return
     }
 
-    const selectedListIds = Object.keys(rowSelectionData).filter((id) => rowSelectionData[id])
+    // Resolve folder selections to child list IDs
+    const selectedKeys = Object.keys(rowSelectionData).filter((id) => rowSelectionData[id])
+    const listIdSet = new Set<string>()
+
+    for (const key of selectedKeys) {
+      if (key.startsWith('folder-')) {
+        // Folder row: extract child list IDs from the row data
+        const rowData = rowSelectionData[key]
+        if (rowData && typeof rowData === 'object' && 'data' in rowData) {
+          const data = (rowData as { data?: { childListIds?: string[] } }).data
+          if (data?.childListIds) {
+            for (const id of data.childListIds) {
+              listIdSet.add(id)
+            }
+          }
+        }
+      } else {
+        listIdSet.add(key)
+      }
+    }
+
+    const selectedListIds = [...listIdSet]
 
     if (!selectedListIds.length) {
       setEntityIds(EMPTY_IDS)
