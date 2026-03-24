@@ -140,7 +140,7 @@ const useTableDataBySlice = ({
     useExtraSlices,
   })
   //   Entity Lists
-  const { getData: getEntityListsData, isLoading: isLoadingLists, isExpandable: isEntityListExpandable } = useEntityListsSlice()
+  const { getData: getEntityListsData, isLoading: isLoadingLists, isExpandable: isEntityListExpandable } = useEntityListsSlice(entityTypes)
   const isLoadingData = isLoadingHierarchy || isLoadingProject || isUsersLoading
 
   const builtInSlices: Record<SliceType, SliceData> = {

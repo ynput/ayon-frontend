@@ -19,7 +19,7 @@ export const buildListFolderRowId = (folderId: string) =>
 const getListIcon = (list: Pick<EntityList, 'entityListType' | 'entityType'>) =>
   list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)
 
-export const useEntityListsSlice = () => {
+export const useEntityListsSlice = (entityTypes?: string[]) => {
   const { projectName } = useProjectContext()
   const { powerLicense } = usePowerpack()
 
@@ -43,7 +43,10 @@ export const useEntityListsSlice = () => {
   const tableData: SimpleTableRow[] = useMemo(() => {
     if (!listsData?.pages) return []
 
-    const allLists = listsData.pages.flatMap((page) => page.lists)
+    const allListsRaw = listsData.pages.flatMap((page) => page.lists)
+    const allLists = entityTypes?.length
+      ? allListsRaw.filter((list) => entityTypes.includes(list.entityType))
+      : allListsRaw
 
     // If we have power license and folders, build hierarchical structure
     if (powerLicense && listFolders.length > 0) {
@@ -107,14 +110,14 @@ export const useEntityListsSlice = () => {
       const createListRow = (list: EntityList, _parentType?: string, parents: string[] = []): SimpleTableRow => ({
         id: list.id,
         name: list.label,
-        label: `${list.label} (${list.entityType})`,
+        label: list.label,
         ...(parents.length > 0 && { parents }),
         icon: getListIcon(list),
         subRows: [],
         data: {
           id: list.id,
           name: list.label,
-          label: `${list.label} (${list.entityType})`,
+          label: list.label,
           entityType: list.entityType,
           listId: list.id,
         },
@@ -188,18 +191,18 @@ export const useEntityListsSlice = () => {
     return allLists.map((list) => ({
       id: list.id,
       name: list.label,
-      label: `${list.label} (${list.entityType})`,
+      label: list.label,
       icon: getListIcon(list),
       subRows: [],
       data: {
         id: list.id,
         name: list.label,
-        label: `${list.label} (${list.entityType})`,
+        label: list.label,
         entityType: list.entityType,
         listId: list.id,
       },
     }))
-  }, [listsData, powerLicense, listFolders])
+  }, [listsData, powerLicense, listFolders, entityTypes])
 
   const isExpandable = powerLicense && listFolders.length > 0
 
