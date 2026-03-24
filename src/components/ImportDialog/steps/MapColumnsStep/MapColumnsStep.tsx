@@ -130,6 +130,7 @@ const mappingUpdater = (
 
 export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(defaultMappings)
+  const [selectedColumn, setSelectedColumn] = useState<string | null>(null)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
   const [previewUnique, setPreviewUnique] = useState(true)
 
@@ -288,9 +289,14 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                   targetOptions={targetOptions}
                   errorHandling={mappings?.[column]?.errorHandlingMode}
                   errorHandlingOptions={errorHandlingOptions}
-                  selected={previewColumn === column}
+                  selected={selectedColumn === column}
                   onPointerEnter={() => setPreviewColumn(column)}
-                  onClick={() => {}}
+                  onClick={() => {
+                    if (selectedColumn === column) {
+                      return setSelectedColumn(null)
+                    }
+                    setSelectedColumn(column)
+                  }}
                   onTargetChange={onTargetChange(column)}
                   onActionChange={(action) => {
                     setMappings(mappingUpdater(column, { action }))
@@ -317,7 +323,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
               }}
             />
           </PreviewHeading>
-          <DataPreview data={data} column={previewColumn} unique={previewUnique} />
+          <DataPreview data={data} column={selectedColumn ?? previewColumn} unique={previewUnique} />
         </Preview>
       </Container>
       <StepNavButtons>
