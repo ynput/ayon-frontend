@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Dropdown, Icon } from "@ynput/ayon-react-components"
+import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
@@ -132,6 +132,7 @@ const mappingUpdater = (
 export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(defaultMappings)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
+  const [previewUnique, setPreviewUnique] = useState(true)
 
   const columnSettings = useMemo(
     () => Object.fromEntries(importSchema.map((col) => [col.key, col])),
@@ -304,8 +305,19 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
           </Mappers>
         </MappersContainer>
         <Preview>
-          <PreviewHeading>Data preview</PreviewHeading>
-          <DataPreview data={data} column={previewColumn} />
+          <PreviewHeading>
+            Data preview
+            <SwitchButton
+              label="Show unique values"
+              value={previewUnique}
+              onClick={() => setPreviewUnique(!previewUnique)}
+              variant="secondary"
+              pt={{
+                switch: { compact: true },
+              }}
+            />
+          </PreviewHeading>
+          <DataPreview data={data} column={previewColumn} unique={previewUnique} />
         </Preview>
       </Container>
       <StepNavButtons>

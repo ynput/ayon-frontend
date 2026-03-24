@@ -26,11 +26,15 @@ export const Preview = styled.div`
 
 export const PreviewHeading = styled.h2`
   background: var(--md-sys-color-surface-container);
-  padding: var(--padding-m) var(--padding-m);
+  padding: var(--padding-m) 0 var(--padding-m) var(--padding-m);
   margin: 0;
   font-size: inherit;
   position: sticky;
   top: 0;
   z-index: 1;
   line-height: 20px;
+  display: flex;
+  gap: var(--base-gap-small);
+  justify-content: space-between;
+  align-items: center;
 `
