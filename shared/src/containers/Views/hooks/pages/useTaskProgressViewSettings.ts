@@ -28,10 +28,6 @@ type Return = {
   // Slicer type management
   sliceType: string | undefined
   onUpdateSliceType: (sliceType: string) => void
-
-  // Slicer selection management
-  slicerSelection: Record<string, boolean> | undefined
-  onUpdateSlicerSelection: (selection: Record<string, boolean>) => void
 }
 
 export const useTaskProgressViewSettings = (): Return => {
@@ -49,7 +45,6 @@ export const useTaskProgressViewSettings = (): Return => {
   const serverFilters = (taskProgressSettings?.filter as any) ?? {}
   const serverColumns = (taskProgressSettings?.columns as ColumnItemModel[]) ?? []
   const serverSliceType = taskProgressSettings?.sliceType
-  const serverSlicerSelection = taskProgressSettings?.slicerSelection
 
   // Sync local state with server when viewSettings change
   useEffect(() => {
@@ -92,16 +87,6 @@ export const useTaskProgressViewSettings = (): Return => {
     [updateViewSettings],
   )
 
-  // Slicer selection update handler
-  const onUpdateSlicerSelection = useCallback(
-    async (newSelection: Record<string, boolean>) => {
-      await updateViewSettings({ slicerSelection: newSelection }, noop, newSelection, {
-        errorMessage: 'Failed to update slicer selection',
-      })
-    },
-    [updateViewSettings],
-  )
-
   return {
     filters,
     onUpdateFilters,
@@ -109,7 +94,5 @@ export const useTaskProgressViewSettings = (): Return => {
     onUpdateColumns,
     sliceType: serverSliceType,
     onUpdateSliceType,
-    slicerSelection: serverSlicerSelection,
-    onUpdateSlicerSelection,
   }
 }

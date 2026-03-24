@@ -85,12 +85,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateFilters: setQueryFilters,
     sliceType: viewSliceType,
     onUpdateSliceType,
-    slicerSelection: viewSlicerSelection,
-    onUpdateSlicerSelection,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
-  // Sync slicer slice type and selection with view settings
-  useSlicerViewSync(viewSliceType, onUpdateSliceType, viewSlicerSelection, onUpdateSlicerSelection, isLoadingViews)
+  // Sync slicer slice type with view settings, selection with localStorage
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews, `slicer-selection-overview-${projectName}`)
 
   // GET GROUPING
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({

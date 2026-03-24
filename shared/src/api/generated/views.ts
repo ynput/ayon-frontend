@@ -250,7 +250,6 @@ export type OverviewSettings = {
   filter?: QueryFilter
   folderFilter?: QueryFilter
   sliceType?: string
-  slicerSelection?: Record<string, boolean>
   columns?: ColumnItemModel[]
 }
 export type OverviewViewPostModel = {
@@ -266,7 +265,6 @@ export type OverviewViewPostModel = {
 export type TaskProgressSettings = {
   filter?: QueryFilter
   sliceType?: string
-  slicerSelection?: Record<string, boolean>
   columns?: ColumnItemModel[]
 }
 export type TaskProgressViewPostModel = {
@@ -320,7 +318,6 @@ export type VersionsSettings = {
   gridHeight?: number
   featuredVersionOrder?: string[]
   slicerType?: string
-  slicerSelection?: Record<string, boolean>
   groupBy?: string
   groupSortByDesc?: boolean
   showEmptyGroups?: boolean

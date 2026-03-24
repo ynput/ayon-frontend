@@ -133,12 +133,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   modules,
 }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType, slicerSelection, onUpdateSlicerSelection } =
+  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType } =
     useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
 
-  // Sync slicer slice type and selection with view settings
-  useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, slicerSelection, onUpdateSlicerSelection, isLoadingViews)
+  // Sync slicer slice type with view settings, selection with localStorage
+  useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, isLoadingViews, `slicer-selection-versions-${projectName}`)
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 

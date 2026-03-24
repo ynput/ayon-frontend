@@ -1,44 +1,52 @@
 import { useEffect, useRef } from 'react'
 import { useSlicerContext } from '../context/SlicerContext'
 import { SliceType } from '../types'
+import { useLocalStorage } from '@shared/hooks'
+
+type StoredSelection = {
+  type: string
+  selection: Record<string, boolean>
+}
 
 /**
- * Syncs the slicer's active slice type and selection with view settings.
+ * Syncs the slicer's active slice type and selection with view/localStorage.
+ *
+ * Slice type: persisted in view settings (server-side)
+ * Row selection: persisted in localStorage (server model doesn't support it)
  *
  * - Sets isViewSyncPending=true on mount so the slicer shows loading until views are ready
- * - On view load: silently restores sliceType and rowSelection without resetting selection
+ * - On view load: silently restores sliceType from view and rowSelection from localStorage
  * - On user-initiated slice type change: saves the new sliceType to the view
- * - On user-initiated selection change: debounced save of rowSelection to the view
+ * - On user-initiated selection change: saves rowSelection to localStorage
  */
 export const useSlicerViewSync = (
   viewSliceType: string | undefined,
   onUpdateSliceType: (sliceType: string) => void,
-  viewSlicerSelection: Record<string, boolean> | undefined,
-  onUpdateSlicerSelection: (selection: Record<string, boolean>) => void,
   isLoadingViews?: boolean,
+  selectionStorageKey?: string,
 ) => {
   const { sliceType, setSliceType, setIsViewSyncPending, rowSelection, setRowSelection } =
     useSlicerContext()
   const initializedRef = useRef(false)
   const isRestoringTypeRef = useRef(false)
   const isRestoringSelectionRef = useRef(false)
-  const selectionSaveTimerRef = useRef<ReturnType<typeof setTimeout>>()
 
-  // Keep refs to always have the latest callbacks, avoiding stale closures
-  // in the debounced selection save. Without this, a 300ms-old closure could
-  // call updateViewSettings with stale viewSettings, overwriting concurrent saves.
-  const latestRef = useRef({ onUpdateSliceType, onUpdateSlicerSelection })
-  latestRef.current = { onUpdateSliceType, onUpdateSlicerSelection }
+  // Keep a ref to always have the latest callback, avoiding stale closures
+  const onUpdateSliceTypeRef = useRef(onUpdateSliceType)
+  onUpdateSliceTypeRef.current = onUpdateSliceType
+
+  const [storedSelection, setStoredSelection] = useLocalStorage<StoredSelection>(
+    selectionStorageKey || 'slicer-selection',
+    { type: '', selection: {} },
+  )
 
   // On mount: mark sync as pending so slicer shows loading
   useEffect(() => {
     setIsViewSyncPending(true)
     return () => {
       setIsViewSyncPending(false)
-      if (selectionSaveTimerRef.current) {
-        clearTimeout(selectionSaveTimerRef.current)
-      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Restore: view → slicer (only when views finish loading, not on save-triggered updates)
@@ -49,17 +57,23 @@ export const useSlicerViewSync = (
     initializedRef.current = true
     setIsViewSyncPending(false)
 
+    const restoredType = viewSliceType || sliceType
+
     // Restore saved slice type if present
     if (viewSliceType && viewSliceType !== sliceType) {
       isRestoringTypeRef.current = true
       setSliceType(viewSliceType as SliceType)
     }
 
-    // Restore saved selection if present
-    if (viewSlicerSelection && Object.keys(viewSlicerSelection).length > 0) {
+    // Restore selection from localStorage if it matches the restored slice type
+    if (
+      storedSelection.type === restoredType &&
+      Object.keys(storedSelection.selection).length > 0
+    ) {
       isRestoringSelectionRef.current = true
-      setRowSelection(viewSlicerSelection)
+      setRowSelection(storedSelection.selection)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoadingViews])
 
   // Save: slicer slice type → view (on user change)
@@ -75,11 +89,12 @@ export const useSlicerViewSync = (
 
     // Save to view if different
     if (sliceType !== viewSliceType) {
-      latestRef.current.onUpdateSliceType(sliceType)
+      onUpdateSliceTypeRef.current(sliceType)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sliceType])
 
-  // Save: slicer selection → view (debounced, on user change)
+  // Save: slicer selection → localStorage (on user change)
   useEffect(() => {
     if (!initializedRef.current) return
 
@@ -89,15 +104,7 @@ export const useSlicerViewSync = (
       return
     }
 
-    // Debounce selection saves to avoid hammering the API on rapid clicks
-    if (selectionSaveTimerRef.current) {
-      clearTimeout(selectionSaveTimerRef.current)
-    }
-
-    selectionSaveTimerRef.current = setTimeout(() => {
-      // Use latestRef to avoid stale closures — the callback from 300ms ago
-      // could have an old viewSettings that would overwrite concurrent saves
-      latestRef.current.onUpdateSlicerSelection(rowSelection)
-    }, 300)
+    setStoredSelection({ type: sliceType, selection: rowSelection })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowSelection])
 }
