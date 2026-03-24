@@ -3,13 +3,12 @@ import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
-import { StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
+import { StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "../../components/DataPreview"
 import {
-    StepContainer,
-    Container,
-    PreviewHeading,
-    Preview,
+  Container,
+  PreviewHeading,
+  Preview,
 } from "./MapColumnsStep.styled"
 import {
   MappersContainer,

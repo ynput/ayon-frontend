@@ -1,22 +1,17 @@
 import styled from "styled-components"
 
-// what are you doing, step-container?
-export const StepContainer = styled.div`
-  display: flex;
-  flex-flow: column;
-  height: 100%;
-  overflow: hidden;
-`
-
 export const Container = styled.div`
   display: grid;
   grid-template-columns: minmax(66%, max-content) 1fr;
   gap:var(--base-gap-medium);
   height: 100%;
   overflow: hidden;
+  border-radius: var(--border-radius-m);
 `
 
 export const Preview = styled.div`
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
   display: flex;
   flex-direction: column;
   height: 100%;

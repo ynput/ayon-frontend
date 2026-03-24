@@ -11,6 +11,7 @@ const acceptedTypes = ["text/csv"]
 
 const FileUploadWrapper = styled.div`
   position: relative;
+  flex-grow: 1;
 `
 
 const FileUploadButtons = styled.div`
@@ -26,9 +27,16 @@ export const HiddenFileInput = styled.input`
   display: none;
 `
 
+export const FileStatsWrapper = styled.div`
+  flex-grow: 1;
+  align-content: center;
+  justify-content: center;
+`
+
 export const FileStats = styled(Panel)`
   background: var(--md-sys-color-surface-container-high);
   margin: 0 auto;
+  max-width: max-content;
 `
 export const FileStat = styled(Panel)`
   background: var(--md-sys-color-surface-container-low);
@@ -114,37 +122,39 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
       }
       {
         data && files.length > 0 && (
-          <FileStats>
-            <FileStatsHeading>
-              {files[0].file.name}
-              <FileStatsFileSize>
-                {getFileSizeString(files[0].file.size)}
-              </FileStatsFileSize>
-              <FileStatsRemove
-                icon="close"
-                variant="nav"
-                onClick={() => {
-                  setFiles([])
-                  setData(null)
-                }}
-              />
-            </FileStatsHeading>
-            <FileStat direction="row">
-              <Icon icon="table_rows" style={{ rotate: "90deg" }} />
-              {data.columns.length} columns found
-            </FileStat>
-            <FileStat direction="row">
-              <Icon icon="table_rows" />
-              {data.rows.length} rows found
-            </FileStat>
-          </FileStats>
+          <FileStatsWrapper>
+            <FileStats>
+              <FileStatsHeading>
+                {files[0].file.name}
+                <FileStatsFileSize>
+                  {getFileSizeString(files[0].file.size)}
+                </FileStatsFileSize>
+                <FileStatsRemove
+                  icon="close"
+                  variant="nav"
+                  onClick={() => {
+                    setFiles([])
+                    setData(null)
+                  }}
+                />
+              </FileStatsHeading>
+              <FileStat direction="row">
+                <Icon icon="table_rows" style={{ rotate: "90deg" }} />
+                {data.columns.length} columns found
+              </FileStat>
+              <FileStat direction="row">
+                <Icon icon="table_rows" />
+                {data.rows.length} rows found
+              </FileStat>
+            </FileStats>
+          </FileStatsWrapper>
         )
       }
       <StepNavButtons>
         <Button
           variant="nav"
           label="Back"
-          onClick={onBack}
+          onClick={() => onBack()}
         />
         <Button
           variant="filled"

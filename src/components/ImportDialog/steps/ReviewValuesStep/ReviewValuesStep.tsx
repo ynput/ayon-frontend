@@ -9,9 +9,9 @@ import {
   MappersTableBody, MappersTableActionCol,
   StepNavButtons,
   StepNavStats,
+  StepContainer,
 } from "../common.styled"
 import {
-  StepContainer,
   Container,
   ColumnsListWrapper,
   Heading,

@@ -2,6 +2,9 @@ import { Dialog } from "@ynput/ayon-react-components";
 import styled from "styled-components";
 
 export const DialogContainer = styled(Dialog)`
+  max-height: none;
+  height: calc(100vh - var(--padding-l) * 2);
+  width: calc(100vw - var(--padding-l) * 2);
 `
 
 export const DialogHeading = styled.h1`

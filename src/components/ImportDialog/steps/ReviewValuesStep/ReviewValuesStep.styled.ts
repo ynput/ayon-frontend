@@ -2,12 +2,10 @@ import { Button } from "@ynput/ayon-react-components";
 import styled from "styled-components";
 import { MappersContainer } from "../common.styled";
 
-export const StepContainer = styled.div`
-`
-
 export const Container = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+  flex-grow: 1;
 `
 
 export const ColumnsListWrapper = styled.div`
@@ -40,6 +38,7 @@ export const ColumnsListButton = styled(Button)`
 
 export const ValueMappersContainer = styled(MappersContainer)`
   flex-grow: 1;
+  background: var(--md-sys-color-surface-container-low);
 `
 
 export const ColumnsListItemStats = styled.span`

@@ -1,6 +1,14 @@
 import { Dropdown } from "@ynput/ayon-react-components";
 import styled from "styled-components";
 
+// what are you doing, step-container?
+export const StepContainer = styled.div`
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  overflow: hidden;
+`
+
 export const StepNavButtons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
