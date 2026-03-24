@@ -56,9 +56,9 @@ export const Slicer: FC<SlicerProps> = ({
     onRowSelectionChange?.(s, sliceMap)
   }
 
-  // Reconcile selection data after restoring rowSelection from view settings.
+  // Reconcile selection data after restoring rowSelection from localStorage.
   // When selection is restored but sliceMap wasn't ready yet, derive rowSelectionData
-  // once slice data loads.
+  // once the correct slice data loads.
   const hasReconciledRef = useRef(false)
   useEffect(() => {
     // Reset when selection is cleared (e.g., slice type change)
@@ -67,7 +67,11 @@ export const Slicer: FC<SlicerProps> = ({
       return
     }
     if (hasReconciledRef.current) return
-    if (sliceMap.size > 0 && Object.keys(rowSelectionData).length === 0) {
+    // Only reconcile when sliceMap actually contains the selected IDs.
+    // This prevents premature reconciliation with stale data from a previous slice type.
+    const selectedIds = Object.keys(rowSelection)
+    const hasMatchingData = selectedIds.some((id) => sliceMap.has(id))
+    if (hasMatchingData && Object.keys(rowSelectionData).length === 0) {
       hasReconciledRef.current = true
       onRowSelectionChange?.(rowSelection, sliceMap)
     }
