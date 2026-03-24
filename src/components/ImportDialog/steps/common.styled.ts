@@ -106,6 +106,10 @@ export const MappersTableColumnName = styled.th`
   &.autoresolved::before {
     background-color: var(--md-sys-color-tertiary);
   }
+
+  &.empty {
+    color: var(--md-sys-color-outline);
+  }
 `
 
 export const MappersTableAttribute = styled(MappersTableBodyCell)`

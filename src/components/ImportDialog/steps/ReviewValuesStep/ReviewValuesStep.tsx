@@ -140,7 +140,7 @@ const extractListOfStrings = (text: string) => {
     }
   }
 
-  return text
+  return []
 }
 
 // Returns all values found in `data` for a given column based on its settings.
@@ -149,10 +149,24 @@ const extractListOfStrings = (text: string) => {
 const getValuesForColumn = (data: ImportData, column: string, settings: typeof testImportSchema["0"]) => {
   if (settings.valueType === "list_of_string") {
     return data.rows
-      .map((row) => extractListOfStrings(`${row[column]}`))
+      .map((row) => {
+        if (!row[column]) return []
+        return extractListOfStrings(`${row[column]}`)
+      })
       .flat()
   }
-  return data.rows.map((row) => `${row[column]}`)
+
+  return data.rows.map((row) => {
+    switch (typeof row[column]) {
+      case "undefined":
+        return undefined
+      case "object":
+        // coerce null to undefined
+        return row[column] ?? undefined
+      default:
+        return `${row[column]}`
+    }
+  })
 }
 
 export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
@@ -213,7 +227,10 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
 
   const currentUniqueValues = useMemo(() => {
     if (!activeColumn) return []
-    return uniqueValuesForColumn[activeColumn]
+    return uniqueValuesForColumn[activeColumn].sort((v1, v2) => {
+      if (!v1) return -1
+      return v1.localeCompare(v2)
+    })
   }, [activeColumn, uniqueValuesForColumn])
 
   const targetValueOptions = useMemo(() => {

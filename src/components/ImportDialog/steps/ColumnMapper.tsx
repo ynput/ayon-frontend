@@ -73,8 +73,8 @@ export default function ColumnMapper({
       onPointerEnter={() => onPointerEnter()}
       onClick={(event) => onClick(event.ctrlKey, event.shiftKey)}
     >
-      <MappersTableColumnName className={clsx([state])} scope="row">
-        {column}
+      <MappersTableColumnName className={clsx([state], { empty: column === undefined })} scope="row">
+        {column ?? "(empty)"}
       </MappersTableColumnName>
       <MappersTableBodyCell>
         <PickActionDropdown
