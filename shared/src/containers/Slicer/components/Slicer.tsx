@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
@@ -39,6 +39,7 @@ export const Slicer: FC<SlicerProps> = ({
     setExpanded,
     onExpandedChange,
     isViewSyncPending,
+    rowSelectionData,
   } = useSlicerContext()
 
   const {
@@ -54,6 +55,23 @@ export const Slicer: FC<SlicerProps> = ({
     setRowSelection(s)
     onRowSelectionChange?.(s, sliceMap)
   }
+
+  // Reconcile selection data after restoring rowSelection from view settings.
+  // When selection is restored but sliceMap wasn't ready yet, derive rowSelectionData
+  // once slice data loads.
+  const hasReconciledRef = useRef(false)
+  useEffect(() => {
+    // Reset when selection is cleared (e.g., slice type change)
+    if (Object.keys(rowSelection).length === 0) {
+      hasReconciledRef.current = false
+      return
+    }
+    if (hasReconciledRef.current) return
+    if (sliceMap.size > 0 && Object.keys(rowSelectionData).length === 0) {
+      hasReconciledRef.current = true
+      onRowSelectionChange?.(rowSelection, sliceMap)
+    }
+  }, [sliceMap, rowSelection, rowSelectionData])
 
   // on first mount, check that current sliceType is in sliceFields, if not, change to first option
   // Skip if view sync is pending — the view will set the correct type once loaded

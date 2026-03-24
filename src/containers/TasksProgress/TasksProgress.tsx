@@ -82,7 +82,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // FILTERS
   //
   //
-  const { filters: queryFilters, onUpdateFilters: setQueryFilters, sliceType: viewSliceType, onUpdateSliceType } = useTaskProgressViewSettings()
+  const { filters: queryFilters, onUpdateFilters: setQueryFilters, sliceType: viewSliceType, onUpdateSliceType, slicerSelection: viewSlicerSelection, onUpdateSlicerSelection } = useTaskProgressViewSettings()
   const { isLoadingViews } = useViewsContext()
 
   // filter out by slice
@@ -94,8 +94,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
     persistentRowSelectionData,
   } = useSlicerContext()
 
-  // Sync slicer slice type with view settings
-  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
+  // Sync slicer slice type and selection with view settings
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, viewSlicerSelection, onUpdateSlicerSelection, isLoadingViews)
 
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
     ? null

@@ -85,10 +85,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateFilters: setQueryFilters,
     sliceType: viewSliceType,
     onUpdateSliceType,
+    slicerSelection: viewSlicerSelection,
+    onUpdateSlicerSelection,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
-  // Sync slicer slice type with view settings
-  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
+  // Sync slicer slice type and selection with view settings
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, viewSlicerSelection, onUpdateSlicerSelection, isLoadingViews)
 
   // GET GROUPING
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({

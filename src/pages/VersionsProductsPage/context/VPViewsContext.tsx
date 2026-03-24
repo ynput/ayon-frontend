@@ -29,6 +29,10 @@ export type VPViewsContextValue = {
   slicerType: string
   onUpdateSlicerType: (slicerType: string) => void
 
+  // slicer selection
+  slicerSelection: Record<string, boolean> | undefined
+  onUpdateSlicerSelection: (selection: Record<string, boolean>) => void
+
   // View mode management
   showProducts: boolean
   onUpdateShowProducts: (showProducts: boolean) => void
@@ -110,6 +114,10 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const serverSlicerType = useMemo(
     () => versionsSettings?.slicerType ?? '',
     [versionsSettings?.slicerType],
+  )
+  const serverSlicerSelection = useMemo(
+    () => versionsSettings?.slicerSelection,
+    [versionsSettings?.slicerSelection],
   )
   const serverShowProducts = useMemo(
     () => versionsSettings?.showProducts ?? false,
@@ -257,6 +265,16 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     async (newSlicerType: string) => {
       await updateViewSettings({ slicerType: newSlicerType }, noopSlicerType, newSlicerType, {
         errorMessage: 'Failed to update slicer type',
+      })
+    },
+    [updateViewSettings],
+  )
+
+  // Slicer selection update handler
+  const onUpdateSlicerSelection = useCallback(
+    async (newSelection: Record<string, boolean>) => {
+      await updateViewSettings({ slicerSelection: newSelection }, noopSlicerType, newSelection, {
+        errorMessage: 'Failed to update slicer selection',
       })
     },
     [updateViewSettings],
@@ -421,6 +439,8 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
         onUpdateColumns,
         slicerType,
         onUpdateSlicerType,
+        slicerSelection: serverSlicerSelection,
+        onUpdateSlicerSelection,
         showProducts,
         onUpdateShowProducts,
         showGrid,
