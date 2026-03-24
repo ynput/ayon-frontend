@@ -45,6 +45,9 @@ export const useSlicerViewSync = (
     setIsViewSyncPending(true)
     return () => {
       setIsViewSyncPending(false)
+      initializedRef.current = false
+      isRestoringTypeRef.current = false
+      isRestoringSelectionRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
