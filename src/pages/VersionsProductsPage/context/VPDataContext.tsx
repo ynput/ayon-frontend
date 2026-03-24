@@ -39,7 +39,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds, useSlicerViewSync } from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
@@ -133,9 +133,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   modules,
 }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy } =
+  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType } =
     useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
+
+  // Sync slicer slice type with view settings
+  useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, isLoadingViews)
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 

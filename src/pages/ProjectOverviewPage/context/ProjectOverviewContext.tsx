@@ -32,7 +32,7 @@ import {
 } from '@shared/containers'
 
 // Local context and hooks
-import { useSlicerContext, useSelectedEntityIds } from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds, useSlicerViewSync } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
@@ -75,7 +75,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   })
 
   // view context and update helper
-  const { viewSettings } = useViewsContext()
+  const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
 
   const {
@@ -83,7 +83,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateHierarchy: updateShowHierarchy,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
+    sliceType: viewSliceType,
+    onUpdateSliceType,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
+
+  // Sync slicer slice type with view settings
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
 
   // GET GROUPING
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({

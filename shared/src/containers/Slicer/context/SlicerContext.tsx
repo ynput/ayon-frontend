@@ -51,7 +51,10 @@ export interface SlicerContextValue {
   setExpanded: React.Dispatch<React.SetStateAction<ExpandedState>>
   onExpandedChange?: (expanded: ExpandedState) => void
   sliceType: SliceType
+  setSliceType: (sliceType: SliceType) => void
   onSliceTypeChange: OnSliceTypeChange
+  isViewSyncPending: boolean
+  setIsViewSyncPending: React.Dispatch<React.SetStateAction<boolean>>
   rowSelectionData: SelectionData
   setRowSelectionData: React.Dispatch<React.SetStateAction<SelectionData>>
   persistentRowSelectionData: SelectionData
@@ -98,6 +101,7 @@ export const SlicerProvider = ({
   const setExpanded = setExpandedProp ?? setInternalExpanded
   const sliceType = sliceTypeProp ?? internalSliceType
 
+  const [isViewSyncPending, setIsViewSyncPending] = useState(false)
   const [rowSelectionData, setRowSelectionData] = useState<SelectionData>({})
   // if there is a need to leavePersistentSlice row selection data between slice changes (like the hierarchy)
   const [persistentRowSelectionData, setPersistentRowSelectionData] = useState<SelectionData>({})
@@ -211,7 +215,10 @@ export const SlicerProvider = ({
         setExpanded,
         onExpandedChange: handleExpandedChange,
         sliceType,
+        setSliceType: setInternalSliceType,
         onSliceTypeChange: handleSliceTypeChange,
+        isViewSyncPending,
+        setIsViewSyncPending,
         rowSelectionData,
         setRowSelectionData,
         persistentRowSelectionData,
