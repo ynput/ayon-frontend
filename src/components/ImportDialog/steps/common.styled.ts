@@ -33,6 +33,7 @@ export const MappersContainer = styled.div`
 export const Mappers = styled.table`
   border-collapse: collapse;
   width: 100%;
+  user-select: none;
 `
 export const MappersTableHeader = styled.thead`
   background: var(--md-sys-color-surface-container);

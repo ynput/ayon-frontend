@@ -30,6 +30,7 @@ type Props = {
   errorHandling: ErrorHandlingMode | undefined
   errorHandlingOptions: DropdownProps["options"]
   onPointerEnter: () => void
+  onClick: (ctrl: boolean, shift: boolean) => void
   onActionChange: (action: ColumnAction) => void
   onTargetChange: (target: string) => void
   onErrorHandlingChange: (mode: ErrorHandlingMode) => void
@@ -49,6 +50,7 @@ export default function ColumnMapper({
   errorHandlingOptions,
   errorHandlingEnabled = true,
   onPointerEnter,
+  onClick,
   onActionChange,
   onTargetChange,
   onErrorHandlingChange,
@@ -69,6 +71,7 @@ export default function ColumnMapper({
     <MappersTableBodyRow
       className={clsx({ selected })}
       onPointerEnter={() => onPointerEnter()}
+      onClick={(event) => onClick(event.ctrlKey, event.shiftKey)}
     >
       <MappersTableColumnName className={clsx([state])} scope="row">
         {column}

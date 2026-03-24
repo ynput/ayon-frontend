@@ -19,9 +19,10 @@ import {
   ColumnsListButton,
   ValueMappersContainer,
   ColumnsListItemStats,
+  SelectedCount,
 } from "./ReviewValuesStep.styled"
 import testImportSchema from "../test_import_schema"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import ColumnMapper, { MappingState } from "../ColumnMapper"
 
 type Props = StepProps<ValueMappings> & {
@@ -156,6 +157,7 @@ const getValuesForColumn = (data: ImportData, column: string, settings: typeof t
 
 export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
+  const [selection, setSelection] = useState<Set<string>>(new Set())
 
   const enumSchemaColumns = useMemo(
     () => importSchema.filter(
@@ -253,6 +255,37 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
     [mappingsToReview, unresolvedValues],
   )
 
+  const getMapperClickHandler = useCallback((uniqueDataValue: string, index: number) => (ctrl: boolean, shift: boolean) => {
+    setSelection((s) => {
+      const toAdd = new Set([uniqueDataValue])
+      if (ctrl) {
+        // add or remove this specific mapper from the selection
+        return s.has(uniqueDataValue)
+          ? s.difference(toAdd)
+          : s.union(toAdd)
+      } else if (shift && s.size > 0) {
+        // select a range of mappers from the first selected one to the clicked one
+        const firstSelectedIndex = currentUniqueValues.findIndex((value) => s.has(value))
+        if (firstSelectedIndex >= 0) {
+          // automatically inverts the range if the first selected index is higher than the clicked index
+          const range = currentUniqueValues.slice(
+            Math.min(firstSelectedIndex, index),
+            Math.max(firstSelectedIndex, index),
+          )
+
+          return s
+            .union(toAdd)
+            .union(new Set(range))
+        }
+      }
+      // If no modifier key pressed or there's no existing selection,
+      // just add/remove the current mapper.
+      return s.has(uniqueDataValue)
+        ? new Set()
+        : toAdd
+    })
+  }, [])
+
   useEffect(() => {
     if (!columnSettings || Boolean(mappings)) return
     // infer mappings based on the schema
@@ -267,6 +300,11 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
       ])
     ))
   }, [columnSettings])
+
+  // reset selection if target changes
+  useEffect(() => {
+    setSelection(new Set())
+  }, [activeTarget])
 
   return (
     <StepContainer>
@@ -313,6 +351,9 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
               <tr>
                 <MappersTableHeaderCell scope="col">
                   Raw Data
+                  <SelectedCount hidden={selection.size === 0}>
+                    ({selection.size} / {currentUniqueValues.length} selected)
+                  </SelectedCount>
                 </MappersTableHeaderCell>
                 <MappersTableHeaderCell scope="col">
                   Action
@@ -324,7 +365,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
             </MappersTableHeader>
             <MappersTableBody>
             {
-              currentUniqueValues.map((uniqueDataValue) => (
+              currentUniqueValues.map((uniqueDataValue, index) => (
                 <ColumnMapper
                   key={uniqueDataValue}
                   state={getMapperState(activeColumn, uniqueDataValue, mappings)}
@@ -336,10 +377,20 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                   errorHandling={undefined}
                   errorHandlingOptions={[]}
                   errorHandlingEnabled={false}
-                  selected={false}
+                  selected={selection.has(uniqueDataValue)}
                   onPointerEnter={() => {}}
+                  onClick={getMapperClickHandler(uniqueDataValue, index)}
                   onActionChange={(action) => {
                     if (!activeColumn) return
+
+                    if (selection.size > 0 && selection.has(uniqueDataValue)) {
+                      for (const value of selection) {
+                        setMappings(mappingUpdater(activeColumn, value, { action }))
+                      }
+
+                      return
+                    }
+
                     setMappings(mappingUpdater(activeColumn, uniqueDataValue, { action }))
                   }}
                   onTargetChange={(targetValue) => {

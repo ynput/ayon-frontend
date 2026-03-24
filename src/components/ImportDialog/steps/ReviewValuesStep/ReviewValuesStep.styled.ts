@@ -47,3 +47,13 @@ export const ColumnsListItemStats = styled.span`
   margin-left: auto;
   margin-right: 0;
 `
+
+export const SelectedCount = styled.span`
+  color: var(--md-sys-color-outline);
+  margin-left: 1ch;
+
+  &[hidden] {
+    display: inline-flex;
+    opacity: 0;
+  }
+`

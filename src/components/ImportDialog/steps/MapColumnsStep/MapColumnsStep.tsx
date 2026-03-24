@@ -291,6 +291,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                   errorHandlingOptions={errorHandlingOptions}
                   selected={previewColumn === column}
                   onPointerEnter={() => setPreviewColumn(column)}
+                  onClick={() => {}}
                   onTargetChange={onTargetChange(column)}
                   onActionChange={(action) => {
                     setMappings(mappingUpdater(column, { action }))
