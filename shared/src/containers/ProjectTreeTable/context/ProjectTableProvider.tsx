@@ -42,7 +42,7 @@ import useBuildGroupByTableData, {
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
 import { PowerpackContextType, useProjectContext } from '@shared/context'
-import { useColumnSettingsContext } from './ColumnSettingsContext'
+import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
 import type { SubtasksManagerProps } from '@shared/components'
@@ -78,6 +78,7 @@ export interface ProjectTableProviderProps {
   // grouping
   groups: EntityGroup[]
   groupRowFunc?: (node: any) => TableRow
+  overrideGroupBy?: TableGroupBy
 
   // data functions
   fetchNextPage: (value?: string) => void
@@ -155,6 +156,7 @@ export const ProjectTableProvider = ({
   scopes,
   groups,
   groupRowFunc,
+  overrideGroupBy,
   queryFilters,
   updateShowHierarchy,
   toggleExpanded,
@@ -190,8 +192,11 @@ export const ProjectTableProvider = ({
     isLoadingMore,
   })
 
-  const { groupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
+  const { groupBy: columnSettingsGroupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
     useColumnSettingsContext()
+
+  // overrideGroupBy (from view dropdown) takes priority over Customize panel's groupBy
+  const effectiveGroupBy = overrideGroupBy || columnSettingsGroupBy
 
   const buildGroupByTableData = useBuildGroupByTableData({
     entities: entitiesMap,
@@ -209,11 +214,11 @@ export const ProjectTableProvider = ({
 
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
-    () => !!groupBy && buildGroupByTableData(groupBy),
-    [groupBy, entitiesMap, groups],
+    () => !!effectiveGroupBy && buildGroupByTableData(effectiveGroupBy),
+    [effectiveGroupBy, entitiesMap, groups],
   )
 
-  const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
+  const tableData = effectiveGroupBy && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
     (id: string, field: string = 'entityId'): EntityMap | undefined => {
@@ -333,6 +338,7 @@ export const ProjectTableProvider = ({
         fetchNextPage,
         reloadTableData,
         groups,
+        overrideGroupBy,
         queryFilters,
         // hierarchy
         showHierarchy,

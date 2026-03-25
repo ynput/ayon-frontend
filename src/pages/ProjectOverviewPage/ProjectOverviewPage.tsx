@@ -1,12 +1,12 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 
 // state
 import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
 
 // arc
-import { Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
+import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { ScopeWithFilterTypes } from '@shared/components'
@@ -14,10 +14,10 @@ import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPane
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
-  useColumnSettingsContext,
   useSelectionCellsContext,
   getCellId,
   ROW_SELECTION_COLUMN_ID,
+  useGetGroupedFields,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import { CustomizeButton } from '@shared/components'
@@ -57,12 +57,38 @@ const ProjectOverviewPage: FC = () => {
     setQueryFilters,
     displayFilters,
     showHierarchy,
-    updateShowHierarchy,
+    viewGroupBy,
+    updateViewGroupBy,
     tasksMap,
     updateExpanded,
   } = useProjectOverviewContext()
 
-  const { updateGroupBy } = useColumnSettingsContext()
+  // Build group-by dropdown options
+  const groupedFields = useGetGroupedFields({ scope: 'task' })
+  const viewGroupByOptions = useMemo(() => {
+    const options = [
+      { id: 'hierarchy', label: 'Hierarchy' },
+      ...groupedFields.map((field) => ({
+        id: field.value,
+        label: field.label,
+      })),
+    ]
+    return options
+  }, [groupedFields])
+
+  const viewGroupByValue = useMemo(
+    () => viewGroupByOptions.filter((o) => o.id === (viewGroupBy ?? 'hierarchy')),
+    [viewGroupBy, viewGroupByOptions],
+  )
+
+  const handleViewGroupByChange = (values: { id: string }[]) => {
+    const value = values[0]?.id
+    if (value === 'hierarchy') {
+      updateViewGroupBy(null)
+    } else {
+      updateViewGroupBy(value)
+    }
+  }
 
   const { isPanelOpen } = useSettingsPanel()
   //   table contexts
@@ -88,8 +114,6 @@ const ProjectOverviewPage: FC = () => {
     }
   }
 
-  const handleShowHierarchy = () => updateShowHierarchy(!showHierarchy)
-
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
 
   // select new entities and expand their parents
@@ -111,8 +135,7 @@ const ProjectOverviewPage: FC = () => {
 
     // Reset view state
     setQueryFilters({})
-    updateGroupBy(undefined)
-    updateShowHierarchy(true)
+    updateViewGroupBy(null) // switches to hierarchy and syncs groupBy in one server call
 
     // Expand folders in both table and slicer
     updateExpanded(data.expandedFolders)
@@ -157,10 +180,12 @@ const ProjectOverviewPage: FC = () => {
                 data={{}}
               />
               <ReloadButton />
-              <SwitchButton
-                value={showHierarchy}
-                onClick={handleShowHierarchy}
-                label="Show hierarchy"
+              <SortingDropdown
+                title="Group by"
+                options={viewGroupByOptions}
+                value={viewGroupByValue}
+                onChange={handleViewGroupByChange}
+                multiSelect={false}
               />
               <Actions
                 entities={[]}

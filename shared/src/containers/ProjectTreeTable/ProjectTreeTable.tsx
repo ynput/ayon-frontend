@@ -193,7 +193,6 @@ export const ProjectTreeTable = ({
     columnOrderOnChange,
     groupBy,
   } = useColumnSettingsContext()
-  const isGrouping = !!groupBy
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
   const {
@@ -212,7 +211,9 @@ export const ProjectTreeTable = ({
     scopes, // or entityTypes
     getEntityById,
     onResetView,
+    overrideGroupBy,
   } = useProjectTableContext()
+  const isGrouping = !!groupBy || !!overrideGroupBy
 
   const { writableFields } = useProjectDataContext()
 

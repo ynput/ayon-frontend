@@ -36,6 +36,7 @@ export interface ProjectTableContextType {
 
   // grouping
   groups: ProjectTableProviderProps['groups']
+  overrideGroupBy?: ProjectTableProviderProps['overrideGroupBy']
 
   // Filters
   queryFilters: ProjectTableProviderProps['queryFilters']

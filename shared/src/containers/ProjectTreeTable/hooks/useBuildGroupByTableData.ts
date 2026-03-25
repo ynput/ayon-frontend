@@ -206,6 +206,11 @@ const useBuildGroupByTableData = ({
         // for attribute based grouping, get the value of the attribute
         const attributeId = groupBy.id.split('.')[1]
         groupValues = valueToStringArray(entity.attrib?.[attributeId])
+      } else if (groupBy.id === 'folderType' && 'folder' in entity) {
+        // folderType is nested under folder for task entities (from TaskPropsFragment)
+        groupValues = valueToStringArray(
+          (entity as EditorTaskNode & { folder?: { folderType?: string } }).folder?.folderType,
+        )
       } else {
         groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
       }

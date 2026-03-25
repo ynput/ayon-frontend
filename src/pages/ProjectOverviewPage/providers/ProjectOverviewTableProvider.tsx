@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   ProjectTableProvider,
@@ -19,7 +19,13 @@ import { useViewsContext } from '@shared/containers'
 import { ProjectTableModulesType } from '@shared/hooks'
 
 const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
-  const { taskGroups, ...props } = useProjectOverviewContext()
+  const { taskGroups, viewGroupBy, ...props } = useProjectOverviewContext()
+
+  // Convert view dropdown's groupBy string to TableGroupBy object for ProjectTableProvider
+  const overrideGroupBy = useMemo(
+    () => (viewGroupBy ? { id: viewGroupBy, desc: false } : undefined),
+    [viewGroupBy],
+  )
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({
     projectName: props.projectName,
@@ -38,6 +44,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
       <ProjectTableProvider
         {...props}
         groups={taskGroups}
+        overrideGroupBy={overrideGroupBy}
         powerpack={powerpack}
         modules={modules}
         groupByConfig={{ entityType: 'task' }}

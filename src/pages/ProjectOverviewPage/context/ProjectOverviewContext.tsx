@@ -1,5 +1,5 @@
 // React imports
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
@@ -47,7 +47,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
     useSlicerContext()
 
-  const { groupBy, sorting } = useColumnSettingsContext()
+  const { sorting, groupBy: panelGroupBy, updateGroupBy } = useColumnSettingsContext()
 
   const sliceFilter = createFilterFromSlicer({
     type: sliceType,
@@ -69,6 +69,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     createLocalStorageKey(page, 'expanded', projectName),
     {},
   )
+
+  // View mode: null = hierarchy, string = groupBy field id (e.g. 'folderType', 'status')
+  // Independent from Customize panel groupBy
+  const [viewGroupBy, setViewGroupBy] = useLocalStorage<string | null>(
+    createLocalStorageKey(page, 'viewGroupBy', projectName),
+    'folderType', // default to folder type grouping
+  )
   const { updateExpanded, toggleExpanded, expandedIds } = useExpandedState({
     expanded,
     setExpanded,
@@ -79,17 +86,67 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { updateViewSettings } = useViewUpdateHelper()
 
   const {
-    showHierarchy,
-    onUpdateHierarchy: updateShowHierarchy,
+    showHierarchy: _showHierarchy,
+    onUpdateHierarchy: _updateShowHierarchy,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
-  // GET GROUPING
+  // Derive effective showHierarchy from viewGroupBy
+  // viewGroupBy === null means hierarchy mode, otherwise it's a groupBy field
+  const showHierarchy = viewGroupBy === null
+
+  // When user changes viewGroupBy, sync to Customize panel's groupBy
+  // onUpdateColumns (called by updateGroupBy) already handles showHierarchy on the server
+  const updateViewGroupBy = useCallback(
+    (newViewGroupBy: string | null) => {
+      setViewGroupBy(newViewGroupBy)
+      // Sync to Customize panel groupBy — this single call handles both
+      // groupBy and showHierarchy on the server via onUpdateColumns
+      if (newViewGroupBy === null) {
+        updateGroupBy(undefined)
+      } else {
+        updateGroupBy({ id: newViewGroupBy, desc: false })
+      }
+    },
+    [setViewGroupBy, updateGroupBy],
+  )
+
+  // Sync FROM Customize panel TO dropdown when panel's groupBy changes
+  const panelGroupById = panelGroupBy?.id
+  const prevPanelGroupByIdRef = useRef(panelGroupById)
+  useEffect(() => {
+    if (panelGroupById !== prevPanelGroupByIdRef.current) {
+      prevPanelGroupByIdRef.current = panelGroupById
+      setViewGroupBy(panelGroupById ?? null)
+    }
+  }, [panelGroupById, setViewGroupBy])
+
+  // For backward compat: wrap updateShowHierarchy to also update viewGroupBy
+  const updateShowHierarchy = useCallback(
+    (newShowHierarchy: boolean) => {
+      if (newShowHierarchy) {
+        setViewGroupBy(null)
+      }
+      _updateShowHierarchy(newShowHierarchy)
+    },
+    [setViewGroupBy, _updateShowHierarchy],
+  )
+
+  // Build the effective groupBy for data fetching from the view dropdown
+  // This is independent from the Customize panel's groupBy
+  const viewGroupByObj = useMemo(
+    () => (viewGroupBy ? { id: viewGroupBy, desc: false } : undefined),
+    [viewGroupBy],
+  )
+
+  // GET GROUPING — use viewGroupBy for the top-level dropdown grouping
+  // folderType can only be used with entity type 'folder'
+  const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
-    groupBy,
+    groupBy: viewGroupByObj,
     projectName,
-    entityType: 'task',
+    entityType: groupingEntityType,
   })
 
   // Stable default filter to prevent unnecessary re-renders
@@ -173,7 +230,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     },
     expanded,
     sorting: sorting,
-    groupBy,
+    groupBy: viewGroupByObj,
     taskGroups,
     showHierarchy,
     attribFields,
@@ -228,6 +285,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
+        // view mode grouping (top-level dropdown)
+        viewGroupBy,
+        updateViewGroupBy,
         // expanded state
         expanded,
         expandedIds,

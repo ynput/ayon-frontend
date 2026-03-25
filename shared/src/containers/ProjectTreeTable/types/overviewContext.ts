@@ -63,6 +63,10 @@ export interface ProjectOverviewContextType {
   showHierarchy: boolean
   updateShowHierarchy: (showHierarchy: boolean) => void
 
+  // View mode grouping (top-level dropdown, independent from Customize panel groupBy)
+  viewGroupBy: string | null // null = hierarchy mode, string = groupBy field id (e.g. 'folderType', 'status')
+  updateViewGroupBy: (viewGroupBy: string | null) => void
+
   // Expanded state
   expanded: ExpandedState
   expandedIds: string[]
