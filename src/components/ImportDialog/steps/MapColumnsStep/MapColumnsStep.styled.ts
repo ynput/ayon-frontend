@@ -21,7 +21,7 @@ export const Preview = styled.div`
 
 export const PreviewHeading = styled.h2`
   background: var(--md-sys-color-surface-container);
-  padding: var(--padding-m) 0 var(--padding-m) var(--padding-m);
+  padding: 0 0 var(--padding-m) var(--padding-m);
   margin: 0;
   font-size: inherit;
   position: sticky;

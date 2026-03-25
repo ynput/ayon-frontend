@@ -50,7 +50,8 @@ export const MappersTableHeader = styled.thead`
   z-index: 100;
 `
 export const MappersTableHeaderCell = styled.th`
-  padding: var(--padding-m) var(--padding-l);
+  padding: 0 var(--padding-l) var(--padding-m);
+  line-height: 32px;
   font-weight: bold;
   text-align: left;
 `

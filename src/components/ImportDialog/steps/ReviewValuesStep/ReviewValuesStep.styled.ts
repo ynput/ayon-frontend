@@ -17,6 +17,7 @@ export const ColumnsListWrapper = styled.div`
 export const Heading = styled.h2`
   font-size: inherit;
   margin: 0 0 var(--padding-m);
+  line-height: 32px;
 `
 
 export const ColumnsList = styled.ul`

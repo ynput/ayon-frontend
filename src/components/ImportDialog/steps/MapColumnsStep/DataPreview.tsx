@@ -1,5 +1,5 @@
 import { Panel } from "@ynput/ayon-react-components"
-import { ImportData } from "../utils"
+import { ImportData } from "../../utils"
 import styled from "styled-components"
 import { CSSProperties, useMemo } from "react"
 import clsx from "clsx"
@@ -15,6 +15,7 @@ const List = styled.ol`
   --max-row-index-length: 2;
 
   background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
   list-style-type: none;
   padding: 0;
   margin: 0;
