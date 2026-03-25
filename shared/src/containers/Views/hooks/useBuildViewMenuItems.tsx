@@ -73,7 +73,7 @@ const useBuildViewMenuItems = ({
 
   const workingBaseView: ViewItem = {
     id: WORKING_VIEW_ID,
-    label: useWorkingView ? `Personal ${viewAlias.toLowerCase()}` : `Working ${viewAlias}`,
+    label: useWorkingView ? `Personal ${viewAlias.toLowerCase()}` : `Working ${viewAlias.toLowerCase()}`,
     startContent: useWorkingView && <Icon icon="person" />,
     isEditable: false,
   }
