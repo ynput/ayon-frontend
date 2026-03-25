@@ -524,14 +524,19 @@ const injectedApi = enhancedApi.injectEndpoints({
                 if (folderConditions.length > 0) {
                   taskFilter = taskConditions.length
                     ? JSON.stringify({ ...parsed, conditions: taskConditions })
-                    : ''
-                  // Merge folder conditions with existing folderFilter
+                    : undefined
+                  // Merge folder conditions with existing folderFilter, preserving metadata
                   const existingFolderFilter = folderFilter ? JSON.parse(folderFilter) : null
-                  const allFolderConditions = [
-                    ...(existingFolderFilter?.conditions || []),
-                    ...folderConditions,
-                  ]
-                  mergedFolderFilter = JSON.stringify({ conditions: allFolderConditions })
+                  const existingConditions =
+                    existingFolderFilter && Array.isArray(existingFolderFilter.conditions)
+                      ? existingFolderFilter.conditions
+                      : []
+                  const allFolderConditions = [...existingConditions, ...folderConditions]
+                  mergedFolderFilter = JSON.stringify(
+                    existingFolderFilter
+                      ? { ...existingFolderFilter, conditions: allFolderConditions }
+                      : { conditions: allFolderConditions },
+                  )
                 }
               } catch {
                 // If parsing fails, use the original filter as-is

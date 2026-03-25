@@ -71,10 +71,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   )
 
   // View mode: null = hierarchy, string = groupBy field id (e.g. 'folderType', 'status')
-  // Independent from Customize panel groupBy
+  // Default is derived from server settings: if server has a groupBy, use it;
+  // if server has showHierarchy: true (or default), use null (hierarchy mode);
+  // otherwise fall back to 'folderType'
+  const serverGroupByDefault = panelGroupBy?.id ?? null
   const [viewGroupBy, setViewGroupBy] = useLocalStorage<string | null>(
     createLocalStorageKey(page, 'viewGroupBy', projectName),
-    'folderType', // default to folder type grouping
+    serverGroupByDefault,
   )
   const { updateExpanded, toggleExpanded, expandedIds } = useExpandedState({
     expanded,
@@ -86,7 +89,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { updateViewSettings } = useViewUpdateHelper()
 
   const {
-    showHierarchy: _showHierarchy,
     onUpdateHierarchy: _updateShowHierarchy,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
@@ -101,15 +103,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const updateViewGroupBy = useCallback(
     (newViewGroupBy: string | null) => {
       setViewGroupBy(newViewGroupBy)
-      // Sync to Customize panel groupBy — this single call handles both
-      // groupBy and showHierarchy on the server via onUpdateColumns
       if (newViewGroupBy === null) {
+        // Enter hierarchy mode: clear groupBy and persist showHierarchy on server
+        _updateShowHierarchy(true)
         updateGroupBy(undefined)
       } else {
+        // onUpdateColumns (called by updateGroupBy) sets showHierarchy: false on the server
         updateGroupBy({ id: newViewGroupBy, desc: false })
       }
     },
-    [setViewGroupBy, updateGroupBy],
+    [setViewGroupBy, updateGroupBy, _updateShowHierarchy],
   )
 
   // Sync FROM Customize panel TO dropdown when panel's groupBy changes
