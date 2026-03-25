@@ -1,6 +1,8 @@
-import { Column } from "primereact/column"
+import { ExportFieldsApiArg, ExportFieldsApiResponse } from "@shared/api/generated/dataImport"
 
-export type ImportContext = "hierarchy" | "users" | "list"
+export type ImportContext = ExportFieldsApiArg["entityType"]
+
+export type ImportSchema = ExportFieldsApiResponse
 
 export enum ImportStep {
   UPLOAD,

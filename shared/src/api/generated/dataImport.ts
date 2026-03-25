@@ -1,0 +1,161 @@
+import { api } from '@shared/api/base'
+const injectedRtkApi = api.injectEndpoints({
+  endpoints: (build) => ({
+    exportFields: build.query<ExportFieldsApiResponse, ExportFieldsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/csv/export/${queryArg.entityType}/fields`,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
+    postApiCsvExportByEntityType: build.mutation<
+      PostApiCsvExportByEntityTypeApiResponse,
+      PostApiCsvExportByEntityTypeApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/csv/export/${queryArg.entityType}`,
+        method: 'POST',
+        body: queryArg.bodyExportApiCsvExportEntityTypePost,
+        params: {
+          project_name: queryArg.projectName,
+        },
+      }),
+    }),
+    uploadFile: build.mutation<UploadFileApiResponse, UploadFileApiArg>({
+      query: () => ({ url: `/api/csv/import/upload`, method: 'PUT' }),
+    }),
+    importData: build.mutation<ImportDataApiResponse, ImportDataApiArg>({
+      query: (queryArg) => ({
+        url: `/api/csv/import/${queryArg.entityType}`,
+        method: 'POST',
+        body: queryArg.columnMapping,
+        params: {
+          file_id: queryArg.fileId,
+          skip_errors: queryArg.skipErrors,
+          existing_strategy: queryArg.existingStrategy,
+          project_name: queryArg.projectName,
+          folder_id: queryArg.folderId,
+          preview: queryArg.preview,
+        },
+      }),
+    }),
+  }),
+  overrideExisting: false,
+})
+export { injectedRtkApi as api }
+export type ExportFieldsApiResponse = /** status 200 Successful Response */ ImportableColumn[]
+export type ExportFieldsApiArg = {
+  entityType: 'user' | 'folder' | 'task' | 'hierarchy'
+  projectName?: string
+}
+export type PostApiCsvExportByEntityTypeApiResponse = /** status 200 Successful Response */ any
+export type PostApiCsvExportByEntityTypeApiArg = {
+  entityType: 'user' | 'folder' | 'task' | 'hierarchy'
+  projectName?: string
+  bodyExportApiCsvExportEntityTypePost: BodyExportApiCsvExportEntityTypePost
+}
+export type UploadFileApiResponse = /** status 200 Successful Response */ ImportUpload
+export type UploadFileApiArg = void
+export type ImportDataApiResponse = /** status 200 Successful Response */ ImportStatus
+export type ImportDataApiArg = {
+  entityType: 'user' | 'folder' | 'task' | 'hierarchy'
+  fileId: string
+  skipErrors?: boolean
+  existingStrategy?: 'skip' | 'update' | 'fail'
+  projectName?: string
+  folderId?: string
+  preview?: boolean
+  columnMapping: ColumnMapping[]
+}
+export type IconModel = {
+  type?: 'material-symbols' | 'url'
+  /** The name of the icon (for type material-symbols) */
+  name?: string
+  /** The color of the icon (for type material-symbols) */
+  color?: string
+  /** The URL of the icon (for type url) */
+  url?: string
+}
+export type EnumItem = {
+  value: string | number | number | boolean
+  label: string
+  description?: string
+  fulltext?: string[]
+  group?: string
+  /** Icon name (material symbol) or IconModel object */
+  icon?: string | IconModel
+  color?: string
+  /** Enum item is visible, but not selectable */
+  disabled?: boolean
+  /** Message to show when the option is disabled */
+  disabledMessage?: string
+}
+export type ImportableColumn = {
+  /** The key of the column, such as `name`, `attrib.priority`, etc. */
+  key: string
+  /** The label of the column, such as `Name`, `Priority`, etc. This is used for display purposes only. */
+  label: string
+  /** If value in field is required */
+  required: boolean
+  /** The type of the value in this column. This is used to determine how to parse the value. For example: `name` column has type `string`, `assignees` `list_of_strings` etc. */
+  valueType:
+    | 'string'
+    | 'integer'
+    | 'float'
+    | 'boolean'
+    | 'datetime'
+    | 'list_of_strings'
+    | 'list_of_integers'
+    | 'list_of_any'
+    | 'list_of_submodels'
+    | 'dict'
+  /** If value in field is required */
+  defaultValue: string
+  /** A list of possible enum items for this column (if set) */
+  enumItems?: EnumItem[]
+  /** A list of possible error handling modes for this column. Every column can have different available modes: For example: `name` column cannot use `default`, because default name cannot be generated. */
+  errorHandlingModes: ('skip' | 'abort' | 'default')[]
+}
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
+}
+export type BodyExportApiCsvExportEntityTypePost = {
+  field_names?: string[]
+  entity_ids?: any[]
+}
+export type ImportUpload = {
+  id: string
+}
+export type ImportStatus = {
+  created?: number
+  updated?: number
+  skipped?: number
+  failed?: number
+  failedItems?: object
+}
+export type ColumnValueMapping = {
+  /** The source value from csv */
+  source?: string
+  /** The target value from csv */
+  target?: string
+  /** Only map or create missing */
+  action: 'map' | 'create'
+}
+export type ColumnMapping = {
+  /** The key of the column, such as `name`, `attrib.priority`, etc. */
+  sourceKey: string
+  /** The key of the column, such as `name`, `attrib.priority`, etc. */
+  targetKey: string
+  /** If value in field is required */
+  action: 'map' | 'create'
+  /** If value in field is required */
+  errorHandlingMode: 'skip' | 'update' | 'fail'
+  /** List of values mapping mostly for enum fields */
+  valuesMapping: ColumnValueMapping[]
+}

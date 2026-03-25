@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
-import { MappersTableErrorHandlingCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
+import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ImportSchema, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
+import { MappersTableErrorHandlingCol, MappersTableNameCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "./DataPreview"
 import {
   Container,
@@ -20,15 +20,14 @@ import {
   MappersTableActionCol
 } from "../common.styled"
 import ColumnMapper, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../ColumnMapper"
-import testImportSchema from "../test_import_schema"
 import { confirmDialog } from "primereact/confirmdialog"
-import { useViewsContext, useViewUpdateHelper } from "@shared/containers"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
+import { ImportableColumn } from "@shared/api/generated/dataImport"
 
 type Props = StepProps<ResolvedColumnMappings> & {
   data: ImportData
   mappings?: ColumnMappings
-  importSchema: typeof testImportSchema
+  importSchema: ImportSchema
 }
 
 const actionOptions = [
@@ -59,11 +58,11 @@ const errorHandlingOptions = [
   },
 ]
 
-const inferErrorHandling = (columnSchema: (typeof testImportSchema)["0"]) => {
+const inferErrorHandling = (columnSchema: ImportableColumn) => {
   return columnSchema.errorHandlingModes[0] as ErrorHandlingMode
 }
 
-const inferMapping = (column: string, schema: typeof testImportSchema): ColumnMapping | null => {
+const inferMapping = (column: string, schema: ImportSchema): ColumnMapping | null => {
   const normalisedColumn = normaliseForComparison(column)
   const columnSchema = schema.find((s) =>
     normalisedColumn === normaliseForComparison(s.key) ||
@@ -80,7 +79,7 @@ const inferMapping = (column: string, schema: typeof testImportSchema): ColumnMa
 }
 
 type Option = { value: string, label: string }
-const targetOptionCompareFn = (columnForTarget: Record<string, string>, columnSettings: Record<string, typeof testImportSchema["0"]>) => (
+const targetOptionCompareFn = (columnForTarget: Record<string, string>, columnSettings: Record<string, ImportableColumn>) => (
   o1: Option,
   o2: Option,
 ) => {
@@ -273,7 +272,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
         <MappersContainer>
           <Mappers>
             <colgroup>
-              <col />
+              <col style={{ width: "30%" }} />
               <MappersTableActionCol />
               <col />
               <MappersTableErrorHandlingCol />

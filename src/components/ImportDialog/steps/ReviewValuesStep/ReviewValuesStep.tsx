@@ -1,7 +1,7 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison } from "../common"
+import { ColumnAction, ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema } from "../common"
 import {
   Mappers,
   MappersTableHeader,
@@ -10,6 +10,7 @@ import {
   StepNavButtons,
   StepNavStats,
   StepContainer,
+  MappersTableNameCol,
 } from "../common.styled"
 import {
   Container,
@@ -21,15 +22,15 @@ import {
   ColumnsListItemStats,
   SelectedCount,
 } from "./ReviewValuesStep.styled"
-import testImportSchema from "../test_import_schema"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ColumnMapper, { MappingState } from "../ColumnMapper"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { cloneDeep, merge } from "lodash"
+import { ImportableColumn } from "@shared/api/generated/dataImport"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
-  importSchema: typeof testImportSchema
+  importSchema: ImportSchema
   columnMappings: ResolvedColumnMappings
   mappings: ValueMappings | null
 }
@@ -52,18 +53,18 @@ const actionOptions = [
   },
 ]
 
-const inferMapping = (value: string, settings: (typeof testImportSchema)["0"]): ValueMapping | null => {
+const inferMapping = (value: string, settings: ImportableColumn): ValueMapping | null => {
   const normalisedValue = normaliseForComparison(value)
 
   const inferredEnum = settings.enumItems?.find((e) =>
-    normalisedValue === normaliseForComparison(e.value) ||
+    normalisedValue === normaliseForComparison(`${e.value}`) ||
     normalisedValue === normaliseForComparison(e.label)
   )
 
   if (!inferredEnum) return null
 
   return {
-    targetValue: inferredEnum.value,
+    targetValue: `${inferredEnum.value}`,
     action: ColumnAction.MAP,
   }
 }
@@ -153,8 +154,8 @@ const extractListOfStrings = (text: string) => {
 // Returns all values found in `data` for a given column based on its settings.
 // For columns of type `list_of_string`, it tries to parse each value as a JSON array,
 // then a plain list with various separators.
-const getValuesForColumn = (data: ImportData, column: string, settings: typeof testImportSchema["0"]) => {
-  if (settings.valueType === "list_of_string") {
+const getValuesForColumn = (data: ImportData, column: string, settings: ImportableColumn) => {
+  if (settings.valueType === "list_of_strings") {
     return data.rows
       .map((row) => {
         if (!row[column]) return []
@@ -185,7 +186,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
   const enumSchemaColumns = useMemo(
     () => importSchema.filter(
       ({ valueType, enumItems }) =>
-        valueType === "list_of_string" ||
+        valueType === "list_of_strings" ||
         (valueType === "string" && !!enumItems),
     ),
     [importSchema],
@@ -376,7 +377,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
         <ValueMappersContainer>
           <Mappers>
             <colgroup>
-              <col />
+              <col style={{ width: "40%" }} />
               <MappersTableActionCol />
               <col />
             </colgroup>

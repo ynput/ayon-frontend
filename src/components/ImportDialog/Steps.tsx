@@ -4,9 +4,10 @@ import { ImportData } from "./utils";
 import MapColumnsStep from "./steps/MapColumnsStep/MapColumnsStep";
 import { ImportContext, ImportStep, ResolvedColumnMappings, ValueMappings } from "./steps/common";
 import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
-import testImportSchema from "./steps/test_import_schema";
 import PreviewStep from "./steps/PreviewStep/PreviewStep";
 import { useViewsContext } from "@shared/containers";
+import { useExportFieldsQuery } from "@queries/dataImport";
+import { useProjectContext } from "@shared/context";
 
 type Props = {
   importContext: ImportContext
@@ -18,11 +19,15 @@ type Props = {
 }
 
 export default function ImportSteps({ importContext, data, setData, step, setStep, onClose }: Props) {
+  const { projectName } = useProjectContext()
+
   const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
 
-  // TODO: get this from the API
-  const importSchema = testImportSchema
+  const { data: importSchema } = useExportFieldsQuery({
+    projectName,
+    entityType: importContext,
+  })
 
   const { setSelectedView, workingView } = useViewsContext()
 
@@ -46,7 +51,12 @@ export default function ImportSteps({ importContext, data, setData, step, setSte
         )
       }
       {
-        data && step === ImportStep.MAP_COLUMNS && (
+        step > ImportStep.UPLOAD && !importSchema && (
+          <h2>Loading</h2>
+        )
+      }
+      {
+        importSchema && data && step === ImportStep.MAP_COLUMNS && (
           <MapColumnsStep
             data={data}
             mappings={columnMappings}
@@ -61,7 +71,7 @@ export default function ImportSteps({ importContext, data, setData, step, setSte
         )
       }
       {
-        data && columnMappings && step === ImportStep.REVIEW_VALUES && (
+        importSchema && data && columnMappings && step === ImportStep.REVIEW_VALUES && (
           <ReviewValuesStep
             data={data}
             columnMappings={columnMappings}
@@ -80,7 +90,7 @@ export default function ImportSteps({ importContext, data, setData, step, setSte
         )
       }
       {
-        data && columnMappings && valueMappings && step === ImportStep.PREVIEW && (
+        importSchema && data && columnMappings && valueMappings && step === ImportStep.PREVIEW && (
           <PreviewStep
             data={data}
             columnMappings={columnMappings}
