@@ -6,7 +6,8 @@ export const Container = styled.div`
   gap:var(--base-gap-medium);
   height: 100%;
   overflow: hidden;
-  border-radius: var(--border-radius-m);
+  border-bottom-left-radius: var(--border-radius-m);
+  border-bottom-right-radius: var(--border-radius-m);
 `
 
 export const Preview = styled.div`

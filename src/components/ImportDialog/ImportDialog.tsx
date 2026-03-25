@@ -1,15 +1,9 @@
 import { Button, DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
-import UploadStep from "./steps/UploadStep/UploadStep";
 import { DialogContainer, DialogHeading, ImportContextWrapper, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
-import MapColumnsStep from "./steps/MapColumnsStep/MapColumnsStep";
-import { ImportContext, ImportStep, ResolvedColumnMappings, ValueMappings } from "./steps/common";
+import { ImportContext, ImportStep } from "./steps/common";
 import { upperFirst } from "lodash";
-import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
-import testImportSchema from "./steps/test_import_schema";
-import PreviewStep from "./steps/PreviewStep/PreviewStep";
-import { useProjectContext } from "@shared/context";
 import clsx from "clsx";
 import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containers";
 import { useDispatch } from "react-redux";
@@ -18,6 +12,7 @@ import ImportSteps from "./Steps";
 
 type Props = {
   importContext: ImportContext
+  projectName?: string
 }
 
 const dialogHeaderForStep: Record<ImportStep, string> = {
@@ -33,8 +28,9 @@ const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
   [ImportStep.PREVIEW]: "full",
 }
 
-export default function ImportDialog({ importContext }: Props) {
-  const { projectName } = useProjectContext()
+const PRESETS_BUTTON_LABEL = "Mapping presets"
+
+export default function ImportDialog({ importContext, projectName }: Props) {
   const dispatch = useDispatch()
 
   const [open, setOpen] = useState(false)
@@ -88,8 +84,8 @@ export default function ImportDialog({ importContext }: Props) {
             fullButtonProps={
               (selectedView) => ({
                 label: selectedView?.working
-                  ? "Mapping presets"
-                  : selectedView?.label,
+                  ? PRESETS_BUTTON_LABEL
+                  : selectedView?.label ?? PRESETS_BUTTON_LABEL,
                 selected: selectedView && !selectedView.working
               })
             }
@@ -98,6 +94,7 @@ export default function ImportDialog({ importContext }: Props) {
           <ViewsDialogContainer />
           <ImportSteps
             importContext={importContext}
+            projectName={projectName}
             data={data}
             setData={setData}
             step={step}

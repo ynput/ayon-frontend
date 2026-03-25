@@ -165,6 +165,7 @@ const ProjectOverviewPage: FC = () => {
               />
               <ImportDialog
                 importContext="hierarchy"
+                projectName={projectName}
               />
               <Actions
                 entities={[]}

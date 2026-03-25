@@ -7,10 +7,10 @@ import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
 import PreviewStep from "./steps/PreviewStep/PreviewStep";
 import { useViewsContext } from "@shared/containers";
 import { useExportFieldsQuery } from "@queries/dataImport";
-import { useProjectContext } from "@shared/context";
 
 type Props = {
   importContext: ImportContext
+  projectName?: string
   data: ImportData | null
   setData: Dispatch<SetStateAction<ImportData | null>>
   step: ImportStep
@@ -18,9 +18,7 @@ type Props = {
   onClose: () => void
 }
 
-export default function ImportSteps({ importContext, data, setData, step, setStep, onClose }: Props) {
-  const { projectName } = useProjectContext()
-
+export default function ImportSteps({ importContext, projectName, data, setData, step, setStep, onClose }: Props) {
   const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
 
