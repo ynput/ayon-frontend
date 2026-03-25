@@ -4,10 +4,14 @@ type ParseAsyncConfig = Omit<ParseLocalConfig, "complete">
 
 export type CSVRow = Record<string, any>
 
-export type ImportData = {
+export type ParsedCSV = {
   fileName: string
   columns: string[]
   rows: CSVRow[]
+}
+
+export type ImportData = ParsedCSV & {
+  fileId: string
 }
 
 const parseConfig: ParseAsyncConfig = {
@@ -31,7 +35,7 @@ const parseAsync = (file: File, config: ParseAsyncConfig): Promise<CSVRow[]> => 
   )
 })
 
-const fileCache = new WeakMap<File, ImportData>()
+const fileCache = new WeakMap<File, ParsedCSV>()
 
 export const parseCSV = async (file: File) => {
   if (fileCache.has(file)) return fileCache.get(file)!

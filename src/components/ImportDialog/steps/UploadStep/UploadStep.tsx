@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { StepNavButtons } from "../common.styled";
 import { ImportData, parseCSV } from "../../utils";
 import styled from "styled-components";
+import { useUploadFileMutation } from "@queries/dataImport";
 
 type Props = StepProps<ImportData>
 
@@ -64,12 +65,21 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
   const [data, setData] = useState<ImportData | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
+  const [uploadFile] = useUploadFileMutation()
+
   useEffect(() => {
     if (files.length === 0) return
 
     const firstFile = files[0].file
     parseCSV(firstFile)
-      .then((csv) => setData(csv))
+      .then(async (csv) => {
+        const { data, error } = await uploadFile({
+          csv: await firstFile.text(),
+        })
+
+        if (error) throw new Error('Upload failed')
+        setData({ ...csv, fileId: data.id })
+      })
       .catch((error) => setError(error))
   }, [files])
 

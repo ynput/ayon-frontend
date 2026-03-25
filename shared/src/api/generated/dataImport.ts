@@ -23,7 +23,7 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     uploadFile: build.mutation<UploadFileApiResponse, UploadFileApiArg>({
-      query: () => ({ url: `/api/csv/import/upload`, method: 'PUT' }),
+      query: (queryArg) => ({ url: `/api/csv/import/upload`, method: 'PUT', body: queryArg.csv }),
     }),
     importData: build.mutation<ImportDataApiResponse, ImportDataApiArg>({
       query: (queryArg) => ({
@@ -56,7 +56,9 @@ export type PostApiCsvExportByEntityTypeApiArg = {
   bodyExportApiCsvExportEntityTypePost: BodyExportApiCsvExportEntityTypePost
 }
 export type UploadFileApiResponse = /** status 200 Successful Response */ ImportUpload
-export type UploadFileApiArg = void
+export type UploadFileApiArg = {
+  csv: string
+}
 export type ImportDataApiResponse = /** status 200 Successful Response */ ImportStatus
 export type ImportDataApiArg = {
   entityType: 'user' | 'folder' | 'task' | 'hierarchy'
