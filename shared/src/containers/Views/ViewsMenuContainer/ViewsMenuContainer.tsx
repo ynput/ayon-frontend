@@ -22,6 +22,7 @@ export { WORKING_VIEW_ID, NEW_VIEW_ID }
 export const ViewsMenuContainer: FC = () => {
   const {
     viewType,
+    viewAlias,
     isMenuOpen,
     setIsMenuOpen,
     setEditingView,
@@ -117,7 +118,7 @@ export const ViewsMenuContainer: FC = () => {
               </>
             )}
             <ViewItem
-              label="Create new view"
+              label={`Create new ${viewAlias.toLowerCase()}`}
               id={NEW_VIEW_ID}
               startContent={<Icon icon="add" />}
               endContent={!powerLicense && <PowerIcon icon="bolt" />}

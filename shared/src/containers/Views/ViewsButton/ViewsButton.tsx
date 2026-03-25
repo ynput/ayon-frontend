@@ -12,7 +12,7 @@ type Props = {
 }
 
 export const ViewsButton: FC<Props> = ({ fullButton = false, fullButtonProps = () => ({}) }: Props) => {
-  const { viewType, isMenuOpen, setIsMenuOpen, selectedView, isViewWorking, editingViewId } =
+  const { viewType, viewAlias, isMenuOpen, setIsMenuOpen, selectedView, isViewWorking, editingViewId } =
     useViewsContext()
 
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -33,7 +33,7 @@ export const ViewsButton: FC<Props> = ({ fullButton = false, fullButtonProps = (
     onClick: handleButtonClick,
     className: clsx({ active: !!editingViewId, open: isMenuOpen }),
     tabIndex: 0,
-    "data-tooltip": isViewWorking ? 'Working view' : 'View: ' + selectedView?.label || 'None',
+    "data-tooltip": isViewWorking ? `Working ${viewAlias.toLowerCase()}` : `${viewAlias}: ` + selectedView?.label || 'None',
     "data-tooltip-delay": 0,
     onKeyDown: (e: KeyboardEvent<HTMLButtonElement>) => {
       if (e.key === 'Enter' || e.key === ' ') {

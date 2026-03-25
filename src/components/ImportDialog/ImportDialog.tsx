@@ -80,6 +80,7 @@ export default function ImportDialog({ importContext }: Props) {
         <ViewsProvider
           projectName={projectName}
           viewType={`import.${importContext}`}
+          viewAlias="Preset"
           dispatch={dispatch}
         >
           <ViewsButton

@@ -25,6 +25,7 @@ type Props = {
   viewsList: ViewListItemModel[]
   workingView?: GetWorkingViewApiResponse
   viewType?: string
+  viewAlias: string
   projectName?: string
   currentUser?: UserModel
   useWorkingView?: boolean
@@ -42,6 +43,7 @@ const useBuildViewMenuItems = ({
   viewsList,
   workingView,
   viewType,
+  viewAlias,
   projectName,
   currentUser,
   useWorkingView,
@@ -71,7 +73,7 @@ const useBuildViewMenuItems = ({
 
   const workingBaseView: ViewItem = {
     id: WORKING_VIEW_ID,
-    label: useWorkingView ? 'Personal view' : 'Working view',
+    label: useWorkingView ? `Personal ${viewAlias.toLowerCase()}` : `Working ${viewAlias}`,
     startContent: useWorkingView && <Icon icon="person" />,
     isEditable: false,
   }
@@ -82,7 +84,7 @@ const useBuildViewMenuItems = ({
     if (!workingView) {
       // no working view found, create one
       try {
-        console.warn('No working view found, creating a new one')
+        console.warn(`No working ${viewAlias.toLowerCase()} found, creating a new one`)
         const workingView = generateWorkingView()
         await createView({
           payload: workingView,
@@ -92,7 +94,7 @@ const useBuildViewMenuItems = ({
         // set id of the new view
         workingViewId = workingView.id
       } catch (error: any) {
-        toast.error(`Failed to create working view: ${error}`)
+        toast.error(`Failed to create working ${viewAlias}: ${error}`)
       }
     }
     // select the working view
@@ -134,9 +136,9 @@ const useBuildViewMenuItems = ({
 
   const sections: Array<{ id: string; title: string; items: ViewItem[] }> = useMemo(() => {
     return [
-      { id: 'myViews', title: 'My views', items: myViews as ViewItem[] },
-      { id: 'sharedViews', title: 'Shared views', items: sharedViews as ViewItem[] },
-      { id: 'allPrivateViews', title: 'All private views', items: allPrivateViews as ViewItem[] },
+      { id: 'myViews', title: `My ${viewAlias.toLowerCase()}s`, items: myViews as ViewItem[] },
+      { id: 'sharedViews', title: `Shared ${viewAlias.toLowerCase()}s`, items: sharedViews as ViewItem[] },
+      { id: 'allPrivateViews', title: `All private ${viewAlias.toLowerCase()}s`, items: allPrivateViews as ViewItem[] },
     ]
   }, [myViews, sharedViews, allPrivateViews])
 
