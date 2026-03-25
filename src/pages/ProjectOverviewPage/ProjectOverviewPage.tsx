@@ -1,6 +1,7 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC, useMemo } from 'react'
+import styled from 'styled-components'
 
 // state
 import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
@@ -44,6 +45,25 @@ const scopesConfig: ScopeWithFilterTypes[] = [
   },
 ]
 
+const GroupByDropdown = styled(SortingDropdown)`
+  flex-shrink: 0;
+
+  /* hide the empty placeholder container (flex:1) so chip gets full space */
+  .template-value > div:has(.placeholder) {
+    display: none;
+  }
+
+  .sort-chip {
+    min-width: fit-content;
+
+    /* hide close and sort arrow — not relevant for grouping */
+    .remove,
+    .sort-order {
+      display: none;
+    }
+  }
+`
+
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
   const isDeveloperMode = user?.attrib?.developerMode ?? false
@@ -83,7 +103,7 @@ const ProjectOverviewPage: FC = () => {
 
   const handleViewGroupByChange = (values: { id: string }[]) => {
     const value = values[0]?.id
-    if (value === 'hierarchy') {
+    if (!value || value === 'hierarchy') {
       updateViewGroupBy(null)
     } else {
       updateViewGroupBy(value)
@@ -180,7 +200,7 @@ const ProjectOverviewPage: FC = () => {
                 data={{}}
               />
               <ReloadButton />
-              <SortingDropdown
+              <GroupByDropdown
                 title="Group by"
                 options={viewGroupByOptions}
                 value={viewGroupByValue}
