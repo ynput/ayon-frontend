@@ -3,7 +3,7 @@ import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
-import { StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
+import { MappersTableErrorHandlingCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "../../components/DataPreview"
 import {
   Container,
@@ -22,6 +22,8 @@ import {
 import ColumnMapper, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../ColumnMapper"
 import testImportSchema from "../test_import_schema"
 import { confirmDialog } from "primereact/confirmdialog"
+import { useViewsContext, useViewUpdateHelper } from "@shared/containers"
+import usePreset from "@components/ImportDialog/hooks/usePreset"
 
 type Props = StepProps<ResolvedColumnMappings> & {
   data: ImportData
@@ -117,6 +119,7 @@ const mappingUpdater = (
   column: string,
   update: Partial<ColumnMapping>,
   fallback: Partial<ColumnMapping> = {},
+  callback?: (mappings: ColumnMappings) => void,
 ) => (old: ColumnMappings | undefined) => {
   const base = old ?? {}
   const mapping = {
@@ -125,7 +128,11 @@ const mappingUpdater = (
     ...update,
     userResolved: true,
   }
-  return { ...base, [column]: mapping }
+
+  const mappings = { ...base, [column]: mapping }
+  callback?.(mappings)
+
+  return mappings
 }
 
 export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
@@ -138,6 +145,8 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
     () => Object.fromEntries(importSchema.map((col) => [col.key, col])),
     [importSchema]
   )
+
+  const preset = usePreset()
 
   // lookup table for which data column a target is mapped to
   const columnForTarget: Record<string, string> = useMemo(() => {
@@ -216,11 +225,19 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
     ))
   }, [importSchema])
 
+  // apply the current preset if it changes
+  useEffect(() => {
+    if (!preset.current.columns) return
+
+    setMappings((m) => ({ ...m, ...preset.current.columns }))
+  }, [preset.current])
+
   const onTargetChange = useCallback((column: string) => (targetColumn: string) => {
     const updater = mappingUpdater(
       column,
       { targetColumn, action: ColumnAction.MAP },
       { errorHandlingMode: inferErrorHandling(columnSettings[targetColumn]) },
+      preset.updateColumns,
     )
 
     if (mappings && columnForTarget[targetColumn]) {
@@ -259,7 +276,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
               <col />
               <MappersTableActionCol />
               <col />
-              <col />
+              <MappersTableErrorHandlingCol />
             </colgroup>
             <MappersTableHeader>
               <tr>
@@ -299,10 +316,20 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                   }}
                   onTargetChange={onTargetChange(column)}
                   onActionChange={(action) => {
-                    setMappings(mappingUpdater(column, { action }))
+                    setMappings(mappingUpdater(
+                      column,
+                      { action },
+                      {},
+                      preset.updateColumns,
+                    ))
                   }}
                   onErrorHandlingChange={(errorHandlingMode) => {
-                    setMappings(mappingUpdater(column, { errorHandlingMode }))
+                    setMappings(mappingUpdater(
+                      column,
+                      { errorHandlingMode },
+                      {},
+                      preset.updateColumns,
+                    ))
                   }}
                 />
               ))

@@ -1,7 +1,7 @@
 import { Button, DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
 import UploadStep from "./steps/UploadStep/UploadStep";
-import { DialogContainer, DialogHeading, ImportContextWrapper } from "./ImportDialog.styled";
+import { DialogContainer, DialogHeading, ImportContextWrapper, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
 import MapColumnsStep from "./steps/MapColumnsStep/MapColumnsStep";
 import { ImportContext, ImportStep, ResolvedColumnMappings, ValueMappings } from "./steps/common";
@@ -9,6 +9,12 @@ import { upperFirst } from "lodash";
 import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
 import testImportSchema from "./steps/test_import_schema";
 import PreviewStep from "./steps/PreviewStep/PreviewStep";
+import { useProjectContext } from "@shared/context";
+import clsx from "clsx";
+import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containers";
+import { useDispatch } from "react-redux";
+import ViewsDialogContainer from "@shared/containers/Views/ViewsDialogContainer/ViewsDialogContainer";
+import ImportSteps from "./Steps";
 
 type Props = {
   importContext: ImportContext
@@ -28,20 +34,17 @@ const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
 }
 
 export default function ImportDialog({ importContext }: Props) {
+  const { projectName } = useProjectContext()
+  const dispatch = useDispatch()
+
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<ImportStep>(ImportStep.UPLOAD)
   const [data, setData] = useState<ImportData | null>(null)
-  const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>(undefined)
-  const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
-
-  // TODO: get this from the API
-  const importSchema = testImportSchema
 
   const closeDialog = useCallback(() => {
     setOpen(false)
     setStep(ImportStep.UPLOAD)
     setData(null)
-    setColumnMappings(undefined)
   }, [])
 
   return (
@@ -58,6 +61,11 @@ export default function ImportDialog({ importContext }: Props) {
         header={(
           <DialogHeading>
             {dialogHeaderForStep[step]}
+            <TemplatesSelector
+              className={clsx({ shown: step > ImportStep.UPLOAD })}
+            >
+              <span id={`import.${importContext}-views-portal`}></span>
+            </TemplatesSelector>
             <ImportContextWrapper>
               {upperFirst(importContext)}
               {
@@ -69,65 +77,34 @@ export default function ImportDialog({ importContext }: Props) {
           </DialogHeading>
         )}
       >
-        {
-          step === ImportStep.UPLOAD && (
-            <UploadStep
-              importContext={importContext}
-              onBack={closeDialog}
-              onNext={(d) => {
-                setData(d)
-                setStep(ImportStep.MAP_COLUMNS)
-              }}
-            />
-          )
-        }
-        {
-          data && step === ImportStep.MAP_COLUMNS && (
-            <MapColumnsStep
-              data={data}
-              mappings={columnMappings}
-              importContext={importContext}
-              importSchema={importSchema}
-              onBack={() => setStep(ImportStep.UPLOAD)}
-              onNext={(mappings) => {
-                setColumnMappings(mappings)
-                setStep(ImportStep.REVIEW_VALUES)
-              }}
-            />
-          )
-        }
-        {
-          data && columnMappings && step === ImportStep.REVIEW_VALUES && (
-            <ReviewValuesStep
-              data={data}
-              columnMappings={columnMappings}
-              mappings={valueMappings}
-              importContext={importContext}
-              importSchema={importSchema}
-              onBack={(mappings) => {
-                setValueMappings(mappings ?? null)
-                setStep(ImportStep.MAP_COLUMNS)
-              }}
-              onNext={(mappings) => {
-                setValueMappings(mappings)
-                setStep(ImportStep.PREVIEW)
-              }}
-            />
-          )
-        }
-        {
-          data && columnMappings && valueMappings && step === ImportStep.PREVIEW && (
-            <PreviewStep
-              data={data}
-              columnMappings={columnMappings}
-              mappings={valueMappings}
-              importContext={importContext}
-              onBack={() => setStep(ImportStep.REVIEW_VALUES)}
-              onNext={() => {}}
-            />
-          )
-        }
-      </DialogContainer>
+        <ViewsProvider
+          projectName={projectName}
+          viewType={`import.${importContext}`}
+          dispatch={dispatch}
+        >
+          <ViewsButton
+            fullButton
+            fullButtonProps={
+              (selectedView) => ({
+                label: selectedView?.working
+                  ? "Mapping presets"
+                  : selectedView?.label,
+                selected: selectedView && !selectedView.working
+              })
+            }
+          />
+          <ViewsMenuContainer />
+          <ViewsDialogContainer />
+          <ImportSteps
+            importContext={importContext}
+            data={data}
+            setData={setData}
+            step={step}
+            setStep={setStep}
+            onClose={closeDialog}
+          />
+        </ViewsProvider>
+      </DialogContainer >
     </>
   )
 }

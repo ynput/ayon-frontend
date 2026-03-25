@@ -24,6 +24,8 @@ import {
 import testImportSchema from "../test_import_schema"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ColumnMapper, { MappingState } from "../ColumnMapper"
+import usePreset from "@components/ImportDialog/hooks/usePreset"
+import { cloneDeep, merge } from "lodash"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
@@ -84,26 +86,31 @@ const getMapperState = (column: string | null, value: string, mappings: ValueMap
 
 const mappingUpdater = (
   column: string,
-  value: string,
+  values: string[],
   update: Partial<ValueMapping>,
-  fallback: Partial<ValueMapping> = {},
+  callback?: (mappings: ValueMappings) => void,
 ) => (old: ValueMappings | null) => {
   const base = old ?? {}
   const columnBase = base[column] ?? {}
-  const mapping = {
-    ...fallback,
-    ...(columnBase[value] ?? { }),
-    ...update,
-    userResolved: true,
+
+  const updated = values.map((value: string) => ({
+    [value]: {
+      ...(columnBase[value] ?? { }),
+      ...update,
+      userResolved: true,
+    },
+  }))
+
+  const mappings = {
+    ...cloneDeep(base),
+    [column]: merge(
+      cloneDeep(columnBase),
+      ...updated,
+    ),
   }
 
-  return {
-    ...base,
-    [column]: {
-      ...columnBase,
-      [value]: mapping,
-    },
-  }
+  callback?.(mappings)
+  return mappings
 }
 
 const possibleDelimiters = [
@@ -172,6 +179,8 @@ const getValuesForColumn = (data: ImportData, column: string, settings: typeof t
 export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
   const [selection, setSelection] = useState<Set<string>>(new Set())
+
+  const preset = usePreset()
 
   const enumSchemaColumns = useMemo(
     () => importSchema.filter(
@@ -318,6 +327,13 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
     ))
   }, [columnSettings])
 
+  // apply the current preset if it changes
+  useEffect(() => {
+    if (!preset.current.columns) return
+
+    setMappings((m) => merge(cloneDeep(m), cloneDeep(preset.current.values)))
+  }, [preset.current])
+
   // reset selection if target changes
   useEffect(() => {
     setSelection(new Set())
@@ -401,24 +417,33 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                     if (!activeColumn) return
 
                     if (selection.size > 0 && selection.has(uniqueDataValue)) {
-                      for (const value of selection) {
-                        setMappings(mappingUpdater(activeColumn, value, { action }))
-                      }
+                      setMappings(mappingUpdater(
+                        activeColumn,
+                        Array.from(selection),
+                        { action },
+                        preset.updateValues,
+                      ))
 
                       return
                     }
 
-                    setMappings(mappingUpdater(activeColumn, uniqueDataValue, { action }))
+                    setMappings(mappingUpdater(
+                      activeColumn,
+                      [uniqueDataValue],
+                      { action },
+                      preset.updateValues,
+                    ))
                   }}
                   onTargetChange={(targetValue) => {
                     if (!activeColumn) return
                     setMappings(mappingUpdater(
                       activeColumn,
-                      uniqueDataValue,
+                      [uniqueDataValue],
                       {
                         targetValue,
                         action: ColumnAction.MAP,
                       },
+                      preset.updateValues,
                     ))
                   }}
                   onErrorHandlingChange={() => {}}

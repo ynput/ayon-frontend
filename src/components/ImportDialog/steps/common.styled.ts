@@ -123,6 +123,9 @@ export const MappersTableErrorHandling = styled(MappersTableBodyCell)`
 export const MappersTableActionCol = styled.col`
   width: calc(var(--padding-l) * 2 + 14ch);
 `
+export const MappersTableErrorHandlingCol = styled.col`
+  width: max-content;
+`
 
 export const MapperDropdown = styled(Dropdown)`
   width: 100%;
