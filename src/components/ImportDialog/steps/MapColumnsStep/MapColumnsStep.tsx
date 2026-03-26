@@ -175,7 +175,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
 
   const targetOptions = useMemo(
     () => importSchema
-      .map(({ key, label, required, valueType }) => {
+      .map(({ key, label, required, valueType, enumItems }) => {
         const column = columnForTarget[key]
         if (!column) return {
           value: key,
@@ -183,6 +183,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
           icon: required ? "warning" : undefined,
           color: "var(--md-sys-color-warning)",
           type: valueType,
+          isEnum: Boolean(enumItems),
         }
 
         const state = getMapperState(column, mappings)
@@ -194,6 +195,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
             : 'var(--md-sys-color-primary)',
           label: `${label}${TARGET_OPTION_MAPPING_SEPARATOR}mapped to "${column}"`,
           type: valueType,
+          isEnum: Boolean(enumItems),
         }
       })
       .sort(targetOptionCompareFn(columnForTarget, columnSettings)),

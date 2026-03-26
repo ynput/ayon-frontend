@@ -42,7 +42,27 @@ type Props = {
 
 export const TARGET_OPTION_MAPPING_SEPARATOR = ' - '
 
-const formatDataType = (t: string) => t.replace(/_/g, ' ')
+export const humanReadableDataType: Record<string, string> = {
+  "string": "Text",
+  "enum": "Select",
+  "list_of_strings": "Multi-select",
+  "list_of_any": "Multi-select",
+  "list_of_dict": "Multi-select",
+  "list_of_integers": "Multi-select (whole number)",
+  "list_of_submodels": "Multi-select",
+  "integer": "Whole Number",
+  "float": "Number with decimals",
+  "datetime": "Date and time",
+  "boolean": "True/False",
+}
+
+const formatDataType = (t: string, isEnum: boolean) => {
+  if (isEnum) {
+    return humanReadableDataType["enum"]
+  }
+
+  return humanReadableDataType[t] ?? t.replace(/_/g, ' ')
+}
 
 export default function ColumnMapper({
   state,
@@ -131,7 +151,9 @@ export default function ColumnMapper({
                 >
                   <DropdownValueLabel>
                     {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
-                    <TargetType>{formatDataType(selectedTargetOption?.type ?? "")}</TargetType>
+                    <TargetType>
+                      {formatDataType(selectedTargetOption?.type ?? "", selectedTargetOption?.isEnum)}
+                    </TargetType>
                   </DropdownValueLabel>
                 </DefaultValueTemplate>
               )}
@@ -143,7 +165,7 @@ export default function ColumnMapper({
                   value={option.value}
                   endContent={
                     option.type
-                      ? <TargetType>{formatDataType(option.type)}</TargetType>
+                      ? <TargetType>{formatDataType(option.type, option.isEnum)}</TargetType>
                       : undefined
                   }
                 />
