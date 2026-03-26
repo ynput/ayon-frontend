@@ -8,6 +8,7 @@ export interface ViewFormDialogProps {
   setEditingView: (viewId: string | null) => void
   isLoading: boolean
   viewType: ViewType
+  viewAlias: string
   viewSettings?: ViewSettings
   currentUser?: UserModel
   projectName?: string
