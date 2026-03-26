@@ -7,6 +7,7 @@ export const StepContainer = styled.div`
   flex-flow: column;
   height: 100%;
   overflow: hidden;
+  margin-top: var(--padding-l);
 `
 
 export const StepNavButtons = styled.div`

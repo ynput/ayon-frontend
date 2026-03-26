@@ -45,7 +45,6 @@ export const ColumnsListButton = styled(Button)`
 
 export const ValueMappersContainer = styled(MappersContainer)`
   flex-grow: 1;
-  background: var(--md-sys-color-surface-container-low);
 `
 
 export const ColumnsListItemStats = styled.span`
