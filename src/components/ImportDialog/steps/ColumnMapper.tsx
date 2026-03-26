@@ -1,4 +1,4 @@
-import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps } from "@ynput/ayon-react-components"
+import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps, InputText } from "@ynput/ayon-react-components"
 import { useMemo } from "react"
 import {
   MappersTableBodyRow,
@@ -98,46 +98,57 @@ export default function ColumnMapper({
         />
       </MappersTableBodyCell>
       <MappersTableAttribute>
-        <MapperDropdown
-          disabled={skipping || creating || targetOptions.length === 0}
-          value={target && !(skipping || creating) ? [target] : []}
-          options={targetOptions}
-          onChange={([value]) => onTargetChange(value)}
-          valueTemplate={(value, selected, isOpen) => (
-            <DefaultValueTemplate
-              value={value}
-              displayIcon={undefined}
-              isOpen={isOpen}
-              placeholder={
-                skipping
-                  ? "Will be skipped"
-                  : creating
-                    ? "A new value will be created"
-                    : targetOptions.length === 0
-                      ? "Nothing to map. Try choosing the Create or Skip action."
-                      : "Select a target..."
-              }
-            >
-              <DropdownValueLabel>
-                {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
-                <TargetType>{formatDataType(selectedTargetOption?.type)}</TargetType>
-              </DropdownValueLabel>
-            </DefaultValueTemplate>
-          )}
-          itemTemplate={(option) => (
-            <DefaultItemTemplate
-              option={option}
-              dataKey="value"
-              labelKey="label"
-              value={option.value}
-              endContent={
-                option.type
-                  ? <TargetType>{formatDataType(option.type)}</TargetType>
-                  : undefined
-              }
+        {
+          action === ValueAction.CREATE
+          ? (
+            <InputText
+              value={target}
+              onChange={(event) => onTargetChange(event.target.value)}
+              placeholder="Enter a value"
             />
-          )}
-        />
+          ) : (
+            <MapperDropdown
+              disabled={skipping || creating || targetOptions.length === 0}
+              value={target && !(skipping || creating) ? [target] : []}
+              options={targetOptions}
+              onChange={([value]) => onTargetChange(value)}
+              valueTemplate={(value, selected, isOpen) => (
+                <DefaultValueTemplate
+                  value={value}
+                  displayIcon={undefined}
+                  isOpen={isOpen}
+                  placeholder={
+                    skipping
+                      ? "Will be skipped"
+                      : creating
+                        ? "A new value will be created"
+                        : targetOptions.length === 0
+                          ? "Nothing to map. Try choosing the Create or Skip action."
+                          : "Select a target..."
+                  }
+                >
+                  <DropdownValueLabel>
+                    {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
+                    <TargetType>{formatDataType(selectedTargetOption?.type ?? "")}</TargetType>
+                  </DropdownValueLabel>
+                </DefaultValueTemplate>
+              )}
+              itemTemplate={(option) => (
+                <DefaultItemTemplate
+                  option={option}
+                  dataKey="value"
+                  labelKey="label"
+                  value={option.value}
+                  endContent={
+                    option.type
+                      ? <TargetType>{formatDataType(option.type)}</TargetType>
+                      : undefined
+                  }
+                />
+              )}
+            />
+          )
+        }
       </MappersTableAttribute>
       {
         errorHandlingEnabled && (

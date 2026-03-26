@@ -1,7 +1,7 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction } from "../common"
+import { ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, ResolvedColumnMapping } from "../common"
 import {
   Mappers,
   MappersTableHeader,
@@ -20,6 +20,7 @@ import {
   ValueMappersContainer,
   ColumnsListItemStats,
   SelectedCount,
+  ColumnsListScrollable,
 } from "./ReviewValuesStep.styled"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import ColumnMapper, { MappingState } from "../ColumnMapper"
@@ -34,12 +35,15 @@ type Props = StepProps<ValueMappings> & {
   mappings: ValueMappings | null
 }
 
-const actionOptions = [
+const enumActionOptions = [
   {
     value: ValueAction.MAP,
     label: "Map",
     icon: "line_end_arrow",
   },
+]
+
+const actionOptions = [
   {
     value: ValueAction.SKIP,
     label: "Skip",
@@ -53,6 +57,14 @@ const actionOptions = [
 ]
 
 const inferMapping = (value: string, settings: ImportableColumn): ValueMapping | null => {
+  // for non-enum columns, we default to creating a new value
+  if (!settings.enumItems) {
+    return {
+      action: ValueAction.CREATE,
+      targetValue: value,
+    }
+  }
+
   const normalisedValue = normaliseForComparison(value)
 
   const inferredEnum = settings.enumItems?.find((e) =>
@@ -176,20 +188,28 @@ const getValuesForColumn = (data: ImportData, column: string, settings: Importab
   })
 }
 
+type SortEntry = [string, ResolvedColumnMapping]
+
+const sortMappingsToReviewEntries = (resolvedColumns: string[]) => ([m1]: SortEntry, [m2]: SortEntry) => {
+  const m1Resolved = resolvedColumns.includes(m1)
+  const m2Resolved = resolvedColumns.includes(m2)
+  if (m1Resolved && m2Resolved || (!m1Resolved && !m2Resolved)) {
+    return m1.localeCompare(m2)
+  }
+
+  return m1Resolved ? 1 : -1
+}
+
+const enumTypes: ImportableColumn["valueType"][] = [
+  "string",
+  "list_of_strings",
+]
+
 export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
   const [selection, setSelection] = useState<Set<string>>(new Set())
 
   const preset = usePreset()
-
-  const enumSchemaColumns = useMemo(
-    () => importSchema.filter(
-      ({ valueType, enumItems }) =>
-        valueType === "list_of_strings" ||
-        (valueType === "string" && !!enumItems),
-    ),
-    [importSchema],
-  )
 
   const columnSettings = useMemo(
     () => Object.fromEntries(importSchema.map((col) => [col.key, col])),
@@ -198,10 +218,10 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
 
   const mappingsToReview = useMemo(
     () => Object.fromEntries(Object.entries(columnMappings)
-      .filter(([, { targetColumn }]) => enumSchemaColumns.some(
+      .filter(([, { targetColumn }]) => importSchema.some(
         ({ key }) => targetColumn === key,
       ))),
-    [columnMappings, enumSchemaColumns]
+    [columnMappings, importSchema]
   )
 
   // default to the first reviewable target
@@ -215,6 +235,16 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
 
     return entry ?? [null, null]
   }, [mappingsToReview, activeTarget])
+
+  const activeTargetType = useMemo(
+    () => columnSettings[activeTarget].valueType,
+    [columnSettings, activeTarget],
+  )
+
+  const activeTargetIsEnum = useMemo(
+    () => columnSettings[activeTarget].enumItems?.length,
+    [columnSettings, activeTarget]
+  )
 
   const uniqueValuesForColumn = useMemo(
     () => Object.fromEntries(
@@ -245,11 +275,15 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
   const targetValueOptions = useMemo(() => {
     if (!activeMapping) return []
 
-    const { enumItems } = columnSettings[activeMapping.targetColumn]
-    if (!enumItems) return []
+    if (enumTypes.includes(activeTargetType)) {
+      const { enumItems } = columnSettings[activeMapping.targetColumn]
+      if (!enumItems) return []
 
-    return enumItems
-  }, [activeMapping, columnSettings])
+      return enumItems
+    }
+
+    return []
+  }, [activeMapping, columnSettings, activeTargetType])
 
   const currentMappings = useMemo(
     () => mappings && activeColumn ? mappings[activeColumn] : null,
@@ -320,7 +354,13 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
         column,
         Object.fromEntries(
           uniqueValuesForColumn[column]
-            .map((value) => [`${value}`, inferMapping(`${value}`, columnSettings[targetColumn])])
+            .map((value) => {
+              if (value === undefined && !columnSettings[targetColumn].enumItems) {
+                return [`${value}`, { action: ValueAction.SKIP }]
+              }
+
+              return [`${value}`, inferMapping(`${value}`, columnSettings[targetColumn])]
+            })
             .filter(([, mapping]) => !!mapping)
         ),
       ])
@@ -344,34 +384,42 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
       <Container>
         <ColumnsListWrapper>
           <Heading>Columns</Heading>
-          <ColumnsList>
-            {
-              Object.entries(mappingsToReview).map(([column, { targetColumn }]) => (
-                <li key={targetColumn}>
-                  <ColumnsListButton
-                    variant="text"
-                    icon={resolvedColumns.includes(column) ? "check" : ""}
-                    iconProps={{
-                      style: { color: "var(--md-sys-color-tertiary)" }
-                    }}
-                    selected={activeTarget === targetColumn}
-                    onClick={() => setActiveTarget(targetColumn)}
-                  >
-                    {
-                      columnSettings[targetColumn].label
-                    }
-                    <ColumnsListItemStats>
+          <ColumnsListScrollable>
+            <ColumnsList>
+              {
+                Object.entries(mappingsToReview)
+                  .sort(sortMappingsToReviewEntries(resolvedColumns))
+                  .map(([column, { targetColumn }]) => (
+                  <li key={targetColumn}>
+                    <ColumnsListButton
+                      variant="text"
+                      icon={resolvedColumns.includes(column) ? "check" : "error"}
+                      iconProps={{
+                        style: {
+                          color: resolvedColumns.includes(column)
+                            ? "var(--md-sys-color-tertiary)"
+                            : "var(--md-sys-color-error)"
+                        }
+                      }}
+                      selected={activeTarget === targetColumn}
+                      onClick={() => setActiveTarget(targetColumn)}
+                    >
                       {
-                        uniqueValuesForColumn[column].length - unresolvedValues[column].size
-                      } / {
-                        uniqueValuesForColumn[column].length
+                        columnSettings[targetColumn].label
                       }
-                    </ColumnsListItemStats>
-                  </ColumnsListButton>
-                </li>
-              ))
-            }
-          </ColumnsList>
+                      <ColumnsListItemStats>
+                        {
+                          uniqueValuesForColumn[column].length - unresolvedValues[column].size
+                        } / {
+                          uniqueValuesForColumn[column].length
+                        }
+                      </ColumnsListItemStats>
+                    </ColumnsListButton>
+                  </li>
+                ))
+              }
+            </ColumnsList>
+          </ColumnsListScrollable>
         </ColumnsListWrapper>
         <ValueMappersContainer>
           <Mappers>
@@ -404,7 +452,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                   state={getMapperState(activeColumn, uniqueDataValue, mappings)}
                   column={uniqueDataValue}
                   action={currentMappings?.[uniqueDataValue]?.action}
-                  actions={actionOptions}
+                  actions={actionOptions.concat(activeTargetIsEnum ? enumActionOptions : [])}
                   target={currentMappings?.[uniqueDataValue]?.targetValue}
                   targetOptions={targetValueOptions}
                   errorHandling={undefined}
@@ -436,13 +484,16 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                   }}
                   onTargetChange={(targetValue) => {
                     if (!activeColumn) return
+
+                    const update: Partial<ValueMapping> = { targetValue }
+                    if (!currentMappings?.[uniqueDataValue]) {
+                      update.action = activeTargetIsEnum ? ValueAction.MAP : ValueAction.CREATE
+                    }
+
                     setMappings(mappingUpdater(
                       activeColumn,
                       [uniqueDataValue],
-                      {
-                        targetValue,
-                        action: ValueAction.MAP,
-                      },
+                      update,
                       preset.updateValues,
                     ))
                   }}

@@ -54,6 +54,7 @@ export const MappersTableHeaderCell = styled.th`
   line-height: 32px;
   font-weight: bold;
   text-align: left;
+  white-space: nowrap;
 `
 export const MappersTableHeaderErrorHandling = styled(MappersTableHeaderCell)`
   padding-left: var(--padding-s);

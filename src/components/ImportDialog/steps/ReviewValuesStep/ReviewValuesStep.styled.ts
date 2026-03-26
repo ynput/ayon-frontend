@@ -6,12 +6,18 @@ export const Container = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   flex-grow: 1;
+  overflow: hidden;
 `
 
 export const ColumnsListWrapper = styled.div`
   flex-basis: 25ch;
   display: flex;
   flex-flow: column;
+`
+
+export const ColumnsListScrollable = styled.div`
+  overflow-x: hidden;
+  overflow-y: auto;
 `
 
 export const Heading = styled.h2`
