@@ -88,7 +88,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
-  const [localSlicerType, setLocalSlicerType] = useState<string | null>(null)
   const [localShowProducts, setLocalShowProducts] = useState<boolean | null>(null)
   const [localShowGrid, setLocalShowGrid] = useState<boolean | null>(null)
   const [localGridHeight, setLocalGridHeight] = useState<number | null>(null)
@@ -112,6 +111,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => versionsSettings?.slicerType ?? '',
     [versionsSettings?.slicerType],
   )
+
   const serverShowProducts = useMemo(
     () => versionsSettings?.showProducts ?? false,
     [versionsSettings?.showProducts],
@@ -155,7 +155,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   useEffect(() => {
     setLocalFilters(null)
     setLocalColumns(null)
-    setLocalSlicerType(null)
     setLocalShowProducts(null)
     setLocalShowGrid(null)
     setLocalGridHeight(null)
@@ -172,10 +171,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => (localFilters !== null ? localFilters : serverFilters),
     [localFilters, serverFilters],
   )
-  const slicerType = useMemo(
-    () => (localSlicerType !== null ? localSlicerType : serverSlicerType),
-    [localSlicerType, serverSlicerType],
-  )
+  const slicerType = serverSlicerType
   const showProducts = useMemo(
     () => (localShowProducts !== null ? localShowProducts : serverShowProducts),
     [localShowProducts, serverShowProducts],
@@ -256,10 +252,11 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [updateViewSettings, showProducts],
   )
 
-  // Slicer type update handler
+  // Slicer type update handler (no local state needed — slicer context is the optimistic state)
+  const noopSlicerType = useCallback(() => {}, [])
   const onUpdateSlicerType = useCallback(
     async (newSlicerType: string) => {
-      await updateViewSettings({ slicerType: newSlicerType }, setLocalSlicerType, newSlicerType, {
+      await updateViewSettings({ slicerType: newSlicerType }, noopSlicerType, newSlicerType, {
         errorMessage: 'Failed to update slicer type',
       })
     },

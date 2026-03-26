@@ -32,7 +32,7 @@ import {
 } from '@shared/containers'
 
 // Local context and hooks
-import { useSlicerContext } from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds, useSlicerViewSync } from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
@@ -75,7 +75,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   })
 
   // view context and update helper
-  const { viewSettings } = useViewsContext()
+  const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
 
   const {
@@ -83,7 +83,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateHierarchy: updateShowHierarchy,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
+    sliceType: viewSliceType,
+    onUpdateSliceType,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
+
+  // Sync slicer slice type with view settings, selection with localStorage
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews, `slicer-selection-overview-${projectName}`)
 
   // GET GROUPING
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
@@ -111,17 +116,29 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   }, [queryFilters])
 
   // Separate slicer filters into different types
+  const validScopes: ('task' | 'folder')[] = ['task', 'folder']
+  const attribScopeMap = useMemo(
+    () =>
+      attribFields.reduce<Record<string, string>>((acc, field) => {
+        const scope = validScopes.find((s) => field.scope?.includes(s))
+        if (scope) acc[`attrib.${field.name}`] = scope
+        return acc
+      }, {}),
+    [attribFields],
+  )
+
   const {
     task: [slicerTaskFilter],
     folder: [slicerFolderFilter],
   } = useMemo(() => {
-    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, ['task', 'folder'], {
+    return splitClientFiltersByScope(sliceFilter ? [sliceFilter] : null, validScopes, {
       status: 'task', // status defaults to task for overview
       taskType: 'task',
       assignees: 'task',
       folderType: 'folder',
+      ...attribScopeMap,
     })
-  }, [sliceFilter])
+  }, [sliceFilter, attribScopeMap])
 
   // Combine slicer filters with task/folder filters
   const combinedTaskFilter = useQueryFilters({
@@ -142,10 +159,14 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     config: { searchKey: 'name' },
   })
 
+  // Resolve entity list selections to IDs
+  const { entityIds, rawEntityIds } = useSelectedEntityIds()
+
   const selectedFolders = useSelectedFolders({
     rowSelection,
     sliceType,
     persistentRowSelectionData,
+    entityListFolderIds: entityIds.folderIds,
   })
 
   // DATA FETCHING
@@ -161,6 +182,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   } = useFetchOverviewData({
     projectName,
     selectedFolders,
+    taskIds: rawEntityIds.taskIds,
     taskFilters: {
       filter: combinedTaskFilter.filter,
       filterString: combinedTaskFilter.filterString,
