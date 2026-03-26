@@ -19,13 +19,15 @@ import { useViewsContext } from '@shared/containers'
 import { ProjectTableModulesType } from '@shared/hooks'
 
 const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
-  const { taskGroups, viewGroupBy, isFlatFolderView, ...props } = useProjectOverviewContext()
+  const { taskGroups, viewGroupBy, viewGroupByDesc, isFlatFolderView, ...props } =
+    useProjectOverviewContext()
 
   // Convert view dropdown's groupBy string to TableGroupBy object for ProjectTableProvider
   // For flat folder view, we don't set a groupBy — it uses hierarchy-style task fetching
   const overrideGroupBy = useMemo(
-    () => (viewGroupBy && !isFlatFolderView ? { id: viewGroupBy, desc: false } : undefined),
-    [viewGroupBy, isFlatFolderView],
+    () =>
+      viewGroupBy && !isFlatFolderView ? { id: viewGroupBy, desc: viewGroupByDesc } : undefined,
+    [viewGroupBy, isFlatFolderView, viewGroupByDesc],
   )
 
   const { updateEntities, getFoldersTasks } = useTableQueriesHelper({

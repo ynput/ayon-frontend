@@ -13,7 +13,7 @@ import {
 } from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import { CustomizeButton, EmptyPlaceholder, TableGridSwitch } from '@shared/components'
+import { CustomizeButton,  TableGridSwitch } from '@shared/components'
 import {
   MoveEntityProvider,
   SettingsPanelProvider,

@@ -79,6 +79,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     createLocalStorageKey(page, 'viewGroupBy', projectName),
     serverGroupByDefault,
   )
+  // Derive desc directly from panel groupBy (single source of truth — no separate state)
+  const viewGroupByDesc = panelGroupBy?.desc ?? false
+
   const { updateExpanded, toggleExpanded, expandedIds } = useExpandedState({
     expanded,
     setExpanded,
@@ -104,7 +107,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // When user changes viewGroupBy, sync to Customize panel's groupBy
   // onUpdateColumns (called by updateGroupBy) already handles showHierarchy on the server
   const updateViewGroupBy = useCallback(
-    (newViewGroupBy: string | null) => {
+    (newViewGroupBy: string | null, desc?: boolean) => {
       setViewGroupBy(newViewGroupBy)
       if (newViewGroupBy === null) {
         // Enter hierarchy mode: clear groupBy and persist showHierarchy on server
@@ -117,13 +120,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         _updateShowHierarchy(false)
       } else {
         // onUpdateColumns (called by updateGroupBy) sets showHierarchy: false on the server
-        updateGroupBy({ id: newViewGroupBy, desc: false })
+        updateGroupBy({ id: newViewGroupBy, desc: desc ?? viewGroupByDesc })
       }
     },
-    [setViewGroupBy, updateGroupBy, _updateShowHierarchy],
+    [setViewGroupBy, updateGroupBy, _updateShowHierarchy, viewGroupByDesc],
   )
 
-  // Sync FROM Customize panel TO dropdown when panel's groupBy changes
+  // Sync FROM Customize panel TO dropdown when panel's groupBy id changes
   const panelGroupById = panelGroupBy?.id
   const prevPanelGroupByIdRef = useRef(panelGroupById)
   useEffect(() => {
@@ -148,8 +151,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // This is independent from the Customize panel's groupBy
   // For flat folder view, we don't need a groupBy — it uses hierarchy-style task fetching
   const viewGroupByObj = useMemo(
-    () => (viewGroupBy && !isFlatFolderView ? { id: viewGroupBy, desc: false } : undefined),
-    [viewGroupBy, isFlatFolderView],
+    () => (viewGroupBy && !isFlatFolderView ? { id: viewGroupBy, desc: viewGroupByDesc } : undefined),
+    [viewGroupBy, isFlatFolderView, viewGroupByDesc],
   )
 
   // GET GROUPING — use viewGroupBy for the top-level dropdown grouping
@@ -302,6 +305,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         updateShowHierarchy,
         // view mode grouping (top-level dropdown)
         viewGroupBy,
+        viewGroupByDesc,
         updateViewGroupBy,
         // flat folder view
         isFlatFolderView,

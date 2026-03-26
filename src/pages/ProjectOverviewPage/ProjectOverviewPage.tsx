@@ -4,24 +4,23 @@ import { FC, useMemo } from 'react'
 import styled from 'styled-components'
 
 // state
-import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
+import { Slicer, useSlicerContext } from '@shared/containers/Slicer'
 
 // arc
 import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { ScopeWithFilterTypes } from '@shared/components'
+import { CustomizeButton, ScopeWithFilterTypes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
-  useSelectionCellsContext,
   getCellId,
   ROW_SELECTION_COLUMN_ID,
   useGetGroupedFields,
+  useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
-import { CustomizeButton } from '@shared/components'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useGlobalContext, useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
@@ -45,7 +44,10 @@ const scopesConfig: ScopeWithFilterTypes[] = [
   },
 ]
 
-const GroupByDropdown = styled(SortingDropdown)`
+const GroupByDropdown = styled(SortingDropdown)<{
+  $hideRemove?: boolean
+  $hideSortOrder?: boolean
+}>`
   flex-shrink: 0;
 
   /* hide the empty placeholder container (flex:1) so chip gets full space */
@@ -56,11 +58,8 @@ const GroupByDropdown = styled(SortingDropdown)`
   .sort-chip {
     min-width: fit-content;
 
-    /* hide close and sort arrow — not relevant for grouping */
-    .remove,
-    .sort-order {
-      display: none;
-    }
+    ${({ $hideRemove }) => $hideRemove && `.remove { display: none; }`}
+    ${({ $hideSortOrder }) => $hideSortOrder && `.sort-order { display: none; }`}
   }
 `
 
@@ -78,6 +77,7 @@ const ProjectOverviewPage: FC = () => {
     displayFilters,
     showHierarchy,
     viewGroupBy,
+    viewGroupByDesc,
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
@@ -86,28 +86,34 @@ const ProjectOverviewPage: FC = () => {
   // Build group-by dropdown options
   const groupedFields = useGetGroupedFields({ scope: 'task' })
   const viewGroupByOptions = useMemo(() => {
-    const options = [
-      { id: 'hierarchy', label: 'Hierarchy' },
-      { id: 'folder', label: 'Folder' },
+
+    return [
+      { id: 'hierarchy', label: 'Hierarchy', sortOrder: true },
+      { id: 'folder', label: 'Folder', sortOrder: true },
       ...groupedFields.map((field) => ({
         id: field.value,
         label: field.label,
+        sortOrder: true,
       })),
     ]
-    return options
   }, [groupedFields])
 
   const viewGroupByValue = useMemo(
-    () => viewGroupByOptions.filter((o) => o.id === (viewGroupBy ?? 'hierarchy')),
-    [viewGroupBy, viewGroupByOptions],
+    () =>
+      viewGroupByOptions
+        .filter((o) => o.id === (viewGroupBy ?? 'hierarchy'))
+        .map((o) => ({ ...o, sortOrder: !viewGroupByDesc })),
+    [viewGroupBy, viewGroupByOptions, viewGroupByDesc],
   )
 
-  const handleViewGroupByChange = (values: { id: string }[]) => {
-    const value = values[0]?.id
-    if (!value || value === 'hierarchy') {
+  const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
+    const value = values[0]
+    if (!value || value.id === 'hierarchy') {
       updateViewGroupBy(null)
     } else {
-      updateViewGroupBy(value)
+      // sortOrder: true = ascending, desc: false = ascending
+      const desc = value.sortOrder === false
+      updateViewGroupBy(value.id, desc)
     }
   }
 
@@ -202,6 +208,8 @@ const ProjectOverviewPage: FC = () => {
               />
               <ReloadButton />
               <GroupByDropdown
+                $hideRemove={viewGroupBy === null}
+                $hideSortOrder={viewGroupBy === null || viewGroupBy === 'folder'}
                 title="Group by"
                 options={viewGroupByOptions}
                 value={viewGroupByValue}

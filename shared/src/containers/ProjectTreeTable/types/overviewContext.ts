@@ -65,7 +65,8 @@ export interface ProjectOverviewContextType {
 
   // View mode grouping (top-level dropdown, independent from Customize panel groupBy)
   viewGroupBy: string | null // null = hierarchy mode, string = groupBy field id (e.g. 'folderType', 'status')
-  updateViewGroupBy: (viewGroupBy: string | null) => void
+  viewGroupByDesc: boolean // sort direction for grouping (true = descending)
+  updateViewGroupBy: (viewGroupBy: string | null, desc?: boolean) => void
 
   // Flat folder view mode (viewGroupBy === 'folder')
   isFlatFolderView: boolean

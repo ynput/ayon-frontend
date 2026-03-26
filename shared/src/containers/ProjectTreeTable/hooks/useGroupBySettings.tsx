@@ -16,10 +16,14 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   if (!modules) return null
   const { GroupSettings, requiredVersion } = modules || {}
 
-  // Add Hierarchy option when the table supports it
+  // Add Hierarchy and Folder options when the table supports it
   const hasHierarchy = !!updateShowHierarchy
   const fields = hasHierarchy
-    ? [{ value: HIERARCHY_ID, label: 'Hierarchy', icon: 'account_tree' }, ...groupByFields]
+    ? [
+        { value: HIERARCHY_ID, label: 'Hierarchy', icon: 'account_tree' },
+        { value: 'folder', label: 'Folder', icon: 'folder' },
+        ...groupByFields,
+      ]
     : groupByFields
 
   // When hierarchy is active (groupBy is undefined), present a virtual groupBy
@@ -27,18 +31,18 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   const virtualGroupBy =
     groupBy ?? (hasHierarchy && showHierarchy ? { id: HIERARCHY_ID, desc: false } : undefined)
 
-  // Wrap updateGroupBy to intercept "hierarchy" selection
+  // Wrap updateGroupBy to intercept "hierarchy" and "none" selection
   const handleUpdateGroupBy = useCallback(
     (newGroupBy: TableGroupBy | undefined) => {
       if (newGroupBy?.id === HIERARCHY_ID || !newGroupBy) {
-        // Clear groupBy — the sync effect in ProjectOverviewContext
-        // will set viewGroupBy to null (hierarchy mode)
+        // Clear groupBy and restore hierarchy mode
+        updateShowHierarchy?.(true)
         updateGroupBy(undefined)
         return
       }
       updateGroupBy(newGroupBy)
     },
-    [updateGroupBy],
+    [updateGroupBy, updateShowHierarchy],
   )
 
   const preview = virtualGroupBy
