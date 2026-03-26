@@ -119,6 +119,14 @@ export default function ImportSteps({ importContext, projectName, data, setData,
                 variant="nav"
                 label={`${index + 1}. ${breadcrumbForStep[s]}`}
                 disabled={!completed[s]}
+                icon={completed[s] ? "check" : ""}
+                iconProps={{
+                  style: {
+                    color: completed[s]
+                      ? "var(--md-sys-color-tertiary)"
+                      : "inherit"
+                  }
+                }}
                 selected={step === s}
                 onClick={() => {
                   setStep(s)
