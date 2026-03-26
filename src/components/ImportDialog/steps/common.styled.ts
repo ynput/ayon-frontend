@@ -99,7 +99,7 @@ export const MappersTableColumnName = styled.th`
     top: 0;
   }
 
-  &.unresolved::before {
+  &.unresolved::before, &.error::before {
     background-color: var(--md-sys-color-error);
   }
   &.resolved::before {
@@ -111,6 +111,18 @@ export const MappersTableColumnName = styled.th`
 
   &.empty {
     color: var(--md-sys-color-outline);
+  }
+`
+
+export const MappingError = styled.span`
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 1ch;
+  align-items: center;
+  gap: var(--base-gap-small);
+
+  &, & .icon {
+    color: var(--md-sys-color-error);
   }
 `
 

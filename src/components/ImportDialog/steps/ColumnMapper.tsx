@@ -1,4 +1,4 @@
-import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps, InputText } from "@ynput/ayon-react-components"
+import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps, Icon, InputText } from "@ynput/ayon-react-components"
 import { useMemo } from "react"
 import {
   MappersTableBodyRow,
@@ -9,7 +9,8 @@ import {
   PickActionDropdown,
   MapperDropdown,
   TargetType,
-  DropdownValueLabel
+  DropdownValueLabel,
+  MappingError
 } from "./common.styled"
 import { ColumnAction, ErrorHandlingMode, ValueAction } from "./common"
 import clsx from "clsx"
@@ -18,6 +19,7 @@ export enum MappingState {
   UNRESOLVED = "unresolved",
   RESOLVED = "resolved",
   AUTO_RESOLVED = "autoresolved",
+  ERROR = "error",
 }
 
 type Props = {
@@ -149,6 +151,12 @@ export default function ColumnMapper({
             />
           )
         }
+        {state === MappingState.ERROR && (
+          <MappingError>
+            <Icon icon="error" />
+            Invalid value
+          </MappingError>
+        )}
       </MappersTableAttribute>
       {
         errorHandlingEnabled && (

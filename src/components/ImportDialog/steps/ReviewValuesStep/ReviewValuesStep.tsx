@@ -80,7 +80,28 @@ const inferMapping = (value: string, settings: ImportableColumn): ValueMapping |
   }
 }
 
-const getMapperState = (column: string | null, value: string, mappings: ValueMappings | null) => {
+const validateValue = (settings: ImportableColumn, value: string) => {
+  switch (settings.valueType) {
+    case "integer":
+      return /[0-9]+/.test(value)
+    case "boolean":
+      return /true|false/i.test(value)
+    case "float":
+      return !Number.isNaN(parseFloat(value))
+    case "string":
+    // we don't know how to validate the types below - yet!
+    case "dict":
+    case "datetime":
+    case "list_of_strings":
+    case "list_of_any":
+    case "list_of_integers":
+    case "list_of_submodels":
+    default:
+      return true
+  }
+}
+
+const getMapperState = (settings: ImportableColumn, column: string | null, value: string, mappings: ValueMappings | null) => {
   if (!column || !mappings) return MappingState.UNRESOLVED
 
   const mapping = mappings[column]?.[value]
@@ -90,6 +111,10 @@ const getMapperState = (column: string | null, value: string, mappings: ValueMap
   const resolvedToSkip = mapping.action === ValueAction.SKIP
   const resolvedToCreate = mapping.action === ValueAction.CREATE
   if (resolvedToMap || resolvedToSkip || resolvedToCreate) {
+    if (resolvedToCreate && !validateValue(settings, mapping.targetValue)) {
+      return MappingState.ERROR
+    }
+
     return mapping.userResolved ? MappingState.RESOLVED : MappingState.AUTO_RESOLVED
   }
 
@@ -296,8 +321,9 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
         const valuesSet = new Set(uniqueValues)
         if (!mappings) return [column, valuesSet]
 
+        const settings = columnSettings[columnMappings[column].targetColumn]
         const resolvedValuesSet = new Set(uniqueValues
-          .map((value) => [value, getMapperState(column, value, mappings)])
+          .map((value) => [value, getMapperState(settings, column, value, mappings)])
           .filter(([, state]) => state !== MappingState.UNRESOLVED)
           .map(([c]) => c),
         )
@@ -449,7 +475,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
               currentUniqueValues.map((uniqueDataValue, index) => (
                 <ColumnMapper
                   key={uniqueDataValue}
-                  state={getMapperState(activeColumn, uniqueDataValue, mappings)}
+                  state={getMapperState(columnSettings[activeTarget], activeColumn, uniqueDataValue, mappings)}
                   column={uniqueDataValue}
                   action={currentMappings?.[uniqueDataValue]?.action}
                   actions={actionOptions.concat(activeTargetIsEnum ? enumActionOptions : [])}

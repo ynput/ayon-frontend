@@ -1,12 +1,14 @@
 import { useViewsContext, useViewUpdateHelper } from "@shared/containers"
 import { ColumnMappings, ValueMappings } from "../steps/common"
-import { useMemo } from "react"
-import { cloneDeep, merge } from "lodash"
+import { useCallback, useMemo } from "react"
+import { cloneDeep, debounce, merge } from "lodash"
 
 type MappingsPreset = {
   columns?: ColumnMappings
   values?: ValueMappings
 }
+
+const UPDATE_DEBOUNCE_DELAY_MS = 1_000
 
 export default function usePreset() {
   const { viewSettings, isViewWorking } = useViewsContext()
@@ -17,6 +19,22 @@ export default function usePreset() {
     if (!viewSettings || isViewWorking) return {}
     return (viewSettings as any).preset ?? {}
   }, [viewSettings, isViewWorking])
+
+  const updateValues = useCallback(debounce(
+    (values: ValueMappings) => {
+      const settings = merge(
+        cloneDeep(viewSettings),
+        {
+          preset: {
+            ...(values ? { values } : {}),
+          },
+        },
+      )
+
+      return updateViewSettings(settings, () => {}, settings, {})
+    },
+    UPDATE_DEBOUNCE_DELAY_MS,
+  ), [viewSettings])
 
   return {
     current,
@@ -32,17 +50,6 @@ export default function usePreset() {
 
       return updateViewSettings(settings, () => {}, settings, {})
     },
-    updateValues: (values: ValueMappings) => {
-      const settings = merge(
-        cloneDeep(viewSettings),
-        {
-          preset: {
-            ...(values ? { values } : {}),
-          },
-        },
-      )
-
-      return updateViewSettings(settings, () => {}, settings, {})
-    },
+    updateValues,
   }
 }
