@@ -25,6 +25,7 @@ export const ImportContextWrapper = styled.span`
   border-radius: var(--border-radius-m);
   margin-left: auto;
   margin-right: 0;
+  align-self: start;
 `
 
 export const TemplatesSelector = styled.div`
