@@ -157,7 +157,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   // GET GROUPING — use viewGroupBy for the top-level dropdown grouping
   // folderType can only be used with entity type 'folder'
-  // folderType can only be used with entity type 'folder'
   // viewGroupByObj is already undefined for flat folder view, so no extra guard needed
   const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
