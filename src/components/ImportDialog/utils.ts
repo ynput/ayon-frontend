@@ -1,4 +1,4 @@
-import { parse, type ParseLocalConfig } from "papaparse"
+import { parse, unparse, UnparseConfig, UnparseObject, type ParseLocalConfig } from "papaparse"
 import { ResolvedColumnMappings, ValueMappings } from "./steps/common"
 
 type ParseAsyncConfig = Omit<ParseLocalConfig, "complete">
@@ -50,6 +50,8 @@ export const parseCSV = async (file: File) => {
 
   return result
 }
+
+export const serializeCSV = (data: UnparseObject<unknown>) => unparse(data)
 
 export const getFullMapping = (columnMappings: ResolvedColumnMappings, valueMappings: ValueMappings) => {
   return Object.entries(columnMappings).map(([column, columnMapping]) => {

@@ -92,6 +92,7 @@ export default function ImportSteps({ importContext, projectName, data, setData,
         step === ImportStep.UPLOAD && (
           <UploadStep
             importContext={importContext}
+            importSchema={importSchema}
             onBack={onClose}
             onNext={(d) => {
               setData(d)

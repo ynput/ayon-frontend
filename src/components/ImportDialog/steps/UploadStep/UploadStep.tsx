@@ -1,13 +1,15 @@
-import { StepProps } from "../common";
+import { ImportSchema, StepProps } from "../common";
 import { Button, FileUpload, FileUploadProps, getFileSizeString, Icon, Panel } from "@ynput/ayon-react-components";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { StepNavButtons } from "../common.styled";
-import { ImportData, parseCSV } from "../../utils";
+import { ImportData, parseCSV, serializeCSV } from "../../utils";
 import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
 import Stats from "../Stats";
 
-type Props = StepProps<ImportData>
+type Props = StepProps<ImportData> & {
+  importSchema: ImportSchema
+}
 
 const acceptedTypes = ["text/csv"]
 
@@ -29,7 +31,7 @@ export const HiddenFileInput = styled.input`
   display: none;
 `
 
-export default function UploadStep({ importContext, onBack, onNext }: Props) {
+export default function UploadStep({ importContext, importSchema, onBack, onNext }: Props) {
   const [files, setFiles] = useState<FileUploadProps["files"]>([])
   const [data, setData] = useState<ImportData | null>(null)
   const [error, setError] = useState<Error | null>(null)
@@ -57,6 +59,12 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
 
   const hiddenFileInputRef = useRef<HTMLInputElement | null>(null)
 
+  const templateURL = useMemo(() => {
+    const serialized = serializeCSV({ fields: importSchema.map(({ key }) => key), data: [] })
+    const blob = new Blob([serialized], { type: "text/csv" })
+    return URL.createObjectURL(blob)
+  }, [importSchema])
+
   return (
     <>
       {
@@ -74,10 +82,16 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
               errorMessage={error ? `Could not parse this file: ${error?.message}` : undefined}
             />
             <FileUploadButtons>
-              <Button
-                variant="text"
-                label="Download template"
-              />
+              <a
+                href={templateURL}
+                download={`ayon-import-${importContext}-template.csv`}
+              >
+                <Button
+                  icon="download"
+                  variant="text"
+                  label="Download template"
+                />
+              </a>
               <label>
                 <HiddenFileInput
                   ref={hiddenFileInputRef}
@@ -94,6 +108,7 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
                   }}
                 />
                 <Button
+                  icon="upload_file"
                   label={`Choose ${importContext} .csv file`}
                   onClick={() => hiddenFileInputRef.current?.click()}
                 />
