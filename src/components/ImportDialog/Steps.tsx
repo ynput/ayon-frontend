@@ -9,6 +9,8 @@ import { useViewsContext } from "@shared/containers";
 import { useExportFieldsQuery, useImportDataMutation } from "@queries/dataImport";
 import { ColumnMapping, ImportStatus } from "@shared/api/generated/dataImport";
 import { toast } from "react-toastify";
+import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from "./ImportDialog.styled";
+import { Button } from "@ynput/ayon-react-components";
 
 type Props = {
   importContext: ImportContext
@@ -18,6 +20,20 @@ type Props = {
   step: ImportStep
   setStep: Dispatch<SetStateAction<ImportStep>>
   onClose: () => void
+}
+
+const steps = [
+  ImportStep.UPLOAD,
+  ImportStep.MAP_COLUMNS,
+  ImportStep.REVIEW_VALUES,
+  ImportStep.PREVIEW,
+]
+
+const breadcrumbForStep: Record<ImportStep, string> = {
+  [ImportStep.UPLOAD]: "Upload file",
+  [ImportStep.MAP_COLUMNS]: "Map Columns",
+  [ImportStep.REVIEW_VALUES]: "Review Values",
+  [ImportStep.PREVIEW]: "Preview Result",
 }
 
 export default function ImportSteps({ importContext, projectName, data, setData, step, setStep, onClose }: Props) {
@@ -86,8 +102,32 @@ export default function ImportSteps({ importContext, projectName, data, setData,
     })
   }, [requestImport, columnMappings, valueMappings])
 
+  const completed: Record<ImportStep, boolean> = useMemo(() => ({
+    [ImportStep.UPLOAD]: Boolean(importSchema),
+    [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data),
+    [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings),
+    [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
+  }), [importSchema, data, columnMappings, valueMappings, previewStatus])
+
   return (
     <>
+      <Breadcrumbs>
+        {
+          steps.map((s, index) => (
+            <Breadcrumb key={s}>
+              <BreadcrumbButton
+                variant="nav"
+                label={`${index + 1}. ${breadcrumbForStep[s]}`}
+                disabled={!completed[s]}
+                selected={step === s}
+                onClick={() => {
+                  setStep(s)
+                }}
+              />
+            </Breadcrumb>
+          ))
+        }
+      </Breadcrumbs>
       {
         !importSchema && (
           <h2>Loading</h2>
@@ -101,6 +141,9 @@ export default function ImportSteps({ importContext, projectName, data, setData,
             onBack={onClose}
             onNext={(d) => {
               setData(d)
+              setColumnMappings(undefined)
+              setValueMappings(null)
+              setPreviewStatus(null)
               setStep(ImportStep.MAP_COLUMNS)
             }}
           />

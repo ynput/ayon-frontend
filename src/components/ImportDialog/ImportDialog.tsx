@@ -2,7 +2,7 @@ import { Button, DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
 import { DialogContainer, DialogHeading, ImportContextWrapper, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
-import { ImportContext, ImportStep } from "./steps/common";
+import { ImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
 import { upperFirst } from "lodash";
 import clsx from "clsx";
 import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containers";
@@ -15,12 +15,6 @@ type Props = {
   projectName?: string
 }
 
-const dialogHeaderForStep: Record<ImportStep, string> = {
-  [ImportStep.UPLOAD]: "Upload file",
-  [ImportStep.MAP_COLUMNS]: "Map Columns",
-  [ImportStep.REVIEW_VALUES]: "Review Values",
-  [ImportStep.PREVIEW]: "Preview Result",
-}
 const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
   [ImportStep.UPLOAD]: "lg",
   [ImportStep.MAP_COLUMNS]: "full",
@@ -56,9 +50,9 @@ export default function ImportDialog({ importContext, projectName }: Props) {
         size={dialogSizeForStep[step]}
         header={(
           <DialogHeading>
-            {dialogHeaderForStep[step]}
+            Import {itemsLabelForImportContext[importContext]}
             <TemplatesSelector
-              className={clsx({ shown: step > ImportStep.UPLOAD })}
+              className={clsx({ shown: step > ImportStep.UPLOAD && step < ImportStep.PREVIEW })}
             >
               <span id={`import.${importContext}-views-portal`}></span>
             </TemplatesSelector>

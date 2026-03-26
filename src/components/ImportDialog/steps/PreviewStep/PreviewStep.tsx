@@ -1,26 +1,14 @@
-import { ImportContext, ResolvedColumnMappings, StepProps, ValueMappings } from "../common";
+import { ImportContext, itemsLabelForImportContext, StepProps } from "../common";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
 import { StepContainer, StepNavButtons } from "../common.styled";
 import { ImportData } from "@components/ImportDialog/utils";
-import { useImportDataMutation } from "@queries/dataImport";
-import { useEffect, useMemo, useState } from "react";
-import { ColumnMapping, ImportStatus } from "@shared/api/generated/dataImport";
-import { toast } from "react-toastify";
+import { ImportStatus } from "@shared/api/generated/dataImport";
 import Stats from "../Stats";
 
 type Props = StepProps<void> & {
   data: ImportData
   previewStatus: ImportStatus
   importContext: ImportContext
-}
-
-const itemsLabelForImporContext: Record<ImportContext, string> = {
-  hierarchy: "folders and tasks",
-  user: "users",
-  folder: "folders",
-  task: "tasks",
-  // TODO: add this once lists are supported in the backend
-  // list: "items",
 }
 
 export default function PreviewStep({ data, previewStatus, importContext, onBack, onNext }: Props) {
@@ -31,7 +19,7 @@ export default function PreviewStep({ data, previewStatus, importContext, onBack
           previewStatus && (
             <Stats
               heading={data.fileName}
-              subtitle={`Importing ${itemsLabelForImporContext[importContext]}`}
+              subtitle={`Importing ${itemsLabelForImportContext[importContext]}`}
               size={getFileSizeString(data.fileSize)}
               items={[
                 {
