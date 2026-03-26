@@ -423,13 +423,11 @@ export const useBuildFilterOptions = ({
             id: 'true',
             label: 'Yes',
             values: [],
-            icon: 'radio_button_checked',
           },
           {
             id: 'false',
             label: 'No',
             values: [],
-            icon: 'radio_button_unchecked',
           },
         ]
         hasReviewablesOption.values?.push(...options_list)
@@ -504,13 +502,11 @@ export const useBuildFilterOptions = ({
               id: 'true',
               label: 'Yes',
               values: [],
-              icon: 'radio_button_checked',
             },
             {
               id: 'false',
               label: 'No',
               values: [],
-              icon: 'radio_button_unchecked',
             },
           ]
           optionValues.push(...options)
@@ -583,10 +579,10 @@ const getSubTypes = (
             values: [],
             allowsCustomValues: false,
             pt: {
-              style:{
-                color: 'inherit'
-              }
-            }
+              style: {
+                color: 'inherit',
+              },
+            },
           })
         }
       })
@@ -607,10 +603,10 @@ const getSubTypes = (
             values: [],
             allowsCustomValues: false,
             pt: {
-              style:{
-                color: 'inherit'
-              }
-            }
+              style: {
+                color: 'inherit',
+              },
+            },
           })
         }
       })
@@ -884,9 +880,9 @@ const getAttributeOptions = (
         values: [],
         icon: enumItem.icon,
         color: enumItem.color,
-        pt:{
-          style:{color:'inherit'}
-        }
+        pt: {
+          style: { color: 'inherit' },
+        },
       })
     })
   }
