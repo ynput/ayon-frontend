@@ -1,6 +1,6 @@
 import { ImportSchema, StepProps } from "../common";
-import { Button, FileUpload, FileUploadProps, getFileSizeString, Icon, Panel } from "@ynput/ayon-react-components";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Button, FileUpload, FileUploadProps, getFileSizeString } from "@ynput/ayon-react-components";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StepNavButtons } from "../common.styled";
 import { ImportData, parseCSV, serializeCSV } from "../../utils";
 import styled from "styled-components";
@@ -20,6 +20,8 @@ const FileUploadWrapper = styled.div`
 
 const FileUploadButtons = styled.div`
   display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
   gap: var(--base-gap-medium);
   position: absolute;
   top: 50%;
@@ -27,25 +29,29 @@ const FileUploadButtons = styled.div`
   translate: -50% -50%;
 `
 
+const FileUploadHint = styled.p`
+  color: var(--md-sys-color-outline);
+  flex-basis: 100%;
+  text-align: center;
+`
+
 export const HiddenFileInput = styled.input`
   display: none;
 `
 
 export default function UploadStep({ importContext, importSchema, onBack, onNext }: Props) {
-  const [files, setFiles] = useState<FileUploadProps["files"]>([])
   const [data, setData] = useState<ImportData | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
   const [uploadFile] = useUploadFileMutation()
 
-  useEffect(() => {
-    if (files.length === 0) return
-
-    const firstFile = files[0].file
-    parseCSV(firstFile)
+  const upload = useCallback((file: File | string) => {
+    parseCSV(file)
       .then(async (csv) => {
         const { data, error } = await uploadFile({
-          csv: await firstFile.text(),
+          csv: typeof file === "string"
+            ? file
+            : await file.text(),
         })
 
         if (error) throw new Error('Upload failed')
@@ -55,7 +61,35 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
         })
       })
       .catch((error) => setError(error))
-  }, [files])
+  }, [])
+
+  const uploadFilesFromComponent = useCallback((files: FileUploadProps["files"]) => {
+    if (files.length === 0) return
+
+    const firstFile = files[0].file
+    upload(firstFile)
+  }, [upload])
+
+  useEffect(() => {
+    const handler = (event: ClipboardEvent) => {
+      if (!event.clipboardData) return
+
+      if (event.clipboardData.files.length > 0) {
+        uploadFilesFromComponent(Array.from(event.clipboardData.files).map((file) => ({
+          file,
+          sequenceId: "",
+          sequenceNumber: 0,
+        })))
+
+        return
+      }
+
+      upload(event.clipboardData?.getData("text"))
+    }
+
+    document.addEventListener('paste', handler);
+    return () => document.removeEventListener('paste', handler);
+  }, [upload, uploadFilesFromComponent])
 
   const hiddenFileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -71,8 +105,11 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
         !data && (
           <FileUploadWrapper>
             <FileUpload
-              files={files}
-              setFiles={setFiles}
+              files={[]}
+              setFiles={(f) => {
+                const files = typeof f === "function" ? f([]) : f
+                uploadFilesFromComponent(files)
+              }}
               placeholder=" "
               dropIcon=" "
               header={<></>}
@@ -99,12 +136,7 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
                   accept={acceptedTypes.join()}
                   onChange={(event) => {
                     if (!event.target.files || event.target.files?.length === 0) return
-                    // fake the CustomFile data structure for compatibility with <FileUpload />
-                    setFiles([{
-                      file: event.target.files[0],
-                      sequenceId: null,
-                      sequenceNumber: 0,
-                    }])
+                    upload(event.target.files[0])
                   }}
                 />
                 <Button
@@ -113,15 +145,18 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
                   onClick={() => hiddenFileInputRef.current?.click()}
                 />
               </label>
+              <FileUploadHint>
+                Drop a file here or paste CSV from the clipboard
+              </FileUploadHint>
             </FileUploadButtons>
           </FileUploadWrapper>
         )
       }
       {
-        data && files.length > 0 && (
+        data && (
           <Stats
-            heading={files[0].file.name}
-            size={getFileSizeString(files[0].file.size)}
+            heading={data.fileName}
+            size={getFileSizeString(data.fileSize)}
             items={[
               {
                 text: `${data.columns.length} columns found`,
@@ -133,10 +168,7 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
                 icon: "table_rows",
               }
             ]}
-            onClose={() => {
-              setFiles([])
-              setData(null)
-            }}
+            onClose={() => setData(null)}
           />
         )
       }

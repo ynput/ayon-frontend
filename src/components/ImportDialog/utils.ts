@@ -21,7 +21,7 @@ const parseConfig: ParseAsyncConfig = {
   header: true,
 }
 
-const parseAsync = (file: File, config: ParseAsyncConfig): Promise<CSVRow[]> => new Promise((resolve, reject) => {
+const parseAsync = (file: File | string, config: ParseAsyncConfig): Promise<CSVRow[]> => new Promise((resolve, reject) => {
   parse(
     // @ts-expect-error some weirdness with the overloads, we're passing a File which should be fine
     file,
@@ -38,15 +38,24 @@ const parseAsync = (file: File, config: ParseAsyncConfig): Promise<CSVRow[]> => 
 })
 
 const fileCache = new WeakMap<File, ParsedCSV>()
+const textEncoder = new TextEncoder()
 
-export const parseCSV = async (file: File) => {
-  if (fileCache.has(file)) return fileCache.get(file)!
+export const parseCSV = async (file: File | string) => {
+  if (typeof file === "object" && fileCache.has(file)) return fileCache.get(file)!
 
   const rows = await parseAsync(file, parseConfig)
   const keys = rows.map((r) => Object.keys(r)).flat()
   const columns = Array.from(new Set(keys))
-  const result = { columns, rows, fileName: file.name, fileSize: file.size }
-  fileCache.set(file, result)
+  const result = {
+    columns,
+    rows,
+    fileName: typeof file === "object" ? file.name : "Pasted from clipboard",
+    fileSize: typeof file === "object" ? file.size : textEncoder.encode(file).length,
+  }
+
+  if (typeof file === "object") {
+    fileCache.set(file, result)
+  }
 
   return result
 }
