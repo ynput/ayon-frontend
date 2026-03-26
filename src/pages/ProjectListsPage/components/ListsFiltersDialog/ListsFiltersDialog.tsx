@@ -200,12 +200,10 @@ const ListsFiltersDialog: FC<ListsFiltersDialogProps> = ({}) => {
             {
               id: 'true',
               label: 'Yes',
-              icon: 'radio_button_checked',
             },
             {
               id: 'false',
               label: 'No',
-              icon: 'radio_button_unchecked',
             },
           ]
         } else {
