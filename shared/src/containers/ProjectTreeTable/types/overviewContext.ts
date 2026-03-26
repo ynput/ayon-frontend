@@ -67,6 +67,9 @@ export interface ProjectOverviewContextType {
   viewGroupBy: string | null // null = hierarchy mode, string = groupBy field id (e.g. 'folderType', 'status')
   updateViewGroupBy: (viewGroupBy: string | null) => void
 
+  // Flat folder view mode (viewGroupBy === 'folder')
+  isFlatFolderView: boolean
+
   // Expanded state
   expanded: ExpandedState
   expandedIds: string[]

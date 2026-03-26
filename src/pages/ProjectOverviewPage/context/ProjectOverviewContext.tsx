@@ -98,6 +98,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // viewGroupBy === null means hierarchy mode, otherwise it's a groupBy field
   const showHierarchy = viewGroupBy === null
 
+  // Flat folder view: shows all folders flat, each expandable to reveal tasks
+  const isFlatFolderView = viewGroupBy === 'folder'
+
   // When user changes viewGroupBy, sync to Customize panel's groupBy
   // onUpdateColumns (called by updateGroupBy) already handles showHierarchy on the server
   const updateViewGroupBy = useCallback(
@@ -107,6 +110,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         // Enter hierarchy mode: clear groupBy and persist showHierarchy on server
         _updateShowHierarchy(true)
         updateGroupBy(undefined)
+      } else if (newViewGroupBy === 'folder') {
+        // Flat folder view: no hierarchy, no groupBy (uses hierarchy-style task fetching)
+        // Don't call updateGroupBy — avoids triggering the panel sync effect
+        // which would override viewGroupBy back to null
+        _updateShowHierarchy(false)
       } else {
         // onUpdateColumns (called by updateGroupBy) sets showHierarchy: false on the server
         updateGroupBy({ id: newViewGroupBy, desc: false })
@@ -138,13 +146,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   // Build the effective groupBy for data fetching from the view dropdown
   // This is independent from the Customize panel's groupBy
+  // For flat folder view, we don't need a groupBy — it uses hierarchy-style task fetching
   const viewGroupByObj = useMemo(
-    () => (viewGroupBy ? { id: viewGroupBy, desc: false } : undefined),
-    [viewGroupBy],
+    () => (viewGroupBy && !isFlatFolderView ? { id: viewGroupBy, desc: false } : undefined),
+    [viewGroupBy, isFlatFolderView],
   )
 
   // GET GROUPING — use viewGroupBy for the top-level dropdown grouping
   // folderType can only be used with entity type 'folder'
+  // folderType can only be used with entity type 'folder'
+  // viewGroupByObj is already undefined for flat folder view, so no extra guard needed
   const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
     groupBy: viewGroupByObj,
@@ -236,6 +247,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     groupBy: viewGroupByObj,
     taskGroups,
     showHierarchy,
+    isFlatFolderView,
     attribFields,
     modules,
   })
@@ -291,6 +303,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         // view mode grouping (top-level dropdown)
         viewGroupBy,
         updateViewGroupBy,
+        // flat folder view
+        isFlatFolderView,
         // expanded state
         expanded,
         expandedIds,

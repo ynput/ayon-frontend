@@ -68,6 +68,9 @@ export interface ProjectTableProviderProps {
   attribFields: ProjectTableAttribute[]
   scopes: string[]
 
+  // Flat folder view
+  isFlatFolderView?: boolean
+
   // data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -168,6 +171,7 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  isFlatFolderView,
   SubtasksManager,
   // player
   playerOpen,
@@ -180,6 +184,9 @@ export const ProjectTableProvider = ({
   useSearchParams,
 }: ProjectTableProviderProps) => {
   const { attrib: projectAttrib } = useProjectContext()
+  const { groupBy: columnSettingsGroupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
+    useColumnSettingsContext()
+
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
     foldersMap,
@@ -188,12 +195,11 @@ export const ProjectTableProvider = ({
     tasksByFolderMap,
     expanded,
     showHierarchy,
+    isFlatFolderView,
+    showEmptyFolders: showEmptyGroups,
     loadingTasks,
     isLoadingMore,
   })
-
-  const { groupBy: columnSettingsGroupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
-    useColumnSettingsContext()
 
   // overrideGroupBy (from view dropdown) takes priority over Customize panel's groupBy
   const effectiveGroupBy = overrideGroupBy || columnSettingsGroupBy
@@ -218,7 +224,7 @@ export const ProjectTableProvider = ({
     [effectiveGroupBy, entitiesMap, groups],
   )
 
-  const tableData = effectiveGroupBy && groupedTableData ? groupedTableData : defaultTableData
+  const tableData = effectiveGroupBy && !isFlatFolderView && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
     (id: string, field: string = 'entityId'): EntityMap | undefined => {
@@ -343,6 +349,8 @@ export const ProjectTableProvider = ({
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
+        // flat folder view
+        isFlatFolderView,
         // expanded state
         expanded,
         setExpanded,

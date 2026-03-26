@@ -88,6 +88,7 @@ const ProjectOverviewPage: FC = () => {
   const viewGroupByOptions = useMemo(() => {
     const options = [
       { id: 'hierarchy', label: 'Hierarchy' },
+      { id: 'folder', label: 'Folder' },
       ...groupedFields.map((field) => ({
         id: field.value,
         label: field.label,

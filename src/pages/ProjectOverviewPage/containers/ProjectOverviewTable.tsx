@@ -13,7 +13,7 @@ type Props = {}
 const ProjectOverviewTable = ({}: Props) => {
   const { projectName } = useProjectContext()
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
-  const { showHierarchy, isLoading, fetchNextPage } = useProjectTableContext()
+  const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage } = useProjectTableContext()
 
   const { onOpenNew } = useNewEntityContext()
 
@@ -41,7 +41,7 @@ const ProjectOverviewTable = ({}: Props) => {
         onScrollBottomGroupBy={handleScrollBottomGroupBy}
         // metadata
         onOpenNew={onOpenNew}
-        clientSorting={showHierarchy}
+        clientSorting={showHierarchy || isFlatFolderView}
       />
     </Section>
   )
