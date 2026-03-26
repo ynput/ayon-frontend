@@ -150,3 +150,25 @@ export const PickActionDropdown = styled(MapperDropdown)`
     border: none;
   }
 `
+
+export const DropdownValueLabel = styled.span`
+  display: inline-flex;
+  gap: var(--base-gap-small);
+  width: 100%;
+
+  span:has(> &) {
+    width: 100%;
+    display: flex;
+  }
+
+  div:has(> span > &) {
+    width: 100%;
+  }
+`
+
+export const TargetType = styled.span`
+  color: var(--md-sys-color-outline);
+  margin-left: auto;
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  padding-right: var(--padding-s);
+`

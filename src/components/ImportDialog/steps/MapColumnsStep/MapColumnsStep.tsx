@@ -175,13 +175,14 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
 
   const targetOptions = useMemo(
     () => importSchema
-      .map(({ key, label, required }) => {
+      .map(({ key, label, required, valueType }) => {
         const column = columnForTarget[key]
         if (!column) return {
           value: key,
           label: required ? `${label} (required)` : label,
           icon: required ? "warning" : undefined,
           color: "var(--md-sys-color-warning)",
+          type: valueType,
         }
 
         const state = getMapperState(column, mappings)
@@ -192,6 +193,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
             ? 'var(--md-sys-color-tertiary)'
             : 'var(--md-sys-color-primary)',
           label: `${label}${TARGET_OPTION_MAPPING_SEPARATOR}mapped to "${column}"`,
+          type: valueType,
         }
       })
       .sort(targetOptionCompareFn(columnForTarget, columnSettings)),

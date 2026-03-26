@@ -1,4 +1,4 @@
-import { DefaultValueTemplate, DropdownProps } from "@ynput/ayon-react-components"
+import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps } from "@ynput/ayon-react-components"
 import { useMemo } from "react"
 import {
   MappersTableBodyRow,
@@ -7,7 +7,9 @@ import {
   MappersTableAttribute,
   MappersTableErrorHandling,
   PickActionDropdown,
-  MapperDropdown
+  MapperDropdown,
+  TargetType,
+  DropdownValueLabel
 } from "./common.styled"
 import { ColumnAction, ErrorHandlingMode, ValueAction } from "./common"
 import clsx from "clsx"
@@ -114,8 +116,24 @@ export default function ColumnMapper({
                       : "Select a target..."
               }
             >
-              {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
+              <DropdownValueLabel>
+                {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
+                <TargetType> {selectedTargetOption?.type}</TargetType>
+              </DropdownValueLabel>
             </DefaultValueTemplate>
+          )}
+          itemTemplate={(option) => (
+            <DefaultItemTemplate
+              option={option}
+              dataKey="value"
+              labelKey="label"
+              value={option.value}
+              endContent={
+                option.type
+                  ? <TargetType>{option.type.replace(/_/g, ' ')}</TargetType>
+                  : undefined
+              }
+            />
           )}
         />
       </MappersTableAttribute>
