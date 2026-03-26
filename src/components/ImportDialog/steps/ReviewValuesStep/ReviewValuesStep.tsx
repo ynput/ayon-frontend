@@ -1,7 +1,7 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema } from "../common"
+import { ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction } from "../common"
 import {
   Mappers,
   MappersTableHeader,
@@ -10,7 +10,6 @@ import {
   StepNavButtons,
   StepNavStats,
   StepContainer,
-  MappersTableNameCol,
 } from "../common.styled"
 import {
   Container,
@@ -37,17 +36,17 @@ type Props = StepProps<ValueMappings> & {
 
 const actionOptions = [
   {
-    value: ColumnAction.MAP,
+    value: ValueAction.MAP,
     label: "Map",
     icon: "line_end_arrow",
   },
   {
-    value: ColumnAction.SKIP,
+    value: ValueAction.SKIP,
     label: "Skip",
     icon: "block",
   },
   {
-    value: ColumnAction.CREATE,
+    value: ValueAction.CREATE,
     label: "Create",
     icon: "add",
   },
@@ -65,7 +64,7 @@ const inferMapping = (value: string, settings: ImportableColumn): ValueMapping |
 
   return {
     targetValue: `${inferredEnum.value}`,
-    action: ColumnAction.MAP,
+    action: ValueAction.MAP,
   }
 }
 
@@ -75,9 +74,9 @@ const getMapperState = (column: string | null, value: string, mappings: ValueMap
   const mapping = mappings[column]?.[value]
   if (!mapping) return MappingState.UNRESOLVED
 
-  const resolvedToMap = mapping.action === ColumnAction.MAP && mapping.targetValue
-  const resolvedToSkip = mapping.action === ColumnAction.SKIP
-  const resolvedToCreate = mapping.action === ColumnAction.CREATE
+  const resolvedToMap = mapping.action === ValueAction.MAP && mapping.targetValue
+  const resolvedToSkip = mapping.action === ValueAction.SKIP
+  const resolvedToCreate = mapping.action === ValueAction.CREATE
   if (resolvedToMap || resolvedToSkip || resolvedToCreate) {
     return mapping.userResolved ? MappingState.RESOLVED : MappingState.AUTO_RESOLVED
   }
@@ -421,7 +420,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                       setMappings(mappingUpdater(
                         activeColumn,
                         Array.from(selection),
-                        { action },
+                        { action: action as ValueAction },
                         preset.updateValues,
                       ))
 
@@ -431,7 +430,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                     setMappings(mappingUpdater(
                       activeColumn,
                       [uniqueDataValue],
-                      { action },
+                      { action: action as ValueAction },
                       preset.updateValues,
                     ))
                   }}
@@ -442,7 +441,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                       [uniqueDataValue],
                       {
                         targetValue,
-                        action: ColumnAction.MAP,
+                        action: ValueAction.MAP,
                       },
                       preset.updateValues,
                     ))

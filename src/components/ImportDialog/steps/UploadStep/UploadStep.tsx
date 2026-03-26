@@ -5,6 +5,7 @@ import { StepNavButtons } from "../common.styled";
 import { ImportData, parseCSV } from "../../utils";
 import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
+import Stats from "../Stats";
 
 type Props = StepProps<ImportData>
 
@@ -28,38 +29,6 @@ export const HiddenFileInput = styled.input`
   display: none;
 `
 
-export const FileStatsWrapper = styled.div`
-  flex-grow: 1;
-  align-content: center;
-  justify-content: center;
-`
-
-export const FileStats = styled(Panel)`
-  background: var(--md-sys-color-surface-container-high);
-  margin: 0 auto;
-  max-width: max-content;
-`
-export const FileStat = styled(Panel)`
-  background: var(--md-sys-color-surface-container-low);
-  padding: var(--padding-s);
-`
-export const FileStatsHeading = styled.h2`
-  margin: 0;
-  font-size: inherit;
-  display: flex;
-  gap: var(--base-gap-small);
-  align-items: center;
-  min-width: 300px;
-`
-export const FileStatsFileSize = styled.span`
-  color: var(--md-sys-color-outline);
-  margin-left: 1ch;
-`
-export const FileStatsRemove = styled(Button)`
-  margin-left: auto;
-  margin-right: 0;
-`
-
 export default function UploadStep({ importContext, onBack, onNext }: Props) {
   const [files, setFiles] = useState<FileUploadProps["files"]>([])
   const [data, setData] = useState<ImportData | null>(null)
@@ -78,7 +47,10 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
         })
 
         if (error) throw new Error('Upload failed')
-        setData({ ...csv, fileId: data.id })
+        setData({
+          ...csv,
+          fileId: data.id,
+        })
       })
       .catch((error) => setError(error))
   }, [files])
@@ -132,32 +104,25 @@ export default function UploadStep({ importContext, onBack, onNext }: Props) {
       }
       {
         data && files.length > 0 && (
-          <FileStatsWrapper>
-            <FileStats>
-              <FileStatsHeading>
-                {files[0].file.name}
-                <FileStatsFileSize>
-                  {getFileSizeString(files[0].file.size)}
-                </FileStatsFileSize>
-                <FileStatsRemove
-                  icon="close"
-                  variant="nav"
-                  onClick={() => {
-                    setFiles([])
-                    setData(null)
-                  }}
-                />
-              </FileStatsHeading>
-              <FileStat direction="row">
-                <Icon icon="table_rows" style={{ rotate: "90deg" }} />
-                {data.columns.length} columns found
-              </FileStat>
-              <FileStat direction="row">
-                <Icon icon="table_rows" />
-                {data.rows.length} rows found
-              </FileStat>
-            </FileStats>
-          </FileStatsWrapper>
+          <Stats
+            heading={files[0].file.name}
+            size={getFileSizeString(files[0].file.size)}
+            items={[
+              {
+                text: `${data.columns.length} columns found`,
+                icon: "table_rows",
+                rotated: true,
+              },
+              {
+                text: `${data.rows.length} rows found`,
+                icon: "table_rows",
+              }
+            ]}
+            onClose={() => {
+              setFiles([])
+              setData(null)
+            }}
+          />
         )
       }
       <StepNavButtons>

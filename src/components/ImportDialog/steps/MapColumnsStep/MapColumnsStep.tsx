@@ -3,7 +3,7 @@ import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ImportSchema, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
-import { MappersTableErrorHandlingCol, MappersTableNameCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
+import { MappersTableErrorHandlingCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "./DataPreview"
 import {
   Container,
@@ -317,7 +317,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                   onActionChange={(action) => {
                     setMappings(mappingUpdater(
                       column,
-                      { action },
+                      { action: action as ColumnAction },
                       {},
                       preset.updateColumns,
                     ))

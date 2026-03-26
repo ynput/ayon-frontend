@@ -1,12 +1,14 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 import UploadStep from "./steps/UploadStep/UploadStep";
-import { ImportData } from "./utils";
+import { getFullMapping, ImportData } from "./utils";
 import MapColumnsStep from "./steps/MapColumnsStep/MapColumnsStep";
 import { ImportContext, ImportStep, ResolvedColumnMappings, ValueMappings } from "./steps/common";
 import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
 import PreviewStep from "./steps/PreviewStep/PreviewStep";
 import { useViewsContext } from "@shared/containers";
-import { useExportFieldsQuery } from "@queries/dataImport";
+import { useExportFieldsQuery, useImportDataMutation } from "@queries/dataImport";
+import { ColumnMapping, ImportStatus } from "@shared/api/generated/dataImport";
+import { toast } from "react-toastify";
 
 type Props = {
   importContext: ImportContext
@@ -19,8 +21,11 @@ type Props = {
 }
 
 export default function ImportSteps({ importContext, projectName, data, setData, step, setStep, onClose }: Props) {
+  const [importData] = useImportDataMutation()
+
   const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
+  const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
 
   const { data: importSchema } = useExportFieldsQuery({
     projectName,
@@ -33,6 +38,53 @@ export default function ImportSteps({ importContext, projectName, data, setData,
     if (!workingView?.id) return
     setSelectedView(workingView.id)
   }, [workingView])
+
+  const requestImport = useCallback(async (columnMapping: ColumnMapping[], preview: boolean) => {
+    if (!data) return
+
+    return importData({
+      fileId: data.fileId,
+      entityType: importContext,
+      columnMapping,
+      preview,
+      projectName,
+    })
+  }, [data, projectName, importContext])
+
+  const onValuesReviewed = useCallback((mappings: ValueMappings) => {
+    if (!columnMappings) return
+    setValueMappings(mappings)
+
+    requestImport(
+      getFullMapping(columnMappings, mappings),
+      true,
+    ).then((result) => {
+      if (!result || result.error) {
+        throw new Error(JSON.stringify(result?.error))
+      }
+
+      setPreviewStatus(result.data)
+    }).catch((err) => {
+      console.error(err)
+      toast.error(`Error getting import preview`)
+    })
+    setStep(ImportStep.PREVIEW)
+  }, [requestImport, columnMappings])
+
+  const onConfirmImport = useCallback(() => {
+    if (!columnMappings || !valueMappings) return
+
+    requestImport(
+      getFullMapping(columnMappings, valueMappings),
+      false,
+    ).then(() => {
+      toast.success(`Import successful`)
+      onClose()
+    }).catch((err) => {
+      console.error(err)
+      toast.error(`Error importing data`)
+    })
+  }, [requestImport, columnMappings, valueMappings])
 
   return (
     <>
@@ -80,22 +132,18 @@ export default function ImportSteps({ importContext, projectName, data, setData,
               setValueMappings(mappings ?? null)
               setStep(ImportStep.MAP_COLUMNS)
             }}
-            onNext={(mappings) => {
-              setValueMappings(mappings)
-              setStep(ImportStep.PREVIEW)
-            }}
+            onNext={onValuesReviewed}
           />
         )
       }
       {
-        importSchema && data && columnMappings && valueMappings && step === ImportStep.PREVIEW && (
+        importSchema && data && columnMappings && valueMappings && previewStatus && step === ImportStep.PREVIEW && (
           <PreviewStep
             data={data}
-            columnMappings={columnMappings}
-            mappings={valueMappings}
+            previewStatus={previewStatus}
             importContext={importContext}
             onBack={() => setStep(ImportStep.REVIEW_VALUES)}
-            onNext={() => {}}
+            onNext={onConfirmImport}
           />
         )
       }

@@ -9,7 +9,7 @@ import {
   PickActionDropdown,
   MapperDropdown
 } from "./common.styled"
-import { ColumnAction, ErrorHandlingMode } from "./common"
+import { ColumnAction, ErrorHandlingMode, ValueAction } from "./common"
 import clsx from "clsx"
 
 export enum MappingState {
@@ -22,7 +22,7 @@ type Props = {
   state: MappingState
   selected: boolean
   column: string
-  action: ColumnAction | undefined
+  action: ColumnAction | ValueAction | undefined
   actions: DropdownProps["options"]
   target: string | undefined
   targetOptions: DropdownProps["options"]
@@ -31,7 +31,7 @@ type Props = {
   errorHandlingOptions: DropdownProps["options"]
   onPointerEnter: () => void
   onClick: (ctrl: boolean, shift: boolean) => void
-  onActionChange: (action: ColumnAction) => void
+  onActionChange: (action: ColumnAction | ValueAction) => void
   onTargetChange: (target: string) => void
   onErrorHandlingChange: (mode: ErrorHandlingMode) => void
 }
@@ -65,7 +65,7 @@ export default function ColumnMapper({
   )
 
   const skipping = action === ColumnAction.SKIP
-  const creating = action === ColumnAction.CREATE
+  const creating = action === ValueAction.CREATE
 
   return (
     <MappersTableBodyRow

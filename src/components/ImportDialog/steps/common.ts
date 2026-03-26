@@ -14,13 +14,18 @@ export enum ImportStep {
 export enum ColumnAction {
   MAP = "map",
   SKIP = "skip",
+}
+
+export enum ValueAction {
+  MAP = "map",
+  SKIP = "skip",
   CREATE = "create",
 }
 
 export enum ErrorHandlingMode {
   SKIP = "skip",
-  ABORT = "abort",
-  DEFAULT = "default",
+  ABORT = "fail",
+  DEFAULT = "update",
 }
 
 export type StepProps<R> = {
@@ -45,7 +50,7 @@ export type ColumnMappings = Record<string, ColumnMapping>
 export type ResolvedColumnMappings = Record<string, ResolvedColumnMapping>
 
 export type ValueMapping = {
-  action: ColumnAction
+  action: ValueAction
   targetValue: string
   userResolved?: boolean
 }

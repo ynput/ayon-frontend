@@ -140,22 +140,23 @@ export type ImportStatus = {
   skipped?: number
   failed?: number
   failedItems?: object
+  preview?: boolean
 }
 export type ColumnValueMapping = {
   /** The source value from csv */
   source?: string
   /** The target value from csv */
   target?: string
-  /** Only map or create missing */
-  action: 'map' | 'create'
+  /** Map, skip or create missing */
+  action: 'map' | 'skip' | 'create'
 }
 export type ColumnMapping = {
   /** The key of the column, such as `name`, `attrib.priority`, etc. */
   sourceKey: string
   /** The key of the column, such as `name`, `attrib.priority`, etc. */
   targetKey: string
-  /** If value in field is required */
-  action: 'map' | 'create'
+  /** Map or skip whole column */
+  action: 'map' | 'skip'
   /** If value in field is required */
   errorHandlingMode: 'skip' | 'update' | 'fail'
   /** List of values mapping mostly for enum fields */
