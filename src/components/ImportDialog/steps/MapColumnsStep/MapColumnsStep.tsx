@@ -230,7 +230,14 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
   useEffect(() => {
     if (!preset.current.columns) return
 
-    setMappings((m) => ({ ...m, ...preset.current.columns }))
+    // Ensure only columns which are in the CSV get mapped,
+    // since the preset might include other irrelevant mappings
+    // to one of the targets.
+    const filteredPreset = Object.fromEntries(
+      Object.entries(preset.current.columns)
+        .filter(([column]) => data.columns.includes(column)),
+    )
+    setMappings((m) => ({ ...m, ...filteredPreset }))
   }, [preset.current])
 
   const onTargetChange = useCallback((column: string) => (targetColumn: string) => {
