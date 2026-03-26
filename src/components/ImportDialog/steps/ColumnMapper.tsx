@@ -40,6 +40,8 @@ type Props = {
 
 export const TARGET_OPTION_MAPPING_SEPARATOR = ' - '
 
+const formatDataType = (t: string) => t.replace(/_/g, ' ')
+
 export default function ColumnMapper({
   state,
   selected,
@@ -118,7 +120,7 @@ export default function ColumnMapper({
             >
               <DropdownValueLabel>
                 {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
-                <TargetType> {selectedTargetOption?.type}</TargetType>
+                <TargetType>{formatDataType(selectedTargetOption?.type)}</TargetType>
               </DropdownValueLabel>
             </DefaultValueTemplate>
           )}
@@ -130,7 +132,7 @@ export default function ColumnMapper({
               value={option.value}
               endContent={
                 option.type
-                  ? <TargetType>{option.type.replace(/_/g, ' ')}</TargetType>
+                  ? <TargetType>{formatDataType(option.type)}</TargetType>
                   : undefined
               }
             />

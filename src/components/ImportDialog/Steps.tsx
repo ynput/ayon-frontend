@@ -89,7 +89,12 @@ export default function ImportSteps({ importContext, projectName, data, setData,
   return (
     <>
       {
-        step === ImportStep.UPLOAD && (
+        !importSchema && (
+          <h2>Loading</h2>
+        )
+      }
+      {
+        step === ImportStep.UPLOAD && importSchema && (
           <UploadStep
             importContext={importContext}
             importSchema={importSchema}
@@ -99,11 +104,6 @@ export default function ImportSteps({ importContext, projectName, data, setData,
               setStep(ImportStep.MAP_COLUMNS)
             }}
           />
-        )
-      }
-      {
-        step > ImportStep.UPLOAD && !importSchema && (
-          <h2>Loading</h2>
         )
       }
       {
