@@ -500,14 +500,53 @@ const injectedApi = enhancedApi.injectEndpoints({
       ) => {
         try {
           let promises = []
+          // Folder-level filter keys that must go in folderFilter, not task filter
+          const folderFilterKeys = new Set(['folderType'])
+
           for (const group of groups) {
             // Determine count for this group - use argument override, else group count, else default
             const count = groupCount || group.count || 500
 
+            // Separate folder-level conditions from task-level conditions in the group filter
+            let taskFilter = group.filter
+            let mergedFolderFilter = folderFilter
+            if (group.filter) {
+              try {
+                const parsed = JSON.parse(group.filter)
+                const conditions = parsed.conditions || []
+                const taskConditions = conditions.filter(
+                  (c: any) => !folderFilterKeys.has(c.key),
+                )
+                const folderConditions = conditions.filter((c: any) =>
+                  folderFilterKeys.has(c.key),
+                )
+
+                if (folderConditions.length > 0) {
+                  taskFilter = taskConditions.length
+                    ? JSON.stringify({ ...parsed, conditions: taskConditions })
+                    : undefined
+                  // Merge folder conditions with existing folderFilter, preserving metadata
+                  const existingFolderFilter = folderFilter ? JSON.parse(folderFilter) : null
+                  const existingConditions =
+                    existingFolderFilter && Array.isArray(existingFolderFilter.conditions)
+                      ? existingFolderFilter.conditions
+                      : []
+                  const allFolderConditions = [...existingConditions, ...folderConditions]
+                  mergedFolderFilter = JSON.stringify(
+                    existingFolderFilter
+                      ? { ...existingFolderFilter, conditions: allFolderConditions }
+                      : { conditions: allFolderConditions },
+                  )
+                }
+              } catch {
+                // If parsing fails, use the original filter as-is
+              }
+            }
+
             const queryParams: GetTasksListQueryVariables = {
               projectName,
-              filter: group.filter,
-              folderFilter, // Passed but not yet supported by backend
+              filter: taskFilter,
+              folderFilter: mergedFolderFilter,
               search,
               folderIds,
               sortBy: sortBy,

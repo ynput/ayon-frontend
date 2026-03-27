@@ -193,7 +193,6 @@ export const ProjectTreeTable = ({
     columnOrderOnChange,
     groupBy,
   } = useColumnSettingsContext()
-  const isGrouping = !!groupBy
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
   const {
@@ -208,11 +207,14 @@ export const ProjectTreeTable = ({
     updateExpanded,
     toggleExpandAll,
     showHierarchy,
+    isFlatFolderView,
     fetchNextPage,
     scopes, // or entityTypes
     getEntityById,
     onResetView,
+    overrideGroupBy,
   } = useProjectTableContext()
+  const isGrouping = !!groupBy || !!overrideGroupBy
 
   const { writableFields } = useProjectDataContext()
 
@@ -336,6 +338,7 @@ export const ProjectTreeTable = ({
       links: linkTypes,
       includeLinks,
       showHierarchy,
+      isFlatFolderView,
       options,
       extraColumns,
       excluded: excludedColumns,
@@ -366,6 +369,7 @@ export const ProjectTreeTable = ({
     scopes,
     columnAttribs,
     showHierarchy,
+    isFlatFolderView,
     isExpandable,
     options,
     linkTypes,
@@ -393,7 +397,7 @@ export const ProjectTreeTable = ({
     getRowId: (row) => row.id,
     enableSubRowSelection: false, //disable sub row selection
     getSubRows: (row) => row.subRows,
-    getRowCanExpand: () => !!isExpandable || showHierarchy || isGrouping,
+    getRowCanExpand: () => !!isExpandable || showHierarchy || isFlatFolderView || isGrouping,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -522,7 +526,7 @@ export const ProjectTreeTable = ({
 
       if (onScrollBottom) {
         const containerRefElement = e.currentTarget
-        if (containerRefElement && !showHierarchy && !groupBy) {
+        if (containerRefElement && !showHierarchy && !isFlatFolderView && !groupBy) {
           const { scrollHeight, scrollTop, clientHeight } = containerRefElement
           //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
           if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
