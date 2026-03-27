@@ -30,7 +30,10 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const { SubtasksManager } = useSubtasksModulesContext()
 
   const hierarchyOptions = useMemo(
-    () => [{ value: 'hierarchy', label: 'Product', icon: 'inventory_2' }],
+    () => [
+      { value: 'hierarchy', label: 'Product', icon: 'inventory_2' },
+      { value: 'folder', label: 'Folder', icon: 'folder' },
+    ],
     [],
   )
 
