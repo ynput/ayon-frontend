@@ -30,6 +30,9 @@ export type VPViewsContextValue = {
   onUpdateSlicerType: (slicerType: string) => void
 
   // View mode management
+  viewGroupBy: string | undefined
+  onUpdateViewGroupBy: (viewGroupBy: string | undefined) => void
+
   showProducts: boolean
   onUpdateShowProducts: (showProducts: boolean) => void
 
@@ -89,13 +92,12 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
   const [localSlicerType, setLocalSlicerType] = useState<string | null>(null)
-  const [localShowProducts, setLocalShowProducts] = useState<boolean | null>(null)
+  const [localViewGroupBy, setLocalViewGroupBy] = useState<string | undefined | null>(null)
   const [localShowGrid, setLocalShowGrid] = useState<boolean | null>(null)
   const [localGridHeight, setLocalGridHeight] = useState<number | null>(null)
   const [localGridHeightImmediate, setLocalGridHeightImmediate] = useState<number | null>(null)
   const [localRowHeight, setLocalRowHeight] = useState<number | null>(null)
   const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[] | null>(null)
-  const [localGroupBy, setLocalGroupBy] = useState<string | undefined | null>(null)
   const [localShowEmptyGroups, setLocalShowEmptyGroups] = useState<boolean | null>(null)
   const [localSortBy, setLocalSortBy] = useState<string | undefined | null>(null)
   const [localSortDesc, setLocalSortDesc] = useState<boolean | null>(null)
@@ -112,10 +114,13 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => versionsSettings?.slicerType ?? '',
     [versionsSettings?.slicerType],
   )
-  const serverShowProducts = useMemo(
-    () => versionsSettings?.showProducts ?? false,
-    [versionsSettings?.showProducts],
-  )
+  const serverViewGroupBy = useMemo(() => {
+    // Server → client translation
+    // 'hierarchy' when showProducts is true, otherwise groupBy value (or undefined)
+    const result = versionsSettings?.showProducts ? 'hierarchy' : (versionsSettings?.groupBy ?? undefined)
+      return result
+  }, [versionsSettings?.showProducts, versionsSettings?.groupBy])
+
   const serverShowGrid = useMemo(
     () => versionsSettings?.showGrid ?? false,
     [versionsSettings?.showGrid],
@@ -131,10 +136,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const serverFeaturedVersionOrder = useMemo(
     () => versionsSettings?.featuredVersionOrder ?? [],
     [versionsSettings?.featuredVersionOrder],
-  )
-  const serverGroupBy = useMemo(
-    () => versionsSettings?.groupBy ?? undefined,
-    [versionsSettings?.groupBy],
   )
   const serverShowEmptyGroups = useMemo(
     () => versionsSettings?.showEmptyGroups ?? false,
@@ -156,12 +157,11 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     setLocalFilters(null)
     setLocalColumns(null)
     setLocalSlicerType(null)
-    setLocalShowProducts(null)
+    setLocalViewGroupBy(null)
     setLocalShowGrid(null)
     setLocalGridHeight(null)
     setLocalGridHeightImmediate(null)
     setLocalFeaturedVersionOrder(null)
-    setLocalGroupBy(null)
     setLocalShowEmptyGroups(null)
     setLocalSortBy(null)
     setLocalSortDesc(null)
@@ -170,11 +170,11 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     versionsSettings?.columns,
     versionsSettings?.slicerType,
     versionsSettings?.showProducts,
+    versionsSettings?.groupBy,
     versionsSettings?.showGrid,
     versionsSettings?.gridHeight,
     versionsSettings?.rowHeight,
     versionsSettings?.featuredVersionOrder,
-    versionsSettings?.groupBy,
     versionsSettings?.showEmptyGroups,
     versionsSettings?.sortBy,
     versionsSettings?.sortDesc,
@@ -189,10 +189,18 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => (localSlicerType !== null ? localSlicerType : serverSlicerType),
     [localSlicerType, serverSlicerType],
   )
-  const showProducts = useMemo(
-    () => (localShowProducts !== null ? localShowProducts : serverShowProducts),
-    [localShowProducts, serverShowProducts],
+  const viewGroupBy = useMemo(
+    () => {
+      const result = localViewGroupBy !== null ? localViewGroupBy : serverViewGroupBy
+      return result
+    },
+    [localViewGroupBy, serverViewGroupBy],
   )
+  // Compute showProducts and groupBy from viewGroupBy
+  const showProducts = viewGroupBy === 'hierarchy'
+  const groupBy = viewGroupBy !== 'hierarchy' ? viewGroupBy : undefined
+
+
   const showGrid = useMemo(
     () => (localShowGrid !== null ? localShowGrid : serverShowGrid),
     [localShowGrid, serverShowGrid],
@@ -214,10 +222,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () =>
       localFeaturedVersionOrder?.length ? localFeaturedVersionOrder : serverFeaturedVersionOrder,
     [localFeaturedVersionOrder, serverFeaturedVersionOrder],
-  )
-  const groupBy = useMemo(
-    () => (localGroupBy !== null ? localGroupBy : serverGroupBy),
-    [localGroupBy, serverGroupBy],
   )
   const showEmptyGroups = useMemo(
     () => (localShowEmptyGroups !== null ? localShowEmptyGroups : serverShowEmptyGroups),
@@ -243,36 +247,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [updateViewSettings],
   )
 
-  // Column update handler
-  const onUpdateColumns = useCallback(
-    async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
-      const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
-      const vpSettings = settings as any
-
-      // Special handling for "hierarchy" (product grouping)
-      if (settings.groupBy === 'hierarchy') {
-        // Hierarchy/Products selected: enable products view
-        vpSettings.showProducts = true
-        vpSettings.groupBy = undefined
-      } else if (settings.groupBy && showProducts) {
-        // If enabling other groupBy, disable showProducts
-        vpSettings.showProducts = false
-      }
-
-      await updateViewSettings(
-        vpSettings,
-        () => {
-          setLocalColumns(tableSettings)
-        },
-        tableSettings,
-        {
-          errorMessage: 'Failed to update columns',
-        },
-      )
-    },
-    [updateViewSettings, showProducts],
-  )
-
   // Slicer type update handler
   const onUpdateSlicerType = useCallback(
     async (newSlicerType: string) => {
@@ -283,27 +257,64 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [updateViewSettings],
   )
 
-  // Show products update handler
-  const onUpdateShowProducts = useCallback(
-    async (newShowProducts: boolean) => {
-      const settings: any = { showProducts: newShowProducts }
-      // If enabling showProducts, disable groupBy
-      if (newShowProducts && groupBy) {
-        settings.groupBy = undefined
-      }
+  // Unified view grouping handler (defined first so onUpdateColumns can use it)
+  const onUpdateViewGroupBy = useCallback(
+    async (newViewGroupBy: string | undefined) => {
+      const serverSettings =
+        newViewGroupBy === 'hierarchy'
+          ? { showProducts: true, groupBy: undefined }
+          : { showProducts: false, groupBy: newViewGroupBy }
+
       await updateViewSettings(
-        settings,
+        serverSettings,
         () => {
-          setLocalShowProducts(newShowProducts)
-          if (newShowProducts && groupBy) {
-            setLocalGroupBy(undefined)
-          }
+          setLocalViewGroupBy(newViewGroupBy)
         },
-        newShowProducts,
-        { errorMessage: 'Failed to update stacked view setting' },
+        newViewGroupBy,
+        {
+          errorMessage: 'Failed to update group by setting',
+        },
       )
     },
-    [updateViewSettings, groupBy],
+    [updateViewSettings],
+  )
+
+  // Column update handler
+  const onUpdateColumns = useCallback(
+    async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
+      const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
+      const currentGroupBy = groupBy // capture current value
+
+      // Handle groupBy changes from settings panel
+      if (settings.groupBy !== undefined && settings.groupBy !== currentGroupBy) {
+        // Delegate to the unified handler for field groupings
+        if (settings.groupBy === 'hierarchy') {
+          await onUpdateViewGroupBy('hierarchy')
+        } else {
+          await onUpdateViewGroupBy(settings.groupBy)
+        }
+      }
+
+      // Always sync local columns state
+      setLocalColumns(tableSettings)
+    },
+    [groupBy, onUpdateViewGroupBy],
+  )
+
+  // Show products update handler (delegates to unified handler)
+  const onUpdateShowProducts = useCallback(
+    (newShowProducts: boolean) => {
+      return onUpdateViewGroupBy(newShowProducts ? 'hierarchy' : undefined)
+    },
+    [onUpdateViewGroupBy],
+  )
+
+  // Group by update handler (delegates to unified handler)
+  const onUpdateGroupBy = useCallback(
+    (newGroupBy: string | undefined) => {
+      return onUpdateViewGroupBy(newGroupBy)
+    },
+    [onUpdateViewGroupBy],
   )
 
   // Show grid update handler
@@ -354,31 +365,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       )
     },
     [updateViewSettings],
-  )
-
-  // Group by update handler
-  const onUpdateGroupBy = useCallback(
-    async (newGroupBy: string | undefined) => {
-      const settings: any = { groupBy: newGroupBy }
-      // If enabling groupBy, disable showProducts
-      if (newGroupBy && showProducts) {
-        settings.showProducts = false
-      }
-      await updateViewSettings(
-        settings,
-        () => {
-          setLocalGroupBy(newGroupBy)
-          if (newGroupBy && showProducts) {
-            setLocalShowProducts(false)
-          }
-        },
-        newGroupBy,
-        {
-          errorMessage: 'Failed to update group by setting',
-        },
-      )
-    },
-    [updateViewSettings, showProducts],
   )
 
   // Show empty groups update handler
@@ -441,6 +427,8 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
         onUpdateColumns,
         slicerType,
         onUpdateSlicerType,
+        viewGroupBy,
+        onUpdateViewGroupBy,
         showProducts,
         onUpdateShowProducts,
         showGrid,

@@ -26,8 +26,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 `
 
 const VPToolbar: FC = () => {
-  const { showGrid, onUpdateShowGrid, showProducts, onUpdateShowProducts, groupBy, onUpdateGroupBy } =
-    useVPViewsContext()
+  const { showGrid, onUpdateShowGrid, viewGroupBy, onUpdateViewGroupBy } = useVPViewsContext()
 
   const groupedFields = useGetGroupedFields({ scope: 'version' })
 
@@ -43,31 +42,26 @@ const VPToolbar: FC = () => {
     [groupedFields],
   )
 
-  // Derive current value from showProducts + groupBy state
+  // Derive current value from viewGroupBy state
   const viewGroupByValue = useMemo(() => {
-    if (showProducts) {
-      return viewGroupByOptions.filter((o) => o.id === 'product')
-    }
-    if (groupBy) {
-      return viewGroupByOptions.filter((o) => o.id === groupBy)
-    }
-    return [] // flat list - nothing selected
-  }, [showProducts, groupBy, viewGroupByOptions])
+    if (!viewGroupBy) return [] // flat list - nothing selected
+    const id = viewGroupBy === 'hierarchy' ? 'product' : viewGroupBy
+    return viewGroupByOptions.filter((o) => o.id === id)
+  }, [viewGroupBy, viewGroupByOptions])
 
   const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
     const value = values[0]
     if (!value) {
       // X clicked — flat list (no grouping, no products)
-      if (showProducts) onUpdateShowProducts(false)
-      if (groupBy) onUpdateGroupBy(undefined)
+      onUpdateViewGroupBy(undefined)
     } else if (value.id === 'product') {
-      onUpdateShowProducts(true) // mutex clears groupBy
+      onUpdateViewGroupBy('hierarchy')
     } else {
-      onUpdateGroupBy(value.id) // mutex clears showProducts
+      onUpdateViewGroupBy(value.id)
     }
   }
 
-  const isNoneSelected = !showProducts && !groupBy
+  const isNoneSelected = !viewGroupBy
 
   return (
     <Toolbar>
