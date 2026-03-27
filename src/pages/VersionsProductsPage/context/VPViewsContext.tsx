@@ -94,7 +94,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const [localGridHeight, setLocalGridHeight] = useState<number | null>(null)
   const [localGridHeightImmediate, setLocalGridHeightImmediate] = useState<number | null>(null)
   const [localRowHeight, setLocalRowHeight] = useState<number | null>(null)
-  const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[] | null>([])
+  const [localFeaturedVersionOrder, setLocalFeaturedVersionOrder] = useState<string[] | null>(null)
   const [localGroupBy, setLocalGroupBy] = useState<string | undefined | null>(null)
   const [localShowEmptyGroups, setLocalShowEmptyGroups] = useState<boolean | null>(null)
   const [localSortBy, setLocalSortBy] = useState<string | undefined | null>(null)
@@ -165,7 +165,20 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     setLocalShowEmptyGroups(null)
     setLocalSortBy(null)
     setLocalSortDesc(null)
-  }, [JSON.stringify(viewSettings)])
+  }, [
+    versionsSettings?.filter,
+    versionsSettings?.columns,
+    versionsSettings?.slicerType,
+    versionsSettings?.showProducts,
+    versionsSettings?.showGrid,
+    versionsSettings?.gridHeight,
+    versionsSettings?.rowHeight,
+    versionsSettings?.featuredVersionOrder,
+    versionsSettings?.groupBy,
+    versionsSettings?.showEmptyGroups,
+    versionsSettings?.sortBy,
+    versionsSettings?.sortDesc,
+  ])
 
   // Use local state if available, otherwise use server state
   const filters = useMemo(
@@ -347,7 +360,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       if (newGroupBy && showProducts) {
         settings.showProducts = false
       }
-      console.log(settings)
       await updateViewSettings(
         settings,
         () => {
