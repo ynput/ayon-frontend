@@ -26,7 +26,9 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
   // For flat folder view, we don't set a groupBy — it uses hierarchy-style task fetching
   const overrideGroupBy = useMemo(
     () =>
-      viewGroupBy && !isFlatFolderView ? { id: viewGroupBy, desc: viewGroupByDesc } : undefined,
+      viewGroupBy && viewGroupBy !== 'none' && !isFlatFolderView
+        ? { id: viewGroupBy, desc: viewGroupByDesc }
+        : undefined,
     [viewGroupBy, isFlatFolderView, viewGroupByDesc],
   )
 

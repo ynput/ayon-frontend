@@ -113,6 +113,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         // Enter hierarchy mode: clear groupBy and persist showHierarchy on server
         _updateShowHierarchy(true)
         updateGroupBy(undefined)
+      } else if (newViewGroupBy === 'none') {
+        // Flat list: no hierarchy, no grouping
+        _updateShowHierarchy(false)
+        updateGroupBy(undefined)
       } else if (newViewGroupBy === 'folder') {
         // Flat folder view: no hierarchy, no groupBy (uses hierarchy-style task fetching)
         // Don't call updateGroupBy — avoids triggering the panel sync effect
@@ -127,12 +131,16 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   )
 
   // Sync FROM Customize panel TO dropdown when panel's groupBy id changes
+  // Only sync when panel has a real groupBy value — when it clears (undefined),
+  // the correct viewGroupBy was already set by updateShowHierarchy (null for hierarchy, 'none' for flat list)
   const panelGroupById = panelGroupBy?.id
   const prevPanelGroupByIdRef = useRef(panelGroupById)
   useEffect(() => {
     if (panelGroupById !== prevPanelGroupByIdRef.current) {
       prevPanelGroupByIdRef.current = panelGroupById
-      setViewGroupBy(panelGroupById ?? null)
+      if (panelGroupById !== undefined) {
+        setViewGroupBy(panelGroupById)
+      }
     }
   }, [panelGroupById, setViewGroupBy])
 
@@ -141,6 +149,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     (newShowHierarchy: boolean) => {
       if (newShowHierarchy) {
         setViewGroupBy(null)
+      } else {
+        setViewGroupBy('none')
       }
       _updateShowHierarchy(newShowHierarchy)
     },
@@ -151,7 +161,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // This is independent from the Customize panel's groupBy
   // For flat folder view, we don't need a groupBy — it uses hierarchy-style task fetching
   const viewGroupByObj = useMemo(
-    () => (viewGroupBy && !isFlatFolderView ? { id: viewGroupBy, desc: viewGroupByDesc } : undefined),
+    () =>
+      viewGroupBy && viewGroupBy !== 'none' && !isFlatFolderView
+        ? { id: viewGroupBy, desc: viewGroupByDesc }
+        : undefined,
     [viewGroupBy, isFlatFolderView, viewGroupByDesc],
   )
 

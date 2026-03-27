@@ -34,9 +34,15 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   // Wrap updateGroupBy to intercept "hierarchy" and "none" selection
   const handleUpdateGroupBy = useCallback(
     (newGroupBy: TableGroupBy | undefined) => {
-      if (newGroupBy?.id === HIERARCHY_ID || !newGroupBy) {
-        // Clear groupBy and restore hierarchy mode
+      if (newGroupBy?.id === HIERARCHY_ID) {
+        // Hierarchy selected: show tree structure
         updateShowHierarchy?.(true)
+        updateGroupBy(undefined)
+        return
+      }
+      if (!newGroupBy) {
+        // None selected: flat list (no hierarchy, no grouping)
+        updateShowHierarchy?.(false)
         updateGroupBy(undefined)
         return
       }

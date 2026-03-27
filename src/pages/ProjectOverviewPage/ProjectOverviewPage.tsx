@@ -101,14 +101,17 @@ const ProjectOverviewPage: FC = () => {
   const viewGroupByValue = useMemo(
     () =>
       viewGroupByOptions
-        .filter((o) => o.id === (viewGroupBy ?? 'hierarchy'))
+        .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : (viewGroupBy ?? 'hierarchy')))
         .map((o) => ({ ...o, sortOrder: !viewGroupByDesc })),
     [viewGroupBy, viewGroupByOptions, viewGroupByDesc],
   )
 
   const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
     const value = values[0]
-    if (!value || value.id === 'hierarchy') {
+    if (!value) {
+      // X clicked — flat list (no grouping)
+      updateViewGroupBy('none')
+    } else if (value.id === 'hierarchy') {
       updateViewGroupBy(null)
     } else {
       // sortOrder: true = ascending, desc: false = ascending
