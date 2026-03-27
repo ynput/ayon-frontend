@@ -44,6 +44,8 @@ export interface ProjectTableContextType {
   // Hierarchy
   showHierarchy: ProjectTableProviderProps['showHierarchy']
   updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
+  hierarchyOptions?: ProjectTableProviderProps['hierarchyOptions']
+  hierarchyActive?: ProjectTableProviderProps['hierarchyActive']
 
   // Flat folder view
   isFlatFolderView?: boolean

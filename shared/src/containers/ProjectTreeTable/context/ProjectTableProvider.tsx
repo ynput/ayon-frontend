@@ -117,6 +117,15 @@ export interface ProjectTableProviderProps {
     entityType?: GroupByEntityType
   }
 
+  // Custom hierarchy-like options for the group-by settings panel
+  // Overrides the default Hierarchy/Folder options when provided
+  hierarchyOptions?: Array<{ value: string; label: string; icon: string }>
+
+  // Whether hierarchy mode is active (for panel display only)
+  // Used when showHierarchy must stay false for table internals (e.g. infinite scroll)
+  // but the panel should still highlight the hierarchy option
+  hierarchyActive?: boolean
+
   // SubtasksManager component
   SubtasksManager?: React.ComponentType<SubtasksManagerProps>
 
@@ -171,6 +180,8 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  hierarchyOptions,
+  hierarchyActive,
   isFlatFolderView,
   SubtasksManager,
   // player
@@ -349,6 +360,8 @@ export const ProjectTableProvider = ({
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
+        hierarchyOptions,
+        hierarchyActive,
         // flat folder view
         isFlatFolderView,
         // expanded state

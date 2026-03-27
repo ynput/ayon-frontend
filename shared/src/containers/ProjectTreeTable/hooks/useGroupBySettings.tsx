@@ -11,25 +11,27 @@ interface UseGroupBySettingsProps {
 
 export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig } = useColumnSettingsContext()
-  const { modules, showHierarchy, updateShowHierarchy } = useProjectTableContext()
+  const { modules, showHierarchy, updateShowHierarchy, hierarchyOptions: customHierarchyOptions, hierarchyActive, } = useProjectTableContext()
   const groupByFields = useGetGroupedFields({ scope })
   if (!modules) return null
   const { GroupSettings, requiredVersion } = modules || {}
 
-  // Add Hierarchy and Folder options when the table supports it
+  // Add hierarchy-like options when the table supports it
   const hasHierarchy = !!updateShowHierarchy
+  const defaultHierarchyOptions = [
+    { value: HIERARCHY_ID, label: 'Hierarchy', icon: 'account_tree' },
+    { value: 'folder', label: 'Folder', icon: 'folder' },
+  ]
   const fields = hasHierarchy
-    ? [
-        { value: HIERARCHY_ID, label: 'Hierarchy', icon: 'account_tree' },
-        { value: 'folder', label: 'Folder', icon: 'folder' },
-        ...groupByFields,
-      ]
+    ? [...(customHierarchyOptions || defaultHierarchyOptions), ...groupByFields]
     : groupByFields
 
   // When hierarchy is active (groupBy is undefined), present a virtual groupBy
-  // so the GroupSettings component highlights "Hierarchy" as selected
+  // so the GroupSettings component highlights the hierarchy option as selected
+  // hierarchyActive overrides showHierarchy for panel display when table behavior differs
+  const isHierarchyActive = hierarchyActive ?? showHierarchy
   const virtualGroupBy =
-    groupBy ?? (hasHierarchy && showHierarchy ? { id: HIERARCHY_ID, desc: false } : undefined)
+    groupBy ?? (hasHierarchy && isHierarchyActive ? { id: HIERARCHY_ID, desc: false } : undefined)
 
   // Wrap updateGroupBy to intercept "hierarchy" and "none" selection
   const handleUpdateGroupBy = useCallback(
