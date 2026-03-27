@@ -247,18 +247,22 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   const onUpdateColumns = useCallback(
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
       const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
-      // If enabling groupBy, disable showProducts
-      if (settings.groupBy && showProducts) {
-        // @ts-expect-error - showProducts exists
-        settings.showProducts = false
+      const vpSettings = settings as any
+
+      // Special handling for "hierarchy" (product grouping)
+      if (settings.groupBy === 'hierarchy') {
+        // Hierarchy/Products selected: enable products view
+        vpSettings.showProducts = true
+        vpSettings.groupBy = undefined
+      } else if (settings.groupBy && showProducts) {
+        // If enabling other groupBy, disable showProducts
+        vpSettings.showProducts = false
       }
+
       await updateViewSettings(
-        settings,
+        vpSettings,
         () => {
           setLocalColumns(tableSettings)
-          if (settings.groupBy && showProducts) {
-            setLocalShowProducts(false)
-          }
         },
         tableSettings,
         {
