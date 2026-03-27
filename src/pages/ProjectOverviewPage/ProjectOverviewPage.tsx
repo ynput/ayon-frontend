@@ -45,8 +45,7 @@ const scopesConfig: ScopeWithFilterTypes[] = [
 ]
 
 const GroupByDropdown = styled(SortingDropdown)<{
-  $hideRemove?: boolean
-  $hideSortOrder?: boolean
+  $disableSortOrder?: boolean
 }>`
   flex-shrink: 0;
 
@@ -58,8 +57,15 @@ const GroupByDropdown = styled(SortingDropdown)<{
   .sort-chip {
     min-width: fit-content;
 
-    ${({ $hideRemove }) => $hideRemove && `.remove { display: none; }`}
-    ${({ $hideSortOrder }) => $hideSortOrder && `.sort-order { display: none; }`}
+    ${({ $disableSortOrder }) =>
+      $disableSortOrder &&
+      `
+      .sort-order {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    `}
   }
 `
 
@@ -211,8 +217,7 @@ const ProjectOverviewPage: FC = () => {
               />
               <ReloadButton />
               <GroupByDropdown
-                $hideRemove={viewGroupBy === null}
-                $hideSortOrder={viewGroupBy === null || viewGroupBy === 'folder'}
+                $disableSortOrder={viewGroupBy === null || viewGroupBy === 'folder'}
                 title="Group by"
                 options={viewGroupByOptions}
                 value={viewGroupByValue}

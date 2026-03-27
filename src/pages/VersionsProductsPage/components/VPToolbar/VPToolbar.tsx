@@ -7,8 +7,7 @@ import { useGetGroupedFields } from '@shared/containers/ProjectTreeTable'
 import styled from 'styled-components'
 
 const GroupByDropdown = styled(SortingDropdown)<{
-  $hideRemove?: boolean
-  $hideSortOrder?: boolean
+  $disableSortOrder?: boolean
 }>`
   flex-shrink: 0;
 
@@ -20,8 +19,15 @@ const GroupByDropdown = styled(SortingDropdown)<{
   .sort-chip {
     min-width: fit-content;
 
-    ${({ $hideRemove }) => $hideRemove && `.remove { display: none; }`}
-    ${({ $hideSortOrder }) => $hideSortOrder && `.sort-order { display: none; }`}
+    ${({ $disableSortOrder }) =>
+      $disableSortOrder &&
+      `
+      .sort-order {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    `}
   }
 `
 
@@ -60,15 +66,11 @@ const VPToolbar: FC = () => {
       onUpdateViewGroupBy(value.id)
     }
   }
-
-  const isNoneSelected = !viewGroupBy
-
   return (
     <Toolbar>
       <VPSearchFilter />
       <GroupByDropdown
-        $hideRemove={isNoneSelected}
-        $hideSortOrder
+        $disableSortOrder={viewGroupBy === 'hierarchy'}
         title="Group by"
         options={viewGroupByOptions}
         value={viewGroupByValue}

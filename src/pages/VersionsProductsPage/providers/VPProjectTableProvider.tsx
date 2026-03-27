@@ -32,7 +32,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const hierarchyOptions = useMemo(
     () => [
       { value: 'hierarchy', label: 'Product', icon: 'inventory_2' },
-      { value: 'folder', label: 'Folder', icon: 'folder' },
     ],
     [],
   )
