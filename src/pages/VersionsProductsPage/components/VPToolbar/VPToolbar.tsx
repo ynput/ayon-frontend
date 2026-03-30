@@ -1,9 +1,9 @@
 import { SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import VPSearchFilter from './VPSearchFilter'
 import { CustomizeButton, TableGridSwitch } from '@shared/components'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
-import { useGetGroupedFields } from '@shared/containers/ProjectTreeTable'
+import { useGetGroupedFields, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import styled from 'styled-components'
 
 const GroupByDropdown = styled(SortingDropdown)<{
@@ -32,7 +32,9 @@ const GroupByDropdown = styled(SortingDropdown)<{
 `
 
 const VPToolbar: FC = () => {
-  const { showGrid, onUpdateShowGrid, viewGroupBy, onUpdateViewGroupBy } = useVPViewsContext()
+  const { showGrid, onUpdateShowGrid, viewGroupBy, onUpdateViewGroupBy, columns, onUpdateColumns } =
+    useVPViewsContext()
+  const { sorting } = useColumnSettingsContext()
 
   const groupedFields = useGetGroupedFields({ scope: 'version' })
 
@@ -48,24 +50,68 @@ const VPToolbar: FC = () => {
     [groupedFields],
   )
 
-  // Derive current value from viewGroupBy state
+  // Derive current value from viewGroupBy state, including current sort order from columns config
   const viewGroupByValue = useMemo(() => {
     if (!viewGroupBy) return [] // flat list - nothing selected
     const id = viewGroupBy === 'hierarchy' ? 'product' : viewGroupBy
-    return viewGroupByOptions.filter((o) => o.id === id)
-  }, [viewGroupBy, viewGroupByOptions])
+    const option = viewGroupByOptions.find((o) => o.id === id)
+    if (!option) return []
 
-  const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
-    const value = values[0]
-    if (!value) {
-      // X clicked — flat list (no grouping, no products)
-      onUpdateViewGroupBy(undefined)
-    } else if (value.id === 'product') {
-      onUpdateViewGroupBy('hierarchy')
-    } else {
-      onUpdateViewGroupBy(value.id)
+    // When grouping (not hierarchy), get sort order from groupBy.desc
+    // When hierarchy or flat, get from sorting config
+    let sortOrder = true // default to ascending
+
+    if (viewGroupBy !== 'hierarchy' && columns.groupBy) {
+      // Grouping mode: get sort order from groupBy.desc
+      sortOrder = !columns.groupBy.desc // invert: desc true = sortOrder false (descending)
+    } else if (sorting.length > 0) {
+      // Flat or hierarchy mode: get from sorting
+      sortOrder = !sorting[0].desc
     }
-  }
+
+    return [{ ...option, sortOrder }]
+  }, [viewGroupBy, viewGroupByOptions, columns.groupBy, sorting])
+
+  const handleViewGroupByChange = useCallback(
+    (values: { id: string; sortOrder?: boolean }[]) => {
+      const value = values[0]
+
+      // Handle sort order changes by updating the columns config
+      if (value && value.sortOrder !== undefined) {
+        const newDesc = !value.sortOrder // invert sortOrder to desc
+
+        // When grouping (not hierarchy), toggle group sorting (groupBy.desc)
+        // When hierarchy or flat, toggle item sorting
+        if (viewGroupBy && viewGroupBy !== 'hierarchy' && columns.groupBy) {
+          // Grouping mode: update groupBy.desc
+          onUpdateColumns({
+            ...columns,
+            groupBy: {
+              ...columns.groupBy,
+              desc: newDesc,
+            },
+          })
+        } else {
+          // Flat or hierarchy mode: update item sorting
+          onUpdateColumns({
+            ...columns,
+            sorting: [{ id: value.id, desc: newDesc }],
+          })
+        }
+      }
+
+      // Handle grouping selection
+      if (!value) {
+        // X clicked — flat list (no grouping, no products)
+        onUpdateViewGroupBy(undefined)
+      } else if (value.id === 'product') {
+        onUpdateViewGroupBy('hierarchy')
+      } else {
+        onUpdateViewGroupBy(value.id)
+      }
+    },
+    [columns, onUpdateColumns, onUpdateViewGroupBy, viewGroupBy],
+  )
   return (
     <Toolbar>
       <VPSearchFilter />

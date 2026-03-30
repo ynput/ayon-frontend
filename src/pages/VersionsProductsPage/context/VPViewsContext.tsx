@@ -153,9 +153,9 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   )
 
   // Sync local state with server when viewSettings change
+  // Note: Excluded localColumns and localSortBy/localSortDesc because we manage them ourselves for immediate updates
   useEffect(() => {
     setLocalFilters(null)
-    setLocalColumns(null)
     setLocalSlicerType(null)
     setLocalViewGroupBy(null)
     setLocalShowGrid(null)
@@ -163,21 +163,15 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     setLocalGridHeightImmediate(null)
     setLocalFeaturedVersionOrder(null)
     setLocalShowEmptyGroups(null)
-    setLocalSortBy(null)
-    setLocalSortDesc(null)
   }, [
     versionsSettings?.filter,
-    versionsSettings?.columns,
     versionsSettings?.slicerType,
     versionsSettings?.showProducts,
-    versionsSettings?.groupBy,
     versionsSettings?.showGrid,
     versionsSettings?.gridHeight,
     versionsSettings?.rowHeight,
     versionsSettings?.featuredVersionOrder,
     versionsSettings?.showEmptyGroups,
-    versionsSettings?.sortBy,
-    versionsSettings?.sortDesc,
   ])
 
   // Use local state if available, otherwise use server state
@@ -265,18 +259,40 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
           ? { showProducts: true, groupBy: undefined }
           : { showProducts: false, groupBy: newViewGroupBy }
 
+      // Also update localColumns to sync groupBy field when grouping changes
+      setLocalViewGroupBy(newViewGroupBy)
+
+      // Update localColumns groupBy to match the new grouping
+      setLocalColumns((prevColumns) => {
+        if (!prevColumns) return prevColumns
+        if (newViewGroupBy && newViewGroupBy !== 'hierarchy') {
+          // Grouping by field: update groupBy with new field id
+          return {
+            ...prevColumns,
+            groupBy: {
+              id: newViewGroupBy,
+              desc: prevColumns.groupBy?.desc ?? false, // Keep existing sort direction
+            },
+          }
+        } else {
+          // Hierarchy or flat list: clear groupBy
+          return {
+            ...prevColumns,
+            groupBy: undefined,
+          }
+        }
+      })
+
       await updateViewSettings(
         serverSettings,
-        () => {
-          setLocalViewGroupBy(newViewGroupBy)
-        },
+        () => {},
         newViewGroupBy,
         {
           errorMessage: 'Failed to update group by setting',
         },
       )
     },
-    [updateViewSettings],
+    [],
   )
 
   // Column update handler
@@ -297,8 +313,25 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
 
       // Always sync local columns state
       setLocalColumns(tableSettings)
+
+      // Persist only the fields that changed to server
+      // Extract only the relevant settings to persist
+      const persistSettings: Record<string, any> = {}
+      if (settings.groupBy !== undefined) persistSettings.groupBy = settings.groupBy
+      if (settings.groupSortByDesc !== undefined) persistSettings.groupSortByDesc = settings.groupSortByDesc
+      if (settings.showEmptyGroups !== undefined) persistSettings.showEmptyGroups = settings.showEmptyGroups
+      if (settings.sortBy !== undefined) persistSettings.sortBy = settings.sortBy
+      if (settings.sortDesc !== undefined) persistSettings.sortDesc = settings.sortDesc
+      if (settings.rowHeight !== undefined) persistSettings.rowHeight = settings.rowHeight
+
+      // Only persist if there are actually settings to persist
+      if (Object.keys(persistSettings).length > 0) {
+        await updateViewSettings(persistSettings, () => {}, persistSettings, {
+          errorMessage: 'Failed to update columns settings',
+        })
+      }
     },
-    [groupBy, onUpdateViewGroupBy],
+    [groupBy, onUpdateViewGroupBy, updateViewSettings],
   )
 
   // Show products update handler (delegates to unified handler)
