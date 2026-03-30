@@ -115,7 +115,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const type = attributeData?.type
 
   const { projectName } = useProjectContext()
-  const { isEditing, setEditingCellId } = useCellEditing()
+  const { isEditing, setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
 
@@ -248,6 +248,10 @@ export const CellWidget: FC<EditorCellProps> = ({
                 value={enumValue.join(', ')}
                 isInherited={isInherited}
                 columnId={columnId}
+                cellId={cellId}
+                onRequestEdit={setEditingCellId}
+                getDraftValue={getEditingDraft}
+                setDraftValue={setEditingDraft}
                 {...sharedProps}
                 {...pt?.text}
               />
@@ -285,6 +289,9 @@ export const CellWidget: FC<EditorCellProps> = ({
             columnId={columnId}
             cellId={cellId}
             type={type as TextWidgetType}
+            onRequestEdit={setEditingCellId}
+            getDraftValue={getEditingDraft}
+            setDraftValue={setEditingDraft}
             {...sharedProps}
             {...pt?.text}
           />
