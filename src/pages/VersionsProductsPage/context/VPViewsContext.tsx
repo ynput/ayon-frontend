@@ -312,7 +312,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       // Extract only the relevant settings to persist
       const persistSettings: Record<string, any> = {}
       if (settings.groupBy !== undefined) persistSettings.groupBy = settings.groupBy
-      if (settings.groupSortByDesc !== undefined) persistSettings.groupSortByDesc = settings.groupSortByDesc
       if (settings.showEmptyGroups !== undefined) persistSettings.showEmptyGroups = settings.showEmptyGroups
       if (settings.sortBy !== undefined) persistSettings.sortBy = settings.sortBy
       if (settings.sortDesc !== undefined) persistSettings.sortDesc = settings.sortDesc
