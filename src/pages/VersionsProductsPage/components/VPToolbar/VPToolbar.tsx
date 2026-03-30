@@ -76,6 +76,9 @@ const VPToolbar: FC = () => {
     (values: { id: string; sortOrder?: boolean }[]) => {
       const value = values[0]
 
+      // Get the grouping selection from the dropdown (what the user selected)
+      const selectedGrouping = !value ? undefined : (value.id === 'product' ? 'hierarchy' : value.id)
+
       // Handle sort order changes by updating the columns config
       if (value && value.sortOrder !== undefined) {
         const newDesc = !value.sortOrder // invert sortOrder to desc
@@ -100,14 +103,16 @@ const VPToolbar: FC = () => {
         }
       }
 
-      // Handle grouping selection
-      if (!value) {
-        // X clicked — flat list (no grouping, no products)
-        onUpdateViewGroupBy(undefined)
-      } else if (value.id === 'product') {
-        onUpdateViewGroupBy('hierarchy')
-      } else {
-        onUpdateViewGroupBy(value.id)
+      // Handle grouping selection change (only if selection actually changed)
+      if (selectedGrouping !== viewGroupBy) {
+        if (!value) {
+          // X clicked — flat list (no grouping, no products)
+          onUpdateViewGroupBy(undefined)
+        } else if (value.id === 'product') {
+          onUpdateViewGroupBy('hierarchy')
+        } else {
+          onUpdateViewGroupBy(value.id)
+        }
       }
     },
     [columns, onUpdateColumns, onUpdateViewGroupBy, viewGroupBy],
@@ -116,7 +121,7 @@ const VPToolbar: FC = () => {
     <Toolbar>
       <VPSearchFilter />
       <GroupByDropdown
-        $disableSortOrder={viewGroupBy === 'hierarchy'}
+        $disableSortOrder={!viewGroupBy || viewGroupBy === 'hierarchy'}
         title="Group by"
         options={viewGroupByOptions}
         value={viewGroupByValue}
