@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } f
 import UploadStep from "./steps/UploadStep/UploadStep";
 import { getFullMapping, ImportData } from "./utils";
 import MapColumnsStep from "./steps/MapColumnsStep/MapColumnsStep";
-import { ImportContext, ImportStep, ResolvedColumnMappings, ValueMappings } from "./steps/common";
+import { ColumnMappings, ImportContext, ImportStep, ValueMappings } from "./steps/common";
 import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
 import PreviewStep from "./steps/PreviewStep/PreviewStep";
 import { useViewsContext } from "@shared/containers";
@@ -11,7 +11,6 @@ import { ColumnMapping, ImportStatus } from "@shared/api/generated/dataImport";
 import { toast } from "react-toastify";
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from "./ImportDialog.styled";
 import Loading from "./steps/Loading";
-import ErrorFallback from "@components/ErrorFallback";
 import { EmptyPlaceholder } from "@shared/components";
 
 type Props = {
@@ -41,7 +40,7 @@ const breadcrumbForStep: Record<ImportStep, string> = {
 export default function ImportSteps({ importContext, projectName, data, setData, step, setStep, onClose }: Props) {
   const [importData] = useImportDataMutation()
 
-  const [columnMappings, setColumnMappings] = useState<ResolvedColumnMappings | undefined>(undefined)
+  const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
 

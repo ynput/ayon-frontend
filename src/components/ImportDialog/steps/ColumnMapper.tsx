@@ -200,17 +200,28 @@ export default function ColumnMapper({
       {
         errorHandlingEnabled && (
           <MappersTableErrorHandling>
-            <MapperDropdown
-              disabled={skipping || creating || !target}
-              value={errorHandling && !skipping ? [errorHandling] : []}
-              options={errorHandlingOptions}
-              onChange={([value]) => onErrorHandlingChange(value as ErrorHandlingMode)}
-              placeholder={
-                skipping
-                ? "Will be skipped"
-                : creating ? "A new value will be created" : "Choose error handling..."
-              }
-            />
+            {
+              skipping
+              ? (
+                <InputText
+                  value=""
+                  disabled
+                  placeholder="Will be skipped"
+                />
+              ) : (
+                <MapperDropdown
+                  disabled={skipping || creating || !target}
+                  value={errorHandling && !skipping ? [errorHandling] : []}
+                  options={errorHandlingOptions}
+                  onChange={([value]) => onErrorHandlingChange(value as ErrorHandlingMode)}
+                  placeholder={
+                    skipping
+                    ? "Will be skipped"
+                    : creating ? "A new value will be created" : "Choose error handling..."
+                  }
+                />
+              )
+            }
           </MappersTableErrorHandling>
         )
       }

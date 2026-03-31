@@ -43,13 +43,13 @@ export type ColumnMapping = {
   userResolved?: boolean
 }
 
-export type ResolvedColumnMapping = ColumnMapping & {
+export type ValueMappableColumnMapping = ColumnMapping & {
   targetColumn: string
   errorHandlingMode: ErrorHandlingMode
 }
 
 export type ColumnMappings = Record<string, ColumnMapping>
-export type ResolvedColumnMappings = Record<string, ResolvedColumnMapping>
+export type ValueMappableColumnMappings = Record<string, ValueMappableColumnMapping>
 
 export type TargetValue = string | boolean
 

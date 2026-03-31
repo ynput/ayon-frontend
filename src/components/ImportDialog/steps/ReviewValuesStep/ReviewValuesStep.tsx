@@ -1,7 +1,7 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, ResolvedColumnMapping, TargetValue } from "../common"
+import { ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, TargetValue, ColumnMappings, ValueMappableColumnMappings, ValueMappableColumnMapping } from "../common"
 import {
   Mappers,
   MappersTableHeader,
@@ -31,7 +31,7 @@ import { ImportableColumn } from "@shared/api/generated/dataImport"
 type Props = StepProps<ValueMappings> & {
   data: ImportData
   importSchema: ImportSchema
-  columnMappings: ResolvedColumnMappings
+  columnMappings: ColumnMappings
   mappings: ValueMappings | null
 }
 
@@ -225,7 +225,7 @@ const getValuesForColumn = (data: ImportData, column: string, settings: Importab
   })
 }
 
-type SortEntry = [string, ResolvedColumnMapping]
+type SortEntry = [string, ValueMappableColumnMapping]
 
 const sortMappingsToReviewEntries = (resolvedColumns: string[]) => ([m1]: SortEntry, [m2]: SortEntry) => {
   const m1Resolved = resolvedColumns.includes(m1)
@@ -253,11 +253,13 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
     [importSchema]
   )
 
-  const mappingsToReview = useMemo(
+  const mappingsToReview: ValueMappableColumnMappings = useMemo(
     () => Object.fromEntries(Object.entries(columnMappings)
       .filter(([, { targetColumn }]) => importSchema.some(
         ({ key }) => targetColumn === key,
-      ))),
+      ))
+      .map(([column, mapping]) => [column, mapping as ValueMappableColumnMapping])
+    ),
     [columnMappings, importSchema]
   )
 
@@ -285,20 +287,21 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
 
   const uniqueValuesForColumn = useMemo(
     () => Object.fromEntries(
-      data.columns.map((column) => {
-        const values = getValuesForColumn(
-          data,
-          column,
-          columnSettings[columnMappings[column].targetColumn],
-        )
+      Object.keys(mappingsToReview)
+        .map((column) => {
+          const values = getValuesForColumn(
+            data,
+            column,
+            columnSettings[mappingsToReview[column].targetColumn],
+          )
 
-        return [
-          column,
-          Array.from(new Set(values))
-        ]
-      })
+          return [
+            column,
+            Array.from(new Set(values))
+          ]
+        })
     ),
-    [data.columns, data.rows, columnSettings, columnMappings],
+    [data.rows, columnSettings, mappingsToReview],
   )
 
   const currentUniqueValues = useMemo(() => {
@@ -333,7 +336,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
         const valuesSet = new Set(uniqueValues)
         if (!mappings) return [column, valuesSet]
 
-        const settings = columnSettings[columnMappings[column].targetColumn]
+        const settings = columnSettings[mappingsToReview[column].targetColumn]
         const resolvedValuesSet = new Set(uniqueValues
           .map((value) => [value, getMapperState(settings, column, value, mappings)])
           .filter(([, state]) => state !== MappingState.UNRESOLVED)
@@ -343,7 +346,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
         return [column, valuesSet.difference(resolvedValuesSet)]
       })
     ),
-    [data.columns, mappings],
+    [data.columns, mappings, mappingsToReview],
   )
 
   const resolvedColumns = useMemo(
@@ -486,7 +489,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
             {
               currentUniqueValues.map((uniqueDataValue, index) => (
                 <ColumnMapper
-                  key={uniqueDataValue}
+                  key={uniqueDataValue + index}
                   state={getMapperState(columnSettings[activeTarget], activeColumn, uniqueDataValue, mappings)}
                   column={uniqueDataValue}
                   action={currentMappings?.[uniqueDataValue]?.action}
