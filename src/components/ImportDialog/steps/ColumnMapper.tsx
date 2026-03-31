@@ -1,4 +1,4 @@
-import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps, Icon, InputText } from "@ynput/ayon-react-components"
+import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps, Icon, InputSwitch, InputText } from "@ynput/ayon-react-components"
 import { useMemo } from "react"
 import {
   MappersTableBodyRow,
@@ -10,10 +10,12 @@ import {
   MapperDropdown,
   TargetType,
   DropdownValueLabel,
-  MappingError
+  MappingError,
+  SwitchWrapper,
 } from "./common.styled"
-import { ColumnAction, ErrorHandlingMode, ValueAction } from "./common"
+import { ColumnAction, ErrorHandlingMode, TargetColumn, TargetValue, ValueAction } from "./common"
 import clsx from "clsx"
+import { ImportableColumn } from "@shared/api/generated/dataImport"
 
 export enum MappingState {
   UNRESOLVED = "unresolved",
@@ -28,15 +30,16 @@ type Props = {
   column: string
   action: ColumnAction | ValueAction | undefined
   actions: DropdownProps["options"]
-  target: string | undefined
+  target: TargetColumn | TargetValue | undefined
   targetOptions: DropdownProps["options"]
   errorHandlingEnabled?: boolean
   errorHandling: ErrorHandlingMode | undefined
   errorHandlingOptions: DropdownProps["options"]
+  valueType?: ImportableColumn["valueType"]
   onPointerEnter: () => void
   onClick: (ctrl: boolean, shift: boolean) => void
   onActionChange: (action: ColumnAction | ValueAction) => void
-  onTargetChange: (target: string) => void
+  onTargetChange: (target: TargetValue) => void
   onErrorHandlingChange: (mode: ErrorHandlingMode) => void
 }
 
@@ -75,6 +78,7 @@ export default function ColumnMapper({
   errorHandling,
   errorHandlingOptions,
   errorHandlingEnabled = true,
+  valueType,
   onPointerEnter,
   onClick,
   onActionChange,
@@ -122,16 +126,26 @@ export default function ColumnMapper({
       <MappersTableAttribute>
         {
           action === ValueAction.CREATE
-          ? (
-            <InputText
-              value={target}
-              onChange={(event) => onTargetChange(event.target.value)}
-              placeholder="Enter a value"
-            />
-          ) : (
+          ? valueType === "boolean"
+            ? (
+              <SwitchWrapper>
+                <InputSwitch
+                  checked={target as boolean}
+                  onChange={(event) => onTargetChange((event.target as HTMLInputElement).checked)}
+                />
+                { target ? "Yes" : "No" }
+              </SwitchWrapper>
+            ) : (
+              <InputText
+                value={target as string}
+                onChange={(event) => onTargetChange(event.target.value)}
+                placeholder="Enter a value"
+              />
+            )
+          : (
             <MapperDropdown
               disabled={skipping || creating || targetOptions.length === 0}
-              value={target && !(skipping || creating) ? [target] : []}
+              value={target && !(skipping || creating) ? [target as string] : []}
               options={targetOptions}
               onChange={([value]) => onTargetChange(value)}
               valueTemplate={(value, selected, isOpen) => (

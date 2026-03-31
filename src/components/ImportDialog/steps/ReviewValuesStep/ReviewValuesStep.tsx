@@ -1,7 +1,7 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, ResolvedColumnMapping } from "../common"
+import { ResolvedColumnMappings, ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, ResolvedColumnMapping, TargetValue } from "../common"
 import {
   Mappers,
   MappersTableHeader,
@@ -80,7 +80,11 @@ const inferMapping = (value: string, settings: ImportableColumn): ValueMapping |
   }
 }
 
-const validateValue = (settings: ImportableColumn, value: string) => {
+const validateValue = (settings: ImportableColumn, value: TargetValue) => {
+  if (typeof value === "boolean") {
+    return settings.valueType === "boolean"
+  }
+
   switch (settings.valueType) {
     case "integer":
       return /[0-9]+/.test(value)
@@ -484,6 +488,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                   errorHandling={undefined}
                   errorHandlingOptions={[]}
                   errorHandlingEnabled={false}
+                  valueType={columnSettings[activeTarget].valueType}
                   selected={selection.has(uniqueDataValue)}
                   onPointerEnter={() => {}}
                   onClick={getMapperClickHandler(uniqueDataValue, index)}

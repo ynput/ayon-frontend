@@ -14,7 +14,7 @@ type Props = {
   subtitle?: string
   size: string,
   items: StatsItem[]
-  onClose: () => void
+  onClose?: () => void
 }
 
 export const StatsWrapper = styled.div`
@@ -70,11 +70,15 @@ export default function Stats({ heading, subtitle, size, items, onClose }: Props
               </StatsFileSize>
             )
           }
-          <StatsRemove
-            icon="close"
-            variant="nav"
-            onClick={onClose}
-          />
+          {
+            onClose && (
+              <StatsRemove
+                icon="close"
+                variant="nav"
+                onClick={onClose}
+              />
+            )
+          }
         </StatsHeading>
         {
           subtitle && <StatsSubtitle>{subtitle}</StatsSubtitle>

@@ -186,3 +186,9 @@ export const TargetType = styled.span`
   font-size: var(--md-sys-typescale-body-small-font-size);
   padding-right: var(--padding-s);
 `
+
+export const SwitchWrapper = styled.label`
+  display: flex;
+  gap: 1ch;
+  align-items: center;
+`

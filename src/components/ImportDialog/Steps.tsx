@@ -10,7 +10,6 @@ import { useExportFieldsQuery, useImportDataMutation } from "@queries/dataImport
 import { ColumnMapping, ImportStatus } from "@shared/api/generated/dataImport";
 import { toast } from "react-toastify";
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from "./ImportDialog.styled";
-import { Button } from "@ynput/ayon-react-components";
 
 type Props = {
   importContext: ImportContext
@@ -31,8 +30,8 @@ const steps = [
 
 const breadcrumbForStep: Record<ImportStep, string> = {
   [ImportStep.UPLOAD]: "Upload file",
-  [ImportStep.MAP_COLUMNS]: "Map Columns",
-  [ImportStep.REVIEW_VALUES]: "Review Values",
+  [ImportStep.MAP_COLUMNS]: "Map columns",
+  [ImportStep.REVIEW_VALUES]: "Review calues",
   [ImportStep.PREVIEW]: "Preview Result",
 }
 

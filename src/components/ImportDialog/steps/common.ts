@@ -34,9 +34,11 @@ export type StepProps<R> = {
   onNext: (result: R) => void
 }
 
+export type TargetColumn = string
+
 export type ColumnMapping = {
   action: ColumnAction
-  targetColumn?: string
+  targetColumn?: TargetColumn
   errorHandlingMode?: ErrorHandlingMode
   userResolved?: boolean
 }
@@ -49,9 +51,11 @@ export type ResolvedColumnMapping = ColumnMapping & {
 export type ColumnMappings = Record<string, ColumnMapping>
 export type ResolvedColumnMappings = Record<string, ResolvedColumnMapping>
 
+export type TargetValue = string | boolean
+
 export type ValueMapping = {
   action: ValueAction
-  targetValue: string
+  targetValue: TargetValue
   userResolved?: boolean
 }
 

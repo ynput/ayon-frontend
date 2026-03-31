@@ -66,9 +66,14 @@ export const getFullMapping = (columnMappings: ResolvedColumnMappings, valueMapp
   return Object.entries(columnMappings).map(([column, columnMapping]) => {
     const valuesMapping = valueMappings[column]
       ? Object.entries(valueMappings[column]).map(([value, { targetValue, action }]) => {
+        // the backend expects a string and coerces it into a boolean
+        const target = typeof targetValue === "boolean"
+          ? (targetValue ? "true" : "false")
+          : targetValue
+
         return {
           source: value,
-          target: targetValue,
+          target,
           action,
         }
       })

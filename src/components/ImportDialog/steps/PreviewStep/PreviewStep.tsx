@@ -35,12 +35,11 @@ export default function PreviewStep({ data, previewStatus, importContext, onBack
                   icon: "do_not_disturb",
                 },
                 {
-                  text: `Failed: ${previewStatus.failed}`,
+                  text: `Errors: ${previewStatus.failed}`,
                   icon: "error",
                   danger: !!previewStatus.failed,
                 },
               ]}
-              onClose={() => onBack()}
             />
           )
         }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ImportSchema, normaliseForComparison, ResolvedColumnMappings, StepProps } from "../common"
+import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ImportSchema, normaliseForComparison, ResolvedColumnMappings, StepProps, TargetColumn, TargetValue } from "../common"
 import { MappersTableErrorHandlingCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "./DataPreview"
 import {
@@ -242,7 +242,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
     setMappings((m) => ({ ...m, ...filteredPreset }))
   }, [preset.current])
 
-  const onTargetChange = useCallback((column: string) => (targetColumn: string) => {
+  const onTargetChange = useCallback((column: string) => (targetColumn: TargetColumn) => {
     const updater = mappingUpdater(
       column,
       { targetColumn, action: ColumnAction.MAP },
@@ -324,7 +324,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                     }
                     setSelectedColumn(column)
                   }}
-                  onTargetChange={onTargetChange(column)}
+                  onTargetChange={(target) => onTargetChange(column)(target as TargetColumn)}
                   onActionChange={(action) => {
                     setMappings(mappingUpdater(
                       column,
