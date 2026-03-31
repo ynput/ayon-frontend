@@ -2,7 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ColumnAction, ColumnMapping, ColumnMappings, ErrorHandlingMode, ImportSchema, normaliseForComparison, ResolvedColumnMappings, StepProps, TargetColumn, TargetValue } from "../common"
+import {
+  ColumnAction,
+  ColumnMapping,
+  ColumnMappings,
+  ErrorHandlingMode,
+  ImportSchema,
+  normaliseForComparison,
+  StepProps,
+  TargetColumn,
+} from "../common"
 import { MappersTableErrorHandlingCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
 import DataPreview from "./DataPreview"
 import {
@@ -24,7 +33,7 @@ import { confirmDialog } from "primereact/confirmdialog"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
 
-type Props = StepProps<ResolvedColumnMappings> & {
+type Props = StepProps<ColumnMappings> & {
   data: ImportData
   mappings?: ColumnMappings
   importSchema: ImportSchema
@@ -395,7 +404,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
           }
           onClick={() => {
             if (!mappings || unresolvedColumns.size > 0) return
-            onNext(mappings as ResolvedColumnMappings)
+            onNext(mappings as ColumnMappings)
           }}
         />
       </StepNavButtons>

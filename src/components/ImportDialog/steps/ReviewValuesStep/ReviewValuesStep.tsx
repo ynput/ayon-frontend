@@ -27,6 +27,7 @@ import ColumnMapper, { MappingState } from "../ColumnMapper"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { cloneDeep, merge } from "lodash"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
+import useMultiSelect from "@components/ImportDialog/hooks/useMultiSelect"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
@@ -244,7 +245,6 @@ const enumTypes: ImportableColumn["valueType"][] = [
 
 export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
-  const [selection, setSelection] = useState<Set<string>>(new Set())
 
   const preset = usePreset()
 
@@ -312,6 +312,8 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
     })
   }, [activeColumn, uniqueValuesForColumn])
 
+  const multiSelect = useMultiSelect({ items: currentUniqueValues })
+
   const targetValueOptions = useMemo(() => {
     if (!activeMapping) return []
 
@@ -356,37 +358,6 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
     [mappingsToReview, unresolvedValues],
   )
 
-  const getMapperClickHandler = useCallback((uniqueDataValue: string, index: number) => (ctrl: boolean, shift: boolean) => {
-    setSelection((s) => {
-      const toAdd = new Set([uniqueDataValue])
-      if (ctrl) {
-        // add or remove this specific mapper from the selection
-        return s.has(uniqueDataValue)
-          ? s.difference(toAdd)
-          : s.union(toAdd)
-      } else if (shift && s.size > 0) {
-        // select a range of mappers from the first selected one to the clicked one
-        const firstSelectedIndex = currentUniqueValues.findIndex((value) => s.has(value))
-        if (firstSelectedIndex >= 0) {
-          // automatically inverts the range if the first selected index is higher than the clicked index
-          const range = currentUniqueValues.slice(
-            Math.min(firstSelectedIndex, index),
-            Math.max(firstSelectedIndex, index),
-          )
-
-          return s
-            .union(toAdd)
-            .union(new Set(range))
-        }
-      }
-      // If no modifier key pressed or there's no existing selection,
-      // just add/remove the current mapper.
-      return s.has(uniqueDataValue)
-        ? new Set()
-        : toAdd
-    })
-  }, [])
-
   useEffect(() => {
     if (!columnSettings || Boolean(mappings)) return
     // infer mappings based on the schema
@@ -417,7 +388,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
 
   // reset selection if target changes
   useEffect(() => {
-    setSelection(new Set())
+    multiSelect.reset()
   }, [activeTarget])
 
   return (
@@ -473,8 +444,8 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
               <tr>
                 <MappersTableHeaderCell scope="col">
                   Raw Data
-                  <SelectedCount hidden={selection.size === 0}>
-                    ({selection.size} / {currentUniqueValues.length} selected)
+                  <SelectedCount hidden={multiSelect.selection.size === 0}>
+                    ({multiSelect.selection.size} / {currentUniqueValues.length} selected)
                   </SelectedCount>
                 </MappersTableHeaderCell>
                 <MappersTableHeaderCell scope="col">
@@ -500,16 +471,16 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                   errorHandlingOptions={[]}
                   errorHandlingEnabled={false}
                   valueType={columnSettings[activeTarget].valueType}
-                  selected={selection.has(uniqueDataValue)}
+                  selected={multiSelect.selection.has(uniqueDataValue)}
                   onPointerEnter={() => {}}
-                  onClick={getMapperClickHandler(uniqueDataValue, index)}
+                  onClick={multiSelect.getClickHandler(uniqueDataValue, index)}
                   onActionChange={(action) => {
                     if (!activeColumn) return
 
-                    if (selection.size > 0 && selection.has(uniqueDataValue)) {
+                    if (multiSelect.selection.size > 0 && multiSelect.selection.has(uniqueDataValue)) {
                       setMappings(mappingUpdater(
                         activeColumn,
-                        Array.from(selection),
+                        Array.from(multiSelect.selection),
                         { action: action as ValueAction },
                         preset.updateValues,
                       ))
