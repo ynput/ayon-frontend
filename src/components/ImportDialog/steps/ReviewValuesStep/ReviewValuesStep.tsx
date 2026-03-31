@@ -1,7 +1,7 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, TargetValue, ColumnMappings, ValueMappableColumnMappings, ValueMappableColumnMapping } from "../common"
+import { ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, TargetValue, ColumnMappings, ValueMappableColumnMappings, ValueMappableColumnMapping, ColumnAction } from "../common"
 import {
   Mappers,
   MappersTableHeader,
@@ -255,8 +255,8 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
 
   const mappingsToReview: ValueMappableColumnMappings = useMemo(
     () => Object.fromEntries(Object.entries(columnMappings)
-      .filter(([, { targetColumn }]) => importSchema.some(
-        ({ key }) => targetColumn === key,
+      .filter(([, { action, targetColumn }]) => importSchema.some(
+        ({ key }) => targetColumn === key && action !== ColumnAction.SKIP,
       ))
       .map(([column, mapping]) => [column, mapping as ValueMappableColumnMapping])
     ),

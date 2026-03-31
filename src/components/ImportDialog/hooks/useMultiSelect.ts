@@ -36,7 +36,7 @@ export default function useMultiSelect({ items }: Args) {
         ? new Set()
         : toAdd
     })
-  }, [])
+  }, [items])
 
   return {
     selection,

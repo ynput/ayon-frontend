@@ -65,7 +65,7 @@ export default function ImportSteps({ importContext, projectName, data, setData,
 
     return importData({
       fileId: data.fileId,
-      entityType: importContext,
+      importType: importContext,
       columnMapping,
       preview,
       projectName,
