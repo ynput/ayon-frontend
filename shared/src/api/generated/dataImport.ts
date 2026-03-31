@@ -23,11 +23,18 @@ const injectedRtkApi = api.injectEndpoints({
       }),
     }),
     uploadFile: build.mutation<UploadFileApiResponse, UploadFileApiArg>({
-      query: (queryArg) => ({ url: `/api/csv/import/upload`, method: 'PUT', body: queryArg.csv }),
+      query: (queryArg) => ({
+        url: `/api/csv/import/upload`,
+        method: 'PUT',
+        body: queryArg.csv,
+        params: {
+          ttl: queryArg.ttl,
+        },
+      }),
     }),
     importData: build.mutation<ImportDataApiResponse, ImportDataApiArg>({
       query: (queryArg) => ({
-        url: `/api/csv/import/${queryArg.entityType}`,
+        url: `/api/csv/import/${queryArg.importType}`,
         method: 'POST',
         body: queryArg.columnMapping,
         params: {
@@ -46,22 +53,23 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api }
 export type ExportFieldsApiResponse = /** status 200 Successful Response */ ImportableColumn[]
 export type ExportFieldsApiArg = {
-  entityType: 'user' | 'folder' | 'task' | 'hierarchy'
+  entityType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   projectName?: string
 }
 export type PostApiCsvExportByEntityTypeApiResponse = /** status 200 Successful Response */ any
 export type PostApiCsvExportByEntityTypeApiArg = {
-  entityType: 'user' | 'folder' | 'task' | 'hierarchy'
+  entityType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   projectName?: string
   bodyExportApiCsvExportEntityTypePost: BodyExportApiCsvExportEntityTypePost
 }
 export type UploadFileApiResponse = /** status 200 Successful Response */ ImportUpload
 export type UploadFileApiArg = {
+  ttl?: number
   csv: string
 }
 export type ImportDataApiResponse = /** status 200 Successful Response */ ImportStatus
 export type ImportDataApiArg = {
-  entityType: 'user' | 'folder' | 'task' | 'hierarchy'
+  importType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   fileId: string
   skipErrors?: boolean
   existingStrategy?: 'skip' | 'update' | 'fail'
@@ -116,6 +124,8 @@ export type ImportableColumn = {
   defaultValue: string
   /** A list of possible enum items for this column (if set) */
   enumItems?: EnumItem[]
+  /** The enum resolver name (e.g., 'statuses', 'folderTypes') */
+  enumName?: string
   /** A list of possible error handling modes for this column. Every column can have different available modes: For example: `name` column cannot use `default`, because default name cannot be generated. */
   errorHandlingModes: ('skip' | 'abort' | 'default')[]
 }
@@ -157,8 +167,8 @@ export type ColumnMapping = {
   targetKey: string
   /** Map or skip whole column */
   action: 'map' | 'skip'
-  /** If value in field is required */
-  errorHandlingMode: 'skip' | 'update' | 'fail'
+  /** Handle errors in this column. 'abort' to stop import */
+  errorHandlingMode: 'skip' | 'abort' | 'default'
   /** List of values mapping mostly for enum fields */
   valuesMapping: ColumnValueMapping[]
 }

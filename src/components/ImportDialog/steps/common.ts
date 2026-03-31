@@ -24,8 +24,8 @@ export enum ValueAction {
 
 export enum ErrorHandlingMode {
   SKIP = "skip",
-  ABORT = "fail",
-  DEFAULT = "update",
+  ABORT = "abort",
+  DEFAULT = "default",
 }
 
 export type StepProps<R> = {
@@ -70,6 +70,5 @@ export const itemsLabelForImportContext: Record<ImportContext, string> = {
   user: "users",
   folder: "folders",
   task: "tasks",
-  // TODO: add this once lists are supported in the backend
-  // list: "items",
+  entity_list_item: "items",
 }
