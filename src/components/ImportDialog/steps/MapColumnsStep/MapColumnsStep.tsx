@@ -18,6 +18,7 @@ import {
   Container,
   PreviewHeading,
   Preview,
+  MultipleColumnsPreview,
 } from "./MapColumnsStep.styled"
 import {
   MappersContainer,
@@ -32,6 +33,8 @@ import ColumnMapper, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../
 import { confirmDialog } from "primereact/confirmdialog"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
+import useMultiSelect from "@components/ImportDialog/hooks/useMultiSelect"
+import { cloneDeep, merge } from "lodash"
 
 type Props = StepProps<ColumnMappings> & {
   data: ImportData
@@ -124,20 +127,27 @@ const getMapperState = (column: string, mappings: ColumnMappings = {}) => {
 }
 
 const mappingUpdater = (
-  column: string,
+  columns: string[],
   update: Partial<ColumnMapping>,
   fallback: Partial<ColumnMapping> = {},
   callback?: (mappings: ColumnMappings) => void,
 ) => (old: ColumnMappings | undefined) => {
   const base = old ?? {}
-  const mapping = {
-    ...fallback,
-    ...(base[column] ?? {}),
-    ...update,
-    userResolved: true,
-  }
 
-  const mappings = { ...base, [column]: mapping }
+  const updated = columns.map((column: string) => ({
+    [column]: {
+      ...fallback,
+      ...(base[column] ?? {}),
+      ...update,
+      userResolved: true,
+    }
+  }))
+
+  const mappings = merge(
+    cloneDeep(base),
+    ...updated,
+  )
+
   callback?.(mappings)
 
   return mappings
@@ -145,7 +155,6 @@ const mappingUpdater = (
 
 export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(defaultMappings)
-  const [selectedColumn, setSelectedColumn] = useState<string | null>(null)
   const [previewColumn, setPreviewColumn] = useState<string | null>(null)
   const [previewUnique, setPreviewUnique] = useState(true)
 
@@ -155,6 +164,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
   )
 
   const preset = usePreset()
+  const multiSelect = useMultiSelect({ items: data.columns })
 
   // lookup table for which data column a target is mapped to
   const columnForTarget: Record<string, string> = useMemo(() => {
@@ -253,7 +263,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
 
   const onTargetChange = useCallback((column: string) => (targetColumn: TargetColumn) => {
     const updater = mappingUpdater(
-      column,
+      [column],
       { targetColumn, action: ColumnAction.MAP },
       { errorHandlingMode: inferErrorHandling(columnSettings[targetColumn]) },
       preset.updateColumns,
@@ -314,7 +324,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
             </MappersTableHeader>
             <MappersTableBody>
             {
-              data.columns.map((column) => (
+              data.columns.map((column, index) => (
                 <ColumnMapper
                   key={column}
                   state={getMapperState(column, mappings)}
@@ -325,18 +335,23 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                   targetOptions={targetOptions}
                   errorHandling={mappings?.[column]?.errorHandlingMode}
                   errorHandlingOptions={errorHandlingOptions}
-                  selected={selectedColumn === column}
+                  selected={multiSelect.selection.has(column)}
                   onPointerEnter={() => setPreviewColumn(column)}
-                  onClick={() => {
-                    if (selectedColumn === column) {
-                      return setSelectedColumn(null)
-                    }
-                    setSelectedColumn(column)
-                  }}
+                  onClick={multiSelect.getClickHandler(column, index)}
                   onTargetChange={(target) => onTargetChange(column)(target as TargetColumn)}
                   onActionChange={(action) => {
+                    if (multiSelect.selection.size > 0 && multiSelect.selection.has(column)) {
+                      setMappings(mappingUpdater(
+                        Array.from(multiSelect.selection),
+                        { action: action as ColumnAction },
+                        {},
+                        preset.updateColumns,
+                      ))
+                      return
+                    }
+
                     setMappings(mappingUpdater(
-                      column,
+                      [column],
                       { action: action as ColumnAction },
                       {},
                       preset.updateColumns,
@@ -344,7 +359,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                   }}
                   onErrorHandlingChange={(errorHandlingMode) => {
                     setMappings(mappingUpdater(
-                      column,
+                      [column],
                       { errorHandlingMode },
                       {},
                       preset.updateColumns,
@@ -362,6 +377,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
             <SwitchButton
               label="Show unique values"
               value={previewUnique}
+              disabled={multiSelect.selection.size > 1}
               onClick={() => setPreviewUnique(!previewUnique)}
               variant="secondary"
               pt={{
@@ -369,7 +385,20 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
               }}
             />
           </PreviewHeading>
-          <DataPreview data={data} column={selectedColumn ?? previewColumn} unique={previewUnique} />
+          {
+            multiSelect.selection.size > 1
+            ? (
+              <MultipleColumnsPreview>
+                {multiSelect.selection.size} columns selected
+              </MultipleColumnsPreview>
+            ) : (
+              <DataPreview
+                data={data}
+                column={Array.from(multiSelect.selection).at(0) ?? previewColumn}
+                unique={previewUnique}
+              />
+            )
+          }
         </Preview>
       </Container>
       <StepNavButtons>

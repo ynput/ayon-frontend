@@ -34,3 +34,9 @@ export const PreviewHeading = styled.h2`
   justify-content: space-between;
   align-items: center;
 `
+
+export const MultipleColumnsPreview = styled.div`
+  color: var(--md-sys-color-outline);
+  padding: var(--padding-l) var(--padding-m);
+  text-align: center;
+`
