@@ -374,6 +374,7 @@ export const ProjectTreeTable = ({
     excludedColumns,
     excludedSorting,
     sortableRows,
+    groupBy,
   ])
 
   // Keep ColumnSettingsProvider's allColumns ref up to date

@@ -108,6 +108,7 @@ const defaultEntityToGroupRow = (
     entityId: task.id,
     entityType: entityType,
     parentId: task.folderId,
+    folderId: task.folderId,
     name: task.name || '',
     label: task.label || task.name || '',
     icon: typeData?.icon || null,
@@ -121,7 +122,10 @@ const defaultEntityToGroupRow = (
     attrib: task.attrib,
     ownAttrib: task.ownAttrib,
     parents: task.parents || [],
+    folder: task.parents?.[task.parents.length - 1] || undefined,
+    createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    hasReviewables: task.hasReviewables || false,
     links: linksToTableData(task.links, entityType, {
       folderTypes: project?.folderTypes || [],
       productTypes: Object.values(project.productTypes) || [],
