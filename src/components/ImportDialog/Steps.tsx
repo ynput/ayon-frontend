@@ -105,14 +105,14 @@ export default function ImportSteps({ importContext, projectName, data, setData,
     [ImportStep.UPLOAD]: Boolean(importSchema),
     [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data),
     [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings),
-    [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings),
+    [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
   }), [importSchema, data, columnMappings, valueMappings, previewStatus])
 
   const completed: Record<ImportStep, boolean> = useMemo(() => ({
     [ImportStep.UPLOAD]: Boolean(importSchema && data),
     [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data && columnMappings),
-    [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings && valueMappings),
-    [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
+    [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
+    [ImportStep.PREVIEW]: false,
   }), [importSchema, data, columnMappings, valueMappings, previewStatus])
 
   return (

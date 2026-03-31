@@ -126,7 +126,7 @@ export default function ColumnMapper({
       </MappersTableBodyCell>
       <MappersTableAttribute>
         {
-          mapping
+          mapping || !action
           ? (
             valueType === "boolean"
             ? (
@@ -180,7 +180,7 @@ export default function ColumnMapper({
           ) : (
             <InputText
               value={target as string}
-              disabled={skipping}
+              disabled={!creating}
               onChange={(event) => onTargetChange(event.target.value)}
               placeholder={
                 skipping
