@@ -2,8 +2,7 @@ import { Button, DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
 import { DialogContainer, DialogHeading, ImportContextWrapper, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
-import { ImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
-import { upperFirst } from "lodash";
+import { contextLabelForImportContext, ImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
 import clsx from "clsx";
 import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containers";
 import { useDispatch } from "react-redux";
@@ -57,7 +56,7 @@ export default function ImportDialog({ importContext, projectName }: Props) {
               <span id={`import.${importContext}-views-portal`}></span>
             </TemplatesSelector>
             <ImportContextWrapper>
-              {upperFirst(importContext)}
+              {contextLabelForImportContext[importContext]}
               {
                 data
                   ? ` - ${data.fileName}`

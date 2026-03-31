@@ -70,5 +70,13 @@ export const itemsLabelForImportContext: Record<ImportContext, string> = {
   user: "users",
   folder: "folders",
   task: "tasks",
-  entity_list_item: "items",
+  entity_list_item: "list items",
+}
+
+export const contextLabelForImportContext: Record<ImportContext, string> = {
+  hierarchy: "Hierarchy",
+  user: "Users",
+  folder: "Folders",
+  task: "Tasks",
+  entity_list_item: "List items",
 }

@@ -1,4 +1,4 @@
-import { ImportSchema, StepProps } from "../common";
+import { ImportSchema, itemsLabelForImportContext, StepProps } from "../common";
 import { Button, FileUpload, FileUploadProps, getFileSizeString } from "@ynput/ayon-react-components";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StepNavButtons } from "../common.styled";
@@ -141,7 +141,7 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
                 />
                 <Button
                   icon="upload_file"
-                  label={`Choose ${importContext} .csv file`}
+                  label={`Choose .csv file with ${itemsLabelForImportContext[importContext]}`}
                   onClick={() => hiddenFileInputRef.current?.click()}
                 />
               </label>
