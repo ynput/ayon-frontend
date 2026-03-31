@@ -31,7 +31,7 @@ const steps = [
 const breadcrumbForStep: Record<ImportStep, string> = {
   [ImportStep.UPLOAD]: "Upload file",
   [ImportStep.MAP_COLUMNS]: "Map columns",
-  [ImportStep.REVIEW_VALUES]: "Review calues",
+  [ImportStep.REVIEW_VALUES]: "Review values",
   [ImportStep.PREVIEW]: "Preview Result",
 }
 

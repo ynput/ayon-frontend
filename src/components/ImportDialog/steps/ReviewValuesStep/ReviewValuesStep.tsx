@@ -35,26 +35,34 @@ type Props = StepProps<ValueMappings> & {
   mappings: ValueMappings | null
 }
 
-const enumActionOptions = [
-  {
-    value: ValueAction.MAP,
-    label: "Map",
-    icon: "line_end_arrow",
-  },
-]
+const mapActionOption = {
+  value: ValueAction.MAP,
+  label: "Map",
+  icon: "line_end_arrow",
+}
+const skipActionOption = {
+  value: ValueAction.SKIP,
+  label: "Skip",
+  icon: "block",
+}
+const createActionOption = {
+  value: ValueAction.CREATE,
+  label: "Create",
+  icon: "add",
+}
 
-const actionOptions = [
-  {
-    value: ValueAction.SKIP,
-    label: "Skip",
-    icon: "block",
-  },
-  {
-    value: ValueAction.CREATE,
-    label: "Create",
-    icon: "add",
-  },
-]
+const getActionOptions = (isEnum: boolean, valueType: ImportableColumn["valueType"]) => {
+  if (valueType === "boolean") {
+    return [mapActionOption, skipActionOption]
+  }
+
+  if (isEnum) {
+    return [mapActionOption, createActionOption, skipActionOption]
+  }
+
+  return [createActionOption, skipActionOption]
+}
+
 
 const inferMapping = (value: string, settings: ImportableColumn): ValueMapping | null => {
   // for non-enum columns, we default to creating a new value
@@ -482,7 +490,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                   state={getMapperState(columnSettings[activeTarget], activeColumn, uniqueDataValue, mappings)}
                   column={uniqueDataValue}
                   action={currentMappings?.[uniqueDataValue]?.action}
-                  actions={actionOptions.concat(activeTargetIsEnum ? enumActionOptions : [])}
+                  actions={getActionOptions(!!activeTargetIsEnum, columnSettings[activeTarget].valueType)}
                   target={currentMappings?.[uniqueDataValue]?.targetValue}
                   targetOptions={targetValueOptions}
                   errorHandling={undefined}

@@ -94,6 +94,7 @@ export default function ColumnMapper({
     [targetOptions, target]
   )
 
+  const mapping = action === ValueAction.MAP || action === ColumnAction.MAP
   const skipping = action === ColumnAction.SKIP
   const creating = action === ValueAction.CREATE
 
@@ -125,8 +126,9 @@ export default function ColumnMapper({
       </MappersTableBodyCell>
       <MappersTableAttribute>
         {
-          action === ValueAction.CREATE
-          ? valueType === "boolean"
+          mapping
+          ? (
+            valueType === "boolean"
             ? (
               <SwitchWrapper>
                 <InputSwitch
@@ -136,54 +138,55 @@ export default function ColumnMapper({
                 { target ? "Yes" : "No" }
               </SwitchWrapper>
             ) : (
-              <InputText
-                value={target as string}
-                onChange={(event) => onTargetChange(event.target.value)}
-                placeholder="Enter a value"
+              <MapperDropdown
+                disabled={targetOptions.length === 0}
+                value={target && !(skipping || creating) ? [target as string] : []}
+                options={targetOptions}
+                onChange={([value]) => onTargetChange(value)}
+                valueTemplate={(value, selected, isOpen) => (
+                  <DefaultValueTemplate
+                    value={value}
+                    displayIcon={undefined}
+                    isOpen={isOpen}
+                    placeholder={
+                      targetOptions.length === 0
+                        ? "Nothing to map. Try choosing the Create or Skip action."
+                        : "Select a target..."
+                    }
+                  >
+                    <DropdownValueLabel>
+                      {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
+                      <TargetType>
+                        {formatDataType(selectedTargetOption?.type ?? "", selectedTargetOption?.isEnum)}
+                      </TargetType>
+                    </DropdownValueLabel>
+                  </DefaultValueTemplate>
+                )}
+                itemTemplate={(option) => (
+                  <DefaultItemTemplate
+                    option={option}
+                    dataKey="value"
+                    labelKey="label"
+                    value={option.value}
+                    endContent={
+                      option.type
+                        ? <TargetType>{formatDataType(option.type, option.isEnum)}</TargetType>
+                        : undefined
+                    }
+                  />
+                )}
               />
             )
-          : (
-            <MapperDropdown
-              disabled={skipping || creating || targetOptions.length === 0}
-              value={target && !(skipping || creating) ? [target as string] : []}
-              options={targetOptions}
-              onChange={([value]) => onTargetChange(value)}
-              valueTemplate={(value, selected, isOpen) => (
-                <DefaultValueTemplate
-                  value={value}
-                  displayIcon={undefined}
-                  isOpen={isOpen}
-                  placeholder={
-                    skipping
-                      ? "Will be skipped"
-                      : creating
-                        ? "A new value will be created"
-                        : targetOptions.length === 0
-                          ? "Nothing to map. Try choosing the Create or Skip action."
-                          : "Select a target..."
-                  }
-                >
-                  <DropdownValueLabel>
-                    {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
-                    <TargetType>
-                      {formatDataType(selectedTargetOption?.type ?? "", selectedTargetOption?.isEnum)}
-                    </TargetType>
-                  </DropdownValueLabel>
-                </DefaultValueTemplate>
-              )}
-              itemTemplate={(option) => (
-                <DefaultItemTemplate
-                  option={option}
-                  dataKey="value"
-                  labelKey="label"
-                  value={option.value}
-                  endContent={
-                    option.type
-                      ? <TargetType>{formatDataType(option.type, option.isEnum)}</TargetType>
-                      : undefined
-                  }
-                />
-              )}
+          ) : (
+            <InputText
+              value={target as string}
+              disabled={skipping}
+              onChange={(event) => onTargetChange(event.target.value)}
+              placeholder={
+                skipping
+                  ? "Will be skipped"
+                  : "Enter a value"
+              }
             />
           )
         }

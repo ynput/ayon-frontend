@@ -129,6 +129,10 @@ export const MappingError = styled.span`
 
 export const MappersTableAttribute = styled(MappersTableBodyCell)`
   padding-right: var(--padding-s);
+
+  input {
+    width: 100%;
+  }
 `
 export const MappersTableErrorHandling = styled(MappersTableBodyCell)`
   padding-left: var(--padding-s);
