@@ -38,7 +38,9 @@ export const getMapperState = (
   const mapping = mappings[column]?.[value]
   if (!mapping) return MappingState.UNRESOLVED
 
-  const resolvedToMap = mapping.action === ValueAction.MAP && mapping.targetValue
+  const resolvedToMap = mapping.action === ValueAction.MAP
+    && (settings.valueType === "boolean" || mapping.targetValue)
+
   const resolvedToSkip = mapping.action === ValueAction.SKIP
   const resolvedToCreate = mapping.action === ValueAction.CREATE
   if (resolvedToMap || resolvedToSkip || resolvedToCreate) {

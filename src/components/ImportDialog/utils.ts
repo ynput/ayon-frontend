@@ -88,3 +88,25 @@ export const getFullMapping = (columnMappings: ColumnMappings, valueMappings: Va
     }
   })
 }
+
+const humanReadableDataType: Record<string, string> = {
+  "string": "Text",
+  "enum": "Select",
+  "list_of_strings": "Multi-select",
+  "list_of_any": "Multi-select",
+  "list_of_dict": "Multi-select",
+  "list_of_integers": "Multi-select (whole number)",
+  "list_of_submodels": "Multi-select",
+  "integer": "Whole Number",
+  "float": "Number with decimals",
+  "datetime": "Date and time",
+  "boolean": "Checkbox",
+}
+
+export const formatDataType = (t: string, isEnum: boolean) => {
+  if (isEnum) {
+    return humanReadableDataType["enum"]
+  }
+
+  return humanReadableDataType[t] ?? t.replace(/_/g, ' ')
+}

@@ -1,4 +1,11 @@
-import { DefaultItemTemplate, DefaultValueTemplate, DropdownProps, Icon, InputSwitch, InputText } from "@ynput/ayon-react-components"
+import {
+  DefaultItemTemplate,
+  DefaultValueTemplate,
+  DropdownProps,
+  Icon,
+  InputSwitch,
+  InputText,
+} from "@ynput/ayon-react-components"
 import { useMemo } from "react"
 import {
   MappersTableBodyRow,
@@ -16,6 +23,7 @@ import {
 import { ColumnAction, ErrorHandlingMode, TargetColumn, TargetValue, ValueAction } from "./common"
 import clsx from "clsx"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
+import { formatDataType } from "../utils"
 
 export enum MappingState {
   UNRESOLVED = "unresolved",
@@ -44,28 +52,6 @@ type Props = {
 }
 
 export const TARGET_OPTION_MAPPING_SEPARATOR = ' - '
-
-export const humanReadableDataType: Record<string, string> = {
-  "string": "Text",
-  "enum": "Select",
-  "list_of_strings": "Multi-select",
-  "list_of_any": "Multi-select",
-  "list_of_dict": "Multi-select",
-  "list_of_integers": "Multi-select (whole number)",
-  "list_of_submodels": "Multi-select",
-  "integer": "Whole Number",
-  "float": "Number with decimals",
-  "datetime": "Date and time",
-  "boolean": "Checkbox",
-}
-
-const formatDataType = (t: string, isEnum: boolean) => {
-  if (isEnum) {
-    return humanReadableDataType["enum"]
-  }
-
-  return humanReadableDataType[t] ?? t.replace(/_/g, ' ')
-}
 
 export default function ColumnMapper({
   state,
@@ -155,6 +141,10 @@ export default function ColumnMapper({
                     }
                   >
                     <DropdownValueLabel>
+                      {/*
+                        Splitting by the option separator allows us to strip the extra text
+                        shown next to the options in the dropdown (such as the already mapped source column).
+                      */}
                       {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
                       <TargetType>
                         {formatDataType(selectedTargetOption?.type ?? "", selectedTargetOption?.isEnum)}
