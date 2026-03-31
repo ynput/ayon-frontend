@@ -22,7 +22,7 @@ import {
   SelectedCount,
   ColumnsListScrollable,
 } from "./ReviewValuesStep.styled"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import ColumnMapper, { MappingState } from "../ColumnMapper"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { cloneDeep, merge } from "lodash"
@@ -64,8 +64,30 @@ const getActionOptions = (isEnum: boolean, valueType: ImportableColumn["valueTyp
   return [createActionOption, skipActionOption]
 }
 
+const truthyBooleanStrings = new Set(["true", "yes", "1", "on", "ano", "ja", "si"])
+const falsyBooleanStrings = new Set(["false", "no", "0", "off", "ne", "nein", "no"])
 
 const inferMapping = (value: string, settings: ImportableColumn): ValueMapping | null => {
+  const normalisedValue = normaliseForComparison(value)
+  if (settings.valueType === "boolean") {
+    if (truthyBooleanStrings.has(normalisedValue)) {
+      return {
+        action: ValueAction.MAP,
+        targetValue: true,
+      }
+    } else if (falsyBooleanStrings.has(normalisedValue)) {
+      return {
+        action: ValueAction.MAP,
+        targetValue: false,
+      }
+    } else {
+      return {
+        action: ValueAction.SKIP,
+        targetValue: false,
+      }
+    }
+  }
+
   // for non-enum columns, we default to creating a new value
   if (!settings.enumItems) {
     return {
@@ -73,8 +95,6 @@ const inferMapping = (value: string, settings: ImportableColumn): ValueMapping |
       targetValue: value,
     }
   }
-
-  const normalisedValue = normaliseForComparison(value)
 
   const inferredEnum = settings.enumItems?.find((e) =>
     normalisedValue === normaliseForComparison(`${e.value}`) ||
@@ -499,7 +519,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                     if (!activeColumn) return
 
                     const update: Partial<ValueMapping> = { targetValue }
-                    if (!currentMappings?.[uniqueDataValue]) {
+                    if (!currentMappings?.[uniqueDataValue] && columnSettings[activeTarget].valueType !== "boolean") {
                       update.action = activeTargetIsEnum ? ValueAction.MAP : ValueAction.CREATE
                     }
 

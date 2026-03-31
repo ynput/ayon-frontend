@@ -102,7 +102,7 @@ export default function ColumnMapper({
     <MappersTableBodyRow
       className={clsx({ selected })}
       onPointerEnter={() => onPointerEnter()}
-      onClick={(event) => onClick(event.ctrlKey, event.shiftKey)}
+      onClick={(event) => onClick(event.ctrlKey || event.metaKey, event.shiftKey)}
     >
       <MappersTableColumnName className={clsx([state], { empty: source === undefined })} scope="row">
         {source ?? "(empty)"}
