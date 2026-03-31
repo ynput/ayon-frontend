@@ -10,6 +10,9 @@ import { useExportFieldsQuery, useImportDataMutation } from "@queries/dataImport
 import { ColumnMapping, ImportStatus } from "@shared/api/generated/dataImport";
 import { toast } from "react-toastify";
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from "./ImportDialog.styled";
+import Loading from "./steps/Loading";
+import ErrorFallback from "@components/ErrorFallback";
+import { EmptyPlaceholder } from "@shared/components";
 
 type Props = {
   importContext: ImportContext
@@ -42,7 +45,11 @@ export default function ImportSteps({ importContext, projectName, data, setData,
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
 
-  const { data: importSchema } = useExportFieldsQuery({
+  const {
+    data: importSchema,
+    isLoading: importSchemaLoading,
+    isError: importSchemaError,
+  } = useExportFieldsQuery({
     projectName,
     entityType: importContext,
   })
@@ -143,9 +150,10 @@ export default function ImportSteps({ importContext, projectName, data, setData,
         }
       </Breadcrumbs>
       {
-        !importSchema && (
-          <h2>Loading</h2>
-        )
+        !importSchema && importSchemaLoading && <Loading />
+      }
+      {
+        !importSchema && importSchemaError && <EmptyPlaceholder error={importSchemaError} />
       }
       {
         step === ImportStep.UPLOAD && importSchema && (
