@@ -1,7 +1,17 @@
 import { Button } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
-import { ValueMappings, StepProps, ValueMapping, normaliseForComparison, ImportSchema, ValueAction, TargetValue, ColumnMappings, ValueMappableColumnMappings, ValueMappableColumnMapping, ColumnAction } from "../common"
+import {
+  ValueMappings,
+  StepProps,
+  ValueMapping,
+  ImportSchema,
+  ValueAction,
+  ColumnMappings,
+  ValueMappableColumnMappings,
+  ValueMappableColumnMapping,
+  ColumnAction,
+} from "../common"
 import {
   Mappers,
   MappersTableHeader,
@@ -28,6 +38,11 @@ import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { cloneDeep, merge } from "lodash"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
 import useMultiSelect from "@components/ImportDialog/hooks/useMultiSelect"
+import { inferMapping } from "./inferMapping"
+import { mappingUpdater } from "./mappingUpdater"
+import { getValuesForColumn } from "./values"
+import { getMapperState } from "./getMapperState"
+import { sortMappingsToReviewEntries } from "./sorting"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
@@ -62,200 +77,6 @@ const getActionOptions = (isEnum: boolean, valueType: ImportableColumn["valueTyp
   }
 
   return [createActionOption, skipActionOption]
-}
-
-const truthyBooleanStrings = new Set(["true", "yes", "1", "on", "ano", "ja", "si"])
-const falsyBooleanStrings = new Set(["false", "no", "0", "off", "ne", "nein", "no"])
-
-const inferMapping = (value: string, settings: ImportableColumn): ValueMapping | null => {
-  const normalisedValue = normaliseForComparison(value)
-  if (settings.valueType === "boolean") {
-    if (truthyBooleanStrings.has(normalisedValue)) {
-      return {
-        action: ValueAction.MAP,
-        targetValue: true,
-      }
-    } else if (falsyBooleanStrings.has(normalisedValue)) {
-      return {
-        action: ValueAction.MAP,
-        targetValue: false,
-      }
-    } else {
-      return {
-        action: ValueAction.SKIP,
-        targetValue: false,
-      }
-    }
-  }
-
-  // for non-enum columns, we default to creating a new value
-  if (!settings.enumItems) {
-    return {
-      action: ValueAction.CREATE,
-      targetValue: value,
-    }
-  }
-
-  const inferredEnum = settings.enumItems?.find((e) =>
-    normalisedValue === normaliseForComparison(`${e.value}`) ||
-    normalisedValue === normaliseForComparison(e.label)
-  )
-
-  if (!inferredEnum) return null
-
-  return {
-    targetValue: `${inferredEnum.value}`,
-    action: ValueAction.MAP,
-  }
-}
-
-const validateValue = (settings: ImportableColumn, value: TargetValue) => {
-  if (typeof value === "boolean") {
-    return settings.valueType === "boolean"
-  }
-
-  switch (settings.valueType) {
-    case "integer":
-      return /[0-9]+/.test(value)
-    case "boolean":
-      return /true|false/i.test(value)
-    case "float":
-      return !Number.isNaN(parseFloat(value))
-    case "string":
-    // we don't know how to validate the types below - yet!
-    case "dict":
-    case "datetime":
-    case "list_of_strings":
-    case "list_of_any":
-    case "list_of_integers":
-    case "list_of_submodels":
-    default:
-      return true
-  }
-}
-
-const getMapperState = (settings: ImportableColumn, column: string | null, value: string, mappings: ValueMappings | null) => {
-  if (!column || !mappings) return MappingState.UNRESOLVED
-
-  const mapping = mappings[column]?.[value]
-  if (!mapping) return MappingState.UNRESOLVED
-
-  const resolvedToMap = mapping.action === ValueAction.MAP && mapping.targetValue
-  const resolvedToSkip = mapping.action === ValueAction.SKIP
-  const resolvedToCreate = mapping.action === ValueAction.CREATE
-  if (resolvedToMap || resolvedToSkip || resolvedToCreate) {
-    if (resolvedToCreate && !validateValue(settings, mapping.targetValue)) {
-      return MappingState.ERROR
-    }
-
-    return mapping.userResolved ? MappingState.RESOLVED : MappingState.AUTO_RESOLVED
-  }
-
-  return MappingState.UNRESOLVED
-}
-
-const mappingUpdater = (
-  column: string,
-  values: string[],
-  update: Partial<ValueMapping>,
-  callback?: (mappings: ValueMappings) => void,
-) => (old: ValueMappings | null) => {
-  const base = old ?? {}
-  const columnBase = base[column] ?? {}
-
-  const updated = values.map((value: string) => ({
-    [value]: {
-      ...(columnBase[value] ?? { }),
-      ...update,
-      userResolved: true,
-    },
-  }))
-
-  const mappings = {
-    ...cloneDeep(base),
-    [column]: merge(
-      cloneDeep(columnBase),
-      ...updated,
-    ),
-  }
-
-  callback?.(mappings)
-  return mappings
-}
-
-const possibleDelimiters = [
-  ",",
-  ";",
-  "/",
-  "|",
-  "\t",
-  "\n",
-  " ",
-]
-
-const tryParseJSONArray = (text: string) => {
-  const array = JSON.parse(text)
-  if (!Array.isArray(array)) throw new Error()
-  return array
-}
-
-const extractListOfStrings = (text: string) => {
-  try {
-    let array = []
-    try {
-      array = tryParseJSONArray(text)
-    } catch {
-      array = tryParseJSONArray(text.replaceAll("'", '"'))
-    }
-    return array
-  } catch {
-    for (const delimiter of possibleDelimiters) {
-      const parts = text.split(delimiter)
-      if (parts.length === 0) continue
-
-      return parts.map((p) => p.trim())
-    }
-  }
-
-  return []
-}
-
-// Returns all values found in `data` for a given column based on its settings.
-// For columns of type `list_of_string`, it tries to parse each value as a JSON array,
-// then a plain list with various separators.
-const getValuesForColumn = (data: ImportData, column: string, settings: ImportableColumn) => {
-  if (settings.valueType === "list_of_strings") {
-    return data.rows
-      .map((row) => {
-        if (!row[column]) return []
-        return extractListOfStrings(`${row[column]}`)
-      })
-      .flat()
-  }
-
-  return data.rows.map((row) => {
-    switch (typeof row[column]) {
-      case "undefined":
-        return undefined
-      case "object":
-        // coerce null to undefined
-        return row[column] ?? undefined
-      default:
-        return `${row[column]}`
-    }
-  })
-}
-
-type SortEntry = [string, ValueMappableColumnMapping]
-
-const sortMappingsToReviewEntries = (resolvedColumns: string[]) => ([m1]: SortEntry, [m2]: SortEntry) => {
-  const m1Resolved = resolvedColumns.includes(m1)
-  const m2Resolved = resolvedColumns.includes(m2)
-  if (m1Resolved && m2Resolved || (!m1Resolved && !m2Resolved)) {
-    return m1.localeCompare(m2)
-  }
-
-  return m1Resolved ? 1 : -1
 }
 
 const enumTypes: ImportableColumn["valueType"][] = [
@@ -519,7 +340,10 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                     if (!activeColumn) return
 
                     const update: Partial<ValueMapping> = { targetValue }
-                    if (!currentMappings?.[uniqueDataValue] && columnSettings[activeTarget].valueType !== "boolean") {
+                    if (
+                      !currentMappings?.[uniqueDataValue]
+                      && columnSettings[activeTarget].valueType !== "boolean"
+                    ) {
                       update.action = activeTargetIsEnum ? ValueAction.MAP : ValueAction.CREATE
                     }
 

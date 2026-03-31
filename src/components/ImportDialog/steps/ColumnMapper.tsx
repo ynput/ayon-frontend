@@ -56,7 +56,7 @@ export const humanReadableDataType: Record<string, string> = {
   "integer": "Whole Number",
   "float": "Number with decimals",
   "datetime": "Date and time",
-  "boolean": "True/False",
+  "boolean": "Checkbox",
 }
 
 const formatDataType = (t: string, isEnum: boolean) => {

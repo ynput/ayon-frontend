@@ -3,16 +3,18 @@ import { Button, Icon, SwitchButton } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import {
-  ColumnAction,
-  ColumnMapping,
-  ColumnMappings,
+  ColumnAction, ColumnMappings,
   ErrorHandlingMode,
-  ImportSchema,
-  normaliseForComparison,
-  StepProps,
-  TargetColumn,
+  ImportSchema, StepProps,
+  TargetColumn
 } from "../common"
-import { MappersTableErrorHandlingCol, StepContainer, StepNavButtons, StepNavStats, StepNavStatsRequired } from "../common.styled"
+import {
+  MappersTableErrorHandlingCol,
+  StepContainer,
+  StepNavButtons,
+  StepNavStats,
+  StepNavStatsRequired,
+} from "../common.styled"
 import DataPreview from "./DataPreview"
 import {
   Container,
@@ -32,9 +34,11 @@ import {
 import ColumnMapper, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../ColumnMapper"
 import { confirmDialog } from "primereact/confirmdialog"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
-import { ImportableColumn } from "@shared/api/generated/dataImport"
 import useMultiSelect from "@components/ImportDialog/hooks/useMultiSelect"
-import { cloneDeep, merge } from "lodash"
+import { inferErrorHandling, inferMapping } from "./inferMapping"
+import { mappingUpdater } from "./mappingUpdater"
+import { getMapperState } from "./getMapperState"
+import { targetOptionCompareFn } from "./sorting"
 
 type Props = StepProps<ColumnMappings> & {
   data: ImportData
@@ -69,89 +73,6 @@ const errorHandlingOptions = [
     label: "Abort Import",
   },
 ]
-
-const inferErrorHandling = (columnSchema: ImportableColumn) => {
-  return columnSchema.errorHandlingModes[0] as ErrorHandlingMode
-}
-
-const inferMapping = (column: string, schema: ImportSchema): ColumnMapping | null => {
-  const normalisedColumn = normaliseForComparison(column)
-  const columnSchema = schema.find((s) =>
-    normalisedColumn === normaliseForComparison(s.key) ||
-    normalisedColumn === normaliseForComparison(s.label)
-  )
-
-  if (!columnSchema) return null
-
-  return {
-    targetColumn: columnSchema.key,
-    action: ColumnAction.MAP,
-    errorHandlingMode: inferErrorHandling(columnSchema)
-  }
-}
-
-type Option = { value: string, label: string }
-const targetOptionCompareFn = (columnForTarget: Record<string, string>, columnSettings: Record<string, ImportableColumn>) => (
-  o1: Option,
-  o2: Option,
-) => {
-  const bothMapped = columnForTarget[o1.value] && columnForTarget[o2.value]
-  const neitherMapped = !columnForTarget[o1.value] && !columnForTarget[o2.value]
-  if (bothMapped || neitherMapped) {
-    const bothRequired = columnSettings[o1.value].required && columnSettings[o2.value].required
-    const neitherRequired = !columnSettings[o1.value].required && !columnSettings[o2.value].required
-    if (bothRequired || neitherRequired) {
-      return o1.label.localeCompare(o2.label)
-    }
-    // push required targets to the very top
-    if (columnSettings[o1.value].required) {
-      return -1
-    }
-    return 1
-  }
-
-  return columnForTarget[o1.value] ? 1 : -1
-}
-
-const getMapperState = (column: string, mappings: ColumnMappings = {}) => {
-  const mapping = mappings[column]
-  if (!mapping) return MappingState.UNRESOLVED
-
-  const resolvedToMap = mapping.action === ColumnAction.MAP && mapping.targetColumn
-  const resolvedToSkip = mapping.action === ColumnAction.SKIP
-  if (resolvedToMap || resolvedToSkip) {
-    return mapping.userResolved ? MappingState.RESOLVED : MappingState.AUTO_RESOLVED
-  }
-
-  return MappingState.UNRESOLVED
-}
-
-const mappingUpdater = (
-  columns: string[],
-  update: Partial<ColumnMapping>,
-  fallback: Partial<ColumnMapping> = {},
-  callback?: (mappings: ColumnMappings) => void,
-) => (old: ColumnMappings | undefined) => {
-  const base = old ?? {}
-
-  const updated = columns.map((column: string) => ({
-    [column]: {
-      ...fallback,
-      ...(base[column] ?? {}),
-      ...update,
-      userResolved: true,
-    }
-  }))
-
-  const mappings = merge(
-    cloneDeep(base),
-    ...updated,
-  )
-
-  callback?.(mappings)
-
-  return mappings
-}
 
 export default function MapColumnsStep({ data, mappings: defaultMappings, importSchema, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ColumnMappings | undefined>(defaultMappings)
