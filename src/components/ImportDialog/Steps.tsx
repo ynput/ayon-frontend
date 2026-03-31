@@ -101,10 +101,17 @@ export default function ImportSteps({ importContext, projectName, data, setData,
     })
   }, [requestImport, columnMappings, valueMappings])
 
-  const completed: Record<ImportStep, boolean> = useMemo(() => ({
+  const unlocked: Record<ImportStep, boolean> = useMemo(() => ({
     [ImportStep.UPLOAD]: Boolean(importSchema),
     [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data),
     [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings),
+    [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings),
+  }), [importSchema, data, columnMappings, valueMappings, previewStatus])
+
+  const completed: Record<ImportStep, boolean> = useMemo(() => ({
+    [ImportStep.UPLOAD]: Boolean(importSchema && data),
+    [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data && columnMappings),
+    [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings && valueMappings),
     [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
   }), [importSchema, data, columnMappings, valueMappings, previewStatus])
 
@@ -117,7 +124,7 @@ export default function ImportSteps({ importContext, projectName, data, setData,
               <BreadcrumbButton
                 variant="nav"
                 label={`${index + 1}. ${breadcrumbForStep[s]}`}
-                disabled={!completed[s]}
+                disabled={!unlocked[s]}
                 icon={completed[s] ? "check" : ""}
                 iconProps={{
                   style: {
