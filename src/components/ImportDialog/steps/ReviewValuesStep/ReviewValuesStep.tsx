@@ -462,7 +462,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                 <ColumnMapper
                   key={uniqueDataValue + index}
                   state={getMapperState(columnSettings[activeTarget], activeColumn, uniqueDataValue, mappings)}
-                  column={uniqueDataValue}
+                  source={uniqueDataValue}
                   action={currentMappings?.[uniqueDataValue]?.action}
                   actions={getActionOptions(!!activeTargetIsEnum, columnSettings[activeTarget].valueType)}
                   target={currentMappings?.[uniqueDataValue]?.targetValue}

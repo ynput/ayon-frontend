@@ -27,7 +27,7 @@ export enum MappingState {
 type Props = {
   state: MappingState
   selected: boolean
-  column: string
+  source: string
   action: ColumnAction | ValueAction | undefined
   actions: DropdownProps["options"]
   target: TargetColumn | TargetValue | undefined
@@ -70,7 +70,7 @@ const formatDataType = (t: string, isEnum: boolean) => {
 export default function ColumnMapper({
   state,
   selected,
-  column,
+  source,
   action,
   actions,
   target,
@@ -104,8 +104,8 @@ export default function ColumnMapper({
       onPointerEnter={() => onPointerEnter()}
       onClick={(event) => onClick(event.ctrlKey, event.shiftKey)}
     >
-      <MappersTableColumnName className={clsx([state], { empty: column === undefined })} scope="row">
-        {column ?? "(empty)"}
+      <MappersTableColumnName className={clsx([state], { empty: source === undefined })} scope="row">
+        {source ?? "(empty)"}
       </MappersTableColumnName>
       <MappersTableBodyCell>
         <PickActionDropdown
@@ -179,7 +179,11 @@ export default function ColumnMapper({
             )
           ) : (
             <InputText
-              value={target as string}
+              value={
+                target
+                ? target as string
+                : source
+              }
               disabled={!creating}
               onChange={(event) => onTargetChange(event.target.value)}
               placeholder={

@@ -328,7 +328,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
                 <ColumnMapper
                   key={column}
                   state={getMapperState(column, mappings)}
-                  column={column}
+                  source={column}
                   action={mappings?.[column]?.action}
                   actions={actionOptions}
                   target={mappings?.[column]?.targetColumn}
