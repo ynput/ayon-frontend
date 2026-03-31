@@ -43,6 +43,7 @@ import { mappingUpdater } from "./mappingUpdater"
 import { getValuesForColumn } from "./values"
 import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
+import { ENTITY_TYPE, entityTypeDependentColumns, getHierarchyRowFilter } from "../hierarchy"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
@@ -84,7 +85,7 @@ const enumTypes: ImportableColumn["valueType"][] = [
   "list_of_strings",
 ]
 
-export default function ReviewValuesStep({ data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
+export default function ReviewValuesStep({ importContext, data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
   const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
 
   const preset = usePreset()
@@ -126,14 +127,39 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
     [columnSettings, activeTarget]
   )
 
+  const entityTypeSource = useMemo(
+    () => {
+      if (importContext !== "hierarchy" || !columnMappings) return
+
+      const entry = Object.entries(columnMappings)
+        .find(([, mapping]) => mapping.targetColumn === ENTITY_TYPE)
+      if (!entry) return
+
+      return entry[0]
+    },
+    [importContext, columnMappings],
+  )
+
   const uniqueValuesForColumn = useMemo(
     () => Object.fromEntries(
       Object.keys(mappingsToReview)
         .map((column) => {
+          const columnMapping = mappingsToReview[column]
+          let rows = data.rows
+
+          if (
+            importContext === "hierarchy"
+            && entityTypeDependentColumns.has(columnMapping.targetColumn)
+            && entityTypeSource
+          ) {
+            console.log('filtering for column', column)
+            rows = data.rows.filter(getHierarchyRowFilter(column, entityTypeSource))
+          }
+
           const values = getValuesForColumn(
-            data,
+            rows,
             column,
-            columnSettings[mappingsToReview[column].targetColumn],
+            columnSettings[columnMapping.targetColumn],
           )
 
           return [
@@ -142,7 +168,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
           ]
         })
     ),
-    [data.rows, columnSettings, mappingsToReview],
+    [importContext, entityTypeSource, data.rows, columnSettings, mappingsToReview],
   )
 
   const currentUniqueValues = useMemo(() => {
@@ -312,6 +338,7 @@ export default function ReviewValuesStep({ data, importSchema, columnMappings, m
                   errorHandlingOptions={[]}
                   errorHandlingEnabled={false}
                   valueType={columnSettings[activeTarget].valueType}
+                  dropdownValueIcon
                   selected={multiSelect.selection.has(uniqueDataValue)}
                   onPointerEnter={() => {}}
                   onClick={multiSelect.getClickHandler(uniqueDataValue, index)}

@@ -6,7 +6,7 @@ import {
   InputSwitch,
   InputText,
 } from "@ynput/ayon-react-components"
-import { useMemo } from "react"
+import { useMemo, CSSProperties } from "react"
 import {
   MappersTableBodyRow,
   MappersTableBodyCell,
@@ -19,6 +19,7 @@ import {
   DropdownValueLabel,
   MappingError,
   SwitchWrapper,
+  DropdownValueTemplate,
 } from "./common.styled"
 import { ColumnAction, ErrorHandlingMode, TargetColumn, TargetValue, ValueAction } from "./common"
 import clsx from "clsx"
@@ -44,6 +45,7 @@ type Props = {
   errorHandling: ErrorHandlingMode | undefined
   errorHandlingOptions: DropdownProps["options"]
   valueType?: ImportableColumn["valueType"]
+  dropdownValueIcon?: boolean
   onPointerEnter: () => void
   onClick: (ctrl: boolean, shift: boolean) => void
   onActionChange: (action: ColumnAction | ValueAction) => void
@@ -65,6 +67,7 @@ export default function ColumnMapper({
   errorHandlingOptions,
   errorHandlingEnabled = true,
   valueType,
+  dropdownValueIcon = false,
   onPointerEnter,
   onClick,
   onActionChange,
@@ -130,9 +133,13 @@ export default function ColumnMapper({
                 options={targetOptions}
                 onChange={([value]) => onTargetChange(value)}
                 valueTemplate={(value, selected, isOpen) => (
-                  <DefaultValueTemplate
+                  <DropdownValueTemplate
                     value={value}
-                    displayIcon={undefined}
+                    displayIcon={dropdownValueIcon && selectedTargetOption?.icon}
+                    style={dropdownValueIcon
+                      ? { "--icon-color": selectedTargetOption?.color } as unknown as CSSProperties
+                      : {}
+                    }
                     isOpen={isOpen}
                     placeholder={
                       targetOptions.length === 0
@@ -150,7 +157,7 @@ export default function ColumnMapper({
                         {formatDataType(selectedTargetOption?.type ?? "", selectedTargetOption?.isEnum)}
                       </TargetType>
                     </DropdownValueLabel>
-                  </DefaultValueTemplate>
+                  </DropdownValueTemplate>
                 )}
                 itemTemplate={(option) => (
                   <DefaultItemTemplate

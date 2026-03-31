@@ -1,4 +1,4 @@
-import { Dropdown } from "@ynput/ayon-react-components";
+import { DefaultValueTemplate, Dropdown } from "@ynput/ayon-react-components";
 import styled from "styled-components";
 
 // what are you doing, step-container?
@@ -195,4 +195,10 @@ export const SwitchWrapper = styled.label`
   display: flex;
   gap: 1ch;
   align-items: center;
+`
+
+export const DropdownValueTemplate = styled(DefaultValueTemplate)`
+  .icon:first-child {
+    color: var(--icon-color);
+  }
 `

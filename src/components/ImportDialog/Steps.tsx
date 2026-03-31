@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from "./ImportDialog.styled";
 import Loading from "./steps/Loading";
 import { EmptyPlaceholder } from "@shared/components";
+import { withHierarchySchema } from "./steps/hierarchy";
 
 type Props = {
   importContext: ImportContext
@@ -45,13 +46,21 @@ export default function ImportSteps({ importContext, projectName, data, setData,
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
 
   const {
-    data: importSchema,
+    data: rawImportSchema,
     isLoading: importSchemaLoading,
     isError: importSchemaError,
   } = useExportFieldsQuery({
     projectName,
     entityType: importContext,
   })
+
+  const importSchema = useMemo(() => {
+    if (importContext !== "hierarchy") {
+      return rawImportSchema
+    }
+
+    return withHierarchySchema(rawImportSchema)
+  }, [rawImportSchema])
 
   const { setSelectedView, workingView } = useViewsContext()
 

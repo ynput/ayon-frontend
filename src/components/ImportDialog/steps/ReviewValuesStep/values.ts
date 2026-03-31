@@ -1,5 +1,5 @@
 import { ImportableColumn } from "@shared/api/generated/dataImport"
-import { ImportData } from "../../utils"
+import { CSVRow, ImportData } from "../../utils"
 
 const possibleDelimiters = [
   ",",
@@ -38,12 +38,12 @@ const extractListOfStrings = (text: string) => {
   return []
 }
 
-// Returns all values found in `data` for a given column based on its settings.
+// Returns all values found in `rows` for a given column based on its settings.
 // For columns of type `list_of_string`, it tries to parse each value as a JSON array,
 // then a plain list with various separators.
-export const getValuesForColumn = (data: ImportData, column: string, settings: ImportableColumn) => {
+export const getValuesForColumn = (rows: CSVRow[], column: string, settings: ImportableColumn) => {
   if (settings.valueType === "list_of_strings") {
-    return data.rows
+    return rows
       .map((row) => {
         if (!row[column]) return []
         return extractListOfStrings(`${row[column]}`)
@@ -51,7 +51,7 @@ export const getValuesForColumn = (data: ImportData, column: string, settings: I
       .flat()
   }
 
-  return data.rows.map((row) => {
+  return rows.map((row) => {
     switch (typeof row[column]) {
       case "undefined":
         return undefined
