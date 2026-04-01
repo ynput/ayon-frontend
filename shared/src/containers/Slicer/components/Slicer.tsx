@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
