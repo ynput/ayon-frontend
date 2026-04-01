@@ -48,6 +48,7 @@ type Params = {
   taskGroupsCount?: number // override for number of items per group
   expanded: ExpandedState
   showHierarchy: boolean
+  isFlatFolderView?: boolean
   attribFields: ProjectTableAttribute[]
   modules: ProjectTableModulesType
 }
@@ -63,6 +64,7 @@ export const useFetchOverviewData = ({
   taskGroupsCount,
   expanded,
   showHierarchy,
+  isFlatFolderView = false,
   attribFields,
   modules,
 }: Params): useFetchOverviewDataData => {
@@ -94,7 +96,7 @@ export const useFetchOverviewData = ({
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
     },
-    { skip: !expandedParentIds.length || !showHierarchy },
+    { skip: !expandedParentIds.length || (!showHierarchy && !isFlatFolderView) },
   )
 
   const skipFoldersByTaskFilter =
@@ -103,7 +105,7 @@ export const useFetchOverviewData = ({
       !taskFilters.search &&
       !folderFilters.search) ||
     !folders.length ||
-    !showHierarchy
+    (!showHierarchy && !isFlatFolderView)
   // get folders that would be left if the filters were applied for tasks
   const {
     data: foldersByTaskFilter,
@@ -308,7 +310,7 @@ export const useFetchOverviewData = ({
       desc: !!singleSort?.desc,
     },
     {
-      skip: showHierarchy,
+      skip: showHierarchy || isFlatFolderView,
       initialPageParam: {
         cursor: '',
         desc: !!singleSort?.desc,
@@ -386,9 +388,9 @@ export const useFetchOverviewData = ({
 
   // Get visible tasks for link fetching
   const visibleTasks = useMemo(() => {
-    const allTasks = showHierarchy ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
+    const allTasks = (showHierarchy || isFlatFolderView) ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
     return new Set(allTasks.map((task) => task.id))
-  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks, groupBy])
+  }, [expandedFoldersTasks, showHierarchy, isFlatFolderView, tasksList, groupTasks, groupBy])
 
   // Get all links for visible tasks
   const {
@@ -432,7 +434,7 @@ export const useFetchOverviewData = ({
     })
 
     // either show the hierarchy or the flat list of tasks
-    const allTasks = showHierarchy ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
+    const allTasks = (showHierarchy || isFlatFolderView) ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
     for (const task of allTasks) {
       const taskId = task.id as string
       const folderId = task.folderId as string
@@ -460,7 +462,7 @@ export const useFetchOverviewData = ({
     }
 
     return { tasksMap, tasksByFolderMap }
-  }, [expandedFoldersTasks, showHierarchy, tasksList, groupTasks, tasksLinks])
+  }, [expandedFoldersTasks, showHierarchy, isFlatFolderView, tasksList, groupTasks, tasksLinks])
 
   // reload all data for all queries
   const reloadTableData = () => {

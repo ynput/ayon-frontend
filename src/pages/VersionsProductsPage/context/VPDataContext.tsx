@@ -63,7 +63,7 @@ const SORT_BY_FIELD_MAP: Record<string, string> = {
 // Define which sort fields are excluded for each entity type
 const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
   version: [],
-  product: ['author'],
+  product: ['author', 'productName', 'path'],
 }
 
 export type VersionMap = Map<string, VersionNodeExtended>

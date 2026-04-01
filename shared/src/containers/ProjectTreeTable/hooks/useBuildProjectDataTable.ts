@@ -22,6 +22,8 @@ type Params = {
   rows?: TableRow[]
   expanded: ExpandedState
   showHierarchy: boolean
+  isFlatFolderView?: boolean
+  showEmptyFolders?: boolean
   loadingTasks?: LoadingTasks
   isLoadingMore?: boolean
   groupBy?: TableGroupBy
@@ -34,6 +36,8 @@ export default function useBuildProjectDataTable({
   tasksByFolderMap,
   expanded,
   showHierarchy,
+  isFlatFolderView = false,
+  showEmptyFolders = false,
   loadingTasks = {},
   isLoadingMore = false,
 }: Params): TableRow[] {
@@ -149,6 +153,72 @@ export default function useBuildProjectDataTable({
         links: links,
         subtasks: task.subtasks || [],
       }
+    }
+
+    // Flat folder view: all folders at root level, each expandable to show tasks
+    if (isFlatFolderView) {
+      const flatFolderRows: TableRow[] = []
+
+      for (const folder of foldersMap.values()) {
+        if (!folder?.id) continue
+
+        // Use the folder's hasTasks flag (from REST data) to filter before tasks are loaded
+        const hasTasks = folder.hasTasks ?? tasksByFolderMap.has(folder.id)
+        // Skip folders without tasks when showEmptyFolders is off
+        if (!showEmptyFolders && !hasTasks) continue
+
+        const folderTypeData = getEntityTypeData('folder', folder.folderType)
+        const links = linksToTableData(folder.links, 'folder', project.anatomy)
+
+        const row: TableRow = {
+          id: folder.id,
+          entityType: 'folder',
+          parentId: undefined, // flat — no parent nesting
+          folderId: folder.id,
+          name: folder.name || '',
+          label: folder.label || folder.name || '',
+          icon: folderTypeData?.icon || null,
+          color: folderTypeData?.color || null,
+          img: null,
+          subRows: [],
+          status: folder.status,
+          tags: folder.tags || [],
+          subType: folder.folderType || null,
+          ownAttrib: folder.ownAttrib || [],
+          path: folder.path,
+          folder: folder.parents[folder.parents.length - 1] || undefined,
+          attrib: folder.attrib || {},
+          childOnlyMatch: folder.childOnlyMatch || false,
+          updatedAt: folder.updatedAt,
+          createdAt: folder.createdAt,
+          hasReviewables: folder.hasReviewables || false,
+          hasVersions: folder.hasVersions || false,
+          links: links,
+        }
+
+        // If folder is expanded, attach task subRows
+        if (expandedFolderIds.has(folder.id)) {
+          const folderTaskIds = tasksByFolderMap.get(folder.id) || []
+          const folderTasks = folderTaskIds.flatMap((taskId) => tasksMap.get(taskId) || [])
+
+          if (folderTasks.length || loadingTasks[folder.id]) {
+            const taskRows = folderTasks.map((task) => createTaskRow(task, folder.id))
+
+            if (loadingTasks[folder.id]) {
+              const count = loadingTasks[folder.id]
+              if (count > 0) {
+                taskRows.push(...generateLoadingRows(count, { parentId: folder.id }))
+              }
+            }
+
+            row.subRows = taskRows
+          }
+        }
+
+        flatFolderRows.push(row)
+      }
+
+      return flatFolderRows
     }
 
     // If showHierarchy is false, create a flat list of task rows
@@ -288,6 +358,8 @@ export default function useBuildProjectDataTable({
     childToParentMap,
     expandedFolderIds,
     showHierarchy,
+    isFlatFolderView,
+    showEmptyFolders,
     loadingTasks,
     isLoadingMore,
   ])
