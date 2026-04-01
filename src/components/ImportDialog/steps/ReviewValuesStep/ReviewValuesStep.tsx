@@ -51,6 +51,7 @@ type Props = StepProps<ValueMappings> & {
   importSchema: ImportSchema
   columnMappings: ColumnMappings
   mappings: ValueMappings | null
+  setMappings: React.Dispatch<React.SetStateAction<ValueMappings | null>>,
 }
 
 const mapActionOption = {
@@ -86,9 +87,16 @@ const enumTypes: ImportableColumn["valueType"][] = [
   "list_of_strings",
 ]
 
-export default function ReviewValuesStep({ importContext, data, importSchema, columnMappings, mappings: defaultMappings, onBack, onNext }: Props) {
-  const [mappings, setMappings] = useState<ValueMappings | null>(defaultMappings)
-
+export default function ReviewValuesStep({
+  importContext,
+  data,
+  importSchema,
+  columnMappings,
+  mappings,
+  setMappings,
+  onBack,
+  onNext,
+}: Props) {
   const preset = usePreset()
 
   const columnSettings = useMemo(

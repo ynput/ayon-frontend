@@ -81,12 +81,11 @@ export default function ImportSteps({ importContext, projectName, data, setData,
     })
   }, [data, projectName, importContext])
 
-  const onValuesReviewed = useCallback((mappings: ValueMappings) => {
-    if (!columnMappings) return
-    setValueMappings(mappings)
+  const fetchPreview = useCallback(() => {
+    if (!columnMappings || !valueMappings) return
 
     requestImport(
-      getFullMapping(columnMappings, mappings),
+      getFullMapping(columnMappings, valueMappings),
       true,
     ).then((result) => {
       if (!result || result.error) {
@@ -98,8 +97,12 @@ export default function ImportSteps({ importContext, projectName, data, setData,
       console.error(err)
       toast.error(`Error getting import preview`)
     })
+  }, [requestImport, columnMappings, valueMappings])
+
+  const onValuesReviewed = useCallback(() => {
+    fetchPreview()
     setStep(ImportStep.PREVIEW)
-  }, [requestImport, columnMappings])
+  }, [requestImport, columnMappings, valueMappings])
 
   const onConfirmImport = useCallback(() => {
     if (!columnMappings || !valueMappings) return
@@ -151,6 +154,10 @@ export default function ImportSteps({ importContext, projectName, data, setData,
                 selected={step === s}
                 onClick={() => {
                   setStep(s)
+
+                  if (s === ImportStep.PREVIEW) {
+                    fetchPreview()
+                  }
                 }}
               />
             </Breadcrumb>
@@ -199,11 +206,11 @@ export default function ImportSteps({ importContext, projectName, data, setData,
           <ReviewValuesStep
             data={data}
             columnMappings={columnMappings}
-            mappings={valueMappings}
             importContext={importContext}
             importSchema={importSchema}
-            onBack={(mappings) => {
-              setValueMappings(mappings ?? null)
+            mappings={valueMappings}
+            setMappings={setValueMappings}
+            onBack={() => {
               setStep(ImportStep.MAP_COLUMNS)
             }}
             onNext={onValuesReviewed}
