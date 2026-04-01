@@ -2,15 +2,17 @@ import { Quill } from 'react-quill-ayon'
 import useReferenceTooltip from '../../../hooks/useReferenceTooltip'
 import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanelEntityType } from '@shared/api'
+import { TeamDialogState } from '../../../context/FeedContext'
 
 const Inline = Quill.import('blots/inline')
 
 interface MentionLinkOptions {
   projectName: string
+  setTeamDialog?: (state: TeamDialogState) => void
 }
 
 // custom mention links
-const useMentionLink = ({ projectName }: MentionLinkOptions) => {
+const useMentionLink = ({ projectName, setTeamDialog }: MentionLinkOptions) => {
   const { openSlideOut } = useDetailsPanelContext()
   const [, setRefTooltip] = useReferenceTooltip()
 
@@ -42,6 +44,13 @@ const useMentionLink = ({ projectName }: MentionLinkOptions) => {
       node.addEventListener('click', (e: React.MouseEvent<HTMLElement>) => {
         e.preventDefault()
         if (valueMentionType === 'user') return
+        if (valueMentionType === 'team' && setTeamDialog) {
+          setTeamDialog({
+            open: true,
+            teamName: valueMentionId,
+          })
+          return
+        }
 
         openSlideOut({
           entityId: valueMentionId,

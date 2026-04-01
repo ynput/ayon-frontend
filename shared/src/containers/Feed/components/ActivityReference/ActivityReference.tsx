@@ -27,7 +27,7 @@ const ActivityReference: React.FC<ActivityReferenceProps> = ({
   children,
   ...props
 }) => {
-  const icon = type === 'user' ? 'alternate_email' : getEntityTypeIcon(type, 'link')
+  const icon = type === 'team' ? 'group' : type === 'user' ? 'alternate_email' : getEntityTypeIcon(type, 'link')
   const ref = useRef<HTMLDivElement>(null)
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {

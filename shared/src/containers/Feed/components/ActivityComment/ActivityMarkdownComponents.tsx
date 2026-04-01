@@ -4,6 +4,7 @@ import ActivityReference from '../ActivityReference/ActivityReference'
 
 const allowedRefTypes = [
   'user',
+  'team',
   'task',
   'folder',
   'version',
@@ -93,10 +94,12 @@ export const aTag = (
     <ActivityReference
       {...{ type, id: id.replaceAll('.', '-') }}
       variant={isHighlighted ? 'filled' : 'surface'}
-      onClick={() =>
-        type !== 'user' &&
-        onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
-      }
+      onClick={() => {
+        if (type !== 'user' && type !== 'team') {
+          onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
+        }
+        // Team clicks are handled by the MentionLink blot in useMentionLink
+      }}
       onMouseEnter={(e, pos) => onReferenceTooltip({ type, id, label, name: id, pos })}
       categoryPrimary={categoryPrimary}
       categorySecondary={categorySecondary}

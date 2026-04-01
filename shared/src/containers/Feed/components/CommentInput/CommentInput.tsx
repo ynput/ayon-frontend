@@ -91,6 +91,7 @@ const CommentInput: FC<CommentInputProps> = ({
     mentionSuggestionsData,
     categories,
     isGuest,
+    setTeamDialog,
   } = useFeedContext()
 
   const { hasLicense, onPowerFeature, user } = useDetailsPanelContext()
@@ -145,7 +146,7 @@ const CommentInput: FC<CommentInputProps> = ({
   // When editing, set selection to the end of the editor
   useSetCursorEnd({ initHeight, editorRef, isEditing })
   // create a new quill format for mentions and registers it
-  useMentionLink({ projectName })
+  useMentionLink({ projectName, setTeamDialog })
 
   // focus on editor when opened
   useEffect(() => {
@@ -212,8 +213,12 @@ const CommentInput: FC<CommentInputProps> = ({
     // first delete the search string
     quill.deleteText(startIndex, search.length)
 
+    // For teams, use 'team:' prefix instead of 'user:' to distinguish at render time
+    const mentionKind = selectedOption.type // 'user' or 'team' (from getMentionUsers)
+    const mentionHref = mentionKind === 'team' ? `team:${selectedOption.id}` : href
+
     //  insert embed link
-    quill.insertText(startIndex, mentionLabel, 'mention', href)
+    quill.insertText(startIndex, mentionLabel, 'mention', mentionHref)
 
     const endIndex = startIndex + mentionLabel.length
 
