@@ -259,7 +259,7 @@ const useTableDataBySlice = ({
     }
 
     fetchData()
-  }, [sliceType, getHierarchyData, sliceFields, projectName, isLoadingData, getEntityListsData])
+  }, [sliceType, projectName, isLoadingData])
 
   // from slice data, flatten into a map of ids to rows
   const sliceMap = useMemo(() => {

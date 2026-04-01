@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
@@ -42,6 +42,10 @@ export const Slicer: FC<SlicerProps> = ({
     rowSelectionData,
   } = useSlicerContext()
 
+  // Memoize props to prevent recreating dependency arrays on every render
+  const memoizedSliceFields = useMemo(() => sliceFields, [sliceFields])
+  const memoizedEntityTypes = useMemo(() => entityTypes, [entityTypes])
+
   const {
     sliceOptions,
     sliceType,
@@ -49,33 +53,12 @@ export const Slicer: FC<SlicerProps> = ({
     table: { data: sliceTableData, isExpandable },
     sliceMap,
     isLoading: isLoadingSliceTableData,
-  } = useTableDataBySlice({ sliceFields, entityTypes })
+  } = useTableDataBySlice({ sliceFields: memoizedSliceFields, entityTypes: memoizedEntityTypes })
 
   const handleSelectionChange = (s: RowSelectionState) => {
     setRowSelection(s)
     onRowSelectionChange?.(s, sliceMap)
   }
-
-  // Reconcile selection data after restoring rowSelection from localStorage.
-  // When selection is restored but sliceMap wasn't ready yet, derive rowSelectionData
-  // once the correct slice data loads.
-  const hasReconciledRef = useRef(false)
-  useEffect(() => {
-    // Reset when selection is cleared (e.g., slice type change)
-    if (Object.keys(rowSelection).length === 0) {
-      hasReconciledRef.current = false
-      return
-    }
-    if (hasReconciledRef.current) return
-    // Only reconcile when sliceMap actually contains the selected IDs.
-    // This prevents premature reconciliation with stale data from a previous slice type.
-    const selectedIds = Object.keys(rowSelection)
-    const hasMatchingData = selectedIds.some((id) => sliceMap.has(id))
-    if (hasMatchingData && Object.keys(rowSelectionData).length === 0) {
-      hasReconciledRef.current = true
-      onRowSelectionChange?.(rowSelection, sliceMap)
-    }
-  }, [sliceMap, rowSelection, rowSelectionData])
 
   // on first mount, check that current sliceType is in sliceFields, if not, change to first option
   // Skip if view sync is pending — the view will set the correct type once loaded
