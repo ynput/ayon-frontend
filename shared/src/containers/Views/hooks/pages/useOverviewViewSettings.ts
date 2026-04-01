@@ -34,6 +34,9 @@ type Return = {
   // Column management
   columns: ColumnsConfig
   onUpdateColumns: (columns: ColumnsConfig, allColumnIds?: string[]) => void
+  // Slicer type management
+  sliceType: string | undefined
+  onUpdateSliceType: (sliceType: string) => void
 }
 
 type Props = {
@@ -51,6 +54,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const overviewSettings = viewSettings as OverviewSettings
   const serverFilters = (overviewSettings?.filter as any) ?? {}
   const serverHierarchy = overviewSettings?.showHierarchy ?? true
+  const serverSliceType = overviewSettings?.sliceType
 
   const serverColumns = useMemo(
     () => convertColumnConfigToTanstackStates(overviewSettings),
@@ -68,6 +72,17 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const filters = localFilters !== null ? localFilters : serverFilters
   const showHierarchy = localHierarchy !== null ? localHierarchy : serverHierarchy
   const columns = localColumns || serverColumns
+
+  // Slice type update handler
+  const noop = useCallback(() => {}, [])
+  const onUpdateSliceType = useCallback(
+    async (newSliceType: string) => {
+      await updateViewSettings({ sliceType: newSliceType }, noop, newSliceType, {
+        errorMessage: 'Failed to update slicer type',
+      })
+    },
+    [updateViewSettings],
+  )
 
   // Filter update handler
   const onUpdateFilters = useCallback(
@@ -148,5 +163,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     onUpdateHierarchy,
     columns,
     onUpdateColumns,
+    sliceType: serverSliceType,
+    onUpdateSliceType,
   }
 }

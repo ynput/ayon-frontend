@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import SimpleTable, { Container, Header } from '@shared/containers/SimpleTable'
 
 import useTableDataBySlice from '../hooks/useTableDataBySlice'
@@ -9,6 +9,14 @@ import { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { SliceTypeField } from '../types'
 import { useSlicerContext } from '../context/SlicerContext'
+import styled from 'styled-components'
+
+const DropdownSkeleton = styled.div`
+  height: 28px;
+  border-radius: 4px;
+  background: var(--md-sys-color-surface-container);
+  width: 100px;
+`
 
 export interface SlicerProps {
   sliceFields: SliceTypeField[]
@@ -30,7 +38,12 @@ export const Slicer: FC<SlicerProps> = ({
     expanded,
     setExpanded,
     onExpandedChange,
+    isViewSyncPending,
   } = useSlicerContext()
+
+  // Memoize props to prevent recreating dependency arrays on every render
+  const memoizedSliceFields = useMemo(() => sliceFields, [sliceFields])
+  const memoizedEntityTypes = useMemo(() => entityTypes, [entityTypes])
 
   const {
     sliceOptions,
@@ -39,7 +52,7 @@ export const Slicer: FC<SlicerProps> = ({
     table: { data: sliceTableData, isExpandable },
     sliceMap,
     isLoading: isLoadingSliceTableData,
-  } = useTableDataBySlice({ sliceFields, entityTypes })
+  } = useTableDataBySlice({ sliceFields: memoizedSliceFields, entityTypes: memoizedEntityTypes })
 
   const handleSelectionChange = (s: RowSelectionState) => {
     setRowSelection(s)
@@ -47,7 +60,9 @@ export const Slicer: FC<SlicerProps> = ({
   }
 
   // on first mount, check that current sliceType is in sliceFields, if not, change to first option
+  // Skip if view sync is pending — the view will set the correct type once loaded
   useEffect(() => {
+    if (isViewSyncPending) return
     const isAttribute = sliceType.startsWith('attrib.')
     if (
       !sliceFields.some((field) => field.value === sliceType) &&
@@ -55,25 +70,29 @@ export const Slicer: FC<SlicerProps> = ({
     ) {
       handleSliceTypeChange(sliceFields[0].value, false, false)
     }
-  }, [])
+  }, [isViewSyncPending])
 
   return (
     <Container>
       <Header>
-        <SlicerDropdown
-          options={sliceOptions || []}
-          value={[sliceType]}
-          sliceTypes={sliceFields.map((field) => field.value)}
-          onChange={(value: any) =>
-            handleSliceTypeChange(
-              value[0] as SliceType,
-              persistFieldId === sliceType,
-              persistFieldId === value[0],
-            )
-          }
-          className={clsx('slicer-dropdown', { 'single-option': sliceOptions.length === 1 })}
-          disableOpen={sliceOptions.length === 1}
-        />
+        {isViewSyncPending ? (
+          <DropdownSkeleton />
+        ) : (
+          <SlicerDropdown
+            options={sliceOptions || []}
+            value={[sliceType]}
+            sliceTypes={sliceFields.map((field) => field.value)}
+            onChange={(value: any) =>
+              handleSliceTypeChange(
+                value[0] as SliceType,
+                persistFieldId === sliceType,
+                persistFieldId === value[0],
+              )
+            }
+            className={clsx('slicer-dropdown', { 'single-option': sliceOptions.length === 1 })}
+            disableOpen={sliceOptions.length === 1}
+          />
+        )}
         <SlicerSearch value={globalFilter} onChange={setGlobalFilter} />
       </Header>
       <SimpleTableProvider
@@ -89,7 +108,7 @@ export const Slicer: FC<SlicerProps> = ({
         <SimpleTable
           data={sliceTableData}
           isExpandable={isExpandable}
-          isLoading={isLoadingSliceTableData}
+          isLoading={isLoadingSliceTableData || isViewSyncPending}
           forceUpdateTable={sliceType}
           globalFilter={globalFilter}
         />
