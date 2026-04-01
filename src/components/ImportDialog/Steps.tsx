@@ -161,7 +161,7 @@ export default function ImportSteps({ importContext, projectName, data, setData,
         !importSchema && importSchemaLoading && <Loading />
       }
       {
-        !importSchema && importSchemaError && <EmptyPlaceholder error={importSchemaError} />
+        !importSchema && !importSchemaLoading && <EmptyPlaceholder error={importSchemaError} />
       }
       {
         step === ImportStep.UPLOAD && importSchema && (

@@ -20,6 +20,7 @@ import {
   MappingError,
   SwitchWrapper,
   DropdownValueTemplate,
+  MappersTableComment,
 } from "./common.styled"
 import { ColumnAction, ErrorHandlingMode, TargetColumn, TargetValue, ValueAction } from "./common"
 import clsx from "clsx"
@@ -37,6 +38,7 @@ type Props = {
   state: MappingState
   selected: boolean
   source: string
+  comment?: string
   action: ColumnAction | ValueAction | undefined
   actions: DropdownProps["options"]
   target: TargetColumn | TargetValue | undefined
@@ -59,6 +61,7 @@ export default function ColumnMapper({
   state,
   selected,
   source,
+  comment,
   action,
   actions,
   target,
@@ -95,12 +98,15 @@ export default function ColumnMapper({
     >
       <MappersTableColumnName className={clsx([state], { empty: source === undefined })} scope="row">
         {source ?? "(empty)"}
+        {
+          comment && <MappersTableComment>{comment}</MappersTableComment>
+        }
       </MappersTableColumnName>
       <MappersTableBodyCell>
         <PickActionDropdown
           value={action ? [action] : []}
           options={actions}
-          valueTemplate={(value, selected, isOpen) => (
+          valueTemplate={(value, _, isOpen) => (
             <DefaultValueTemplate
               value={value}
               displayIcon={selectedActionOption?.icon}
@@ -132,7 +138,7 @@ export default function ColumnMapper({
                 value={target && !(skipping || creating) ? [target as string] : []}
                 options={targetOptions}
                 onChange={([value]) => onTargetChange(value)}
-                valueTemplate={(value, selected, isOpen) => (
+                valueTemplate={(value, _, isOpen) => (
                   <DropdownValueTemplate
                     value={value}
                     displayIcon={dropdownValueIcon && selectedTargetOption?.icon}

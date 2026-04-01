@@ -1,5 +1,5 @@
 import { ImportableColumn } from "@shared/api/generated/dataImport"
-import { CSVRow, ImportData } from "../../utils"
+import { CSVRow } from "../../utils"
 
 const possibleDelimiters = [
   ",",

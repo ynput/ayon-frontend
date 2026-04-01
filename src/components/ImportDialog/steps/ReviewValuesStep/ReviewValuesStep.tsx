@@ -11,6 +11,7 @@ import {
   ValueMappableColumnMappings,
   ValueMappableColumnMapping,
   ColumnAction,
+  ExtendedEnumItem,
 } from "../common"
 import {
   Mappers,
@@ -35,7 +36,7 @@ import {
 import { useEffect, useMemo, useState } from "react"
 import ColumnMapper, { MappingState } from "../ColumnMapper"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
-import { cloneDeep, merge } from "lodash"
+import { cloneDeep, merge, upperFirst } from "lodash"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
 import useMultiSelect from "@components/ImportDialog/hooks/useMultiSelect"
 import { inferMapping } from "./inferMapping"
@@ -43,7 +44,7 @@ import { mappingUpdater } from "./mappingUpdater"
 import { getValuesForColumn } from "./values"
 import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
-import { ENTITY_TYPE, entityTypeDependentColumns, getHierarchyRowFilter } from "../hierarchy"
+import { parseUniqueValueIfHierarchy, preprocessRowsIfHierarchy } from "../hierarchy"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
@@ -127,34 +128,18 @@ export default function ReviewValuesStep({ importContext, data, importSchema, co
     [columnSettings, activeTarget]
   )
 
-  const entityTypeSource = useMemo(
-    () => {
-      if (importContext !== "hierarchy" || !columnMappings) return
-
-      const entry = Object.entries(columnMappings)
-        .find(([, mapping]) => mapping.targetColumn === ENTITY_TYPE)
-      if (!entry) return
-
-      return entry[0]
-    },
-    [importContext, columnMappings],
-  )
-
   const uniqueValuesForColumn = useMemo(
     () => Object.fromEntries(
       Object.keys(mappingsToReview)
         .map((column) => {
           const columnMapping = mappingsToReview[column]
-          let rows = data.rows
 
-          if (
-            importContext === "hierarchy"
-            && entityTypeDependentColumns.has(columnMapping.targetColumn)
-            && entityTypeSource
-          ) {
-            console.log('filtering for column', column)
-            rows = data.rows.filter(getHierarchyRowFilter(column, entityTypeSource))
-          }
+          const rows = preprocessRowsIfHierarchy(
+            importContext,
+            column,
+            columnMappings,
+            data.rows,
+          )
 
           const values = getValuesForColumn(
             rows,
@@ -168,7 +153,7 @@ export default function ReviewValuesStep({ importContext, data, importSchema, co
           ]
         })
     ),
-    [importContext, entityTypeSource, data.rows, columnSettings, mappingsToReview],
+    [importContext, columnMappings, data.rows, columnSettings, mappingsToReview],
   )
 
   const currentUniqueValues = useMemo(() => {
@@ -181,7 +166,7 @@ export default function ReviewValuesStep({ importContext, data, importSchema, co
 
   const multiSelect = useMultiSelect({ items: currentUniqueValues })
 
-  const targetValueOptions = useMemo(() => {
+  const targetValueOptions: ExtendedEnumItem[] = useMemo(() => {
     if (!activeMapping) return []
 
     if (enumTypes.includes(activeTargetType)) {
@@ -238,7 +223,15 @@ export default function ReviewValuesStep({ importContext, data, importSchema, co
                 return [`${value}`, { action: ValueAction.SKIP }]
               }
 
-              return [`${value}`, inferMapping(`${value}`, columnSettings[targetColumn])]
+              const {
+                source,
+                entityType,
+              } = parseUniqueValueIfHierarchy(targetColumn, value)
+
+              return [
+                `${value}`,
+                inferMapping(`${source}`, columnSettings[targetColumn], entityType),
+              ]
             })
             .filter(([, mapping]) => !!mapping)
         ),
@@ -325,65 +318,75 @@ export default function ReviewValuesStep({ importContext, data, importSchema, co
             </MappersTableHeader>
             <MappersTableBody>
             {
-              currentUniqueValues.map((uniqueDataValue, index) => (
-                <ColumnMapper
-                  key={uniqueDataValue + index}
-                  state={getMapperState(columnSettings[activeTarget], activeColumn, uniqueDataValue, mappings)}
-                  source={uniqueDataValue}
-                  action={currentMappings?.[uniqueDataValue]?.action}
-                  actions={getActionOptions(!!activeTargetIsEnum, columnSettings[activeTarget].valueType)}
-                  target={currentMappings?.[uniqueDataValue]?.targetValue}
-                  targetOptions={targetValueOptions}
-                  errorHandling={undefined}
-                  errorHandlingOptions={[]}
-                  errorHandlingEnabled={false}
-                  valueType={columnSettings[activeTarget].valueType}
-                  dropdownValueIcon
-                  selected={multiSelect.selection.has(uniqueDataValue)}
-                  onPointerEnter={() => {}}
-                  onClick={multiSelect.getClickHandler(uniqueDataValue, index)}
-                  onActionChange={(action) => {
-                    if (!activeColumn) return
+              currentUniqueValues.map((uniqueDataValue, index) => {
+                const { source, entityType } = parseUniqueValueIfHierarchy(
+                  activeTarget,
+                  uniqueDataValue,
+                )
 
-                    if (multiSelect.selection.size > 0 && multiSelect.selection.has(uniqueDataValue)) {
+                return (
+                  <ColumnMapper
+                    key={uniqueDataValue + index}
+                    state={getMapperState(columnSettings[activeTarget], activeColumn, uniqueDataValue, mappings)}
+                    source={source}
+                    comment={upperFirst(entityType)}
+                    action={currentMappings?.[uniqueDataValue]?.action}
+                    actions={getActionOptions(!!activeTargetIsEnum, columnSettings[activeTarget].valueType)}
+                    target={currentMappings?.[uniqueDataValue]?.targetValue}
+                    targetOptions={targetValueOptions
+                      .filter((option) => !option.entityType || option.entityType === entityType)
+                    }
+                    errorHandling={undefined}
+                    errorHandlingOptions={[]}
+                    errorHandlingEnabled={false}
+                    valueType={columnSettings[activeTarget].valueType}
+                    dropdownValueIcon
+                    selected={multiSelect.selection.has(uniqueDataValue)}
+                    onPointerEnter={() => {}}
+                    onClick={multiSelect.getClickHandler(uniqueDataValue, index)}
+                    onActionChange={(action) => {
+                      if (!activeColumn) return
+
+                      if (multiSelect.selection.size > 0 && multiSelect.selection.has(uniqueDataValue)) {
+                        setMappings(mappingUpdater(
+                          activeColumn,
+                          Array.from(multiSelect.selection),
+                          { action: action as ValueAction },
+                          preset.updateValues,
+                        ))
+
+                        return
+                      }
+
                       setMappings(mappingUpdater(
                         activeColumn,
-                        Array.from(multiSelect.selection),
+                        [uniqueDataValue],
                         { action: action as ValueAction },
                         preset.updateValues,
                       ))
+                    }}
+                    onTargetChange={(targetValue) => {
+                      if (!activeColumn) return
 
-                      return
-                    }
+                      const update: Partial<ValueMapping> = { targetValue }
+                      if (
+                        !currentMappings?.[uniqueDataValue]
+                        && columnSettings[activeTarget].valueType !== "boolean"
+                      ) {
+                        update.action = activeTargetIsEnum ? ValueAction.MAP : ValueAction.CREATE
+                      }
 
-                    setMappings(mappingUpdater(
-                      activeColumn,
-                      [uniqueDataValue],
-                      { action: action as ValueAction },
-                      preset.updateValues,
-                    ))
-                  }}
-                  onTargetChange={(targetValue) => {
-                    if (!activeColumn) return
-
-                    const update: Partial<ValueMapping> = { targetValue }
-                    if (
-                      !currentMappings?.[uniqueDataValue]
-                      && columnSettings[activeTarget].valueType !== "boolean"
-                    ) {
-                      update.action = activeTargetIsEnum ? ValueAction.MAP : ValueAction.CREATE
-                    }
-
-                    setMappings(mappingUpdater(
-                      activeColumn,
-                      [uniqueDataValue],
-                      update,
-                      preset.updateValues,
-                    ))
-                  }}
-                  onErrorHandlingChange={() => {}}
-                />
-              ))
+                      setMappings(mappingUpdater(
+                        activeColumn,
+                        [uniqueDataValue],
+                        update,
+                        preset.updateValues,
+                      ))
+                    }}
+                    onErrorHandlingChange={() => {}}
+                  />
+                )
+              })
             }
             </MappersTableBody>
           </Mappers>

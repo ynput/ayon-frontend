@@ -1,8 +1,16 @@
-import { ExportFieldsApiArg, ExportFieldsApiResponse } from "@shared/api/generated/dataImport"
+import { EnumItem, ExportFieldsApiArg, ImportableColumn } from "@shared/api/generated/dataImport"
 
 export type ImportContext = ExportFieldsApiArg["entityType"]
 
-export type ImportSchema = ExportFieldsApiResponse
+export type ExtendedEnumItem = EnumItem & {
+  entityType?: "folder" | "task"
+}
+
+export type ExtendedImportableColumn = ImportableColumn & {
+  enumItems?: ExtendedEnumItem[]
+}
+
+export type ImportSchema = ExtendedImportableColumn[]
 
 export enum ImportStep {
   UPLOAD,

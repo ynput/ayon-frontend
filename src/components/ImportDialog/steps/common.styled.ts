@@ -119,6 +119,14 @@ export const MappersTableColumnName = styled.th`
   }
 `
 
+export const MappersTableComment = styled.span`
+  color: var(--md-sys-color-outline);
+
+  &::before {
+    content: " – ";
+  }
+`
+
 export const MappingError = styled.span`
   display: inline-flex;
   vertical-align: middle;

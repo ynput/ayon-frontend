@@ -1,5 +1,6 @@
 import { parse, unparse, UnparseObject, type ParseLocalConfig } from "papaparse"
 import { ColumnMappings, ErrorHandlingMode, ValueMappings } from "./steps/common"
+import { parseUniqueValueIfHierarchy } from "./steps/hierarchy"
 
 type ParseAsyncConfig = Omit<ParseLocalConfig, "complete">
 
@@ -66,15 +67,17 @@ export const getFullMapping = (columnMappings: ColumnMappings, valueMappings: Va
   return Object.entries(columnMappings).map(([column, columnMapping]) => {
     const valuesMapping = valueMappings[column]
       ? Object.entries(valueMappings[column]).map(([value, { targetValue, action }]) => {
+        const { source, entityType } = parseUniqueValueIfHierarchy(columnMapping.targetColumn ?? null, value)
         // the backend expects a string and coerces it into a boolean
         const target = typeof targetValue === "boolean"
           ? (targetValue ? "true" : "false")
           : targetValue
 
         return {
-          source: value,
+          source,
           target,
           action,
+          entityType,
         }
       })
       : []
