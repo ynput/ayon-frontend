@@ -39,7 +39,6 @@ export const Slicer: FC<SlicerProps> = ({
     setExpanded,
     onExpandedChange,
     isViewSyncPending,
-    rowSelectionData,
   } = useSlicerContext()
 
   // Memoize props to prevent recreating dependency arrays on every render
