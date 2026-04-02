@@ -35,6 +35,11 @@ export enum MappingState {
   ERROR = "error",
 }
 
+export const resolvedStates = new Set([
+  MappingState.AUTO_RESOLVED,
+  MappingState.RESOLVED,
+])
+
 type Props = {
   state: MappingState
   selected: boolean

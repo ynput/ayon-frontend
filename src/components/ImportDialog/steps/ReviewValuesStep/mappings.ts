@@ -13,7 +13,7 @@ import {
 import { preprocessRowsIfHierarchy } from "../hierarchy"
 import { getValuesForColumn } from "./values"
 import { getMapperState } from "./getMapperState"
-import { MappingState } from "../ColumnMapper"
+import { resolvedStates } from "../ColumnMapper"
 
 export const getMappingsToReview = (importSchema: ImportSchema, columnMappings: ColumnMappings) => {
   return Object.fromEntries(Object.entries(columnMappings)
@@ -59,7 +59,7 @@ export const getUniqueValuesForColumn = (
 export const getUnresolvedValues = (
   columnSettings: Record<string, ExtendedImportableColumn>,
   mappingsToReview: ValueMappableColumnMappings,
-  uniqueValuesForColumn: Record<string, TargetValue[]>,
+  uniqueValuesForColumn: Record<string, any[]>,
   mappings: ValueMappings | null,
 ) => {
   return Object.fromEntries(
@@ -70,7 +70,7 @@ export const getUnresolvedValues = (
       const settings = columnSettings[mappingsToReview[column].targetColumn]
       const resolvedValuesSet = new Set(uniqueValues
         .map((value) => [value, getMapperState(settings, column, `${value}`, mappings)])
-        .filter(([, state]) => state !== MappingState.UNRESOLVED)
+        .filter(([, state]) => resolvedStates.has(state))
         .map(([c]) => c),
       )
 
