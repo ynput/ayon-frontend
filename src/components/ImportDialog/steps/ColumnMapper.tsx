@@ -11,7 +11,7 @@ import {
   MappersTableBodyRow,
   MappersTableBodyCell,
   MappersTableColumnName,
-  MappersTableAttribute,
+  MappersTableTarget,
   MappersTableErrorHandling,
   PickActionDropdown,
   MapperDropdown,
@@ -21,6 +21,7 @@ import {
   SwitchWrapper,
   DropdownValueTemplate,
   MappersTableComment,
+  MappersTableTargetInner,
 } from "./common.styled"
 import { ColumnAction, ErrorHandlingMode, TargetColumn, TargetValue, ValueAction } from "./common"
 import clsx from "clsx"
@@ -119,91 +120,94 @@ export default function ColumnMapper({
           onChange={([value]) => onActionChange(value as ColumnAction)}
         />
       </MappersTableBodyCell>
-      <MappersTableAttribute>
-        {
-          mapping || !action
-          ? (
-            valueType === "boolean"
+      <MappersTableTarget>
+        <MappersTableTargetInner>
+          {
+            mapping || !action
             ? (
-              <SwitchWrapper>
-                <InputSwitch
-                  checked={target as boolean}
-                  onChange={(event) => onTargetChange((event.target as HTMLInputElement).checked)}
-                />
-                { target ? "Yes" : "No" }
-              </SwitchWrapper>
-            ) : (
-              <MapperDropdown
-                disabled={targetOptions.length === 0}
-                value={target && !(skipping || creating) ? [target as string] : []}
-                options={targetOptions}
-                onChange={([value]) => onTargetChange(value)}
-                valueTemplate={(value, _, isOpen) => (
-                  <DropdownValueTemplate
-                    value={value}
-                    displayIcon={dropdownValueIcon && selectedTargetOption?.icon}
-                    style={dropdownValueIcon
-                      ? { "--icon-color": selectedTargetOption?.color } as unknown as CSSProperties
-                      : {}
-                    }
-                    isOpen={isOpen}
-                    placeholder={
-                      targetOptions.length === 0
-                        ? "Nothing to map. Try choosing the Create or Skip action."
-                        : "Select a target..."
-                    }
-                  >
-                    <DropdownValueLabel>
-                      {/*
-                        Splitting by the option separator allows us to strip the extra text
-                        shown next to the options in the dropdown (such as the already mapped source column).
-                      */}
-                      {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
-                      <TargetType>
-                        {formatDataType(selectedTargetOption?.type ?? "", selectedTargetOption?.isEnum)}
-                      </TargetType>
-                    </DropdownValueLabel>
-                  </DropdownValueTemplate>
-                )}
-                itemTemplate={(option) => (
-                  <DefaultItemTemplate
-                    option={option}
-                    dataKey="value"
-                    labelKey="label"
-                    value={option.value}
-                    endContent={
-                      option.type
-                        ? <TargetType>{formatDataType(option.type, option.isEnum)}</TargetType>
-                        : undefined
-                    }
+              valueType === "boolean"
+              ? (
+                <SwitchWrapper>
+                  <InputSwitch
+                    checked={target as boolean}
+                    onChange={(event) => onTargetChange((event.target as HTMLInputElement).checked)}
                   />
-                )}
+                  { target ? "Yes" : "No" }
+                </SwitchWrapper>
+              ) : (
+                <MapperDropdown
+                  disabled={targetOptions.length === 0}
+                  value={target && !(skipping || creating) ? [target as string] : []}
+                  options={targetOptions}
+                  searchOnNumber={10}
+                  onChange={([value]) => onTargetChange(value)}
+                  valueTemplate={(value, _, isOpen) => (
+                    <DropdownValueTemplate
+                      value={value}
+                      displayIcon={dropdownValueIcon && selectedTargetOption?.icon}
+                      style={dropdownValueIcon
+                        ? { "--icon-color": selectedTargetOption?.color } as unknown as CSSProperties
+                        : {}
+                      }
+                      isOpen={isOpen}
+                      placeholder={
+                        targetOptions.length === 0
+                          ? "Nothing to map. Try choosing the Create or Skip action."
+                          : "Select a target..."
+                      }
+                    >
+                      <DropdownValueLabel>
+                        {/*
+                          Splitting by the option separator allows us to strip the extra text
+                          shown next to the options in the dropdown (such as the already mapped source column).
+                        */}
+                        {selectedTargetOption?.label.split(TARGET_OPTION_MAPPING_SEPARATOR).at(0)}
+                        <TargetType>
+                          {formatDataType(selectedTargetOption?.type ?? "", selectedTargetOption?.isEnum)}
+                        </TargetType>
+                      </DropdownValueLabel>
+                    </DropdownValueTemplate>
+                  )}
+                  itemTemplate={(option) => (
+                    <DefaultItemTemplate
+                      option={option}
+                      dataKey="value"
+                      labelKey="label"
+                      value={option.value}
+                      endContent={
+                        option.type
+                          ? <TargetType>{formatDataType(option.type, option.isEnum)}</TargetType>
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+              )
+            ) : (
+              <InputText
+                value={
+                  target
+                  ? target as string
+                  : source
+                }
+                disabled={!creating}
+                onChange={(event) => onTargetChange(event.target.value)}
+                placeholder={
+                  skipping
+                    ? "Will be skipped"
+                    : "Enter a value"
+                }
               />
             )
-          ) : (
-            <InputText
-              value={
-                target
-                ? target as string
-                : source
-              }
-              disabled={!creating}
-              onChange={(event) => onTargetChange(event.target.value)}
-              placeholder={
-                skipping
-                  ? "Will be skipped"
-                  : "Enter a value"
-              }
-            />
-          )
-        }
-        {state === MappingState.ERROR && (
-          <MappingError>
-            <Icon icon="error" />
-            Invalid value
-          </MappingError>
-        )}
-      </MappersTableAttribute>
+          }
+          {state === MappingState.ERROR && (
+            <MappingError>
+              <Icon icon="error" />
+              Invalid value
+            </MappingError>
+          )}
+        </MappersTableTargetInner>
+      </MappersTableTarget>
       {
         errorHandlingEnabled && (
           <MappersTableErrorHandling>

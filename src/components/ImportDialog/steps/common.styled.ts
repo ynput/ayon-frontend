@@ -85,6 +85,7 @@ export const MappersTableBodyCell = styled.td`
 
   input {
     width: 100%;
+    flex-grow: 1;
   }
 `
 
@@ -130,8 +131,9 @@ export const MappersTableComment = styled.span`
 export const MappingError = styled.span`
   display: inline-flex;
   vertical-align: middle;
-  margin-left: 1ch;
+  margin: 0 1ch;
   align-items: center;
+  white-space: nowrap;
   gap: var(--base-gap-small);
 
   &, & .icon {
@@ -139,9 +141,16 @@ export const MappingError = styled.span`
   }
 `
 
-export const MappersTableAttribute = styled(MappersTableBodyCell)`
+export const MappersTableTarget = styled(MappersTableBodyCell)`
   padding-right: var(--padding-s);
 `
+
+export const MappersTableTargetInner = styled.span`
+  display: inline-flex;
+  gap: var(--base-gap-small);
+  width: 100%;
+`
+
 export const MappersTableErrorHandling = styled(MappersTableBodyCell)`
   padding-left: var(--padding-s);
   padding-right: var(--padding-s);
