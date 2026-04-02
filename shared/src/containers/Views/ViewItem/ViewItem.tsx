@@ -3,6 +3,7 @@ import * as Styled from './ViewItem.styled'
 import clsx from 'clsx'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { confirmDialog } from 'primereact/confirmdialog'
+import { useViewsContext } from '../context/ViewsContext'
 
 export interface ViewItem {
   id: string
@@ -42,13 +43,15 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
     },
     ref,
   ) => {
+    const { viewAlias } = useViewsContext()
+
     const handleSave = (e: React.MouseEvent<HTMLButtonElement>, requireConfirm: boolean) => {
       // prevent selecting the view when clicking save
       e.stopPropagation()
       if (requireConfirm) {
         // first validate we actually want to save by asking user to confirm
         confirmDialog({
-          message: 'Save current view settings and overwrite this view?',
+          message: `Save current ${viewAlias} settings and overwrite this ${viewAlias}?`,
           header: 'Confirm save',
           accept: () => onSave && onSave(e, id),
         })
@@ -83,7 +86,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             variant="text"
             className={clsx('save', { active: highlighted === 'save' })}
             onClick={(e) => handleSave(e, highlighted !== 'save')}
-            data-tooltip="Save view settings from current view"
+            data-tooltip={`Save ${viewAlias} settings from current ${viewAlias}`}
           />
         )}
         {isEditable && onEdit && (
@@ -92,7 +95,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             icon="more_horiz"
             className={clsx('more', { active: highlighted === 'edit' })}
             onClick={(e) => onEdit(e, id)}
-            data-tooltip="Edit view"
+            data-tooltip={`Edit ${viewAlias}`}
           />
         )}
         {endContent && endContent}
