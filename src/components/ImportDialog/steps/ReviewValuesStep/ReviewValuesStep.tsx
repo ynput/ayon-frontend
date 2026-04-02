@@ -9,9 +9,7 @@ import {
   ValueAction,
   ColumnMappings,
   ValueMappableColumnMappings,
-  ValueMappableColumnMapping,
-  ColumnAction,
-  ExtendedEnumItem,
+  ValueMappableColumnMapping, ExtendedEnumItem
 } from "../common"
 import {
   Mappers,
@@ -34,17 +32,17 @@ import {
   ColumnsListScrollable,
 } from "./ReviewValuesStep.styled"
 import { useEffect, useMemo, useState } from "react"
-import ColumnMapper, { MappingState } from "../ColumnMapper"
+import ColumnMapper from "../ColumnMapper"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { cloneDeep, merge, upperFirst } from "lodash"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
 import useMultiSelect from "@components/ImportDialog/hooks/useMultiSelect"
 import { inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
-import { getValuesForColumn } from "./values"
 import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
-import { parseUniqueValueIfHierarchy, preprocessRowsIfHierarchy } from "../hierarchy"
+import { parseUniqueValueIfHierarchy } from "../hierarchy"
+import { getMappingsToReview, getResolvedColumns, getUniqueValuesForColumn, getUnresolvedValues } from "./mappings"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
@@ -53,6 +51,8 @@ type Props = StepProps<ValueMappings> & {
   mappings: ValueMappings | null
   setMappings: React.Dispatch<React.SetStateAction<ValueMappings | null>>,
 }
+
+type ColumnMappingsEntry = [string, ValueMappableColumnMapping]
 
 const mapActionOption = {
   value: ValueAction.MAP,
@@ -105,19 +105,59 @@ export default function ReviewValuesStep({
   )
 
   const mappingsToReview: ValueMappableColumnMappings = useMemo(
-    () => Object.fromEntries(Object.entries(columnMappings)
-      .filter(([, { action, targetColumn }]) => importSchema.some(
-        ({ key }) => targetColumn === key && action !== ColumnAction.SKIP,
-      ))
-      .map(([column, mapping]) => [column, mapping as ValueMappableColumnMapping])
-    ),
+    () => getMappingsToReview(importSchema, columnMappings),
     [columnMappings, importSchema]
   )
 
-  // default to the first reviewable target
-  const [activeTarget, setActiveTarget] = useState<string>(
-    Object.values(mappingsToReview)[0].targetColumn,
+  const uniqueValuesForColumn = useMemo(
+    () => getUniqueValuesForColumn(
+      importContext,
+      columnSettings,
+      data,
+      columnMappings,
+      mappingsToReview,
+    ),
+    [importContext, columnMappings, data.rows, columnSettings, mappingsToReview],
   )
+
+  const unresolvedValues = useMemo(
+    () => getUnresolvedValues(
+      columnSettings,
+      mappingsToReview,
+      uniqueValuesForColumn,
+      mappings,
+    ),
+    [columnSettings, mappingsToReview, uniqueValuesForColumn, mappings],
+  )
+
+  const resolvedColumns = useMemo(
+    () => getResolvedColumns(
+      mappingsToReview,
+      unresolvedValues,
+    ),
+    [mappingsToReview, unresolvedValues],
+  )
+
+  const [sortedMappingsToReview, setSortedMappingsToReview] = useState<ColumnMappingsEntry[]>(
+    Object.entries(mappingsToReview)
+      .toSorted(sortMappingsToReviewEntries(resolvedColumns))
+  )
+
+  const firstTargetToReview = useMemo(() => {
+    const entry = sortedMappingsToReview.at(0)
+    if (!entry) return Object.values(mappingsToReview).at(0)?.targetColumn ?? ""
+
+    return entry[1].targetColumn
+  }, [sortedMappingsToReview])
+
+  // default to the first reviewable target
+  const [activeTarget, setActiveTarget] = useState(firstTargetToReview)
+
+  useEffect(() => {
+    if (!firstTargetToReview) return
+
+    setActiveTarget(firstTargetToReview)
+  }, [firstTargetToReview])
 
   const [activeColumn, activeMapping] = useMemo(() => {
     const entry = Object.entries(mappingsToReview)
@@ -134,34 +174,6 @@ export default function ReviewValuesStep({
   const activeTargetIsEnum = useMemo(
     () => columnSettings[activeTarget].enumItems?.length,
     [columnSettings, activeTarget]
-  )
-
-  const uniqueValuesForColumn = useMemo(
-    () => Object.fromEntries(
-      Object.keys(mappingsToReview)
-        .map((column) => {
-          const columnMapping = mappingsToReview[column]
-
-          const rows = preprocessRowsIfHierarchy(
-            importContext,
-            column,
-            columnMappings,
-            data.rows,
-          )
-
-          const values = getValuesForColumn(
-            rows,
-            column,
-            columnSettings[columnMapping.targetColumn],
-          )
-
-          return [
-            column,
-            Array.from(new Set(values))
-          ]
-        })
-    ),
-    [importContext, columnMappings, data.rows, columnSettings, mappingsToReview],
   )
 
   const currentUniqueValues = useMemo(() => {
@@ -192,36 +204,10 @@ export default function ReviewValuesStep({
     [mappings, activeColumn],
   )
 
-  const unresolvedValues = useMemo(
-    () => Object.fromEntries(
-      Object.entries(uniqueValuesForColumn).map(([column, uniqueValues]) => {
-        const valuesSet = new Set(uniqueValues)
-        if (!mappings) return [column, valuesSet]
-
-        const settings = columnSettings[mappingsToReview[column].targetColumn]
-        const resolvedValuesSet = new Set(uniqueValues
-          .map((value) => [value, getMapperState(settings, column, value, mappings)])
-          .filter(([, state]) => state !== MappingState.UNRESOLVED)
-          .map(([c]) => c),
-        )
-
-        return [column, valuesSet.difference(resolvedValuesSet)]
-      })
-    ),
-    [data.columns, mappings, mappingsToReview],
-  )
-
-  const resolvedColumns = useMemo(
-    () => Object
-      .keys(mappingsToReview)
-      .filter((column) => unresolvedValues[column].size === 0),
-    [mappingsToReview, unresolvedValues],
-  )
-
   useEffect(() => {
     if (!columnSettings || Boolean(mappings)) return
     // infer mappings based on the schema
-    setMappings(Object.fromEntries(
+    const inferredMappings = Object.fromEntries(
       Object.entries(mappingsToReview).map(([column, { targetColumn }]) => [
         column,
         Object.fromEntries(
@@ -244,8 +230,23 @@ export default function ReviewValuesStep({
             .filter(([, mapping]) => !!mapping)
         ),
       ])
-    ))
-  }, [columnSettings])
+    )
+
+    // pre-calculate (un)resolved states so we can compute the order
+    // of columns to review in the sidebar.
+    const unresolvedValues = getUnresolvedValues(
+      columnSettings,
+      mappingsToReview,
+      uniqueValuesForColumn,
+      inferredMappings,
+    )
+
+    const resolvedColumns = getResolvedColumns(mappingsToReview, unresolvedValues)
+
+    setMappings(inferredMappings)
+    setSortedMappingsToReview(Object.entries(mappingsToReview)
+      .toSorted(sortMappingsToReviewEntries(resolvedColumns)))
+  }, [columnSettings, importSchema])
 
   // apply the current preset if it changes
   useEffect(() => {
@@ -267,8 +268,7 @@ export default function ReviewValuesStep({
           <ColumnsListScrollable>
             <ColumnsList>
               {
-                Object.entries(mappingsToReview)
-                  .sort(sortMappingsToReviewEntries(resolvedColumns))
+                sortedMappingsToReview
                   .map(([column, { targetColumn }]) => (
                   <li key={targetColumn}>
                     <ColumnsListButton
