@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -116,8 +116,8 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.27.0",
-    "@module-federation/enhanced": "^0.21.6",
-    "@module-federation/vite": "^1.9.2",
+    "@module-federation/enhanced": "^2.3.1",
+    "@module-federation/vite": "^1.14.1",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.8.3",
     "vite": "7.2.6",
