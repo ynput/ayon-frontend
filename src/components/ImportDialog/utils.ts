@@ -106,8 +106,16 @@ const humanReadableDataType: Record<string, string> = {
   "boolean": "Checkbox",
 }
 
+const listDataTypes = new Set([
+  "list_of_strings",
+  "list_of_any",
+  "list_of_dict",
+  "list_of_integers",
+  "list_of_submodels",
+])
+
 export const formatDataType = (t: string, isEnum: boolean) => {
-  if (isEnum) {
+  if (isEnum && !listDataTypes.has(t)) {
     return humanReadableDataType["enum"]
   }
 
