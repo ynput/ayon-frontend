@@ -43,6 +43,7 @@ import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
 import { parseUniqueValueIfHierarchy } from "../hierarchy"
 import { getMappingsToReview, getResolvedColumns, getUniqueValuesForColumn, getUnresolvedValues } from "./mappings"
+import ReviewValuesColumnsList from "./ColumnsList"
 
 type Props = StepProps<ValueMappings> & {
   data: ImportData
@@ -52,7 +53,7 @@ type Props = StepProps<ValueMappings> & {
   setMappings: React.Dispatch<React.SetStateAction<ValueMappings | null>>,
 }
 
-type ColumnMappingsEntry = [string, ValueMappableColumnMapping]
+export type ColumnMappingsEntry = [string, ValueMappableColumnMapping]
 
 const mapActionOption = {
   value: ValueAction.MAP,
@@ -263,44 +264,15 @@ export default function ReviewValuesStep({
   return (
     <StepContainer>
       <Container>
-        <ColumnsListWrapper>
-          <Heading>Columns</Heading>
-          <ColumnsListScrollable>
-            <ColumnsList>
-              {
-                sortedMappingsToReview
-                  .map(([column, { targetColumn }]) => (
-                  <li key={targetColumn}>
-                    <ColumnsListButton
-                      variant="text"
-                      icon={resolvedColumns.includes(column) ? "check" : "error"}
-                      iconProps={{
-                        style: {
-                          color: resolvedColumns.includes(column)
-                            ? "var(--md-sys-color-tertiary)"
-                            : "var(--md-sys-color-error)"
-                        }
-                      }}
-                      selected={activeTarget === targetColumn}
-                      onClick={() => setActiveTarget(targetColumn)}
-                    >
-                      {
-                        columnSettings[targetColumn].label
-                      }
-                      <ColumnsListItemStats>
-                        {
-                          uniqueValuesForColumn[column].length - unresolvedValues[column].size
-                        } / {
-                          uniqueValuesForColumn[column].length
-                        }
-                      </ColumnsListItemStats>
-                    </ColumnsListButton>
-                  </li>
-                ))
-              }
-            </ColumnsList>
-          </ColumnsListScrollable>
-        </ColumnsListWrapper>
+        <ReviewValuesColumnsList
+          sortedMappingsToReview={sortedMappingsToReview}
+          resolvedColumns={resolvedColumns}
+          activeTarget={activeTarget}
+          setActiveTarget={setActiveTarget}
+          columnSettings={columnSettings}
+          uniqueValuesForColumn={uniqueValuesForColumn}
+          unresolvedValues={unresolvedValues}
+        />
         <ValueMappersContainer>
           <Mappers>
             <colgroup>
