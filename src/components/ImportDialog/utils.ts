@@ -20,6 +20,7 @@ export type ImportData = ParsedCSV & {
 const parseConfig: ParseAsyncConfig = {
   dynamicTyping: true,
   header: true,
+  skipEmptyLines: "greedy",
 }
 
 const parseAsync = (file: File | string, config: ParseAsyncConfig): Promise<CSVRow[]> => new Promise((resolve, reject) => {
