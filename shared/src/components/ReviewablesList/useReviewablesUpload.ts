@@ -46,6 +46,13 @@ export const useReviewablesUpload = ({
     [versionId],
   )
 
+  // strip out non-ISO-8859-1 characters like Narrow No-Break Space and emojis
+  // then check it is not an empty string, if so replace with "unnamed"
+  const parseFilename = (filename: string) => {
+    const parsed = filename.replace(/[^\x00-\xFF]/g, '').trim()
+    return parsed.length > 0 ? parsed : 'unnamed'
+  }
+
   const handleFileUpload = useCallback(
     async (files: FileList | File[], fileVersionId?: string) => {
       // use the passed versionId or the one from props
@@ -55,7 +62,7 @@ export const useReviewablesUpload = ({
       const fileArray = Array.from(files)
 
       const uploadingFiles = fileArray.map((file) => ({
-        name: file.name,
+        name: parseFilename(file.name),
         size: file.size,
         progress: 0,
       }))
@@ -94,7 +101,7 @@ export const useReviewablesUpload = ({
         folderId && dispatch(api.util.invalidateTags([{ type: 'viewer', id: folderId }]))
         taskId && dispatch(api.util.invalidateTags([{ type: 'viewer', id: taskId }]))
         // remove the file from the list
-        handleRemoveUpload(file.name)
+        handleRemoveUpload(parseFilename(file.name))
       }
 
       const errorHandler = (file: File) => (error: any) => {
@@ -106,10 +113,11 @@ export const useReviewablesUpload = ({
           // current uploads for reviewableVersionId
           const currentUploads = uploads[reviewableVersionId] || []
           const updatedUploads = currentUploads.map((upload) => {
-            if (upload.name !== file.name) return upload
+            if (upload.name !== parseFilename(file.name)) return upload
+            console.log(error)
             return {
               ...upload,
-              error: error.response.data.detail || error.message,
+              error: error.response || error.message,
             }
           })
 
@@ -128,7 +136,7 @@ export const useReviewablesUpload = ({
             // current uploads for reviewableVersionId
             const currentUploads = uploads[reviewableVersionId] || []
             const updatedUploads = currentUploads.map((upload) => {
-              if (upload.name !== file.name) return upload
+              if (upload.name !== parseFilename(file.name)) return upload
               return {
                 ...upload,
                 progress: progressEvent.total
@@ -158,10 +166,11 @@ export const useReviewablesUpload = ({
       try {
         // upload the files
         const uploadPromises = fileArray.map((file) => {
-          const autoLabel = file.name.split('.').slice(0, -1).join('.')
+          const fileName = parseFilename(file.name)
+          const autoLabel = fileName.split('.').slice(0, -1).join('.') || 'unnamed'
 
           const url = `/api/projects/${projectName}/versions/${reviewableVersionId}/reviewables?label=${autoLabel}`
-          const headers = { 'content-type': file.type, 'x-file-name': file.name }
+          const headers = { 'content-type': file.type, 'x-file-name': fileName }
           return axios
             .post(url, file, { headers, onUploadProgress: progressHandler(file) })
             .then(successHandler(file))
