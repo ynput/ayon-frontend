@@ -6,6 +6,20 @@ import api, { reviewablesQueries } from '@shared/api'
 import type { UploadReviewableApiResponse } from '@shared/api'
 import type { ReviewableProgress } from '@shared/components'
 
+// strip out non-ISO-8859-1 characters like Narrow No-Break Space and emojis
+// then check it is not an empty string without extension, if so replace with "unnamed"
+export const parseFilename = (filename: string) => {
+  const parsed = filename.replace(/[^\x00-\xFF]/g, '').trim()
+  // without extension
+  const nameWithoutExtension = parsed.replace(/\.[^/.]+$/, '')
+  const extension = parsed.split('.').pop()
+  if (nameWithoutExtension.length === 0) {
+    return 'unnamed' + (extension ? `.${extension}` : '')
+  } else {
+    return parsed
+  }
+}
+
 export interface UseReviewablesUploadProps {
   projectName: string | null
   versionId?: string | null
@@ -45,13 +59,6 @@ export const useReviewablesUpload = ({
     },
     [versionId],
   )
-
-  // strip out non-ISO-8859-1 characters like Narrow No-Break Space and emojis
-  // then check it is not an empty string, if so replace with "unnamed"
-  const parseFilename = (filename: string) => {
-    const parsed = filename.replace(/[^\x00-\xFF]/g, '').trim()
-    return parsed.length > 0 ? parsed : 'unnamed'
-  }
 
   const handleFileUpload = useCallback(
     async (files: FileList | File[], fileVersionId?: string) => {
