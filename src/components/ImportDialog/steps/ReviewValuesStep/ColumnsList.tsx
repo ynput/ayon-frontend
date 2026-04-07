@@ -83,6 +83,7 @@ export default function ReviewValuesColumnsList({
                   role="option"
                   aria-selected={activeTarget === targetColumn}
                   ref={activeTarget === targetColumn ? activeRef : null}
+                  tabIndex={activeTarget === targetColumn ? 0 : -1}
                   icon={resolvedColumns.includes(column) ? "check" : "error"}
                   iconProps={{
                     style: {
