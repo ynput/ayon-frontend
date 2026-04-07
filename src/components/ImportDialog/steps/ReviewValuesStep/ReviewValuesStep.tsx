@@ -22,14 +22,8 @@ import {
 } from "../common.styled"
 import {
   Container,
-  ColumnsListWrapper,
-  Heading,
-  ColumnsList,
-  ColumnsListButton,
   ValueMappersContainer,
-  ColumnsListItemStats,
   SelectedCount,
-  ColumnsListScrollable,
 } from "./ReviewValuesStep.styled"
 import { useEffect, useMemo, useState } from "react"
 import ColumnMapper from "../ColumnMapper"
