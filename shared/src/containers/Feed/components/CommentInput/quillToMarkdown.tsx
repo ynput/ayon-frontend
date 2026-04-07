@@ -17,7 +17,7 @@ turndownService.addRule('emptyParagraph', {
     return childNode?.nodeName === 'BR'
   },
   replacement: function () {
-    return `\n\n<br>\n\n`
+    return `&nbsp;`
   },
 })
 

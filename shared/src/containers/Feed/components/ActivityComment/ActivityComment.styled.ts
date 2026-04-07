@@ -67,10 +67,8 @@ export const Body = styled.div`
   position: relative;
   min-width: 0;
 
-  /* remove first and last margins */
-  /* + * because tools is actual first */
-  & > *:nth-child(2) + * {
-    margin-top: 8px;
+  p {
+    margin: 0;
   }
 
   & > *:not(.tools):not(h1) {
@@ -89,6 +87,12 @@ export const Body = styled.div`
     word-break: break-word;
     .reference {
       top: 5px;
+    }
+
+    /* target empty lines with &nbsp; or br */
+    &.empty-line {
+      height: 20px;
+      margin: 0;
     }
   }
 
