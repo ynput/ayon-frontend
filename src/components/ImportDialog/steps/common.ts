@@ -17,6 +17,7 @@ export enum ImportStep {
   MAP_COLUMNS,
   REVIEW_VALUES,
   PREVIEW,
+  SUBMIT,
 }
 
 export enum ColumnAction {
@@ -87,4 +88,21 @@ export const contextLabelForImportContext: Record<ImportContext, string> = {
   folder: "Folders",
   task: "Tasks",
   entity_list_item: "List items",
+}
+
+export type ImportDataStartSummary = {
+  total: number
+  type: string
+}
+
+export type ImportDataProcessSummary = {
+  created: number
+  updated: number
+  skipped: number
+  failed: number
+  failedItems?: Record<string, string>
+}
+
+export type ImportDataMessage = {
+  summary: ImportDataStartSummary | ImportDataProcessSummary
 }

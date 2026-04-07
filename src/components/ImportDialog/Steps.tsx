@@ -13,6 +13,7 @@ import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from "./ImportDialog.styled
 import Loading from "./steps/Loading";
 import { EmptyPlaceholder } from "@shared/components";
 import { withHierarchySchema } from "./steps/hierarchy";
+import SubmitStep from "./steps/SubmitStep/SubmitStep";
 
 type Props = {
   importContext: ImportContext
@@ -29,13 +30,15 @@ const steps = [
   ImportStep.MAP_COLUMNS,
   ImportStep.REVIEW_VALUES,
   ImportStep.PREVIEW,
+  ImportStep.SUBMIT,
 ]
 
 const breadcrumbForStep: Record<ImportStep, string> = {
   [ImportStep.UPLOAD]: "Upload file",
   [ImportStep.MAP_COLUMNS]: "Map columns",
   [ImportStep.REVIEW_VALUES]: "Review values",
-  [ImportStep.PREVIEW]: "Preview Result",
+  [ImportStep.PREVIEW]: "Preview result",
+  [ImportStep.SUBMIT]: "Import data",
 }
 
 export default function ImportSteps({ importContext, projectName, data, setData, step, setStep, onClose }: Props) {
@@ -44,6 +47,8 @@ export default function ImportSteps({ importContext, projectName, data, setData,
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
   const [valueMappings, setValueMappings] = useState<ValueMappings | null>(null)
   const [previewStatus, setPreviewStatus] = useState<ImportStatus | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const {
     data: rawImportSchema,
@@ -107,12 +112,13 @@ export default function ImportSteps({ importContext, projectName, data, setData,
   const onConfirmImport = useCallback(() => {
     if (!columnMappings || !valueMappings) return
 
+    setSubmitted(true)
+    setStep(ImportStep.SUBMIT)
     requestImport(
       getFullMapping(columnMappings, valueMappings),
       false,
     ).then(() => {
-      toast.success(`Import successful`)
-      onClose()
+      setSuccess(true)
     }).catch((err) => {
       console.error(err)
       toast.error(`Error importing data`)
@@ -120,18 +126,20 @@ export default function ImportSteps({ importContext, projectName, data, setData,
   }, [requestImport, columnMappings, valueMappings])
 
   const unlocked: Record<ImportStep, boolean> = useMemo(() => ({
-    [ImportStep.UPLOAD]: Boolean(importSchema),
-    [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data),
-    [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings),
-    [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
-  }), [importSchema, data, columnMappings, valueMappings, previewStatus])
+    [ImportStep.UPLOAD]: !submitted && Boolean(importSchema),
+    [ImportStep.MAP_COLUMNS]: !submitted && Boolean(importSchema && data),
+    [ImportStep.REVIEW_VALUES]: !submitted && Boolean(importSchema && data && columnMappings),
+    [ImportStep.PREVIEW]: !submitted && Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
+    [ImportStep.SUBMIT]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus && submitted),
+  }), [importSchema, data, columnMappings, valueMappings, previewStatus, submitted, success])
 
   const completed: Record<ImportStep, boolean> = useMemo(() => ({
     [ImportStep.UPLOAD]: Boolean(importSchema && data),
     [ImportStep.MAP_COLUMNS]: Boolean(importSchema && data && columnMappings),
     [ImportStep.REVIEW_VALUES]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus),
-    [ImportStep.PREVIEW]: false,
-  }), [importSchema, data, columnMappings, valueMappings, previewStatus])
+    [ImportStep.PREVIEW]: Boolean(importSchema && data && columnMappings && valueMappings && previewStatus && submitted),
+    [ImportStep.SUBMIT]: success,
+  }), [importSchema, data, columnMappings, valueMappings, previewStatus, submitted, success])
 
   return (
     <>
@@ -218,13 +226,23 @@ export default function ImportSteps({ importContext, projectName, data, setData,
         )
       }
       {
-        importSchema && data && columnMappings && valueMappings && previewStatus && step === ImportStep.PREVIEW && (
+        importSchema && data && columnMappings && valueMappings && step === ImportStep.PREVIEW && (
           <PreviewStep
             data={data}
             previewStatus={previewStatus}
             importContext={importContext}
             onBack={() => setStep(ImportStep.REVIEW_VALUES)}
             onNext={onConfirmImport}
+          />
+        )
+      }
+      {
+        importSchema && data && columnMappings && valueMappings && submitted && step === ImportStep.SUBMIT && (
+          <SubmitStep
+            data={data}
+            importContext={importContext}
+            onBack={() => {}}
+            onNext={onClose}
           />
         )
       }
