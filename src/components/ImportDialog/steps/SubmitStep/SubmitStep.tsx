@@ -8,11 +8,11 @@ import {
   StepProps
 } from "../common";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
-import { StepContainer } from "../common.styled";
+import { ProgressBar, StepContainer } from "../common.styled";
 import { ImportData } from "@components/ImportDialog/utils";
 import usePubSub from "@hooks/usePubSub";
 import { useState } from "react";
-import { EmptyPlaceholder, ReviewableProgressCard } from "@shared/components";
+import { EmptyPlaceholder } from "@shared/components";
 import styled from "styled-components";
 import Stats from "../Stats";
 
@@ -29,17 +29,6 @@ const SuccessState = styled(EmptyPlaceholder)`
   .placeholder-icon {
     background-color: var(--md-sys-color-tertiary);
     color: var(--md-sys-color-on-tertiary);
-  }
-`
-
-const ProgressBar = styled(ReviewableProgressCard)`
-  justify-content: center;
-  margin: auto;
-  max-width: max-content;
-  padding-right: var(--padding-l);
-
-  .content {
-    flex-grow: 0;
   }
 `
 

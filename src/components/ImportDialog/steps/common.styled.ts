@@ -1,3 +1,4 @@
+import { ReviewableProgressCard } from "@shared/components";
 import { DefaultValueTemplate, Dropdown } from "@ynput/ayon-react-components";
 import styled from "styled-components";
 
@@ -221,5 +222,20 @@ export const SwitchWrapper = styled.label`
 export const DropdownValueTemplate = styled(DefaultValueTemplate)`
   .icon:first-child {
     color: var(--icon-color);
+  }
+`
+
+export const ProgressBar = styled(ReviewableProgressCard)`
+  justify-content: center;
+  margin: auto;
+  max-width: max-content;
+  padding-right: var(--padding-l);
+
+  .content {
+    flex-grow: 0;
+
+    .name {
+      white-space: nowrap;
+    }
   }
 `

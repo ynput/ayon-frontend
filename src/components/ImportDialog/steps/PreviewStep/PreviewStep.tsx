@@ -1,30 +1,17 @@
 import { formatFailedItems, ImportContext, ImportDataMessage, ImportDataProcessSummary, ImportDataStartSummary, itemsLabelForImportContext, StepProps } from "../common";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
-import { StepContainer, StepNavButtons } from "../common.styled";
+import { ProgressBar, StepContainer, StepNavButtons } from "../common.styled";
 import { ImportData } from "@components/ImportDialog/utils";
 import { ImportStatus } from "@shared/api/generated/dataImport";
 import Stats from "../Stats";
 import usePubSub from "@hooks/usePubSub";
 import { useState } from "react";
-import { ReviewableProgressCard } from "@shared/components";
-import styled from "styled-components";
 
 type Props = StepProps<void> & {
   data: ImportData
   previewStatus: ImportStatus | null
   importContext: ImportContext
 }
-
-const ProgressBar = styled(ReviewableProgressCard)`
-  justify-content: center;
-  margin: auto;
-  max-width: max-content;
-  padding-right: var(--padding-l);
-
-  .content {
-    flex-grow: 0;
-  }
-`
 
 export default function PreviewStep({ data, previewStatus, importContext, onBack, onNext }: Props) {
   const [previewProgress, setPreviewProgress] = useState(0)
