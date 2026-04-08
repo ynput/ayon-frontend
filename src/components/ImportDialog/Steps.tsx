@@ -6,9 +6,9 @@ import { ColumnMappings, ImportContext, ImportStep, ValueMappings } from "./step
 import ReviewValuesStep from "./steps/ReviewValuesStep/ReviewValuesStep";
 import PreviewStep from "./steps/PreviewStep/PreviewStep";
 import { useViewsContext } from "@shared/containers";
-import { useExportFieldsQuery, useImportDataMutation } from "@queries/dataImport";
 import { ColumnMapping, ImportStatus } from "@shared/api/generated/dataImport";
 import { toast } from "react-toastify";
+import { useExportFieldsQuery, useImportDataMutation } from "../../services/dataImport";
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from "./ImportDialog.styled";
 import Loading from "./steps/Loading";
 import { EmptyPlaceholder } from "@shared/components";
