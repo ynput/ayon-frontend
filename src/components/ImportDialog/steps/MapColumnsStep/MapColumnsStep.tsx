@@ -31,7 +31,7 @@ import {
   MappersTableHeaderErrorHandling,
   MappersTableActionCol
 } from "../common.styled"
-import ColumnMapper, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../ColumnMapper"
+import MapperRow, { MappingState, TARGET_OPTION_MAPPING_SEPARATOR } from "../MapperRow"
 import { confirmDialog } from "primereact/confirmdialog"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import useMultiSelect from "@components/ImportDialog/hooks/useMultiSelect"
@@ -246,7 +246,7 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
             <MappersTableBody>
             {
               data.columns.map((column, index) => (
-                <ColumnMapper
+                <MapperRow
                   key={column}
                   state={getMapperState(column, mappings)}
                   source={column}

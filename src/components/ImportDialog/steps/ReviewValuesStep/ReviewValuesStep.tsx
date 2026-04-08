@@ -27,7 +27,7 @@ import {
   SelectedCount,
 } from "./ReviewValuesStep.styled"
 import { useEffect, useMemo, useState } from "react"
-import ColumnMapper from "../ColumnMapper"
+import MapperRow from "../MapperRow"
 import usePreset from "@components/ImportDialog/hooks/usePreset"
 import { cloneDeep, merge, upperFirst } from "lodash"
 import { ImportableColumn } from "@shared/api/generated/dataImport"
@@ -310,7 +310,7 @@ export default function ReviewValuesStep({
                 )
 
                 return (
-                  <ColumnMapper
+                  <MapperRow
                     key={uniqueDataValue + index}
                     state={getMapperState(columnSettings[activeTarget], activeColumn, uniqueDataValue, mappings)}
                     source={source}

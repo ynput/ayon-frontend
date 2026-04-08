@@ -1,6 +1,6 @@
 import { ImportableColumn } from "@shared/api/generated/dataImport"
 import { TargetValue, ValueAction, ValueMappings } from "../common"
-import { MappingState } from "../ColumnMapper"
+import { MappingState } from "../MapperRow"
 
 const validateValue = (settings: ImportableColumn, value: TargetValue) => {
   if (typeof value === "boolean") {
