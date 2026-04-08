@@ -26,6 +26,10 @@ const ProgressBar = styled(ReviewableProgressCard)`
   }
 `
 
+const formatFailedItems = (failedItems: Record<string, string>) => Object.entries(failedItems)
+  .map(([key, reason]) => `- ${key}: ${reason}`)
+  .join('\n')
+
 export default function PreviewStep({ data, previewStatus, importContext, onBack, onNext }: Props) {
   const [previewProgress, setPreviewProgress] = useState(0)
 
@@ -36,9 +40,10 @@ export default function PreviewStep({ data, previewStatus, importContext, onBack
 
       const processedCount = Object.values(message.summary as ImportDataProcessSummary)
         .reduce((a, i) => {
+          if (typeof a !== "number") return 0
           if (typeof i !== "number") return a
           return a + i
-        }, 0)
+        }, 0) as number
 
       setPreviewProgress(Math.round(processedCount / data.rows.length * 100))
     },
@@ -72,6 +77,8 @@ export default function PreviewStep({ data, previewStatus, importContext, onBack
                   text: `Errors: ${previewStatus.failed}`,
                   icon: "error",
                   danger: !!previewStatus.failed,
+                  tooltip: previewStatus.failedItems
+                    && formatFailedItems(previewStatus.failedItems as Record<string, string>)
                 },
               ]}
             />

@@ -7,6 +7,7 @@ type StatsItem = {
   icon: IconProps["icon"]
   rotated?: boolean
   danger?: boolean
+  tooltip?: string
 }
 
 type Props = {
@@ -85,7 +86,22 @@ export default function Stats({ heading, subtitle, size, items, onClose }: Props
         }
         {
           items.map((item, index) => (
-            <Stat key={index} direction="row" className={clsx({ danger: item.danger })}>
+            <Stat
+              key={index}
+              direction="row"
+              className={clsx({ danger: item.danger })}
+              {
+                ...(
+                  item.tooltip
+                  ? {
+                    "data-tooltip": item.tooltip,
+                    "data-tooltip-delay": 0,
+                    "data-tooltip-as": "markdown",
+                  }
+                  : {}
+                )
+              }
+            >
               <Icon
                 icon={item.icon}
                 style={{
