@@ -286,7 +286,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
         },
       )
     },
-    [],
+    [updateViewSettings],
   )
 
   // Column update handler
@@ -295,8 +295,12 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       const settings = convertTanstackStatesToColumnConfig(tableSettings, allColumnIds)
       const currentGroupBy = groupBy // capture current value
 
+      // Track whether we delegated groupBy to the unified handler
+      let groupByHandledByViewGroupBy = false
+
       // Handle groupBy changes from settings panel
       if (settings.groupBy !== undefined && settings.groupBy !== currentGroupBy) {
+        groupByHandledByViewGroupBy = true
         // Delegate to the unified handler for field groupings
         if (settings.groupBy === 'hierarchy') {
           await onUpdateViewGroupBy('hierarchy')
@@ -309,9 +313,14 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       setLocalColumns(tableSettings)
 
       // Persist only the fields that changed to server
-      // Extract only the relevant settings to persist
+      // Skip groupBy if it was already persisted by onUpdateViewGroupBy above
       const persistSettings: Record<string, any> = {}
-      if (settings.groupBy !== undefined) persistSettings.groupBy = settings.groupBy
+      if (settings.groupBy !== undefined && !groupByHandledByViewGroupBy) {
+        persistSettings.groupBy = settings.groupBy
+      }
+      if (settings.groupSortByDesc !== undefined && !groupByHandledByViewGroupBy) {
+        persistSettings.groupSortByDesc = settings.groupSortByDesc
+      }
       if (settings.showEmptyGroups !== undefined) persistSettings.showEmptyGroups = settings.showEmptyGroups
       if (settings.sortBy !== undefined) persistSettings.sortBy = settings.sortBy
       if (settings.sortDesc !== undefined) persistSettings.sortDesc = settings.sortDesc

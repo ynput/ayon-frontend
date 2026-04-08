@@ -37,15 +37,22 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   const handleUpdateGroupBy = useCallback(
     (newGroupBy: TableGroupBy | undefined) => {
       if (newGroupBy?.id === HIERARCHY_ID) {
-        // Hierarchy selected: show tree structure
+        // Hierarchy selected: delegate entirely to updateShowHierarchy
+        // which routes through onUpdateViewGroupBy('hierarchy') and also
+        // sets localColumns.groupBy = undefined — no need to call updateGroupBy separately
         updateShowHierarchy?.(true)
-        updateGroupBy(undefined)
         return
       }
       if (!newGroupBy) {
         // None selected: flat list (no hierarchy, no grouping)
-        updateShowHierarchy?.(false)
-        updateGroupBy(undefined)
+        if (updateShowHierarchy) {
+          // Has hierarchy support: delegate to updateShowHierarchy(false)
+          // which routes through onUpdateViewGroupBy(undefined) and clears everything
+          updateShowHierarchy(false)
+        } else {
+          // No hierarchy support: just clear groupBy through ColumnSettingsContext
+          updateGroupBy(undefined)
+        }
         return
       }
       updateGroupBy(newGroupBy)

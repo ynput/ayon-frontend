@@ -202,7 +202,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         author: 'version',
       },
     )
-  }, [sliceFilter, showProducts])
+  }, [sliceFilter])
   // get selected folders from slicer
   const slicerFolderIds = useSelectedFolders({
     rowSelection,
