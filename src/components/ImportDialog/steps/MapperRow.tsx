@@ -54,6 +54,7 @@ type Props = {
   errorHandlingOptions: DropdownProps["options"]
   valueType?: ImportableColumn["valueType"]
   dropdownValueIcon?: boolean
+  dependencies?: string[]
   onPointerEnter: () => void
   onClick: (ctrl: boolean, shift: boolean) => void
   onActionChange: (action: ColumnAction | ValueAction) => void
@@ -77,6 +78,7 @@ export default function ColumnMapper({
   errorHandlingEnabled = true,
   valueType,
   dropdownValueIcon = false,
+  dependencies,
   onPointerEnter,
   onClick,
   onActionChange,
@@ -157,7 +159,9 @@ export default function ColumnMapper({
                       isOpen={isOpen}
                       placeholder={
                         targetOptions.length === 0
-                          ? "Nothing to map. Try choosing the Create or Skip action."
+                          ? dependencies && dependencies.length > 0
+                            ? `Nothing to map. Resolve ${dependencies.join(', ')} first.`
+                            : "Nothing to map. Try choosing the Create or Skip action."
                           : "Select a target..."
                       }
                     >

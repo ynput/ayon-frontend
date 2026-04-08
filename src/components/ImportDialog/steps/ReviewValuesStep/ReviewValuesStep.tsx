@@ -326,6 +326,9 @@ export default function ReviewValuesStep({
                     errorHandlingEnabled={false}
                     valueType={columnSettings[activeTarget].valueType}
                     dropdownValueIcon
+                    dependencies={
+                      currentTargetUnmappedDependencies.map((dep) => columnSettings[dep].label)
+                    }
                     selected={multiSelect.selection.has(uniqueDataValue)}
                     onPointerEnter={() => {}}
                     onClick={multiSelect.getClickHandler(uniqueDataValue, index)}
