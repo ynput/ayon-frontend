@@ -73,7 +73,7 @@ export type ValueMappings = Record<string, Record<string, ValueMapping>>
 // Can be applied to two strings to compare them with some tolerance
 // e.g. case-insensitive and ignoring certain characters.
 export const normaliseForComparison = (name: string) => name
-  .replace(/[_\.\*\s]|attrib\.|data\./g, '')
+  .replace(/[_\.\*\s]|^attrib\.|^data\./g, '')
   .toLowerCase();
 
 export const itemsLabelForImportContext: Record<ImportContext, string> = {
