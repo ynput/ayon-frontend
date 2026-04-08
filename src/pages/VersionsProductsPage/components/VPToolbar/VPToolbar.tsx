@@ -19,6 +19,19 @@ const GroupByDropdown = styled(SortingDropdown)<{
   .sort-chip {
     min-width: fit-content;
 
+    /* Override arrow_right with arrow_upward to match GroupSettings panel */
+    .sort-order .icon {
+      font-size: 0;
+
+      &::after {
+        content: 'arrow_upward';
+        font-family: 'Material Symbols Outlined';
+        font-size: 16px;
+        display: block;
+        transform: rotate(90deg);
+      }
+    }
+
     ${({ $disableSortOrder }) =>
       $disableSortOrder &&
       `
@@ -40,10 +53,11 @@ const VPToolbar: FC = () => {
 
   const viewGroupByOptions = useMemo(
     () => [
-      { id: 'product', label: 'Product', sortOrder: true },
+      { id: 'product', label: 'Product', icon: 'inventory_2', sortOrder: true },
       ...groupedFields.map((field) => ({
         id: field.value,
         label: field.label,
+        icon: field.icon,
         sortOrder: true,
       })),
     ],

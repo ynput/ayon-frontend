@@ -57,6 +57,19 @@ const GroupByDropdown = styled(SortingDropdown)<{
   .sort-chip {
     min-width: fit-content;
 
+    /* Override arrow_right with arrow_upward to match GroupSettings panel */
+    .sort-order .icon {
+      font-size: 0;
+
+      &::after {
+        content: 'arrow_upward';
+        font-family: 'Material Symbols Outlined';
+        font-size: 16px;
+        display: block;
+        transform: rotate(90deg);
+      }
+    }
+
     ${({ $disableSortOrder }) =>
       $disableSortOrder &&
       `
@@ -94,11 +107,12 @@ const ProjectOverviewPage: FC = () => {
   const viewGroupByOptions = useMemo(() => {
 
     return [
-      { id: 'hierarchy', label: 'Hierarchy', sortOrder: true },
-      { id: 'folder', label: 'Folder', sortOrder: true },
+      { id: 'hierarchy', label: 'Hierarchy', icon: 'account_tree', sortOrder: true },
+      { id: 'folder', label: 'Folder', icon: 'folder', sortOrder: true },
       ...groupedFields.map((field) => ({
         id: field.value,
         label: field.label,
+        icon: field.icon,
         sortOrder: true,
       })),
     ]
