@@ -12,6 +12,7 @@ import ImportSteps from "./Steps";
 type Props = {
   importContext: ImportContext
   projectName?: string
+  folderId?: string
 }
 
 const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
@@ -19,11 +20,12 @@ const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
   [ImportStep.MAP_COLUMNS]: "full",
   [ImportStep.REVIEW_VALUES]: "full",
   [ImportStep.PREVIEW]: "full",
+  [ImportStep.SUBMIT]: "full",
 }
 
 const PRESETS_BUTTON_LABEL = "Mapping presets"
 
-export default function ImportDialog({ importContext, projectName }: Props) {
+export default function ImportDialog({ importContext, projectName, folderId }: Props) {
   const dispatch = useDispatch()
 
   const [open, setOpen] = useState(false)
@@ -88,6 +90,7 @@ export default function ImportDialog({ importContext, projectName }: Props) {
           <ImportSteps
             importContext={importContext}
             projectName={projectName}
+            folderId={folderId}
             data={data}
             setData={setData}
             step={step}

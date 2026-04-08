@@ -18,6 +18,7 @@ import SubmitStep from "./steps/SubmitStep/SubmitStep";
 type Props = {
   importContext: ImportContext
   projectName?: string
+  folderId?: string
   data: ImportData | null
   setData: Dispatch<SetStateAction<ImportData | null>>
   step: ImportStep
@@ -41,7 +42,16 @@ const breadcrumbForStep: Record<ImportStep, string> = {
   [ImportStep.SUBMIT]: "Import data",
 }
 
-export default function ImportSteps({ importContext, projectName, data, setData, step, setStep, onClose }: Props) {
+export default function ImportSteps({
+  importContext,
+  projectName,
+  folderId,
+  data,
+  setData,
+  step,
+  setStep,
+  onClose,
+}: Props) {
   const [importData] = useImportDataMutation()
 
   const [columnMappings, setColumnMappings] = useState<ColumnMappings | undefined>(undefined)
@@ -79,13 +89,14 @@ export default function ImportSteps({ importContext, projectName, data, setData,
 
     return importData({
       fileId: data.fileId,
+      folderId,
       importType: importContext,
       columnMapping,
       preview,
       projectName,
       existingStrategy: "update",
     })
-  }, [data, projectName, importContext])
+  }, [data, folderId, projectName, importContext])
 
   const fetchPreview = useCallback(() => {
     if (!columnMappings || !valueMappings) return

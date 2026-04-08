@@ -343,6 +343,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   <ImportDialog
                     importContext="entity_list_item"
                     projectName={projectName}
+                    folderId={selectedList?.id}
                   />
                   <Actions
                     entities={[

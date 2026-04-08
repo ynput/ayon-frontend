@@ -27,7 +27,7 @@ const ProgressBar = styled(ReviewableProgressCard)`
 `
 
 const formatFailedItems = (failedItems: Record<string, string>) => Object.entries(failedItems)
-  .map(([key, reason]) => `- ${key}: ${reason}`)
+  .map(([key, reason]) => `- ${key || '(empty)'}: ${reason}`)
   .join('\n')
 
 export default function PreviewStep({ data, previewStatus, importContext, onBack, onNext }: Props) {
