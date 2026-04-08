@@ -1,5 +1,5 @@
 import { CSVRow } from "../utils";
-import { ColumnMappings, ExtendedEnumItem, ImportContext, ImportSchema } from "./common";
+import { ColumnMappings, ExtendedEnumItem, ImportContext, ImportSchema, ValueMappings } from "./common";
 
 export enum HierarchyEntityType {
   FOLDER = "folder",
@@ -12,8 +12,23 @@ export const TASK_TYPE = "task_type"
 
 export const FOLDER_TASK_TYPE_COMBINED_COLUMN = "folder_or_task_type"
 export const FOLDER_TASK_TYPE_VALUE_SEPARATOR = ":|:|:|:"
+export const FALLBACK_ENTITY_TYPE = "(unknown)"
 
 export const entityTypeDependentColumns = new Set([FOLDER_TYPE, TASK_TYPE])
+
+// some columns can only be value-mapped if another column has been value mapped
+const valueMappingDependencies: Record<string, string[]> = {
+  [FOLDER_TASK_TYPE_COMBINED_COLUMN]: [ENTITY_TYPE]
+}
+
+export const getValueMappingDependencies = (
+  importContext: ImportContext,
+  targetColumn: string,
+): Set<string> => {
+  if (importContext !== "hierarchy") return new Set()
+
+  return new Set(valueMappingDependencies[targetColumn])
+}
 
 // If a combined folder/task type column is returned in the hierarchy schema,
 // we grab its enum items from the individual folder type/task type columns,
@@ -102,6 +117,7 @@ export const preprocessRowsIfHierarchy = (
   importContext: ImportContext,
   column: string,
   columnMappings: ColumnMappings,
+  mappings: ValueMappings | null,
   rows: CSVRow[],
 ) => {
   const entityTypeSource = getEntityTypeSource(importContext, columnMappings)
@@ -111,10 +127,15 @@ export const preprocessRowsIfHierarchy = (
     if (columnMapping.targetColumn && entityTypeDependentColumns.has(columnMapping.targetColumn)) {
       return rows.filter(getHierarchyRowFilter(column, entityTypeSource))
     } else if (columnMapping.targetColumn === FOLDER_TASK_TYPE_COMBINED_COLUMN) {
-      return rows.map((row) => ({
-        ...row,
-        [column]: encodeUniqueFolderTaskType(row[entityTypeSource], row[column]),
-      }))
+      return rows.map((row) => {
+        const entityType = mappings?.[entityTypeSource]?.[row[entityTypeSource]]?.targetValue
+          ?? FALLBACK_ENTITY_TYPE
+
+        return {
+          ...row,
+          [column]: encodeUniqueFolderTaskType(entityType as HierarchyEntityType, row[column]),
+        }
+      })
     }
   }
 

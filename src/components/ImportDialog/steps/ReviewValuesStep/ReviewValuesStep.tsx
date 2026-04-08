@@ -1,4 +1,4 @@
-import { Button } from "@ynput/ayon-react-components"
+import { Button, Icon } from "@ynput/ayon-react-components"
 
 import { ImportData } from "../../utils"
 import {
@@ -19,6 +19,7 @@ import {
   StepNavButtons,
   StepNavStats,
   StepContainer,
+  StepNavStatsRequired,
 } from "../common.styled"
 import {
   Container,
@@ -35,7 +36,7 @@ import { inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
 import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
-import { parseUniqueValueIfHierarchy } from "../hierarchy"
+import { getValueMappingDependencies, parseUniqueValueIfHierarchy } from "../hierarchy"
 import { getMappingsToReview, getResolvedColumns, getUniqueValuesForColumn, getUnresolvedValues } from "./mappings"
 import ReviewValuesColumnsList from "./ColumnsList"
 
@@ -111,8 +112,9 @@ export default function ReviewValuesStep({
       data,
       columnMappings,
       mappingsToReview,
+      mappings,
     ),
-    [importContext, columnMappings, data.rows, columnSettings, mappingsToReview],
+    [importContext, columnMappings, data.rows, columnSettings, mappingsToReview, mappings],
   )
 
   const unresolvedValues = useMemo(
@@ -198,6 +200,15 @@ export default function ReviewValuesStep({
     () => mappings && activeColumn ? mappings[activeColumn] : null,
     [mappings, activeColumn],
   )
+
+  const currentTargetUnmappedDependencies = useMemo(() => {
+    const dependencies = getValueMappingDependencies(importContext, activeTarget)
+    // get the dependencies whose respective source columns haven't been resolved yet
+    return Array.from(dependencies)
+      .filter((dependencyTarget) => sortedMappingsToReview.find(
+        ([column, { targetColumn }]) => dependencyTarget === targetColumn && !resolvedColumns.includes(column)
+      ))
+  }, [importContext, activeTarget, resolvedColumns, sortedMappingsToReview])
 
   useEffect(() => {
     if (!columnSettings || Boolean(mappings)) return
@@ -350,6 +361,17 @@ export default function ReviewValuesStep({
                         update.action = activeTargetIsEnum ? ValueAction.MAP : ValueAction.CREATE
                       }
 
+                      if (multiSelect.selection.size > 0 && multiSelect.selection.has(uniqueDataValue)) {
+                        setMappings(mappingUpdater(
+                          activeColumn,
+                          Array.from(multiSelect.selection),
+                          update,
+                          preset.updateValues,
+                        ))
+
+                        return
+                      }
+
                       setMappings(mappingUpdater(
                         activeColumn,
                         [uniqueDataValue],
@@ -369,6 +391,21 @@ export default function ReviewValuesStep({
       <StepNavButtons>
         <StepNavStats>
           {resolvedColumns.length} / {Object.keys(mappingsToReview).length} columns resolved.
+          {
+            activeMapping && currentTargetUnmappedDependencies.length > 0 && (
+              <StepNavStatsRequired>
+                <Icon icon="warning" />
+                Mapping values of <strong>{
+                  columnSettings[activeMapping.targetColumn].label
+                }</strong> requires
+                the following column{
+                  currentTargetUnmappedDependencies.length === 1 ? "" : "s"
+                } to be mapped: <strong>{
+                  currentTargetUnmappedDependencies.map((dep) => columnSettings[dep].label).join(", ")
+                }</strong>
+              </StepNavStatsRequired>
+            )
+          }
         </StepNavStats>
         <Button
           variant="nav"

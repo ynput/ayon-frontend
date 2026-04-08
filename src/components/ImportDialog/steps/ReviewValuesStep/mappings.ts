@@ -29,6 +29,7 @@ export const getUniqueValuesForColumn = (
   data: ImportData,
   columnMappings: ColumnMappings,
   mappingsToReview: ValueMappableColumnMappings,
+  mappings: ValueMappings | null,
 ) => {
   return Object.fromEntries(
     Object.keys(mappingsToReview)
@@ -39,6 +40,7 @@ export const getUniqueValuesForColumn = (
           importContext,
           column,
           columnMappings,
+          mappings,
           data.rows,
         )
 

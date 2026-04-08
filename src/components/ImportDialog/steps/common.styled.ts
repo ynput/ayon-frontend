@@ -28,10 +28,14 @@ export const StepNavStats = styled.span`
 
 export const StepNavStatsRequired = styled.span`
   margin-left: 1ch;
-  color: var(--md-sys-color-warning);
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
+  color: var(--md-sys-color-on-surface);
+
+  .icon, strong {
+    color: var(--md-sys-color-warning);
+  }
 `
 
 export const MappersContainer = styled.div`

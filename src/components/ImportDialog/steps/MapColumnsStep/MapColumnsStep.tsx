@@ -328,12 +328,12 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
           {
             unmappedRequiredTargets.length > 0 && (
               <StepNavStatsRequired>
-                <Icon icon="warning" style={{ color: "inherit" }} />
-                {unmappedRequiredTargets.length} required target{
+                <Icon icon="warning" />
+                <strong>{unmappedRequiredTargets.length}</strong> required target{
                   unmappedRequiredTargets.length === 1 ? "" : "s"
-                } must be mapped: {
+                } must be mapped: <strong>{
                   unmappedRequiredTargets.map(({ label }) => label).join(", ")
-                }
+                }</strong>
               </StepNavStatsRequired>
             )
           }
