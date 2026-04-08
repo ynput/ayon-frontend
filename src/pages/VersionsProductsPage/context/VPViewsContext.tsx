@@ -91,7 +91,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   // Local state for immediate updates
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
-  const [localSlicerType, setLocalSlicerType] = useState<string | null>(null)
   const [localViewGroupBy, setLocalViewGroupBy] = useState<string | undefined | null>(null)
   const [localShowGrid, setLocalShowGrid] = useState<boolean | null>(null)
   const [localGridHeight, setLocalGridHeight] = useState<number | null>(null)
@@ -157,7 +156,6 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
   // because we manage them ourselves for immediate updates
   useEffect(() => {
     setLocalFilters(null)
-    setLocalSlicerType(null)
     setLocalGridHeight(null)
     setLocalGridHeightImmediate(null)
     setLocalFeaturedVersionOrder(null)
@@ -176,10 +174,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => (localFilters !== null ? localFilters : serverFilters),
     [localFilters, serverFilters],
   )
-  const slicerType = useMemo(
-    () => (localSlicerType !== null ? localSlicerType : serverSlicerType),
-    [localSlicerType, serverSlicerType],
-  )
+  const slicerType = serverSlicerType
   const viewGroupBy = useMemo(
     () => {
       const result = localViewGroupBy !== null ? localViewGroupBy : serverViewGroupBy
@@ -238,10 +233,11 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [updateViewSettings],
   )
 
-  // Slicer type update handler
+  // Slicer type update handler (no local state needed — slicer context is the optimistic state)
+  const noopSlicerType = useCallback(() => {}, [])
   const onUpdateSlicerType = useCallback(
     async (newSlicerType: string) => {
-      await updateViewSettings({ slicerType: newSlicerType }, setLocalSlicerType, newSlicerType, {
+      await updateViewSettings({ slicerType: newSlicerType }, noopSlicerType, newSlicerType, {
         errorMessage: 'Failed to update slicer type',
       })
     },

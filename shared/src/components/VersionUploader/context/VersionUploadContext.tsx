@@ -23,6 +23,7 @@ import {
   createProductAndVersion,
   createVersionHelper,
 } from '@shared/util/versionUploadHelpers'
+import { parseFilename } from '@shared/components/ReviewablesList'
 
 export interface FormData {
   version: number
@@ -263,7 +264,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
       // Try to extract version from the first file
       const firstFile = files[0]
       if (firstFile) {
-        const extractedVersion = extractVersionFromFilename(firstFile.name)
+        const fileName = parseFilename(firstFile.name)
+        const extractedVersion = extractVersionFromFilename(fileName)
         if (extractedVersion && extractedVersion !== form.version) {
           setForm((prev) => ({
             ...prev,
@@ -276,7 +278,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   )
 
   // Fallback order: (1) queried from productId, (2) passed by caller, (3) from matched product name
-  const latestVersion = version?.version ?? latestVersionNumber ?? matchedProduct?.latestVersion?.version
+  const latestVersion =
+    version?.version ?? latestVersionNumber ?? matchedProduct?.latestVersion?.version
 
   // Handle form changes
   const handleFormChange = useCallback((key: keyof FormData, value: string | number) => {

@@ -35,7 +35,23 @@ const convertStringToBlockquotes = (text: string) =>
 
 type ParagraphProps = ComponentProps<'p'> & { node?: unknown }
 
-const Paragraph = ({ node: _node, ...props }: ParagraphProps) => <p {...props} />
+export const checkForEmptyLine = (text: string) => {
+  return text.trim() === '' || text.includes('&nbsp;') || text.includes('<br>')
+}
+
+const Paragraph = ({ node: _node, ...props }: ParagraphProps) => {
+  // ensure empty lines are preserved by checking if the text is empty or contains only &nbsp; or <br>
+  // @ts-expect-error
+  const text = props.children?.[0]
+  if (typeof text === 'string' && checkForEmptyLine(text)) {
+    return (
+      <p className="empty-line">
+        <br></br>
+      </p>
+    )
+  }
+  return <p {...props} />
+}
 
 // Preserve multiple blank lines by replacing sequences of 3+ newlines
 // with interleaved <br> tags so ReactMarkdown renders empty paragraphs.

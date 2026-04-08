@@ -12,7 +12,7 @@ import clsx from 'clsx'
 import { parseHtmlToPlainTextWithLinks } from '@shared/util'
 import { TextContentWidget } from './TextContentWidget'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
-import { useCellEditing } from '../context/CellEditingContext'
+import { CellId } from '../utils/cellUtils'
 
 // ── Styled components ──────────────────────────────────────────────
 
@@ -144,6 +144,9 @@ export interface TextWidgetProps
   type?: TextWidgetType
   columnId?: string
   cellId?: string
+  onRequestEdit?: (id: CellId | null) => void
+  getDraftValue?: () => string | null
+  setDraftValue?: (value: string | null) => void
 }
 
 export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
@@ -159,12 +162,17 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       type,
       columnId,
       cellId,
+      onRequestEdit,
+      getDraftValue,
+      setDraftValue,
       className,
       ...props
     },
     ref,
   ) => {
-    const { setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
+    const requestEdit = onRequestEdit || (() => undefined)
+    const getCurrentDraft = getDraftValue || (() => null)
+    const setCurrentDraft = setDraftValue || (() => undefined)
 
     const [isHoveredOnCell, setIsHoveredOnCell] = useState(false)
     const [isHoveredOnPreview, setIsHoveredOnPreview] = useState(false)
@@ -285,8 +293,8 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
     // ── Preview click → start editing
     const handlePreviewClick = useCallback(() => {
       updatePreview(false)
-      if (cellId) setEditingCellId(cellId)
-    }, [cellId, setEditingCellId, updatePreview])
+      if (cellId) requestEdit(cellId)
+    }, [cellId, requestEdit, updatePreview])
 
     // For description columns, Ctrl+Enter should save and close — not jump to next row.
     // Remap 'Enter' → 'Click' so CellWidget doesn't call moveToNextRow.
@@ -432,8 +440,8 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             onChange={handleDescriptionChange}
             onCancelEdit={onCancelEdit}
             onDismissWithoutSave={onCancelEdit}
-            draftValue={getEditingDraft()}
-            onEditingDraftChange={setEditingDraft}
+            draftValue={getCurrentDraft()}
+            onEditingDraftChange={setCurrentDraft}
           />
         )}
 

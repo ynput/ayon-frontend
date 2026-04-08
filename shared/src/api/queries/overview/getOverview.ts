@@ -77,6 +77,7 @@ export type GetTasksListArgs = {
   folderFilter?: string
   search?: string
   folderIds?: string[]
+  taskIds?: string[]
   desc?: boolean
   sortBy?: string
 }
@@ -341,7 +342,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       },
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, filter, folderFilter, search, folderIds, sortBy, desc } = queryArg
+          const { projectName, filter, folderFilter, search, folderIds, taskIds, sortBy, desc } = queryArg
           const { cursor } = pageParam
 
           // Build the query parameters for GetTasksList
@@ -351,6 +352,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             folderFilter,
             search,
             folderIds,
+            taskIds,
           }
 
           // Add cursor-based pagination

@@ -387,6 +387,7 @@ export const Comment = styled.div<CommentProps>`
 
       .ql-editor {
         padding: 8px;
+        padding-top: 0px;
       }
     }
   }

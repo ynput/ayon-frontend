@@ -40,6 +40,7 @@ type useFetchOverviewDataData = {
 type Params = {
   projectName: string
   selectedFolders: string[] // folders selected in the slicer (hierarchy)
+  taskIds?: string[] // specific task IDs to filter by (from entity list slicer)
   taskFilters: QueryFilterParams // filters for tasks
   folderFilters: QueryFilterParams // filters for folders
   sorting: SortingState
@@ -56,6 +57,7 @@ type Params = {
 export const useFetchOverviewData = ({
   projectName,
   selectedFolders, // comes from the slicer
+  taskIds, // specific task IDs from entity list slicer
   taskFilters,
   folderFilters,
   sorting,
@@ -77,7 +79,6 @@ export const useFetchOverviewData = ({
     refetch: refetchFolders,
   } = useProjectFoldersContext()
 
-  // console.log('Folder count:', folders.length)
   const expandedParentIds = Object.entries(expanded)
     .filter(([, isExpanded]) => isExpanded)
     .filter(([id]) => !isGroupId(id)) // filter out the root folder
@@ -305,12 +306,14 @@ export const useFetchOverviewData = ({
       filter: taskFilters.filterString,
       folderFilter: folderFilters.filterString,
       search: taskFilters.search,
-      folderIds: tasksFolderIdsParams,
+      folderIds: taskIds?.length ? undefined : tasksFolderIdsParams,
+      taskIds: taskIds?.length ? taskIds : undefined,
       sortBy: sortId ? sortId.replace('_', '.') : undefined,
       desc: !!singleSort?.desc,
     },
     {
-      skip: showHierarchy || isFlatFolderView,
+      // Use flat task list when entity list provides specific task IDs, even in hierarchy mode
+      skip: (showHierarchy || isFlatFolderView) && !(taskIds?.length),
       initialPageParam: {
         cursor: '',
         desc: !!singleSort?.desc,
@@ -386,11 +389,19 @@ export const useFetchOverviewData = ({
     },
   )
 
+  // Resolve which task source to use based on current mode
+  // When entity list provides specific task IDs, use flat task list even in hierarchy mode
+  const resolvedTasks = useMemo(() => {
+    if (taskIds?.length) return tasksList
+    if (showHierarchy || isFlatFolderView) return expandedFoldersTasks
+    if (groupBy) return groupTasks
+    return tasksList
+  }, [taskIds, showHierarchy, isFlatFolderView, groupBy, tasksList, expandedFoldersTasks, groupTasks])
+
   // Get visible tasks for link fetching
   const visibleTasks = useMemo(() => {
-    const allTasks = (showHierarchy || isFlatFolderView) ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
-    return new Set(allTasks.map((task) => task.id))
-  }, [expandedFoldersTasks, showHierarchy, isFlatFolderView, tasksList, groupTasks, groupBy])
+    return new Set(resolvedTasks.map((task) => task.id))
+  }, [resolvedTasks])
 
   // Get all links for visible tasks
   const {
@@ -411,11 +422,9 @@ export const useFetchOverviewData = ({
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
       if (group && group in groupPageCounts) {
-        console.log('fetching next page for group:', group)
         incrementPageCount(group)
       }
     } else if (hasNextPage) {
-      console.log('fetching next page')
       fetchNextPage()
     }
   }
@@ -433,9 +442,7 @@ export const useFetchOverviewData = ({
       links: tasksLinks?.find((link) => link.id === task.id)?.links || [],
     })
 
-    // either show the hierarchy or the flat list of tasks
-    const allTasks = (showHierarchy || isFlatFolderView) ? expandedFoldersTasks : groupBy ? groupTasks : tasksList
-    for (const task of allTasks) {
+    for (const task of resolvedTasks) {
       const taskId = task.id as string
       const folderId = task.folderId as string
 
@@ -462,7 +469,44 @@ export const useFetchOverviewData = ({
     }
 
     return { tasksMap, tasksByFolderMap }
-  }, [expandedFoldersTasks, showHierarchy, isFlatFolderView, tasksList, groupTasks, tasksLinks])
+  }, [resolvedTasks, tasksLinks])
+
+  // When entity list provides specific task IDs, filter folders to only those containing tasks
+  const filteredFoldersMap: FolderNodeMap = useMemo(() => {
+    if (!taskIds?.length || !tasksByFolderMap.size) return foldersMap
+
+    const relevantFolderIds = new Set<string>()
+
+    // Add all folders that contain selected tasks
+    for (const folderId of tasksByFolderMap.keys()) {
+      relevantFolderIds.add(folderId)
+    }
+
+    // Add parent folders for proper tree display
+    const addParents = (folderId: string) => {
+      const folder = foldersMap.get(folderId)
+      if (folder && folder.parentId) {
+        const parentId = folder.parentId as string
+        if (!relevantFolderIds.has(parentId)) {
+          relevantFolderIds.add(parentId)
+          addParents(parentId)
+        }
+      }
+    }
+
+    for (const folderId of relevantFolderIds) {
+      addParents(folderId)
+    }
+
+    const filtered = new Map() as FolderNodeMap
+    for (const [id, folder] of foldersMap) {
+      if (relevantFolderIds.has(id)) {
+        filtered.set(id, folder)
+      }
+    }
+
+    return filtered
+  }, [foldersMap, tasksByFolderMap, taskIds])
 
   // reload all data for all queries
   const reloadTableData = () => {
@@ -477,7 +521,7 @@ export const useFetchOverviewData = ({
   }
 
   return {
-    foldersMap: foldersMap,
+    foldersMap: filteredFoldersMap,
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     isLoadingAll:

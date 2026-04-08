@@ -94,6 +94,7 @@ const VPToolbar: FC = () => {
               desc: newDesc,
             },
           })
+
         } else {
           // Flat or hierarchy mode: update item sorting
           onUpdateColumns({

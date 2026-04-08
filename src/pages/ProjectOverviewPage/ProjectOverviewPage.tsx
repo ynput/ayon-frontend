@@ -197,7 +197,7 @@ const ProjectOverviewPage: FC = () => {
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <Slicer sliceFields={overviewSliceFields} persistFieldId="hierarchy" />
+            <Slicer sliceFields={overviewSliceFields} entityTypes={['task', 'folder']} persistFieldId="hierarchy" />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
