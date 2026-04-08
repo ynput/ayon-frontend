@@ -18,7 +18,9 @@ export const entityTypeDependentColumns = new Set([FOLDER_TYPE, TASK_TYPE])
 
 // some columns can only be value-mapped if another column has been value mapped
 const valueMappingDependencies: Record<string, string[]> = {
-  [FOLDER_TASK_TYPE_COMBINED_COLUMN]: [ENTITY_TYPE]
+  [FOLDER_TASK_TYPE_COMBINED_COLUMN]: [ENTITY_TYPE],
+  [TASK_TYPE]: [ENTITY_TYPE],
+  [FOLDER_TYPE]: [ENTITY_TYPE],
 }
 
 export const getValueMappingDependencies = (
@@ -97,16 +99,33 @@ export const parseUniqueValueIfHierarchy = (targetColumn: string | null, value: 
   }
 }
 
+// For a column dependent on the entity type column,
+// attempts to find the actual entity type based on the existing value mappings.
+const getEntityTypeForMappings = (
+  row: CSVRow,
+  mappings: ValueMappings | null,
+  entityTypeSource: string,
+) => mappings
+    ?.[entityTypeSource]
+    ?.[row[entityTypeSource]]
+    ?.targetValue
+    ?? FALLBACK_ENTITY_TYPE
+
 const getHierarchyRowFilter = (
   column: string,
-  entityTypeSourceColumn: string,
+  entityTypeSource: string,
+  mappings: ValueMappings | null,
 ) => {
   switch (column) {
     case FOLDER_TYPE:
-      return (row: CSVRow) => row[entityTypeSourceColumn] === HierarchyEntityType.FOLDER
+      return (row: CSVRow) => {
+        return getEntityTypeForMappings(row, mappings, entityTypeSource) === HierarchyEntityType.FOLDER
+      }
     case TASK_TYPE:
     default:
-      return (row: CSVRow) => row[entityTypeSourceColumn] === HierarchyEntityType.TASK
+      return (row: CSVRow) => {
+        return getEntityTypeForMappings(row, mappings, entityTypeSource) === HierarchyEntityType.TASK
+      }
   }
 }
 
@@ -125,12 +144,10 @@ export const preprocessRowsIfHierarchy = (
     const columnMapping = columnMappings[column]
 
     if (columnMapping.targetColumn && entityTypeDependentColumns.has(columnMapping.targetColumn)) {
-      return rows.filter(getHierarchyRowFilter(column, entityTypeSource))
+      return rows.filter(getHierarchyRowFilter(column, entityTypeSource, mappings))
     } else if (columnMapping.targetColumn === FOLDER_TASK_TYPE_COMBINED_COLUMN) {
       return rows.map((row) => {
-        const entityType = mappings?.[entityTypeSource]?.[row[entityTypeSource]]?.targetValue
-          ?? FALLBACK_ENTITY_TYPE
-
+        const entityType = getEntityTypeForMappings(row, mappings, entityTypeSource)
         return {
           ...row,
           [column]: encodeUniqueFolderTaskType(entityType as HierarchyEntityType, row[column]),
