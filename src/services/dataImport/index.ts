@@ -2,6 +2,19 @@ import { dataImportApi } from "@shared/api";
 
 const enhancedApi = dataImportApi.enhanceEndpoints({
   endpoints: {
+    uploadFile: {
+      query: ({ csv, ttl }) => ({
+        url: `/api/csv/import/upload`,
+        method: 'PUT',
+        body: csv,
+        headers: {
+          'Content-Type': 'text/csv',
+        },
+        params: {
+          ttl,
+        },
+      }),
+    },
     importData: {
       invalidatesTags: (_r, _e, { folderId, projectName, importType, preview }) => {
         // for preview we don't need to refetch anything in the background
