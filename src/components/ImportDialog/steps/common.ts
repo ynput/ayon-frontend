@@ -106,3 +106,7 @@ export type ImportDataProcessSummary = {
 export type ImportDataMessage = {
   summary: ImportDataStartSummary | ImportDataProcessSummary
 }
+
+export const formatFailedItems = (failedItems: Record<string, string>) => Object.entries(failedItems)
+  .map(([key, reason]) => `- ${key || '(empty)'}: ${reason}`)
+  .join('\n')

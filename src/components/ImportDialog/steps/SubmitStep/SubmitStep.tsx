@@ -1,4 +1,5 @@
 import {
+  formatFailedItems,
   ImportContext,
   ImportDataMessage,
   ImportDataProcessSummary,
@@ -101,6 +102,8 @@ export default function SubmitStep({ data, importContext, onNext }: Props) {
                     text: `Errors: ${importResult.failed}`,
                     icon: "error",
                     danger: !!importResult.failed,
+                    tooltip: importResult.failedItems
+                      && formatFailedItems(importResult.failedItems as Record<string, string>)
                   },
                 ]}
               />

@@ -1,4 +1,4 @@
-import { ImportContext, ImportDataMessage, ImportDataProcessSummary, ImportDataStartSummary, itemsLabelForImportContext, StepProps } from "../common";
+import { formatFailedItems, ImportContext, ImportDataMessage, ImportDataProcessSummary, ImportDataStartSummary, itemsLabelForImportContext, StepProps } from "../common";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
 import { StepContainer, StepNavButtons } from "../common.styled";
 import { ImportData } from "@components/ImportDialog/utils";
@@ -25,10 +25,6 @@ const ProgressBar = styled(ReviewableProgressCard)`
     flex-grow: 0;
   }
 `
-
-const formatFailedItems = (failedItems: Record<string, string>) => Object.entries(failedItems)
-  .map(([key, reason]) => `- ${key || '(empty)'}: ${reason}`)
-  .join('\n')
 
 export default function PreviewStep({ data, previewStatus, importContext, onBack, onNext }: Props) {
   const [previewProgress, setPreviewProgress] = useState(0)
