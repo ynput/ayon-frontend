@@ -9,7 +9,10 @@ const enhancedApi = dataImportApi.enhanceEndpoints({
 
         switch (importType) {
           case "hierarchy":
-            return [{ type: "overviewTask", id: projectName }]
+            return [
+              { type: "overviewTask", id: projectName },
+              { type: 'project', id: projectName },
+            ]
           case "user":
             return [{ type: "user", id: "LIST" }]
           case "entity_list_item":
