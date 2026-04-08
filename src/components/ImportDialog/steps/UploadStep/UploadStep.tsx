@@ -1,8 +1,8 @@
 import { ImportSchema, itemsLabelForImportContext, StepProps } from "../common";
 import { Button, FileUpload, FileUploadProps, getFileSizeString } from "@ynput/ayon-react-components";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StepNavButtons } from "../common.styled";
-import { ImportData, parseCSV, serializeCSV } from "../../utils";
+import { ImportData, parseCSV } from "../../utils";
 import styled from "styled-components";
 import { useUploadFileMutation } from "@queries/dataImport";
 import Stats from "../Stats";
@@ -39,7 +39,7 @@ export const HiddenFileInput = styled.input`
   display: none;
 `
 
-export default function UploadStep({ importContext, importSchema, onBack, onNext }: Props) {
+export default function UploadStep({ importContext, onBack, onNext }: Props) {
   const [data, setData] = useState<ImportData | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
@@ -93,12 +93,6 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
 
   const hiddenFileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const templateURL = useMemo(() => {
-    const serialized = serializeCSV({ fields: importSchema.map(({ key }) => key), data: [] })
-    const blob = new Blob([serialized], { type: "text/csv" })
-    return URL.createObjectURL(blob)
-  }, [importSchema])
-
   return (
     <>
       {
@@ -120,8 +114,8 @@ export default function UploadStep({ importContext, importSchema, onBack, onNext
             />
             <FileUploadButtons>
               <a
-                href={templateURL}
-                download={`ayon-import-${importContext}-template.csv`}
+                href={`/templates/ayon_import_${importContext}_template.csv`}
+                download={`ayon_import_${importContext}_template.csv`}
               >
                 <Button
                   icon="download"

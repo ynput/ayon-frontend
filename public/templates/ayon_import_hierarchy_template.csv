@@ -1,0 +1,4 @@
+path*,entity_type*,folder_type,task_type,status,attrib.priority
+shots,folder,Folder,,In progress,normal
+shots / 020_tryout,folder,Sequence,,Approved,high
+shots / 020_tryout / animation,task,,Animation,Pending review,urgent

@@ -1,4 +1,4 @@
-import { parse, unparse, UnparseObject, type ParseLocalConfig } from "papaparse"
+import { parse, type ParseLocalConfig } from "papaparse"
 import { ColumnMappings, ErrorHandlingMode, ValueMappings } from "./steps/common"
 import { parseUniqueValueIfHierarchy } from "./steps/hierarchy"
 import { ColumnMapping as ServerColumnMapping } from "@shared/api/generated/dataImport"
@@ -62,8 +62,6 @@ export const parseCSV = async (file: File | string) => {
 
   return result
 }
-
-export const serializeCSV = (data: UnparseObject<unknown>) => unparse(data)
 
 export const getFullMapping = (columnMappings: ColumnMappings, valueMappings: ValueMappings): ServerColumnMapping[] => {
   return Object.entries(columnMappings).map(([column, columnMapping]) => {
