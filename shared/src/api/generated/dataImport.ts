@@ -39,7 +39,6 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.columnMapping,
         params: {
           file_id: queryArg.fileId,
-          skip_errors: queryArg.skipErrors,
           existing_strategy: queryArg.existingStrategy,
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
@@ -71,7 +70,6 @@ export type ImportDataApiResponse = /** status 200 Successful Response */ Import
 export type ImportDataApiArg = {
   importType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   fileId: string
-  skipErrors?: boolean
   existingStrategy?: 'skip' | 'update' | 'fail'
   projectName?: string
   folderId?: string
@@ -121,7 +119,7 @@ export type ImportableColumn = {
     | 'list_of_submodels'
     | 'dict'
   /** If value in field is required */
-  defaultValue: string
+  defaultValue?: string
   /** A list of possible enum items for this column (if set) */
   enumItems?: EnumItem[]
   /** The enum resolver name (e.g., 'statuses', 'folderTypes') */

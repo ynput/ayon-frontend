@@ -83,6 +83,7 @@ export default function ImportSteps({ importContext, projectName, data, setData,
       columnMapping,
       preview,
       projectName,
+      existingStrategy: "update",
     })
   }, [data, projectName, importContext])
 
