@@ -1,6 +1,5 @@
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
-import { SortingSetting } from '@shared/components'
-import { SortCardType } from '@ynput/ayon-react-components'
+import { SortCardType, SettingsSortingDropdown } from '@ynput/ayon-react-components'
 
 const BUILT_IN_SORT_OPTIONS: { id: string; label: string; scopes?: string[] }[] = [
   { id: 'name', label: 'Name' },
@@ -44,8 +43,9 @@ export const useSortBySettings = () => {
   return {
     id: 'sort-by',
     component: (
-      <SortingSetting
+      <SettingsSortingDropdown
         title="Sort by"
+        icon="sort"
         value={value}
         options={options}
         onChange={handleChange}

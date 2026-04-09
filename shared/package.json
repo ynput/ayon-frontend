@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.3.19",
+  "version": "0.3.20",
   "description": "Shared React components for AYON frontend",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
@@ -106,7 +106,7 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@rtk-query/graphql-request-base-query": "^2.3.2",
     "@tanstack/react-table": "^8.21.3",
-    "@ynput/ayon-react-components": "^1.16.1",
+    "@ynput/ayon-react-components": "^1.16.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-redux": "^9.2.0",
@@ -127,7 +127,7 @@
   "dependencies": {
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-virtual": "^3.13.4",
-    "@ynput/ayon-react-components": "^1.16.1",
+    "@ynput/ayon-react-components": "^1.17.1",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "custom-protocol-check": "^1.4.0",
