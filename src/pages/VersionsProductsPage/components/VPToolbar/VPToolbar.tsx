@@ -19,19 +19,6 @@ const GroupByDropdown = styled(SortingDropdown)<{
   .sort-chip {
     min-width: fit-content;
 
-    /* Override arrow_right with arrow_upward to match GroupSettings panel */
-    .sort-order .icon {
-      font-size: 0;
-
-      &::after {
-        content: 'arrow_upward';
-        font-family: 'Material Symbols Outlined';
-        font-size: 16px;
-        display: block;
-        transform: rotate(90deg);
-      }
-    }
-
     ${({ $disableSortOrder }) =>
       $disableSortOrder &&
       `
@@ -91,7 +78,7 @@ const VPToolbar: FC = () => {
       const value = values[0]
 
       // Get the grouping selection from the dropdown (what the user selected)
-      const selectedGrouping = !value ? undefined : (value.id === 'product' ? 'hierarchy' : value.id)
+      const selectedGrouping = !value ? undefined : value.id === 'product' ? 'hierarchy' : value.id
 
       // Handle sort order changes by updating the columns config
       if (value && value.sortOrder !== undefined) {
@@ -108,7 +95,6 @@ const VPToolbar: FC = () => {
               desc: newDesc,
             },
           })
-
         } else {
           // Flat or hierarchy mode: update item sorting
           onUpdateColumns({

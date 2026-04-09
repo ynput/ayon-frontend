@@ -57,19 +57,6 @@ const GroupByDropdown = styled(SortingDropdown)<{
   .sort-chip {
     min-width: fit-content;
 
-    /* Override arrow_right with arrow_upward to match GroupSettings panel */
-    .sort-order .icon {
-      font-size: 0;
-
-      &::after {
-        content: 'arrow_upward';
-        font-family: 'Material Symbols Outlined';
-        font-size: 16px;
-        display: block;
-        transform: rotate(90deg);
-      }
-    }
-
     ${({ $disableSortOrder }) =>
       $disableSortOrder &&
       `
@@ -105,7 +92,6 @@ const ProjectOverviewPage: FC = () => {
   // Build group-by dropdown options
   const groupedFields = useGetGroupedFields({ scope: 'task' })
   const viewGroupByOptions = useMemo(() => {
-
     return [
       { id: 'hierarchy', label: 'Hierarchy', icon: 'account_tree', sortOrder: true },
       { id: 'folder', label: 'Folder', icon: 'folder', sortOrder: true },
@@ -121,7 +107,7 @@ const ProjectOverviewPage: FC = () => {
   const viewGroupByValue = useMemo(
     () =>
       viewGroupByOptions
-        .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : (viewGroupBy ?? 'hierarchy')))
+        .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
         .map((o) => ({ ...o, sortOrder: !viewGroupByDesc })),
     [viewGroupBy, viewGroupByOptions, viewGroupByDesc],
   )
@@ -211,7 +197,11 @@ const ProjectOverviewPage: FC = () => {
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <Slicer sliceFields={overviewSliceFields} entityTypes={['task', 'folder']} persistFieldId="hierarchy" />
+            <Slicer
+              sliceFields={overviewSliceFields}
+              entityTypes={['task', 'folder']}
+              persistFieldId="hierarchy"
+            />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
