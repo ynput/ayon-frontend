@@ -35,9 +35,7 @@ const KanBanCard = forwardRef<HTMLDivElement, KanBanCardProps>(
     if (!inView && inView !== undefined && !isLoading)
       return <div style={{ minHeight: 'var(--min-height)' }}></div>
 
-    // get parent folder from path (second to last segment)
-    const pathParts = task.folderPath?.split('/').filter(Boolean) || []
-    const parent = pathParts.length >= 2 ? pathParts[pathParts.length - 2] : undefined
+    const parent = task.parentFolder === 'Root' ? undefined : task.parentFolder
 
     return (
       <>
