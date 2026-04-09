@@ -1,5 +1,6 @@
 import { Filter, FilterValue, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { QueryFilter, QueryCondition } from '../types/operations'
+import { format, parseISO, isValid } from 'date-fns'
 
 // Option interface for filter options (from useBuildFilterOptions)
 interface Option {
@@ -175,6 +176,22 @@ const convertConditionValueToFilterValues = (
       const existingValue = filterOption.values?.find((v: FilterValue) => v.id === stringValue)
       if (existingValue) {
         return existingValue
+      }
+    }
+
+    // Format datetime values nicely instead of showing raw ISO strings
+    if (filterOption.type === 'datetime' && typeof val === 'string') {
+      try {
+        const date = parseISO(val)
+        if (isValid(date)) {
+          return {
+            id: stringValue,
+            label: format(date, 'MMM d, yyyy'),
+            isCustom: true,
+          }
+        }
+      } catch {
+        // fall through to default
       }
     }
 

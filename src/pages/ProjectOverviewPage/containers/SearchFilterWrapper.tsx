@@ -1,8 +1,12 @@
 import { BuildFilterOptions, useBuildFilterOptions, ScopeWithFilterTypes } from '@shared/components'
-import { FC, useMemo, useState, useEffect } from 'react'
+import { FC, useMemo, useState, useEffect, useRef } from 'react'
 import {
+  Dialog,
   Filter,
+  FormRow,
   Icon,
+  InputDate,
+  SaveButton,
   SearchFilter,
   SearchFilterProps,
   SEARCH_FILTER_ID,
@@ -16,6 +20,8 @@ import {
   queryFilterToClientFilter,
   clientFilterToQueryFilter,
 } from '@shared/containers/ProjectTreeTable/utils'
+import { CUSTOM_RANGE_ID } from '@shared/components/SearchFilter/filterDates'
+import { startOfDay, endOfDay, format } from 'date-fns'
 
 interface SearchFilterWrapperProps
   extends Omit<BuildFilterOptions, 'scope' | 'scopes' | 'data' | 'power'>,
@@ -94,9 +100,127 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // keeps track of the filters whilst adding/removing filters
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
 
+  // Custom date range picker state
+  const [customRangeFilterId, setCustomRangeFilterId] = useState<string | null>(null)
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+
+  // Track which datetime filter the user is currently interacting with
+  const activeDatetimeFilterRef = useRef<string | null>(null)
+
   useEffect(() => {
     setLocalFilters(filters)
   }, [JSON.stringify(filters)]) // Update filters when filters change
+
+  // Track the active datetime filter from onChange events
+  const handleFilterChange = (newFilters: Filter[]) => {
+    // Track the most recently added/modified datetime filter
+    const datetimeFilter = newFilters.find(
+      (f) => f.type === 'datetime' && !localFilters.some((lf) => lf.id === f.id),
+    )
+    if (datetimeFilter) {
+      activeDatetimeFilterRef.current = datetimeFilter.id
+    }
+
+    // Strip any custom-range values that might slip through, but keep empty datetime
+    // filters so SearchFilter can maintain its intermediate state (user selected the
+    // filter type but hasn't picked a preset yet)
+    const cleanedFilters = newFilters.map((f) => {
+      if (f.type === 'datetime' && f.values?.some((v) => v.id === CUSTOM_RANGE_ID)) {
+        return {
+          ...f,
+          values: f.values?.filter((v) => v.id !== CUSTOM_RANGE_ID),
+        }
+      }
+      return f
+    })
+
+    validateFilters(cleanedFilters, setLocalFilters)
+  }
+
+  // Apply custom date range (reads values from controlled state)
+  const handleCustomRangeApply = () => {
+    console.debug('[CustomRange] Apply clicked', { customRangeFilterId, customStartDate, customEndDate })
+
+    if (!customRangeFilterId || !customStartDate || !customEndDate) {
+      console.debug('[CustomRange] Guard failed — missing values')
+      return
+    }
+
+    // SearchFilter appends __<uuid> to option IDs when creating filter instances,
+    // so we need to match by prefix (e.g. "version_createdAt" matches "version_createdAt__abc-123")
+    const baseFilterId = customRangeFilterId.split('__')[0]
+    const filterOption = options.find((o) => o.id === baseFilterId)
+    if (!filterOption) {
+      console.debug('[CustomRange] Filter option not found for id:', customRangeFilterId, 'base:', baseFilterId)
+      return
+    }
+
+    const start = startOfDay(new Date(customStartDate))
+    const end = endOfDay(new Date(customEndDate))
+
+    const dateValue = {
+      id: `custom-${start.toISOString()}-${end.toISOString()}`,
+      label: `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`,
+      values: [
+        { id: start.toISOString(), label: format(start, 'MMM d, yyyy') },
+        { id: end.toISOString(), label: format(end, 'MMM d, yyyy') },
+      ],
+    }
+
+    const newFilter: Filter = {
+      id: customRangeFilterId,
+      type: 'datetime',
+      label: filterOption.label,
+      icon: filterOption.icon,
+      values: [dateValue],
+      singleSelect: true,
+    }
+
+    const updatedFilters = [
+      ...localFilters.filter((f) => f.id !== customRangeFilterId),
+      newFilter,
+    ]
+
+    const queryFilter = clientFilterToQueryFilter(updatedFilters)
+    console.debug('[CustomRange] Calling onChange with:', queryFilter)
+    onChange?.(queryFilter)
+
+    setCustomRangeFilterId(null)
+    setCustomStartDate('')
+    setCustomEndDate('')
+  }
+
+  const handleCustomRangeClose = () => {
+    setCustomRangeFilterId(null)
+    setCustomStartDate('')
+    setCustomEndDate('')
+  }
+
+  // Find which datetime filter the custom-range click belongs to
+  const findActiveDatetimeFilterId = (): string | null => {
+    // First check the ref (set when a new datetime filter was added)
+    if (activeDatetimeFilterRef.current) {
+      return activeDatetimeFilterRef.current
+    }
+
+    // Fallback: find the first datetime filter option that exists
+    const datetimeOptions = options.filter((o) => o.type === 'datetime')
+    if (datetimeOptions.length === 1) {
+      return datetimeOptions[0].id
+    }
+
+    // If multiple datetime options, check which one is currently selected in localFilters
+    const activeDatetime = localFilters.find(
+      (f) => f.type === 'datetime' && (!f.values || f.values.length === 0),
+    )
+    if (activeDatetime) {
+      return activeDatetime.id
+    }
+
+    // Last resort: return the first datetime option
+    return datetimeOptions[0]?.id || null
+  }
 
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
     // if a filter is a date then check we have power features
@@ -137,47 +261,94 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const { dropdown, searchBar, ...ptRest } = pt || {}
 
   return (
-    <SearchFilter
-      options={options}
-      filters={localFilters}
-      onChange={(v) => validateFilters(v, setLocalFilters)} // when filters are changed
-      onFinish={handleFinish} // when changes are applied
-      enableMultipleSameFilters={false}
-      enableGlobalSearch={true}
-      disabledFilters={disabledFilters}
-      pt={{
-        searchBar: {
-          style: {
-            paddingRight: 28,
+    <>
+      <SearchFilter
+        options={options}
+        filters={localFilters}
+        onChange={handleFilterChange}
+        onFinish={handleFinish} // when changes are applied
+        enableMultipleSameFilters={false}
+        enableGlobalSearch={true}
+        disabledFilters={disabledFilters}
+        pt={{
+          searchBar: {
+            style: {
+              paddingRight: 28,
+            },
+            ...searchBar,
           },
-          ...searchBar,
-        },
-        dropdown: {
-          operationsTemplate: powerLicense ? undefined : (
-            <AdvancedFiltersPlaceholder onClick={handlePowerClick} />
-          ),
-          pt: {
-            item: {
-              onClick: (event) => {
-                const listItem = (event.target as HTMLLIElement).closest('li')
-                if (listItem?.querySelector('span[icon="bolt"]')) {
-                  return handlePowerClick()
-                } else return true
+          dropdown: {
+            operationsTemplate: powerLicense ? undefined : (
+              <AdvancedFiltersPlaceholder onClick={handlePowerClick} />
+            ),
+            pt: {
+              item: {
+                onClick: (event) => {
+                  const listItem = (event.target as HTMLLIElement).closest('li')
+                  if (!listItem) return true
+
+                  // PowerPack gating
+                  if (listItem.querySelector('span[icon="bolt"]')) {
+                    return handlePowerClick()
+                  }
+
+                  // Custom range: intercept click and open date picker instead
+                  if (listItem.querySelector('span[icon="tune"]')) {
+                    const filterId = findActiveDatetimeFilterId()
+                    if (filterId) {
+                      setCustomRangeFilterId(filterId)
+                    }
+                    return false // prevent SearchFilter from selecting this value
+                  }
+
+                  return true
+                },
+              },
+              hasNoOption: {
+                contentAfter: powerLicense ? undefined : <Icon icon="bolt" />,
+              },
+              hasSomeOption: {
+                contentAfter: powerLicense ? undefined : <Icon icon="bolt" />,
               },
             },
-            hasNoOption: {
-              contentAfter: powerLicense ? undefined : <Icon icon="bolt" />,
-            },
-            hasSomeOption: {
-              contentAfter: powerLicense ? undefined : <Icon icon="bolt" />,
-            },
+            ...dropdown,
           },
-          ...dropdown,
-        },
-        ...ptRest,
-      }}
-      {...props}
-    />
+          ...ptRest,
+        }}
+        {...props}
+      />
+      <Dialog
+        isOpen={!!customRangeFilterId}
+        onClose={handleCustomRangeClose}
+        header={options.find((o) => o.id === customRangeFilterId?.split('__')[0])?.label || 'Custom range'}
+        size="sm"
+        hideCancelButton
+        footer={
+          <SaveButton
+            label="Apply"
+            icon="check"
+            onClick={handleCustomRangeApply}
+            active={!!customStartDate && !!customEndDate}
+          />
+        }
+      >
+        <FormRow label="Start date">
+          <InputDate
+            /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
+            selected={customStartDate ? new Date(customStartDate) : undefined}
+            onChange={(date: Date | null) => setCustomStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
+            autoFocus
+          />
+        </FormRow>
+        <FormRow label="End date">
+          <InputDate
+            /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
+            selected={customEndDate ? new Date(customEndDate) : undefined}
+            onChange={(date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
+          />
+        </FormRow>
+      </Dialog>
+    </>
   )
 }
 

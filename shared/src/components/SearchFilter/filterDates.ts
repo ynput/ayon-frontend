@@ -122,7 +122,9 @@ export const filterDateFunctions = {
 
 export type DateOptionType = keyof typeof filterDateFunctions
 
-export const dateOptions: (Option & { id: DateOptionType })[] = [
+export const CUSTOM_RANGE_ID = 'custom-range'
+
+export const dateOptions: (Option & { id: DateOptionType | typeof CUSTOM_RANGE_ID })[] = [
   {
     id: 'today',
     label: 'Today',
@@ -182,5 +184,11 @@ export const dateOptions: (Option & { id: DateOptionType })[] = [
     label: 'Last year',
     values: filterDateFunctions['last-year'](),
     icon: 'calendar_month',
+  },
+  {
+    id: CUSTOM_RANGE_ID,
+    label: 'Custom range...',
+    values: [],
+    icon: 'tune',
   },
 ]
