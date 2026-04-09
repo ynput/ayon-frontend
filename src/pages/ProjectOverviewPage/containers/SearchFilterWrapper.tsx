@@ -1,3 +1,4 @@
+import styled from 'styled-components'
 import { BuildFilterOptions, useBuildFilterOptions, ScopeWithFilterTypes } from '@shared/components'
 import { FC, useMemo, useState, useEffect, useRef } from 'react'
 import {
@@ -9,6 +10,7 @@ import {
   SaveButton,
   SearchFilter,
   SearchFilterProps,
+  SearchFilterRef,
   SEARCH_FILTER_ID,
 } from '@ynput/ayon-react-components'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
@@ -22,6 +24,12 @@ import {
 } from '@shared/containers/ProjectTreeTable/utils'
 import { CUSTOM_RANGE_ID } from '@shared/components/SearchFilter/filterDates'
 import { startOfDay, endOfDay, format } from 'date-fns'
+
+const DialogBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
 
 interface SearchFilterWrapperProps
   extends Omit<BuildFilterOptions, 'scope' | 'scopes' | 'data' | 'power'>,
@@ -100,6 +108,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // keeps track of the filters whilst adding/removing filters
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
 
+  const searchFilterRef = useRef<SearchFilterRef>(null)
+
   // Custom date range picker state
   const [customRangeFilterId, setCustomRangeFilterId] = useState<string | null>(null)
   const [customStartDate, setCustomStartDate] = useState('')
@@ -138,23 +148,12 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     validateFilters(cleanedFilters, setLocalFilters)
   }
 
-  // Apply custom date range (reads values from controlled state)
   const handleCustomRangeApply = () => {
-    console.debug('[CustomRange] Apply clicked', { customRangeFilterId, customStartDate, customEndDate })
+    if (!customRangeFilterId || !customStartDate || !customEndDate) return
 
-    if (!customRangeFilterId || !customStartDate || !customEndDate) {
-      console.debug('[CustomRange] Guard failed — missing values')
-      return
-    }
-
-    // SearchFilter appends __<uuid> to option IDs when creating filter instances,
-    // so we need to match by prefix (e.g. "version_createdAt" matches "version_createdAt__abc-123")
     const baseFilterId = customRangeFilterId.split('__')[0]
     const filterOption = options.find((o) => o.id === baseFilterId)
-    if (!filterOption) {
-      console.debug('[CustomRange] Filter option not found for id:', customRangeFilterId, 'base:', baseFilterId)
-      return
-    }
+    if (!filterOption) return
 
     const start = startOfDay(new Date(customStartDate))
     const end = endOfDay(new Date(customEndDate))
@@ -182,13 +181,14 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       newFilter,
     ]
 
-    const queryFilter = clientFilterToQueryFilter(updatedFilters)
-    console.debug('[CustomRange] Calling onChange with:', queryFilter)
-    onChange?.(queryFilter)
+    handleFinish(updatedFilters)
 
     setCustomRangeFilterId(null)
     setCustomStartDate('')
     setCustomEndDate('')
+
+    // Close the SearchFilter dropdown
+    searchFilterRef.current?.close()
   }
 
   const handleCustomRangeClose = () => {
@@ -263,6 +263,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   return (
     <>
       <SearchFilter
+        ref={searchFilterRef}
         options={options}
         filters={localFilters}
         onChange={handleFilterChange}
@@ -325,28 +326,30 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         hideCancelButton
         footer={
           <SaveButton
-            label="Apply"
+            label="Confirm"
             icon="check"
             onClick={handleCustomRangeApply}
             active={!!customStartDate && !!customEndDate}
           />
         }
       >
-        <FormRow label="Start date">
-          <InputDate
-            /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
-            selected={customStartDate ? new Date(customStartDate) : undefined}
-            onChange={(date: Date | null) => setCustomStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
-            autoFocus
-          />
-        </FormRow>
-        <FormRow label="End date">
-          <InputDate
-            /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
-            selected={customEndDate ? new Date(customEndDate) : undefined}
-            onChange={(date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
-          />
-        </FormRow>
+        <DialogBody>
+          <FormRow label="Start date">
+            <InputDate
+              /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
+              selected={customStartDate ? new Date(customStartDate) : undefined}
+              onChange={(date: Date | null) => setCustomStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
+              autoFocus
+            />
+          </FormRow>
+          <FormRow label="End date">
+            <InputDate
+              /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
+              selected={customEndDate ? new Date(customEndDate) : undefined}
+              onChange={(date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
+            />
+          </FormRow>
+        </DialogBody>
       </Dialog>
     </>
   )
