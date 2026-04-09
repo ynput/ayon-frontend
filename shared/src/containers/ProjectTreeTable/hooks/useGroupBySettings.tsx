@@ -77,6 +77,7 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
         updateGroupBy={handleUpdateGroupBy}
         config={groupByConfig}
         onConfigChange={updateGroupByConfig}
+        sortDisabled={virtualGroupBy?.id === 'hierarchy' || virtualGroupBy?.id === 'folder'}
       />
     ),
   }
