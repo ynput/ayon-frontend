@@ -1,29 +1,28 @@
 import { TeamSuggestionItem, UserSuggestionItem } from '@shared/api'
 
-const getMentionUsers = (users: (UserSuggestionItem | TeamSuggestionItem)[] = []) =>
-  users.map((user) => {
-    const isTeam = !('fullName' in user)
+const getMentionUsers = (
+  users: UserSuggestionItem[] = [],
+  teams: TeamSuggestionItem[] = [],
+) => {
+  const userItems = users.map((user) => ({
+    type: 'user',
+    id: user.name,
+    label: user.fullName || user.name,
+    keywords: [user.name, user.fullName],
+    relevance: user.relevance,
+  }))
 
-    if (isTeam) {
-      return {
-        type: 'team',
-        id: user.name,
-        label: user.name,
-        keywords: [user.name],
-        relevance: user.relevance,
-        icon: 'group',
-        suffix: 'Team',
-      }
-    }
+  const teamItems = teams.map((team) => ({
+    type: 'team',
+    id: team.name,
+    label: team.name,
+    keywords: [team.name],
+    relevance: team.relevance,
+    icon: 'group',
+    suffix: 'Team',
+  }))
 
-    const userItem = user as UserSuggestionItem
-    return {
-      type: 'user',
-      id: userItem.name,
-      label: userItem.fullName || userItem.name,
-      keywords: [userItem.name, userItem.fullName],
-      relevance: userItem.relevance,
-    }
-  })
+  return [...userItems, ...teamItems]
+}
 
 export default getMentionUsers

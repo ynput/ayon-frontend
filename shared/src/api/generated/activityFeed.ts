@@ -278,7 +278,8 @@ export type VersionSuggestionItem = {
   name?: string
 }
 export type SuggestResponse = {
-  users?: (UserSuggestionItem | TeamSuggestionItem)[]
+  users?: UserSuggestionItem[]
+  teams?: TeamSuggestionItem[]
   tasks?: TaskSuggestionItem[]
   versions?: VersionSuggestionItem[]
 }

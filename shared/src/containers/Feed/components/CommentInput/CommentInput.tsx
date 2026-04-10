@@ -101,6 +101,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const {
     users: mentionUsers,
+    teams: mentionTeams,
     versions: mentionVersions,
     tasks: mentionTasks,
   } = mentionSuggestionsData || {}
@@ -170,13 +171,13 @@ const CommentInput: FC<CommentInputProps> = ({
       getMentionOptions(
         mention?.type,
         {
-          '@': () => getMentionUsers(mentionUsers),
+          '@': () => getMentionUsers(mentionUsers, mentionTeams),
           '@@': () => getMentionVersions(mentionVersions, project),
           '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
         mention?.search,
       ),
-    [mentionTasks, mentionVersions, mentionUsers, mention?.type, mention?.search],
+    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mention?.search],
   )
 
   // show first 5 and filter itself out
