@@ -22,8 +22,8 @@ import {
   queryFilterToClientFilter,
   clientFilterToQueryFilter,
 } from '@shared/containers/ProjectTreeTable/utils'
-import { CUSTOM_RANGE_ID } from '@shared/components/SearchFilter/filterDates'
-import { startOfDay, endOfDay, format } from 'date-fns'
+import { CUSTOM_RANGE_ID, CUSTOM_RANGE_ICON } from '@shared/components/SearchFilter/filterDates'
+import { startOfDay, endOfDay, format, parse } from 'date-fns'
 
 const DialogBody = styled.div`
   display: flex;
@@ -155,8 +155,12 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     const filterOption = options.find((o) => o.id === baseFilterId)
     if (!filterOption) return
 
-    const start = startOfDay(new Date(customStartDate))
-    const end = endOfDay(new Date(customEndDate))
+    // Parse as local dates (not UTC) to avoid off-by-one timezone issues
+    const start = startOfDay(parse(customStartDate, 'yyyy-MM-dd', new Date()))
+    const end = endOfDay(parse(customEndDate, 'yyyy-MM-dd', new Date()))
+
+    // Validate the range
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return
 
     const dateValue = {
       id: `custom-${start.toISOString()}-${end.toISOString()}`,
@@ -199,36 +203,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   // Find which datetime filter the custom-range click belongs to
   const findActiveDatetimeFilterId = (): string | null => {
-    // First check the ref (set when a new datetime filter was added)
+    // First check the ref (set when a new datetime filter was added/modified)
     if (activeDatetimeFilterRef.current) {
       return activeDatetimeFilterRef.current
     }
 
-    // Fallback: find the first datetime filter option that exists
-    const datetimeOptions = options.filter((o) => o.type === 'datetime')
-    if (datetimeOptions.length === 1) {
-      return datetimeOptions[0].id
-    }
+    // Check localFilters for datetime filters — prefer one without values (being edited),
+    // then fall back to the most recently added one
+    const datetimeFilters = localFilters.filter((f) => f.type === 'datetime')
+    const emptyDatetime = datetimeFilters.find((f) => !f.values || f.values.length === 0)
+    if (emptyDatetime) return emptyDatetime.id
+    if (datetimeFilters.length > 0) return datetimeFilters[datetimeFilters.length - 1].id
 
-    // If multiple datetime options, check which one is currently selected in localFilters
-    const activeDatetime = localFilters.find(
-      (f) => f.type === 'datetime' && (!f.values || f.values.length === 0),
-    )
-    if (activeDatetime) {
-      return activeDatetime.id
-    }
-
-    // Last resort: return the first datetime option
-    return datetimeOptions[0]?.id || null
+    // Last resort: return the first datetime option from available options
+    const datetimeOption = options.find((o) => o.type === 'datetime')
+    return datetimeOption?.id || null
   }
 
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
     // if a filter is a date then check we have power features
-    const invalidFilters = filters.filter((f) => f.type === 'datetime' && !powerLicense)
-    let validFilters = filters.filter((f) => f.type !== 'datetime' || powerLicense)
-    if (invalidFilters.length) {
-      setPowerpackDialog('advancedFilters')
-    }
+    let validFilters = [...filters]
 
     // Merge multiple text search filters (SEARCH_FILTER_ID) into one filter
     const searchFilters = validFilters.filter((f) => f.id.startsWith(SEARCH_FILTER_ID))
@@ -294,7 +288,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                   }
 
                   // Custom range: intercept click and open date picker instead
-                  if (listItem.querySelector('span[icon="tune"]')) {
+                  if (listItem.querySelector(`span[icon="${CUSTOM_RANGE_ICON}"]`)) {
                     const filterId = findActiveDatetimeFilterId()
                     if (filterId) {
                       setCustomRangeFilterId(filterId)
@@ -329,24 +323,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
             label="Confirm"
             icon="check"
             onClick={handleCustomRangeApply}
-            active={!!customStartDate && !!customEndDate}
+            active={!!customStartDate && !!customEndDate && customEndDate >= customStartDate}
           />
         }
       >
         <DialogBody>
           <FormRow label="Start date">
             <InputDate
-              /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
-              selected={customStartDate ? new Date(customStartDate) : undefined}
-              onChange={(date: Date | null) => setCustomStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
-              autoFocus
+              {...{
+                selected: customStartDate ? new Date(customStartDate) : undefined,
+                onChange: (date: Date | null) => setCustomStartDate(date ? format(date, 'yyyy-MM-dd') : ''),
+                autoFocus: true,
+              } as any}
             />
           </FormRow>
           <FormRow label="End date">
             <InputDate
-              /* @ts-ignore - InputDate extends ReactDatePickerProps but types don't resolve cleanly */
-              selected={customEndDate ? new Date(customEndDate) : undefined}
-              onChange={(date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
+              {...{
+                selected: customEndDate ? new Date(customEndDate) : undefined,
+                onChange: (date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : ''),
+              } as any}
             />
           </FormRow>
         </DialogBody>

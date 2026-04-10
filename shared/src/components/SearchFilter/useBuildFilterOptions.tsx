@@ -18,7 +18,7 @@ import type {
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
-import { dateOptions } from './filterDates'
+import { customRangeOption, datePresetOptions, CUSTOM_RANGE_ID } from './filterDates'
 import { isEmpty } from 'lodash'
 import { SliceFilter } from '@shared/containers'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
@@ -441,8 +441,10 @@ export const useBuildFilterOptions = ({
     if (scopeFilterTypes.includes('createdAt')) {
       const createdAtOption = getOptionRoot('createdAt', config, scopePrefix, scopeLabel)
       if (createdAtOption) {
+        createdAtOption.values?.push(customRangeOption)
+        // Preset date options are PowerPack-gated
         createdAtOption.values?.push(
-          ...dateOptions.map((o) => ({
+          ...datePresetOptions.map((o) => ({
             ...o,
             contentAfter: power ? undefined : <Icon icon="bolt" />,
           })),
@@ -455,8 +457,9 @@ export const useBuildFilterOptions = ({
     if (scopeFilterTypes.includes('updatedAt')) {
       const updatedAtOption = getOptionRoot('updatedAt', config, scopePrefix, scopeLabel)
       if (updatedAtOption) {
+        updatedAtOption.values?.push(customRangeOption)
         updatedAtOption.values?.push(
-          ...dateOptions.map((o) => ({
+          ...datePresetOptions.map((o) => ({
             ...o,
             contentAfter: power ? undefined : <Icon icon="bolt" />,
           })),
@@ -545,8 +548,11 @@ export const useBuildFilterOptions = ({
         // if the attribute type is datetime, add datetime options
 
         if (isDate) {
+          // Custom range is free
+          optionValues.push(customRangeOption)
+          // Preset date options are PowerPack-gated
           optionValues.push(
-            ...dateOptions.map((o) => ({
+            ...datePresetOptions.map((o) => ({
               ...o,
               contentAfter: power ? undefined : <Icon icon="bolt" />,
             })),

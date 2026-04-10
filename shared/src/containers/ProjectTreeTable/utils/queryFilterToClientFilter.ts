@@ -44,13 +44,86 @@ export const queryFilterToClientFilter = (
         filters.push(filter)
       }
     } else {
-      // This is a nested QueryFilter - recursively process it
-      const nestedFilters = queryFilterToClientFilter(condition, filterOptions)
-      filters.push(...nestedFilters)
+      // This is a nested QueryFilter - check if it's a datetime range (gte+lte same key)
+      const datetimeFilter = tryMergeDatetimeRange(condition, filterOptions)
+      if (datetimeFilter) {
+        filters.push(datetimeFilter)
+      } else {
+        // Recursively process other nested QueryFilters
+        const nestedFilters = queryFilterToClientFilter(condition, filterOptions)
+        filters.push(...nestedFilters)
+      }
     }
   })
 
   return filters
+}
+
+/**
+ * Detects nested QueryFilters that represent datetime ranges (gte+lte on the same key)
+ * and merges them into a single datetime Filter with proper range values.
+ */
+const tryMergeDatetimeRange = (
+  nestedFilter: QueryFilter,
+  filterOptions: Option[],
+): Filter | null => {
+  if (!nestedFilter.conditions || nestedFilter.conditions.length < 1) return null
+
+  // All conditions must be QueryConditions (not nested QueryFilters)
+  const conditions = nestedFilter.conditions.filter(
+    (c): c is QueryCondition => 'key' in c,
+  )
+  if (conditions.length !== nestedFilter.conditions.length) return null
+
+  // All conditions must share the same key
+  const key = conditions[0].key
+  if (!conditions.every((c) => c.key === key)) return null
+
+  // Find the matching filter option and check it's a datetime type
+  const filterOption = findFilterOption(key, filterOptions)
+  if (!filterOption || filterOption.type !== 'datetime') return null
+
+  // Extract gte (start) and lte (end) values
+  const gteCondition = conditions.find((c) => c.operator === 'gte')
+  const lteCondition = conditions.find((c) => c.operator === 'lte')
+  if (!gteCondition && !lteCondition) return null
+
+  const startISO = gteCondition?.value as string | undefined
+  const endISO = lteCondition?.value as string | undefined
+
+  // Build the range label
+  let label = 'Custom range'
+  if (startISO && endISO) {
+    const startDate = parseISO(startISO)
+    const endDate = parseISO(endISO)
+    if (isValid(startDate) && isValid(endDate)) {
+      label = `${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d, yyyy')}`
+    }
+  }
+
+  // Check if the operator is inverted (lte for start, gte for end means inverted)
+  const inverted = !!conditions.find((c) => c.operator === 'lte' && c === gteCondition)
+
+  // `values` holds the gte/lte range pair — used by clientFilterToQueryFilter for round-trip
+  // but not part of the FilterValue type, so we extend it at runtime
+  const rangeValue = {
+    id: `custom-${startISO || ''}-${endISO || ''}`,
+    label,
+    values: [
+      ...(startISO ? [{ id: startISO, label: isValid(parseISO(startISO)) ? format(parseISO(startISO), 'MMM d, yyyy') : startISO }] : []),
+      ...(endISO ? [{ id: endISO, label: isValid(parseISO(endISO)) ? format(parseISO(endISO), 'MMM d, yyyy') : endISO }] : []),
+    ],
+  } as FilterValue
+
+  return {
+    id: filterOption.id,
+    type: filterOption.type as Filter['type'],
+    label: filterOption.label,
+    icon: filterOption.icon,
+    inverted: nestedFilter.operator === 'or',
+    values: [rangeValue],
+    singleSelect: filterOption.singleSelect,
+  }
 }
 
 const convertConditionToFilter = (
