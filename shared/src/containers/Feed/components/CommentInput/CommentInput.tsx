@@ -38,6 +38,7 @@ import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
 import { useProjectContext } from '@shared/context'
+import { parseFilename } from '@shared/components'
 
 var Delta = Quill.import('delta')
 
@@ -416,9 +417,10 @@ const CommentInput: FC<CommentInputProps> = ({
   }
 
   const handleFileUploaded = ({ file, data }: any) => {
+    const fileName = parseFilename(file.name)
     const newFile = {
       id: data.id,
-      name: file.name,
+      name: fileName,
       mime: file.type,
       size: file.size,
       order: files.length,
@@ -426,7 +428,9 @@ const CommentInput: FC<CommentInputProps> = ({
 
     setFiles((prev) => [...prev, newFile])
     // remove from uploading
-    setFilesUploading((prev) => prev.filter((uploading: any) => uploading.name !== file.name))
+    setFilesUploading((prev) =>
+      prev.filter((uploading: any) => parseFilename(uploading.name) !== fileName),
+    )
 
     return newFile
   }
@@ -440,7 +444,7 @@ const CommentInput: FC<CommentInputProps> = ({
       setFiles((prev) => prev.filter((file) => file.id !== id))
       // remove from uploading
       setFilesUploading((prev) => {
-        return prev.filter((file: any) => file.name !== name)
+        return prev.filter((file: any) => parseFilename(file.name) !== parseFilename(name))
       })
     }
   }
@@ -448,8 +452,9 @@ const CommentInput: FC<CommentInputProps> = ({
   const handleFileProgress = (e: any, file: any) => {
     const progress = Math.round((e.loaded * 100) / e.total)
     if (progress !== 100) {
+      const fileName = parseFilename(file.name)
       const uploadProgress = {
-        name: file.name,
+        name: fileName,
         progress,
         type: file.type,
         order: files.length + filesUploading.length,
@@ -458,7 +463,7 @@ const CommentInput: FC<CommentInputProps> = ({
       // @ts-ignore
       setFilesUploading((prev) => {
         // replace or add new progress
-        const newProgress = prev.filter((name: any) => name.name !== file.name)
+        const newProgress = prev.filter((name: any) => parseFilename(name.name) !== fileName)
         return [...newProgress, uploadProgress]
       })
     }

@@ -18,6 +18,7 @@ import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
 import {
   createFilterFromSlicer,
   useTaskProgressViewSettings,
+  useViewsContext,
   type SelectionData,
   type SliceType,
 } from '@shared/containers'
@@ -35,7 +36,7 @@ import formatFilterAttributesData from './helpers/formatFilterAttributesData'
 import formatFilterTagsData from './helpers/formatFilterTagsData'
 import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
-import { useSlicerContext } from '@shared/containers/Slicer'
+import { useSlicerContext, useSlicerViewSync } from '@shared/containers/Slicer'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
 import { isEmpty } from 'lodash'
 import { RowSelectionState } from '@tanstack/react-table'
@@ -81,7 +82,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
   // FILTERS
   //
   //
-  const { filters: queryFilters, onUpdateFilters: setQueryFilters } = useTaskProgressViewSettings()
+  const { filters: queryFilters, onUpdateFilters: setQueryFilters, sliceType: viewSliceType, onUpdateSliceType } = useTaskProgressViewSettings()
+  const { isLoadingViews } = useViewsContext()
 
   // filter out by slice
   const {
@@ -91,6 +93,10 @@ const TasksProgress: FC<TasksProgressProps> = ({
     setPersistentRowSelectionData,
     persistentRowSelectionData,
   } = useSlicerContext()
+
+  // Sync slicer slice type with view settings, selection with localStorage
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews, `slicer-selection-progress-${projectName}`)
+
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
     ? null
     : persistentRowSelectionData
