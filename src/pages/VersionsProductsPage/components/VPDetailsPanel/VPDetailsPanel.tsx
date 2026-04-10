@@ -30,7 +30,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const { selectedVersions, setSelectedVersions, showVersionDetails } =
     useVersionsSelectionContext()
   const { setSelectedCells, selectedRows } = useSelectionCellsContext()
-  const { onUpdateGroupBy, onUpdateFilters } = useVPViewsContext()
+  const { onUpdateViewGroupBy, onUpdateFilters } = useVPViewsContext()
   const { setExpanded: setProductsExpanded } = useVersionsDataContext()
   const slicer = useSlicerContext()
 
@@ -95,7 +95,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
 
     // Reset view state
     onUpdateFilters({})
-    onUpdateGroupBy(undefined)
+    onUpdateViewGroupBy(undefined)
 
     // Expand folders in slicer
     slicer.setExpanded(data.expandedFolders)

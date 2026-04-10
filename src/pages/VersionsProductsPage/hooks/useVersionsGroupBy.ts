@@ -40,14 +40,18 @@ const useVersionsGroupBy = ({
   const { attribFields } = useProjectDataContext()
   const { getGroupQueries, isLoading: isLoadingModules } = modules
 
-  const { groupBy: groupById } = useVPViewsContext()
+  const { groupBy: groupById, columns } = useVPViewsContext()
 
-  const groupBy: TableGroupBy | undefined = groupById
-    ? {
-        id: groupById,
-        desc: false,
-      }
-    : undefined
+  const groupBy: TableGroupBy | undefined = useMemo(
+    () =>
+      groupById
+        ? {
+            id: groupById,
+            desc: columns.groupBy?.desc ?? false,
+          }
+        : undefined,
+    [groupById, columns.groupBy?.desc],
+  )
 
   // GET GROUPING
   const { groups } = useGetEntityGroups({
@@ -124,8 +128,16 @@ const useVersionsGroupBy = ({
 
   const isLoading = useQueryArgumentChangeLoading(queryArgs, isFetchingGroups)
 
+  // Sort groups client-side based on desc value since API doesn't support it
+  const sortedGroups = useMemo(() => {
+    if (!groupBy?.desc || groups.length === 0) return groups
+
+    const sorted = [...groups].reverse()
+    return sorted
+  }, [groups, groupBy?.desc])
+
   return {
-    groups,
+    groups: sortedGroups,
     versions,
     isLoading,
     refetch: refetchGroupedVersions,
