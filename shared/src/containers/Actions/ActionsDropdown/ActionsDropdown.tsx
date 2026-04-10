@@ -108,7 +108,7 @@ export const ActionsDropdown = ({
       disabled={isLoading}
       className={clsx('more', {
         staging: frontendBundleMode === 'staging',
-        developer: frontendBundleMode === 'developer',
+        dev: frontendBundleMode === 'developer',
       })}
       options={options}
       maxOptionsShown={100}

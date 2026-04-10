@@ -49,7 +49,7 @@ export const StyledDropdown = styled(Dropdown)`
     }
   }
 
-  &.developer {
+  &.dev {
     button {
       background-color: var(--color-hl-developer-container);
       .icon {
