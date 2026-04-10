@@ -65,7 +65,7 @@ const getBundleModeHoverBackgroundColor = (frontendBundleMode: FrontendBundleMod
 }
 
 const FrontendBundleModeDropdown = styled(Dropdown)<{ $mode: FrontendBundleMode }>`
-  height: 36px;
+  height: 32px;
   min-width: 180px;
   margin: 4px 0;
   z-index: 10;
@@ -75,8 +75,8 @@ const FrontendBundleModeDropdown = styled(Dropdown)<{ $mode: FrontendBundleMode 
     color: ${({ $mode }) => getBundleModeTextColor($mode)};
     border: none;
     border-radius: var(--border-radius-l);
-    padding: 4px 8px;
-    min-height: 36px;
+    padding: 2px 8px;
+    min-height: 32px;
     transition: background-color 0.2s;
 
     &:hover {
