@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { useEffect } from 'react'
 import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import UserTooltip from '../Tooltips/UserTooltip/UserTooltip'
+import TeamTooltip from '../Tooltips/TeamTooltip/TeamTooltip'
 import EntityTooltip from '../Tooltips/EntityTooltip/EntityTooltip'
 
 interface ActivityReferenceTooltipProps {}
@@ -41,6 +42,8 @@ const ActivityReferenceTooltip: React.FC<ActivityReferenceTooltipProps> = () => 
   return createPortal(
     type === 'user' && pos ? (
       <UserTooltip name={name} label={label} pos={pos} />
+    ) : type === 'team' && pos ? (
+      <TeamTooltip name={name} pos={pos} />
     ) : (
       <EntityTooltip {...{ type, label, name, pos, id }} />
     ),

@@ -204,7 +204,9 @@ const CommentInput: FC<CommentInputProps> = ({
     const mentionLabel = typePrefix + selectedOption.label // the label of the mention: @Tim Bailey
     // @ts-expect-error
     const type = mentionTypeOptions[typePrefix] // the type of mention: user, version, task
-    const href = `${type?.id}:${selectedOption.id}` // the href of the mention: user:user.123
+    // Use the option's own type (e.g. 'team') if available, otherwise fall back to the mention type config
+    const refType = selectedOption.type || type?.id
+    const href = `${refType}:${selectedOption.id}` // the href of the mention: user:user.123 or team:Thunder boys
 
     // get selection delta
     const selection = quill.getSelection(true)

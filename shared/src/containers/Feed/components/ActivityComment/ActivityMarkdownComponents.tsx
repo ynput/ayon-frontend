@@ -4,6 +4,7 @@ import ActivityReference from '../ActivityReference/ActivityReference'
 
 const allowedRefTypes = [
   'user',
+  'team',
   'task',
   'folder',
   'version',
@@ -19,7 +20,8 @@ const sanitizeURL = (url = '') => {
   else if (url.includes(':')) {
     const sections = url.split(':')
     const [type, id] = sections
-    if (allowedRefTypes.includes(type) && id && sections.length === 2) return { type, id }
+    if (allowedRefTypes.includes(type) && id && sections.length === 2)
+      return { type, id: decodeURIComponent(id) }
   }
   return {}
 }
@@ -94,7 +96,7 @@ export const aTag = (
       {...{ type, id: id.replaceAll('.', '-') }}
       variant={isHighlighted ? 'filled' : 'surface'}
       onClick={() => {
-        if (type !== 'user') {
+        if (type !== 'user' && type !== 'team') {
           onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
         }
       }}
