@@ -101,9 +101,6 @@ const tryMergeDatetimeRange = (
     }
   }
 
-  // Check if the operator is inverted (lte for start, gte for end means inverted)
-  const inverted = !!conditions.find((c) => c.operator === 'lte' && c === gteCondition)
-
   // `values` holds the gte/lte range pair — used by clientFilterToQueryFilter for round-trip
   // but not part of the FilterValue type, so we extend it at runtime
   const rangeValue = {

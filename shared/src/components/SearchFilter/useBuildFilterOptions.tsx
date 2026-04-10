@@ -18,7 +18,7 @@ import type {
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
-import { customRangeOption, datePresetOptions, CUSTOM_RANGE_ID } from './filterDates'
+import { customRangeOption, datePresetOptions } from './filterDates'
 import { isEmpty } from 'lodash'
 import { SliceFilter } from '@shared/containers'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
