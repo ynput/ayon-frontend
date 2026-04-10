@@ -28,8 +28,28 @@ export const StyledDropdown = styled(Dropdown)`
     }
   }
 
-  /* developer mode */
-  &.dev {
+  &.staging {
+    button {
+      background-color: color-mix(
+        in srgb,
+        var(--color-hl-staging) 18%,
+        var(--md-sys-color-surface-container-high)
+      );
+      .icon {
+        color: var(--color-hl-staging);
+      }
+
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-hl-staging) 24%,
+          var(--md-sys-color-surface-container-high)
+        );
+      }
+    }
+  }
+
+  &.developer {
     button {
       background-color: var(--color-hl-developer-container);
       .icon {

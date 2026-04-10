@@ -31,6 +31,7 @@ import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
+import { getFrontendBundleMode } from '@shared/util'
 
 // Configure scope-specific filter types for the search filter
 const scopesConfig: ScopeWithFilterTypes[] = [
@@ -71,7 +72,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
-  const isDeveloperMode = user?.attrib?.developerMode ?? false
+  const frontendBundleMode = getFrontendBundleMode(user)
 
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -236,7 +237,7 @@ const ProjectOverviewPage: FC = () => {
                 onNavigate={navigate}
                 onSetSearchParams={setSearchParams}
                 searchParams={searchParams}
-                isDeveloperMode={isDeveloperMode}
+                frontendBundleMode={frontendBundleMode}
                 align="right"
               />
               <CustomizeButton />

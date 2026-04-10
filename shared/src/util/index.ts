@@ -22,6 +22,7 @@ export * from './keyboardShortcuts'
 export * from './buildHierarchicalTableRows'
 export * from './folderHierarchy'
 export * from './folderOperations'
+export * from './frontendBundleMode'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }

@@ -13,6 +13,7 @@ import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useURIContext } from './UriContext'
 import { useLocalStorage } from '@shared/hooks'
 import type { SubtasksManagerProps } from '@shared/components'
+import { FrontendBundleMode, getFrontendBundleMode } from '@shared/util'
 
 // High-level tabs for the details panel
 export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
@@ -80,6 +81,7 @@ export interface DetailsPanelContextProps {
   // debugging used to simulate different values
   debug?: {
     isDeveloperMode?: boolean
+    frontendBundleMode?: FrontendBundleMode
     isGuest?: boolean
     hasLicense?: boolean
   }
@@ -88,6 +90,7 @@ export interface DetailsPanelContextProps {
 // Interface for our simplified context
 export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // user
+  frontendBundleMode: FrontendBundleMode
   isDeveloperMode: boolean
   isGuest: boolean
   // Open state for the panel by scope
@@ -143,10 +146,16 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
   ...forwardedProps
 }) => {
   const user = forwardedProps.user
+  const frontendBundleMode =
+    'frontendBundleMode' in debug && debug.frontendBundleMode
+      ? debug.frontendBundleMode
+      : 'isDeveloperMode' in debug && debug.isDeveloperMode
+        ? 'developer'
+        : getFrontendBundleMode(user)
   const isDeveloperMode =
     'isDeveloperMode' in debug
       ? (debug.isDeveloperMode as boolean)
-      : user?.attrib?.developerMode ?? false
+      : frontendBundleMode === 'developer'
   const isGuest = 'isGuest' in debug ? (debug.isGuest as boolean) : user?.data?.isGuest
 
   // get license from powerpack or forwarded down from props
@@ -339,6 +348,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     setEntities,
     feedAnnotations,
     setFeedAnnotations,
+    frontendBundleMode,
     isDeveloperMode,
     isGuest,
     hasLicense,
