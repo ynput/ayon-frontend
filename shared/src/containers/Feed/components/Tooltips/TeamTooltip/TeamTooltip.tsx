@@ -26,7 +26,7 @@ const TeamTooltip = ({ name, pos }: TeamTooltipProps) => {
   const members = team?.members ?? []
   const memberCount = team?.memberCount ?? 0
   const visibleMembers = members.slice(0, MAX_VISIBLE_MEMBERS)
-  const remaining = memberCount - MAX_VISIBLE_MEMBERS
+  const remaining = Math.max(0, memberCount - MAX_VISIBLE_MEMBERS)
 
   return (
     <Styled.Popup style={{ ...pos }}>
@@ -34,9 +34,11 @@ const TeamTooltip = ({ name, pos }: TeamTooltipProps) => {
         <Icon icon="group" />
         <Styled.HeaderContent>
           <span>{name}</span>
-          <span className="label">
-            {memberCount} {memberCount === 1 ? 'member' : 'members'}
-          </span>
+          {team && (
+            <span className="label">
+              {memberCount} {memberCount === 1 ? 'member' : 'members'}
+            </span>
+          )}
         </Styled.HeaderContent>
       </Styled.Header>
       {visibleMembers.length > 0 && (
