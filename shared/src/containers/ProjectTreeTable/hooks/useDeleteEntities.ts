@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, createElement } from 'react'
 import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
 // TODO: confirmDelete uses prime react, so we should find a different solution
 import { confirmDelete } from '../../../util'
@@ -68,14 +68,57 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         }
       }
 
-      const entityLabel =
-        fullEntities.length === 1
-          ? `"${fullEntities[0].label || fullEntities[0].name}"`
-          : `${fullEntities.length} entities`
+      // Count entities by type in a single pass
+      const counts: Record<string, number> = {}
+      for (const e of fullEntities) {
+        counts[e.entityType] = (counts[e.entityType] || 0) + 1
+      }
+
+      const pluralize = (count: number, singular: string): string =>
+        `${count} ${count === 1 ? singular : singular + 's'}`
+
+      // Build a descriptive label based on entity types and counts
+      let entityLabel: string
+      if (fullEntities.length === 1) {
+        const entity = fullEntities[0]
+        entityLabel = `"${entity.label || entity.name}"`
+      } else {
+        const typeLabels = ['folder', 'task', 'product', 'version'] as const
+        const parts = typeLabels
+          .filter((type) => counts[type] > 0)
+          .map((type) => pluralize(counts[type], type))
+        entityLabel = parts.join(', ')
+      }
+
+      // Build extra details about children that will also be deleted
+      const childrenDetails: string[] = []
+      const folders = fullEntities.filter((e) => e.entityType === 'folder')
+      for (const folder of folders) {
+        if ('hasChildren' in folder && folder.hasChildren) {
+          childrenDetails.push(`"${folder.label || folder.name}" contains child folders`)
+        }
+        if ('taskNames' in folder && folder.taskNames && folder.taskNames.length > 0) {
+          childrenDetails.push(
+            `"${folder.label || folder.name}" contains ${pluralize(folder.taskNames.length, 'task')}`,
+          )
+        }
+      }
+
+      const message = createElement('div', null,
+        createElement('p', null, `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`),
+        childrenDetails.length > 0 && createElement('div', { style: { marginTop: 12 } },
+          createElement('p', { style: { fontWeight: 600 } }, 'The following will also be affected:'),
+          createElement('ul', { style: { margin: '4px 0', paddingLeft: 20, maxHeight: 200, overflowY: 'auto' as const } },
+            ...childrenDetails.map((detail, i) =>
+              createElement('li', { key: i, style: { marginBottom: 2 } }, detail),
+            ),
+          ),
+        ),
+      )
 
       confirmDelete({
         label: 'folders and tasks',
-        message: `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`,
+        message,
         accept: deleteEntities,
         onError: (error: any) => {
           const FOLDER_WITH_CHILDREN_CODE = 'delete-folder-with-children'
