@@ -10,6 +10,7 @@ import HeaderButton from './HeaderButton'
 import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { HelpMenu, UserMenu } from '@components/Menu'
@@ -162,6 +163,8 @@ const Header: React.FC = () => {
   // Get developer states
   const isDeveloper = (user?.data as any)?.isDeveloper
   const frontendBundleMode = getFrontendBundleMode(user)
+  const { data: { stagingBundle } = {} } = useListBundlesQuery({ archived: false })
+  const hasActiveStagingBundle = !!stagingBundle
 
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef<HTMLButtonElement>(null)
@@ -198,21 +201,31 @@ const Header: React.FC = () => {
   const [updateUser] = useUpdateUserMutation()
   const frontendBundleModeOptions = useMemo<BundleModeOption[]>(
     () =>
-      (isDeveloper
-        ? ['production', 'staging', 'developer']
-        : ['production', 'staging']
+      (
+        isDeveloper
+          ? ([
+              'production',
+              ...(hasActiveStagingBundle ? (['staging'] as const) : []),
+              'developer',
+            ] as const)
+          : (['production', ...(hasActiveStagingBundle ? (['staging'] as const) : [])] as const)
       ).map((value) => ({
         value: value as FrontendBundleMode,
         label: FRONTEND_BUNDLE_MODE_LABELS[value as FrontendBundleMode],
       })),
-    [isDeveloper],
+    [hasActiveStagingBundle, isDeveloper],
   )
+  const visibleFrontendBundleMode = frontendBundleModeOptions.some(
+    ({ value }) => value === frontendBundleMode,
+  )
+    ? frontendBundleMode
+    : 'production'
 
   const renderFrontendBundleMode = (
     frontendBundleModeValue?: FrontendBundleMode,
     isActive?: boolean,
   ) => {
-    const mode = frontendBundleModeValue || frontendBundleMode
+    const mode = frontendBundleModeValue || visibleFrontendBundleMode
 
     return (
       <FrontendBundleModeOptionRow $isActive={isActive}>
@@ -291,21 +304,23 @@ const Header: React.FC = () => {
       <FlexWrapperEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
-        <FrontendBundleModeDropdown
-          $mode={frontendBundleMode}
-          value={[frontendBundleMode]}
-          options={frontendBundleModeOptions}
-          onChange={handleBundleModeChange}
-          widthExpand
-          valueTemplate={(value) => (
-            <FrontendBundleModeValue>
-              {renderFrontendBundleMode(value?.[0] as FrontendBundleMode)}
-            </FrontendBundleModeValue>
-          )}
-          itemTemplate={(option, isActive) =>
-            renderFrontendBundleMode(option.value as FrontendBundleMode, isActive)
-          }
-        />
+        {frontendBundleModeOptions.length > 1 && (
+          <FrontendBundleModeDropdown
+            $mode={visibleFrontendBundleMode}
+            value={[visibleFrontendBundleMode]}
+            options={frontendBundleModeOptions}
+            onChange={handleBundleModeChange}
+            widthExpand
+            valueTemplate={(value) => (
+              <FrontendBundleModeValue>
+                {renderFrontendBundleMode(value?.[0] as FrontendBundleMode)}
+              </FrontendBundleModeValue>
+            )}
+            itemTemplate={(option, isActive) =>
+              renderFrontendBundleMode(option.value as FrontendBundleMode, isActive)
+            }
+          />
+        )}
 
         {!user.data.isGuest && (
           <>
