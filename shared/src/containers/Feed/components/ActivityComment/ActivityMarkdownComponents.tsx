@@ -21,12 +21,7 @@ const sanitizeURL = (url = '') => {
     const sections = url.split(':')
     const [type, id] = sections
     if (allowedRefTypes.includes(type) && id && sections.length === 2) {
-      let decodedId = id
-      try {
-        decodedId = decodeURIComponent(id)
-      } catch {
-        decodedId = id
-      }
+      const decodedId = (() => { try { return decodeURIComponent(id) } catch { return id } })()
       return { type, id: decodedId }
     }
   }
