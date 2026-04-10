@@ -16,7 +16,8 @@ const ActivityReferenceTooltip: React.FC<ActivityReferenceTooltipProps> = () => 
     if (id) {
       const handleMouseOver = (event: MouseEvent) => {
         const target = event.target as Element | null
-        const closestRef = target?.closest(`#ref-${id.replaceAll('.', '-')}`)
+        const escapedId = CSS.escape(`ref-${id.replaceAll('.', '-')}`)
+        const closestRef = target?.closest(`#${escapedId}`)
         if (!closestRef) {
           // close
           setRefTooltip(null)
