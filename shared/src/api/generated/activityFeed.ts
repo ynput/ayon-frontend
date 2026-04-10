@@ -233,9 +233,6 @@ export type TeamSuggestionItem = {
   /** The relevance score of the suggestion */
   relevance?: number
   name: string
-  isTeam: boolean
-  memberCount: number
-  teamLeader?: string
 }
 export type FolderSuggestionItem = {
   /** The date and time when the suggested entity was created */

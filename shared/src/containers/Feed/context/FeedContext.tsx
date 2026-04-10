@@ -34,14 +34,6 @@ export interface RefTooltip {
   }
 }
 
-// Add type for team dialog
-export interface TeamDialogState {
-  open: boolean
-  teamName: string | null
-  memberCount?: number
-  teamLeader?: string
-}
-
 export type FeedContextProps = {
   children: React.ReactNode
   projectName: string
@@ -76,9 +68,6 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   // refTooltip state and functions
   refTooltip: RefTooltip | null
   setRefTooltip: (tooltip: RefTooltip | null) => void
-  // team dialog state
-  teamDialog: TeamDialogState
-  setTeamDialog: (state: TeamDialogState) => void
   // tooltip data
   entityTooltipData: any
   isFetchingTooltip: boolean
@@ -117,7 +106,6 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
 
   const [editingId, setEditingId] = useState<EditingState>(null)
   const [refTooltip, setRefTooltip] = useState<RefTooltip | null>(null)
-  const [teamDialog, setTeamDialog] = useState<TeamDialogState>({ open: false, teamName: null })
 
   //   queries
   const [createEntityActivityMutation, { isLoading: isLoadingCreate }] =
@@ -185,7 +173,6 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         entityTooltipData,
         isFetchingTooltip,
         refTooltip,
-        teamDialog,
         activityTypes,
         feedFilter,
         setFeedFilter,
@@ -193,7 +180,6 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         editingId,
         setEditingId,
         setRefTooltip,
-        setTeamDialog,
         // Query functions
         createEntityActivity,
         updateActivity,

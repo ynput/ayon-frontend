@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import ActivityItem from './components/ActivityItem'
 import CommentInput from './components/CommentInput/CommentInput'
-import TeamMembersDialog from './components/TeamMembersDialog/TeamMembersDialog'
 import * as Styled from './Feed.styled'
 import useCommentMutations, { Activity } from './hooks/useCommentMutations'
 import useTransformActivities from './hooks/useTransformActivities'
@@ -81,8 +80,6 @@ export const Feed = ({
     users,
     feedFilter,
     setFeedFilter,
-    teamDialog,
-    setTeamDialog,
   } = useFeedContext()
 
   const {
@@ -372,13 +369,6 @@ export const Feed = ({
           />
         )}
       </Styled.FeedContainer>
-      <TeamMembersDialog
-        open={teamDialog.open}
-        teamName={teamDialog.teamName || ''}
-        memberCount={teamDialog.memberCount}
-        teamLeader={teamDialog.teamLeader}
-        onClose={() => setTeamDialog({ open: false, teamName: null })}
-      />
     </>
   )
 }
