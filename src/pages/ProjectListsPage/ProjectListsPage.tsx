@@ -54,6 +54,7 @@ import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSet
 import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
+import ImportDialog from '@components/ImportDialog/ImportDialog.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -339,6 +340,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       </>
                     )
                   }
+                  <ImportDialog
+                    importContext="entity_list_item"
+                    projectName={projectName}
+                    folderId={selectedList?.id}
+                  />
                   <Actions
                     entities={[
                       {

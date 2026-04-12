@@ -32,6 +32,7 @@ export type CollapsedViewState = Record<string, boolean>
 export interface ViewsContextValue {
   // State
   viewType?: ViewType
+  viewAlias: string
   projectName?: string
   currentUser?: UserModel
   isMenuOpen: boolean
@@ -86,11 +87,14 @@ export interface ViewsContextValue {
   dispatch: any // dispatch is used to dispatch api mutations in pp like the share one.
 }
 
+const DEFAULT_VIEW_ALIAS = "view"
+
 const ViewsContext = createContext<ViewsContextValue | null>(null)
 
 export interface ViewsProviderProps {
   children: ReactNode
   viewType?: string
+  viewAlias?: string
   projectName?: string
   dispatch?: any
   debug?: {
@@ -101,6 +105,7 @@ export interface ViewsProviderProps {
 export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
   viewType,
+  viewAlias = DEFAULT_VIEW_ALIAS,
   projectName,
   dispatch,
   debug,
@@ -275,6 +280,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewsList,
     workingView,
     viewType,
+    viewAlias,
     projectName,
     currentUser,
     useWorkingView: !powerLicense,
@@ -296,6 +302,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const value: ViewsContextValue = {
     viewType,
+    viewAlias,
     projectName,
     isMenuOpen,
     editingView,
