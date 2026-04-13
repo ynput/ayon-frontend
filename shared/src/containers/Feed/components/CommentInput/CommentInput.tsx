@@ -122,6 +122,14 @@ const CommentInput: FC<CommentInputProps> = ({
   // MENTION STATES
   const [mention, setMention] = useState<null | any>(null)
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
+  // Prefix filter for mentions (e.g. 'team:' or 'user:')
+  const [mentionPrefix, setMentionPrefix] = useState('')
+
+  const clearMention = () => {
+    setMention(null)
+    setMentionSelectedIndex(0)
+    setMentionPrefix('')
+  }
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
   const categoryOptions = categories.filter((cat) => cat.accessLevel >= 20)
@@ -166,6 +174,9 @@ const CommentInput: FC<CommentInputProps> = ({
 
   mentionTypes.sort((a, b) => b.length - a.length)
 
+  // Combine prefix filter with typed search for options filtering
+  const mentionSearchWithPrefix = mentionPrefix + (mention?.search || '')
+
   const mentionOptions = useMemo(
     () =>
       getMentionOptions(
@@ -175,9 +186,9 @@ const CommentInput: FC<CommentInputProps> = ({
           '@@': () => getMentionVersions(mentionVersions, project),
           '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
-        mention?.search,
+        mentionSearchWithPrefix || undefined,
       ),
-    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mention?.search],
+    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mentionSearchWithPrefix],
   )
 
   // show first 5 and filter itself out
@@ -231,8 +242,7 @@ const CommentInput: FC<CommentInputProps> = ({
     setNewSelection(endIndex + 1)
 
     // reset mention state
-    setMention(null)
-    setMentionSelectedIndex(0)
+    clearMention()
   }
 
   const handleSelectChange = (option: any) => {
@@ -312,8 +322,7 @@ const CommentInput: FC<CommentInputProps> = ({
           retain: retain,
         })
       } else {
-        setMention(null)
-        setMentionSelectedIndex(0)
+        clearMention()
       }
     } else {
       // get full string between mention and new delta
@@ -322,8 +331,7 @@ const CommentInput: FC<CommentInputProps> = ({
         const retain = delta.ops[0].retain
         // if space is pressed, remove mention
         if (currentCharacter === ' ' || !retain) {
-          setMention(null)
-          setMentionSelectedIndex(0)
+          clearMention()
           return
         }
 
@@ -333,8 +341,7 @@ const CommentInput: FC<CommentInputProps> = ({
         const mentionSearch = mentionFull.replace(mention.type.slice(-1), '')
         //  check for space in mentionFull
         if (mentionFull.includes(' ')) {
-          setMention(null)
-          setMentionSelectedIndex(0)
+          clearMention()
         } else {
           setMention({
             ...mention,
@@ -538,8 +545,7 @@ const CommentInput: FC<CommentInputProps> = ({
     if (mention) {
       // close mention on escape
       if (e.key === 'Escape') {
-        setMention(null)
-        setMentionSelectedIndex(0)
+        clearMention()
         return
       }
 
@@ -755,11 +761,16 @@ const CommentInput: FC<CommentInputProps> = ({
           mention={mention}
           options={shownMentionOptions}
           onChange={handleSelectChange}
+          onPrefixFilter={(prefix) => {
+            setMentionPrefix(prefix)
+            setMentionSelectedIndex(0)
+          }}
+          activePrefix={mentionPrefix ? mentionPrefix.replace(':', '') : undefined}
           types={mentionTypes}
           // @ts-ignore
           config={mentionTypeOptions[mention?.type]}
-          noneFound={!shownMentionOptions.length && mention?.search}
-          noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
+          noneFound={!shownMentionOptions.length && (mention?.search || mentionPrefix)}
+          noneFoundAtAll={!shownMentionOptions.length && !mention?.search && !mentionPrefix}
           selectedIndex={mentionSelectedIndex}
           // @ts-ignore
           error={mentionsError}

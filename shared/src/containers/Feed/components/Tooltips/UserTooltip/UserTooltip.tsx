@@ -1,4 +1,4 @@
-import UserImage from '../../../../../components/UserImage'
+import UserTooltipItem from '../UserTooltipItem'
 import * as Styled from './UserTooltip.styled'
 
 interface UserTooltipProps {
@@ -13,11 +13,7 @@ interface UserTooltipProps {
 const UserTooltip = ({ name, label, pos }: UserTooltipProps) => {
   return (
     <Styled.Popup style={{ ...pos }}>
-      <UserImage name={name || ''} />{' '}
-      <Styled.Content>
-        <span>{label}</span>
-        <span className={'label'}>{name}</span>
-      </Styled.Content>
+      <UserTooltipItem name={name || ''} fullName={label} showSubtitle size={40} />
     </Styled.Popup>
   )
 }

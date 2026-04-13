@@ -1,7 +1,7 @@
 import { Icon } from '@ynput/ayon-react-components'
 import { teamsApi } from '@shared/api'
 import { useFeedContext } from '../../../context/FeedContext'
-import UserImage from '../../../../../components/UserImage'
+import UserTooltipItem from '../UserTooltipItem'
 import * as Styled from './TeamTooltip.styled'
 
 const MAX_VISIBLE_MEMBERS = 5
@@ -15,7 +15,7 @@ interface TeamTooltipProps {
 }
 
 const TeamTooltip = ({ name, pos }: TeamTooltipProps) => {
-  const { projectName } = useFeedContext()
+  const { projectName, users } = useFeedContext()
 
   const { data: teams = [] } = teamsApi.useGetTeamsQuery(
     { projectName, showMembers: true },
@@ -27,6 +27,11 @@ const TeamTooltip = ({ name, pos }: TeamTooltipProps) => {
   const memberCount = team?.memberCount ?? 0
   const visibleMembers = members.slice(0, MAX_VISIBLE_MEMBERS)
   const remaining = Math.max(0, memberCount - MAX_VISIBLE_MEMBERS)
+
+  // Build a lookup for user fullNames
+  const userFullNameMap = new Map(
+    users.map((u) => [u.name, u.attrib?.fullName || undefined]),
+  )
 
   return (
     <Styled.Popup style={{ ...pos }}>
@@ -45,8 +50,10 @@ const TeamTooltip = ({ name, pos }: TeamTooltipProps) => {
         <Styled.MembersList>
           {visibleMembers.map((member) => (
             <Styled.MemberItem key={member.name}>
-              <UserImage name={member.name} />
-              <span>{member.name}</span>
+              <UserTooltipItem
+                name={member.name}
+                fullName={userFullNameMap.get(member.name)}
+              />
             </Styled.MemberItem>
           ))}
           {remaining > 0 && <Styled.MoreLabel>+{remaining} more</Styled.MoreLabel>}

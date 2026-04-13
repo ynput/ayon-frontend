@@ -45,21 +45,6 @@ export const MembersList = styled.ul`
 export const MemberItem = styled.li`
   display: flex;
   align-items: center;
-  gap: var(--base-gap-large);
-
-  .thumbnail {
-    width: 24px;
-    height: 24px;
-
-    .icon {
-      font-size: 14px;
-    }
-  }
-
-  span {
-    white-space: nowrap;
-    font-size: 0.9em;
-  }
 `
 
 export const MoreLabel = styled.span`

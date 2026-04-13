@@ -5,8 +5,41 @@ export const Title = styled.li`
   background-color: var(--md-sys-color-surface-container-lowest);
   color: var(--md-sys-color-outline);
   border-radius: var(--border-radius-m) var(--border-radius-m) 0 0;
-  /* text-align: right; */
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+export const PrefixFilters = styled.span`
+  display: flex;
+  gap: 2px;
+`
+
+export const PrefixButton = styled.button`
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-m);
+  cursor: pointer;
+  color: var(--md-sys-color-outline);
+
+  .icon {
+    font-size: 16px;
+  }
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high-hover);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &.active {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+  }
 `
 
 export const MentionSelect = styled.ul`
