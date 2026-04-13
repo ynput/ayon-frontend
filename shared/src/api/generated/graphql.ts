@@ -311,8 +311,10 @@ export type FolderNode = BaseNode & {
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
-  descendantCount: Scalars['Int']['output'];
-  descendantTaskCount: Scalars['Int']['output'];
+  totalFolderCount: Scalars['Int']['output'];
+  totalTaskCount: Scalars['Int']['output'];
+  totalProductCount: Scalars['Int']['output'];
+  totalVersionCount: Scalars['Int']['output'];
   folderType: Scalars['String']['output'];
   hasChildren: Scalars['Boolean']['output'];
   hasProducts: Scalars['Boolean']['output'];
@@ -1729,7 +1731,7 @@ export type GetFolderDeleteInfoQueryVariables = Exact<{
 }>;
 
 
-export type GetFolderDeleteInfoQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, descendantCount: number, descendantTaskCount: number } }> } } };
+export type GetFolderDeleteInfoQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, totalFolderCount: number, totalTaskCount: number, totalProductCount: number, totalVersionCount: number } }> } } };
 
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2655,8 +2657,10 @@ export const GetFolderDeleteInfoDocument = `
           id
           name
           label
-          descendantCount
-          descendantTaskCount
+          totalFolderCount
+          totalTaskCount
+          totalProductCount
+          totalVersionCount
         }
       }
     }

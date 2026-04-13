@@ -6,8 +6,10 @@ query GetFolderDeleteInfo($projectName: String!, $folderIds: [String!]!) {
           id
           name
           label
-          descendantCount
-          descendantTaskCount
+          totalFolderCount
+          totalTaskCount
+          totalProductCount
+          totalVersionCount
         }
       }
     }

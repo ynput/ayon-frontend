@@ -1,4 +1,4 @@
-import { useCallback, createElement } from 'react'
+import { useCallback, createElement, useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
 // TODO: confirmDelete uses prime react, so we should find a different solution
@@ -18,8 +18,157 @@ type FolderDeleteInfo = {
   id: string
   name: string
   label?: string | null
-  descendantCount: number
-  descendantTaskCount: number
+  totalFolderCount: number
+  totalTaskCount: number
+  totalProductCount: number
+  totalVersionCount: number
+}
+
+const pluralize = (count: number, singular: string): string =>
+  `${count} ${count === 1 ? singular : singular + 's'}`
+
+// Component that shows skeleton while loading, then actual counts
+const DeleteConfirmContent = ({
+  entityLabel,
+  topLevelFolders,
+  fetchDeleteInfo,
+}: {
+  entityLabel: string
+  topLevelFolders: (EntityMap & { rowId: string })[]
+  fetchDeleteInfo: (folderIds: string[]) => Promise<Map<string, FolderDeleteInfo>>
+}) => {
+  const [loading, setLoading] = useState(topLevelFolders.length > 0)
+  const [childrenDetails, setChildrenDetails] = useState<string[]>([])
+
+  useEffect(() => {
+    if (topLevelFolders.length === 0) return
+
+    const folderIds = topLevelFolders.map((f) => f.id)
+    fetchDeleteInfo(folderIds)
+      .then((folderInfoMap) => {
+        const details: string[] = []
+        for (const folder of topLevelFolders) {
+          const info = folderInfoMap.get(folder.id)
+          const folderName = `"${folder.label || folder.name}"`
+
+          const hasDescendants =
+            info &&
+            (info.totalFolderCount > 0 ||
+              info.totalTaskCount > 0 ||
+              info.totalProductCount > 0 ||
+              info.totalVersionCount > 0)
+
+          if (hasDescendants) {
+            const parts: string[] = []
+            if (info.totalFolderCount > 0) {
+              parts.push(pluralize(info.totalFolderCount, 'child folder'))
+            }
+            if (info.totalTaskCount > 0) {
+              parts.push(pluralize(info.totalTaskCount, 'task'))
+            }
+            if (info.totalProductCount > 0) {
+              parts.push(pluralize(info.totalProductCount, 'product'))
+            }
+            if (info.totalVersionCount > 0) {
+              parts.push(pluralize(info.totalVersionCount, 'version'))
+            }
+            details.push(`${folderName} contains ${parts.join(', ')}`)
+          } else {
+            // Fallback to local data if GQL fetch failed
+            if ('hasChildren' in folder && folder.hasChildren) {
+              details.push(`${folderName} contains child folders`)
+            }
+            if ('taskNames' in folder && folder.taskNames && folder.taskNames.length > 0) {
+              details.push(
+                `${folderName} contains ${pluralize(folder.taskNames.length, 'task')}`,
+              )
+            }
+          }
+        }
+        setChildrenDetails(details)
+      })
+      .catch(() => {
+        // Fallback: use local data
+        const details: string[] = []
+        for (const folder of topLevelFolders) {
+          const folderName = `"${folder.label || folder.name}"`
+          if ('hasChildren' in folder && folder.hasChildren) {
+            details.push(`${folderName} contains child folders`)
+          }
+          if ('taskNames' in folder && folder.taskNames && folder.taskNames.length > 0) {
+            details.push(
+              `${folderName} contains ${pluralize(folder.taskNames.length, 'task')}`,
+            )
+          }
+        }
+        setChildrenDetails(details)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const skeletonStyle = {
+    height: 14,
+    borderRadius: 4,
+    background: 'var(--md-sys-color-surface-container-high)',
+    animation: 'pulse 1.5s ease-in-out infinite',
+  }
+
+  // Fixed dimensions to prevent layout shift between loading and loaded states
+  const detailsContainerStyle = {
+    marginTop: 12,
+    minHeight: 60,
+    minWidth: 350,
+  }
+
+  return createElement(
+    'div',
+    { style: { minWidth: 350 } },
+    createElement(
+      'style',
+      null,
+      '@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }',
+    ),
+    createElement(
+      'p',
+      null,
+      `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`,
+    ),
+    topLevelFolders.length > 0 &&
+      createElement(
+        'div',
+        { style: detailsContainerStyle },
+        loading
+          ? createElement(
+              'div',
+              null,
+              createElement(
+                'p',
+                { style: { fontWeight: 600 } },
+                'Loading affected items...',
+              ),
+              createElement('div', {
+                style: { ...skeletonStyle, width: '80%', marginBottom: 6 },
+              }),
+              createElement('div', {
+                style: { ...skeletonStyle, width: '60%' },
+              }),
+            )
+          : childrenDetails.length > 0
+            ? createElement(
+                'div',
+                null,
+                createElement(
+                  'p',
+                  { style: { fontWeight: 600 } },
+                  'The following will also be affected:',
+                ),
+                ...childrenDetails.map((detail, i) =>
+                  createElement('p', { key: i }, detail),
+                ),
+              )
+            : null,
+      ),
+  )
 }
 
 const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
@@ -35,7 +184,9 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
   }
 
   // Fetch recursive descendant counts for folders via GraphQL
-  const fetchFolderDeleteInfo = async (folderIds: string[]): Promise<Map<string, FolderDeleteInfo>> => {
+  const fetchFolderDeleteInfo = async (
+    folderIds: string[],
+  ): Promise<Map<string, FolderDeleteInfo>> => {
     const map = new Map<string, FolderDeleteInfo>()
     if (!folderIds.length || !projectName) return map
 
@@ -57,8 +208,10 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
               id: node.id,
               name: node.name,
               label: node.label,
-              descendantCount: node.descendantCount ?? 0,
-              descendantTaskCount: node.descendantTaskCount ?? 0,
+              totalFolderCount: node.totalFolderCount ?? 0,
+              totalTaskCount: node.totalTaskCount ?? 0,
+              totalProductCount: node.totalProductCount ?? 0,
+              totalVersionCount: node.totalVersionCount ?? 0,
             })
           }
         }
@@ -138,9 +291,6 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         counts[e.entityType] = (counts[e.entityType] || 0) + 1
       }
 
-      const pluralize = (count: number, singular: string): string =>
-        `${count} ${count === 1 ? singular : singular + 's'}`
-
       // Build a descriptive label based on entity types and counts
       let entityLabel: string
       if (topLevelEntities.length === 1) {
@@ -154,72 +304,14 @@ const useDeleteEntities = ({ onSuccess }: UseDeleteEntitiesProps) => {
         entityLabel = parts.join(', ')
       }
 
-      // Fetch recursive descendant counts for folders
       const topLevelFolders = topLevelEntities.filter((e) => e.entityType === 'folder')
-      const folderIds = topLevelFolders.map((f) => f.id)
-      const folderInfoMap = await fetchFolderDeleteInfo(folderIds)
 
-      // Build extra details about children that will also be deleted
-      const childrenDetails: string[] = []
-      for (const folder of topLevelFolders) {
-        const info = folderInfoMap.get(folder.id)
-        const folderName = `"${folder.label || folder.name}"`
-
-        if (info && (info.descendantCount > 0 || info.descendantTaskCount > 0)) {
-          const parts: string[] = []
-          if (info.descendantCount > 0) {
-            parts.push(pluralize(info.descendantCount, 'child folder'))
-          }
-          if (info.descendantTaskCount > 0) {
-            parts.push(pluralize(info.descendantTaskCount, 'task'))
-          }
-          childrenDetails.push(`${folderName} contains ${parts.join(' with ')}`)
-        } else {
-          // Fallback to local data if GQL fetch failed
-          if ('hasChildren' in folder && folder.hasChildren) {
-            childrenDetails.push(`${folderName} contains child folders`)
-          }
-          if ('taskNames' in folder && folder.taskNames && folder.taskNames.length > 0) {
-            childrenDetails.push(
-              `${folderName} contains ${pluralize(folder.taskNames.length, 'task')}`,
-            )
-          }
-        }
-      }
-
-      const message = createElement(
-        'div',
-        null,
-        createElement(
-          'p',
-          null,
-          `Are you sure you want to delete ${entityLabel}? This action cannot be undone.`,
-        ),
-        childrenDetails.length > 0 &&
-          createElement(
-            'div',
-            { style: { marginTop: 12 } },
-            createElement(
-              'p',
-              { style: { fontWeight: 600 } },
-              'The following will also be affected:',
-            ),
-            createElement(
-              'ul',
-              {
-                style: {
-                  margin: '4px 0',
-                  paddingLeft: 20,
-                  maxHeight: 200,
-                  overflowY: 'auto' as const,
-                },
-              },
-              ...childrenDetails.map((detail, i) =>
-                createElement('li', { key: i, style: { marginBottom: 2 } }, detail),
-              ),
-            ),
-          ),
-      )
+      // Show dialog immediately with skeleton, fetch counts in background
+      const message = createElement(DeleteConfirmContent, {
+        entityLabel,
+        topLevelFolders,
+        fetchDeleteInfo: fetchFolderDeleteInfo,
+      })
 
       confirmDelete({
         label: 'folders and tasks',
