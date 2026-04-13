@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 
 // state
@@ -22,7 +22,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
-import { useGlobalContext, useSettingsPanel } from '@shared/context'
+import { useGlobalContext, useSettingsPanel, useURIContext } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -75,6 +75,7 @@ const ProjectOverviewPage: FC = () => {
 
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { uriType, entity: uriEntity, getUriEntities } = useURIContext()
 
   const {
     projectName,
@@ -159,6 +160,7 @@ const ProjectOverviewPage: FC = () => {
   }
 
   const { getGoToEntityData } = useGoToEntity()
+  const lastUriSelectionRef = useRef<string | null>(null)
 
   // select the entity in the table and expand its parent folders
   const handleUriOpen = (entity: DetailsPanelEntityData) => {
@@ -186,6 +188,67 @@ const ProjectOverviewPage: FC = () => {
       ]),
     )
   }
+
+  useEffect(() => {
+    const project = searchParams.get('project')
+    const type = searchParams.get('type') as 'folder' | 'task' | null
+    const id = searchParams.get('id')
+
+    if (project !== projectName || !type || !id) {
+      lastUriSelectionRef.current = null
+      return
+    }
+
+    const selectionKey = `${type}:${id}:${uriType === 'entity' ? uriEntity?.projectName || '' : ''}`
+    if (lastUriSelectionRef.current === selectionKey) return
+
+    let cancelled = false
+
+    const resolveAndSelect = async () => {
+      let folderId: string | undefined
+
+      if (uriType === 'entity' && uriEntity?.projectName === projectName) {
+        const resolvedUris = await getUriEntities()
+        const resolvedEntity = resolvedUris[0]?.entities?.[0]
+        folderId = resolvedEntity?.folderId
+      }
+
+      if (cancelled) return
+
+      const data = getGoToEntityData(id, type, {
+        folder: type === 'folder' ? folderId || id : folderId,
+      })
+
+      setQueryFilters({})
+      updateViewGroupBy(null)
+      updateExpanded(data.expandedFolders)
+      slicer.setExpanded(data.expandedFolders)
+      slicer.setRowSelection(data.selectedFolders)
+      setSelectedCells(
+        new Set([getCellId(data.entityId, 'name'), getCellId(data.entityId, ROW_SELECTION_COLUMN_ID)]),
+      )
+
+      lastUriSelectionRef.current = selectionKey
+    }
+
+    void resolveAndSelect()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    getGoToEntityData,
+    getUriEntities,
+    projectName,
+    searchParams,
+    setQueryFilters,
+    setSelectedCells,
+    slicer,
+    updateExpanded,
+    updateViewGroupBy,
+    uriEntity?.projectName,
+    uriType,
+  ])
 
   return (
     <main style={{ gap: 4 }}>

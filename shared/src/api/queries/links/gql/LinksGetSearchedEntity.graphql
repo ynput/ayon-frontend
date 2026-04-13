@@ -29,6 +29,13 @@ query GetSearchedFolders(
           ...OverviewEntityLinkNodeFragment
           subType: folderType
           label
+          thumbnailId
+          thumbnail {
+            id
+            relation
+            sourceEntityId
+            sourceEntityType
+          }
         }
       }
     }
@@ -67,6 +74,16 @@ query GetSearchedProducts(
         node {
           ...OverviewEntityLinkNodeFragment
           subType: productType
+          featuredVersion {
+            id
+            thumbnailId
+            thumbnail {
+              id
+              relation
+              sourceEntityId
+              sourceEntityType
+            }
+          }
         }
       }
     }
@@ -103,6 +120,7 @@ query GetSearchedRepresentations(
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          updatedAt
         }
       }
     }
@@ -142,6 +160,14 @@ query GetSearchedTasks(
           ...OverviewEntityLinkNodeFragment
           label
           subType: taskType
+          updatedAt
+          thumbnailId
+          thumbnail {
+            id
+            relation
+            sourceEntityId
+            sourceEntityType
+          }
         }
       }
     }

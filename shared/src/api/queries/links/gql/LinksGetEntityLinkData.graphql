@@ -2,6 +2,13 @@ query GetFolderLinkData($projectName: String!, $folderId: String!) {
   project(name: $projectName) {
     folder(id: $folderId) {
       ...OverviewEntityLinkNodeFragment
+      thumbnailId
+      thumbnail {
+        id
+        relation
+        sourceEntityId
+        sourceEntityType
+      }
     }
   }
 }
@@ -10,6 +17,16 @@ query GetProductLinkData($projectName: String!, $productId: String!) {
   project(name: $projectName) {
     product(id: $productId) {
       ...OverviewEntityLinkNodeFragment
+      featuredVersion {
+        id
+        thumbnailId
+        thumbnail {
+          id
+          relation
+          sourceEntityId
+          sourceEntityType
+        }
+      }
     }
   }
 }
@@ -26,6 +43,14 @@ query GetTaskLinkData($projectName: String!, $taskId: String!) {
   project(name: $projectName) {
     task(id: $taskId) {
       ...OverviewEntityLinkNodeFragment
+      updatedAt
+      thumbnailId
+      thumbnail {
+        id
+        relation
+        sourceEntityId
+        sourceEntityType
+      }
     }
   }
 }
@@ -34,6 +59,7 @@ query GetVersionLinkData($projectName: String!, $versionId: String!) {
   project(name: $projectName) {
     version(id: $versionId) {
       ...OverviewEntityLinkNodeFragment
+      updatedAt
     }
   }
 }

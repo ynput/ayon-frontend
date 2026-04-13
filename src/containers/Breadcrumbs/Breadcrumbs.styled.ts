@@ -6,23 +6,38 @@ export const Wrapper = styled.div`
   justify-content: center;
   inset: 0;
   flex: 1;
+  min-width: 0;
+  position: relative;
 `
 
 export const Crumbtainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-
-  button {
+  gap: 0;
+  min-width: 0;
+  max-width: 100%;
+  > button {
     border-radius: 0 var(--border-radius-m) var(--border-radius-m) 0;
     z-index: 100;
+    flex-shrink: 0;
   }
 `
 
-export const CrumbsForm = styled.form`
+export const CrumbsForm = styled.form<{ $isSearchEnabled: boolean }>`
+  position: relative;
   background-color: var(--md-sys-color-secondary-container);
   border-radius: 4px 0 0 4px;
   display: inline-flex;
+  min-width: 0;
+  max-width: min(100%, 760px);
+  overflow: visible;
+
+  &.editing {
+    width: ${({ $isSearchEnabled }) => ($isSearchEnabled ? '100%' : 'auto')};
+    min-width: 0;
+  }
+
   *::before,
   *::after {
     box-sizing: border-box;
@@ -48,6 +63,8 @@ export const CrumbsForm = styled.form`
     position: relative;
     padding: 0;
     grid-template-columns: 1fr;
+    min-width: 0;
+    max-width: 100%;
 
     &::after,
     input {
@@ -78,6 +95,19 @@ export const CrumbsForm = styled.form`
       font-size: var(--md-sys-typescale-title-small-font-size);
       letter-spacing: var(--md-sys-typescale-title-small-letter-spacing);
       line-height: var(--md-sys-typescale-title-small-line-height);
+    }
+
+    .editing & {
+      flex: 1 1 auto;
+      width: auto;
+      max-width: 100%;
+    }
+
+    .editing &::after,
+    .editing & input {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
     }
 
 

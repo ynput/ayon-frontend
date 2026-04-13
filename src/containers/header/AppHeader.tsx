@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { MouseEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useMatch, useNavigate } from 'react-router-dom'
 import { InputSwitch } from '@ynput/ayon-react-components'
 import { UserImage } from '@shared/components'
 import { useUpdateUserMutation } from '@shared/api'
@@ -92,6 +92,38 @@ const UserButton = styled(HeaderButton)`
   padding: 6px;
 `
 
+const HeaderCenter = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--base-gap-small);
+  min-width: 0;
+`
+
+const HeaderCenterContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: min(100%, 760px);
+  min-width: 0;
+  max-width: 100%;
+`
+
+const HeaderCenterSlot = styled.div`
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+
+  & > * {
+    min-width: 0;
+    width: 100%;
+  }
+`
+
 const Header: React.FC = () => {
   const dispatch = useAppDispatch()
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
@@ -99,6 +131,10 @@ const Header: React.FC = () => {
   const handleSetMenu = (menu: string | false) => setMenuOpen(menu)
   const location = useLocation()
   const navigate = useNavigate()
+  const projectRouteMatch = useMatch('/projects/:projectName')
+  const projectModuleMatch = useMatch('/projects/:projectName/*')
+  const projectMatch = projectModuleMatch ?? projectRouteMatch
+  const projectName = projectMatch?.params.projectName
   // get user from redux store
   const user = useAppSelector((state) => state.user)
   const avatarKey = useAppSelector((state) => state.user.avatarKey)
@@ -195,7 +231,13 @@ const Header: React.FC = () => {
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </FlexWrapper>
 
-      <Breadcrumbs />
+      <HeaderCenter>
+        <HeaderCenterContent>
+          <HeaderCenterSlot>
+            <Breadcrumbs projectName={projectName} />
+          </HeaderCenterSlot>
+        </HeaderCenterContent>
+      </HeaderCenter>
       <FlexWrapperEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />

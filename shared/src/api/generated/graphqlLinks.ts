@@ -1575,7 +1575,7 @@ export type GetFolderLinkDataQueryVariables = Exact<{
 }>;
 
 
-export type GetFolderLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folder?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | null } };
+export type GetFolderLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folder?: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string, thumbnailId?: string | null, thumbnail?: { __typename?: 'ThumbnailInfo', id: string, relation?: string | null, sourceEntityId?: string | null, sourceEntityType?: string | null } | null } | null } };
 
 export type GetProductLinkDataQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1583,7 +1583,7 @@ export type GetProductLinkDataQueryVariables = Exact<{
 }>;
 
 
-export type GetProductLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', product?: { __typename: 'ProductNode', id: string, name: string, parents: Array<string> } | null } };
+export type GetProductLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', product?: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, featuredVersion?: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, thumbnail?: { __typename?: 'ThumbnailInfo', id: string, relation?: string | null, sourceEntityId?: string | null, sourceEntityType?: string | null } | null } | null } | null } };
 
 export type GetRepresentationLinkDataQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1599,7 +1599,7 @@ export type GetTaskLinkDataQueryVariables = Exact<{
 }>;
 
 
-export type GetTaskLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', task?: { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } | null } };
+export type GetTaskLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', task?: { __typename: 'TaskNode', label?: string | null, updatedAt: string, id: string, name: string, parents: Array<string>, subType: string, thumbnailId?: string | null, thumbnail?: { __typename?: 'ThumbnailInfo', id: string, relation?: string | null, sourceEntityId?: string | null, sourceEntityType?: string | null } | null } | null } };
 
 export type GetVersionLinkDataQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1607,7 +1607,7 @@ export type GetVersionLinkDataQueryVariables = Exact<{
 }>;
 
 
-export type GetVersionLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', version?: { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | null } };
+export type GetVersionLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', version?: { __typename: 'VersionNode', updatedAt: string, id: string, name: string, parents: Array<string> } | null } };
 
 export type GetWorkfileLinkDataQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1717,7 +1717,7 @@ export type GetSearchedFoldersQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedFoldersQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'FolderEdge', cursor?: string | null, node: { __typename: 'FolderNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedFoldersQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, folders: { __typename?: 'FoldersConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'FolderEdge', cursor?: string | null, node: { __typename: 'FolderNode', label?: string | null, thumbnailId?: string | null, id: string, name: string, parents: Array<string>, subType: string, thumbnail?: { __typename?: 'ThumbnailInfo', id: string, relation?: string | null, sourceEntityId?: string | null, sourceEntityType?: string | null } | null } }> } } };
 
 export type GetSearchedProductsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1730,7 +1730,7 @@ export type GetSearchedProductsQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedProductsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, products: { __typename?: 'ProductsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'ProductEdge', cursor?: string | null, node: { __typename: 'ProductNode', id: string, name: string, parents: Array<string>, subType: string, featuredVersion?: { __typename?: 'VersionNode', id: string, thumbnailId?: string | null, thumbnail?: { __typename?: 'ThumbnailInfo', id: string, relation?: string | null, sourceEntityId?: string | null, sourceEntityType?: string | null } | null } | null } }> } } };
 
 export type GetSearchedRepresentationsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1756,7 +1756,7 @@ export type GetSearchedTasksQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string } }> } } };
+export type GetSearchedTasksQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, tasks: { __typename?: 'TasksConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'TaskEdge', cursor?: string | null, node: { __typename: 'TaskNode', label?: string | null, updatedAt: string, thumbnailId?: string | null, id: string, name: string, parents: Array<string>, subType: string, thumbnail?: { __typename?: 'ThumbnailInfo', id: string, relation?: string | null, sourceEntityId?: string | null, sourceEntityType?: string | null } | null } }> } } };
 
 export type GetSearchedVersionsQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1769,7 +1769,7 @@ export type GetSearchedVersionsQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } }> } } };
+export type GetSearchedVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename: 'VersionNode', updatedAt: string, id: string, name: string, parents: Array<string> } }> } } };
 
 export type GetSearchedWorkfilesQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1846,6 +1846,13 @@ export const GetFolderLinkDataDocument = `
   project(name: $projectName) {
     folder(id: $folderId) {
       ...OverviewEntityLinkNodeFragment
+      thumbnailId
+      thumbnail {
+        id
+        relation
+        sourceEntityId
+        sourceEntityType
+      }
     }
   }
 }
@@ -1855,6 +1862,16 @@ export const GetProductLinkDataDocument = `
   project(name: $projectName) {
     product(id: $productId) {
       ...OverviewEntityLinkNodeFragment
+      featuredVersion {
+        id
+        thumbnailId
+        thumbnail {
+          id
+          relation
+          sourceEntityId
+          sourceEntityType
+        }
+      }
     }
   }
 }
@@ -1873,6 +1890,14 @@ export const GetTaskLinkDataDocument = `
   project(name: $projectName) {
     task(id: $taskId) {
       ...OverviewEntityLinkNodeFragment
+      updatedAt
+      thumbnailId
+      thumbnail {
+        id
+        relation
+        sourceEntityId
+        sourceEntityType
+      }
     }
   }
 }
@@ -1882,6 +1907,7 @@ export const GetVersionLinkDataDocument = `
   project(name: $projectName) {
     version(id: $versionId) {
       ...OverviewEntityLinkNodeFragment
+      updatedAt
     }
   }
 }
@@ -2027,6 +2053,13 @@ export const GetSearchedFoldersDocument = `
           ...OverviewEntityLinkNodeFragment
           subType: folderType
           label
+          thumbnailId
+          thumbnail {
+            id
+            relation
+            sourceEntityId
+            sourceEntityType
+          }
         }
       }
     }
@@ -2057,6 +2090,16 @@ export const GetSearchedProductsDocument = `
         node {
           ...OverviewEntityLinkNodeFragment
           subType: productType
+          featuredVersion {
+            id
+            thumbnailId
+            thumbnail {
+              id
+              relation
+              sourceEntityId
+              sourceEntityType
+            }
+          }
         }
       }
     }
@@ -2116,6 +2159,14 @@ export const GetSearchedTasksDocument = `
           ...OverviewEntityLinkNodeFragment
           label
           subType: taskType
+          updatedAt
+          thumbnailId
+          thumbnail {
+            id
+            relation
+            sourceEntityId
+            sourceEntityType
+          }
         }
       }
     }
@@ -2144,6 +2195,7 @@ export const GetSearchedVersionsDocument = `
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          updatedAt
         }
       }
     }
