@@ -1,17 +1,27 @@
 import { useListBundlesQuery } from '@queries/bundles/getBundles'
+import { useGlobalContext } from '@shared/context'
+import { getFrontendBundleMode } from '@shared/util'
 
 type Props = {
   addons: string[]
 }
 
 export const useGetBundleAddonVersions = ({ addons }: Props) => {
+  const { user } = useGlobalContext()
+  const frontendBundleMode = getFrontendBundleMode(user)
   const { data: { bundles, productionBundle, stagingBundle } = {}, isFetching } =
     useListBundlesQuery({})
 
   if (isFetching) return { isLoading: true, addonVersions: new Map<string, string>() }
 
-  // get production, staging, dev, latest bundle
-  const bundleName = productionBundle || stagingBundle
+  const userName = user?.name
+  const activeDevBundle = bundles?.find((bundle) => bundle.isDev && bundle.activeUser === userName)?.name
+  const bundleName =
+    frontendBundleMode === 'developer'
+      ? activeDevBundle || stagingBundle || productionBundle
+      : frontendBundleMode === 'staging'
+        ? stagingBundle || productionBundle
+        : productionBundle || stagingBundle
   const bundleDetails = bundles?.find((b) => b.name === bundleName)
 
   // always return a map, even if no bundle details are found

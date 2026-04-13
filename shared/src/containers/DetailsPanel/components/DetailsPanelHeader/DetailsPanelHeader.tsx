@@ -57,7 +57,7 @@ const DetailsPanelHeader = ({
   onOpenViewer,
   onEntityFocus,
 }: DetailsPanelHeaderProps) => {
-  const { useSearchParams, useNavigate, isDeveloperMode } = useDetailsPanelContext()
+  const { useSearchParams, useNavigate, frontendBundleMode } = useDetailsPanelContext()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tagsSelectRef = useRef<DropdownRef>(null)
@@ -266,7 +266,7 @@ const DetailsPanelHeader = ({
             entitySubTypes={entitySubTypes}
             isLoadingEntity={!!isFetching || !!isLoading}
             searchParams={searchParams}
-            isDeveloperMode={isDeveloperMode}
+            frontendBundleMode={frontendBundleMode}
             onSetSearchParams={setSearchParams}
             onNavigate={navigate}
           />

@@ -9,6 +9,7 @@ import ActionIcon from './ActionIcon'
 import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
+import { FrontendBundleMode, getFrontendBundleVariant } from '@shared/util'
 
 const placeholder = {
   identifier: 'placeholder',
@@ -25,7 +26,7 @@ interface ActionsProps extends ActionTriggersProps {
   isLoadingEntity: boolean
   projectActionsProjectName?: string
   featuredCount?: number
-  isDeveloperMode: boolean
+  frontendBundleMode: FrontendBundleMode
   align?: ActionsDropdownProps['align']
   pt?: {
     dropdown?: Partial<ActionsDropdownProps>
@@ -40,12 +41,13 @@ export const Actions = ({
   projectActionsProjectName,
   searchParams,
   featuredCount = 2,
-  isDeveloperMode,
+  frontendBundleMode,
   onNavigate,
   onSetSearchParams,
   align,
   pt,
 }: ActionsProps) => {
+  const actionVariant = getFrontendBundleVariant(frontendBundleMode)
   // special triggers the actions can make to perform stuff on the client
   const { handleActionPayload } = useActionTriggers({ onNavigate, onSetSearchParams, searchParams })
   const [actionBeingConfigured, setActionBeingConfigured] = useState<any>(null)
@@ -93,7 +95,7 @@ export const Actions = ({
   }, [context])
 
   const { data, isFetching: isFetchingActions } = useGetActionsFromContextQuery(
-    { mode: 'simple', actionContext: context as ActionContext },
+    { mode: 'simple', variant: actionVariant, actionContext: context as ActionContext },
     { skip: !context },
   )
 
@@ -218,7 +220,7 @@ export const Actions = ({
     const params = {
       addonName: action.addonName as string,
       addonVersion: action.addonVersion as string,
-      variant: action.variant,
+      variant: action.variant || actionVariant,
       identifier: action.identifier,
     }
 
@@ -326,7 +328,7 @@ export const Actions = ({
         isLoading={isLoading && featuredCount > 0}
         onAction={handleExecuteAction}
         onConfig={handleConfigureAction}
-        isDeveloperMode={isDeveloperMode}
+        frontendBundleMode={frontendBundleMode}
         align={align}
         {...pt?.dropdown}
       />

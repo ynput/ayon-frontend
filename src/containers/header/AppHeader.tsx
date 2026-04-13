@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { InputSwitch } from '@ynput/ayon-react-components'
+import { Dropdown } from '@ynput/ayon-react-components'
 import { UserImage } from '@shared/components'
 import { useUpdateUserMutation } from '@shared/api'
 
@@ -10,18 +10,20 @@ import HeaderButton from './HeaderButton'
 import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
+import { useListBundlesQuery } from '@queries/bundles/getBundles'
 import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import { MenuContainer } from '@shared/components'
 import { toast } from 'react-toastify'
-import { toggleDevMode } from '@state/user'
+import { updateUserPreferences } from '@state/user'
 import styled from 'styled-components'
 import { useRestart } from '@context/RestartContext'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
 import ChatBubbleButton from './ChatBubbleButton'
+import { FrontendBundleMode, getFrontendBundleMode } from '@shared/util'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -34,53 +36,105 @@ const FlexWrapperEnd = styled.div`
   justify-content: end;
 `
 
-const DeveloperSwitch = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-small);
-  border-radius: var(--border-radius-l);
-  padding: 4px 4px 4px 8px;
+interface BundleModeOption {
+  value: FrontendBundleMode
+  label: string
+}
+
+const FRONTEND_BUNDLE_MODE_LABELS: Record<FrontendBundleMode, string> = {
+  production: 'Production',
+  staging: 'Staging',
+  developer: 'Developer mode',
+}
+
+const getBundleModeTextColor = (frontendBundleMode: FrontendBundleMode) => {
+  if (frontendBundleMode === 'staging') return 'black'
+  if (frontendBundleMode === 'developer') return 'var(--color-hl-developer)'
+  return 'var(--md-sys-color-on-surface)'
+}
+
+const getBundleModeBackgroundColor = (frontendBundleMode: FrontendBundleMode) => {
+  if (frontendBundleMode === 'staging') return 'var(--color-hl-staging)'
+  if (frontendBundleMode === 'developer') return 'var(--color-hl-developer-container)'
+  return 'var(--md-sys-color-surface-container-highest)'
+}
+
+const getBundleModeHoverBackgroundColor = (frontendBundleMode: FrontendBundleMode) => {
+  if (frontendBundleMode === 'staging') return 'var(--color-hl-staging-hover)'
+  if (frontendBundleMode === 'developer') return 'var(--color-hl-developer-container-hover)'
+  return 'var(--md-sys-color-surface-container-highest-hover)'
+}
+
+const FrontendBundleModeDropdown = styled(Dropdown)<{ $mode: FrontendBundleMode }>`
+  height: 32px;
+  min-width: 180px;
   margin: 4px 0;
-  cursor: pointer;
   z-index: 10;
-  transition: background-color 0.2s;
-  background-color: var(--md-sys-color-surface-container-highest);
 
-  & > span {
-    user-select: none;
-  }
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-highest-hover);
-  }
-
-  &.active {
-    background-color: var(--color-hl-developer-container);
-
-    & > span {
-      color: var(--color-hl-developer);
-    }
+  button {
+    background-color: ${({ $mode }) => getBundleModeBackgroundColor($mode)};
+    color: ${({ $mode }) => getBundleModeTextColor($mode)};
+    border: none;
+    border-radius: var(--border-radius-l);
+    padding: 2px 8px;
+    min-height: 32px;
+    transition: background-color 0.2s;
 
     &:hover {
-      background-color: var(--color-hl-developer-container-hover);
+      background-color: ${({ $mode }) => getBundleModeHoverBackgroundColor($mode)};
+    }
+
+    .template-value {
+      border: none;
+      background: transparent;
+      padding: 0;
     }
   }
 `
 
-const StyledSwitch = styled(InputSwitch)`
-  pointer-events: none;
+const FrontendBundleModeValue = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--base-gap-small);
+  min-width: 0;
+`
 
-  .switch-body input:checked + .slider {
-    background-color: var(--color-hl-developer);
-    border-color: var(--color-hl-developer);
+const FrontendBundleModeLabel = styled.span`
+  user-select: none;
+  white-space: nowrap;
+`
 
-    &,
-    &:hover {
-      &::before {
-        background-color: var(--color-hl-developer-container);
-      }
-    }
-  }
+const FrontendBundleModeBadge = styled.span<{ $mode: FrontendBundleMode }>`
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: ${({ $mode }) => ($mode === 'developer' ? 'var(--color-hl-developer)' : 'black')};
+  background-color: ${({ $mode }) =>
+    $mode === 'staging'
+      ? 'var(--color-hl-staging)'
+      : $mode === 'developer'
+        ? 'var(--color-hl-developer-container-hover)'
+        : 'var(--color-hl-production)'};
+`
+
+const FrontendBundleModeOptionRow = styled.div<{ $isActive?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--base-gap-small);
+  padding: 4px 8px;
+  flex: 1;
+
+  ${({ $isActive }) =>
+    $isActive &&
+    `
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    `}
 `
 
 const ProjectsButton = styled(HeaderButton)`
@@ -108,7 +162,9 @@ const Header: React.FC = () => {
 
   // Get developer states
   const isDeveloper = (user?.data as any)?.isDeveloper
-  const developerMode = user?.attrib.developerMode
+  const frontendBundleMode = getFrontendBundleMode(user)
+  const { data: { stagingBundle } = {} } = useListBundlesQuery({ archived: false })
+  const hasActiveStagingBundle = !!stagingBundle
 
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef<HTMLButtonElement>(null)
@@ -143,26 +199,75 @@ const Header: React.FC = () => {
 
   // UPDATE USER DATA
   const [updateUser] = useUpdateUserMutation()
-  const handleDeveloperMode = async () => {
+  const frontendBundleModeOptions = useMemo<BundleModeOption[]>(
+    () =>
+      (
+        isDeveloper
+          ? ([
+              'production',
+              ...(hasActiveStagingBundle ? (['staging'] as const) : []),
+              'developer',
+            ] as const)
+          : (['production', ...(hasActiveStagingBundle ? (['staging'] as const) : [])] as const)
+      ).map((value) => ({
+        value: value as FrontendBundleMode,
+        label: FRONTEND_BUNDLE_MODE_LABELS[value as FrontendBundleMode],
+      })),
+    [hasActiveStagingBundle, isDeveloper],
+  )
+  const visibleFrontendBundleMode = frontendBundleModeOptions.some(
+    ({ value }) => value === frontendBundleMode,
+  )
+    ? frontendBundleMode
+    : 'production'
+
+  const renderFrontendBundleMode = (
+    frontendBundleModeValue?: FrontendBundleMode,
+    isActive?: boolean,
+  ) => {
+    const mode = frontendBundleModeValue || visibleFrontendBundleMode
+
+    return (
+      <FrontendBundleModeOptionRow $isActive={isActive}>
+        <FrontendBundleModeLabel>{FRONTEND_BUNDLE_MODE_LABELS[mode]}</FrontendBundleModeLabel>
+        {mode !== 'production' && (
+          <FrontendBundleModeBadge $mode={mode}>
+            {mode === 'staging' ? 'Staging' : 'Dev'}
+          </FrontendBundleModeBadge>
+        )}
+      </FrontendBundleModeOptionRow>
+    )
+  }
+
+  const handleBundleModeChange = async (value: string[]) => {
     try {
-      const newDeveloperMode = !developerMode
-      // optimistic update the switch
-      dispatch(toggleDevMode(newDeveloperMode))
+      const newFrontendBundleMode =
+        value?.[0] === 'staging' ? 'staging' : value?.[0] === 'developer' && isDeveloper ? 'developer' : 'production'
+      if (newFrontendBundleMode === frontendBundleMode) return
+
+      const updatedFrontendPreferences = {
+        ...(user.data?.frontendPreferences || {}),
+        frontendBundleMode: newFrontendBundleMode,
+      }
+
+      dispatch(updateUserPreferences({ frontendBundleMode: newFrontendBundleMode }))
 
       await updateUser({
         name: user.name,
         patch: {
-          attrib: { developerMode: newDeveloperMode },
+          attrib: { developerMode: newFrontendBundleMode === 'developer' },
+          data: {
+            ...user.data,
+            frontendPreferences: updatedFrontendPreferences,
+          },
         },
       }).unwrap()
 
-      // if the request fails, revert the switch
     } catch (error) {
       console.error(error)
       const errorMessage = (error as any)?.details || 'Unknown error'
-      toast.error('Unable to update developer mode: ' + errorMessage)
-      // reset switch on error
-      dispatch(toggleDevMode(developerMode))
+      toast.error('Unable to update frontend bundle mode: ' + errorMessage)
+      dispatch(updateUserPreferences({ frontendBundleMode }))
     }
   }
 
@@ -199,14 +304,22 @@ const Header: React.FC = () => {
       <FlexWrapperEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
-        {isDeveloper && (
-          <DeveloperSwitch
-            className={clsx({ active: developerMode })}
-            onClick={handleDeveloperMode}
-          >
-            <span>Developer Mode</span>
-            <StyledSwitch checked={developerMode} readOnly />
-          </DeveloperSwitch>
+        {frontendBundleModeOptions.length > 1 && (
+          <FrontendBundleModeDropdown
+            $mode={visibleFrontendBundleMode}
+            value={[visibleFrontendBundleMode]}
+            options={frontendBundleModeOptions}
+            onChange={handleBundleModeChange}
+            widthExpand
+            valueTemplate={(value) => (
+              <FrontendBundleModeValue>
+                {renderFrontendBundleMode(value?.[0] as FrontendBundleMode)}
+              </FrontendBundleModeValue>
+            )}
+            itemTemplate={(option, isActive) =>
+              renderFrontendBundleMode(option.value as FrontendBundleMode, isActive)
+            }
+          />
         )}
 
         {!user.data.isGuest && (

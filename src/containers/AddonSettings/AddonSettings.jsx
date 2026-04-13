@@ -53,6 +53,7 @@ import PerProjectBundleConfig, {
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 import { useLocalStorage } from '@shared/hooks'
 import InfoMessage from '@components/InfoMessage'
+import { getFrontendBundleMode } from '@shared/util'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -106,6 +107,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   //const navigate = useNavigate()
   const user = useSelector((state) => state.user)
   const developerMode = useMemo(() => user?.attrib?.developerMode, [JSON.stringify(user?.attrib)])
+  const frontendBundleMode = useMemo(() => getFrontendBundleMode(user), [user])
   const userName = useSelector((state) => state.user.name)
 
   const [showHelp, setShowHelp] = useState(false)
@@ -170,10 +172,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return bundles.filter((bundle) => bundle.isDev && bundle.activeUser === userName)
   }, [bundles, userName])
 
-  // Update selectedBundle when developer mode changes
+  // Keep bundle defaults aligned with the current frontend bundle mode.
   useEffect(() => {
-    if (developerMode) {
-      // Switch to dev bundle when entering developer mode
+    if (frontendBundleMode === 'developer') {
       const devBundle = devBundles.find((bundle) => bundle.isDev && bundle.activeUser === userName)
       if (devBundle) {
         setSelectedBundle({
@@ -182,16 +183,15 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           projectBundleName: undefined,
         })
       }
-      // If no dev bundle found, stay on current variant (don't switch)
-    } else {
-      // Switch back to production when leaving developer mode
-      setSelectedBundle({
-        variant: 'production',
-        bundleName: null,
-        projectBundleName: undefined,
-      })
+      return
     }
-  }, [developerMode, JSON.stringify(devBundles), userName])
+
+    setSelectedBundle({
+      variant: frontendBundleMode,
+      bundleName: null,
+      projectBundleName: undefined,
+    })
+  }, [frontendBundleMode, JSON.stringify(devBundles), userName])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
