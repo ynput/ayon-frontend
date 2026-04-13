@@ -128,7 +128,7 @@
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-virtual": "3.13.4",
     "@ynput/ayon-react-components": "1.17.1",
-    "axios": "1.13.2",
+    "axios": "1.15.0",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
     "date-fns": "3.6.0",
