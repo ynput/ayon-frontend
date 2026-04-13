@@ -122,7 +122,19 @@ export const filterDateFunctions = {
 
 export type DateOptionType = keyof typeof filterDateFunctions
 
-export const dateOptions: (Option & { id: DateOptionType })[] = [
+export const CUSTOM_RANGE_ID = 'custom-range'
+export const CUSTOM_RANGE_ICON = 'tune'
+
+// Custom range is free (no PowerPack needed), listed first
+export const customRangeOption: Option & { id: typeof CUSTOM_RANGE_ID } = {
+  id: CUSTOM_RANGE_ID,
+  label: 'Custom range...',
+  values: [],
+  icon: CUSTOM_RANGE_ICON,
+}
+
+// Preset date options (PowerPack-gated)
+export const datePresetOptions: (Option & { id: DateOptionType })[] = [
   {
     id: 'today',
     label: 'Today',
@@ -183,4 +195,10 @@ export const dateOptions: (Option & { id: DateOptionType })[] = [
     values: filterDateFunctions['last-year'](),
     icon: 'calendar_month',
   },
+]
+
+// Combined list for backwards compatibility
+export const dateOptions: (Option & { id: DateOptionType | typeof CUSTOM_RANGE_ID })[] = [
+  customRangeOption,
+  ...datePresetOptions,
 ]

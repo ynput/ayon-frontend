@@ -18,7 +18,7 @@ import type {
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
-import { dateOptions } from './filterDates'
+import { customRangeOption, datePresetOptions } from './filterDates'
 import { isEmpty } from 'lodash'
 import { SliceFilter } from '@shared/containers'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
@@ -44,6 +44,8 @@ export type FilterFieldType =
   | 'hasReviewables'
   | 'productName'
   | 'name'
+  | 'createdAt'
+  | 'updatedAt'
 type AttributeType =
   | string
   | number
@@ -435,6 +437,37 @@ export const useBuildFilterOptions = ({
       }
     }
 
+    // CREATED AT
+    if (scopeFilterTypes.includes('createdAt')) {
+      const createdAtOption = getOptionRoot('createdAt', config, scopePrefix, scopeLabel)
+      if (createdAtOption) {
+        createdAtOption.values?.push(customRangeOption)
+        // Preset date options are PowerPack-gated
+        createdAtOption.values?.push(
+          ...datePresetOptions.map((o) => ({
+            ...o,
+            contentAfter: power ? undefined : <Icon icon="bolt" />,
+          })),
+        )
+        options.push(createdAtOption)
+      }
+    }
+
+    // UPDATED AT
+    if (scopeFilterTypes.includes('updatedAt')) {
+      const updatedAtOption = getOptionRoot('updatedAt', config, scopePrefix, scopeLabel)
+      if (updatedAtOption) {
+        updatedAtOption.values?.push(customRangeOption)
+        updatedAtOption.values?.push(
+          ...datePresetOptions.map((o) => ({
+            ...o,
+            contentAfter: power ? undefined : <Icon icon="bolt" />,
+          })),
+        )
+        options.push(updatedAtOption)
+      }
+    }
+
     // ATTRIBUTES
     // dynamically add attributes options
     if (scopeFilterTypes.includes('attributes')) {
@@ -515,8 +548,11 @@ export const useBuildFilterOptions = ({
         // if the attribute type is datetime, add datetime options
 
         if (isDate) {
+          // Custom range is free
+          optionValues.push(customRangeOption)
+          // Preset date options are PowerPack-gated
           optionValues.push(
-            ...dateOptions.map((o) => ({
+            ...datePresetOptions.map((o) => ({
               ...o,
               contentAfter: power ? undefined : <Icon icon="bolt" />,
             })),
@@ -826,6 +862,40 @@ const getOptionRoot = (
         allowHasValue: false,
         allowNoValue: false,
         allowExcludes: config?.enableExcludes,
+        operatorChangeable: false,
+        singleSelect: true,
+      }
+      break
+    case 'createdAt':
+      rootOption = {
+        id: getRootIdWithPrefix('createdAt'),
+        type: 'datetime',
+        label: formatLabelWithScope('Created'),
+        icon: 'calendar_add_on',
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: false,
+        operatorChangeable: false,
+        singleSelect: true,
+      }
+      break
+    case 'updatedAt':
+      rootOption = {
+        id: getRootIdWithPrefix('updatedAt'),
+        type: 'datetime',
+        label: formatLabelWithScope('Updated'),
+        icon: 'edit_calendar',
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: false,
         operatorChangeable: false,
         singleSelect: true,
       }
