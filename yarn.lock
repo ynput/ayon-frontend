@@ -707,7 +707,7 @@
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-3.2.0.tgz#13ed8212f3b9ba697611529d15347f8528058cea"
   integrity sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==
 
-"@graphql-codegen/add@^6.0.0":
+"@graphql-codegen/add@6.0.0", "@graphql-codegen/add@^6.0.0":
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/add/-/add-6.0.0.tgz#d195051d7c4bd6d3955a92361cc9eec7784bb541"
   integrity sha512-biFdaURX0KTwEJPQ1wkT6BRgNasqgQ5KbCI1a3zwtLtO7XTo7/vKITPylmiU27K5DSOWYnY/1jfSqUAEBuhZrQ==
@@ -715,7 +715,7 @@
     "@graphql-codegen/plugin-helpers" "^6.0.0"
     tslib "~2.6.0"
 
-"@graphql-codegen/cli@^6.2.1":
+"@graphql-codegen/cli@6.2.1":
   version "6.2.1"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/cli/-/cli-6.2.1.tgz#c9f4e6ee180bafa433cd635d5e30d27ed9c0c900"
   integrity sha512-E1B+5nBda2l89Pci5M0HcEj2Hmx2yhORFX+1T3rmwpQjdOiulo+h9JifWxKomUpjfbmU1YkBSd47CCGLFPU10A==
@@ -796,7 +796,7 @@
     auto-bind "~4.0.0"
     tslib "~2.6.0"
 
-"@graphql-codegen/introspection@^5.0.1":
+"@graphql-codegen/introspection@5.0.1":
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/introspection/-/introspection-5.0.1.tgz#4f68403227849f379415c0a1345b533f12b9671d"
   integrity sha512-dX6U8o0Sddhuw491e5DTE1Vf8h4SN+8bldQ+XcK6imS7eVqduond1uZjLNgFejQFWfd7x0KWldKqyy/9Ilwtlw==
@@ -805,7 +805,7 @@
     "@graphql-codegen/visitor-plugin-common" "^6.2.4"
     tslib "~2.6.0"
 
-"@graphql-codegen/near-operation-file-preset@^5.0.0":
+"@graphql-codegen/near-operation-file-preset@5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/near-operation-file-preset/-/near-operation-file-preset-5.0.0.tgz#00cf43ce61eba094f82751f3b1709b7a9b9857b9"
   integrity sha512-Ck5jMu2izbKFwODYCM/sGWNQKN4BN4fpxr8g99fs6ESH29yfWMjA1dbUlTbtQtR7iXy39jT8451BLTG4/vOIxQ==
@@ -849,7 +849,7 @@
     "@graphql-tools/utils" "^11.0.0"
     tslib "~2.6.0"
 
-"@graphql-codegen/typed-document-node@^6.1.7":
+"@graphql-codegen/typed-document-node@6.1.7", "@graphql-codegen/typed-document-node@^6.1.7":
   version "6.1.7"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typed-document-node/-/typed-document-node-6.1.7.tgz#cdb3bbc6a5c430d16fd23be60ce2734cfb73a901"
   integrity sha512-VLL9hB+YPigc/W2QYCkSNMZrkKv42nTchb9mJ0h5VY98YmW/zWb6NeYM80iHSpk8ZvHsuUT5geA53/s1phO2NQ==
@@ -860,7 +860,7 @@
     change-case-all "1.0.15"
     tslib "~2.6.0"
 
-"@graphql-codegen/typescript-operations@^5.0.9":
+"@graphql-codegen/typescript-operations@5.0.9", "@graphql-codegen/typescript-operations@^5.0.9":
   version "5.0.9"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typescript-operations/-/typescript-operations-5.0.9.tgz#95388b2c80434118d5dd102ef5eff7f0de4ca29c"
   integrity sha512-jJFdJKMS5Cqisb5QMi7xXHPsJH9yHBMYOxBc8laFkFjHk/AOqJK90qCKbO9lwwTMPZUDe6N/HslmA0ax4J0zsg==
@@ -871,7 +871,7 @@
     auto-bind "~4.0.0"
     tslib "~2.6.0"
 
-"@graphql-codegen/typescript-rtk-query@^4.0.0":
+"@graphql-codegen/typescript-rtk-query@4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typescript-rtk-query/-/typescript-rtk-query-4.0.0.tgz#784dbff8651fa3dc366d62a68f24f1b745de0f75"
   integrity sha512-Nqd013r2YTIDrx8IxX5a+ObWdLs0wilMp09Xuj4Jfe1Iajf8dJyWsICRRDPTyVaCZMrt7om7UAzlV3u7scq/Cw==
@@ -882,7 +882,7 @@
     change-case-all "1.0.15"
     tslib "^2.8.1"
 
-"@graphql-codegen/typescript@^5.0.9":
+"@graphql-codegen/typescript@5.0.9", "@graphql-codegen/typescript@^5.0.9":
   version "5.0.9"
   resolved "https://registry.yarnpkg.com/@graphql-codegen/typescript/-/typescript-5.0.9.tgz#967c3fdd11c79f7adbd612c994367f3b38272435"
   integrity sha512-YlIZ4nqdFdzr5vxuNtQtZnnMYuZ5cLYB2HaGhGI2zvqHxCmkBjIRpu/5sfccawKy23wetV+aoWvoNqxGKIryig==
@@ -909,7 +909,7 @@
     parse-filepath "^1.0.2"
     tslib "~2.6.0"
 
-"@graphql-eslint/eslint-plugin@^4.4.0":
+"@graphql-eslint/eslint-plugin@4.4.0":
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/@graphql-eslint/eslint-plugin/-/eslint-plugin-4.4.0.tgz#3c1d8f92c9b1466097d3311fda7c84cb0d7a6249"
   integrity sha512-dhW6fpk3Souuaphhc38uMAGCcgKMgtCJWFygIKODw/Kns43wiQqRPVay0aNFY1JBx3aevn4KPT/BCOdm6HNncA==
@@ -5499,7 +5499,7 @@ lodash@4.17.23:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.23.tgz#f113b0378386103be4f6893388c73d0bde7f2c5a"
   integrity sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==
 
-lodash@^4.17.11:
+lodash@4.18.1, lodash@^4.17.11:
   version "4.18.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
   integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
@@ -6780,10 +6780,10 @@ quill-magic-url@4.2.0:
     normalize-url "^4.5.1"
     quill-delta "^3.6.2"
 
-quill@^2.0.2:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/quill/-/quill-2.0.3.tgz#752765a31d5a535cdc5717dc49d4e50099365eb1"
-  integrity sha512-xEYQBqfYx/sfb33VJiKnSJp8ehloavImQ2A6564GAbqG55PGw1dAWUn1MUbQB62t0azawUS2CZZhWCjO8gRvTw==
+quill@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/quill/-/quill-2.0.2.tgz#5b26bc10a74e9f7fdcfdb5156b3133a3ebf0a814"
+  integrity sha512-QfazNrhMakEdRG57IoYFwffUIr04LWJxbS/ZkidRFXYCQt63c1gK6Z7IHUXMx/Vh25WgPBU42oBaNzQ0K1R/xw==
   dependencies:
     eventemitter3 "^5.0.1"
     lodash-es "^4.17.21"
@@ -6892,13 +6892,13 @@ react-popper@^2.3.0:
     react-fast-compare "^3.0.1"
     warning "^4.0.2"
 
-react-quill-ayon@2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/react-quill-ayon/-/react-quill-ayon-2.0.2.tgz#8a408fa85ba8cdd9f686933e758fcd66b3916f35"
-  integrity sha512-42OqYieo522dbVrml5lXGZ57czk6ctBcdIG4tCYzyZYPgyc28WoC+AR7UjvdYaQlAj9jy3gpp8kcJHXcRUffYA==
+react-quill-ayon@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/react-quill-ayon/-/react-quill-ayon-2.0.3.tgz#4c5c86805a1fc5267ba69249d0faef9b1038bbe9"
+  integrity sha512-lkKU618tglDJQSGtfwz1/SfSOAr5BWoTGdSUQD43u9WvtNH727ZZhg5+42b/bt5Lk8itBdDfn+P/ThKKXWYYrA==
   dependencies:
-    lodash "^4.17.4"
-    quill "^2.0.2"
+    lodash "4.18.1"
+    quill "2.0.2"
 
 react-redux@9.2.0:
   version "9.2.0"
