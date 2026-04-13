@@ -342,7 +342,10 @@ export const Feed = ({
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 1 && isVersionsFilter && !isLoadingNew && (
+          {transformedActivitiesData.length === 1 &&
+            isVersionsFilter &&
+            !hasCommentLikeFilter &&
+            !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
           {hasNextPage && loadNextPage && (

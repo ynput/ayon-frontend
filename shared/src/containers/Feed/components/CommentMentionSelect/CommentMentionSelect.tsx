@@ -59,12 +59,16 @@ const CommentMentionSelect = ({
   let noOptionsString = `No ${config.id}s found`
   if (error) noOptionsString = error
 
+  // Check if any teams are in the options
+  const hasTeams = options.some((opt) => opt.type === 'team')
+  const titleText = hasTeams
+    ? '@ Users & Teams'
+    : `${mention.type} ${config?.id ? config.id.charAt(0).toUpperCase() + config.id.slice(1) : ''}s`
+
   return (
     <>
       <Styled.MentionSelect tabIndex={0}>
-        <Styled.Title>
-          {mention.type} {config?.id ? config.id.charAt(0).toUpperCase() + config.id.slice(1) : ''}s
-        </Styled.Title>
+        <Styled.Title>{titleText}</Styled.Title>
         {types.includes(mention.type) &&
           formattedOptions.map((option, i) => (
             <Styled.MentionItem

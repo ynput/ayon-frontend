@@ -138,7 +138,8 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     projectName: props.projectName,
     entityType: props.entityType,
   })
-  const skip = !props.projectName || !refTooltip?.id || refTooltip.type === 'user'
+  const skip =
+    !props.projectName || !refTooltip?.id || refTooltip.type === 'user' || refTooltip.type === 'team'
   const { data: entityTooltipData, isFetching: isFetchingTooltip } = useGetEntityTooltipQuery(
     { entityType: refTooltip?.type, entityId: refTooltip?.id, projectName: props.projectName },
     { skip: skip },

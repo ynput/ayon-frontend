@@ -101,6 +101,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const {
     users: mentionUsers,
+    teams: mentionTeams,
     versions: mentionVersions,
     tasks: mentionTasks,
   } = mentionSuggestionsData || {}
@@ -170,13 +171,13 @@ const CommentInput: FC<CommentInputProps> = ({
       getMentionOptions(
         mention?.type,
         {
-          '@': () => getMentionUsers(mentionUsers),
+          '@': () => getMentionUsers(mentionUsers, mentionTeams),
           '@@': () => getMentionVersions(mentionVersions, project),
           '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
         mention?.search,
       ),
-    [mentionTasks, mentionVersions, mentionUsers, mention?.type, mention?.search],
+    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mention?.search],
   )
 
   // show first 5 and filter itself out
@@ -203,7 +204,9 @@ const CommentInput: FC<CommentInputProps> = ({
     const mentionLabel = typePrefix + selectedOption.label // the label of the mention: @Tim Bailey
     // @ts-expect-error
     const type = mentionTypeOptions[typePrefix] // the type of mention: user, version, task
-    const href = `${type?.id}:${selectedOption.id}` // the href of the mention: user:user.123
+    // Use the option's own type (e.g. 'team') if available, otherwise fall back to the mention type config
+    const refType = selectedOption.type || type?.id
+    const href = `${refType}:${selectedOption.id}` // the href of the mention: user:user.123 or team:Thunder boys
 
     // get selection delta
     const selection = quill.getSelection(true)
