@@ -12,6 +12,7 @@ import {
   SearchFilterProps,
   SearchFilterRef,
   SEARCH_FILTER_ID,
+  buildFilterId,
 } from '@ynput/ayon-react-components'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
@@ -335,7 +336,37 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   const { dropdown, searchBar, ...ptRest } = pt || {}
 
-  // Intercept clicks on datetime filter chips to open the edit dialog
+  // Pre-fill the dropdown search input when editing a search filter chip
+  const prefillDropdownSearch = (text: string) => {
+    // Wait for dropdown to render, then set the input value via native setter
+    // to trigger React's onChange on the controlled input
+    requestAnimationFrame(() => {
+      const container = searchFilterRef.current?.getContainerElement()
+      const input = container?.querySelector('ul .search input') as HTMLInputElement
+      if (input) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value',
+        )?.set
+        if (nativeSetter) {
+          nativeSetter.call(input, text)
+          input.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+
+        // Hide preselected value rows and the search suggestion row
+        const list = input.closest('ul')
+        list?.querySelectorAll('li.selected, li#search').forEach((li) => {
+          ;(li as HTMLElement).style.display = 'none'
+        })
+
+        // Add margin so the search input's bottom outline isn't clipped
+        const searchContainer = input.closest('.search') as HTMLElement
+        if (searchContainer) searchContainer.style.marginBottom = '4px'
+      }
+    })
+  }
+
+  // Intercept clicks on filter chips (search prefill + datetime edit dialog)
   const handleSearchBarClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
 
@@ -344,6 +375,17 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
     const chipEl = target.closest('.search-filter-item')
     if (!chipEl) return
+
+    // Pre-fill dropdown search when clicking a search filter chip to edit
+    const chipId = chipEl.id
+    if (chipId === SEARCH_FILTER_ID || chipId.startsWith(SEARCH_FILTER_ID + '__')) {
+      const filter = localFilters.find((f) => f.id === chipId)
+      if (filter?.values?.length) {
+        const text = filter.values[0].label || String(filter.values[0].id)
+        prefillDropdownSearch(text)
+      }
+      return
+    }
 
     // Find the label text from the chip (format: "Created At:")
     const labelEl = chipEl.querySelector('.label')
@@ -419,6 +461,37 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                       handleOpenCustomRangeForFilter(filterId)
                     }
                     return false // prevent SearchFilter from selecting this value
+                  }
+
+                  // Auto-fill: if user typed text and then clicked a filter type,
+                  // create the filter with that text as value and prevent normal flow
+                  // (which would reopen the dropdown to the values panel)
+                  const searchInput = listItem.parentElement?.querySelector(
+                    '.search input',
+                  ) as HTMLInputElement
+                  const searchText = searchInput?.value?.trim() || ''
+
+                  if (searchText) {
+                    const optionId = listItem.id
+                    // Only for top-level filter types (no data-parent = not a value item)
+                    const parentAttr = listItem.getAttribute('data-parent')
+                    if (!parentAttr) {
+                      const matchingOption = options.find((o) => o.id === optionId)
+                      if (matchingOption?.allowsCustomValues) {
+                        const newId = buildFilterId(optionId)
+                        const newFilter: Filter = {
+                          id: newId,
+                          label: matchingOption.label,
+                          type: matchingOption.type,
+                          icon: matchingOption.icon,
+                          values: [{ id: searchText, label: searchText, isCustom: true }],
+                        }
+
+                        handleFinish([...localFilters, newFilter])
+                        searchFilterRef.current?.close()
+                        return false // prevent SearchFilter from reopening values panel
+                      }
+                    }
                   }
 
                   return true
