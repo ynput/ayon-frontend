@@ -26,6 +26,7 @@ const injectedApi = enhancedMentionsApi.injectEndpoints({
 
         return { data: res.data }
       },
+      providesTags: [{ type: 'team' as const, id: 'LIST' }],
     }),
   }),
 })

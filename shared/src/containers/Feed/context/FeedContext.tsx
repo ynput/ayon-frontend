@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useMemo, useState } from 'react'
 import useGetFeedActivitiesData from '../hooks/useGetFeedActivitiesData'
 
 // Queries
@@ -12,6 +12,7 @@ import {
   useGetEntityMentionsQuery,
   useGetEntityTooltipQuery,
   useGetActivityCategoriesQuery,
+  teamsApi,
 } from '@shared/api'
 import type { ActivityCategory, SuggestRequest, SuggestResponse } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
@@ -81,6 +82,8 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   // users data
   users: ActivityUser[]
   isGuest: boolean
+  // team membership for current user
+  userTeamNames: string[]
   // mentions data
   mentionSuggestionsData: SuggestResponse
   // categories data
@@ -94,6 +97,19 @@ const FeedContext = createContext<FeedContextType | undefined>(undefined)
 export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
   const { isGuest } = useDetailsPanelContext()
   const { data: users = [] } = useGetActivityUsersQuery({ projects: [props.projectName] })
+
+  // Fetch teams with members to derive which teams the current user belongs to
+  const { data: teams = [] } = teamsApi.useGetTeamsQuery(
+    { projectName: props.projectName, showMembers: true },
+    { skip: !props.projectName },
+  )
+  const userTeamNames = useMemo(
+    () =>
+      teams
+        .filter((t) => t.members?.some((m) => m.name === props.userName))
+        .map((t) => t.name),
+    [teams, props.userName],
+  )
 
   const [feedFilterInternal, setFeedFilterInternal] = useState<FeedFilter>({
     operator: 'and',
@@ -171,6 +187,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         categories,
         users,
         isUpdatingActivity,
+        userTeamNames,
         entityTooltipData,
         isFetchingTooltip,
         refTooltip,
