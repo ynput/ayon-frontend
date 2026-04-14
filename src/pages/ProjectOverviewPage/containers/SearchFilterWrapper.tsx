@@ -335,6 +335,49 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   const { dropdown, searchBar, ...ptRest } = pt || {}
 
+  // Intercept clicks on datetime filter chips to open the edit dialog
+  const handleSearchBarClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+
+    // Don't intercept clicks on the remove (X) button or include/exclude toggle
+    if (target.closest('.remove') || target.closest('.button')) return
+
+    const chipEl = target.closest('.search-filter-item')
+    if (!chipEl) return
+
+    // Find the label text from the chip (format: "Created At:")
+    const labelEl = chipEl.querySelector('.label')
+    if (!labelEl) return
+    const chipLabel = labelEl.textContent?.replace(/:$/, '').trim()
+    if (!chipLabel) return
+
+    // Match against datetime filters in localFilters
+    const datetimeFilter = localFilters.find(
+      (f) => f.type === 'datetime' && f.label === chipLabel && f.values && f.values.length > 0,
+    )
+
+    if (!datetimeFilter) return
+
+    // Check if it's a relative date (Today, This week, etc.) — let dropdown open normally
+    const rangeValue = datetimeFilter.values?.[0]
+    if (rangeValue?.id) {
+      const customIdContent = (rangeValue.id as string).replace('custom-', '')
+      const firstZIndex = customIdContent.indexOf('Z')
+      if (firstZIndex > 0) {
+        const startISO = customIdContent.substring(0, firstZIndex + 1)
+        const endISO = customIdContent.substring(firstZIndex + 2)
+        if (detectRelativeDatePattern(startISO, endISO)) {
+          // Relative date — let SearchFilter handle it (open dropdown)
+          return
+        }
+      }
+    }
+
+    // Custom date range — intercept and open the edit dialog
+    e.stopPropagation()
+    handleOpenCustomRangeForFilter(datetimeFilter.id)
+  }
+
   return (
     <>
       <SearchFilter
@@ -351,6 +394,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
             style: {
               paddingRight: 28,
             },
+            onClickCapture: handleSearchBarClickCapture,
             ...searchBar,
           },
           dropdown: {
