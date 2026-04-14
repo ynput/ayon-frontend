@@ -18,7 +18,7 @@ import type {
 } from '@shared/api'
 import { ColumnOrderState } from '@tanstack/react-table'
 import { Icon, Option, Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
-import { customRangeOption, datePresetOptions } from './filterDates'
+import { customRangeOption, generateDatePresetOptions } from './filterDates'
 import { isEmpty } from 'lodash'
 import { SliceFilter } from '@shared/containers'
 import { FEATURED_VERSION_TYPES } from '../FeaturedVersionOrder'
@@ -444,7 +444,7 @@ export const useBuildFilterOptions = ({
         createdAtOption.values?.push(customRangeOption)
         // Preset date options are PowerPack-gated
         createdAtOption.values?.push(
-          ...datePresetOptions.map((o) => ({
+          ...generateDatePresetOptions().map((o) => ({
             ...o,
             contentAfter: power ? undefined : <Icon icon="bolt" />,
           })),
@@ -459,7 +459,7 @@ export const useBuildFilterOptions = ({
       if (updatedAtOption) {
         updatedAtOption.values?.push(customRangeOption)
         updatedAtOption.values?.push(
-          ...datePresetOptions.map((o) => ({
+          ...generateDatePresetOptions().map((o) => ({
             ...o,
             contentAfter: power ? undefined : <Icon icon="bolt" />,
           })),
@@ -552,7 +552,7 @@ export const useBuildFilterOptions = ({
           optionValues.push(customRangeOption)
           // Preset date options are PowerPack-gated
           optionValues.push(
-            ...datePresetOptions.map((o) => ({
+            ...generateDatePresetOptions().map((o) => ({
               ...o,
               contentAfter: power ? undefined : <Icon icon="bolt" />,
             })),

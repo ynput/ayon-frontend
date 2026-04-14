@@ -15,6 +15,9 @@ import {
   endOfYear,
   subYears,
   setHours,
+  isSameDay,
+  parseISO,
+  isValid,
 } from 'date-fns'
 
 export const NO_DATE = 'no-date'
@@ -133,8 +136,9 @@ export const customRangeOption: Option & { id: typeof CUSTOM_RANGE_ID } = {
   icon: CUSTOM_RANGE_ICON,
 }
 
-// Preset date options (PowerPack-gated)
-export const datePresetOptions: (Option & { id: DateOptionType })[] = [
+// Function to generate date preset options dynamically (recalculates on each call)
+// This ensures relative dates like "Today" always reflect the current date
+export const generateDatePresetOptions = (): (Option & { id: DateOptionType })[] => [
   {
     id: 'today',
     label: 'Today',
@@ -197,8 +201,135 @@ export const datePresetOptions: (Option & { id: DateOptionType })[] = [
   },
 ]
 
-// Combined list for backwards compatibility
-export const dateOptions: (Option & { id: DateOptionType | typeof CUSTOM_RANGE_ID })[] = [
+// Deprecated: kept for backwards compatibility only
+// Use generateDatePresetOptions() instead to get fresh presets on each render
+export const datePresetOptions: (Option & { id: DateOptionType })[] = generateDatePresetOptions()
+
+// Function to generate combined list dynamically
+export const generateDateOptions = (): (Option & { id: DateOptionType | typeof CUSTOM_RANGE_ID })[] => [
   customRangeOption,
-  ...datePresetOptions,
+  ...generateDatePresetOptions(),
 ]
+
+// Deprecated: kept for backwards compatibility only
+// Use generateDateOptions() instead
+export const dateOptions: (Option & { id: DateOptionType | typeof CUSTOM_RANGE_ID })[] = generateDateOptions()
+
+/**
+ * Detects if a date range matches a known relative pattern (Today, This week, etc.)
+ * Returns the pattern info if matched, null otherwise
+ */
+export const detectRelativeDatePattern = (
+  startISO: string | undefined,
+  endISO: string | undefined,
+): { label: string; id: DateOptionType } | null => {
+  if (!startISO || !endISO) return null
+
+  try {
+    const startDate = parseISO(startISO)
+    const endDate = parseISO(endISO)
+
+    if (!isValid(startDate) || !isValid(endDate)) return null
+
+    // Check against each relative pattern
+    const patterns: Array<{ id: DateOptionType; label: string; check: () => boolean }> = [
+      {
+        id: 'today',
+        label: 'Today',
+        check: () => {
+          const today = filterDateFunctions.today()
+          return (
+            isSameDay(startDate, parseISO(today[0].id)) && isSameDay(endDate, parseISO(today[1].id))
+          )
+        },
+      },
+      {
+        id: 'yesterday',
+        label: 'Yesterday',
+        check: () => {
+          const yesterday = filterDateFunctions.yesterday()
+          return (
+            isSameDay(startDate, parseISO(yesterday[0].id)) &&
+            isSameDay(endDate, parseISO(yesterday[1].id))
+          )
+        },
+      },
+      {
+        id: 'this-week',
+        label: 'This week',
+        check: () => {
+          const thisWeek = filterDateFunctions['this-week']()
+          return (
+            isSameDay(startDate, parseISO(thisWeek[0].id)) &&
+            isSameDay(endDate, parseISO(thisWeek[1].id))
+          )
+        },
+      },
+      {
+        id: 'last-week',
+        label: 'Last week',
+        check: () => {
+          const lastWeek = filterDateFunctions['last-week']()
+          return (
+            isSameDay(startDate, parseISO(lastWeek[0].id)) &&
+            isSameDay(endDate, parseISO(lastWeek[1].id))
+          )
+        },
+      },
+      {
+        id: 'this-month',
+        label: 'This month',
+        check: () => {
+          const thisMonth = filterDateFunctions['this-month']()
+          return (
+            isSameDay(startDate, parseISO(thisMonth[0].id)) &&
+            isSameDay(endDate, parseISO(thisMonth[1].id))
+          )
+        },
+      },
+      {
+        id: 'last-month',
+        label: 'Last month',
+        check: () => {
+          const lastMonth = filterDateFunctions['last-month']()
+          return (
+            isSameDay(startDate, parseISO(lastMonth[0].id)) &&
+            isSameDay(endDate, parseISO(lastMonth[1].id))
+          )
+        },
+      },
+      {
+        id: 'this-year',
+        label: 'This year',
+        check: () => {
+          const thisYear = filterDateFunctions['this-year']()
+          return (
+            isSameDay(startDate, parseISO(thisYear[0].id)) &&
+            isSameDay(endDate, parseISO(thisYear[1].id))
+          )
+        },
+      },
+      {
+        id: 'last-year',
+        label: 'Last year',
+        check: () => {
+          const lastYear = filterDateFunctions['last-year']()
+          return (
+            isSameDay(startDate, parseISO(lastYear[0].id)) &&
+            isSameDay(endDate, parseISO(lastYear[1].id))
+          )
+        },
+      },
+    ]
+
+    for (const pattern of patterns) {
+      if (pattern.check()) {
+        return { label: pattern.label, id: pattern.id }
+      }
+    }
+
+    return null
+  } catch {
+    return null
+  }
+}

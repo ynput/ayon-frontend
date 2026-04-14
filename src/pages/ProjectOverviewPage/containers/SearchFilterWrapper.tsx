@@ -22,7 +22,11 @@ import {
   queryFilterToClientFilter,
   clientFilterToQueryFilter,
 } from '@shared/containers/ProjectTreeTable/utils'
-import { CUSTOM_RANGE_ID, CUSTOM_RANGE_ICON } from '@shared/components/SearchFilter/filterDates'
+import {
+  CUSTOM_RANGE_ID,
+  CUSTOM_RANGE_ICON,
+  detectRelativeDatePattern,
+} from '@shared/components/SearchFilter/filterDates'
 import { startOfDay, endOfDay, format, parse } from 'date-fns'
 
 const DialogBody = styled.div`
@@ -117,6 +121,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   // Track which datetime filter the user is currently interacting with
   const activeDatetimeFilterRef = useRef<string | null>(null)
+  const lastInteractedFilterRef = useRef<string | null>(null)
 
   useEffect(() => {
     setLocalFilters(filters)
@@ -131,6 +136,31 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     if (datetimeFilter) {
       activeDatetimeFilterRef.current = datetimeFilter.id
     }
+
+    // Check if a relative date filter is being clicked to edit it
+    // If so, auto-open the edit dialog instead of allowing dropdown
+    const modifiedDatetimeFilter = newFilters.find((f) => f.type === 'datetime' && f.id !== lastInteractedFilterRef.current)
+    if (modifiedDatetimeFilter && modifiedDatetimeFilter.values && modifiedDatetimeFilter.values.length > 0) {
+      const rangeValue = modifiedDatetimeFilter.values[0]
+      if (rangeValue.id && rangeValue.id.startsWith('custom-')) {
+        // This is a custom date range — check if it matches a relative pattern
+        const idParts = rangeValue.id.replace('custom-', '')
+        const firstEndIndex = idParts.indexOf('Z')
+        if (firstEndIndex > 0) {
+          const startISO = idParts.substring(0, firstEndIndex + 1)
+          const endISO = idParts.substring(firstEndIndex + 2)
+          const relativePattern = detectRelativeDatePattern(startISO, endISO)
+
+          if (relativePattern) {
+            // It's a relative date — auto-open edit dialog
+            handleOpenCustomRangeForFilter(modifiedDatetimeFilter.id)
+            lastInteractedFilterRef.current = modifiedDatetimeFilter.id
+            return
+          }
+        }
+      }
+    }
+    lastInteractedFilterRef.current = null
 
     // Strip any custom-range values that might slip through, but keep empty datetime
     // filters so SearchFilter can maintain its intermediate state (user selected the
@@ -162,9 +192,11 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // Validate the range
     if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return
 
+    const currentYear = new Date().getFullYear()
+    const endDateFormat = end.getFullYear() === currentYear ? 'MMM d' : 'MMM d, yyyy'
     const dateValue = {
       id: `custom-${start.toISOString()}-${end.toISOString()}`,
-      label: `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`,
+      label: `${format(start, 'MMM d')} – ${format(end, endDateFormat)}`,
       values: [
         { id: start.toISOString(), label: format(start, 'MMM d, yyyy') },
         { id: end.toISOString(), label: format(end, 'MMM d, yyyy') },
@@ -218,6 +250,55 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // Last resort: return the first datetime option from available options
     const datetimeOption = options.find((o) => o.type === 'datetime')
     return datetimeOption?.id || null
+  }
+
+  // Parse custom date range ID and populate form fields
+  const handleOpenCustomRangeForFilter = (filterId: string) => {
+    const filter = localFilters.find((f) => f.id === filterId)
+    if (!filter || filter.type !== 'datetime' || !filter.values || filter.values.length === 0) {
+      // No existing values — open fresh dialog
+      setCustomRangeFilterId(filterId)
+      setCustomStartDate('')
+      setCustomEndDate('')
+      return
+    }
+
+    const rangeValue = filter.values[0]
+    // Check if it's a custom date range (ID format: custom-${startISO}-${endISO})
+    if (rangeValue.id && rangeValue.id.startsWith('custom-')) {
+      // Extract ISO strings from the custom date ID
+      const customId = rangeValue.id as string
+      const isoStrings = customId.replace('custom-', '').split('-')
+
+      // Handle the ISO format which contains dashes in the date part
+      // Format: 2025-03-05T00:00:00.000Z-2025-03-10T23:59:59.999Z
+      // We need to find the split point (the T separates date from time)
+      if (isoStrings.length >= 2) {
+        // Find where the second ISO date starts (after the first Z)
+        const customIdContent = customId.replace('custom-', '')
+        const firstEndIndex = customIdContent.indexOf('Z')
+        if (firstEndIndex > 0) {
+          const startISO = customIdContent.substring(0, firstEndIndex + 1)
+          const endISO = customIdContent.substring(firstEndIndex + 2) // skip the dash after Z
+
+          if (startISO && endISO) {
+            // Convert to yyyy-MM-dd format for the date input
+            const startDate = parse(startISO, "yyyy-MM-dd'T'HH:mm:ss.SSSx", new Date())
+            const endDate = parse(endISO, "yyyy-MM-dd'T'HH:mm:ss.SSSx", new Date())
+
+            setCustomStartDate(format(startDate, 'yyyy-MM-dd'))
+            setCustomEndDate(format(endDate, 'yyyy-MM-dd'))
+            setCustomRangeFilterId(filterId)
+            return
+          }
+        }
+      }
+    }
+
+    // For non-custom values or if parsing fails, open fresh dialog
+    setCustomRangeFilterId(filterId)
+    setCustomStartDate('')
+    setCustomEndDate('')
   }
 
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
@@ -291,7 +372,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                   if (listItem.querySelector(`span[icon="${CUSTOM_RANGE_ICON}"]`)) {
                     const filterId = findActiveDatetimeFilterId()
                     if (filterId) {
-                      setCustomRangeFilterId(filterId)
+                      handleOpenCustomRangeForFilter(filterId)
                     }
                     return false // prevent SearchFilter from selecting this value
                   }

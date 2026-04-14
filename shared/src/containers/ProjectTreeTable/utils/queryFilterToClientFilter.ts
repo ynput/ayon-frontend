@@ -1,6 +1,7 @@
 import { Filter, FilterValue, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { QueryFilter, QueryCondition } from '../types/operations'
 import { format, parseISO, isValid } from 'date-fns'
+import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 
 // Option interface for filter options (from useBuildFilterOptions)
 interface Option {
@@ -94,10 +95,19 @@ const tryMergeDatetimeRange = (
   // Build the range label
   let label = 'Custom range'
   if (startISO && endISO) {
-    const startDate = parseISO(startISO)
-    const endDate = parseISO(endISO)
-    if (isValid(startDate) && isValid(endDate)) {
-      label = `${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d, yyyy')}`
+    // Check if it matches a relative date pattern first
+    const relativePattern = detectRelativeDatePattern(startISO, endISO)
+    if (relativePattern) {
+      label = relativePattern.label
+    } else {
+      // Fall back to showing the date range
+      const startDate = parseISO(startISO)
+      const endDate = parseISO(endISO)
+      if (isValid(startDate) && isValid(endDate)) {
+        const currentYear = new Date().getFullYear()
+        const endDateFormat = endDate.getFullYear() === currentYear ? 'MMM d' : 'MMM d, yyyy'
+        label = `${format(startDate, 'MMM d')} – ${format(endDate, endDateFormat)}`
+      }
     }
   }
 
