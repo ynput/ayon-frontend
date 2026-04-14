@@ -70,8 +70,7 @@ const ActivityComment = ({
   isSlideOut,
   statuses = [],
 }: Props) => {
-  const { userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest } =
-    useFeedContext()
+  const {userName, createReaction, deleteReaction, editingId, setEditingId, categories, isGuest, userTeamNames,} = useFeedContext()
 
   const moreRef = useRef<HTMLButtonElement>(null)
   const { toggleMenuOpen, menuOpen } = useMenuContext()
@@ -291,6 +290,7 @@ const ActivityComment = ({
                       aTag(props, {
                         entityId,
                         userName,
+                        userTeamNames,
                         projectName,
                         projectInfo,
                         onReferenceClick,

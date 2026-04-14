@@ -18,7 +18,11 @@ const urlToMention = (href: string | null, options: TypeOptions) => {
   // check href is a mention
   const type = href && href.split(':')[0]
   // find the type in mention options
-  const typeSymbol = Object.entries(options).find(([, value]) => value.id === type)?.[0]
+  // Team shares the @ symbol with user, so handle it explicitly
+  const typeSymbol =
+    type === 'team'
+      ? '@'
+      : Object.entries(options).find(([, value]) => value.id === type)?.[0]
   if (!typeSymbol) return { href }
   // prefix @ to the href
   const newHref = '@' + href

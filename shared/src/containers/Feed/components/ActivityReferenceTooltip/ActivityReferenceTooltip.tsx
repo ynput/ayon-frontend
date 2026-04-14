@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { useEffect } from 'react'
 import useReferenceTooltip from '../../hooks/useReferenceTooltip'
 import UserTooltip from '../Tooltips/UserTooltip/UserTooltip'
+import TeamTooltip from '../Tooltips/TeamTooltip/TeamTooltip'
 import EntityTooltip from '../Tooltips/EntityTooltip/EntityTooltip'
 
 interface ActivityReferenceTooltipProps {}
@@ -15,7 +16,8 @@ const ActivityReferenceTooltip: React.FC<ActivityReferenceTooltipProps> = () => 
     if (id) {
       const handleMouseOver = (event: MouseEvent) => {
         const target = event.target as Element | null
-        const closestRef = target?.closest(`#ref-${id.replaceAll('.', '-')}`)
+        const escapedId = CSS.escape(`ref-${id.replaceAll('.', '-')}`)
+        const closestRef = target?.closest(`#${escapedId}`)
         if (!closestRef) {
           // close
           setRefTooltip(null)
@@ -41,6 +43,8 @@ const ActivityReferenceTooltip: React.FC<ActivityReferenceTooltipProps> = () => 
   return createPortal(
     type === 'user' && pos ? (
       <UserTooltip name={name} label={label} pos={pos} />
+    ) : type === 'team' && pos ? (
+      <TeamTooltip name={name} pos={pos} />
     ) : (
       <EntityTooltip {...{ type, label, name, pos, id }} />
     ),
