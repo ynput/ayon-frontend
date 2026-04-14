@@ -86,6 +86,7 @@ export const Body = styled.div`
   p {
     word-break: break-word;
     .reference {
+      margin-right: -2px;
       top: 5px;
     }
 
