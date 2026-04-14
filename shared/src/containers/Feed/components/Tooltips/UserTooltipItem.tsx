@@ -42,7 +42,7 @@ interface UserTooltipItemProps {
 const UserTooltipItem = ({ name, fullName, showSubtitle, size = 24 }: UserTooltipItemProps) => {
   return (
     <Wrapper $size={size}>
-      <UserImage name={name} />
+      <UserImage name={name} size={size} />
       {showSubtitle ? (
         <TextContent>
           <span>{fullName || name}</span>

@@ -13,7 +13,7 @@ interface UserTooltipProps {
 const UserTooltip = ({ name, label, pos }: UserTooltipProps) => {
   return (
     <Styled.Popup style={{ ...pos }}>
-      <UserTooltipItem name={name || ''} fullName={label} showSubtitle size={40} />
+      <UserTooltipItem name={name || ''} fullName={label} showSubtitle size={32} />
     </Styled.Popup>
   )
 }

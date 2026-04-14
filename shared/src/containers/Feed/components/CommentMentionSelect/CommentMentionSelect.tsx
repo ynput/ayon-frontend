@@ -78,14 +78,16 @@ const CommentMentionSelect = ({
               <Styled.PrefixButton
                 className={clsx({ active: activePrefix === 'user' })}
                 onClick={() => onPrefixFilter?.(activePrefix === 'user' ? '' : 'user:')}
-                title="Filter users"
+                data-tooltip="Filter users"
+                data-tooltip-delay={0}
               >
                 <Icon icon="person" />
               </Styled.PrefixButton>
               <Styled.PrefixButton
                 className={clsx({ active: activePrefix === 'team' })}
                 onClick={() => onPrefixFilter?.(activePrefix === 'team' ? '' : 'team:')}
-                title="Filter teams"
+                data-tooltip="Filter teams"
+                data-tooltip-delay={0}
               >
                 <Icon icon="group" />
               </Styled.PrefixButton>

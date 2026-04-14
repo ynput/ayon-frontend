@@ -29,9 +29,7 @@ const TeamTooltip = ({ name, pos }: TeamTooltipProps) => {
   const remaining = Math.max(0, memberCount - MAX_VISIBLE_MEMBERS)
 
   // Build a lookup for user fullNames
-  const userFullNameMap = new Map(
-    users.map((u) => [u.name, u.attrib?.fullName || undefined]),
-  )
+  const userFullNameMap = new Map(users.map((u) => [u.name, u.attrib?.fullName || undefined]))
 
   return (
     <Styled.Popup style={{ ...pos }}>
@@ -53,6 +51,7 @@ const TeamTooltip = ({ name, pos }: TeamTooltipProps) => {
               <UserTooltipItem
                 name={member.name}
                 fullName={userFullNameMap.get(member.name)}
+                size={20}
               />
             </Styled.MemberItem>
           ))}
