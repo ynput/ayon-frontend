@@ -1,10 +1,11 @@
-import React from 'react'
 import { useState, useEffect } from 'react'
 import { Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
 import styled from 'styled-components'
+import OrderedListWidget from './OrderedListWidget'
+import { isEqual } from 'lodash'
 
 const StyledDropdown = styled(Dropdown)`
   button > div > div:has(span) {
@@ -136,6 +137,27 @@ const SelectWidget = (props: $Any) => {
   }
 
   const widget = props.schema?.widget
+  // TODO: remove ID check once backend addon adds widget="sortable_multiselect" to schema
+  const isSortableMultiselect =
+    widget === 'sortable_multiselect' ||
+    (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
+
+  if (isSortableMultiselect && props.multiple) {
+    return (
+      <OrderedListWidget
+        value={value || []}
+        options={options}
+        onChange={(newValue) => {
+          props.onChange(newValue)
+          setTimeout(() => {
+            // use isEqual (order-sensitive) instead of equiv (order-insensitive)
+            updateChangedKeys(props, !isEqual(newValue, originalValue), path)
+          }, 100)
+        }}
+      />
+    )
+  }
+
   if (widget === 'switchbox' && props.multiple) {
     return (
       <Switchbox
