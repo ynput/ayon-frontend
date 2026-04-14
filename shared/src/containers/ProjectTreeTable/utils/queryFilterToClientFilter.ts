@@ -2,6 +2,7 @@ import { Filter, FilterValue, SEARCH_FILTER_ID } from '@ynput/ayon-react-compone
 import { QueryFilter, QueryCondition } from '../types/operations'
 import { format, parseISO, isValid } from 'date-fns'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
+import { isRelativeDateValue, resolveRelativeValue } from '@shared/containers'
 
 // Option interface for filter options (from useBuildFilterOptions)
 interface Option {
@@ -84,13 +85,15 @@ const tryMergeDatetimeRange = (
   const filterOption = findFilterOption(key, filterOptions)
   if (!filterOption || filterOption.type !== 'datetime') return null
 
-  // Extract gte (start) and lte (end) values
+  // Extract gte (start) and lte (end) values, resolving relative dates
   const gteCondition = conditions.find((c) => c.operator === 'gte')
   const lteCondition = conditions.find((c) => c.operator === 'lte')
   if (!gteCondition && !lteCondition) return null
 
-  const startISO = gteCondition?.value as string | undefined
-  const endISO = lteCondition?.value as string | undefined
+  const rawStartValue = gteCondition?.value as string | undefined
+  const rawEndValue = lteCondition?.value as string | undefined
+  const startISO = rawStartValue && isRelativeDateValue(rawStartValue) ? resolveRelativeValue(rawStartValue) : rawStartValue
+  const endISO = rawEndValue && isRelativeDateValue(rawEndValue) ? resolveRelativeValue(rawEndValue) : rawEndValue
 
   // Build the range label
   let label = 'Custom range'

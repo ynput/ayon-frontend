@@ -1,5 +1,7 @@
 import { getFilterFromId } from '@ynput/ayon-react-components'
 import { QueryCondition, QueryFilter } from '../types/operations'
+import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
+import { createRelativeValue } from './expandRelativeDates'
 const NO_DATE = 'no-date'
 
 // New type that cherry picks only the needed fields from Filter
@@ -112,12 +114,22 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
           const conditions: QueryCondition[] = []
           const dateValues = filterValue.values
 
+          // Check if this date range matches a relative pattern (Today, This week, etc.)
+          const startISO = dateValues?.[0]?.id
+          const endISO = dateValues?.[1]?.id
+          const relativePattern =
+            startISO && endISO && startISO !== NO_DATE && endISO !== NO_DATE
+              ? detectRelativeDatePattern(startISO, endISO)
+              : null
+
           // First value is greater than (start date)
           if (dateValues?.[0] !== undefined && dateValues?.[0].id !== NO_DATE) {
             conditions.push({
               key,
               operator: filter.inverted ? 'lte' : 'gte',
-              value: dateValues[0].id,
+              value: relativePattern
+                ? createRelativeValue(relativePattern.id, 0)
+                : dateValues[0].id,
             })
           }
 
@@ -126,7 +138,9 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
             conditions.push({
               key,
               operator: filter.inverted ? 'gte' : 'lte',
-              value: dateValues[1].id,
+              value: relativePattern
+                ? createRelativeValue(relativePattern.id, 1)
+                : dateValues[1].id,
             })
           }
 
