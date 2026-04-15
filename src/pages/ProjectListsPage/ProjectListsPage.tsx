@@ -54,6 +54,7 @@ import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSet
 import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
+import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -243,6 +244,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
 
   const { gridHeight } = useReviewCardsSettingsContext()
 
+  const useModules = isStoryboards
+    ? useStoryboardsCardsModules
+    : useReviewSessionCardsModules
+
   const {
     ReviewSessionCards,
     ReviewSessionCardsProvider,
@@ -250,7 +255,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsControlsRight,
     outdated: reviewSessionCardsOutdated,
     allModulesLoaded: reviewModulesLoaded,
-  } = useReviewSessionCardsModules({ skip: !isReview })
+  } = useModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
   const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
@@ -415,7 +420,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       }}
                       className="details"
                     >
-                      <ProjectListsDetailsPanels isReview={!!isReview} view={view} />
+                      <ProjectListsDetailsPanels
+                        isReview={!!isReview}
+                        isStoryboards={!!isStoryboards}
+                        view={view}
+                      />
                     </SplitterPanel>
                   </DetailsPanelSplitter>
                 </SplitterPanel>
