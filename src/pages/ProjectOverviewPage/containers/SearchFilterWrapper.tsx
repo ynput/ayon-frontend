@@ -303,7 +303,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   }
 
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
-    // if a filter is a date then check we have power features
     let validFilters = [...filters]
 
     // Merge multiple text search filters (SEARCH_FILTER_ID) into one filter
@@ -529,7 +528,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           <FormRow label="Start date">
             <InputDate
               {...{
-                selected: customStartDate ? new Date(customStartDate) : undefined,
+                selected: customStartDate ? parse(customStartDate, 'yyyy-MM-dd', new Date()) : undefined,
                 onChange: (date: Date | null) => setCustomStartDate(date ? format(date, 'yyyy-MM-dd') : ''),
                 autoFocus: true,
               } as any}
@@ -538,7 +537,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
           <FormRow label="End date">
             <InputDate
               {...{
-                selected: customEndDate ? new Date(customEndDate) : undefined,
+                selected: customEndDate ? parse(customEndDate, 'yyyy-MM-dd', new Date()) : undefined,
                 onChange: (date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : ''),
               } as any}
             />
