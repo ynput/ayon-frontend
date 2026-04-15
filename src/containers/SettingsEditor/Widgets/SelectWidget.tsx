@@ -13,6 +13,46 @@ const StyledDropdown = styled(Dropdown)`
   }
 `
 
+const SwitchboxContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 800px;
+`
+
+const SwitchboxGrid = styled.div`
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px 16px;
+`
+
+const SwitchboxButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`
+
+const SwitchboxButton = styled.button`
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-s);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-highest);
+    border-color: var(--md-sys-color-outline);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
 const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
   const isSelected = (val: $Any) => {
     if (Array.isArray(value)) {
@@ -33,36 +73,60 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
     }
   }
 
-    return (
-    <div style={{
-      maxWidth: '800px',
-    }}>
-    <div
-      style={{
-        position: "relative",
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-        gap: "12px 16px",
-      }}
-    >
-      {options.map((opt: any) => (
-        <div
-          key={opt.value}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <InputSwitch
-            checked={isSelected(opt.value)}
-            onChange={() => toggleSelection(opt.value)}
-          />
-          <label style={{whiteSpace:"nowrap"}}>{opt.label}</label>
-        </div>
-      ))}
-    </div>
-    </div>
+  const selectAll = () => {
+    if (Array.isArray(value)) {
+      onSelectionChange(options.map((opt: any) => opt.value))
+    }
+  }
+
+  const deselectAll = () => {
+    if (Array.isArray(value)) {
+      onSelectionChange([])
+    }
+  }
+
+  const allSelected = Array.isArray(value) && value.length === options.length
+  const noneSelected = Array.isArray(value) && value.length === 0
+
+  return (
+    <SwitchboxContainer>
+      {options.length > 0 && (
+        <SwitchboxButtonGroup>
+          <SwitchboxButton
+            onClick={selectAll}
+            disabled={allSelected}
+            title="Select all options"
+          >
+            Select All
+          </SwitchboxButton>
+          <SwitchboxButton
+            onClick={deselectAll}
+            disabled={noneSelected}
+            title="Deselect all options"
+          >
+            Deselect All
+          </SwitchboxButton>
+        </SwitchboxButtonGroup>
+      )}
+      <SwitchboxGrid>
+        {options.map((opt: any) => (
+          <div
+            key={opt.value}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <InputSwitch
+              checked={isSelected(opt.value)}
+              onChange={() => toggleSelection(opt.value)}
+            />
+            <label style={{whiteSpace:"nowrap"}}>{opt.label}</label>
+          </div>
+        ))}
+      </SwitchboxGrid>
+    </SwitchboxContainer>
   )
 
 }

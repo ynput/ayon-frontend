@@ -111,6 +111,33 @@ const SectionLabel = styled.div`
   letter-spacing: 0.5px;
 `
 
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 6px;
+  padding: 6px 0;
+`
+
+const ActionButton = styled.button`
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-s);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-highest);
+    border-color: var(--md-sys-color-outline);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
 // Sortable item for selected list
 const SortableItem = ({
   id,
@@ -172,6 +199,15 @@ const OrderedListWidget = ({ value, options, onChange }: OrderedListWidgetProps)
 
   const removeItem = (item: string) => {
     onChange(value.filter((v) => v !== item))
+  }
+
+  const selectAll = () => {
+    const allValues = options.map((opt) => opt.value)
+    onChange(allValues)
+  }
+
+  const deselectAll = () => {
+    onChange([])
   }
 
   // Close dropdown on outside click
@@ -250,7 +286,25 @@ const OrderedListWidget = ({ value, options, onChange }: OrderedListWidgetProps)
       )}
       {value.length > 0 && (
         <>
-          <SectionLabel>Selected ({value.length})</SectionLabel>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <SectionLabel>Selected ({value.length})</SectionLabel>
+            <ButtonGroup>
+              {unselectedItems.length > 0 && (
+                <ActionButton
+                  onClick={selectAll}
+                  title="Select all available items"
+                >
+                  Select All
+                </ActionButton>
+              )}
+              <ActionButton
+                onClick={deselectAll}
+                title="Deselect all items"
+              >
+                Deselect All
+              </ActionButton>
+            </ButtonGroup>
+          </div>
           <DndContext
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
