@@ -36,11 +36,11 @@ import useGoToEntity from '../../hooks/useGoToEntity'
 const scopesConfig: ScopeWithFilterTypes[] = [
   {
     scope: 'task',
-    filterTypes: ['status', 'tags', 'taskType', 'assignees', 'attributes', 'name'],
+    filterTypes: ['status', 'tags', 'taskType', 'assignees', 'attributes', 'name', 'createdAt', 'updatedAt'],
   },
   {
     scope: 'folder',
-    filterTypes: ['status', 'tags', 'folderType', 'attributes', 'name'],
+    filterTypes: ['status', 'tags', 'folderType', 'attributes', 'name', 'createdAt', 'updatedAt'],
   },
 ]
 
