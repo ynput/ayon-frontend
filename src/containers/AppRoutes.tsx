@@ -72,6 +72,19 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           </ProtectedRoute>
         }
       />
+      {/* Allow reviews route for all levels */}
+      <Route
+        path={'/projects/:projectName/storyboards/:sessionId'}
+        element={
+          <ProtectedRoute
+            isAllowed={level > 0}
+            redirectPath="/"
+            preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
+          >
+            <ProjectPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path={'/projects/:projectName'}
         element={

@@ -115,6 +115,7 @@ interface ListsTableHeaderProps {
   buttonLabels?: ButtonsCustomization
   hiddenButtons?: ButtonType[]
   isReview?: boolean
+  isStoryboards?: boolean
 }
 
 const ListsTableHeader: FC<ListsTableHeaderProps> = ({
@@ -124,6 +125,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   buttonLabels = {},
   hiddenButtons = [],
   isReview = false,
+  isStoryboards = false,
 }) => {
   const {
     openNewList,
@@ -228,7 +230,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     { id: 'divider' },
     {
       id: 'new-list',
-      label: isReview ? 'Create review session' : 'Create list',
+      label: isReview
+        ? isStoryboards ? 'Create storyboard' : 'Create review session'
+        : 'Create list',
       icon: 'add',
       shortcut: 'N',
       onClick: () => {

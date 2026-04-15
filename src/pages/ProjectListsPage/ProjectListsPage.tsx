@@ -59,6 +59,7 @@ type ProjectListsPageProps = {
   projectName: string
   entityListTypes?: string[]
   isReview?: boolean
+  isStoryboards?: boolean
 }
 
 export type ReviewPageView = "table" | "cards"
@@ -67,6 +68,7 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   projectName,
   entityListTypes,
   isReview,
+  isStoryboards,
 }) => {
   // lists page does not support grouping yet
   const modules = undefined
@@ -80,7 +82,11 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
               <ListItemsDataProvider>
                 <ListsAttributesProvider>
                   <MoveEntityProvider>
-                    <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
+                    <ProjectListsWithInnerProviders
+                      isReview={isReview}
+                      isStoryboards={isStoryboards}
+                      modules={modules}
+                    />
                   </MoveEntityProvider>
                 </ListsAttributesProvider>
               </ListItemsDataProvider>
@@ -94,11 +100,13 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
 
 type ProjectListsWithInnerProvidersProps = {
   isReview?: boolean
+  isStoryboards?: boolean
   modules?: any
 }
 
 const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({
   isReview,
+  isStoryboards,
   modules,
 }) => {
   const { projectName, ...projectInfo } = useProjectContext()
@@ -174,6 +182,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                           extraColumns={extraColumns}
                           extraColumnsSettings={extraColumnsSettings}
                           isReview={isReview}
+                          isStoryboards={isStoryboards}
                           dndActiveId={dndActiveId}
                         />
                         <ListsShortcuts />
@@ -194,6 +203,7 @@ type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
   extraColumnsSettings: any[]
   isReview?: boolean
+  isStoryboards?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
 }
 
@@ -201,6 +211,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
   extraColumns,
   extraColumnsSettings,
   isReview,
+  isStoryboards,
   dndActiveId, // Destructure new prop
 }) => {
   const user = useAppSelector((state) => state.user?.attrib)
@@ -260,7 +271,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <ListsTable isReview={isReview} />
+            <ListsTable isReview={isReview} isStoryboards={isStoryboards} />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>

@@ -39,6 +39,7 @@ import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from '@shared/components'
+import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPage'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -99,7 +100,7 @@ const ProjectPageInner = () => {
 
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
-    addons: ['review', 'planner', 'reports'],
+    addons: ['review', 'planner', 'reports', 'storyboards'],
   })
 
   useEffect(() => {
@@ -165,6 +166,12 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
         viewType: 'reviews',
+      },
+      {
+        name: 'Storyboards',
+        path: `/projects/${projectName}/storyboards`,
+        module: 'storyboards',
+        viewType: 'storyboards',
       },
       {
         name: 'Reports',
@@ -253,6 +260,14 @@ const ProjectPageInner = () => {
           projectName={projectName}
           isLoadingAccess={isLoadingAddons}
           hasReviewAddon={!!matchedAddons.has('review')}
+        />
+      )
+    } else if (module === 'storyboards') {
+      component = (
+        <ProjectStoryboardsPage
+          projectName={projectName}
+          isLoadingAccess={isLoadingAddons}
+          hasStoryboardsAddon={!!matchedAddons.has('storyboards')}
         />
       )
     } else if (module === 'workfiles') {
