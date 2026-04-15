@@ -9,13 +9,14 @@ import { Menu, MenuContainer, MenuItemType } from '@shared/components'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useProjectContext } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
   canDeleteAllLists,
   canDeleteAllFolders,
   UserPermissions,
 } from '@pages/ProjectListsPage/util/listAccessControl'
+import { useCreateStoryboardMutation } from '@queries/storyboards'
 
 export const MENU_ID = 'lists-table-menu'
 
@@ -127,6 +128,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   isReview = false,
   isStoryboards = false,
 }) => {
+  const { projectName } = useProjectContext()
   const {
     openNewList,
     onOpenFolderList,
@@ -203,6 +205,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
 
   const handleSelectAllLists = () => selectAllLists()
 
+  const [createList] = useCreateStoryboardMutation()
+
   // Define all menu items in order (matching right-to-left button order)
   const menuItems: MenuItemType[] = [
     {
@@ -236,6 +240,15 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       icon: 'add',
       shortcut: 'N',
       onClick: () => {
+        if (isStoryboards) {
+          const label = prompt("What would you like to call the storyboard?")
+
+          createList({
+            projectName,
+            label,
+          })
+          return
+        }
         // If a single folder is selected, create list inside that folder
         if (selectedFolders.length === 1) {
           openNewList({ entityListFolderId: selectedFolders[0] })
