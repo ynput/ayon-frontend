@@ -71,11 +71,19 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
 
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState(null)
+  const [value, setValue] = useState<string[] | string | null>(null)
+
+  const widget = props.schema?.widget
+  // TODO: remove ID check once backend addon adds widget="sortable_multiselect" to schema
+  const isSortableMultiselect =
+    widget === 'sortable_multiselect' ||
+    (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (equiv(value, props.value)) {
+    // For sortable multiselect, order matters - use isEqual instead of equiv
+    const eq = isSortableMultiselect ? isEqual(value, props.value) : equiv(value, props.value)
+    if (eq) {
       return
     }
 
@@ -91,13 +99,18 @@ const SelectWidget = (props: $Any) => {
 
   useEffect(() => {
     if (value === null) return
-    const isChanged = !equiv(value, props.value)
+    const isChanged = isSortableMultiselect
+      ? !isEqual(value, props.value)
+      : !equiv(value, props.value)
     if (!isChanged) {
       return
     }
     props.onChange(value)
     setTimeout(() => {
-      updateChangedKeys(props, !equiv(value, props.originalValue), path)
+      const origChanged = isSortableMultiselect
+        ? !isEqual(value, originalValue)
+        : !equiv(value, props.originalValue)
+      updateChangedKeys(props, origChanged, path)
     }, 100)
   }, [value])
 
@@ -136,24 +149,12 @@ const SelectWidget = (props: $Any) => {
     renderableValue = [value]
   }
 
-  const widget = props.schema?.widget
-  // TODO: remove ID check once backend addon adds widget="sortable_multiselect" to schema
-  const isSortableMultiselect =
-    widget === 'sortable_multiselect' ||
-    (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
-
   if (isSortableMultiselect && props.multiple) {
     return (
       <OrderedListWidget
-        value={value || []}
+        value={(value as string[]) || []}
         options={options}
-        onChange={(newValue) => {
-          props.onChange(newValue)
-          setTimeout(() => {
-            // use isEqual (order-sensitive) instead of equiv (order-insensitive)
-            updateChangedKeys(props, !isEqual(newValue, originalValue), path)
-          }, 100)
-        }}
+        onChange={setValue as (value: string[]) => void}
       />
     )
   }
