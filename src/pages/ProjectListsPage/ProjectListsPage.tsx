@@ -55,6 +55,7 @@ import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './co
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
 import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
+import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -333,10 +334,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
             >
               {selectedList && (
                 <Toolbar>
-                  <OpenReviewSessionButton
-                    projectName={projectName}
-                    disabled={listItemsData.length === 0}
-                  />
+                  {
+                    isStoryboards
+                    ? <OpenStoryboardButton
+                        projectName={projectName}
+                      />
+                    : <OpenReviewSessionButton
+                        projectName={projectName}
+                        disabled={listItemsData.length === 0}
+                      />
+                  }
                   {
                     reviewModulesLoaded && view === "cards" && (
                       <ReviewSessionCardsControlsLeft />

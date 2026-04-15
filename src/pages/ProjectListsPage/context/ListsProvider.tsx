@@ -80,8 +80,10 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
       : unstableListSelection
     ),
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
-    [unstableListSelection, unstableReviewSelection, isReview, isStoryboards],
+    [unstableListSelection, unstableReviewSelection, unstableStoryboardSelection, isReview, isStoryboards],
   )
+
+  console.log('unstableStoryboardSelection', unstableStoryboardSelection)
 
   const setRowSelection = useCallback(
     (ids: RowSelectionState) => {
