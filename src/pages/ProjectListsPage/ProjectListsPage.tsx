@@ -385,7 +385,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     align="right"
                   />
                   {
-                    !reviewSessionCardsOutdated && isReview && (
+                    !reviewSessionCardsOutdated && isReview && !isStoryboards && (
                       <TableGridSwitch
                         showGrid={view === "cards"}
                         onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
