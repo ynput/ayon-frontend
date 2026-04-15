@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import {
@@ -24,6 +24,11 @@ const Container = styled.div`
   width: 100%;
 `
 
+const DropdownWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`
+
 const SearchInput = styled.input`
   width: 100%;
   padding: 6px 8px;
@@ -43,12 +48,23 @@ const SearchInput = styled.input`
   }
 `
 
-const ItemList = styled.div`
+const DropdownList = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 1px;
   overflow-y: auto;
   max-height: 300px;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-m);
+  margin-top: 2px;
+  padding: 4px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `
 
 const ItemRow = styled.div<{ $isSelected?: boolean }>`
@@ -58,8 +74,7 @@ const ItemRow = styled.div<{ $isSelected?: boolean }>`
   padding: 4px 8px;
   border-radius: var(--border-radius-m);
   cursor: pointer;
-  background: ${({ $isSelected }) =>
-    $isSelected ? 'var(--md-sys-color-surface-container-high)' : 'transparent'};
+  background: transparent
 
   &:hover {
     background: var(--md-sys-color-surface-container-high);
@@ -118,9 +133,9 @@ const SortableItem = ({
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} {...attributes}>
       <ItemRow $isSelected>
-        <DragHandle {...listeners} {...attributes} icon="drag_indicator" />
+        <DragHandle {...listeners} icon="drag_indicator" />
         <ItemLabel>{label}</ItemLabel>
         <ActionIcon
           icon="close"
@@ -142,7 +157,10 @@ export interface OrderedListWidgetProps {
 
 const OrderedListWidget = ({ value, options, onChange }: OrderedListWidgetProps) => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [draggedId, setDraggedId] = useState<string | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const getLabel = (val: string) => {
     const opt = options.find((o) => o.value === val)
@@ -156,6 +174,18 @@ const OrderedListWidget = ({ value, options, onChange }: OrderedListWidgetProps)
   const removeItem = (item: string) => {
     onChange(value.filter((v) => v !== item))
   }
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false)
+        setSearchQuery('')
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Drag handlers
   const handleDragStart = (event: DragStartEvent) => {
@@ -188,8 +218,37 @@ const OrderedListWidget = ({ value, options, onChange }: OrderedListWidgetProps)
   const draggedLabel = draggedId ? getLabel(draggedId) : ''
 
   return (
-    <Container>
+    <Container data-tooltip="">
+
       {/* Selected items with drag-and-drop */}
+      {/* Dropdown to add items */}
+      {unselectedItems.length > 0 && (
+        <DropdownWrapper ref={dropdownRef}>
+          <SearchInput
+            ref={inputRef}
+            placeholder="Application"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsDropdownOpen(true)}
+          />
+          {isDropdownOpen && (
+            <DropdownList>
+              {unselectedItems.map((opt) => (
+                <ItemRow
+                  key={opt.value}
+                  onClick={() => {
+                    addItem(opt.value)
+                    setSearchQuery('')
+                    inputRef.current?.focus()
+                  }}
+                >
+                  <ItemLabel>{opt.label}</ItemLabel>
+                </ItemRow>
+              ))}
+            </DropdownList>
+          )}
+        </DropdownWrapper>
+      )}
       {value.length > 0 && (
         <>
           <SectionLabel>Selected ({value.length})</SectionLabel>
@@ -226,30 +285,6 @@ const OrderedListWidget = ({ value, options, onChange }: OrderedListWidgetProps)
                 document.body,
               )}
           </DndContext>
-        </>
-      )}
-
-      {/* Available items */}
-      {unselectedItems.length > 0 && (
-        <>
-          <SectionLabel>Available</SectionLabel>
-          {options.length > 5 && (
-            <div style={{ padding: '0 4px 4px' }}>
-              <SearchInput
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          )}
-          <ItemList>
-            {unselectedItems.map((opt) => (
-              <ItemRow key={opt.value} onClick={() => addItem(opt.value)}>
-                <ActionIcon icon="add" style={{ opacity: 0.7 }} />
-                <ItemLabel>{opt.label}</ItemLabel>
-              </ItemRow>
-            ))}
-          </ItemList>
         </>
       )}
 
