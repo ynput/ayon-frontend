@@ -33,8 +33,6 @@ const ListsTable: FC<ListsTableProps> = ({ isReview, isStoryboards }) => {
   const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
   const [clientSearch, setClientSearch] = useState<null | string>(null)
 
-  console.log('rs', rowSelection)
-
   // Define stable event handlers using useCallback
   const handleDoubleClick = useCallback((e: MouseEvent<HTMLSpanElement>) => {
     if (e.detail === 2) {

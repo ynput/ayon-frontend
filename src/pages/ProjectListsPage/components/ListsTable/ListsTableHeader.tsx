@@ -17,6 +17,9 @@ import {
   UserPermissions,
 } from '@pages/ProjectListsPage/util/listAccessControl'
 import { useCreateStoryboardMutation } from '@queries/storyboards'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router'
+import { useSearchParams } from 'react-router-dom'
 
 export const MENU_ID = 'lists-table-menu'
 
@@ -146,6 +149,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const { listsData, listFolders } = useListsDataContext()
   const user = useAppSelector((state) => state.user)
 
+  const [searchParams, setSearchParams] = useSearchParams()
+
   // Create user permissions object for access control checks
   const userPermissions: UserPermissions = useMemo(
     () => ({
@@ -239,14 +244,25 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
         : 'Create list',
       icon: 'add',
       shortcut: 'N',
-      onClick: () => {
+      onClick: async () => {
         if (isStoryboards) {
           const label = prompt("What would you like to call the storyboard?")
+            || `Storyboard - ${new Date().toLocaleString()}`
 
-          createList({
+          const { data, error } = await createList({
             projectName,
             label,
           })
+
+          if (error) {
+            return toast.error("Error creating storyboard")
+          }
+
+          setSearchParams({
+            ...searchParams,
+            storyboard: data.id,
+          })
+
           return
         }
         // If a single folder is selected, create list inside that folder

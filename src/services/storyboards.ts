@@ -1,8 +1,17 @@
 import api from '@shared/api'
 
+type CreateStoryboardApiResponse = {
+  id: string
+}
+
+type CreateStoryboardApiArg = {
+  projectName: string
+  label: string
+}
+
 export const getStoryboardsApi = api.injectEndpoints({
   endpoints: (build) => ({
-    createStoryboard: build.mutation({
+    createStoryboard: build.mutation<CreateStoryboardApiResponse, CreateStoryboardApiArg>({
       query: ({ projectName, label }) => ({
         url: `/api/addons/storyboards/0.0.1-dev/${projectName}/boards`,
         method: 'POST',
