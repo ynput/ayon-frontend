@@ -74,10 +74,9 @@ const ItemRow = styled.div<{ $isSelected?: boolean }>`
   padding: 4px 8px;
   border-radius: var(--border-radius-m);
   cursor: pointer;
-  background: transparent
 
   &:hover {
-    background: var(--md-sys-color-surface-container-high);
+    background: var(--md-sys-color-surface-container-highest);
   }
 `
 
