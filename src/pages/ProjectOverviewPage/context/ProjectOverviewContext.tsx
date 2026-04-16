@@ -97,27 +97,32 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // to working view causes a race condition where stale settings override the user's action.
   const skipNextViewSettingsSyncRef = useRef(false)
 
-  // Sync viewGroupBy from server whenever viewSettings changes (view switch, server update, etc.)
-  // Skipped when the change originated from a local groupBy/hierarchy update.
+  // Sync viewGroupBy from server whenever the grouping-related settings change
+  // (view switch, server update, etc.). Skipped when the change originated from
+  // a local groupBy/hierarchy update to avoid race conditions.
+  const overviewShowHierarchy = (viewSettings as OverviewSettings | undefined)?.showHierarchy
+  const overviewGroupBy = (viewSettings as OverviewSettings | undefined)?.groupBy
   useEffect(() => {
     if (skipNextViewSettingsSyncRef.current) {
       skipNextViewSettingsSyncRef.current = false
       return
     }
-    const settings = viewSettings as OverviewSettings | undefined
-    if (!settings) return
-    const serverShowHierarchy = settings.showHierarchy ?? true
-    const serverGroupBy = settings.groupBy
+    const serverShowHierarchy = overviewShowHierarchy ?? true
 
+    let newViewGroupBy: string | null
     if (serverShowHierarchy) {
-      setViewGroupBy(null) // hierarchy mode
-    } else if (serverGroupBy) {
-      setViewGroupBy(serverGroupBy) // grouped by field
+      newViewGroupBy = null // hierarchy mode
+    } else if (overviewGroupBy) {
+      newViewGroupBy = overviewGroupBy // grouped by field
     } else {
-      setViewGroupBy('none') // flat list
+      newViewGroupBy = 'none' // flat list
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(viewSettings)])
+
+    // Only write when value actually changed to avoid unnecessary localStorage churn
+    if (newViewGroupBy !== viewGroupBy) {
+      setViewGroupBy(newViewGroupBy)
+    }
+  }, [overviewShowHierarchy, overviewGroupBy, viewGroupBy, setViewGroupBy])
 
   const {
     onUpdateHierarchy: _updateShowHierarchy,
