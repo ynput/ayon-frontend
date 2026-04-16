@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { type QueryTasksFoldersApiArg } from '@shared/api'
-import { clientFilterToQueryFilter } from '../utils'
+import { clientFilterToQueryFilter, expandRelativeDates } from '../utils'
 import { QueryFilter, QueryCondition } from '../types/operations'
 
 interface UseQueryFiltersProps {
@@ -101,15 +101,21 @@ export const useQueryFilters = ({
         : { ...combinedQueryFilter, conditions: [] }
     }
 
-    const queryFilterString = combinedQueryFilter?.conditions?.length
-      ? JSON.stringify(combinedQueryFilter)
+    // Expand relative date values (e.g., "relative:today:0") to actual ISO dates
+    // before sending to the backend API
+    const expandedQueryFilter = combinedQueryFilter?.conditions?.length
+      ? expandRelativeDates(combinedQueryFilter)
+      : combinedQueryFilter
+
+    const queryFilterString = expandedQueryFilter?.conditions?.length
+      ? JSON.stringify(expandedQueryFilter)
       : ''
 
     return {
       filterString: queryFilterString,
-      filter: combinedQueryFilter,
+      filter: expandedQueryFilter,
       search: fuzzySearchFilter,
-      combinedFilters: combinedQueryFilter,
+      combinedFilters: expandedQueryFilter,
       displayFilters: displayQueryFilter,
     }
   }, [queryFilters, sliceFilter])

@@ -1,5 +1,8 @@
 import { Filter, FilterValue, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { QueryFilter, QueryCondition } from '../types/operations'
+import { format, parseISO, isValid } from 'date-fns'
+import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
+import { isRelativeDateValue, resolveRelativeValue } from '@shared/containers'
 
 // Option interface for filter options (from useBuildFilterOptions)
 interface Option {
@@ -43,13 +46,94 @@ export const queryFilterToClientFilter = (
         filters.push(filter)
       }
     } else {
-      // This is a nested QueryFilter - recursively process it
-      const nestedFilters = queryFilterToClientFilter(condition, filterOptions)
-      filters.push(...nestedFilters)
+      // This is a nested QueryFilter - check if it's a datetime range (gte+lte same key)
+      const datetimeFilter = tryMergeDatetimeRange(condition, filterOptions)
+      if (datetimeFilter) {
+        filters.push(datetimeFilter)
+      } else {
+        // Recursively process other nested QueryFilters
+        const nestedFilters = queryFilterToClientFilter(condition, filterOptions)
+        filters.push(...nestedFilters)
+      }
     }
   })
 
   return filters
+}
+
+/**
+ * Detects nested QueryFilters that represent datetime ranges (gte+lte on the same key)
+ * and merges them into a single datetime Filter with proper range values.
+ */
+const tryMergeDatetimeRange = (
+  nestedFilter: QueryFilter,
+  filterOptions: Option[],
+): Filter | null => {
+  if (!nestedFilter.conditions || nestedFilter.conditions.length < 1) return null
+
+  // All conditions must be QueryConditions (not nested QueryFilters)
+  const conditions = nestedFilter.conditions.filter(
+    (c): c is QueryCondition => 'key' in c,
+  )
+  if (conditions.length !== nestedFilter.conditions.length) return null
+
+  // All conditions must share the same key
+  const key = conditions[0].key
+  if (!conditions.every((c) => c.key === key)) return null
+
+  // Find the matching filter option and check it's a datetime type
+  const filterOption = findFilterOption(key, filterOptions)
+  if (!filterOption || filterOption.type !== 'datetime') return null
+
+  // Extract gte (start) and lte (end) values, resolving relative dates
+  const gteCondition = conditions.find((c) => c.operator === 'gte')
+  const lteCondition = conditions.find((c) => c.operator === 'lte')
+  if (!gteCondition && !lteCondition) return null
+
+  const rawStartValue = gteCondition?.value as string | undefined
+  const rawEndValue = lteCondition?.value as string | undefined
+  const startISO = rawStartValue && isRelativeDateValue(rawStartValue) ? resolveRelativeValue(rawStartValue) : rawStartValue
+  const endISO = rawEndValue && isRelativeDateValue(rawEndValue) ? resolveRelativeValue(rawEndValue) : rawEndValue
+
+  // Build the range label
+  let label = 'Custom range'
+  if (startISO && endISO) {
+    // Check if it matches a relative date pattern first
+    const relativePattern = detectRelativeDatePattern(startISO, endISO)
+    if (relativePattern) {
+      label = relativePattern.label
+    } else {
+      // Fall back to showing the date range
+      const startDate = parseISO(startISO)
+      const endDate = parseISO(endISO)
+      if (isValid(startDate) && isValid(endDate)) {
+        const currentYear = new Date().getFullYear()
+        const endDateFormat = endDate.getFullYear() === currentYear ? 'MMM d' : 'MMM d, yyyy'
+        label = `${format(startDate, 'MMM d')} – ${format(endDate, endDateFormat)}`
+      }
+    }
+  }
+
+  // `values` holds the gte/lte range pair — used by clientFilterToQueryFilter for round-trip
+  // but not part of the FilterValue type, so we extend it at runtime
+  const rangeValue = {
+    id: `custom-${startISO || ''}-${endISO || ''}`,
+    label,
+    values: [
+      ...(startISO ? [{ id: startISO, label: isValid(parseISO(startISO)) ? format(parseISO(startISO), 'MMM d, yyyy') : startISO }] : []),
+      ...(endISO ? [{ id: endISO, label: isValid(parseISO(endISO)) ? format(parseISO(endISO), 'MMM d, yyyy') : endISO }] : []),
+    ],
+  } as FilterValue
+
+  return {
+    id: filterOption.id,
+    type: filterOption.type as Filter['type'],
+    label: filterOption.label,
+    icon: filterOption.icon,
+    inverted: nestedFilter.operator === 'or',
+    values: [rangeValue],
+    singleSelect: filterOption.singleSelect,
+  }
 }
 
 const convertConditionToFilter = (
@@ -175,6 +259,22 @@ const convertConditionValueToFilterValues = (
       const existingValue = filterOption.values?.find((v: FilterValue) => v.id === stringValue)
       if (existingValue) {
         return existingValue
+      }
+    }
+
+    // Format datetime values nicely instead of showing raw ISO strings
+    if (filterOption.type === 'datetime' && typeof val === 'string') {
+      try {
+        const date = parseISO(val)
+        if (isValid(date)) {
+          return {
+            id: stringValue,
+            label: format(date, 'MMM d, yyyy'),
+            isCustom: true,
+          }
+        }
+      } catch {
+        // fall through to default
       }
     }
 
