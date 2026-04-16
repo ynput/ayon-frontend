@@ -1,24 +1,46 @@
-import { DragEndEvent } from '@dnd-kit/core';
+import { DragEndEvent } from '@dnd-kit/core'
+import { isEqual } from 'lodash'
 import { uniqueId } from 'lodash'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const useDraggable = <T extends { id: string }, U>({
   creator,
   initialData,
   onChange,
   normalizer,
+  mergeIncomingData,
 }: {
   creator: () => T
   initialData: T[]
   onChange: (data: U[]) => void
   normalizer: (data: T[]) => U[]
+  mergeIncomingData?: (currentData: T[], incomingData: T[]) => T[]
 }) => {
   const [items, setItems] = useState<T[]>(initialData)
 
   const updateAndSync = (data: T[]) => {
-    onChange(normalizer(data))
     setItems(data)
+
+    const currentNormalized = normalizer(items)
+    const nextNormalized = normalizer(data)
+
+    if (!isEqual(currentNormalized, nextNormalized)) {
+      onChange(nextNormalized)
+    }
   }
+
+  useEffect(() => {
+    setItems((currentItems) => {
+      const currentNormalized = normalizer(currentItems)
+      const incomingNormalized = normalizer(initialData)
+
+      if (isEqual(currentNormalized, incomingNormalized)) {
+        return currentItems
+      }
+
+      return mergeIncomingData ? mergeIncomingData(currentItems, initialData) : initialData
+    })
+  }, [initialData, mergeIncomingData, normalizer])
 
   const handleAddItem = (overrides: Partial<T>) => {
     updateAndSync([...items, { ...creator(), ...overrides, id: uniqueId() }])

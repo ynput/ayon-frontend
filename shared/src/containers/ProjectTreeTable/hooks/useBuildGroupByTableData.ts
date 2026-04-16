@@ -108,6 +108,7 @@ const defaultEntityToGroupRow = (
     entityId: task.id,
     entityType: entityType,
     parentId: task.folderId,
+    folderId: task.folderId,
     name: task.name || '',
     label: task.label || task.name || '',
     icon: typeData?.icon || null,
@@ -121,7 +122,10 @@ const defaultEntityToGroupRow = (
     attrib: task.attrib,
     ownAttrib: task.ownAttrib,
     parents: task.parents || [],
+    folder: task.parents?.[task.parents.length - 1] || undefined,
+    createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    hasReviewables: task.hasReviewables || false,
     links: linksToTableData(task.links, entityType, {
       folderTypes: project?.folderTypes || [],
       productTypes: Object.values(project.productTypes) || [],
@@ -206,6 +210,11 @@ const useBuildGroupByTableData = ({
         // for attribute based grouping, get the value of the attribute
         const attributeId = groupBy.id.split('.')[1]
         groupValues = valueToStringArray(entity.attrib?.[attributeId])
+      } else if (groupBy.id === 'folderType' && 'folder' in entity) {
+        // folderType is nested under folder for task entities (from TaskPropsFragment)
+        groupValues = valueToStringArray(
+          (entity as EditorTaskNode & { folder?: { folderType?: string } }).folder?.folderType,
+        )
       } else {
         groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
       }

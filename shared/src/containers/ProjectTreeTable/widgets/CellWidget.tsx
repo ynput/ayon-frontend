@@ -30,6 +30,11 @@ const Cell = styled.div`
   padding: 4px 8px;
   display: flex;
   align-items: center;
+  overflow: hidden;
+
+  &:has(.markdown) {
+    align-items: flex-start;
+  }
 
   &:focus-visible {
     outline: none;
@@ -110,7 +115,7 @@ export const CellWidget: FC<EditorCellProps> = ({
   const type = attributeData?.type
 
   const { projectName } = useProjectContext()
-  const { isEditing, setEditingCellId } = useCellEditing()
+  const { isEditing, setEditingCellId, getEditingDraft, setEditingDraft } = useCellEditing()
   const { isCellFocused, gridMap, selectCell, focusCell } = useSelectionCellsContext()
   const cellId = getCellId(rowId, columnId)
 
@@ -119,25 +124,36 @@ export const CellWidget: FC<EditorCellProps> = ({
 
   const moveToNextRow = () => {
     const rowIndex = gridMap.rowIdToIndex.get(rowId)
-    if (rowIndex === undefined) return
+    if (rowIndex === undefined) {
+      setEditingCellId(null)
+      return
+    }
     const newRowId = gridMap.indexToRowId.get(rowIndex + 1)
     if (newRowId) {
       const newCellId = getCellId(newRowId, columnId)
       selectCell(newCellId, false, false)
       focusCell(newCellId)
       setEditingCellId(newCellId)
+    } else {
+      setEditingCellId(null)
     }
   }
 
   const handleOnChange: WidgetBaseProps['onChange'] = (newValue, key) => {
-    setEditingCellId(null)
-    if (isReadOnly) return
-    // move to the next cell row
+    if (isReadOnly) {
+      setEditingCellId(null)
+      return
+    }
     if (key === 'Enter') {
+      // Move to next row first (sets new editing cell), then save value.
+      // This prevents the dialog from blinking between rows.
       moveToNextRow()
       onChange?.(newValue, key)
     } else if (key === 'Click' && newValue != value) {
+      setEditingCellId(null)
       onChange?.(newValue, key)
+    } else {
+      setEditingCellId(null)
     }
   }
 
@@ -232,6 +248,10 @@ export const CellWidget: FC<EditorCellProps> = ({
                 value={enumValue.join(', ')}
                 isInherited={isInherited}
                 columnId={columnId}
+                cellId={cellId}
+                onRequestEdit={setEditingCellId}
+                getDraftValue={getEditingDraft}
+                setDraftValue={setEditingDraft}
                 {...sharedProps}
                 {...pt?.text}
               />
@@ -267,6 +287,11 @@ export const CellWidget: FC<EditorCellProps> = ({
             value={value as string}
             isInherited={isInherited}
             columnId={columnId}
+            cellId={cellId}
+            type={type as TextWidgetType}
+            onRequestEdit={setEditingCellId}
+            getDraftValue={getEditingDraft}
+            setDraftValue={setEditingDraft}
             {...sharedProps}
             {...pt?.text}
           />

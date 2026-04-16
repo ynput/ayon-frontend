@@ -6,10 +6,15 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 import { Button } from '@ynput/ayon-react-components'
 
-import DraggableEnumEditorItem from './DraggableEnumEditorItem'
+import DraggableEnumEditorItem, { DraggableEnumEditorItemProps } from './DraggableEnumEditorItem'
 import * as Styled from './EnumEditor.styled'
 import useDraggable from './hooks/useDraggable'
 import { appendOrUpdateNumericSuffix } from './util'
+
+export interface EnumEditorPt {
+  item?: DraggableEnumEditorItemProps
+  addButton?: Partial<React.ComponentProps<typeof Button>>
+}
 
 export type AttributeData = {
   id: string
@@ -67,11 +72,33 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
   })
 }
 
-type Props = {
+const mergeIncomingItems = (
+  currentItems: AttributeData[],
+  incomingItems: AttributeData[],
+): AttributeData[] => {
+  return incomingItems.map((incomingItem, index) => {
+    const currentItem = currentItems[index]
+
+    if (!currentItem) {
+      return incomingItem
+    }
+
+    return {
+      ...incomingItem,
+      id: currentItem.id,
+      isExpanded: currentItem.isExpanded,
+      isLabelFocused: currentItem.isLabelFocused,
+      isNewAttribute: currentItem.isNewAttribute,
+    }
+  })
+}
+
+interface EnumEditorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   values: NormalizedData[]
   onChange: (data: NormalizedData[]) => void
+  pt?: EnumEditorPt
 }
-export const EnumEditor = ({ values, onChange }: Props) => {
+export const EnumEditor = ({ values, onChange, pt, ...props }: EnumEditorProps) => {
   if (!values) {
     return null
   }
@@ -88,6 +115,7 @@ export const EnumEditor = ({ values, onChange }: Props) => {
     initialData: denormalize(values),
     onChange,
     normalizer: normalize,
+    mergeIncomingData: mergeIncomingItems,
   })
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -107,7 +135,7 @@ export const EnumEditor = ({ values, onChange }: Props) => {
 
   return (
     <>
-      <Styled.EnumListWrapper>
+      <Styled.EnumListWrapper {...props}>
         <DndContext
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
@@ -137,22 +165,25 @@ export const EnumEditor = ({ values, onChange }: Props) => {
                     ),
                   })
                 }
+                {...pt?.item}
               />
             ))}
           </SortableContext>
 
           {createPortal(
             <DragOverlay style={{}}>
-              {draggedItem && <DraggableEnumEditorItem item={draggedItem} />}
+              {draggedItem && <DraggableEnumEditorItem item={draggedItem} {...pt?.item} />}
             </DragOverlay>,
             document.body,
           )}
         </DndContext>
 
         <Button
+          {...pt?.addButton}
           icon="add"
           variant="text"
           onClick={() => handleAddItem({ isNewAttribute: true })}
+          className={pt?.addButton?.className}
           style={{ display: 'flex', justifyContent: 'start' }}
         >
           Add new item

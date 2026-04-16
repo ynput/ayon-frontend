@@ -38,6 +38,12 @@ export const useGetGroupedFields = ({
     () =>
       [
         {
+          value: 'folderType',
+          label: 'Folder type',
+          icon: getAttributeIcon('folder'),
+          scopes: ['folder', 'task'],
+        },
+        {
           value: 'taskType',
           label: 'Task type',
           icon: getAttributeIcon('task'),

@@ -21,6 +21,7 @@ export interface ReviewableUploadProps extends React.HTMLProps<HTMLDivElement> {
   onUpload?: () => void
   onFilesAdded?: (files: File[]) => void
   children?: any
+  readOnly?: boolean
   pt?: {
     upload?: React.HTMLProps<HTMLDivElement>
     dropzone?: React.HTMLProps<HTMLDivElement>
@@ -41,6 +42,7 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
   pendingFiles = [],
   setPendingFiles,
   className,
+  readOnly = false,
   pt,
   ...props
 }) => {
@@ -139,7 +141,14 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
       <Styled.ReviewablesList
         className={clsx(className, variant, { dragging: isDraggingFile })}
         {...props}
-        onDragEnter={() => setIsDraggingFile(true)}
+        onDragEnter={() => !readOnly && setIsDraggingFile(true)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          if (readOnly) {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+        }}
       >
         <>
           {children}
@@ -171,19 +180,21 @@ export const ReviewableUpload: FC<ReviewableUploadProps> = ({
             ))}
 
           {/* upload button */}
-          <Styled.Upload
-            id="upload"
-            className={clsx('upload', variant)}
-            style={variantStyles}
-            {...pt?.upload}
-          >
-            <span>Drop or click to upload</span>
-            <input type="file" multiple onChange={handleInputChange} />
-          </Styled.Upload>
+          {!readOnly && (
+            <Styled.Upload
+              id="upload"
+              className={clsx('upload', variant)}
+              style={variantStyles}
+              {...pt?.upload}
+            >
+              <span>Drop or click to upload</span>
+              <input type="file" multiple onChange={handleInputChange} />
+            </Styled.Upload>
+          )}
         </>
       </Styled.ReviewablesList>
 
-      {isDraggingFile && (
+      {isDraggingFile && !readOnly && (
         <Styled.Dropzone
           onDragOver={(e) => e.preventDefault()}
           onDragLeave={() => setIsDraggingFile(false)}

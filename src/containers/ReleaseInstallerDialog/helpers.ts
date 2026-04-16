@@ -9,7 +9,7 @@ import type {
 } from '@shared/api'
 import { getPlatformLabel } from '@pages/AccountPage/DownloadsPage/DownloadsPage'
 import { formatDistance } from 'date-fns'
-import { ReleaseForm } from './hooks/useReleaseForm'
+import type { ReleaseForm } from './hooks/useReleaseForm'
 import { DownloadAddonsApiArg } from '@shared/api'
 import getNewBundleName from '@pages/SettingsPage/Bundles/getNewBundleName'
 

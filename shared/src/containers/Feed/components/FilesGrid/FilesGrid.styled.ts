@@ -5,9 +5,9 @@ export const Grid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
   gap: var(--base-gap-large);
   padding: var(--padding-s);
+  min-width: 0;
 
   &.compact {
-    height: calc(100% + 80px);
     grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
     gap: var(--base-gap-small);
   }

@@ -21,7 +21,6 @@ export const useGetEntityGroups = ({ groupBy, projectName, entityType }: GetEnti
     { projectName, entityType, groupingKey: groupingKey, empty: true },
     { skip: !groupBy?.id },
   )
-
   return {
     groups,
     error,

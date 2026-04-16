@@ -56,7 +56,6 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
   }, [searchData])
 
   const handleSelectEntity = (entity: any) => {
-    console.log(`Add ${entity.name}`)
     onAdd?.(entity.id)
     // Clear search after adding
     setSearch('')

@@ -41,6 +41,7 @@ query GetProducts(
           tags
           type
           productType
+          productBaseType
           allAttrib
           parents
           createdAt

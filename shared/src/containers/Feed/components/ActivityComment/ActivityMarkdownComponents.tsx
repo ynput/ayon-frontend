@@ -4,6 +4,7 @@ import ActivityReference from '../ActivityReference/ActivityReference'
 
 const allowedRefTypes = [
   'user',
+  'team',
   'task',
   'folder',
   'version',
@@ -19,7 +20,10 @@ const sanitizeURL = (url = '') => {
   else if (url.includes(':')) {
     const sections = url.split(':')
     const [type, id] = sections
-    if (allowedRefTypes.includes(type) && id && sections.length === 2) return { type, id }
+    if (allowedRefTypes.includes(type) && id && sections.length === 2) {
+      const decodedId = (() => { try { return decodeURIComponent(id) } catch { return id } })()
+      return { type, id: decodedId }
+    }
   }
   return {}
 }
@@ -33,6 +37,7 @@ interface ATagOptions {
   entityId?: string
   projectName?: string
   userName?: string
+  userTeamNames?: string[]
   onReferenceClick: (data: {
     entityId: string
     entityType: string
@@ -56,6 +61,7 @@ export const aTag = (
   {
     entityId,
     userName,
+    userTeamNames,
     projectName,
     onReferenceClick,
     activityId,
@@ -86,18 +92,25 @@ export const aTag = (
   }
 
   const label = (children && children.toString().replace('@', '')) || ''
-  // is this ref the same as the current task id or the user is mentioning themselves
-  const isHighlighted = id === entityId || (type === 'user' && id === userName)
+  // is this ref the same as the current task id, the user is mentioning themselves,
+  // or the current user is a member of the mentioned team
+  const isHighlighted =
+    id === entityId ||
+    (type === 'user' && id === userName) ||
+    (type === 'team' && !!userTeamNames?.includes(id))
+  // create a DOM-safe id (no dots or spaces) for the element attribute and selector matching
+  const domSafeId = id.replaceAll('.', '-').replaceAll(' ', '-')
 
   return (
     <ActivityReference
-      {...{ type, id: id.replaceAll('.', '-') }}
+      {...{ type, id: domSafeId }}
       variant={isHighlighted ? 'filled' : 'surface'}
-      onClick={() =>
-        type !== 'user' &&
-        onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
-      }
-      onMouseEnter={(e, pos) => onReferenceTooltip({ type, id, label, name: id, pos })}
+      onClick={() => {
+        if (type !== 'user' && type !== 'team') {
+          onReferenceClick({ entityId: id, entityType: type, projectName, activityId })
+        }
+      }}
+      onMouseEnter={(e, pos) => onReferenceTooltip({ type, id: domSafeId, label, name: id, pos })}
       categoryPrimary={categoryPrimary}
       categorySecondary={categorySecondary}
     >

@@ -16,7 +16,7 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
 import { useDetailsPanelContext, FeedFilter } from '@shared/context'
-import { DetailsPanelEntityType } from '@shared/api'
+import { DetailsPanelEntityType, useGetMyProjectPermissionsQuery } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
 import TabHeaderAndFilters, {
@@ -88,6 +88,7 @@ export const Feed = ({
     setHighlightedActivities,
     onOpenImage,
     setFeedAnnotations,
+    user,
   } = useDetailsPanelContext()
 
   const isVersionsFilter = feedFilter.conditions?.some(
@@ -100,8 +101,23 @@ export const Feed = ({
     (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
   )
 
-  // hide comment input for specific filters
-  const hideCommentInput = hasActiveFilters && !hasCommentLikeFilter
+  // check activities permission for commenting
+  const {
+    data: projectPermissions,
+    isLoading: isLoadingPermissions,
+  } = useGetMyProjectPermissionsQuery(
+    { projectName },
+    { skip: !projectName },
+  )
+  const isCommentRestricted =
+    !user.data?.isManager &&
+    !user.data?.isAdmin &&
+    !isLoadingPermissions &&
+    projectPermissions?.activities?.enabled &&
+    !projectPermissions?.activities?.activities?.includes('comment')
+
+  // hide comment input for specific filters or when restricted by permissions
+  const hideCommentInput = isCommentRestricted || (hasActiveFilters && !hasCommentLikeFilter)
 
   const activitiesWithMergedAnnotations = useMemo(
     () => mergeAnnotationAttachments(activitiesData),
@@ -326,7 +342,10 @@ export const Feed = ({
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 1 && isVersionsFilter && !isLoadingNew && (
+          {transformedActivitiesData.length === 1 &&
+            isVersionsFilter &&
+            !hasCommentLikeFilter &&
+            !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
           )}
           {hasNextPage && loadNextPage && (

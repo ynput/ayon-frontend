@@ -27,6 +27,7 @@ export async function typeWithDelay(quill, retain, type, delay = 1) {
   }
 }
 
+import { parseFilename } from '@shared/components'
 import axios from 'axios'
 const abortController = new AbortController()
 const cancelToken = axios.CancelToken
@@ -49,7 +50,7 @@ export const uploadFile = (file, projectName, onUploadProgress): Promise<Uploade
       onUploadProgress: (e) => onUploadProgress && onUploadProgress(e, file),
       headers: {
         'Content-Type': file.type,
-        'x-file-name': file.name,
+        'x-file-name': parseFilename(file.name),
       },
     }
 

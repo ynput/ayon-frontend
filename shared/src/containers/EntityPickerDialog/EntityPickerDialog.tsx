@@ -11,6 +11,7 @@ import styled from 'styled-components'
 import { useGetEntityPickerData } from './hooks/useGetEntityPickerData'
 import { upperFirst } from 'lodash'
 import useExpandedWithInitialFolders from './hooks/useExpandedWithInitialFolders'
+import { usePreserveChildSelectionByName } from './hooks/usePreserveChildSelectionByName'
 
 const COL_MAX_WIDTH = 600
 
@@ -134,6 +135,13 @@ export const EntityPickerDialog: FC<EntityPickerDialogProps> = ({
 
   // Get the complete hierarchy for the target entity type!
   const entityHierarchy = entityHierarchies[entityType]
+
+  usePreserveChildSelectionByName({
+    entityHierarchy,
+    entityData,
+    rowSelection,
+    setEntityRowSelection,
+  })
 
   // Process table data to filter out excluded IDs and mark disabled rows
   const recursivelyProcessRows = (

@@ -1,5 +1,5 @@
-import { AttributeField, SortingSetting } from '@shared/components'
-import { SortCardType } from '@ynput/ayon-react-components'
+import { AttributeField } from '@shared/components'
+import { SortCardType, SettingsSortingDropdown } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 
 interface VPTableSortingSettingProps {
@@ -49,8 +49,9 @@ const VPTableSortingSetting: FC<VPTableSortingSettingProps> = ({
   }
 
   return (
-    <SortingSetting
+    <SettingsSortingDropdown
       title="Sort by"
+      icon="sort"
       value={value}
       options={options}
       onChange={handleChange}

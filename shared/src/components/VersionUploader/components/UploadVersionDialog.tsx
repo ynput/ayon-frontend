@@ -44,6 +44,7 @@ export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
     error,
     createdProductId,
     createdVersionId,
+    matchedProduct,
   } = useVersionUploadContext()
 
   // Use existing productId if available, otherwise use created one
@@ -82,7 +83,7 @@ export const UploadVersionDialog: FC<UploadVersionDialogProps> = () => {
         minVersion={latestVersion}
         onChange={handleFormChange}
         onSubmit={handleFormSubmit}
-        hidden={productId ? ['name', 'productType'] : []}
+        hidden={productId ? ['name', 'productType'] : matchedProduct ? ['productType'] : []}
         projectName={projectName}
         versionId={currentVersionId}
         productId={currentProductId}

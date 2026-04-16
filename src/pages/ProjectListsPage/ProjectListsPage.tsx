@@ -1,9 +1,9 @@
 import { parseCellId, ProjectDataProvider, ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import { ListsDataProvider } from './context/ListsDataContext'
+import { ListsDataProvider, useListsDataContext } from './context/ListsDataContext'
 import ListsTable from './components/ListsTable/ListsTable'
 import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
 import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
@@ -13,7 +13,7 @@ import {
 } from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import { CustomizeButton, EmptyPlaceholder, TableGridSwitch } from '@shared/components'
+import { CustomizeButton, TableGridSwitch } from '@shared/components'
 import {
   MoveEntityProvider,
   SettingsPanelProvider,
@@ -210,7 +210,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { projectName } = useProjectContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
-  const { listItemsData, deleteListItemAction } = useListItemsDataContext()
+  const { refetch: refetchLists } = useListsDataContext()
+  const {
+    listItemsData,
+    deleteListItemAction,
+    refetch: refetchListItems,
+  } = useListItemsDataContext()
 
   const {
     selectedCells,
@@ -219,7 +224,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
     setAnchorCell,
     clearSelection
   } = useSelectionCellsContext()
-  const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -234,21 +238,17 @@ const ProjectLists: FC<ProjectListsProps> = ({
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
     outdated: reviewSessionCardsOutdated,
+    allModulesLoaded: reviewModulesLoaded,
   } = useReviewSessionCardsModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
+  const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
 
-  if (reviewSessionCardsOutdated) {
-    return (
-      <EmptyPlaceholder
-        message={
-          `The Review addon version (${reviewSessionCardsOutdated.current}) is out of date.`
-        }
-      >
-        Please update to version {reviewSessionCardsOutdated.required} or newer.
-      </EmptyPlaceholder>
-    )
-  }
+  // if the addon is outdated, make sure we land in table view
+  useEffect(() => {
+    if (!reviewSessionCardsOutdated) return
+    setView("table")
+  }, [reviewSessionCardsOutdated])
 
   return (
     <main style={{ gap: 4 }}>
@@ -306,11 +306,19 @@ const ProjectLists: FC<ProjectListsProps> = ({
               onOpenInViewer={(state) => {
                 handleOpenPlayer(state, { quickView: true })
               }}
+              onItemsChanged={() => {
+                refetchListItems()
+                refetchLists()
+              }}
             >
               {selectedList && (
                 <Toolbar>
+                  <OpenReviewSessionButton
+                    projectName={projectName}
+                    disabled={listItemsData.length === 0}
+                  />
                   {
-                    view === "cards" && (
+                    reviewModulesLoaded && view === "cards" && (
                       <ReviewSessionCardsControlsLeft />
                     )
                   }
@@ -324,7 +332,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )
                   }
                   {
-                    isReview && (
+                    isReview && reviewModulesLoaded && (
                       <>
                         <Spacer />
                         <ReviewSessionCardsControlsRight groupingDisabled={view === "table"} />
@@ -350,7 +358,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     align="right"
                   />
                   {
-                    isReview && (
+                    !reviewSessionCardsOutdated && isReview && (
                       <TableGridSwitch
                         showGrid={view === "cards"}
                         onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
@@ -358,10 +366,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     )
                   }
                   <CustomizeButton />
-                  <OpenReviewSessionButton
-                    projectName={projectName}
-                    disabled={listItemsData.length === 0}
-                  />
                 </Toolbar>
               )}
               <Splitter
@@ -381,11 +385,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     <SplitterPanel size={70}>
                       {
                         selectedList && isReview && view === "cards"
-                        ? <ReviewSessionCards />
+                        ? (reviewModulesLoaded && <ReviewSessionCards />)
                         : (
                           <ListItemsTable
                             extraColumns={extraColumns}
-                            isReview={isReview}
+                            isReview={isReview && !reviewSessionCardsOutdated}
                             dndActiveId={dndActiveId} // Pass prop
                             viewOnly={(selectedList?.accessLevel || 0) < 20}
                           />
