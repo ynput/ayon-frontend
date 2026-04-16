@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef } fr
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
+import { OverviewSettings } from '@shared/api'
 
 // Shared components and hooks
 import { useLocalStorage, useGetEntityGroups } from '@shared/hooks'
@@ -91,6 +92,33 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
 
+  // Ref to suppress viewSettings sync when the change was triggered locally
+  // (e.g., user clicked X to remove grouping). Without this, the auto-switch
+  // to working view causes a race condition where stale settings override the user's action.
+  const skipNextViewSettingsSyncRef = useRef(false)
+
+  // Sync viewGroupBy from server whenever viewSettings changes (view switch, server update, etc.)
+  // Skipped when the change originated from a local groupBy/hierarchy update.
+  useEffect(() => {
+    if (skipNextViewSettingsSyncRef.current) {
+      skipNextViewSettingsSyncRef.current = false
+      return
+    }
+    const settings = viewSettings as OverviewSettings | undefined
+    if (!settings) return
+    const serverShowHierarchy = settings.showHierarchy ?? true
+    const serverGroupBy = settings.groupBy
+
+    if (serverShowHierarchy) {
+      setViewGroupBy(null) // hierarchy mode
+    } else if (serverGroupBy) {
+      setViewGroupBy(serverGroupBy) // grouped by field
+    } else {
+      setViewGroupBy('none') // flat list
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(viewSettings)])
+
   const {
     onUpdateHierarchy: _updateShowHierarchy,
     filters: queryFilters,
@@ -113,6 +141,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // onUpdateColumns (called by updateGroupBy) already handles showHierarchy on the server
   const updateViewGroupBy = useCallback(
     (newViewGroupBy: string | null, desc?: boolean) => {
+      skipNextViewSettingsSyncRef.current = true
       setViewGroupBy(newViewGroupBy)
       if (newViewGroupBy === null) {
         // Enter hierarchy mode: clear groupBy and persist showHierarchy on server
@@ -152,6 +181,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // For backward compat: wrap updateShowHierarchy to also update viewGroupBy
   const updateShowHierarchy = useCallback(
     (newShowHierarchy: boolean) => {
+      skipNextViewSettingsSyncRef.current = true
       if (newShowHierarchy) {
         setViewGroupBy(null)
       } else {
