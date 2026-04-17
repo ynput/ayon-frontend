@@ -221,6 +221,14 @@ const Attributes = () => {
                 sortable
                 sortField="data.type"
                 body={(rowData) => getUiTypeLabel(rowData.data?.type, rowData.data?.enum)}
+                sortFunction={(e) => {
+                  const dir = e.order ?? 1
+                  return [...e.data].sort((a, b) => {
+                    const la = getUiTypeLabel(a.data?.type, a.data?.enum)
+                    const lb = getUiTypeLabel(b.data?.type, b.data?.enum)
+                    return la.localeCompare(lb) * dir
+                  })
+                }}
               />
               <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
               <Column field="data.description" header="Description" sortable />

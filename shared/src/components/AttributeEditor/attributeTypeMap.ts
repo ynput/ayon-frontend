@@ -70,10 +70,22 @@ export const uiTypeToBackend = (
   }
 }
 
+const UI_MAPPED_BACKEND_TYPES: ReadonlyArray<AttributeData['type']> = [
+  'string',
+  'integer',
+  'float',
+  'boolean',
+  'datetime',
+  'list_of_strings',
+]
+
 export const getUiTypeLabel = (
   type: AttributeData['type'] | undefined,
   enumValues?: AttributeData['enum'],
 ): string => {
+  // Unknown / unsupported backend types fall back to the raw type string
+  // so the table doesn't mislabel them (e.g. list_of_integers, dict).
+  if (!type || !UI_MAPPED_BACKEND_TYPES.includes(type)) return type ?? ''
   const uiType = backendToUiType(type, enumValues)
-  return UI_TYPE_OPTIONS.find((o) => o.value === uiType)?.label ?? type ?? ''
+  return UI_TYPE_OPTIONS.find((o) => o.value === uiType)?.label ?? type
 }
