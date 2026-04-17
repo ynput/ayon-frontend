@@ -96,9 +96,10 @@ const mergeIncomingItems = (
 interface EnumEditorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   values: NormalizedData[]
   onChange: (data: NormalizedData[]) => void
+  onCommit?: (data: NormalizedData[]) => void
   pt?: EnumEditorPt
 }
-export const EnumEditor = ({ values, onChange, pt, ...props }: EnumEditorProps) => {
+export const EnumEditor = ({ values, onChange, onCommit, pt, ...props }: EnumEditorProps) => {
   if (!values) {
     return null
   }
@@ -108,12 +109,14 @@ export const EnumEditor = ({ values, onChange, pt, ...props }: EnumEditorProps) 
     handleAddItem,
     handleRemoveItem,
     handleChangeItem,
+    handleCommitItem,
     handleDuplicateItem,
     handleDraggableEnd,
   } = useDraggable<AttributeData, NormalizedData>({
     creator,
     initialData: denormalize(values),
     onChange,
+    onCommit,
     normalizer: normalize,
     mergeIncomingData: mergeIncomingItems,
   })
@@ -148,6 +151,7 @@ export const EnumEditor = ({ values, onChange, pt, ...props }: EnumEditorProps) 
                 item={item}
                 isBeingDragged={item.id === draggedItemId}
                 onChange={handleChangeItem(idx)}
+                onCommit={handleCommitItem(idx)}
                 onRemove={handleRemoveItem(idx)}
                 onDuplicate={() =>
                   handleDuplicateItem(idx, {
