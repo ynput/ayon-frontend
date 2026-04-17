@@ -36,7 +36,7 @@ import { inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
 import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
-import { getValueMappingDependencies, parseUniqueValueIfHierarchy, preprocessRowsIfHierarchy } from "../hierarchy"
+import { entityTypeDependentColumns, getValueMappingDependencies, parseUniqueValueIfHierarchy, preprocessRowsIfHierarchy } from "../hierarchy"
 import { getMappingsToReview, getResolvedColumns, getUniqueValuesForColumn, getUnresolvedValues } from "./mappings"
 import ReviewValuesColumnsList from "./ColumnsList"
 
@@ -212,31 +212,61 @@ export default function ReviewValuesStep({
 
   useEffect(() => {
     if (!columnSettings || Boolean(mappings)) return
+
+    // Creates a function which can process a list of column mapping entries
+    // and infer a value mapping for each of them given the unique values provided.
+    const createInferrer = (uniqueValues: Record<string, any[]>) => (
+      [column, { targetColumn }]: ColumnMappingsEntry,
+    ) => [
+      column,
+      Object.fromEntries(
+        uniqueValues[column]
+          .map((value) => {
+            if (value === undefined && !columnSettings[targetColumn].enumItems) {
+              return [`${value}`, { action: ValueAction.SKIP }]
+            }
+
+            const {
+              source,
+              entityType,
+            } = parseUniqueValueIfHierarchy(targetColumn, value)
+
+            return [
+              `${value}`,
+              inferMapping(`${source}`, columnSettings[targetColumn], entityType),
+            ]
+          })
+          .filter(([, mapping]) => !!mapping)
+      ),
+    ]
+
     // infer mappings based on the schema
     const inferredMappings = Object.fromEntries(
-      Object.entries(mappingsToReview).map(([column, { targetColumn }]) => [
-        column,
-        Object.fromEntries(
-          uniqueValuesForColumn[column]
-            .map((value) => {
-              if (value === undefined && !columnSettings[targetColumn].enumItems) {
-                return [`${value}`, { action: ValueAction.SKIP }]
-              }
-
-              const {
-                source,
-                entityType,
-              } = parseUniqueValueIfHierarchy(targetColumn, value)
-
-              return [
-                `${value}`,
-                inferMapping(`${source}`, columnSettings[targetColumn], entityType),
-              ]
-            })
-            .filter(([, mapping]) => !!mapping)
-        ),
-      ])
+      Object.entries(mappingsToReview)
+        // first, we just use the unique values taken directly from the data
+        .map(createInferrer(uniqueValuesForColumn))
     )
+
+    // 2nd pass for hierarchy in case there are entity type-dependent columns
+    if (importContext === "hierarchy") {
+      Object.assign(
+        inferredMappings,
+        Object.fromEntries(
+          Object.entries(mappingsToReview)
+            .filter(([, { targetColumn }]) => entityTypeDependentColumns.has(targetColumn))
+            // In the 2nd pass, we give the inferrer a new unique values set
+            // taking into account the mapping inferred in the 1st pass.
+            .map(createInferrer(getUniqueValuesForColumn(
+              importContext,
+              columnSettings,
+              data,
+              columnMappings,
+              mappingsToReview,
+              inferredMappings,
+            )))
+        )
+      )
+    }
 
     // pre-calculate (un)resolved states so we can compute the order
     // of columns to review in the sidebar.
