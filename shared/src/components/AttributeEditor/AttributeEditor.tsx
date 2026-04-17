@@ -360,6 +360,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
               <Dropdown
                 value={[uiType]}
                 disabled={formData.builtin || !isNew}
+                valueIcon={UI_TYPE_OPTIONS.find((o) => o.value === uiType)?.icon}
                 options={UI_TYPE_OPTIONS}
                 onChange={handleUiTypeChange}
                 minSelected={1}

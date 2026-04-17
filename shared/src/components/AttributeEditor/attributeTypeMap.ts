@@ -1,19 +1,31 @@
 import { AttributeData } from '@shared/api'
+import { getAttributeIcon } from '@shared/util'
 
-export type UIAttributeType = 'text' | 'select' | 'multi_select' | 'number' | 'checkbox' | 'datetime'
+export type UIAttributeType =
+  | 'text'
+  | 'select'
+  | 'multi_select'
+  | 'number'
+  | 'checkbox'
+  | 'datetime'
 
 export interface UITypeOption {
   value: UIAttributeType
   label: string
+  icon: string
 }
 
 export const UI_TYPE_OPTIONS: UITypeOption[] = [
-  { value: 'text', label: 'Text' },
-  { value: 'select', label: 'Select' },
-  { value: 'multi_select', label: 'Multi-select' },
-  { value: 'number', label: 'Number' },
-  { value: 'checkbox', label: 'Checkbox' },
-  { value: 'datetime', label: 'Date and time' },
+  { value: 'text', label: 'Text', icon: getAttributeIcon('text', 'string') },
+  { value: 'select', label: 'Select', icon: getAttributeIcon('select', 'string', true) },
+  {
+    value: 'multi_select',
+    label: 'Multi-select',
+    icon: getAttributeIcon('multi_select', 'list_of_strings', true),
+  },
+  { value: 'number', label: 'Number', icon: getAttributeIcon('number', 'integer') },
+  { value: 'checkbox', label: 'Checkbox', icon: getAttributeIcon('checkbox', 'boolean') },
+  { value: 'datetime', label: 'Date and time', icon: getAttributeIcon('datetime', 'datetime') },
 ]
 
 export const UI_TYPE_FIELDS: Record<UIAttributeType, (keyof AttributeData)[]> = {
