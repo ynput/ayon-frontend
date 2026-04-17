@@ -38,7 +38,7 @@ export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
     [key in AttributeData['type']]?: string
   } = {
     integer: 'pin',
-    float: 'pin',
+    float: 'speed_1_2',
     boolean: 'check_box',
     datetime: 'calendar_month',
     list_of_strings: 'format_list_bulleted',
@@ -54,9 +54,9 @@ export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
   } else if (entityTypesWithIcons.includes(name)) {
     icon = getEntityTypeIcon(name)
   } else if (hasEnum && type === 'string') {
-    icon = 'checklist'
-  } else if (hasEnum) {
     icon = 'format_list_bulleted'
+  } else if (hasEnum) {
+    icon = 'checklist'
   } else if (type && typeIcons[type]) {
     icon = typeIcons[type]
   }
