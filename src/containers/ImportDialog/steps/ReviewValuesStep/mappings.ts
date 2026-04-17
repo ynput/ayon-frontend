@@ -1,4 +1,4 @@
-import { ImportData } from "@components/ImportDialog/utils"
+import { ImportData } from "@containers/ImportDialog/utils"
 import {
   ColumnAction,
   ColumnMappings,

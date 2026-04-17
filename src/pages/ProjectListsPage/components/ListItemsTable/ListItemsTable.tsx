@@ -9,7 +9,7 @@ import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import { useProjectContext } from '@shared/context'
-import ImportDialog from '@components/ImportDialog/ImportDialog'
+import ImportDialog from '@containers/ImportDialog/ImportDialog'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']

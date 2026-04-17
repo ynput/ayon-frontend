@@ -54,7 +54,7 @@ import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSet
 import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
-import ImportDialog from '@components/ImportDialog/ImportDialog.tsx'
+import ImportDialog from '@containers/ImportDialog/ImportDialog.tsx'
 
 type ProjectListsPageProps = {
   projectName: string

@@ -23,7 +23,7 @@ import Shortcuts from '@containers/Shortcuts'
 import DeleteUserDialog from './DeleteUserDialog'
 import LicensesDialog from '@components/LicensesDialog/LicensesDialog'
 import { useQueryParam } from 'use-query-params'
-import ImportDialog from '@components/ImportDialog/ImportDialog'
+import ImportDialog from '@containers/ImportDialog/ImportDialog'
 
 // what to show in the access column
 const formatAccessGroups = (rowData) => {
