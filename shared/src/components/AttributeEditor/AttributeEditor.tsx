@@ -15,6 +15,14 @@ import { camelCase, upperFirst } from 'lodash'
 import { MinMaxField } from './components'
 import { EnumEditor } from '@shared/components/EnumEditor'
 import { AttributeData, AttributeModel, AttributeEnumItem } from '@shared/api'
+import {
+  UIAttributeType,
+  UI_TYPE_OPTIONS,
+  UI_TYPE_FIELDS,
+  UI_TYPE_EXCLUDE,
+  backendToUiType,
+  uiTypeToBackend,
+} from './attributeTypeMap'
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -43,51 +51,6 @@ const GLOBAL_FIELDS: GlobalFieldEntry[] = [
     scope: ['project', 'folder', 'task', 'product', 'version', 'representation', 'user'],
   },
 ]
-
-interface TypeOptionDef {
-  value: AttributeData['type']
-  label: string
-  fields: (keyof AttributeData)[]
-  exclude?: (keyof AttributeData)[]
-}
-
-interface TypeOptionsMap {
-  [key: string]: TypeOptionDef
-}
-
-const TYPE_OPTIONS: TypeOptionsMap = {
-  string: {
-    value: 'string',
-    label: 'String',
-    fields: ['minLength', 'maxLength', 'enum', 'regex'],
-  },
-  integer: {
-    value: 'integer',
-    label: 'Integer',
-    fields: ['ge', 'gt', 'le', 'lt'],
-  },
-  float: {
-    value: 'float',
-    label: 'Decimal number',
-    fields: ['ge', 'gt', 'le', 'lt'],
-  },
-  list_of_strings: {
-    value: 'list_of_strings',
-    label: 'List Of Strings',
-    fields: ['minItems', 'maxItems', 'enum'],
-  },
-  boolean: {
-    value: 'boolean',
-    label: 'Boolean',
-    fields: [],
-    exclude: ['example'],
-  },
-  datetime: {
-    value: 'datetime',
-    label: 'Datetime',
-    fields: [],
-  },
-}
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
@@ -196,16 +159,25 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
       }
     : undefined
 
-  const [formData, setFormData] = useState<AttributeForm | null>(
+  const initData =
     attribute ||
-      buildInitFormData(excludes, {
-        position: existingNames.length,
-        ...resolvedDefaultData,
-      }),
+    buildInitFormData(excludes, {
+      position: existingNames.length,
+      ...resolvedDefaultData,
+    })
+
+  const [formData, setFormData] = useState<AttributeForm | null>(initData)
+  const [uiType, setUiType] = useState<UIAttributeType>(() =>
+    backendToUiType(initData?.data?.type, initData?.data?.enum),
   )
+  const [isDecimal, setIsDecimal] = useState<boolean>(() => initData?.data?.type === 'float')
 
   useEffect(() => {
-    if (!!attribute) setFormData(attribute)
+    if (!!attribute) {
+      setFormData(attribute)
+      setUiType(backendToUiType(attribute.data?.type, attribute.data?.enum))
+      setIsDecimal(attribute.data?.type === 'float')
+    }
   }, [attribute])
 
   const isNew = !attribute
@@ -282,10 +254,9 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     }
   })
 
-  if (formData?.data.type && TYPE_OPTIONS[formData.data.type]) {
-    const typeOpt = TYPE_OPTIONS[formData.data.type]
-    dataFields = [...dataFields, ...typeOpt.fields].filter((f) => !typeOpt.exclude?.includes(f))
-  }
+  const typeFields = UI_TYPE_FIELDS[uiType] ?? []
+  const typeExclude = UI_TYPE_EXCLUDE[uiType] ?? []
+  dataFields = [...dataFields, ...typeFields].filter((f) => !typeExclude.includes(f))
 
   type CustomFieldRenderer = (value: any, onChange: (newValue: any) => void) => JSX.Element | null
   const customFields: {
@@ -321,6 +292,21 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
 
     if (isNew) {
       setTopLevelData('name', camelCase(v))
+    }
+  }
+
+  const handleUiTypeChange = (v: string[]) => {
+    const newUiType = v[0] as UIAttributeType
+    setUiType(newUiType)
+    setData('type', uiTypeToBackend(newUiType, isDecimal))
+
+    // Clear enum when switching away from select/multi_select
+    if (newUiType !== 'select' && newUiType !== 'multi_select') {
+      setData('enum', undefined)
+    }
+    // Clear regex if not supported by the new type
+    if (newUiType !== 'text' && formData?.data?.regex) {
+      setData('regex', '')
     }
   }
 
@@ -372,23 +358,25 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
           {!excludes.includes('type') && (
             <FormRow label="Type">
               <Dropdown
-                value={[formData?.data?.type]}
+                value={[uiType]}
                 disabled={formData.builtin || !isNew}
-                options={Object.values(TYPE_OPTIONS)}
-                onChange={(v) => {
-                  const newType = v[0] as AttributeData['type']
-                  // Check if regex is supported for the new type
-                  const typeOpt = TYPE_OPTIONS[newType]
-                  const supportsRegex = typeOpt?.fields?.includes('regex')
-
-                  setData('type', newType)
-                  // Clear regex if not supported by the new type
-                  if (!supportsRegex && formData?.data?.regex) {
-                    setData('regex', '')
-                  }
-                }}
+                options={UI_TYPE_OPTIONS}
+                onChange={handleUiTypeChange}
                 minSelected={1}
                 widthExpand
+              />
+            </FormRow>
+          )}
+          {!excludes.includes('type') && uiType === 'number' && (
+            <FormRow label="Decimal">
+              <InputSwitch
+                checked={isDecimal}
+                disabled={formData.builtin || !isNew}
+                onChange={(e) => {
+                  const checked = (e.target as HTMLInputElement).checked
+                  setIsDecimal(checked)
+                  setData('type', checked ? 'float' : 'integer')
+                }}
               />
             </FormRow>
           )}
