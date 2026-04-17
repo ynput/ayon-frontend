@@ -175,10 +175,19 @@ export default function MapColumnsStep({ data, mappings: defaultMappings, import
     // Ensure only columns which are in the CSV get mapped,
     // since the preset might include other irrelevant mappings
     // to one of the targets.
+    // Also if the present wants to map a column,
+    // check that the target exists in the schema (as the anatomy might
+    // have changed since the preset was created).
     const filteredPreset = Object.fromEntries(
       Object.entries(preset.current.columns)
-        .filter(([column]) => data.columns.includes(column)),
+        .filter(([column, mapping]) => {
+          const inData = data.columns.includes(column)
+          const targetExists = mapping.targetColumn && columnSettings[mapping.targetColumn]
+          const skipping = mapping.action === ColumnAction.SKIP
+          return inData && (targetExists || skipping)
+        }),
     )
+
     setMappings((m) => ({ ...m, ...filteredPreset }))
   }, [preset.current])
 

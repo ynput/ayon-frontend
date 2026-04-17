@@ -36,7 +36,7 @@ import { inferMapping } from "./inferMapping"
 import { mappingUpdater } from "./mappingUpdater"
 import { getMapperState } from "./getMapperState"
 import { sortMappingsToReviewEntries } from "./sorting"
-import { getValueMappingDependencies, parseUniqueValueIfHierarchy } from "../hierarchy"
+import { getValueMappingDependencies, parseUniqueValueIfHierarchy, preprocessRowsIfHierarchy } from "../hierarchy"
 import { getMappingsToReview, getResolvedColumns, getUniqueValuesForColumn, getUnresolvedValues } from "./mappings"
 import ReviewValuesColumnsList from "./ColumnsList"
 
@@ -256,9 +256,66 @@ export default function ReviewValuesStep({
 
   // apply the current preset if it changes
   useEffect(() => {
-    if (!preset.current.columns) return
+    if (!preset.current.values) return
 
-    setMappings((m) => merge(cloneDeep(m), cloneDeep(preset.current.values)))
+    const filteredPreset = Object.fromEntries(
+      Object.entries(preset.current.values)
+        // First, ignore columns not in data.
+        .filter(([column]) => data.columns.includes(column))
+        // For each remaining value map, filter out
+        // values which aren't present in data, as well as
+        // mappings whose targetValue isn't in the schema.
+        .map(([column, m]) => [
+          column,
+          Object.fromEntries(
+            Object.entries(m).filter(([value, mapping]) => {
+              // Since the value mappings in the preset may contain a combined
+              // Folder/task type column, we first have to preprocess the data
+              // taking into account a possible entity type value mapping
+              // in the preset itself.
+              const rows = preprocessRowsIfHierarchy(
+                importContext,
+                column,
+                columnMappings,
+                preset.current.values ?? {},
+                data.rows,
+              )
+
+              const inData = rows.some((row) => {
+                if (row[column] === value) return true
+                // If we don't have strict equality, it's possible this is an "empty" mapping.
+                // Check if that's the case.
+                if (value !== "undefined") return false
+                // Check for undefineds and nulls in the row
+                return typeof row[column] === "undefined" || row[column] === null
+              })
+
+              if (!inData) return false
+
+              // creating/skipping is always valid
+              if ([ValueAction.CREATE, ValueAction.SKIP].includes(mapping.action)) {
+                return true
+              }
+
+              // check that if mapping, the target column exists and has enum items
+              const targetColumn = columnMappings[column]?.targetColumn
+              if (
+                !targetColumn
+                || (mapping.action === ValueAction.MAP && !columnSettings[targetColumn]?.enumItems)
+              ) {
+                return false
+              }
+
+              // check that the target value from the preset exists among the enum items
+              return columnSettings[targetColumn]
+                ?.enumItems
+                ?.some((enumItem) => enumItem.value === mapping.targetValue)
+            })
+          )
+        ]),
+    )
+
+    setMappings((m) => merge(cloneDeep(m), cloneDeep(filteredPreset)))
   }, [preset.current])
 
   // reset selection if target changes
