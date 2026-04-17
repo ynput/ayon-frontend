@@ -391,12 +391,18 @@ export default function ReviewValuesStep({
                     onClick={multiSelect.getClickHandler(uniqueDataValue, index)}
                     onActionChange={(action) => {
                       if (!activeColumn) return
+                      const update: Partial<ValueMapping> = { action: action as ValueAction }
+
+                      // if switching to Create, also set the target value to the original unique value
+                      if (action === ValueAction.CREATE) {
+                        update.targetValue = uniqueDataValue
+                      }
 
                       if (multiSelect.selection.size > 0 && multiSelect.selection.has(uniqueDataValue)) {
                         setMappings(mappingUpdater(
                           activeColumn,
                           Array.from(multiSelect.selection),
-                          { action: action as ValueAction },
+                          update,
                           preset.updateValues,
                         ))
 
@@ -406,7 +412,7 @@ export default function ReviewValuesStep({
                       setMappings(mappingUpdater(
                         activeColumn,
                         [uniqueDataValue],
-                        { action: action as ValueAction },
+                        update,
                         preset.updateValues,
                       ))
                     }}
