@@ -1,7 +1,7 @@
 import { formatFailedItems, ImportContext, ImportDataMessage, ImportDataProcessSummary, ImportDataStartSummary, itemsLabelForImportContext, StepProps } from "../common";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
 import { ProgressBar, StepContainer, StepNavButtons } from "../common.styled";
-import { ImportData } from "@components/ImportDialog/utils";
+import { ImportData } from "../../utils";
 import { ImportStatus } from "@shared/api/generated/dataImport";
 import Stats from "../Stats";
 import usePubSub from "@hooks/usePubSub";

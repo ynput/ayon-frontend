@@ -9,7 +9,7 @@ import {
 } from "../common";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
 import { ProgressBar, StepContainer } from "../common.styled";
-import { ImportData } from "@components/ImportDialog/utils";
+import { ImportData } from "../../utils";
 import usePubSub from "@hooks/usePubSub";
 import { useState } from "react";
 import { EmptyPlaceholder } from "@shared/components";

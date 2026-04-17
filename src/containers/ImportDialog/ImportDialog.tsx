@@ -1,19 +1,14 @@
-import { Button, DialogProps } from "@ynput/ayon-react-components";
+import { DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
 import { DialogContainer, DialogHeading, ImportContextWrapper, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
-import { contextLabelForImportContext, ImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
+import { contextLabelForImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
 import clsx from "clsx";
 import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containers";
 import { useDispatch } from "react-redux";
 import ViewsDialogContainer from "@shared/containers/Views/ViewsDialogContainer/ViewsDialogContainer";
 import ImportSteps from "./Steps";
-
-type Props = {
-  importContext: ImportContext
-  projectName?: string
-  folderId?: string
-}
+import { useImportDialogContext } from "./context/ImportDialogProvider";
 
 const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
   [ImportStep.UPLOAD]: "lg",
@@ -25,28 +20,31 @@ const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
 
 const PRESETS_BUTTON_LABEL = "Mapping presets"
 
-export default function ImportDialog({ importContext, projectName, folderId }: Props) {
+export default function ImportDialog() {
   const dispatch = useDispatch()
 
-  const [open, setOpen] = useState(false)
+  const {
+    importing: importContext,
+    folderId,
+    projectName,
+    close,
+  } = useImportDialogContext()
+
   const [step, setStep] = useState<ImportStep>(ImportStep.UPLOAD)
   const [data, setData] = useState<ImportData | null>(null)
 
   const closeDialog = useCallback(() => {
-    setOpen(false)
+    close()
     setStep(ImportStep.UPLOAD)
     setData(null)
-  }, [])
+  }, [close])
+
+  if (!importContext) return null
 
   return (
     <>
-      <Button
-        icon="upload_file"
-        label="Import CSV"
-        onClick={() => setOpen(true)}
-      />
       <DialogContainer
-        isOpen={open}
+        isOpen
         onClose={closeDialog}
         size={dialogSizeForStep[step]}
         header={(

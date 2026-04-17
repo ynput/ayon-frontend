@@ -31,7 +31,7 @@ import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
-import ImportDialog from '@containers/ImportDialog/ImportDialog'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 // Configure scope-specific filter types for the search filter
 const scopesConfig: ScopeWithFilterTypes[] = [
@@ -229,7 +229,7 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleViewGroupByChange}
                 multiSelect={false}
               />
-              <ImportDialog
+              <ImportDialogButton
                 importContext="hierarchy"
                 projectName={projectName}
               />
