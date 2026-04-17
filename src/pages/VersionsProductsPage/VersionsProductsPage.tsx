@@ -64,7 +64,7 @@ const VersionsProductsPage: FC<VersionsProductsPageProps> = ({}) => {
             <Slicer
               sliceFields={overviewSliceFields}
               persistFieldId="hierarchy"
-              entityTypes={['version']}
+              entityTypes={['version', 'task', 'folder']}
             />
           </Section>
         </SplitterPanel>

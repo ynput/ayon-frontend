@@ -23,15 +23,25 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
         'attributes',
         'version',
         'hasReviewables',
+        'createdAt',
+        'updatedAt',
       ],
     },
     {
       scope: 'product',
-      filterTypes: ['status', 'tags', 'attributes', 'productName'],
+      filterTypes: ['status', 'tags', 'attributes', 'productName', 'createdAt', 'updatedAt'],
     },
     {
       scope: 'task',
-      filterTypes: ['status', 'tags', 'taskType', 'assignees', 'attributes'],
+      filterTypes: [
+        'status',
+        'tags',
+        'taskType',
+        'assignees',
+        'attributes',
+        'createdAt',
+        'updatedAt',
+      ],
     },
   ]
 

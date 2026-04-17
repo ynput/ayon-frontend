@@ -158,7 +158,7 @@ const Attributes = () => {
               label="Delete attribute"
               icon="delete"
               disabled={selectedAttribute?.builtin}
-              onClick={onDelete}
+              onClick={() => onDelete(selectedAttribute)}
             />
             <InputText
               style={{ width: '200px' }}

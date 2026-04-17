@@ -122,9 +122,10 @@ export const HeaderCell = styled.th`
 
     .actions {
       display: flex !important;
-      background-color: var(--md-sys-color-surface-container-lowest-hover); 
+      background-color: var(--md-sys-color-surface-container-lowest-hover);
     }
 
+    .actions .sort-button,
     .actions .header-menu {
       display: flex !important;
     }
@@ -198,8 +199,15 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
     display: flex !important;
   }
 
+  .sort-button {
+    display: none !important;
+  }
+
   .sort-button.visible,
-  .sort-button.selected,
+  .sort-button.selected {
+    display: flex !important;
+  }
+
   .pin-button.visible,
   .pin-button.selected {
     display: flex !important;
@@ -471,6 +479,7 @@ export const TableWrapper = styled.div`
 `
 
 export const TableContainer = styled.div`
+  position: relative;
   display: flex;
 
   height: 100%;

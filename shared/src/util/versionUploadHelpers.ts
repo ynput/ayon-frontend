@@ -67,7 +67,7 @@ export const validateVersion = (version: number, existingVersion?: number): Vali
     return { isValid: false, error: 'Version must be greater than 0' }
   }
 
-  if (existingVersion && version <= existingVersion) {
+  if (existingVersion != null && version <= existingVersion) {
     return {
       isValid: false,
       error: `Version must be greater than ${existingVersion}`,

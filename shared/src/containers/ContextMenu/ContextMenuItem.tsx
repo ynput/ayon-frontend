@@ -15,6 +15,7 @@ export interface CommandEvent {
 
 export interface ContextMenuItemProps {
   icon?: string
+  iconFilled?: boolean
   label?: string
   shortcut?: string
   command?: (event: CommandEvent) => void
@@ -35,6 +36,7 @@ export interface ContextMenuItemProps {
 
 const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
   icon,
+  iconFilled,
   label,
   shortcut,
   command,
@@ -93,7 +95,7 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
       }}
       {...props}
     >
-      {icon && <Icon className="p-menuitem-icon" icon={icon} />}
+      {icon && <Icon className="p-menuitem-icon" icon={icon as any} filled={iconFilled} />}
       {label && (
         <span
           className="p-menuitem-text"

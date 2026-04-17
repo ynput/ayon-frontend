@@ -39,11 +39,3 @@ export const Popup = styled.span`
   transform-origin: left bottom;
 `
 
-export const Content = styled.span`
-  display: flex;
-  flex-direction: column;
-
-  span {
-    white-space: nowrap;
-  }
-`

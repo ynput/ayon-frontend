@@ -8,6 +8,7 @@ import { upperFirst } from 'lodash'
 import { LinkManagerItem } from './LinkManagerItem'
 import { Button } from '@ynput/ayon-react-components'
 import { useGlobalContext } from '@shared/context'
+import { groupLinksByEntity, GroupedLink } from './utils/groupLinks'
 
 export type LinkEntity = {
   linkId: string
@@ -62,22 +63,64 @@ export const LinksManager: FC<LinksManagerProps> = ({
   })
 
   const [searchType, setSearchType] = useState<LinkSearchType>(null)
+  // Optimistic counts for immediate UI feedback (creates are not optimistic in the cache)
+  const [optimisticCounts, setOptimisticCounts] = useState<Record<string, number>>({})
 
-  const handleRemove = (e: React.MouseEvent<HTMLButtonElement>, link: LinkEntity) => {
-    // prevent clicks higher up
+  const groupedLinks = groupLinksByEntity(links)
+
+  // Get display count: use optimistic value until real data catches up
+  const getDisplayCount = (group: GroupedLink) => {
+    const optimistic = optimisticCounts[group.groupKey]
+    if (optimistic !== undefined && optimistic !== group.count) {
+      return optimistic
+    }
+    return group.count
+  }
+
+  const handleRemoveGroup = (e: React.MouseEvent<HTMLButtonElement>, group: GroupedLink) => {
     e.stopPropagation()
 
-    linksUpdater.remove([
-      {
-        id: link.linkId,
-        target: { entityId: link.entityId, entityType: link.entityType },
-      },
-    ])
+    linksUpdater.remove(
+      group.linkIds.map((id) => ({
+        id,
+        target: { entityId: group.entityId, entityType: group.representative.entityType },
+      })),
+    )
+  }
+
+  const handleCountChange = (group: GroupedLink, newCount: number) => {
+    const currentCount = getDisplayCount(group)
+    // Set optimistic count immediately for instant UI feedback
+    setOptimisticCounts((prev) => ({ ...prev, [group.groupKey]: newCount }))
+
+    const diff = newCount - currentCount
+    if (diff > 0) {
+      // Add more links
+      const newLinks = Array.from({ length: diff }, () => ({
+        targetEntityId: group.entityId,
+        linkId: getEntityId(),
+      }))
+      linksUpdater.add(newLinks)
+    } else if (diff < 0) {
+      // Remove links from the end (diff is negative, so slice(-3) takes last 3)
+      const linksToRemove = group.linkIds.slice(diff).map((id) => ({
+        id,
+        target: { entityId: group.entityId, entityType: group.representative.entityType },
+      }))
+      linksUpdater.remove(linksToRemove)
+    }
   }
 
   return (
     <>
-      <Styled.Container>
+      <Styled.Container
+        onMouseDown={(e) => {
+          // Blur active input when clicking anywhere in the dialog (so count input commits)
+          if (e.target !== document.activeElement && document.activeElement instanceof HTMLInputElement) {
+            document.activeElement.blur()
+          }
+        }}
+      >
         <Styled.Header>
           {upperFirst(linkTypeLabel)} links ({direction})
           <Button
@@ -90,13 +133,15 @@ export const LinksManager: FC<LinksManagerProps> = ({
           />
         </Styled.Header>
         <Styled.LinksList>
-          {links?.map((link) => (
+          {groupedLinks.map((group) => (
             <LinkManagerItem
-              key={link.linkId}
-              link={link}
-              isSelected={selectedEntityIds.includes(link.entityId)}
+              key={group.representative.linkId}
+              link={group.representative}
+              count={getDisplayCount(group)}
+              isSelected={selectedEntityIds.includes(group.entityId)}
               onEntityClick={onEntityClick}
-              onRemove={handleRemove}
+              onRemove={(e) => handleRemoveGroup(e, group)}
+              onCountChange={(newCount) => handleCountChange(group, newCount)}
               isManager={isManager}
             />
           ))}

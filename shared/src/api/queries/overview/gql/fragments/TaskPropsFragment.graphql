@@ -17,4 +17,7 @@ fragment TaskPropsFragment on TaskNode {
   subtasks {
     ...SubTaskFragment
   }
+  folder {
+    folderType
+  }
 }

@@ -38,6 +38,7 @@ import { useFeedContext } from '../../context/FeedContext'
 import { ActivityCategorySelect, isCategoryHidden, SavedAnnotationMetadata } from '../../index'
 import { useDetailsPanelContext } from '@shared/context'
 import { useProjectContext } from '@shared/context'
+import { parseFilename } from '@shared/components'
 
 var Delta = Quill.import('delta')
 
@@ -100,6 +101,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const {
     users: mentionUsers,
+    teams: mentionTeams,
     versions: mentionVersions,
     tasks: mentionTasks,
   } = mentionSuggestionsData || {}
@@ -120,6 +122,14 @@ const CommentInput: FC<CommentInputProps> = ({
   // MENTION STATES
   const [mention, setMention] = useState<null | any>(null)
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
+  // Prefix filter for mentions (e.g. 'team:' or 'user:')
+  const [mentionPrefix, setMentionPrefix] = useState('')
+
+  const clearMention = () => {
+    setMention(null)
+    setMentionSelectedIndex(0)
+    setMentionPrefix('')
+  }
   // CATEGORY STATE
   const [category, setCategory] = useState<null | string>(initCategory)
   const categoryOptions = categories.filter((cat) => cat.accessLevel >= 20)
@@ -164,18 +174,21 @@ const CommentInput: FC<CommentInputProps> = ({
 
   mentionTypes.sort((a, b) => b.length - a.length)
 
+  // Combine prefix filter with typed search for options filtering
+  const mentionSearchWithPrefix = mentionPrefix + (mention?.search || '')
+
   const mentionOptions = useMemo(
     () =>
       getMentionOptions(
         mention?.type,
         {
-          '@': () => getMentionUsers(mentionUsers),
+          '@': () => getMentionUsers(mentionUsers, mentionTeams),
           '@@': () => getMentionVersions(mentionVersions, project),
           '@@@': () => getMentionTasks(mentionTasks, projectInfo.taskTypes),
         },
-        mention?.search,
+        mentionSearchWithPrefix || undefined,
       ),
-    [mentionTasks, mentionVersions, mentionUsers, mention?.type, mention?.search],
+    [mentionTasks, mentionVersions, mentionUsers, mentionTeams, mention?.type, mentionSearchWithPrefix],
   )
 
   // show first 5 and filter itself out
@@ -202,7 +215,9 @@ const CommentInput: FC<CommentInputProps> = ({
     const mentionLabel = typePrefix + selectedOption.label // the label of the mention: @Tim Bailey
     // @ts-expect-error
     const type = mentionTypeOptions[typePrefix] // the type of mention: user, version, task
-    const href = `${type?.id}:${selectedOption.id}` // the href of the mention: user:user.123
+    // Use the option's own type (e.g. 'team') if available, otherwise fall back to the mention type config
+    const refType = selectedOption.type || type?.id
+    const href = `${refType}:${selectedOption.id}` // the href of the mention: user:user.123 or team:Thunder boys
 
     // get selection delta
     const selection = quill.getSelection(true)
@@ -227,8 +242,7 @@ const CommentInput: FC<CommentInputProps> = ({
     setNewSelection(endIndex + 1)
 
     // reset mention state
-    setMention(null)
-    setMentionSelectedIndex(0)
+    clearMention()
   }
 
   const handleSelectChange = (option: any) => {
@@ -308,8 +322,7 @@ const CommentInput: FC<CommentInputProps> = ({
           retain: retain,
         })
       } else {
-        setMention(null)
-        setMentionSelectedIndex(0)
+        clearMention()
       }
     } else {
       // get full string between mention and new delta
@@ -318,8 +331,7 @@ const CommentInput: FC<CommentInputProps> = ({
         const retain = delta.ops[0].retain
         // if space is pressed, remove mention
         if (currentCharacter === ' ' || !retain) {
-          setMention(null)
-          setMentionSelectedIndex(0)
+          clearMention()
           return
         }
 
@@ -329,8 +341,7 @@ const CommentInput: FC<CommentInputProps> = ({
         const mentionSearch = mentionFull.replace(mention.type.slice(-1), '')
         //  check for space in mentionFull
         if (mentionFull.includes(' ')) {
-          setMention(null)
-          setMentionSelectedIndex(0)
+          clearMention()
         } else {
           setMention({
             ...mention,
@@ -411,9 +422,10 @@ const CommentInput: FC<CommentInputProps> = ({
   }
 
   const handleFileUploaded = ({ file, data }: any) => {
+    const fileName = parseFilename(file.name)
     const newFile = {
       id: data.id,
-      name: file.name,
+      name: fileName,
       mime: file.type,
       size: file.size,
       order: files.length,
@@ -421,7 +433,9 @@ const CommentInput: FC<CommentInputProps> = ({
 
     setFiles((prev) => [...prev, newFile])
     // remove from uploading
-    setFilesUploading((prev) => prev.filter((uploading: any) => uploading.name !== file.name))
+    setFilesUploading((prev) =>
+      prev.filter((uploading: any) => parseFilename(uploading.name) !== fileName),
+    )
 
     return newFile
   }
@@ -435,7 +449,7 @@ const CommentInput: FC<CommentInputProps> = ({
       setFiles((prev) => prev.filter((file) => file.id !== id))
       // remove from uploading
       setFilesUploading((prev) => {
-        return prev.filter((file: any) => file.name !== name)
+        return prev.filter((file: any) => parseFilename(file.name) !== parseFilename(name))
       })
     }
   }
@@ -443,8 +457,9 @@ const CommentInput: FC<CommentInputProps> = ({
   const handleFileProgress = (e: any, file: any) => {
     const progress = Math.round((e.loaded * 100) / e.total)
     if (progress !== 100) {
+      const fileName = parseFilename(file.name)
       const uploadProgress = {
-        name: file.name,
+        name: fileName,
         progress,
         type: file.type,
         order: files.length + filesUploading.length,
@@ -453,7 +468,7 @@ const CommentInput: FC<CommentInputProps> = ({
       // @ts-ignore
       setFilesUploading((prev) => {
         // replace or add new progress
-        const newProgress = prev.filter((name: any) => name.name !== file.name)
+        const newProgress = prev.filter((name: any) => parseFilename(name.name) !== fileName)
         return [...newProgress, uploadProgress]
       })
     }
@@ -530,8 +545,7 @@ const CommentInput: FC<CommentInputProps> = ({
     if (mention) {
       // close mention on escape
       if (e.key === 'Escape') {
-        setMention(null)
-        setMentionSelectedIndex(0)
+        clearMention()
         return
       }
 
@@ -747,11 +761,16 @@ const CommentInput: FC<CommentInputProps> = ({
           mention={mention}
           options={shownMentionOptions}
           onChange={handleSelectChange}
+          onPrefixFilter={(prefix) => {
+            setMentionPrefix(prefix)
+            setMentionSelectedIndex(0)
+          }}
+          activePrefix={mentionPrefix ? mentionPrefix.replace(':', '') : undefined}
           types={mentionTypes}
           // @ts-ignore
           config={mentionTypeOptions[mention?.type]}
-          noneFound={!shownMentionOptions.length && mention?.search}
-          noneFoundAtAll={!shownMentionOptions.length && !mention?.search}
+          noneFound={!shownMentionOptions.length && (mention?.search || mentionPrefix)}
+          noneFoundAtAll={!shownMentionOptions.length && !mention?.search && !mentionPrefix}
           selectedIndex={mentionSelectedIndex}
           // @ts-ignore
           error={mentionsError}

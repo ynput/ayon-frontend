@@ -124,6 +124,7 @@ export type BuildTreeTableColumnsProps = {
   links: LinkTypeModel[]
   includeLinks?: boolean
   showHierarchy: boolean
+  isFlatFolderView?: boolean
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
   excludedSorting?: (DefaultColumns | string)[]
@@ -138,6 +139,7 @@ const buildTreeTableColumns = ({
   links = [],
   includeLinks = true,
   showHierarchy,
+  isFlatFolderView,
   options,
   excluded,
   excludedSorting,
@@ -289,7 +291,7 @@ const buildTreeTableColumns = ({
                 id={row.id}
                 label={row.original.label}
                 name={row.original.name}
-                path={!showHierarchy ? '/' + row.original.parents?.join('/') : undefined}
+                path={!showHierarchy && !isFlatFolderView ? '/' + row.original.parents?.join('/') : undefined}
                 entityType={row.original.entityType}
                 subType={row.original.subType}
                 isExpandable={isExpandable}

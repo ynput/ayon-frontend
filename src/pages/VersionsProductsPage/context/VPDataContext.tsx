@@ -39,7 +39,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSlicerContext } from '@shared/containers/Slicer'
+import { useSlicerContext, useSelectedEntityIds, useSlicerViewSync } from '@shared/containers/Slicer'
 import { useVPViewsContext } from './VPViewsContext'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
@@ -63,7 +63,7 @@ const SORT_BY_FIELD_MAP: Record<string, string> = {
 // Define which sort fields are excluded for each entity type
 const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
   version: [],
-  product: ['author'],
+  product: ['author', 'productName', 'path'],
 }
 
 export type VersionMap = Map<string, VersionNodeExtended>
@@ -110,6 +110,8 @@ export const useVersionsDataContext = () => {
 export type QueryArguments = {
   projectName: string
   folderIds: string[]
+  versionIds?: string[]
+  productIds?: string[]
   versionFilter?: string
   productFilter?: string
   taskFilter?: string
@@ -131,9 +133,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   modules,
 }) => {
   const { attribFields } = useProjectDataContext()
-  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy } =
+  const { filters, showProducts, sortBy, sortDesc, featuredVersionOrder, groupBy, slicerType, onUpdateSlicerType } =
     useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
+
+  // Sync slicer slice type with view settings, selection with localStorage
+  useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, isLoadingViews, `slicer-selection-versions-${projectName}`)
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
@@ -186,6 +191,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   })
 
   // Separate slicer filters into different types
+  const vpValidScopes: ('version' | 'product' | 'task')[] = ['version', 'product', 'task']
+  const attribScopeMap = useMemo(
+    () =>
+      attribFields.reduce<Record<string, string>>((acc, field) => {
+        const scope = vpValidScopes.find((s) => field.scope?.includes(s))
+        if (scope) acc[`attrib.${field.name}`] = scope
+        return acc
+      }, {}),
+    [attribFields],
+  )
+
   const {
     version: [slicerVersionFilter],
     product: [slicerProductFilter],
@@ -193,21 +209,26 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   } = useMemo(() => {
     return splitClientFiltersByScope(
       sliceFilter ? [sliceFilter] : null,
-      ['version', 'product', 'task'],
+      vpValidScopes,
       {
         status: 'version',
         taskType: 'task',
         productType: 'product',
         assignees: 'task',
         author: 'version',
+        ...attribScopeMap,
       },
     )
-  }, [sliceFilter, showProducts])
+  }, [sliceFilter, attribScopeMap])
+  // Resolve entity list selections to IDs
+  const { entityIds, rawEntityIds } = useSelectedEntityIds()
+
   // get selected folders from slicer
   const slicerFolderIds = useSelectedFolders({
     rowSelection,
     sliceType,
     persistentRowSelectionData,
+    entityListFolderIds: entityIds.folderIds,
   })
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
@@ -223,6 +244,26 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     sliceFilter: slicerTaskFilter,
   })
 
+  // When entity list has task IDs, merge them into the task filter
+  const entityListTaskFilterString = useMemo(() => {
+    if (!rawEntityIds.taskIds.length) return combinedTaskFilter.filterString
+
+    const taskIdCondition = {
+      key: 'id',
+      operator: 'in',
+      value: rawEntityIds.taskIds,
+    }
+
+    const existingFilter = combinedTaskFilter.filterString
+      ? JSON.parse(combinedTaskFilter.filterString)
+      : { conditions: [], operator: 'and' }
+
+    return JSON.stringify({
+      conditions: [...(existingFilter.conditions || []), taskIdCondition],
+      operator: 'and',
+    })
+  }, [rawEntityIds.taskIds, combinedTaskFilter.filterString])
+
   const resolvedSortBy = useMemo(() => (sortBy && SORT_BY_FIELD_MAP[sortBy]) || sortBy, [sortBy])
 
   const queryArgs = useMemo(
@@ -230,8 +271,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       projectName,
       versionFilter: combinedVersionFilter.filterString,
       productFilter: combinedProductFilter.filterString,
-      taskFilter: combinedTaskFilter.filterString,
+      taskFilter: entityListTaskFilterString,
       folderIds: slicerFolderIds,
+      versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
+      productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
       sortBy: resolvedSortBy,
       desc: sortDesc,
     }),
@@ -239,8 +282,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       projectName,
       combinedVersionFilter.filterString,
       combinedProductFilter.filterString,
-      combinedTaskFilter.filterString,
+      entityListTaskFilterString,
       slicerFolderIds,
+      entityIds.versionIds,
+      entityIds.productIds,
       resolvedSortBy,
       sortDesc,
     ],
@@ -264,9 +309,24 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         ? featuredVersionOrder
         : DEFAULT_FEATURED_ORDER
 
+      const { versionIds, productIds, ...restQueryArgs } = queryArgs
       const args: any = {
-        ...queryArgs,
+        ...restQueryArgs,
         sortBy: modifiedSortBy,
+      }
+
+      if (entityType === 'version') {
+        if (versionIds) {
+          args.versionIds = versionIds
+          args.folderIds = []
+        } else if (productIds) {
+          args.productIds = productIds
+          args.folderIds = []
+        }
+      }
+      if (entityType === 'product' && productIds) {
+        args.productIds = productIds
+        args.folderIds = []
       }
 
       if (entityType === 'product') {

@@ -23,6 +23,7 @@ type ExtraInfo = {
 
 export interface TransformedKanbanTask extends KanbanNode, ExtraInfo {
   thumbnailUrl: string | null
+  parentFolder: string
 }
 
 const transformKanbanTasks = (
@@ -52,12 +53,16 @@ const transformKanbanTasks = (
       (priorityItem) => priorityItem.value === task.priority,
     )
 
+    const pathParts = task.folderPath?.split('/').filter(Boolean) || []
+    const parentFolder = pathParts.length >= 2 ? pathParts[pathParts.length - 2] : 'Root'
+
     return {
       ...task,
       thumbnailUrl: `/api/projects/${task.projectName}/tasks/${task.id}/thumbnail?updatedAt=${task.updatedAt}`,
       statusInfo,
       taskInfo,
       priorityInfo,
+      parentFolder,
     }
   })
 }
