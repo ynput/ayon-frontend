@@ -54,6 +54,7 @@ import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSet
 import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
+import { getFrontendBundleMode } from '@shared/util'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -203,8 +204,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
   isReview,
   dndActiveId, // Destructure new prop
 }) => {
-  const user = useAppSelector((state) => state.user?.attrib)
-  const isDeveloperMode = user?.developerMode ?? false
+  const user = useAppSelector((state) => state.user)
+  const frontendBundleMode = getFrontendBundleMode(user)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
@@ -354,7 +355,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     onSetSearchParams={setSearchParams}
                     searchParams={searchParams}
                     featuredCount={0}
-                    isDeveloperMode={isDeveloperMode}
+                    frontendBundleMode={frontendBundleMode}
                     align="right"
                   />
                   {

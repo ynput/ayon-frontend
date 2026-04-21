@@ -12,6 +12,7 @@ import { upperFirst } from 'lodash'
 import ActionIcon from '../ActionIcon'
 import styled from 'styled-components'
 import { IconModel } from '@shared/api'
+import { FrontendBundleMode, getFrontendBundleModeLabel } from '@shared/util'
 
 const ActionItemContainer = styled.div`
   display: flex;
@@ -82,7 +83,7 @@ export const ActionsDropdownItem = ({
 export interface ActionsDropdownProps extends Omit<DropdownProps, 'value'> {
   options: ActionsDropdownItemProps[]
   isLoading?: boolean
-  isDeveloperMode: boolean
+  frontendBundleMode: FrontendBundleMode
   onAction: (value: string) => void
   onConfig: (e: any) => void
 }
@@ -90,7 +91,7 @@ export interface ActionsDropdownProps extends Omit<DropdownProps, 'value'> {
 export const ActionsDropdown = ({
   options,
   isLoading,
-  isDeveloperMode,
+  frontendBundleMode,
   onAction,
   onConfig,
   ...props
@@ -105,7 +106,10 @@ export const ActionsDropdown = ({
     <StyledDropdown
       ref={dropdownRef}
       disabled={isLoading}
-      className={clsx('more', { dev: isDeveloperMode })}
+      className={clsx('more', {
+        staging: frontendBundleMode === 'staging',
+        dev: frontendBundleMode === 'developer',
+      })}
       options={options}
       maxOptionsShown={100}
       value={[]}
@@ -115,7 +119,10 @@ export const ActionsDropdown = ({
       onChange={(v) => onAction(v[0])}
       buttonProps={{
         // @ts-expect-error
-        ['data-tooltip']: isDeveloperMode ? 'Actions (dev bundle)' : 'Actions',
+        ['data-tooltip']:
+          frontendBundleMode === 'production'
+            ? 'Actions'
+            : `Actions (${getFrontendBundleModeLabel(frontendBundleMode)})`,
         ['data-tooltip-delay']: 0,
       }}
       {...props}
