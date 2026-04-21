@@ -18,7 +18,6 @@ import { getGroupedReviewables, ReviewablesSelector } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
 import { useLocalStorage } from '@shared/hooks'
-import { ReviewableCard, ReviewableCardProps } from '@shared/components/ReviewablesSelector/Card'
 
 interface ViewerProps {
   onClose?: () => void
