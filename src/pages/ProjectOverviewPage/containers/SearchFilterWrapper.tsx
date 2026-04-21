@@ -124,6 +124,15 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const activeDatetimeFilterRef = useRef<string | null>(null)
   const lastInteractedFilterRef = useRef<string | null>(null)
 
+  // Active search-chip edit: set when user clicks a search chip to edit it.
+  // The dropdown opens in edit mode; our Enter interceptor updates/removes the chip.
+  const editingSearchChipRef = useRef<string | null>(null)
+
+  // Mirror of localFilters for use inside async DOM event handlers (keydown on
+  // the dropdown input) that need the latest filters without stale closures.
+  const localFiltersRef = useRef<Filter[]>(localFilters)
+  localFiltersRef.current = localFilters
+
   useEffect(() => {
     setLocalFilters(filters)
   }, [JSON.stringify(filters)]) // Update filters when filters change
@@ -326,6 +335,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   }
 
   const handleFinish = (filters: Filter[]) => {
+    // Dropdown closed (or filters committed) — search-chip edit session ends
+    editingSearchChipRef.current = null
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
       const queryFilter = clientFilterToQueryFilter(validFilters)
@@ -335,34 +346,53 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   const { dropdown, searchBar, ...ptRest } = pt || {}
 
-  // Pre-fill the dropdown search input when editing a search filter chip
+  // Set the dropdown search input value via native setter to trigger React's
+  // controlled onChange inside SearchFilterDropdown
   const prefillDropdownSearch = (text: string) => {
-    // Wait for dropdown to render, then set the input value via native setter
-    // to trigger React's onChange on the controlled input
-    requestAnimationFrame(() => {
-      const container = searchFilterRef.current?.getContainerElement()
-      const input = container?.querySelector('ul .search input') as HTMLInputElement
-      if (input) {
-        const nativeSetter = Object.getOwnPropertyDescriptor(
-          HTMLInputElement.prototype,
-          'value',
-        )?.set
-        if (nativeSetter) {
-          nativeSetter.call(input, text)
-          input.dispatchEvent(new Event('input', { bubbles: true }))
-        }
+    const container = searchFilterRef.current?.getContainerElement()
+    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    if (!input) return
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    )?.set
+    if (nativeSetter) {
+      nativeSetter.call(input, text)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    input.focus()
+    input.select()
+  }
 
-        // Hide preselected value rows and the search suggestion row
-        const list = input.closest('ul')
-        list?.querySelectorAll('li.selected, li#search').forEach((li) => {
-          ;(li as HTMLElement).style.display = 'none'
-        })
+  // While editing a search chip, intercept Enter on the dropdown input so the
+  // chip's value gets updated (or removed if input is cleared) instead of the
+  // default behavior that would create an additional chip or toggle nothing.
+  const attachSearchEditEnterHandler = (chipId: string) => {
+    const container = searchFilterRef.current?.getContainerElement()
+    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    if (!input) return
 
-        // Add margin so the search input's bottom outline isn't clipped
-        const searchContainer = input.closest('.search') as HTMLElement
-        if (searchContainer) searchContainer.style.marginBottom = '4px'
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key !== 'Enter') return
+      if (editingSearchChipRef.current !== chipId) return
+      ev.preventDefault()
+      ev.stopPropagation()
+      const text = input.value.trim()
+      const currentFilters = localFiltersRef.current
+      if (!text) {
+        handleFinish(currentFilters.filter((f) => f.id !== chipId))
+      } else {
+        const updated = currentFilters.map((f) =>
+          f.id === chipId ? { ...f, values: [{ id: text, label: text }] } : f,
+        )
+        handleFinish(updated)
       }
-    })
+      editingSearchChipRef.current = null
+      input.removeEventListener('keydown', onKeyDown, true)
+      searchFilterRef.current?.close()
+    }
+
+    input.addEventListener('keydown', onKeyDown, true) // capture phase: run before React's bubble handler
   }
 
   // Intercept clicks on filter chips (search prefill + datetime edit dialog)
@@ -375,13 +405,20 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     const chipEl = target.closest('.search-filter-item')
     if (!chipEl) return
 
-    // Pre-fill dropdown search when clicking a search filter chip to edit
+    // Edit a search chip: let the default edit-mode dropdown open, prefill its
+    // input with the chip's current value, and mark this chip as being edited
+    // so the input's Enter handler updates it instead of creating a new filter.
     const chipId = chipEl.id
     if (chipId === SEARCH_FILTER_ID || chipId.startsWith(SEARCH_FILTER_ID + '__')) {
       const filter = localFilters.find((f) => f.id === chipId)
       if (filter?.values?.length) {
         const text = filter.values[0].label || String(filter.values[0].id)
-        prefillDropdownSearch(text)
+        editingSearchChipRef.current = chipId
+        // Wait for the dropdown to render (after default click handlers fire)
+        requestAnimationFrame(() => {
+          prefillDropdownSearch(text)
+          attachSearchEditEnterHandler(chipId)
+        })
       }
       return
     }
