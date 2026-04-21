@@ -1,4 +1,5 @@
-import { FC, useRef, useEffect, useCallback, useState, Suspense, type ChangeEvent } from 'react'
+import { FC, useRef, useEffect, useCallback, useMemo, useState } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import styled from 'styled-components'
 
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
@@ -56,10 +57,6 @@ const PlainPreview = styled.div`
   overflow: auto;
 `
 
-const StyledHiddenMarkdown = styled.div`
-  display: none;
-`
-
 export interface TextContentWidgetProps extends WidgetBaseProps {
   value?: string | number | null
   cellId: string
@@ -95,10 +92,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   onPreviewMouseLeave,
 }) => {
   const hasDraftRef = useRef(draftValue != null)
-  const [editingValue, setEditingValue] = useState(draftValue ?? '')
-  const [descriptionHtml, setDescriptionHtml] = useState(draftValue ?? '')
   const quillRef = useRef<any>(null)
-  const markdownRef = useRef<HTMLDivElement>(null)
   const isPreview = variant === 'preview'
   const isRichText = allowMarkdown
   const plainTextAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -110,6 +104,19 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     originalValueRef.current = normalizedValue
   }, [normalizedValue])
 
+  // Sync markdown → HTML conversion. Avoids DOM-timing race with hidden div + innerHTML.
+  const descriptionHtml = useMemo(() => {
+    if (!isRichText) return ''
+    if (!normalizedValue.trim()) return ''
+    return renderToStaticMarkup(
+      <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={normalizedValue} />,
+    )
+  }, [normalizedValue, isRichText])
+
+  const [editingValue, setEditingValue] = useState(
+    () => draftValue ?? (isRichText ? descriptionHtml : normalizedValue),
+  )
+
   const updateEditingValue = useCallback(
     (newValue: string) => {
       setEditingValue(newValue)
@@ -118,27 +125,15 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     [onEditingDraftChange],
   )
 
-  // Parse markdown to HTML to initialize the editor content for edit and preview
+  // Re-seed editor when content changes (skip if a draft has been restored)
   useEffect(() => {
     if (hasDraftRef.current) {
       hasDraftRef.current = false
       return
     }
     if (!isEditing && !isPreview) return
-    if (!isRichText) {
-      setEditingValue(normalizedValue)
-      return
-    }
-    if (!normalizedValue.trim()) {
-      setDescriptionHtml('')
-      setEditingValue('')
-      return
-    }
-    if (!markdownRef.current) return
-    const html = markdownRef.current.innerHTML
-    setDescriptionHtml(html)
-    setEditingValue(html)
-  }, [isEditing, isPreview, normalizedValue, isRichText])
+    setEditingValue(isRichText ? descriptionHtml : normalizedValue)
+  }, [isEditing, isPreview, normalizedValue, isRichText, descriptionHtml])
 
   // Autofocus editor when dialog opens
   useEffect(() => {
@@ -389,32 +384,16 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     </StyledDialog>
   )
 
-  return (
-    <>
-      {/* Always render the hidden markdown component so markdownRef is available */}
-      {isRichText && (
-        <StyledHiddenMarkdown
-          className="markdown-content"
-          data-cell-id={cellId}
-          ref={markdownRef}
-          style={{ display: 'none' }}
-        >
-          <Suspense fallback={null}>
-            <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={normalizedValue} />
-          </Suspense>
-        </StyledHiddenMarkdown>
-      )}
+  if (!isEditing && !isPreview) return null
 
-      {(isEditing || isPreview) && (
-        <CellEditingDialog
-          isEditing={Boolean(isEditing || isPreview)}
-          anchorId={cellId}
-          onClose={onCancelEdit}
-          matchAnchorWidth
-        >
-          {dialogContent}
-        </CellEditingDialog>
-      )}
-    </>
+  return (
+    <CellEditingDialog
+      isEditing={Boolean(isEditing || isPreview)}
+      anchorId={cellId}
+      onClose={onCancelEdit}
+      matchAnchorWidth
+    >
+      {dialogContent}
+    </CellEditingDialog>
   )
 }
