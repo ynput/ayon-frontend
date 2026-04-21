@@ -1,4 +1,4 @@
-import { FC, lazy } from 'react'
+import { FC, lazy, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -31,6 +31,11 @@ const AppRoutes: FC<AppRoutesProps> = () => {
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     moduleKey: 'Route',
   }) as { remotePages: RemoteAddon[]; isLoading: boolean }
+
+  const hasStoryboards = useMemo(
+    () => remotePages.some(({ id }) => id === 'storyboards'),
+    [remotePages]
+  )
 
   if (isLoadingModules || !user) {
     return <LoadingPage />
@@ -72,19 +77,22 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           </ProtectedRoute>
         }
       />
-      {/* Allow reviews route for all levels */}
-      <Route
-        path={'/projects/:projectName/storyboards/:sessionId'}
-        element={
-          <ProtectedRoute
-            isAllowed={level > 0}
-            redirectPath="/"
-            preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
-          >
-            <ProjectPage />
-          </ProtectedRoute>
-        }
-      />
+      {
+        hasStoryboards && (
+          <Route
+            path={'/projects/:projectName/storyboards/:sessionId'}
+            element={
+              <ProtectedRoute
+                isAllowed={level > 0}
+                redirectPath="/"
+                preserveParams={['uri', 'type', 'project', 'id', 'activity', 'sessionId']}
+              >
+                <ProjectPage />
+              </ProtectedRoute>
+            }
+          />
+        )
+      }
       <Route
         path={'/projects/:projectName'}
         element={

@@ -123,6 +123,11 @@ const ProjectPageInner = () => {
     isLoading: boolean
   }
 
+  const hasStoryboards = useMemo(
+    () => matchedAddons.has('storyboards'),
+    [matchedAddons]
+  )
+
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
     () => [
@@ -167,12 +172,16 @@ const ProjectPageInner = () => {
         module: 'reviews',
         viewType: 'reviews',
       },
-      {
-        name: 'Storyboards',
-        path: `/projects/${projectName}/storyboards`,
-        module: 'storyboards',
-        viewType: 'storyboards',
-      },
+      ...(
+        hasStoryboards
+          ? [{
+              name: 'Storyboards',
+              path: `/projects/${projectName}/storyboards`,
+              module: 'storyboards',
+              viewType: 'storyboards',
+            }]
+          : []
+      ),
       {
         name: 'Reports',
         path: `/projects/${projectName}/reports`,
@@ -219,7 +228,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, matchedAddons, module],
+    [addonsData, projectName, remotePages, matchedAddons, module, hasStoryboards],
   )
 
   const activeLink = useMemo(() => {
@@ -262,7 +271,7 @@ const ProjectPageInner = () => {
           hasReviewAddon={!!matchedAddons.has('review')}
         />
       )
-    } else if (module === 'storyboards') {
+    } else if (module === 'storyboards' && hasStoryboards) {
       component = (
         <ProjectStoryboardsPage
           projectName={projectName}
