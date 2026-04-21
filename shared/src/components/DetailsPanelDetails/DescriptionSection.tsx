@@ -60,7 +60,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
     return renderToStaticMarkup(
       <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={description} />,
     )
-  }, [description])
+  }, [description, mentionTypeOptions])
 
   // Use custom hooks to manage state and logic
   const {

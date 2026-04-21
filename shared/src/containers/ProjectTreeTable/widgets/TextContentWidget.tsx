@@ -111,7 +111,7 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
     return renderToStaticMarkup(
       <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={normalizedValue} />,
     )
-  }, [normalizedValue, isRichText])
+  }, [normalizedValue, isRichText, mentionTypeOptions])
 
   const [editingValue, setEditingValue] = useState(
     () => draftValue ?? (isRichText ? descriptionHtml : normalizedValue),
