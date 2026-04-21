@@ -18,7 +18,6 @@ import {
 } from '@pages/ProjectListsPage/util/listAccessControl'
 import { useCreateStoryboardMutation } from '@queries/storyboards'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router'
 import { useSearchParams } from 'react-router-dom'
 
 export const MENU_ID = 'lists-table-menu'
