@@ -212,8 +212,10 @@ export const ProjectTableProvider = ({
     isLoadingMore,
   })
 
-  // overrideGroupBy (from view dropdown) takes priority over Customize panel's groupBy
-  const effectiveGroupBy = overrideGroupBy || columnSettingsGroupBy
+  // overrideGroupBy (from view dropdown) takes priority over Customize panel's groupBy.
+  // In flat folder view, ignore both — the 'folder' sentinel persisted on the server
+  // must not leak into grouping logic (it's only used to distinguish the mode from 'none').
+  const effectiveGroupBy = isFlatFolderView ? undefined : (overrideGroupBy || columnSettingsGroupBy)
 
   const buildGroupByTableData = useBuildGroupByTableData({
     entities: entitiesMap,

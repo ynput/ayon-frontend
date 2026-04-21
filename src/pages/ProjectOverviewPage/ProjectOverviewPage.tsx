@@ -104,13 +104,14 @@ const ProjectOverviewPage: FC = () => {
     ]
   }, [groupedFields])
 
-  const viewGroupByValue = useMemo(
-    () =>
-      viewGroupByOptions
-        .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
-        .map((o) => ({ ...o, sortOrder: !viewGroupByDesc })),
-    [viewGroupBy, viewGroupByOptions, viewGroupByDesc],
-  )
+  const viewGroupByValue = useMemo(() => {
+    // undefined = view settings not loaded yet — keep dropdown empty so the
+    // user doesn't see a "Hierarchy" default flicker before the saved value arrives.
+    if (viewGroupBy === undefined) return []
+    return viewGroupByOptions
+      .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
+      .map((o) => ({ ...o, sortOrder: !viewGroupByDesc }))
+  }, [viewGroupBy, viewGroupByOptions, viewGroupByDesc])
 
   const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
     const value = values[0]

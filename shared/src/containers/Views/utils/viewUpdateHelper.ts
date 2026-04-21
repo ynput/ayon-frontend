@@ -1,11 +1,13 @@
 /**
  * Shared helper for updating view settings with optimistic local state management.
  *
- * This helper provides common functionality used by view settings hooks:
- * - Optimistic local state updates for immediate UI response
- * - Background API calls to persist changes
- * - Error handling with state reversion
- * - Working view management
+ * Sequential updateViewSettings calls in the same event tick MUST chain correctly:
+ * the second call has to see the first call's changes. Closure-captured
+ * `viewSettings` does not refresh between sync calls (no re-render yet), so we
+ * read the latest settings from the RTK Query cache at call time instead.
+ * RTK's updateView mutation performs an optimistic cache write in
+ * `onQueryStarted`, so the cache is already up-to-date by the time the next
+ * call reads it.
  */
 
 import {
@@ -13,15 +15,32 @@ import {
   EntityIdResponse,
   useCreateViewMutation,
   useUpdateViewMutation,
+  viewsQueries,
 } from '@shared/api'
 import { generateWorkingView } from './generateWorkingView'
 import { toast } from 'react-toastify'
 import { useCallback } from 'react'
-import { useViewsContext, ViewsContextValue } from '../context/ViewsContext'
+import { useStore } from 'react-redux'
+import { useViewsContext, ViewsContextValue, ViewSettings } from '../context/ViewsContext'
 
 interface UpdateOptions {
   successMessage?: string
   errorMessage?: string
+}
+
+// Module-level flag shared across every useViewUpdateHelper instance. Set true
+// when a mutation has been dispatched in the current tick (RTK cache is now
+// optimistically fresh); reset on the next microtask. Must be module-level so
+// that two different hook instances (e.g. ProjectOverviewDataProvider +
+// ProjectOverviewContext) coordinate correctly when writes flow through one
+// and subsequent reads come from the other in the same event tick.
+let cacheDirtyThisTick = false
+const markCacheDirty = () => {
+  if (cacheDirtyThisTick) return
+  cacheDirtyThisTick = true
+  queueMicrotask(() => {
+    cacheDirtyThisTick = false
+  })
 }
 
 export type UpdateViewSettingsFn = (
@@ -38,6 +57,13 @@ export const updateViewSettings = async (
   options: UpdateOptions = {},
   viewContext: ViewsContextValue,
   onApplyViewChanges: (arg: any, viewId?: string) => Promise<EntityIdResponse | void>,
+  // Reads latest effective settings from RTK Query cache at call time. Required to
+  // prevent stale-closure races when two updates fire in the same tick.
+  getLatestSettings: () => ViewSettings | undefined,
+  // Invoked synchronously right after the mutation is dispatched. The caller
+  // uses this to flip a "cache is fresh this tick" flag so subsequent sync
+  // calls in the same tick read the just-updated cache instead of stale state.
+  markCacheDirty: () => void,
 ): Promise<void> => {
   const {
     viewSettings,
@@ -58,8 +84,12 @@ export const updateViewSettings = async (
     // Immediately update local state for fast UI response
     localStateSetter(newLocalValue)
 
+    // Read latest settings from RTK cache (includes prior same-tick optimistic writes).
+    // Fallback to closure-captured value if cache has nothing (first render, etc.).
+    const latestSettings = getLatestSettings() ?? viewSettings
+
     // Create settings with updates
-    const newSettings = { ...viewSettings, ...updatedSettings }
+    const newSettings = { ...latestSettings, ...updatedSettings }
 
     // always update the working view no matter what
     const newWorkingView = generateWorkingView(newSettings)
@@ -83,6 +113,11 @@ export const updateViewSettings = async (
       },
       viewId,
     )
+
+    // Mutation dispatch above ran onQueryStarted synchronously → RTK cache now
+    // reflects `newSettings`. Signal this so any subsequent sync call in the
+    // same tick reads the fresh cache instead of the stale closure baseline.
+    markCacheDirty()
 
     // if not already on the working view: set that the settings have been changed to show the little blue save button and switch to the working view
     if (!wasWorking) {
@@ -123,6 +158,7 @@ export const useViewUpdateHelper = () => {
   const [updateView] = useUpdateViewMutation()
 
   const viewContext = useViewsContext()
+  const store = useStore()
 
   const onApplyViewChanges = useCallback(
     async (arg: any, viewId?: string) => {
@@ -151,9 +187,33 @@ export const useViewUpdateHelper = () => {
     [createView, updateView],
   )
 
+  // Returns cached settings when a same-tick prior write has refreshed the
+  // cache. Otherwise returns undefined and the caller falls back to the
+  // closure-captured viewSettings (correct baseline for the first write in a
+  // tick, including the named-view → working-view fork).
+  const getLatestSettings = useCallback((): ViewSettings | undefined => {
+    if (!cacheDirtyThisTick) return undefined
+    const { viewType, projectName } = viewContext
+    if (!viewType) return undefined
+    // RTK selector state is typed against the full RootState; we don't have that
+    // type in @shared and the store is project-specific. Cast is safe: the
+    // selector only touches the api slice, which exists in every consumer app.
+    const entry = viewsQueries.endpoints.getWorkingView.select({ viewType, projectName })(
+      store.getState() as any,
+    )
+    return entry?.data?.settings
+  }, [store, viewContext])
+
   const updateViewSettingsHandler = useCallback<UpdateViewSettingsFn>(
-    async (...args) => await updateViewSettings(...args, viewContext, onApplyViewChanges),
-    [viewContext, onApplyViewChanges],
+    async (...args) =>
+      await updateViewSettings(
+        ...args,
+        viewContext,
+        onApplyViewChanges,
+        getLatestSettings,
+        markCacheDirty,
+      ),
+    [viewContext, onApplyViewChanges, getLatestSettings],
   )
 
   return { updateViewSettings: updateViewSettingsHandler, onCreateView: onApplyViewChanges }
