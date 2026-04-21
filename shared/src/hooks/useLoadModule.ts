@@ -72,7 +72,6 @@ export const useLoadModule = <T>({
     }
 
     setIsOutdated(false)
-
     const initializedModule = initializedRemote.modules[remote]
 
     if (!initializedModule) {
