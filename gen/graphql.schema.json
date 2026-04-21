@@ -123,7 +123,7 @@
           },
           {
             "name": "node",
-            "description": "The activity node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -1366,7 +1366,7 @@
           },
           {
             "name": "node",
-            "description": "The entity list node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2235,7 +2235,7 @@
           },
           {
             "name": "node",
-            "description": "Event node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2850,7 +2850,7 @@
           },
           {
             "name": "node",
-            "description": "The folder node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3684,7 +3684,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, path, productType, productBaseType, folderName, status, createdAt, updatedAt, createdBy, updatedBy, tags",
+                "description": "Sort by one of name, path, productType, productBaseType, folderName, folderType, status, createdAt, updatedAt, createdBy, updatedBy, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -4209,6 +4209,70 @@
             "deprecationReason": null
           },
           {
+            "name": "totalFolderCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalProductCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalTaskCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "totalVersionCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "type",
             "description": null,
             "args": [],
@@ -4434,6 +4498,17 @@
         "possibleTypes": null
       },
       {
+        "kind": "SCALAR",
+        "name": "JSON",
+        "description": "The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).",
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "KanbanConnection",
         "description": null,
@@ -4505,7 +4580,7 @@
           },
           {
             "name": "node",
-            "description": "The kanban node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4911,6 +4986,22 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "data",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "JSON",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -5365,7 +5456,7 @@
           },
           {
             "name": "node",
-            "description": "Product node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6280,7 +6371,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName",
+                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName, folderType, taskName, taskType",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6759,7 +6850,7 @@
           },
           {
             "name": "node",
-            "description": "The project node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8131,7 +8222,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of name, path, productType, productBaseType, folderName, status, createdAt, updatedAt, createdBy, updatedBy, tags",
+                "description": "Sort by one of name, path, productType, productBaseType, folderName, folderType, status, createdAt, updatedAt, createdBy, updatedBy, tags",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -9294,7 +9385,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName",
+                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName, folderType, taskName, taskType",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -10724,7 +10815,7 @@
           },
           {
             "name": "node",
-            "description": "Representation node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -11847,7 +11938,7 @@
           },
           {
             "name": "node",
-            "description": "The task node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -12805,7 +12896,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName",
+                "description": "Sort by one of author, version, createdAt, updatedAt, createdBy, updatedBy, tags, path, productType, productName, folderName, folderType, taskName, taskType",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -13417,7 +13508,7 @@
           },
           {
             "name": "node",
-            "description": "The user node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -14078,7 +14169,7 @@
           },
           {
             "name": "node",
-            "description": "Version node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -15119,7 +15210,7 @@
           },
           {
             "name": "node",
-            "description": "Workfile node",
+            "description": null,
             "args": [],
             "type": {
               "kind": "NON_NULL",
