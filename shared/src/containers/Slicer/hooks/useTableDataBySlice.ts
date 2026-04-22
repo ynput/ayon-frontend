@@ -110,7 +110,7 @@ const useTableDataBySlice = ({
       sliceOptions.push({
         label: attr.data.title || attr.name,
         value: 'attrib.' + attr.name,
-        icon: getAttributeIcon(attr.name, attr.data.type, Boolean(attr.data.enum)),
+        icon: getAttributeIcon(attr.name, attr.data.type, !!attr.data.enum?.length),
       }),
     )
   }

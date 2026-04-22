@@ -15,13 +15,15 @@ import { useEffect, useMemo, useState } from "react"
 import ListDetailsPanel from "../ListDetailsPanel/ListDetailsPanel"
 import useReviewSessionCardsModules from "@pages/ProjectListsPage/hooks/useReviewSessionCardsModules"
 import { ReviewPageView } from "@pages/ProjectListsPage/ProjectListsPage"
+import useStoryboardsCardsModules from "@pages/ProjectListsPage/hooks/useStoryboardsCardsModules"
 
 type Props = {
   isReview: boolean
+  isStoryboards: boolean
   view: ReviewPageView
 }
 
-export default function ProjectListsDetailsPanels({ isReview, view }: Props) {
+export default function ProjectListsDetailsPanels({ isReview, isStoryboards, view }: Props) {
   const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
   const { selectedList, listDetailsOpen } = useListsContext()
@@ -88,9 +90,14 @@ export default function ProjectListsDetailsPanels({ isReview, view }: Props) {
     (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
 
+
+  const useModules = isStoryboards
+    ? useStoryboardsCardsModules
+    : useReviewSessionCardsModules
+
   const {
     useReviewSessionCards
-  } = useReviewSessionCardsModules({ skip: !isReview })
+  } = useModules({ skip: !isReview })
 
   const { clearHighlighted } = useReviewSessionCards()
 

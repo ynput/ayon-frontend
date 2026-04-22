@@ -1,4 +1,4 @@
-import { FC, useCallback, MouseEvent, useState } from 'react' // Import event types
+import { FC, useCallback, MouseEvent, useState, useMemo } from 'react' // Import event types
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
 import SimpleTable, {
@@ -16,9 +16,10 @@ import ListFolderFormDialog from '../ListFolderFormDialog'
 
 interface ListsTableProps {
   isReview?: boolean
+  isStoryboards?: boolean
 }
 
-const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
+const ListsTable: FC<ListsTableProps> = ({ isReview, isStoryboards }) => {
   const {
     rowSelection,
     setRowSelection,
@@ -85,6 +86,11 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
     )
   }, [])
 
+  const sessionsLabel = useMemo(
+    () => isStoryboards ? 'Storyboards' : 'Review sessions',
+    [isStoryboards]
+  )
+
   return (
     <>
       <SimpleTableProvider
@@ -92,18 +98,19 @@ const ListsTable: FC<ListsTableProps> = ({ isReview }) => {
       >
         <Container>
           <ListsTableHeader
-            title={isReview ? 'Review sessions' : undefined}
+            title={isReview ? sessionsLabel : undefined}
             buttonLabels={{
               delete: {
-                tooltip: isReview ? 'Delete selected review sessions' : 'Delete selected lists',
+                tooltip: isReview ? `Delete selected ${sessionsLabel.toLowerCase()}` : 'Delete selected lists',
               },
-              add: { tooltip: isReview ? 'Create new review session' : 'Create new list' },
-              search: { tooltip: isReview ? 'Search review sessions' : 'Search lists' },
+              add: { tooltip: isReview ? `Create new ${sessionsLabel.toLowerCase()}` : 'Create new list' },
+              search: { tooltip: isReview ? `Search ${sessionsLabel.toLowerCase()}` : 'Search lists' },
             }}
             hiddenButtons={isReview ? ['filter'] : []}
             search={clientSearch}
             onSearch={setClientSearch}
             isReview={isReview}
+            isStoryboards={isStoryboards}
           />
           <SimpleTable
             data={listsTableData}

@@ -11,6 +11,7 @@ interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
   onSubmit: ((listId: string) => Promise<any> | undefined) | undefined
   onCreateEmpty?: () => void
   submitLoading?: boolean
+  isStoryboards?: boolean
 }
 
 const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
@@ -18,6 +19,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
   onSubmit,
   onCreateEmpty,
   submitLoading,
+  isStoryboards,
   ...props
 }) => {
   const { projectName } = useProjectContext()
@@ -48,7 +50,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
     async (list: { id: string }) => {
       try {
         if (!onSubmit) {
-          throw 'Review addon not installed.'
+          throw `${isStoryboards ? 'Storyboard' : 'Review'} addon not installed.`
         }
 
         // create new list in API
@@ -56,7 +58,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
 
         // Note: closing the dialog and selecting the new list is handled in useNewList.ts
       } catch (error: any) {
-        toast.error('Failed to create review session: ' + error || 'Unknown error')
+        toast.error(`Failed to create ${isStoryboards ? 'storyboard' : 'review session'}: ` + error || 'Unknown error')
       }
     },
     [onSubmit],
@@ -84,7 +86,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
       >
         <ListRow
           id={''}
-          value={'Create empty review session'}
+          value={`Create empty ${isStoryboards ? 'storyboard' : 'review session'}`}
           icon="add_box"
           count={''}
           style={{

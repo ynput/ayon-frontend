@@ -39,6 +39,7 @@ import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from '@shared/components'
+import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPage'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -99,7 +100,7 @@ const ProjectPageInner = () => {
 
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
-    addons: ['review', 'planner', 'reports'],
+    addons: ['review', 'planner', 'reports', 'storyboards'],
   })
 
   useEffect(() => {
@@ -121,6 +122,11 @@ const ProjectPageInner = () => {
     remotePages: RemoteAddonProject[]
     isLoading: boolean
   }
+
+  const hasStoryboards = useMemo(
+    () => matchedAddons.has('storyboards'),
+    [matchedAddons]
+  )
 
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
@@ -166,6 +172,16 @@ const ProjectPageInner = () => {
         module: 'reviews',
         viewType: 'reviews',
       },
+      ...(
+        hasStoryboards
+          ? [{
+              name: 'Storyboards',
+              path: `/projects/${projectName}/storyboards`,
+              module: 'storyboards',
+              viewType: 'storyboards',
+            }]
+          : []
+      ),
       {
         name: 'Reports',
         path: `/projects/${projectName}/reports`,
@@ -212,7 +228,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, matchedAddons, module],
+    [addonsData, projectName, remotePages, matchedAddons, module, hasStoryboards],
   )
 
   const activeLink = useMemo(() => {
@@ -253,6 +269,14 @@ const ProjectPageInner = () => {
           projectName={projectName}
           isLoadingAccess={isLoadingAddons}
           hasReviewAddon={!!matchedAddons.has('review')}
+        />
+      )
+    } else if (module === 'storyboards' && hasStoryboards) {
+      component = (
+        <ProjectStoryboardsPage
+          projectName={projectName}
+          isLoadingAccess={isLoadingAddons}
+          hasStoryboardsAddon={!!matchedAddons.has('storyboards')}
         />
       )
     } else if (module === 'workfiles') {

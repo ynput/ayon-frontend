@@ -1,5 +1,5 @@
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
-import { SortCardType, SettingsSortingDropdown } from '@ynput/ayon-react-components'
+import { SortCardType, SortingDropdown as SettingsSortingDropdown } from '@ynput/ayon-react-components'
 
 const BUILT_IN_SORT_OPTIONS: { id: string; label: string; scopes?: string[] }[] = [
   { id: 'name', label: 'Name' },
