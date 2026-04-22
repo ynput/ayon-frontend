@@ -13,7 +13,7 @@ import {
 } from './context/ListsAttributesContext'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import { CustomizeButton, TableGridSwitch } from '@shared/components'
+import { CustomizeButton } from '@shared/components'
 import {
   MoveEntityProvider,
   SettingsPanelProvider,
@@ -57,6 +57,7 @@ import { getCellIdForColumn } from './util/cellIds.ts'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
 import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
+import { TableGridPlaylistSwitch, TableGridPlaylistView } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -64,8 +65,6 @@ type ProjectListsPageProps = {
   isReview?: boolean
   isStoryboards?: boolean
 }
-
-export type ReviewPageView = "table" | "cards"
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
   projectName,
@@ -264,12 +263,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
   } = useModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
-  const [view, setView] = useState<ReviewPageView>(isReview ? "cards" : "table")
+  const [view, setView] = useState<TableGridPlaylistView>(
+    isReview ? TableGridPlaylistView.GRID : TableGridPlaylistView.TABLE,
+  )
 
   // if the addon is outdated, make sure we land in table view
   useEffect(() => {
     if (!reviewSessionCardsOutdated) return
-    setView("table")
+    setView(TableGridPlaylistView.TABLE)
   }, [reviewSessionCardsOutdated])
 
   return (
@@ -298,6 +299,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
               api={api}
               toast={toast}
               gridSize={gridHeight}
+              playlistView={view === TableGridPlaylistView.PLAYLIST}
               onSelectionChange={(versionIds) => {
                 if (versionIds.length === 0) return clearSelection()
 
@@ -346,12 +348,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       />
                   }
                   {
-                    reviewModulesLoaded && view === "cards" && (
+                    reviewModulesLoaded && view !== TableGridPlaylistView.TABLE && (
                       <ReviewSessionCardsControlsLeft />
                     )
                   }
                   {
-                    view === "table" && (
+                    view === TableGridPlaylistView.TABLE && (
                       <>
                         <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                         {/*@ts-expect-error - we do not support product right now*/}
@@ -363,7 +365,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     isReview && reviewModulesLoaded && (
                       <>
                         <Spacer />
-                        <ReviewSessionCardsControlsRight groupingDisabled={view === "table"} />
+                        <ReviewSessionCardsControlsRight groupingDisabled={view === TableGridPlaylistView.TABLE} />
                       </>
                     )
                   }
@@ -392,9 +394,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   />
                   {
                     !reviewSessionCardsOutdated && isReview && !isStoryboards && (
-                      <TableGridSwitch
-                        showGrid={view === "cards"}
-                        onChange={(showGrid) => setView(showGrid ? "cards" : "table")}
+                      <TableGridPlaylistSwitch
+                        value={view}
+                        onChange={(v) => setView(v)}
                       />
                     )
                   }
@@ -417,7 +419,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   >
                     <SplitterPanel size={70}>
                       {
-                        selectedList && isReview && view === "cards"
+                        selectedList && isReview && view !== TableGridPlaylistView.TABLE
                         ? (reviewModulesLoaded && <ReviewSessionCards />)
                         : (
                           <ListItemsTable
@@ -453,7 +455,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     }}
                   >
                     {
-                      view === "table" ? (
+                      view === TableGridPlaylistView.TABLE ? (
                         <ListsTableSettings
                           extraColumns={extraColumnsSettings}
                           highlightedSetting={highlightedSetting}
