@@ -54,6 +54,7 @@ import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSet
 import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
 import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
 
@@ -366,6 +367,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       </>
                     )
                   }
+                  <ImportDialogButton
+                    importContext="entity_list_item"
+                    projectName={projectName}
+                    folderId={selectedList?.id}
+                  />
                   <Actions
                     entities={[
                       {
