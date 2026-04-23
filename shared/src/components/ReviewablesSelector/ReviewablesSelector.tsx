@@ -1,18 +1,14 @@
 import { FC, useEffect, useRef, useState } from 'react'
 import * as Styled from './ReviewablesSelector.styled'
-import clsx from 'clsx'
-import { FileThumbnail } from '@shared/components'
-import { ReviewableModel } from '@shared/api'
 import { isHTMLElement } from '@shared/util'
 import ScrollBar from 'react-perfect-scrollbar'
-
-type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label' | 'fileId'>
+import Card, { ReviewableCard, ReviewableCardProps } from './Card'
 
 interface ReviewablesSelectorProps {
   reviewables: ReviewableCard[]
   selected: string[]
   projectName: string | null
-  onChange?: (fileId: string) => void
+  onChange?: (fileId: string, modifier?: boolean) => void
   onUpload?: () => void
 }
 
@@ -111,7 +107,7 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
 
   const handleMouseOver = (
     event: React.MouseEvent<HTMLDivElement>,
-    { label }: Pick<ReviewableCard, 'label'>,
+    { label }: Pick<ReviewableCardProps, 'label'>,
   ) => {
     // check event is coming from a reviewable card
     const closest = (event.target as HTMLElement).closest('.reviewable-card') as HTMLElement
@@ -144,18 +140,19 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
           scrollContainerRef.current = ref
         }}
       >
-        {reviewables.map(({ fileId, label }) => (
-          <Styled.ReviewableCard
-            key={fileId}
-            id={'preview-' + fileId}
-            onClick={() => onChange && onChange(fileId)}
-            className={clsx('reviewable-card', { selected: selected.includes(fileId) })}
-            onMouseOver={(e) => handleMouseOver(e, { label })}
+        {reviewables.map(({ fileId, label, tag, selectionVariant, contextMenuItems }) => (
+          <Card
+            projectName={projectName}
+            fileId={fileId}
+            label={label}
+            selected={selected.includes(fileId)}
+            selectionVariant={selectionVariant}
+            tag={tag}
+            contextMenuItems={contextMenuItems}
+            onChange={onChange}
             onKeyDown={handleKeyDown}
-            tabIndex={0}
-          >
-            <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
-          </Styled.ReviewableCard>
+            onMouseOver={handleMouseOver}
+          />
         ))}
         {!!onUpload && (
           <Styled.AddButton
