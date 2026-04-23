@@ -8,7 +8,7 @@ interface ReviewablesSelectorProps {
   reviewables: ReviewableCard[]
   selected: string[]
   projectName: string | null
-  onChange?: (fileId: string) => void
+  onChange?: (fileId: string, modifier?: boolean) => void
   onUpload?: () => void
 }
 

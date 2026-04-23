@@ -14,7 +14,7 @@ export type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label'> & {
 export type ReviewableCardProps = ReviewableCard & {
   projectName: string | null,
   selected: boolean,
-  onChange?: (fileId: string) => void,
+  onChange?: (fileId: string, modifier?: boolean) => void,
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void,
   onMouseOver: (event: MouseEvent<HTMLDivElement>, { label }: { label?: string }) => void,
 }
@@ -37,7 +37,7 @@ export default function Card({
     <Styled.ReviewableCard
       key={fileId}
       id={'preview-' + fileId}
-      onClick={() => onChange && onChange(fileId)}
+      onClick={(event) => onChange?.(fileId, event.metaKey || event.ctrlKey)}
       className={clsx('reviewable-card', { selected }, selectionVariant)}
       onMouseOver={(e) => onMouseOver(e, { label })}
       onKeyDown={onKeyDown}
