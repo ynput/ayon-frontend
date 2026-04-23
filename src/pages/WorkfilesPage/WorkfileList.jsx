@@ -13,6 +13,8 @@ import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
 import { useDeleteWorkfileMutation } from '@queries/workfiles/deleteWorkfile'
 import { DetailsDialog } from '@shared/components'
+import { useGetAllProjectUsersAsAssigneeQuery } from '@shared/api'
+import { WorkfileUsers } from './WorkfileUsers'
 
 const WorkfileList = ({ style }) => {
   const tableRef = useRef(null)
@@ -29,6 +31,11 @@ const WorkfileList = ({ style }) => {
     isError,
     error,
   } = useGetWorkfileListQuery({ projectName, taskIds }, { skip: !taskIds.length })
+
+  const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
+    { projectName },
+    { skip: !projectName },
+  )
 
   const [deleteWorkfile] = useDeleteWorkfileMutation()
 
@@ -158,6 +165,19 @@ const WorkfileList = ({ style }) => {
             rowClassName={(rowData) => ({ ['id-' + rowData.id]: true })}
           >
             <Column field="name" header="Name" body={formatName} />
+            <Column
+              field="author"
+              header="Author"
+              body={(rowData) => (
+                <WorkfileUsers
+                  users={users}
+                  createdBy={rowData.createdBy}
+                  createdAt={rowData.createdAt}
+                  updatedBy={rowData.updatedBy}
+                  updatedAt={rowData.updatedAt}
+                />
+              )}
+            />
           </DataTable>
         )}
       </TablePanel>
