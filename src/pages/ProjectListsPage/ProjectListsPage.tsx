@@ -57,7 +57,7 @@ import { getCellIdForColumn } from './util/cellIds.ts'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
 import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
 import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
-import { TableGridPlaylistSwitch, TableGridPlaylistView } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
+import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 
 type ProjectListsPageProps = {
   projectName: string
@@ -247,7 +247,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
     selectSetting('columns', attrib)
   }
 
-  const { gridHeight } = useReviewCardsSettingsContext()
+  const {
+    gridHeight,
+    displayStyle,
+    onUpdateDisplayStyle,
+    onUpdateDisplayStyleWithPersistence,
+  } = useReviewCardsSettingsContext()
 
   const useModules = isStoryboards
     ? useStoryboardsCardsModules
@@ -263,14 +268,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
   } = useModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
-  const [view, setView] = useState<TableGridPlaylistView>(
-    isReview ? TableGridPlaylistView.GRID : TableGridPlaylistView.TABLE,
-  )
 
   // if the addon is outdated, make sure we land in table view
   useEffect(() => {
     if (!reviewSessionCardsOutdated) return
-    setView(TableGridPlaylistView.TABLE)
+    onUpdateDisplayStyle("table")
+    onUpdateDisplayStyleWithPersistence("table")
   }, [reviewSessionCardsOutdated])
 
   return (
@@ -299,7 +302,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
               api={api}
               toast={toast}
               gridSize={gridHeight}
-              playlistView={view === TableGridPlaylistView.PLAYLIST}
+              playlistView={displayStyle === "playlist"}
               onSelectionChange={(versionIds) => {
                 if (versionIds.length === 0) return clearSelection()
 
@@ -348,12 +351,12 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       />
                   }
                   {
-                    reviewModulesLoaded && view !== TableGridPlaylistView.TABLE && (
+                    reviewModulesLoaded && displayStyle !== "table" && (
                       <ReviewSessionCardsControlsLeft />
                     )
                   }
                   {
-                    view === TableGridPlaylistView.TABLE && (
+                    displayStyle === "table" && (
                       <>
                         <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
                         {/*@ts-expect-error - we do not support product right now*/}
@@ -365,7 +368,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     isReview && reviewModulesLoaded && (
                       <>
                         <Spacer />
-                        <ReviewSessionCardsControlsRight groupingDisabled={view === TableGridPlaylistView.TABLE} />
+                        <ReviewSessionCardsControlsRight groupingDisabled={displayStyle === "table"} />
                       </>
                     )
                   }
@@ -395,8 +398,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   {
                     !reviewSessionCardsOutdated && isReview && !isStoryboards && (
                       <TableGridPlaylistSwitch
-                        value={view}
-                        onChange={(v) => setView(v)}
+                        value={displayStyle}
+                        onChange={(style) => {
+                          onUpdateDisplayStyle(style)
+                          onUpdateDisplayStyleWithPersistence(style)
+                        }}
                       />
                     )
                   }
@@ -419,7 +425,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                   >
                     <SplitterPanel size={70}>
                       {
-                        selectedList && isReview && view !== TableGridPlaylistView.TABLE
+                        selectedList && isReview && displayStyle !== "table"
                         ? (reviewModulesLoaded && <ReviewSessionCards />)
                         : (
                           <ListItemsTable
@@ -442,7 +448,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       <ProjectListsDetailsPanels
                         isReview={!!isReview}
                         isStoryboards={!!isStoryboards}
-                        view={view}
+                        displayStyle={displayStyle}
                       />
                     </SplitterPanel>
                   </DetailsPanelSplitter>
@@ -455,7 +461,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     }}
                   >
                     {
-                      view === TableGridPlaylistView.TABLE ? (
+                      displayStyle === "table" ? (
                         <ListsTableSettings
                           extraColumns={extraColumnsSettings}
                           highlightedSetting={highlightedSetting}
