@@ -6636,7 +6636,7 @@ quill-delta@^5.1.0:
     lodash.clonedeep "^4.5.0"
     lodash.isequal "^4.5.0"
 
-quill-magic-url@4.2.0:
+quill-magic-url@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/quill-magic-url/-/quill-magic-url-4.2.0.tgz#61d5b98c19c0345e744c75e0faf40cb87c2bfdd4"
   integrity sha512-u1tHwsQjrTczhECNtXK5EUkWwAMb8raLpsU3llqiLu344kPlA9ldoenHvY3XW+yI+2IZ9WgKgRmcy+cKGN3gnQ==
@@ -6645,10 +6645,10 @@ quill-magic-url@4.2.0:
     normalize-url "^4.5.1"
     quill-delta "^3.6.2"
 
-quill@2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/quill/-/quill-2.0.2.tgz#5b26bc10a74e9f7fdcfdb5156b3133a3ebf0a814"
-  integrity sha512-QfazNrhMakEdRG57IoYFwffUIr04LWJxbS/ZkidRFXYCQt63c1gK6Z7IHUXMx/Vh25WgPBU42oBaNzQ0K1R/xw==
+quill@^2.0.2:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/quill/-/quill-2.0.3.tgz#752765a31d5a535cdc5717dc49d4e50099365eb1"
+  integrity sha512-xEYQBqfYx/sfb33VJiKnSJp8ehloavImQ2A6564GAbqG55PGw1dAWUn1MUbQB62t0azawUS2CZZhWCjO8gRvTw==
   dependencies:
     eventemitter3 "^5.0.1"
     lodash-es "^4.17.21"
@@ -6757,13 +6757,13 @@ react-popper@^2.3.0:
     react-fast-compare "^3.0.1"
     warning "^4.0.2"
 
-react-quill-ayon@2.0.3:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/react-quill-ayon/-/react-quill-ayon-2.0.3.tgz#4c5c86805a1fc5267ba69249d0faef9b1038bbe9"
-  integrity sha512-lkKU618tglDJQSGtfwz1/SfSOAr5BWoTGdSUQD43u9WvtNH727ZZhg5+42b/bt5Lk8itBdDfn+P/ThKKXWYYrA==
+react-quill-ayon@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/react-quill-ayon/-/react-quill-ayon-2.0.2.tgz#8a408fa85ba8cdd9f686933e758fcd66b3916f35"
+  integrity sha512-42OqYieo522dbVrml5lXGZ57czk6ctBcdIG4tCYzyZYPgyc28WoC+AR7UjvdYaQlAj9jy3gpp8kcJHXcRUffYA==
   dependencies:
-    lodash "4.18.1"
-    quill "2.0.2"
+    lodash "^4.17.4"
+    quill "^2.0.2"
 
 react-redux@9.2.0:
   version "9.2.0"
