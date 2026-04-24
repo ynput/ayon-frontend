@@ -48,7 +48,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
     useSlicerContext()
 
-  const { sorting, groupBy: panelGroupBy, updateGroupBy } = useColumnSettingsContext()
+  const { sorting, groupBy: panelGroupBy } = useColumnSettingsContext()
 
   const sliceFilter = createFilterFromSlicer({
     type: sliceType,
@@ -81,21 +81,27 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { updateViewSettings } = useViewUpdateHelper()
 
   // View mode derived purely from server viewSettings — no localStorage, no sync effect.
+  // undefined = view settings not loaded yet (dropdown stays empty)
   // null = hierarchy, 'none' = flat list, other string = groupBy field id ('folderType', 'status', 'folder', ...)
   const overviewShowHierarchy = (viewSettings as OverviewSettings | undefined)?.showHierarchy
   const overviewGroupBy = (viewSettings as OverviewSettings | undefined)?.groupBy
-  const viewGroupBy = useMemo<string | null>(() => {
+  const viewGroupBy = useMemo<string | null | undefined>(() => {
+    // Before first load, do not assume any grouping — the dropdown must stay
+    // empty so the user doesn't see a "Hierarchy" flicker while the saved
+    // view is still being fetched.
+    if (isLoadingViews || !viewSettings) return undefined
     const showHierarchy = overviewShowHierarchy ?? true
     if (showHierarchy) return null
     if (overviewGroupBy) return overviewGroupBy
     return 'none'
-  }, [overviewShowHierarchy, overviewGroupBy])
+  }, [isLoadingViews, viewSettings, overviewShowHierarchy, overviewGroupBy])
 
   // Derive desc directly from panel groupBy (single source of truth — no separate state)
   const viewGroupByDesc = panelGroupBy?.desc ?? false
 
   const {
     onUpdateHierarchy: _updateShowHierarchy,
+    onUpdateGroupBy: _updateGroupByAtomic,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
     sliceType: viewSliceType,
@@ -105,35 +111,32 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // Sync slicer slice type with view settings, selection with localStorage
   useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews, `slicer-selection-overview-${projectName}`)
 
-  // Derive effective showHierarchy from viewGroupBy
-  // viewGroupBy === null means hierarchy mode, otherwise it's a groupBy field
-  const showHierarchy = viewGroupBy === null
+  // Derive effective showHierarchy from viewGroupBy.
+  // null = explicit hierarchy, undefined = not loaded yet — both default to
+  // hierarchy-style fetching to avoid firing a flat-list query against an
+  // empty config during the initial load window.
+  const showHierarchy = viewGroupBy === null || viewGroupBy === undefined
 
   // Flat folder view: shows all folders flat, each expandable to reveal tasks
   const isFlatFolderView = viewGroupBy === 'folder'
 
-  // User action handler — writes to server only. viewGroupBy is derived from viewSettings,
-  // so the UI updates once the server mutation reflects in the view cache.
+  // User action handler — writes to server via ONE atomic PATCH. Previously split
+  // into `_updateShowHierarchy` + `updateGroupBy`, which fired two requests that
+  // both captured the same pre-update viewSettings snapshot; the second silently
+  // reverted the first's showHierarchy change (race).
   const updateViewGroupBy = useCallback(
     (newViewGroupBy: string | null, desc?: boolean) => {
       if (newViewGroupBy === null) {
-        // Enter hierarchy mode: clear groupBy and persist showHierarchy on server
-        _updateShowHierarchy(true)
-        updateGroupBy(undefined)
+        _updateGroupByAtomic(undefined, true, undefined)
       } else if (newViewGroupBy === 'none') {
-        // Flat list: no hierarchy, no grouping
-        _updateShowHierarchy(false)
-        updateGroupBy(undefined)
-      } else if (newViewGroupBy === 'folder') {
-        // Flat folder view: no hierarchy, no groupBy (uses hierarchy-style task fetching)
-        _updateShowHierarchy(false)
-        updateGroupBy(undefined)
+        _updateGroupByAtomic(undefined, false, undefined)
       } else {
-        // onUpdateColumns (called by updateGroupBy) sets showHierarchy: false on the server
-        updateGroupBy({ id: newViewGroupBy, desc: desc ?? viewGroupByDesc })
+        // 'folder' persists as groupBy sentinel so reload distinguishes it
+        // from 'none'. ProjectTableProvider skips grouping when isFlatFolderView.
+        _updateGroupByAtomic(newViewGroupBy, false, desc ?? viewGroupByDesc)
       }
     },
-    [updateGroupBy, _updateShowHierarchy, viewGroupByDesc],
+    [_updateGroupByAtomic, viewGroupByDesc],
   )
 
   const updateShowHierarchy = useCallback(
