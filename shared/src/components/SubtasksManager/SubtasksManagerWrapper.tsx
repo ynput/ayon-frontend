@@ -2,7 +2,7 @@
 import {
   QueryFilter,
   SubTaskNode,
-  useGetUsersQuery,
+  useGetUsersAssigneeQuery,
   UserModel,
   useUpdateSubtasksMutation,
 } from '@shared/api'
@@ -35,7 +35,7 @@ export const SubtasksManagerWrapper = ({
   ...props
 }: SubtasksManagerWrapperProps) => {
   const [updateSubtasks] = useUpdateSubtasksMutation()
-  const { data: users = [] } = useGetUsersQuery({})
+  const { data: users = [] } = useGetUsersAssigneeQuery({ projectName: props.projectName })
 
   return (
     <SubtasksManager
