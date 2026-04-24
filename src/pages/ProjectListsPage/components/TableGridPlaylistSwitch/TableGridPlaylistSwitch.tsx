@@ -1,15 +1,10 @@
 import { forwardRef, useEffect } from 'react'
 import * as Styled from './TableGridPlaylistSwitch.styled'
-
-export enum TableGridPlaylistView {
-  TABLE = "table",
-  GRID = "cards",
-  PLAYLIST = "playlist",
-}
+import { ReviewsSettings } from '@shared/api'
 
 interface TableGridPlaylistSwitchProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
-  value: TableGridPlaylistView
-  onChange: (view: TableGridPlaylistView) => void
+  value: ReviewsSettings['displayStyle']
+  onChange: (view: ReviewsSettings['displayStyle']) => void
 }
 
 export const TableGridPlaylistSwitch = forwardRef<HTMLDivElement, TableGridPlaylistSwitchProps>(
@@ -28,11 +23,11 @@ export const TableGridPlaylistSwitch = forwardRef<HTMLDivElement, TableGridPlayl
           return
         }
         if (event.key.toLowerCase() === 't') {
-          onChange(TableGridPlaylistView.TABLE)
+          onChange("table")
         } else if (event.key.toLowerCase() === 'g') {
-          onChange(TableGridPlaylistView.GRID)
+          onChange("cards")
         } else if (event.key.toLowerCase() === 'p') {
-          onChange(TableGridPlaylistView.PLAYLIST)
+          onChange("playlist")
         }
       }
 
@@ -44,24 +39,24 @@ export const TableGridPlaylistSwitch = forwardRef<HTMLDivElement, TableGridPlayl
       <Styled.ButtonsContainer {...props} ref={ref}>
         <Styled.InnerButton
           icon="table_rows"
-          selected={value === TableGridPlaylistView.TABLE}
-          onClick={() => onChange(TableGridPlaylistView.TABLE)}
+          selected={value === "table"}
+          onClick={() => onChange("table")}
           variant="text"
           data-tooltip="Table"
           data-shortcut="T"
         />
         <Styled.InnerButton
           icon="grid_view"
-          selected={value === TableGridPlaylistView.GRID}
-          onClick={() => onChange(TableGridPlaylistView.GRID)}
+          selected={value === "cards"}
+          onClick={() => onChange("cards")}
           variant="text"
           data-tooltip="Cards"
           data-shortcut="G"
         />
         <Styled.InnerButton
           icon="format_list_bulleted"
-          selected={value === TableGridPlaylistView.PLAYLIST}
-          onClick={() => onChange(TableGridPlaylistView.PLAYLIST)}
+          selected={value === "playlist"}
+          onClick={() => onChange("playlist")}
           variant="text"
           data-tooltip="Playlist"
           data-shortcut="P"

@@ -15,15 +15,15 @@ import { useEffect, useMemo, useState } from "react"
 import ListDetailsPanel from "../ListDetailsPanel/ListDetailsPanel"
 import useReviewSessionCardsModules from "@pages/ProjectListsPage/hooks/useReviewSessionCardsModules"
 import useStoryboardsCardsModules from "@pages/ProjectListsPage/hooks/useStoryboardsCardsModules"
-import { TableGridPlaylistView } from "../TableGridPlaylistSwitch"
+import { ReviewsSettings } from "@shared/api"
 
 type Props = {
   isReview: boolean
   isStoryboards: boolean
-  view: TableGridPlaylistView
+  displayStyle: ReviewsSettings['displayStyle']
 }
 
-export default function ProjectListsDetailsPanels({ isReview, isStoryboards, view }: Props) {
+export default function ProjectListsDetailsPanels({ isReview, isStoryboards, displayStyle }: Props) {
   const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
   const { selectedList, listDetailsOpen } = useListsContext()
@@ -104,12 +104,12 @@ export default function ProjectListsDetailsPanels({ isReview, isStoryboards, vie
   // For review session lists, closing the details panel
   // should also clear the state in the addon component.
   const onClose = useMemo(() => {
-    if (!clearHighlighted || view !== TableGridPlaylistView.GRID) return
+    if (!clearHighlighted || displayStyle !== "cards") return
 
     return () => {
       clearHighlighted()
     }
-  }, [clearHighlighted, view])
+  }, [clearHighlighted, displayStyle])
 
   return (
     <>
