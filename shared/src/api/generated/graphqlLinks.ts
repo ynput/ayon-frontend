@@ -346,10 +346,6 @@ export type FolderNode = BaseNode & {
   tasks: TasksConnection;
   thumbnail?: Maybe<ThumbnailInfo>;
   thumbnailId?: Maybe<Scalars['String']['output']>;
-  totalFolderCount: Scalars['Int']['output'];
-  totalProductCount: Scalars['Int']['output'];
-  totalTaskCount: Scalars['Int']['output'];
-  totalVersionCount: Scalars['Int']['output'];
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;

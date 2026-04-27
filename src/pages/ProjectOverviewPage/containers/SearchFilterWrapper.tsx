@@ -412,7 +412,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     if (chipId === SEARCH_FILTER_ID || chipId.startsWith(SEARCH_FILTER_ID + '__')) {
       const filter = localFilters.find((f) => f.id === chipId)
       if (filter?.values?.length) {
-        const text = filter.values[0].label || String(filter.values[0].id)
+        const text = (filter.values[0].label || String(filter.values[0].id)).replace(/%/g, '')
         editingSearchChipRef.current = chipId
         // Wait for the dropdown to render (after default click handlers fire)
         requestAnimationFrame(() => {

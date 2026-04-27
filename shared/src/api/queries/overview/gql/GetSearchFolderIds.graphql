@@ -1,0 +1,16 @@
+query GetSearchFolderIds(
+  $projectName: String!
+  $search: String
+  $filter: String
+  $folderFilter: String
+) {
+  project(name: $projectName) {
+    tasks(search: $search, filter: $filter, folderFilter: $folderFilter, first: 10000) {
+      edges {
+        node {
+          folderId
+        }
+      }
+    }
+  }
+}
