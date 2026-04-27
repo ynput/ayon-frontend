@@ -20,6 +20,7 @@ const Attributes = lazy(() => import('./Attributes'))
 const Secrets = lazy(() => import('./Secrets'))
 const AddonsManager = lazy(() => import('./AddonsManager'))
 const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
+const OAuthManager = lazy(() => import('./OAuth'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
@@ -77,6 +78,8 @@ const SettingsPage = () => {
         return <Attributes />
       case 'secrets':
         return <Secrets />
+      case 'oauth':
+        return <OAuthManager />
       case 'server':
         return <ServerConfig />
       default:
@@ -150,6 +153,12 @@ const SettingsPage = () => {
         name: 'Secrets',
         path: '/settings/secrets',
         module: 'secrets',
+        accessLevels: ['manager'],
+      },
+      {
+        name: 'OAuth',
+        path: '/settings/oauth',
+        module: 'oauth',
         accessLevels: ['manager'],
       },
     ]
