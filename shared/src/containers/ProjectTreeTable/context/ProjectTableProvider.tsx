@@ -42,7 +42,7 @@ import useBuildGroupByTableData, {
   ROW_ID_SEPARATOR,
 } from '../hooks/useBuildGroupByTableData'
 import { PowerpackContextType, useProjectContext } from '@shared/context'
-import { useColumnSettingsContext } from './ColumnSettingsContext'
+import { TableGroupBy, useColumnSettingsContext } from './ColumnSettingsContext'
 import { ProjectTableModulesType } from '@shared/hooks'
 import { ProjectTableContext, ProjectTableContextType } from './ProjectTableContext'
 import type { SubtasksManagerProps } from '@shared/components'
@@ -68,6 +68,9 @@ export interface ProjectTableProviderProps {
   attribFields: ProjectTableAttribute[]
   scopes: string[]
 
+  // Flat folder view
+  isFlatFolderView?: boolean
+
   // data
   tasksMap: TaskNodeMap
   foldersMap: FolderNodeMap
@@ -78,6 +81,7 @@ export interface ProjectTableProviderProps {
   // grouping
   groups: EntityGroup[]
   groupRowFunc?: (node: any) => TableRow
+  overrideGroupBy?: TableGroupBy
 
   // data functions
   fetchNextPage: (value?: string) => void
@@ -112,6 +116,15 @@ export interface ProjectTableProviderProps {
   groupByConfig?: {
     entityType?: GroupByEntityType
   }
+
+  // Custom hierarchy-like options for the group-by settings panel
+  // Overrides the default Hierarchy/Folder options when provided
+  hierarchyOptions?: Array<{ value: string; label: string; icon: string }>
+
+  // Whether hierarchy mode is active (for panel display only)
+  // Used when showHierarchy must stay false for table internals (e.g. infinite scroll)
+  // but the panel should still highlight the hierarchy option
+  hierarchyActive?: boolean
 
   // SubtasksManager component
   SubtasksManager?: React.ComponentType<SubtasksManagerProps>
@@ -155,6 +168,7 @@ export const ProjectTableProvider = ({
   scopes,
   groups,
   groupRowFunc,
+  overrideGroupBy,
   queryFilters,
   updateShowHierarchy,
   toggleExpanded,
@@ -166,6 +180,9 @@ export const ProjectTableProvider = ({
   powerpack,
   modules,
   groupByConfig,
+  hierarchyOptions,
+  hierarchyActive,
+  isFlatFolderView,
   SubtasksManager,
   // player
   playerOpen,
@@ -178,6 +195,9 @@ export const ProjectTableProvider = ({
   useSearchParams,
 }: ProjectTableProviderProps) => {
   const { attrib: projectAttrib } = useProjectContext()
+  const { groupBy: columnSettingsGroupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
+    useColumnSettingsContext()
+
   // DATA TO TABLE
   const defaultTableData = useBuildProjectDataTable({
     foldersMap,
@@ -186,12 +206,16 @@ export const ProjectTableProvider = ({
     tasksByFolderMap,
     expanded,
     showHierarchy,
+    isFlatFolderView,
+    showEmptyFolders: showEmptyGroups,
     loadingTasks,
     isLoadingMore,
   })
 
-  const { groupBy, groupByConfig: { showEmpty: showEmptyGroups = false } = {} } =
-    useColumnSettingsContext()
+  // overrideGroupBy (from view dropdown) takes priority over Customize panel's groupBy.
+  // In flat folder view, ignore both — the 'folder' sentinel persisted on the server
+  // must not leak into grouping logic (it's only used to distinguish the mode from 'none').
+  const effectiveGroupBy = isFlatFolderView ? undefined : (overrideGroupBy || columnSettingsGroupBy)
 
   const buildGroupByTableData = useBuildGroupByTableData({
     entities: entitiesMap,
@@ -209,11 +233,11 @@ export const ProjectTableProvider = ({
 
   // if we are grouping by something, we ignore current tableData and format the data based on the groupBy
   const groupedTableData = useMemo(
-    () => !!groupBy && buildGroupByTableData(groupBy),
-    [groupBy, entitiesMap, groups],
+    () => !!effectiveGroupBy && buildGroupByTableData(effectiveGroupBy),
+    [effectiveGroupBy, entitiesMap, groups],
   )
 
-  const tableData = groupBy && groupedTableData ? groupedTableData : defaultTableData
+  const tableData = effectiveGroupBy && !isFlatFolderView && groupedTableData ? groupedTableData : defaultTableData
 
   const getEntityById = useCallback(
     (id: string, field: string = 'entityId'): EntityMap | undefined => {
@@ -333,10 +357,15 @@ export const ProjectTableProvider = ({
         fetchNextPage,
         reloadTableData,
         groups,
+        overrideGroupBy,
         queryFilters,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
+        hierarchyOptions,
+        hierarchyActive,
+        // flat folder view
+        isFlatFolderView,
         // expanded state
         expanded,
         setExpanded,

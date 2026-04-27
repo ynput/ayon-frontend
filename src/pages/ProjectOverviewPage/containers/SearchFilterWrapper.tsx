@@ -576,6 +576,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
               {...{
                 selected: customEndDate ? parse(customEndDate, 'yyyy-MM-dd', new Date()) : undefined,
                 onChange: (date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : ''),
+                openToDate: customStartDate ? new Date(customStartDate) : undefined,
               } as any}
             />
           </FormRow>

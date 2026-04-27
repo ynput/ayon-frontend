@@ -106,6 +106,7 @@ export const Comment = styled.div<CommentProps>`
       border-radius: var(--border-radius-m);
       user-select: none;
       padding: 0 4px;
+      margin-right: -2px;
       /* remove underline */
       text-decoration: none;
 

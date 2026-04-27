@@ -1,26 +1,26 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
+import styled from 'styled-components'
 
 // state
-import { useSlicerContext, Slicer } from '@shared/containers/Slicer'
+import { Slicer, useSlicerContext } from '@shared/containers/Slicer'
 
 // arc
-import { Section, SwitchButton, Toolbar } from '@ynput/ayon-react-components'
+import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { ScopeWithFilterTypes } from '@shared/components'
+import { CustomizeButton, ScopeWithFilterTypes } from '@shared/components'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import NewEntity from '@components/NewEntity/NewEntity'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
-  useColumnSettingsContext,
-  useSelectionCellsContext,
   getCellId,
   ROW_SELECTION_COLUMN_ID,
+  useGetGroupedFields,
+  useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useProjectOverviewContext } from './context/ProjectOverviewContext'
-import { CustomizeButton } from '@shared/components'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useGlobalContext, useSettingsPanel } from '@shared/context'
 import ReloadButton from './components/ReloadButton'
@@ -31,6 +31,7 @@ import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 // Configure scope-specific filter types for the search filter
 const scopesConfig: ScopeWithFilterTypes[] = [
@@ -43,6 +44,31 @@ const scopesConfig: ScopeWithFilterTypes[] = [
     filterTypes: ['status', 'tags', 'folderType', 'attributes', 'name', 'createdAt', 'updatedAt'],
   },
 ]
+
+const GroupByDropdown = styled(SortingDropdown)<{
+  $disableSortOrder?: boolean
+}>`
+  flex-shrink: 0;
+
+  /* hide the empty placeholder container (flex:1) so chip gets full space */
+  .template-value > div:has(.placeholder) {
+    display: none;
+  }
+
+  .sort-chip {
+    min-width: fit-content;
+
+    ${({ $disableSortOrder }) =>
+      $disableSortOrder &&
+      `
+      .sort-order {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    `}
+  }
+`
 
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
@@ -57,12 +83,50 @@ const ProjectOverviewPage: FC = () => {
     setQueryFilters,
     displayFilters,
     showHierarchy,
-    updateShowHierarchy,
+    viewGroupBy,
+    viewGroupByDesc,
+    updateViewGroupBy,
     tasksMap,
     updateExpanded,
   } = useProjectOverviewContext()
 
-  const { updateGroupBy } = useColumnSettingsContext()
+  // Build group-by dropdown options
+  const groupedFields = useGetGroupedFields({ scope: 'task' })
+  const viewGroupByOptions = useMemo(() => {
+    return [
+      { id: 'hierarchy', label: 'Hierarchy', icon: 'account_tree', sortOrder: true },
+      { id: 'folder', label: 'Folder', icon: 'folder', sortOrder: true },
+      ...groupedFields.map((field) => ({
+        id: field.value,
+        label: field.label,
+        icon: field.icon,
+        sortOrder: true,
+      })),
+    ]
+  }, [groupedFields])
+
+  const viewGroupByValue = useMemo(() => {
+    // undefined = view settings not loaded yet — keep dropdown empty so the
+    // user doesn't see a "Hierarchy" default flicker before the saved value arrives.
+    if (viewGroupBy === undefined) return []
+    return viewGroupByOptions
+      .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
+      .map((o) => ({ ...o, sortOrder: !viewGroupByDesc }))
+  }, [viewGroupBy, viewGroupByOptions, viewGroupByDesc])
+
+  const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
+    const value = values[0]
+    if (!value) {
+      // X clicked — flat list (no grouping)
+      updateViewGroupBy('none')
+    } else if (value.id === 'hierarchy') {
+      updateViewGroupBy(null)
+    } else {
+      // sortOrder: true = ascending, desc: false = ascending
+      const desc = value.sortOrder === false
+      updateViewGroupBy(value.id, desc)
+    }
+  }
 
   const { isPanelOpen } = useSettingsPanel()
   //   table contexts
@@ -88,8 +152,6 @@ const ProjectOverviewPage: FC = () => {
     }
   }
 
-  const handleShowHierarchy = () => updateShowHierarchy(!showHierarchy)
-
   const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
 
   // select new entities and expand their parents
@@ -111,8 +173,7 @@ const ProjectOverviewPage: FC = () => {
 
     // Reset view state
     setQueryFilters({})
-    updateGroupBy(undefined)
-    updateShowHierarchy(true)
+    updateViewGroupBy(null) // switches to hierarchy and syncs groupBy in one server call
 
     // Expand folders in both table and slicer
     updateExpanded(data.expandedFolders)
@@ -138,7 +199,11 @@ const ProjectOverviewPage: FC = () => {
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <Slicer sliceFields={overviewSliceFields} entityTypes={['task', 'folder']} persistFieldId="hierarchy" />
+            <Slicer
+              sliceFields={overviewSliceFields}
+              entityTypes={['task', 'folder']}
+              persistFieldId="hierarchy"
+            />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
@@ -157,10 +222,17 @@ const ProjectOverviewPage: FC = () => {
                 data={{}}
               />
               <ReloadButton />
-              <SwitchButton
-                value={showHierarchy}
-                onClick={handleShowHierarchy}
-                label="Show hierarchy"
+              <GroupByDropdown
+                $disableSortOrder={viewGroupBy === null || viewGroupBy === 'folder'}
+                title="Group by"
+                options={viewGroupByOptions}
+                value={viewGroupByValue}
+                onChange={handleViewGroupByChange}
+                multiSelect={false}
+              />
+              <ImportDialogButton
+                importContext="hierarchy"
+                projectName={projectName}
               />
               <Actions
                 entities={[]}

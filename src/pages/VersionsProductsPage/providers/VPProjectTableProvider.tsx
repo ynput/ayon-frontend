@@ -2,7 +2,7 @@ import { useNavigate, useParams, useLocation, useSearchParams } from 'react-rout
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import { ProjectTableProvider, useProjectDataContext, useViewsContext } from '@shared/containers'
 import { useAppSelector } from '@state/store'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../context/VPDataContext'
 import { buildVersionRow } from '../util'
 import { useVPViewsContext } from '../context/VPViewsContext'
@@ -23,11 +23,18 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     useVersionsDataContext()
 
   const { resetWorkingView } = useViewsContext()
-  const { showProducts } = useVPViewsContext()
+  const { showProducts, onUpdateShowProducts } = useVPViewsContext()
 
   const { ...projectInfo } = useProjectContext()
   const { attribFields, users } = useProjectDataContext()
   const { SubtasksManager } = useSubtasksModulesContext()
+
+  const hierarchyOptions = useMemo(
+    () => [
+      { value: 'hierarchy', label: 'Product', icon: 'inventory_2' },
+    ],
+    [],
+  )
 
   // loading states
   const isInitialized = true // replace with actual state
@@ -55,11 +62,14 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       tableRows={versionsTableData}
       groups={groups}
       groupByConfig={{ entityType: 'version' }}
+      hierarchyOptions={hierarchyOptions}
       groupRowFunc={buildVersionRow}
       expanded={expanded}
       updateExpanded={updateExpanded}
       isInitialized={isInitialized}
       showHierarchy={false}
+      updateShowHierarchy={onUpdateShowProducts}
+      hierarchyActive={showProducts}
       isLoading={isLoadingAll}
       scopes={showProducts ? ['version', 'product'] : ['version']}
       playerOpen={viewerOpen}

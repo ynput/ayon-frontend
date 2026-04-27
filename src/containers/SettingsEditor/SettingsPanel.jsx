@@ -136,7 +136,12 @@ const SettingsPanel = ({
 
   useEffect(() => {
     if (!currentId) return
-    if (currentId.startsWith(objId + '_') && !expandedObjects.includes(objId)) {
+    const isHeaderEnabledField = currentId === `${objId}_enabled`
+    if (
+      currentId.startsWith(objId + '_') &&
+      !isHeaderEnabledField &&
+      !expandedObjects.includes(objId)
+    ) {
       console.log('expanding', objId)
       setExpandedObjects([...expandedObjects, objId])
     }

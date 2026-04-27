@@ -71,6 +71,8 @@ import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
 import type { DetailsPanelProviderProps } from '@shared/context'
+import { ImportDialogProvider } from '@containers/ImportDialog/context/ImportDialogProvider'
+import ImportDialog from '@containers/ImportDialog/ImportDialog'
 
 // Wrapper component to get SubtasksManager from SubtasksModulesContext and pass it to DetailsPanelProvider
 const DetailsPanelProviderWithSubtasks = (
@@ -228,18 +230,21 @@ const App = () => {
                                     <NotificationsProvider>
                                       <ShortcutsProvider>
                                         <PiPProvider>
-                                          <Header />
-                                          <ShareDialog />
-                                          <ViewerDialog />
-                                          <ConfirmDialog />
-                                          <FileUploadPreviewContainer />
-                                          <ReleaseInstallerDialog />
-                                          <CompleteProfilePrompt />
-                                          <AppRoutes />
-                                          <DetailsPanelFloating />
-                                          <PowerpackDialog />
-                                          <AppRemoteLoader />
-                                          <TrialBanner />
+                                          <ImportDialogProvider>
+                                            <Header />
+                                            <ShareDialog />
+                                            <ViewerDialog />
+                                            <ConfirmDialog />
+                                            <ImportDialog />
+                                            <FileUploadPreviewContainer />
+                                            <ReleaseInstallerDialog />
+                                            <CompleteProfilePrompt />
+                                            <AppRoutes />
+                                            <DetailsPanelFloating />
+                                            <PowerpackDialog />
+                                            <AppRemoteLoader />
+                                            <TrialBanner />
+                                          </ImportDialogProvider>
                                         </PiPProvider>
                                       </ShortcutsProvider>
                                     </NotificationsProvider>

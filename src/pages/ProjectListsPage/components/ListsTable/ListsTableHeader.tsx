@@ -9,13 +9,16 @@ import { Menu, MenuContainer, MenuItemType } from '@shared/components'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useProjectContext } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
   canDeleteAllLists,
   canDeleteAllFolders,
   UserPermissions,
 } from '@pages/ProjectListsPage/util/listAccessControl'
+import { useCreateStoryboardMutation } from '@queries/storyboards'
+import { toast } from 'react-toastify'
+import { useSearchParams } from 'react-router-dom'
 
 export const MENU_ID = 'lists-table-menu'
 
@@ -115,6 +118,7 @@ interface ListsTableHeaderProps {
   buttonLabels?: ButtonsCustomization
   hiddenButtons?: ButtonType[]
   isReview?: boolean
+  isStoryboards?: boolean
 }
 
 const ListsTableHeader: FC<ListsTableHeaderProps> = ({
@@ -124,7 +128,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   buttonLabels = {},
   hiddenButtons = [],
   isReview = false,
+  isStoryboards = false,
 }) => {
+  const { projectName } = useProjectContext()
   const {
     openNewList,
     onOpenFolderList,
@@ -141,6 +147,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const { powerLicense } = usePowerpack()
   const { listsData, listFolders } = useListsDataContext()
   const user = useAppSelector((state) => state.user)
+
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Create user permissions object for access control checks
   const userPermissions: UserPermissions = useMemo(
@@ -201,6 +209,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
 
   const handleSelectAllLists = () => selectAllLists()
 
+  const [createList] = useCreateStoryboardMutation()
+
   // Define all menu items in order (matching right-to-left button order)
   const menuItems: MenuItemType[] = [
     {
@@ -228,10 +238,32 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     { id: 'divider' },
     {
       id: 'new-list',
-      label: isReview ? 'Create review session' : 'Create list',
+      label: isReview
+        ? isStoryboards ? 'Create storyboard' : 'Create review session'
+        : 'Create list',
       icon: 'add',
       shortcut: 'N',
-      onClick: () => {
+      onClick: async () => {
+        if (isStoryboards) {
+          const label = prompt("What would you like to call the storyboard?")
+            || `Storyboard - ${new Date().toLocaleString()}`
+
+          const { data, error } = await createList({
+            projectName,
+            label,
+          })
+
+          if (error) {
+            return toast.error("Error creating storyboard")
+          }
+
+          setSearchParams({
+            ...searchParams,
+            storyboard: data.id,
+          })
+
+          return
+        }
         // If a single folder is selected, create list inside that folder
         if (selectedFolders.length === 1) {
           openNewList({ entityListFolderId: selectedFolders[0] })

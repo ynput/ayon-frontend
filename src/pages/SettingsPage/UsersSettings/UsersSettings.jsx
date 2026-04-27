@@ -23,6 +23,7 @@ import Shortcuts from '@containers/Shortcuts'
 import DeleteUserDialog from './DeleteUserDialog'
 import LicensesDialog from '@components/LicensesDialog/LicensesDialog'
 import { useQueryParam } from 'use-query-params'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 // what to show in the access column
 const formatAccessGroups = (rowData) => {
@@ -235,6 +236,7 @@ const UsersSettings = () => {
                 autoComplete="search-users"
               />
             </form>
+            <ImportDialogButton importContext="user" />
             <Button
               onClick={() => setShowDeleteUser(selectedUsers)}
               label="Delete Users"

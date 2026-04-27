@@ -9,6 +9,7 @@ import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import { useProjectContext } from '@shared/context'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
@@ -35,7 +36,16 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     [selectedList],
   )
 
-  if (!selectedList) return <EmptyPlaceholder message="Start by selecting a list." />
+  if (!selectedList) return (
+    <EmptyPlaceholder
+      message="Start by selecting or importing a list."
+    >
+      <ImportDialogButton
+        importContext="entity_list_item"
+        projectName={projectName}
+      />
+    </EmptyPlaceholder>
+  )
 
   if (selectedLists.length > 1)
     return <EmptyPlaceholder message="Please select one list to view its items." />

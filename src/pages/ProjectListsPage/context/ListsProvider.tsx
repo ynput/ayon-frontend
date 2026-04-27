@@ -44,9 +44,10 @@ const RowSelectionParam: QueryParamConfig<RowSelectionState> = {
 interface ListsProviderProps {
   children: ReactNode
   isReview?: boolean
+  isStoryboards?: boolean
 }
 
-export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
+export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectContext()
   const { listsMap, listsData, listFolders } = useListsDataContext()
@@ -54,6 +55,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
   // Memoize the configurations for the query parameters
   const listParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
   const reviewParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
+  const storyboardParamConfig = useMemo(() => withDefault(RowSelectionParam, {}), [])
 
   const [unstableListSelection, setListSelection] = useQueryParam<RowSelectionState>(
     'list',
@@ -63,26 +65,37 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
     'review',
     reviewParamConfig, // Use memoized config
   )
+  const [unstableStoryboardSelection, setStoryboardSelection] = useQueryParam<RowSelectionState>(
+    'storyboard',
+    storyboardParamConfig, // Use memoized config
+  )
 
   // find out if and what version of the review addon is installed
   const { addonVersions: matchedAddons } = useGetBundleAddonVersions({ addons: ['review'] })
   const reviewVersion = matchedAddons.get('review')
 
   const rowSelection = useMemo(
-    () => (isReview ? unstableReviewSelection : unstableListSelection),
+    () => (isReview
+      ? isStoryboards ? unstableStoryboardSelection : unstableReviewSelection
+      : unstableListSelection
+    ),
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
-    [unstableListSelection, unstableReviewSelection, isReview],
+    [unstableListSelection, unstableReviewSelection, unstableStoryboardSelection, isReview, isStoryboards],
   )
+
+  console.log('unstableStoryboardSelection', unstableStoryboardSelection)
 
   const setRowSelection = useCallback(
     (ids: RowSelectionState) => {
-      if (isReview) {
+      if (isStoryboards) {
+        setStoryboardSelection(ids)
+      } else if (isReview) {
         setReviewSelection(ids)
       } else {
         setListSelection(ids)
       }
     },
-    [isReview, setReviewSelection, setListSelection], // setReviewSelection and setListSelection are stable
+    [isReview, setReviewSelection, setStoryboardSelection, setListSelection], // setReviewSelection and setListSelection are stable
   )
 
   // only rows that are selected
@@ -354,6 +367,7 @@ export const ListsProvider = ({ children, isReview }: ListsProviderProps) => {
         createReviewSessionList,
         isCreatingList,
         isReview,
+        isStoryboards,
         // expanded state
         expanded,
         setExpanded,

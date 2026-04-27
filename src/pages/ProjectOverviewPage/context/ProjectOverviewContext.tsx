@@ -1,8 +1,9 @@
 // React imports
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useCallback, useContext, useMemo } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
+import { OverviewSettings } from '@shared/api'
 
 // Shared components and hooks
 import { useLocalStorage, useGetEntityGroups } from '@shared/hooks'
@@ -47,7 +48,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
     useSlicerContext()
 
-  const { groupBy, sorting } = useColumnSettingsContext()
+  const { sorting, groupBy: panelGroupBy } = useColumnSettingsContext()
 
   const sliceFilter = createFilterFromSlicer({
     type: sliceType,
@@ -69,6 +70,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     createLocalStorageKey(page, 'expanded', projectName),
     {},
   )
+
   const { updateExpanded, toggleExpanded, expandedIds } = useExpandedState({
     expanded,
     setExpanded,
@@ -78,9 +80,28 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { viewSettings, isLoadingViews } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
 
+  // View mode derived purely from server viewSettings — no localStorage, no sync effect.
+  // undefined = view settings not loaded yet (dropdown stays empty)
+  // null = hierarchy, 'none' = flat list, other string = groupBy field id ('folderType', 'status', 'folder', ...)
+  const overviewShowHierarchy = (viewSettings as OverviewSettings | undefined)?.showHierarchy
+  const overviewGroupBy = (viewSettings as OverviewSettings | undefined)?.groupBy
+  const viewGroupBy = useMemo<string | null | undefined>(() => {
+    // Before first load, do not assume any grouping — the dropdown must stay
+    // empty so the user doesn't see a "Hierarchy" flicker while the saved
+    // view is still being fetched.
+    if (isLoadingViews || !viewSettings) return undefined
+    const showHierarchy = overviewShowHierarchy ?? true
+    if (showHierarchy) return null
+    if (overviewGroupBy) return overviewGroupBy
+    return 'none'
+  }, [isLoadingViews, viewSettings, overviewShowHierarchy, overviewGroupBy])
+
+  // Derive desc directly from panel groupBy (single source of truth — no separate state)
+  const viewGroupByDesc = panelGroupBy?.desc ?? false
+
   const {
-    showHierarchy,
-    onUpdateHierarchy: updateShowHierarchy,
+    onUpdateHierarchy: _updateShowHierarchy,
+    onUpdateGroupBy: _updateGroupByAtomic,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
     sliceType: viewSliceType,
@@ -90,11 +111,60 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // Sync slicer slice type with view settings, selection with localStorage
   useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews, `slicer-selection-overview-${projectName}`)
 
-  // GET GROUPING
+  // Derive effective showHierarchy from viewGroupBy.
+  // null = explicit hierarchy, undefined = not loaded yet — both default to
+  // hierarchy-style fetching to avoid firing a flat-list query against an
+  // empty config during the initial load window.
+  const showHierarchy = viewGroupBy === null || viewGroupBy === undefined
+
+  // Flat folder view: shows all folders flat, each expandable to reveal tasks
+  const isFlatFolderView = viewGroupBy === 'folder'
+
+  // User action handler — writes to server via ONE atomic PATCH. Previously split
+  // into `_updateShowHierarchy` + `updateGroupBy`, which fired two requests that
+  // both captured the same pre-update viewSettings snapshot; the second silently
+  // reverted the first's showHierarchy change (race).
+  const updateViewGroupBy = useCallback(
+    (newViewGroupBy: string | null, desc?: boolean) => {
+      if (newViewGroupBy === null) {
+        _updateGroupByAtomic(undefined, true, undefined)
+      } else if (newViewGroupBy === 'none') {
+        _updateGroupByAtomic(undefined, false, undefined)
+      } else {
+        // 'folder' persists as groupBy sentinel so reload distinguishes it
+        // from 'none'. ProjectTableProvider skips grouping when isFlatFolderView.
+        _updateGroupByAtomic(newViewGroupBy, false, desc ?? viewGroupByDesc)
+      }
+    },
+    [_updateGroupByAtomic, viewGroupByDesc],
+  )
+
+  const updateShowHierarchy = useCallback(
+    (newShowHierarchy: boolean) => {
+      _updateShowHierarchy(newShowHierarchy)
+    },
+    [_updateShowHierarchy],
+  )
+
+  // Build the effective groupBy for data fetching from the view dropdown
+  // This is independent from the Customize panel's groupBy
+  // For flat folder view, we don't need a groupBy — it uses hierarchy-style task fetching
+  const viewGroupByObj = useMemo(
+    () =>
+      viewGroupBy && viewGroupBy !== 'none' && !isFlatFolderView
+        ? { id: viewGroupBy, desc: viewGroupByDesc }
+        : undefined,
+    [viewGroupBy, isFlatFolderView, viewGroupByDesc],
+  )
+
+  // GET GROUPING — use viewGroupBy for the top-level dropdown grouping
+  // folderType can only be used with entity type 'folder'
+  // viewGroupByObj is already undefined for flat folder view, so no extra guard needed
+  const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
   const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
-    groupBy,
+    groupBy: viewGroupByObj,
     projectName,
-    entityType: 'task',
+    entityType: groupingEntityType,
   })
 
   // Stable default filter to prevent unnecessary re-renders
@@ -195,9 +265,10 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     },
     expanded,
     sorting: sorting,
-    groupBy,
+    groupBy: viewGroupByObj,
     taskGroups,
     showHierarchy,
+    isFlatFolderView,
     attribFields,
     modules,
   })
@@ -250,6 +321,12 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         // hierarchy
         showHierarchy,
         updateShowHierarchy,
+        // view mode grouping (top-level dropdown)
+        viewGroupBy,
+        viewGroupByDesc,
+        updateViewGroupBy,
+        // flat folder view
+        isFlatFolderView,
         // expanded state
         expanded,
         expandedIds,

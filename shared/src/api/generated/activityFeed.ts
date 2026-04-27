@@ -227,6 +227,13 @@ export type UserSuggestionItem = {
   name: string
   fullName?: string
 }
+export type TeamSuggestionItem = {
+  /** The date and time when the suggested entity was created */
+  createdAt?: string
+  /** The relevance score of the suggestion */
+  relevance?: number
+  name: string
+}
 export type FolderSuggestionItem = {
   /** The date and time when the suggested entity was created */
   createdAt?: string
@@ -272,6 +279,7 @@ export type VersionSuggestionItem = {
 }
 export type SuggestResponse = {
   users?: UserSuggestionItem[]
+  teams?: TeamSuggestionItem[]
   tasks?: TaskSuggestionItem[]
   versions?: VersionSuggestionItem[]
 }

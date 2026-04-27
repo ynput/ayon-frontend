@@ -95,7 +95,10 @@ turndownService.addRule('mention', {
     return node.classList.contains('mention') && node.getAttribute('data-value')
   },
   replacement: function (content, node) {
-    return `[${content}](${node.getAttribute('data-value')})`
+    const value = node.getAttribute('data-value') || ''
+    // Encode spaces so markdown parsers don't break on URLs like "team:Sons of thunder"
+    const encodedValue = value.replaceAll(' ', '%20')
+    return `[${content}](${encodedValue})`
   },
 })
 
