@@ -26,6 +26,18 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+class TypedDocumentString<TResult, TVariables> extends String {
+  __apiType?: (variables: TVariables) => TResult
+  __meta__?: Record<string, any>
+  constructor(value: string, __meta__?: Record<string, any>) {
+    super(value)
+    this.__meta__ = __meta__
+  }
+  toString(): string {
+    return this.valueOf()
+  }
+}
+
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -1727,6 +1739,16 @@ export type ListItemFragmentFragment =
   | ListItemFragment_WorkfileNode_Fragment
 ;
 
+export type GetSearchFolderIdsQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
+  folderFilter?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetSearchFolderIdsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', tasks: { __typename?: 'TasksConnection', edges: Array<{ __typename?: 'TaskEdge', node: { __typename?: 'TaskNode', folderId: string } }> } } };
+
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
   parentIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
@@ -2946,6 +2968,24 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetSearchFolderIdsDocument = new TypedDocumentString(`
+    query GetSearchFolderIds($projectName: String!, $search: String, $filter: String, $folderFilter: String) {
+  project(name: $projectName) {
+    tasks(
+      search: $search
+      filter: $filter
+      folderFilter: $folderFilter
+      first: 10000
+    ) {
+      edges {
+        node {
+          folderId
+        }
+      }
+    }
+  }
+}
+    `);
 export const GetTasksByParentDocument = new TypedDocumentString(`
     query GetTasksByParent($projectName: String!, $parentIds: [String!]!, $filter: String, $folderFilter: String, $search: String) {
   project(name: $projectName) {
@@ -3726,6 +3766,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
       query: (variables) => ({ document: GetListsItemsForReviewSessionDocument, variables })
+    }),
+    GetSearchFolderIds: build.query<GetSearchFolderIdsQuery, GetSearchFolderIdsQueryVariables>({
+      query: (variables) => ({ document: GetSearchFolderIdsDocument, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })

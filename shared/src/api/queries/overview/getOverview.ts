@@ -5,6 +5,8 @@ import {
   foldersApi,
   SearchFoldersApiArg,
   GetTasksListQueryVariables,
+  GetSearchFolderIdsQueryVariables,
+  GetSearchFolderIdsQuery,
 } from '@shared/api/generated'
 import { PubSub } from '@shared/util'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
@@ -317,6 +319,33 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
       },
     }),
+    // Derive visible folder IDs from tasks matching a search string.
+    // Uses the GraphQL tasks resolver which splits search on commas for OR semantics,
+    // unlike the REST searchFolders endpoint which ANDs all terms.
+    getSearchFolderIdsByTasks: build.query<
+      string[],
+      { projectName: string; search?: string; filter?: string; folderFilter?: string }
+    >({
+      async queryFn({ projectName, search, filter, folderFilter }, { dispatch }) {
+        try {
+          const result = await dispatch(
+            gqlApi.endpoints.GetSearchFolderIds.initiate({
+              projectName,
+              search,
+              filter,
+              folderFilter,
+            } as GetSearchFolderIdsQueryVariables),
+          )
+          const typed = result.data as GetSearchFolderIdsQuery | undefined
+          const edges = typed?.project?.tasks?.edges || []
+          const folderIds: string[] = [...new Set(edges.map((e) => e.node.folderId))]
+          return { data: folderIds }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e)
+          return { error: { status: 'FETCH_ERROR', error: msg } as FetchBaseQueryError }
+        }
+      },
+    }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<
       GetTasksListResult,
@@ -611,6 +640,7 @@ const injectedApi = enhancedApi.injectEndpoints({
 export const {
   useGetOverviewTasksByFoldersQuery,
   useGetSearchFoldersQuery,
+  useGetSearchFolderIdsByTasksQuery,
   useGetTasksListQuery,
   useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,

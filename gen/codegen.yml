@@ -40,6 +40,20 @@ generates:
       - typescript-rtk-query:
           importBaseApiFrom: '@shared/api/base'
           importBaseApiAlternateName: 'api'
+      - add:
+          placement: 'prepend'
+          content: |
+            class TypedDocumentString<TResult, TVariables> extends String {
+              __apiType?: (variables: TVariables) => TResult
+              __meta__?: Record<string, any>
+              constructor(value: string, __meta__?: Record<string, any>) {
+                super(value)
+                this.__meta__ = __meta__
+              }
+              toString(): string {
+                return this.valueOf()
+              }
+            }
   # Generate links-specific queries separately
   ../shared/src/api/generated/graphqlLinks.ts:
     documents: '../shared/src/api/queries/links/**/*.graphql'
@@ -72,6 +86,20 @@ generates:
       - typescript-rtk-query:
           importBaseApiFrom: '@shared/api/base'
           importBaseApiAlternateName: 'api'
+      - add:
+          placement: 'prepend'
+          content: |
+            class TypedDocumentString<TResult, TVariables> extends String {
+              __apiType?: (variables: TVariables) => TResult
+              __meta__?: Record<string, any>
+              constructor(value: string, __meta__?: Record<string, any>) {
+                super(value)
+                this.__meta__ = __meta__
+              }
+              toString(): string {
+                return this.valueOf()
+              }
+            }
   ./graphql.schema.json:
     plugins:
       - 'introspection'
