@@ -48,7 +48,7 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
   ...props
 }) => {
   const views = useViewsContext()
-  const { onCreateView } = useViewUpdateHelper()
+  const { onCreateView, getLatestSettings, markCacheDirty } = useViewUpdateHelper()
 
   return (
     <Component
@@ -57,7 +57,8 @@ export const RemotePageWrapper: FC<RemotePageWrapperProps> = ({
       views={{
         ...views,
         settings: views.viewSettings,
-        updateViewSettings: (...args) => updateViewSettings(...args, views, onCreateView),
+        updateViewSettings: (...args) =>
+          updateViewSettings(...args, views, onCreateView, getLatestSettings, markCacheDirty),
       }}
       state={state}
       toast={toast}

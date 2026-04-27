@@ -216,5 +216,10 @@ export const useViewUpdateHelper = () => {
     [viewContext, onApplyViewChanges, getLatestSettings],
   )
 
-  return { updateViewSettings: updateViewSettingsHandler, onCreateView: onApplyViewChanges }
+  return {
+    updateViewSettings: updateViewSettingsHandler,
+    onCreateView: onApplyViewChanges,
+    getLatestSettings,
+    markCacheDirty,
+  }
 }
