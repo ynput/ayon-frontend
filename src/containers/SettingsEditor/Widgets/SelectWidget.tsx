@@ -1,14 +1,55 @@
-import React from 'react'
 import { useState, useEffect } from 'react'
 import { Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
 import styled from 'styled-components'
+import OrderedListWidget from './OrderedListWidget'
+import { isEqual } from 'lodash'
 
 const StyledDropdown = styled(Dropdown)`
   button > div > div:has(span) {
     width: 0;
+  }
+`
+
+const SwitchboxContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 800px;
+`
+
+const SwitchboxGrid = styled.div`
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px 16px;
+`
+
+const SwitchboxButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`
+
+const SwitchboxButton = styled.button`
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-s);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-highest);
+    border-color: var(--md-sys-color-outline);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `
 
@@ -32,36 +73,60 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
     }
   }
 
-    return (
-    <div style={{
-      maxWidth: '800px',
-    }}>
-    <div
-      style={{
-        position: "relative",
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-        gap: "12px 16px",
-      }}
-    >
-      {options.map((opt: any) => (
-        <div
-          key={opt.value}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <InputSwitch
-            checked={isSelected(opt.value)}
-            onChange={() => toggleSelection(opt.value)}
-          />
-          <label style={{whiteSpace:"nowrap"}}>{opt.label}</label>
-        </div>
-      ))}
-    </div>
-    </div>
+  const selectAll = () => {
+    if (Array.isArray(value)) {
+      onSelectionChange(options.map((opt: any) => opt.value))
+    }
+  }
+
+  const deselectAll = () => {
+    if (Array.isArray(value)) {
+      onSelectionChange([])
+    }
+  }
+
+  const allSelected = Array.isArray(value) && value.length === options.length
+  const noneSelected = Array.isArray(value) && value.length === 0
+
+  return (
+    <SwitchboxContainer>
+      {options.length > 0 && (
+        <SwitchboxButtonGroup>
+          <SwitchboxButton
+            onClick={selectAll}
+            disabled={allSelected}
+            title="Select all options"
+          >
+            Select All
+          </SwitchboxButton>
+          <SwitchboxButton
+            onClick={deselectAll}
+            disabled={noneSelected}
+            title="Deselect all options"
+          >
+            Deselect All
+          </SwitchboxButton>
+        </SwitchboxButtonGroup>
+      )}
+      <SwitchboxGrid>
+        {options.map((opt: any) => (
+          <div
+            key={opt.value}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <InputSwitch
+              checked={isSelected(opt.value)}
+              onChange={() => toggleSelection(opt.value)}
+            />
+            <label style={{whiteSpace:"nowrap"}}>{opt.label}</label>
+          </div>
+        ))}
+      </SwitchboxGrid>
+    </SwitchboxContainer>
   )
 
 }
@@ -70,11 +135,19 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
 
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState(null)
+  const [value, setValue] = useState<string[] | string | null>(null)
+
+  const widget = props.schema?.widget
+  // TODO: remove ID check once backend addon adds widget="sortable_multiselect" to schema
+  const isSortableMultiselect =
+    widget === 'sortable_multiselect' ||
+    (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
 
   useEffect(() => {
     // Sync the local state with the formData
-    if (equiv(value, props.value)) {
+    // For sortable multiselect, order matters - use isEqual instead of equiv
+    const eq = isSortableMultiselect ? isEqual(value, props.value) : equiv(value, props.value)
+    if (eq) {
       return
     }
 
@@ -90,13 +163,18 @@ const SelectWidget = (props: $Any) => {
 
   useEffect(() => {
     if (value === null) return
-    const isChanged = !equiv(value, props.value)
+    const isChanged = isSortableMultiselect
+      ? !isEqual(value, props.value)
+      : !equiv(value, props.value)
     if (!isChanged) {
       return
     }
     props.onChange(value)
     setTimeout(() => {
-      updateChangedKeys(props, !equiv(value, props.originalValue), path)
+      const origChanged = isSortableMultiselect
+        ? !isEqual(value, originalValue)
+        : !equiv(value, props.originalValue)
+      updateChangedKeys(props, origChanged, path)
     }, 100)
   }, [value])
 
@@ -135,7 +213,16 @@ const SelectWidget = (props: $Any) => {
     renderableValue = [value]
   }
 
-  const widget = props.schema?.widget
+  if (isSortableMultiselect && props.multiple) {
+    return (
+      <OrderedListWidget
+        value={(value as string[]) || []}
+        options={options}
+        onChange={setValue as (value: string[]) => void}
+      />
+    )
+  }
+
   if (widget === 'switchbox' && props.multiple) {
     return (
       <Switchbox
