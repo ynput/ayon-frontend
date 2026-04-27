@@ -1,0 +1,17 @@
+query GetFolderDeleteInfo($projectName: String!, $folderIds: [String!]!) {
+  project(name: $projectName) {
+    folders(ids: $folderIds) {
+      edges {
+        node {
+          id
+          name
+          label
+          totalFolderCount
+          totalTaskCount
+          totalProductCount
+          totalVersionCount
+        }
+      }
+    }
+  }
+}

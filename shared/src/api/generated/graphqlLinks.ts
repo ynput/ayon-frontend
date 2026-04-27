@@ -26,6 +26,7 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   DateTime: { input: any; output: any; }
+  JSON: { input: any; output: any; }
 };
 
 export type ActivitiesConnection = {
@@ -44,7 +45,6 @@ export type ActivityCategory = {
 export type ActivityEdge = {
   __typename?: 'ActivityEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The activity node */
   node: ActivityNode;
 };
 
@@ -150,7 +150,6 @@ export type BaseNodeLinksArgs = {
 export type EntityListEdge = {
   __typename?: 'EntityListEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The entity list node */
   node: EntityListNode;
 };
 
@@ -230,7 +229,6 @@ export type EntityListsConnection = {
 export type EventEdge = {
   __typename?: 'EventEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Event node */
   node: EventNode;
 };
 
@@ -297,7 +295,6 @@ export type FolderAttribType = {
 export type FolderEdge = {
   __typename?: 'FolderEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The folder node */
   node: FolderNode;
 };
 
@@ -337,6 +334,10 @@ export type FolderNode = BaseNode & {
   tasks: TasksConnection;
   thumbnail?: Maybe<ThumbnailInfo>;
   thumbnailId?: Maybe<Scalars['String']['output']>;
+  totalFolderCount: Scalars['Int']['output'];
+  totalProductCount: Scalars['Int']['output'];
+  totalTaskCount: Scalars['Int']['output'];
+  totalVersionCount: Scalars['Int']['output'];
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;
@@ -444,7 +445,6 @@ export type KanbanConnection = {
 export type KanbanEdge = {
   __typename?: 'KanbanEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The kanban node */
   node: KanbanNode;
 };
 
@@ -479,6 +479,7 @@ export type LinkEdge = {
   __typename?: 'LinkEdge';
   author?: Maybe<Scalars['String']['output']>;
   cursor?: Maybe<Scalars['String']['output']>;
+  data: Scalars['JSON']['output'];
   description: Scalars['String']['output'];
   direction: Scalars['String']['output'];
   entityId: Scalars['String']['output'];
@@ -531,7 +532,6 @@ export type ProductBaseType = {
 export type ProductEdge = {
   __typename?: 'ProductEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Product node */
   node: ProductNode;
 };
 
@@ -671,7 +671,6 @@ export type ProjectBundleType = {
 export type ProjectEdge = {
   __typename?: 'ProjectEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The project node */
   node: ProjectNode;
 };
 
@@ -1081,7 +1080,6 @@ export type RepresentationAttribType = {
 export type RepresentationEdge = {
   __typename?: 'RepresentationEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Representation node */
   node: RepresentationNode;
 };
 
@@ -1198,7 +1196,6 @@ export type TaskAttribType = {
 export type TaskEdge = {
   __typename?: 'TaskEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The task node */
   node: TaskNode;
 };
 
@@ -1340,7 +1337,6 @@ export type UserAttribType = {
 export type UserEdge = {
   __typename?: 'UserEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** The user node */
   node: UserNode;
 };
 
@@ -1408,7 +1404,6 @@ export type VersionAttribType = {
 export type VersionEdge = {
   __typename?: 'VersionEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Version node */
   node: VersionNode;
 };
 
@@ -1511,7 +1506,6 @@ export type WorkfileAttribType = {
 export type WorkfileEdge = {
   __typename?: 'WorkfileEdge';
   cursor?: Maybe<Scalars['String']['output']>;
-  /** Workfile node */
   node: WorkfileNode;
 };
 
@@ -1814,7 +1808,7 @@ export type OverviewEntityLinkNodeFragmentFragment =
   | OverviewEntityLinkNodeFragment_WorkfileNode_Fragment
 ;
 
-export const OverviewEntityLinkNodeFragmentFragmentDoc = `
+export const OverviewEntityLinkNodeFragmentFragmentDoc = new TypedDocumentString(`
     fragment OverviewEntityLinkNodeFragment on BaseNode {
   __typename
   id
@@ -1829,8 +1823,8 @@ export const OverviewEntityLinkNodeFragmentFragmentDoc = `
     subType: folderType
   }
 }
-    `;
-export const OverviewEntityLinkFragmentFragmentDoc = `
+    `, {"fragmentName":"OverviewEntityLinkNodeFragment"});
+export const OverviewEntityLinkFragmentFragmentDoc = new TypedDocumentString(`
     fragment OverviewEntityLinkFragment on LinkEdge {
   id
   direction
@@ -1840,8 +1834,21 @@ export const OverviewEntityLinkFragmentFragmentDoc = `
     ...OverviewEntityLinkNodeFragment
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetFolderLinkDataDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`, {"fragmentName":"OverviewEntityLinkFragment"});
+export const GetFolderLinkDataDocument = new TypedDocumentString(`
     query GetFolderLinkData($projectName: String!, $folderId: String!) {
   project(name: $projectName) {
     folder(id: $folderId) {
@@ -1849,8 +1856,21 @@ export const GetFolderLinkDataDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetProductLinkDataDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetProductLinkDataDocument = new TypedDocumentString(`
     query GetProductLinkData($projectName: String!, $productId: String!) {
   project(name: $projectName) {
     product(id: $productId) {
@@ -1858,8 +1878,21 @@ export const GetProductLinkDataDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetRepresentationLinkDataDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetRepresentationLinkDataDocument = new TypedDocumentString(`
     query GetRepresentationLinkData($projectName: String!, $representationId: String!) {
   project(name: $projectName) {
     representation(id: $representationId) {
@@ -1867,8 +1900,21 @@ export const GetRepresentationLinkDataDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetTaskLinkDataDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetTaskLinkDataDocument = new TypedDocumentString(`
     query GetTaskLinkData($projectName: String!, $taskId: String!) {
   project(name: $projectName) {
     task(id: $taskId) {
@@ -1876,8 +1922,21 @@ export const GetTaskLinkDataDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetVersionLinkDataDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetVersionLinkDataDocument = new TypedDocumentString(`
     query GetVersionLinkData($projectName: String!, $versionId: String!) {
   project(name: $projectName) {
     version(id: $versionId) {
@@ -1885,8 +1944,21 @@ export const GetVersionLinkDataDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetWorkfileLinkDataDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetWorkfileLinkDataDocument = new TypedDocumentString(`
     query GetWorkfileLinkData($projectName: String!, $workfileId: String!) {
   project(name: $projectName) {
     workfile(id: $workfileId) {
@@ -1894,8 +1966,21 @@ export const GetWorkfileLinkDataDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetFoldersLinksDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetFoldersLinksDocument = new TypedDocumentString(`
     query GetFoldersLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     folders(ids: $entityIds, last: 100) {
@@ -1912,8 +1997,30 @@ export const GetFoldersLinksDocument = `
     }
   }
 }
-    ${OverviewEntityLinkFragmentFragmentDoc}`;
-export const GetProductsLinksDocument = `
+    fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetProductsLinksDocument = new TypedDocumentString(`
     query GetProductsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     products(ids: $entityIds, last: 1000) {
@@ -1930,8 +2037,30 @@ export const GetProductsLinksDocument = `
     }
   }
 }
-    ${OverviewEntityLinkFragmentFragmentDoc}`;
-export const GetTasksLinksDocument = `
+    fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetTasksLinksDocument = new TypedDocumentString(`
     query GetTasksLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     tasks(ids: $entityIds, last: 1000) {
@@ -1948,8 +2077,30 @@ export const GetTasksLinksDocument = `
     }
   }
 }
-    ${OverviewEntityLinkFragmentFragmentDoc}`;
-export const GetVersionsLinksDocument = `
+    fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetVersionsLinksDocument = new TypedDocumentString(`
     query GetVersionsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     versions(ids: $entityIds, last: 1000) {
@@ -1966,8 +2117,30 @@ export const GetVersionsLinksDocument = `
     }
   }
 }
-    ${OverviewEntityLinkFragmentFragmentDoc}`;
-export const GetWorkfilesLinksDocument = `
+    fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetWorkfilesLinksDocument = new TypedDocumentString(`
     query GetWorkfilesLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     workfiles(ids: $entityIds, last: 1000) {
@@ -1984,8 +2157,30 @@ export const GetWorkfilesLinksDocument = `
     }
   }
 }
-    ${OverviewEntityLinkFragmentFragmentDoc}`;
-export const GetRepresentationsLinksDocument = `
+    fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetRepresentationsLinksDocument = new TypedDocumentString(`
     query GetRepresentationsLinks($projectName: String!, $entityIds: [String!]) {
   project(name: $projectName) {
     representations(ids: $entityIds, last: 1000) {
@@ -2002,8 +2197,30 @@ export const GetRepresentationsLinksDocument = `
     }
   }
 }
-    ${OverviewEntityLinkFragmentFragmentDoc}`;
-export const GetSearchedFoldersDocument = `
+    fragment OverviewEntityLinkFragment on LinkEdge {
+  id
+  direction
+  linkType
+  entityType
+  node {
+    ...OverviewEntityLinkNodeFragment
+  }
+}
+fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetSearchedFoldersDocument = new TypedDocumentString(`
     query GetSearchedFolders($projectName: String!, $search: String, $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
@@ -2032,8 +2249,21 @@ export const GetSearchedFoldersDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetSearchedProductsDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetSearchedProductsDocument = new TypedDocumentString(`
     query GetSearchedProducts($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
@@ -2062,8 +2292,21 @@ export const GetSearchedProductsDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetSearchedRepresentationsDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetSearchedRepresentationsDocument = new TypedDocumentString(`
     query GetSearchedRepresentations($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
@@ -2090,8 +2333,21 @@ export const GetSearchedRepresentationsDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetSearchedTasksDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetSearchedTasksDocument = new TypedDocumentString(`
     query GetSearchedTasks($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
@@ -2121,8 +2377,21 @@ export const GetSearchedTasksDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetSearchedVersionsDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetSearchedVersionsDocument = new TypedDocumentString(`
     query GetSearchedVersions($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
@@ -2149,8 +2418,21 @@ export const GetSearchedVersionsDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
-export const GetSearchedWorkfilesDocument = `
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
+export const GetSearchedWorkfilesDocument = new TypedDocumentString(`
     query GetSearchedWorkfiles($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
   project(name: $projectName) {
     name
@@ -2177,7 +2459,20 @@ export const GetSearchedWorkfilesDocument = `
     }
   }
 }
-    ${OverviewEntityLinkNodeFragmentFragmentDoc}`;
+    fragment OverviewEntityLinkNodeFragment on BaseNode {
+  __typename
+  id
+  name
+  parents
+  ... on TaskNode {
+    label
+    subType: taskType
+  }
+  ... on FolderNode {
+    label
+    subType: folderType
+  }
+}`);
 
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
