@@ -9,6 +9,14 @@
  * for this file to be re-created
  */
 // @ts-nocheck
+export class TypedDocumentString<TResult, TVariables> extends String {
+  constructor(private value: string, public __meta__?: Record<string, any>) {
+    super(value);
+  }
+  toString(): string | any {
+    return this.value;
+  }
+}
 
 import { api } from '@shared/api/base';
 export type Maybe<T> = T | null;

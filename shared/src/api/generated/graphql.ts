@@ -9,6 +9,14 @@
  * for this file to be re-created
  */
 // @ts-nocheck
+export class TypedDocumentString<TResult, TVariables> extends String {
+  constructor(private value: string, public __meta__?: Record<string, any>) {
+    super(value);
+  }
+  toString(): string | any {
+    return this.value;
+  }
+}
 
 import { api } from '@shared/api/base';
 export type Maybe<T> = T | null;
@@ -334,6 +342,10 @@ export type FolderNode = BaseNode & {
   tasks: TasksConnection;
   thumbnail?: Maybe<ThumbnailInfo>;
   thumbnailId?: Maybe<Scalars['String']['output']>;
+  totalFolderCount: Scalars['Int']['output'];
+  totalProductCount: Scalars['Int']['output'];
+  totalTaskCount: Scalars['Int']['output'];
+  totalVersionCount: Scalars['Int']['output'];
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;

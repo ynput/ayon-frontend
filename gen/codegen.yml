@@ -9,6 +9,8 @@ generates:
     documents:
       - '../**/*.graphql'
       - '!../shared/src/api/queries/links/**/*.graphql'
+    config:
+      documentMode: 'documentNode'
     plugins:
       - typescript
       - add:
@@ -25,6 +27,15 @@ generates:
              * for this file to be re-created
              */
             // @ts-nocheck
+
+            export class TypedDocumentString<TResult, TVariables> extends String {
+              constructor(private value: string, public __meta__?: Record<string, any>) {
+                super(value);
+              }
+              toString(): string | any {
+                return this.value;
+              }
+            }
       - typescript-operations
       - typescript-rtk-query:
           importBaseApiFrom: '@shared/api/base'
@@ -48,6 +59,15 @@ generates:
              * for this file to be re-created
              */
             // @ts-nocheck
+
+            export class TypedDocumentString<TResult, TVariables> extends String {
+              constructor(private value: string, public __meta__?: Record<string, any>) {
+                super(value);
+              }
+              toString(): string | any {
+                return this.value;
+              }
+            }
       - typescript-operations
       - typescript-rtk-query:
           importBaseApiFrom: '@shared/api/base'

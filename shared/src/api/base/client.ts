@@ -7,7 +7,7 @@ import type {
   FetchArgs,
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query'
-import { GraphQLClient } from 'graphql-request'
+import { GraphQLClient, ClientError } from 'graphql-request'
 import type {
   BaseQueryArg,
   BaseQueryError,
@@ -149,12 +149,7 @@ const polymorphBaseQuery = combineBaseQueries(baseQuery, {
   predicate: (args: any) => !!args.document && !!args.variables,
 })
 
-// @ts-ignore
-const baseQueryWithRedirect: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
-  args,
-  api,
-  extraOptions,
-) => {
+const baseQueryWithRedirect: typeof polymorphBaseQuery = async (args, api, extraOptions) => {
   const url = window.location.pathname
   const shouldRedirectToLogin = () => {
     if (!url.includes('connect') && !url.startsWith('/login')) {
@@ -179,7 +174,6 @@ const baseQueryWithRedirect: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQ
       console.error(error)
     }
     throw error
-  } finally {
   }
 }
 
