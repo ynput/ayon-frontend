@@ -59,6 +59,13 @@ interface ListItemsDataProviderProps {
   children: ReactNode
 }
 
+const reviewSortKeys = new Map([
+  ["task", "task_id"],
+  ["product", "product_id"],
+  ["path", "name"],
+  ["versionAuthor", "author"],
+])
+
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
   // Get project data from the new context
@@ -105,7 +112,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     if (!sorting) return null
 
     return [{
-      id: sorting.property,
+      id: reviewSortKeys.get(sorting.property) ?? sorting.property,
       desc: sorting.order,
     }]
   }, [isReview, selectedList?.data.sorting])
