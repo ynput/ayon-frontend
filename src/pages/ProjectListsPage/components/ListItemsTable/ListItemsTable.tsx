@@ -68,7 +68,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         isLoading={isLoading}
-        sortableRows={!viewOnly && !isReview}
+        sortableRows={!viewOnly}
+        enableSorting={!isReview}
         dndActiveId={dndActiveId} // Pass prop
       />
       <ListItemsShortcuts />

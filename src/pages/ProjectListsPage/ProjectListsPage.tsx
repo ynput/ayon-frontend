@@ -455,7 +455,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         onGoTo={handleGoToCustomAttrib}
                       />
                     ) : (
-                      <ReviewCardsSettings />
+                      <ReviewCardsSettings pageDisplayStyle={pageDisplayStyle} />
                     )}
                   </SplitterPanel>
                 ) : (

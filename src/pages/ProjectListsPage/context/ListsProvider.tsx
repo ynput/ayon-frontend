@@ -83,8 +83,6 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
     [unstableListSelection, unstableReviewSelection, unstableStoryboardSelection, isReview, isStoryboards],
   )
 
-  console.log('unstableStoryboardSelection', unstableStoryboardSelection)
-
   const setRowSelection = useCallback(
     (ids: RowSelectionState) => {
       if (isStoryboards) {
