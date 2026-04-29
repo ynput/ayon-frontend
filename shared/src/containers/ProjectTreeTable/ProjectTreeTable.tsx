@@ -143,6 +143,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   includeLinks?: boolean
   isLoading?: boolean
   isExpandable?: boolean // if true, show the expand/collapse icons
+  enableSorting?: boolean
   clientSorting?: boolean
   sortableRows?: boolean
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
@@ -169,6 +170,7 @@ export const ProjectTreeTable = ({
   includeLinks,
   isLoading: isLoadingProp,
   isExpandable,
+  enableSorting = true,
   clientSorting = false,
   sortableRows = false,
   onRowReorder,
@@ -406,7 +408,7 @@ export const ProjectTreeTable = ({
     // EXPANDABLE
     onExpandedChange: updateExpanded,
     // SORTING
-    enableSorting: true,
+    enableSorting,
     getSortedRowModel: getSortedRowModel(),
     sortDescFirst: false,
     manualSorting: !clientSorting,

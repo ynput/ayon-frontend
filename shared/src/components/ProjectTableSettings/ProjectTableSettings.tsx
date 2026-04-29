@@ -46,6 +46,7 @@ export type ProjectTableSettingsProps = {
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId
   includeLinks?: boolean
+  hideSortBy?: boolean
   order?: string[]
   scope?: string
 }
@@ -57,6 +58,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   hiddenSettings = [],
   highlighted,
   includeLinks = true,
+  hideSortBy = false,
   order,
   scope,
 }) => {
@@ -168,7 +170,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       preview: `${visibleCount}/${visibleColumns.length}`,
       component: <ColumnsSettings columns={visibleColumns} highlighted={highlighted} />,
     },
-    sortBySettings,
+    hideSortBy ? null : sortBySettings,
     groupBySettings,
     {
       id: 'row-height',
