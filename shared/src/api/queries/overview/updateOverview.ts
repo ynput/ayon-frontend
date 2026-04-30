@@ -664,12 +664,14 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         })
 
         // Attrib edits (task or folder) can change which tasks match active
-        // slicer filters. Invalidate the overviewTask LIST so getSearchFolders
-        // and any subscribed task list caches refetch with their filter.
+        // slicer filters. Invalidate the project-scoped overviewTask tag so
+        // getSearchFolders and any subscribed task list caches for THIS project
+        // refetch with their filter — using the global LIST id would cascade
+        // across every project's caches.
         // useFetchOverviewData uses isLoading (not isFetching) for these, so
         // the refresh happens silently — no full-table loading state.
         if (hasAttribOp) {
-          overviewTaskTags.push({ type: 'overviewTask', id: 'LIST' })
+          overviewTaskTags.push({ type: 'overviewTask', id: projectName })
         }
 
         return [

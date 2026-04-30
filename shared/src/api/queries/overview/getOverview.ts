@@ -216,7 +216,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, search },
+        { projectName, parentIds, filter, folderFilter, search },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
@@ -237,15 +237,16 @@ const injectedApi = enhancedApi.injectEndpoints({
           const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
           batchIds.forEach((id) => pendingTaskIds.delete(id))
           try {
-            // Pass through this cache's filter/search so the server only returns
-            // tasks that still match — otherwise PubSub re-adds tasks that were
-            // just removed by a filter mutation (e.g. status/attrib edit).
+            // Pass through this cache's filter/folderFilter/search so the server
+            // only returns tasks that still match — otherwise PubSub re-adds
+            // tasks just removed by a filter mutation (e.g. status/attrib edit).
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName,
                   taskIds: batchIds,
                   filter,
+                  folderFilter,
                   search,
                 } as any,
                 { forceRefetch: true },
@@ -321,10 +322,12 @@ const injectedApi = enhancedApi.injectEndpoints({
           return { error }
         }
       },
-      // Participate in the overviewTask LIST tag so an attrib mutation refreshes
-      // the matching folder set (without forcing a visible loading state — see
-      // useFetchOverviewData where this query uses isLoading not isFetching).
-      providesTags: () => [{ type: 'overviewTask', id: 'LIST' }],
+      // Participate in the project-scoped overviewTask tag so an attrib mutation
+      // refreshes the matching folder set for THIS project only — using a global
+      // 'LIST' id would cascade across all projects (without forcing a visible
+      // loading state — see useFetchOverviewData where this query uses isLoading
+      // not isFetching).
+      providesTags: (_r, _e, { projectName }) => [{ type: 'overviewTask', id: projectName }],
     }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<
