@@ -1,84 +1,93 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { isHTMLElement } from '@shared/util'
 import { VersionReviewablesModel } from '@shared/api'
 
 type VersionButtonKey = 'selected' | 'previous' | 'next' | 'latest' | 'approved' | 'hero'
 
-interface isReviewShortcutsProps {
-  allVersions: {
-    [key in VersionButtonKey]: VersionReviewablesModel
-  }
-  onChange: (id: string) => void
-  toolsRef: any
-  selectRef: any
+type AllVersions = {
+  [key in VersionButtonKey]: VersionReviewablesModel | undefined
 }
 
-const useReviewShortcuts = ({ allVersions, onChange, toolsRef }: isReviewShortcutsProps) => {
-  const handleShortcut = (action: VersionButtonKey) => {
-    const version = allVersions[action]
+type Statuses = Record<string, { state?: string } | undefined>
 
-    if (!version) return
-
-    if (version.id) onChange(version.id)
-
-    // highlight button briefly
-    const buttonEl = toolsRef.current.querySelector(`#${action}-${version.id}`)
-    if (!buttonEl) return
-
-    buttonEl.classList.add('highlight')
-
-    setTimeout(() => {
-      buttonEl.classList.remove('highlight')
-    }, 150)
+export const getVersionShortcutTargets = (
+  versions: VersionReviewablesModel[],
+  selectedId: string | undefined,
+  statuses: Statuses,
+): AllVersions => {
+  const idx = versions.findIndex((v) => v.id === selectedId)
+  const selected = versions[idx]
+  const previous = versions[idx - 1]
+  const next = versions[idx + 1]
+  const latest = versions[versions.length - 1]
+  const approved = [...versions]
+    .reverse()
+    .find(({ status }) => statuses[status]?.state === 'done')
+  const hero = versions.find(({ name }) => name === 'HERO')
+  return {
+    previous: previous || selected,
+    selected,
+    next: next || selected,
+    latest,
+    approved,
+    hero,
   }
+}
 
-  const shortcuts = [
-    {
-      key: 'a', //select previous version
-      action: () => handleShortcut('previous'),
-    },
-    {
-      key: 'd', //select next version
-      action: () => handleShortcut('next'),
-    },
-    {
-      key: 'r', //select latest version
-      action: () => handleShortcut('latest'),
-    },
-    {
-      key: 'e', //select approved version
-      action: () => handleShortcut('approved'),
-    },
-    {
-      key: 'h', //select hero version
-      action: () => handleShortcut('hero'),
-    },
-  ]
+interface UseReviewShortcutsProps {
+  versions: VersionReviewablesModel[]
+  selectedId: string | undefined
+  statuses: Statuses
+  onChange: (id: string) => void
+  toolsRef?: any
+}
+
+const useReviewShortcuts = ({
+  versions,
+  selectedId,
+  statuses,
+  onChange,
+  toolsRef,
+}: UseReviewShortcutsProps) => {
+  const allVersions = useMemo(
+    () => getVersionShortcutTargets(versions, selectedId, statuses),
+    [versions, selectedId, statuses],
+  )
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // abort if modifier keys are pressed
-      if (e.ctrlKey || e.altKey || e.metaKey) return
+    const handleShortcut = (action: VersionButtonKey) => {
+      const version = allVersions[action]
+      if (!version) return
+      if (version.id) onChange(version.id)
 
-      // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
+      // highlight button briefly — skipped when tool is unmounted (e.g. theatre mode)
+      const buttonEl = toolsRef?.current?.querySelector?.(`#${action}-${version.id}`)
+      if (!buttonEl) return
+      buttonEl.classList.add('highlight')
+      setTimeout(() => buttonEl.classList.remove('highlight'), 150)
+    }
+
+    const keyMap: Record<string, VersionButtonKey> = {
+      a: 'previous',
+      d: 'next',
+      r: 'latest',
+      e: 'approved',
+      h: 'hero',
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return
       if (isHTMLElement(e.target)) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
         if (e.target.isContentEditable) return
       }
-
-      const shortcut = shortcuts.find((s) => s.key === e.key)
-      if (shortcut) {
-        shortcut.action()
-      }
+      const action = keyMap[e.key]
+      if (action) handleShortcut(action)
     }
 
     window.addEventListener('keydown', handleKeyDown)
-
-    // Cleanup function to remove the event listener when the component unmounts
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [shortcuts])
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [allVersions, onChange, toolsRef])
 }
 
 export default useReviewShortcuts

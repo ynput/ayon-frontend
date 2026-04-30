@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { useFullScreenHandle } from 'react-full-screen'
 import { Button } from '@ynput/ayon-react-components'
 import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
+import useReviewShortcuts from '@components/VersionSelectorTool/hooks/useReviewShortcuts'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
 import ViewerComponent from './ViewerComponent'
@@ -337,6 +338,17 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
+  // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
+  const projectStatuses = useAppSelector((state) => state.project.statuses) || {}
+  const versionSelectorRef = useRef<HTMLDivElement>(null)
+  useReviewShortcuts({
+    versions: versionsAndReviewables,
+    selectedId: versionIds[0],
+    statuses: projectStatuses,
+    onChange: handleVersionChange,
+    toolsRef: versionSelectorRef,
+  })
+
   // Keyboard nav lives here (not in ReviewablesSelector) so it keeps working
   // in theatre mode, where the selector is unmounted.
   const reviewablesSelectorRef = useRef<ReviewablesSelectorHandle>(null)
@@ -360,6 +372,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           <Styled.PlayerToolbar>
             <>
               <VersionSelectorTool
+                ref={versionSelectorRef}
                 versions={versionsAndReviewables}
                 selected={versionIds[0]}
                 onChange={handleVersionChange}
