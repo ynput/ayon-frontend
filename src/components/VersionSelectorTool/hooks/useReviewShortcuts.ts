@@ -81,7 +81,8 @@ const useReviewShortcuts = ({
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
         if (e.target.isContentEditable) return
       }
-      const action = keyMap[e.key]
+      const normalizedKey = e.key.length === 1 ? e.key.toLowerCase() : e.key
+      const action = keyMap[normalizedKey]
       if (action) handleShortcut(action)
     }
 
