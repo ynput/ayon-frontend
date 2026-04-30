@@ -288,29 +288,10 @@ const injectedApi = enhancedApi.injectEndpoints({
             schedule()
           }
 
-          // Subscribe to task entity events. Backend emits both direct task topics
-          // (entity.task.attrib_changed, status_changed, etc.) and folder topics
-          // (entity.folder.attrib_changed) — the latter cascade to child tasks via
-          // attribute inheritance, so we re-evaluate them here too.
-          const handleFolderPubSub = async (_topic: string, message: any) => {
-            const folderId = message?.summary?.entityId
-            if (!folderId || !parentIds.includes(folderId)) return
-            // Mark every cached task under that folder as pending re-evaluation.
-            // Reading the cache is cheap; the flush will round-trip with the
-            // filter so non-matching tasks get pruned.
-            updateCachedData((draft: EditorTaskNode[]) => {
-              for (const t of draft) {
-                if (t.folderId === folderId) pendingTaskIds.add(t.id)
-              }
-            })
-            if (pendingTaskIds.size) schedule()
-          }
-
+          // Subscribe to task entity updates
+          // NOTE: backend emits topics like 'entity.task.assignees_changed'.
+          // Assuming PubSub supports prefix matching when subscribing without the suffix.
           token = PubSub.subscribe('entity.task', handlePubSub)
-          // Track folder events as well so folder-attrib edits propagate.
-          const folderToken = PubSub.subscribe('entity.folder.attrib_changed', handleFolderPubSub)
-          // Stash both tokens for cleanup.
-          ;(token as any).__folderToken = folderToken
         } catch (e) {
           // cache entry removed before loaded - ignore
         }
@@ -340,6 +321,10 @@ const injectedApi = enhancedApi.injectEndpoints({
           return { error }
         }
       },
+      // Participate in the overviewTask LIST tag so an attrib mutation refreshes
+      // the matching folder set (without forcing a visible loading state — see
+      // useFetchOverviewData where this query uses isLoading not isFetching).
+      providesTags: () => [{ type: 'overviewTask', id: 'LIST' }],
     }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<

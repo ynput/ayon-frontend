@@ -111,7 +111,7 @@ export const useFetchOverviewData = ({
   const {
     data: foldersByTaskFilter,
     isUninitialized,
-    isFetching: isFetchingTasksFolders,
+    isLoading: isLoadingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
     refetch: refetchTasksFolders,
   } = useGetSearchFoldersQuery(
@@ -531,7 +531,7 @@ export const useFetchOverviewData = ({
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     isLoadingAll:
-      isLoadingFolders || isLoadingTasksList || isFetchingTasksFolders || isLoadingModules, // these all show a full loading state
+      isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,

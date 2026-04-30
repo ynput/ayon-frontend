@@ -646,8 +646,10 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         type Tags = { id: string; type: string }[]
         const userDashboardTags: Tags = [{ type: 'kanban', id: 'project-' + projectName }],
           taskProgressTags: Tags = [],
-          entityListItemTags: Tags = []
+          entityListItemTags: Tags = [],
+          overviewTaskTags: Tags = []
 
+        let hasAttribOp = false
         operationsRequestModel.operations?.forEach((op) => {
           const { entityId } = op
           if (entityId) {
@@ -658,9 +660,24 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
             // new entity created, so we should invalidate everything
             taskProgressTags.push({ type: 'progress', id: 'LIST' })
           }
+          if ((op.data as any)?.attrib) hasAttribOp = true
         })
 
-        return [...userDashboardTags, ...taskProgressTags, ...entityListItemTags]
+        // Attrib edits (task or folder) can change which tasks match active
+        // slicer filters. Invalidate the overviewTask LIST so getSearchFolders
+        // and any subscribed task list caches refetch with their filter.
+        // useFetchOverviewData uses isLoading (not isFetching) for these, so
+        // the refresh happens silently — no full-table loading state.
+        if (hasAttribOp) {
+          overviewTaskTags.push({ type: 'overviewTask', id: 'LIST' })
+        }
+
+        return [
+          ...userDashboardTags,
+          ...taskProgressTags,
+          ...entityListItemTags,
+          ...overviewTaskTags,
+        ]
       },
     }),
   }),
