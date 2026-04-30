@@ -237,11 +237,16 @@ const injectedApi = enhancedApi.injectEndpoints({
           const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
           batchIds.forEach((id) => pendingTaskIds.delete(id))
           try {
+            // Pass through this cache's filter/search so the server only returns
+            // tasks that still match — otherwise PubSub re-adds tasks that were
+            // just removed by a filter mutation (e.g. status/attrib edit).
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName,
                   taskIds: batchIds,
+                  filter,
+                  search,
                 } as any,
                 { forceRefetch: true },
               ),
@@ -283,10 +288,29 @@ const injectedApi = enhancedApi.injectEndpoints({
             schedule()
           }
 
-          // Subscribe to task entity updates
-          // NOTE: backend emits topics like 'entity.task.assignees_changed'.
-          // Assuming PubSub supports prefix matching when subscribing without the suffix.
+          // Subscribe to task entity events. Backend emits both direct task topics
+          // (entity.task.attrib_changed, status_changed, etc.) and folder topics
+          // (entity.folder.attrib_changed) — the latter cascade to child tasks via
+          // attribute inheritance, so we re-evaluate them here too.
+          const handleFolderPubSub = async (_topic: string, message: any) => {
+            const folderId = message?.summary?.entityId
+            if (!folderId || !parentIds.includes(folderId)) return
+            // Mark every cached task under that folder as pending re-evaluation.
+            // Reading the cache is cheap; the flush will round-trip with the
+            // filter so non-matching tasks get pruned.
+            updateCachedData((draft: EditorTaskNode[]) => {
+              for (const t of draft) {
+                if (t.folderId === folderId) pendingTaskIds.add(t.id)
+              }
+            })
+            if (pendingTaskIds.size) schedule()
+          }
+
           token = PubSub.subscribe('entity.task', handlePubSub)
+          // Track folder events as well so folder-attrib edits propagate.
+          const folderToken = PubSub.subscribe('entity.folder.attrib_changed', handleFolderPubSub)
+          // Stash both tokens for cleanup.
+          ;(token as any).__folderToken = folderToken
         } catch (e) {
           // cache entry removed before loaded - ignore
         }
@@ -419,12 +443,18 @@ const injectedApi = enhancedApi.injectEndpoints({
           const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
           batchIds.forEach((id) => pendingTaskIds.delete(id))
           try {
+            // Pass through this cache's filter/search so the server only returns
+            // tasks that still match — otherwise PubSub re-adds tasks that were
+            // just removed by a filter mutation (e.g. status/attrib edit).
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName: arg.projectName,
                   taskIds: batchIds,
                   folderIds: arg.folderIds,
+                  filter: arg.filter,
+                  folderFilter: arg.folderFilter,
+                  search: arg.search,
                 } as any,
                 { forceRefetch: true },
               ),
