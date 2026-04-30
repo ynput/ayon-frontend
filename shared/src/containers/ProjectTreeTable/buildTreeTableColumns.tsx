@@ -291,7 +291,11 @@ const buildTreeTableColumns = ({
                 id={row.id}
                 label={row.original.label}
                 name={row.original.name}
-                path={!showHierarchy && !isFlatFolderView ? '/' + row.original.parents?.join('/') : undefined}
+                path={
+                  !showHierarchy && !isFlatFolderView
+                    ? '/' + row.original.parents?.join('/')
+                    : undefined
+                }
                 entityType={row.original.entityType}
                 subType={row.original.subType}
                 isExpandable={isExpandable}
@@ -336,9 +340,11 @@ const buildTreeTableColumns = ({
       accessorKey: 'status',
       minSize: COLUMN_MIN_SIZE,
       header: 'Status',
-      sortingFn: withLoadingStateSort(withNameTieBreaker((a, b, c) =>
-        attribSort(a, b, c, { enum: options.status, type: 'string' }),
-      )),
+      sortingFn: withLoadingStateSort(
+        withNameTieBreaker((a, b, c) =>
+          attribSort(a, b, c, { enum: options.status, type: 'string' }),
+        ),
+      ),
       sortDescFirst: true,
       enableSorting: canSort('status'),
       enableResizing: true,
@@ -425,9 +431,14 @@ const buildTreeTableColumns = ({
       enableResizing: true,
       enablePinning: true,
       enableHiding: true,
-      sortingFn: withLoadingStateSort(withNameTieBreaker((a, b, c) =>
-        attribSort(a, b, c, { enum: [...options.folderType, ...options.taskType], type: 'string' }),
-      )),
+      sortingFn: withLoadingStateSort(
+        withNameTieBreaker((a, b, c) =>
+          attribSort(a, b, c, {
+            enum: [...options.folderType, ...options.taskType],
+            type: 'string',
+          }),
+        ),
+      ),
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
@@ -820,7 +831,9 @@ const buildTreeTableColumns = ({
         header: attrib.data.title || attrib.name,
         minSize: COLUMN_MIN_SIZE,
         filterFn: 'fuzzy' as FilterFnOption<TableRow>,
-        sortingFn: withLoadingStateSort(withNameTieBreaker((a, b, c) => attribSort(a, b, c, attrib.data))),
+        sortingFn: withLoadingStateSort(
+          withNameTieBreaker((a, b, c) => attribSort(a, b, c, attrib.data)),
+        ),
         enableSorting: canSort(attrib.name) && canSort('attrib'),
         enableResizing: true,
         enablePinning: true,

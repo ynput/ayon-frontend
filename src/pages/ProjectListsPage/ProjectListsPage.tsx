@@ -1,4 +1,9 @@
-import { parseCellId, ProjectDataProvider, ROW_SELECTION_COLUMN_ID, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
+import {
+  parseCellId,
+  ProjectDataProvider,
+  ROW_SELECTION_COLUMN_ID,
+  useSelectionCellsContext,
+} from '@shared/containers/ProjectTreeTable'
 import { FC, useEffect, useMemo, useState } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -30,7 +35,7 @@ import {
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionCellsProvider,
-  TreeTableExtraColumn
+  TreeTableExtraColumn,
 } from '@shared/containers/ProjectTreeTable'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
@@ -51,7 +56,10 @@ import { toast } from 'react-toastify'
 import api from '@shared/api/index.ts'
 import useReviewSessionCardsModules from './hooks/useReviewSessionCardsModules.tsx'
 import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
-import { ReviewCardsSettingsProvider, useReviewCardsSettingsContext } from './context/ReviewCardsSettingsContext.tsx'
+import {
+  ReviewCardsSettingsProvider,
+  useReviewCardsSettingsContext,
+} from './context/ReviewCardsSettingsContext.tsx'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
@@ -234,29 +242,20 @@ const ProjectLists: FC<ProjectListsProps> = ({
     refetch: refetchListItems,
   } = useListItemsDataContext()
 
-  const {
-    selectedCells,
-    setSelectedCells,
-    setFocusedCellId,
-    setAnchorCell,
-    clearSelection
-  } = useSelectionCellsContext()
+  const { selectedCells, setSelectedCells, setFocusedCellId, setAnchorCell, clearSelection } =
+    useSelectionCellsContext()
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
     selectSetting('columns', attrib)
   }
 
-  const {
-    gridHeight,
-    displayStyle,
-    onUpdateDisplayStyle,
-    onUpdateDisplayStyleWithPersistence,
-  } = useReviewCardsSettingsContext()
+  const { gridHeight, displayStyle, onUpdateDisplayStyle, onUpdateDisplayStyleWithPersistence } =
+    useReviewCardsSettingsContext()
 
-  const useModules = isStoryboards
-    ? useStoryboardsCardsModules
-    : useReviewSessionCardsModules
+  const pageDisplayStyle = isReview ? displayStyle : 'table' // force table view for non-review pages, as we do not have cards modules for them
+
+  const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules
 
   const {
     ReviewSessionCards,
@@ -272,8 +271,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
   // if the addon is outdated, make sure we land in table view
   useEffect(() => {
     if (!reviewSessionCardsOutdated) return
-    onUpdateDisplayStyle("table")
-    onUpdateDisplayStyleWithPersistence("table")
+    onUpdateDisplayStyle('table')
+    onUpdateDisplayStyleWithPersistence('table')
   }, [reviewSessionCardsOutdated])
 
   return (
@@ -302,14 +301,15 @@ const ProjectLists: FC<ProjectListsProps> = ({
               api={api}
               toast={toast}
               gridSize={gridHeight}
-              playlistView={displayStyle === "playlist"}
+              playlistView={pageDisplayStyle === 'playlist'}
               onSelectionChange={(versionIds) => {
                 if (versionIds.length === 0) return clearSelection()
 
-                const areRowsSelected = Array.from(selectedCells)
-                  .some((cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID)
+                const areRowsSelected = Array.from(selectedCells).some(
+                  (cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
+                )
 
-                const columnToSelect = areRowsSelected ? ROW_SELECTION_COLUMN_ID : "name"
+                const columnToSelect = areRowsSelected ? ROW_SELECTION_COLUMN_ID : 'name'
 
                 const cellIds = versionIds
                   .map((versionId) => getCellIdForColumn(listItemsData, versionId, columnToSelect))
@@ -318,11 +318,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 setSelectedCells(new Set(cellIds))
               }}
               onOpenDetails={(versionId) => {
-                const cellId = getCellIdForColumn(
-                  listItemsData,
-                  versionId,
-                  ROW_SELECTION_COLUMN_ID,
-                )
+                const cellId = getCellIdForColumn(listItemsData, versionId, ROW_SELECTION_COLUMN_ID)
                 if (!cellId) return
 
                 const position = parseCellId(cellId)
@@ -340,38 +336,34 @@ const ProjectLists: FC<ProjectListsProps> = ({
             >
               {selectedList && (
                 <Toolbar>
-                  {
-                    isStoryboards
-                    ? <OpenStoryboardButton
+                  {isStoryboards ? (
+                    <OpenStoryboardButton projectName={projectName} />
+                  ) : (
+                    <OpenReviewSessionButton
+                      projectName={projectName}
+                      disabled={listItemsData.length === 0}
+                    />
+                  )}
+                  {reviewModulesLoaded && pageDisplayStyle !== 'table' && (
+                    <ReviewSessionCardsControlsLeft />
+                  )}
+                  {pageDisplayStyle === 'table' && (
+                    <>
+                      <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
+                      <ListItemsFilter
+                        entityType={selectedList.entityType}
                         projectName={projectName}
                       />
-                    : <OpenReviewSessionButton
-                        projectName={projectName}
-                        disabled={listItemsData.length === 0}
+                    </>
+                  )}
+                  {isReview && reviewModulesLoaded && (
+                    <>
+                      <Spacer />
+                      <ReviewSessionCardsControlsRight
+                        groupingDisabled={pageDisplayStyle === 'table'}
                       />
-                  }
-                  {
-                    reviewModulesLoaded && displayStyle !== "table" && (
-                      <ReviewSessionCardsControlsLeft />
-                    )
-                  }
-                  {
-                    displayStyle === "table" && (
-                      <>
-                        <OverviewActions items={['undo', 'redo', deleteListItemAction]} />
-                        {/*@ts-expect-error - we do not support product right now*/}
-                        <ListItemsFilter entityType={selectedList.entityType} projectName={projectName} />
-                      </>
-                    )
-                  }
-                  {
-                    isReview && reviewModulesLoaded && (
-                      <>
-                        <Spacer />
-                        <ReviewSessionCardsControlsRight groupingDisabled={displayStyle === "table"} />
-                      </>
-                    )
-                  }
+                    </>
+                  )}
                   <ImportDialogButton
                     importContext="entity_list_item"
                     projectName={projectName}
@@ -395,17 +387,15 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     isDeveloperMode={isDeveloperMode}
                     align="right"
                   />
-                  {
-                    !reviewSessionCardsOutdated && isReview && !isStoryboards && (
-                      <TableGridPlaylistSwitch
-                        value={displayStyle}
-                        onChange={(style) => {
-                          onUpdateDisplayStyle(style)
-                          onUpdateDisplayStyleWithPersistence(style)
-                        }}
-                      />
-                    )
-                  }
+                  {!reviewSessionCardsOutdated && isReview && !isStoryboards && (
+                    <TableGridPlaylistSwitch
+                      value={pageDisplayStyle}
+                      onChange={(style) => {
+                        onUpdateDisplayStyle(style)
+                        onUpdateDisplayStyleWithPersistence(style)
+                      }}
+                    />
+                  )}
                   <CustomizeButton />
                 </Toolbar>
               )}
@@ -424,18 +414,16 @@ const ProjectLists: FC<ProjectListsProps> = ({
                     style={{ width: '100%', height: '100%' }}
                   >
                     <SplitterPanel size={70}>
-                      {
-                        selectedList && isReview && displayStyle !== "table"
-                        ? (reviewModulesLoaded && <ReviewSessionCards />)
-                        : (
-                          <ListItemsTable
-                            extraColumns={extraColumns}
-                            isReview={isReview && !reviewSessionCardsOutdated}
-                            dndActiveId={dndActiveId} // Pass prop
-                            viewOnly={(selectedList?.accessLevel || 0) < 20}
-                          />
-                        )
-                      }
+                      {selectedList && isReview && pageDisplayStyle !== 'table' ? (
+                        reviewModulesLoaded && <ReviewSessionCards />
+                      ) : (
+                        <ListItemsTable
+                          extraColumns={extraColumns}
+                          isReview={isReview && !reviewSessionCardsOutdated}
+                          dndActiveId={dndActiveId} // Pass prop
+                          viewOnly={(selectedList?.accessLevel || 0) < 20}
+                        />
+                      )}
                     </SplitterPanel>
                     <SplitterPanel
                       size={30}
@@ -448,7 +436,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       <ProjectListsDetailsPanels
                         isReview={!!isReview}
                         isStoryboards={!!isStoryboards}
-                        displayStyle={displayStyle}
+                        displayStyle={pageDisplayStyle}
                       />
                     </SplitterPanel>
                   </DetailsPanelSplitter>
@@ -460,17 +448,15 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       zIndex: 500,
                     }}
                   >
-                    {
-                      displayStyle === "table" ? (
-                        <ListsTableSettings
-                          extraColumns={extraColumnsSettings}
-                          highlightedSetting={highlightedSetting}
-                          onGoTo={handleGoToCustomAttrib}
-                        />
-                      ) : (
-                        <ReviewCardsSettings />
-                      )
-                    }
+                    {pageDisplayStyle === 'table' ? (
+                      <ListsTableSettings
+                        extraColumns={extraColumnsSettings}
+                        highlightedSetting={highlightedSetting}
+                        onGoTo={handleGoToCustomAttrib}
+                      />
+                    ) : (
+                      <ReviewCardsSettings pageDisplayStyle={pageDisplayStyle} />
+                    )}
                   </SplitterPanel>
                 ) : (
                   <SplitterPanel style={{ maxWidth: 0 }}></SplitterPanel>

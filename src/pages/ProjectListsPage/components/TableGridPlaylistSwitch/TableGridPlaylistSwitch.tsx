@@ -46,20 +46,20 @@ export const TableGridPlaylistSwitch = forwardRef<HTMLDivElement, TableGridPlayl
           data-shortcut="T"
         />
         <Styled.InnerButton
-          icon="grid_view"
-          selected={value === "cards"}
-          onClick={() => onChange("cards")}
-          variant="text"
-          data-tooltip="Cards"
-          data-shortcut="G"
-        />
-        <Styled.InnerButton
           icon="format_list_bulleted"
           selected={value === "playlist"}
           onClick={() => onChange("playlist")}
           variant="text"
           data-tooltip="Playlist"
           data-shortcut="P"
+        />
+        <Styled.InnerButton
+          icon="grid_view"
+          selected={value === "cards"}
+          onClick={() => onChange("cards")}
+          variant="text"
+          data-tooltip="Cards"
+          data-shortcut="G"
         />
       </Styled.ButtonsContainer>
     )

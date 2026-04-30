@@ -206,9 +206,15 @@ export const useFetchOverviewData = ({
         }
       }
 
-      // Process each filtered folder to add its parents
-      for (const folderId of foldersByTaskFilter) {
-        addParents(folderId)
+      // In flat folder view folders are shown as top-level rows — ancestors are
+      // not needed and would bring in unrelated subtrees (e.g. showing the root
+      // "assets" node which then exposes all its children).
+      // In hierarchy mode ancestors ARE needed so the tree path is navigable.
+      if (!isFlatFolderView) {
+        const matchedIds = [...relevantFolderIds]
+        for (const folderId of matchedIds) {
+          addParents(folderId)
+        }
       }
 
       // Third pass: Build the final map using only relevant folders
@@ -263,7 +269,7 @@ export const useFetchOverviewData = ({
     }
 
     return map
-  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders, foldersLinks])
+  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders, foldersLinks, isFlatFolderView])
 
   // calculate partial loading states
   const loadingTasksForParents = useMemo(() => {

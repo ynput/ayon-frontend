@@ -1,4 +1,4 @@
-import { QueryFilter, QueryCondition } from '@shared/containers'
+import type { QueryFilter, QueryCondition } from '../types/operations'
 import {
   filterDateFunctions,
   DateOptionType,

@@ -30,7 +30,10 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         taskTypes: project?.taskTypes || [],
       })
 
-      const entityTypeData = getEntityTypeData(item.entityType, extractSubTypes(item, item.entityType).subType)
+      const entityTypeData = getEntityTypeData(
+        item.entityType,
+        extractSubTypes(item, item.entityType).subType,
+      )
 
       return {
         id: item.id,
@@ -43,6 +46,11 @@ const useBuildListItemsTableData = ({ listItemsData }: Props) => {
         entityType: item.entityType,
         assignees: item.assignees || [],
         ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
+        // version specific fields
+        author: extractAuthor(item, item.entityType),
+        version: extractVersion(item, item.entityType),
+        product: extractProduct(item, item.entityType),
+        // metadata
         updatedAt: item.updatedAt,
         createdAt: item.createdAt,
         attrib: item.attrib,
@@ -114,6 +122,37 @@ const extractFolderId = (item: EntityListItemWithLinks, entityType: string): str
       return item.folderId || ''
     case 'version':
       return item.product?.folderId || ''
+    default:
+      return ''
+  }
+}
+
+const extractAuthor = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      // @ts-expect-error - author field does exist on version list items
+      return item.author || undefined
+    default:
+      return ''
+  }
+}
+
+const extractVersion = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      return item.name || ''
+    default:
+      return ''
+  }
+}
+
+const extractProduct = (item: EntityListItemWithLinks, entityType: string): string => {
+  switch (entityType) {
+    case 'version':
+      // @ts-expect-error = name does exist on product
+      return item.product?.name || ''
+    case 'product':
+      return item.name || ''
     default:
       return ''
   }

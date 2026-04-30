@@ -19,6 +19,7 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
         'status',
         'tags',
         'productType',
+        'productBaseType',
         'author',
         'attributes',
         'version',
@@ -29,7 +30,15 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
     },
     {
       scope: 'product',
-      filterTypes: ['status', 'tags', 'attributes', 'productName', 'createdAt', 'updatedAt'],
+      filterTypes: [
+        'status',
+        'tags',
+        'attributes',
+        'productName',
+        'productBaseType',
+        'createdAt',
+        'updatedAt',
+      ],
     },
     {
       scope: 'task',
@@ -52,6 +61,16 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
           productsMap.size
             ? Array.from(productsMap.values()).map((product) => product.name)
             : Array.from(versionsMap.values()).map((version) => version.product.name),
+        ),
+      ],
+      productBaseTypes: [
+        ...new Set(
+          (productsMap.size
+            ? Array.from(productsMap.values()).map((product) => product.productBaseType)
+            : Array.from(versionsMap.values()).map(
+                (version) => version.product.productBaseType,
+              )
+          ).filter((v): v is string => !!v),
         ),
       ],
     }),

@@ -26,6 +26,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -1682,7 +1683,7 @@ export type GetListItemsQuery = { __typename?: 'Query', project: { __typename?: 
                 | { __typename?: 'ProductNode', status: string, tags: Array<string>, productType: string, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string } }
                 | { __typename?: 'RepresentationNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
                 | { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> }
-                | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null }
+                | { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, author?: string | null, version: number, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null }
                 | { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1714,7 +1715,7 @@ type ListItemFragment_RepresentationNode_Fragment = { __typename?: 'Representati
 
 type ListItemFragment_TaskNode_Fragment = { __typename?: 'TaskNode', label?: string | null, status: string, tags: Array<string>, taskType: string, assignees: Array<string>, ownAttrib: Array<string>, hasReviewables: boolean, folderId: string, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, folder: { __typename?: 'FolderNode', path?: string | null, folderType: string }, subtasks: Array<{ __typename?: 'SubTaskNode', id: string, name: string, label: string, assignees: Array<string>, description?: string | null, startDate?: any | null, endDate?: any | null, isDone: boolean }> };
 
-type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null };
+type ListItemFragment_VersionNode_Fragment = { __typename?: 'VersionNode', status: string, tags: Array<string>, hasReviewables: boolean, author?: string | null, version: number, active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string>, product: { __typename?: 'ProductNode', id: string, name: string, productType: string, folderId: string, folder: { __typename?: 'FolderNode', id: string, path?: string | null, folderType: string } }, task?: { __typename?: 'TaskNode', name: string, taskType: string } | null };
 
 type ListItemFragment_WorkfileNode_Fragment = { __typename?: 'WorkfileNode', active: boolean, name: string, updatedAt: any, createdAt: any, parents: Array<string> };
 
@@ -1726,6 +1727,14 @@ export type ListItemFragmentFragment =
   | ListItemFragment_VersionNode_Fragment
   | ListItemFragment_WorkfileNode_Fragment
 ;
+
+export type GetFolderDeleteInfoQueryVariables = Exact<{
+  projectName: Scalars['String']['input'];
+  folderIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type GetFolderDeleteInfoQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', folders: { __typename?: 'FoldersConnection', edges: Array<{ __typename?: 'FolderEdge', node: { __typename?: 'FolderNode', id: string, name: string, label?: string | null, totalFolderCount: number, totalTaskCount: number, totalProductCount: number, totalVersionCount: number } }> } } };
 
 export type GetTasksByParentQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -2114,6 +2123,8 @@ export const ListItemFragmentFragmentDoc = new TypedDocumentString(`
     status
     tags
     hasReviewables
+    author
+    version
     product {
       id
       name
@@ -2856,6 +2867,8 @@ export const GetListItemsDocument = new TypedDocumentString(`
     status
     tags
     hasReviewables
+    author
+    version
     product {
       id
       name
@@ -2940,6 +2953,25 @@ export const GetListsItemsForReviewSessionDocument = new TypedDocumentString(`
           updatedAt
           count
           accessLevel
+        }
+      }
+    }
+  }
+}
+    `);
+export const GetFolderDeleteInfoDocument = new TypedDocumentString(`
+    query GetFolderDeleteInfo($projectName: String!, $folderIds: [String!]!) {
+  project(name: $projectName) {
+    folders(ids: $folderIds) {
+      edges {
+        node {
+          id
+          name
+          label
+          totalFolderCount
+          totalTaskCount
+          totalProductCount
+          totalVersionCount
         }
       }
     }
@@ -3726,6 +3758,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetListsItemsForReviewSession: build.query<GetListsItemsForReviewSessionQuery, GetListsItemsForReviewSessionQueryVariables>({
       query: (variables) => ({ document: GetListsItemsForReviewSessionDocument, variables })
+    }),
+    GetFolderDeleteInfo: build.query<GetFolderDeleteInfoQuery, GetFolderDeleteInfoQueryVariables>({
+      query: (variables) => ({ document: GetFolderDeleteInfoDocument, variables })
     }),
     GetTasksByParent: build.query<GetTasksByParentQuery, GetTasksByParentQueryVariables>({
       query: (variables) => ({ document: GetTasksByParentDocument, variables })

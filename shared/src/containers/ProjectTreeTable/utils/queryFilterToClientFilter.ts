@@ -2,7 +2,7 @@ import { Filter, FilterValue, SEARCH_FILTER_ID } from '@ynput/ayon-react-compone
 import { QueryFilter, QueryCondition } from '../types/operations'
 import { format, parseISO, isValid } from 'date-fns'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
-import { isRelativeDateValue, resolveRelativeValue } from '@shared/containers'
+import { isRelativeDateValue, resolveRelativeValue } from './expandRelativeDates'
 
 // Option interface for filter options (from useBuildFilterOptions)
 interface Option {
