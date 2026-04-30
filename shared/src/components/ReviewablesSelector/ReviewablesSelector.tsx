@@ -150,6 +150,4 @@ const ReviewablesSelector = forwardRef<ReviewablesSelectorHandle, ReviewablesSel
   )
 })
 
-ReviewablesSelector.displayName = 'ReviewablesSelector'
-
 export default ReviewablesSelector
