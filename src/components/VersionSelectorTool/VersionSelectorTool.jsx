@@ -1,10 +1,10 @@
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
-import { useRef } from 'react'
-import useReviewShortcuts from './hooks/useReviewShortcuts'
+import { forwardRef } from 'react'
 import ReviewVersionDropdown from '@components/ReviewVersionDropdown'
 import { useSelector } from 'react-redux'
 import { upperFirst } from 'lodash'
+import { getVersionShortcutTargets } from './hooks/useReviewShortcuts'
 
 const NavButton = ({
   version: { id = 'none', name = 'None' } = {},
@@ -33,38 +33,17 @@ const NavButton = ({
   </Styled.NavButton>
 )
 
-const VersionSelectorTool = ({ versions, selected, onChange }) => {
+const VersionSelectorTool = forwardRef(({ versions, selected, onChange }, ref) => {
   const statuses = useSelector((state) => state.project.statuses) || {}
 
-  // get the version before the selected version
   const selectedIndex = versions.findIndex(({ id }) => id === selected)
-
-  const selectedVersion = versions[selectedIndex]
-  const previousVersion = versions[selectedIndex - 1]
-  const nextVersion = versions[selectedIndex + 1]
-  const latestVersion = versions[versions.length - 1]
-  // approved is the last version with status approved
-  const approvedVersion = versions
-    .slice()
-    .reverse()
-    .find(({ status }) => statuses[status] && statuses[status].state === 'done')
-  // get any hero version if there is one
-  const heroVersion = versions.find(({ name }) => name === 'HERO')
-
-  const allVersions = {
-    previous: previousVersion || selectedVersion,
-    selected: selectedVersion,
-    next: nextVersion || selectedVersion,
-    latest: latestVersion,
-    approved: approvedVersion,
-    hero: heroVersion,
-  }
-
-  const toolsRef = useRef(null)
-
-  useReviewShortcuts({ allVersions, onChange, toolsRef })
-
   if (selectedIndex === -1) return
+
+  const allVersions = getVersionShortcutTargets(versions, selected, statuses)
+  const { latest: latestVersion, approved: approvedVersion, hero: heroVersion } = allVersions
+  // raw neighbour checks for disabled state (helper falls back to selected)
+  const hasPrevious = !!versions[selectedIndex - 1]
+  const hasNext = !!versions[selectedIndex + 1]
 
   const options = [...versions]
     .sort((a, b) => {
@@ -78,12 +57,12 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
     }))
 
   return (
-    <Styled.Tools ref={toolsRef}>
+    <Styled.Tools ref={ref}>
       <NavButton
         version={allVersions.previous}
         className="previous"
         onClick={onChange}
-        disabled={!previousVersion}
+        disabled={!hasPrevious}
         beforeContent={<Icon icon="chevron_left" />}
         shortcut={{ children: 'A' }}
       />
@@ -92,7 +71,7 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
         version={allVersions.next}
         className="next"
         onClick={onChange}
-        disabled={!nextVersion}
+        disabled={!hasNext}
         afterContent={<Icon icon="chevron_right" />}
         shortcut={{ children: 'D', side: 'left' }}
       />
@@ -125,6 +104,6 @@ const VersionSelectorTool = ({ versions, selected, onChange }) => {
       )}
     </Styled.Tools>
   )
-}
+})
 
 export default VersionSelectorTool

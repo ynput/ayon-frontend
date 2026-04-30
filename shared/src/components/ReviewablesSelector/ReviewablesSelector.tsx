@@ -1,6 +1,5 @@
-import { FC, useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import * as Styled from './ReviewablesSelector.styled'
-import { isHTMLElement } from '@shared/util'
 import ScrollBar from 'react-perfect-scrollbar'
 import Card, { ReviewableCard, ReviewableCardProps } from './Card'
 
@@ -12,13 +11,17 @@ interface ReviewablesSelectorProps {
   onUpload?: () => void
 }
 
-const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
+export type ReviewablesSelectorHandle = {
+  notifyNavigation: (next: { fileId: string; label?: string | null }) => void
+}
+
+const ReviewablesSelector = forwardRef<ReviewablesSelectorHandle, ReviewablesSelectorProps>(({
   reviewables = [],
   selected = [],
   projectName,
   onChange,
   onUpload,
-}) => {
+}, ref) => {
   const scrollRef = useRef<ScrollBar>(null)
   const scrollContainerRef = useRef<HTMLElement | null>(null)
   const [labelTooltip, setLabelTooltip] = useState<null | string>(null)
@@ -47,46 +50,24 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
     scrollRef.current?.updateScroll?.()
   }
 
-  // add keyboard support
-  // use up and down arrow keys to navigate through the reviewables
-  // if at top and press up, go to bottom, if at bottom and press down, go to top
-  useEffect(() => {
-    if (reviewables.length === 1) return
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-        // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
-        if (isHTMLElement(e.target)) {
-          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
-          if (e.target.isContentEditable) return
-        }
-
-        const currentIndex = reviewables.findIndex(({ fileId }) => selected.includes(fileId))
-        const nextIndex = e.key === 'w' || e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1
-        const nextReviewable =
-          reviewables[nextIndex < 0 ? reviewables.length - 1 : nextIndex % reviewables.length]
-        const nextFileId = nextReviewable.fileId
-
-        onChange && onChange(nextFileId)
-        requestAnimationFrame(() => scrollReviewableIntoView(nextFileId))
-        // also set new label for the tooltip
-        setLabelTooltip(nextReviewable.label ?? null)
-        // set label tooltip position
-        const el = document.getElementById('preview-' + nextFileId)
-
+  // Imperative hook for the parent: keyboard nav lives upstream so it works
+  // in theatre mode (where this component is unmounted). When nav happens,
+  // we still update scroll + tooltip via this handle.
+  useImperativeHandle(
+    ref,
+    () => ({
+      notifyNavigation: ({ fileId, label }) => {
+        requestAnimationFrame(() => scrollReviewableIntoView(fileId))
+        setLabelTooltip(label ?? null)
+        const el = document.getElementById('preview-' + fileId)
         if (el) {
           const top = el.offsetTop + el.offsetHeight / 2 - getScrollTop()
           setLabelTooltipYPos(top)
         }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [selected, reviewables, onChange])
+      },
+    }),
+    [],
+  )
 
   // keep track of when NOT hovering over the reviewable cards
   useEffect(() => {
@@ -136,8 +117,8 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
       <Styled.Scrollable
         className="reviewables"
         ref={scrollRef}
-        containerRef={(ref) => {
-          scrollContainerRef.current = ref
+        containerRef={(el) => {
+          scrollContainerRef.current = el
         }}
       >
         {reviewables.map(({ fileId, label, tag, selectionVariant, contextMenuItems }) => (
@@ -167,6 +148,6 @@ const ReviewablesSelector: FC<ReviewablesSelectorProps> = ({
       )}
     </Styled.ReviewablesSelector>
   )
-}
+})
 
 export default ReviewablesSelector
