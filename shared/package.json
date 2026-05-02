@@ -128,7 +128,7 @@
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-virtual": "3.13.23",
     "@ynput/ayon-react-components": "1.17.1",
-    "axios": "1.15.0",
+    "axios": "1.15.1",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
     "date-fns": "3.6.0",
@@ -148,6 +148,6 @@
     "remark-gfm": "4.0.1",
     "short-uuid": "4.2.2",
     "turndown": "7.2.4",
-    "uuid": "9.0.1"
+    "uuid": "14.0.0"
   }
 }
