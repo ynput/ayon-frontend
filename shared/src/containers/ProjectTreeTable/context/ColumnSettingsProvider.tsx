@@ -98,9 +98,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     }
   })
 
-  // if we are in grouping mode, always pin the name column
+  // if we are in grouping mode (except folder grouping), always pin the name column
   // and ensure it is first in column order
-  if (groupBy) {
+  if (groupBy && groupBy.id !== 'folder') {
     // ensure name column is pinned and first in pinning order
     if (!columnPinning.left?.includes('name')) {
       columnPinning.left = ['name', ...(columnPinning?.left || [])]

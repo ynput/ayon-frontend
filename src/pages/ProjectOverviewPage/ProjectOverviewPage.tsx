@@ -17,6 +17,7 @@ import { Actions } from '@shared/containers/Actions/Actions'
 import {
   getCellId,
   ROW_SELECTION_COLUMN_ID,
+  useColumnSettingsContext,
   useGetGroupedFields,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
@@ -90,6 +91,9 @@ const ProjectOverviewPage: FC = () => {
     updateExpanded,
   } = useProjectOverviewContext()
 
+  const { sorting, updateSorting } = useColumnSettingsContext()
+  const nameSortDesc = sorting?.[0]?.id === 'name' ? sorting[0].desc : false
+
   // Build group-by dropdown options
   const groupedFields = useGetGroupedFields({ scope: 'task' })
   const viewGroupByOptions = useMemo(() => {
@@ -111,21 +115,34 @@ const ProjectOverviewPage: FC = () => {
     if (viewGroupBy === undefined) return []
     return viewGroupByOptions
       .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
-      .map((o) => ({ ...o, sortOrder: !viewGroupByDesc }))
-  }, [viewGroupBy, viewGroupByOptions, viewGroupByDesc])
+      .map((o) => ({
+        ...o,
+        sortOrder:
+          o.id === 'folder' || o.id === 'hierarchy' ? !nameSortDesc : !viewGroupByDesc,
+      }))
+  }, [viewGroupBy, viewGroupByOptions, viewGroupByDesc, nameSortDesc])
 
   const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
     const value = values[0]
     if (!value) {
       // X clicked — flat list (no grouping)
       updateViewGroupBy('none')
-    } else if (value.id === 'hierarchy') {
-      updateViewGroupBy(null)
-    } else {
-      // sortOrder: true = ascending, desc: false = ascending
-      const desc = value.sortOrder === false
-      updateViewGroupBy(value.id, desc)
+      return
     }
+    const desc = value.sortOrder === false
+    if (value.id === 'hierarchy' || value.id === 'folder') {
+      const targetView = value.id === 'hierarchy' ? null : 'folder'
+      if (viewGroupBy === targetView) {
+        if (desc !== nameSortDesc) {
+          updateSorting([{ id: 'name', desc }])
+        }
+        return
+      }
+      updateViewGroupBy(targetView)
+      return
+    }
+    // sortOrder: true = ascending, desc: false = ascending
+    updateViewGroupBy(value.id, desc)
   }
 
   const { isPanelOpen } = useSettingsPanel()
@@ -223,7 +240,6 @@ const ProjectOverviewPage: FC = () => {
               />
               <ReloadButton />
               <GroupByDropdown
-                $disableSortOrder={viewGroupBy === null || viewGroupBy === 'folder'}
                 title="Group by"
                 options={viewGroupByOptions}
                 value={viewGroupByValue}
