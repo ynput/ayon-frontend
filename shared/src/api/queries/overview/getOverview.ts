@@ -216,7 +216,7 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, folderFilter, search },
+        { projectName, parentIds, filter, search },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
       ) {
         let token: any
@@ -237,17 +237,11 @@ const injectedApi = enhancedApi.injectEndpoints({
           const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
           batchIds.forEach((id) => pendingTaskIds.delete(id))
           try {
-            // Pass through this cache's filter/folderFilter/search so the server
-            // only returns tasks that still match — otherwise PubSub re-adds
-            // tasks just removed by a filter mutation (e.g. status/attrib edit).
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName,
                   taskIds: batchIds,
-                  filter,
-                  folderFilter,
-                  search,
                 } as any,
                 { forceRefetch: true },
               ),
@@ -431,18 +425,12 @@ const injectedApi = enhancedApi.injectEndpoints({
           const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
           batchIds.forEach((id) => pendingTaskIds.delete(id))
           try {
-            // Pass through this cache's filter/search so the server only returns
-            // tasks that still match — otherwise PubSub re-adds tasks that were
-            // just removed by a filter mutation (e.g. status/attrib edit).
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName: arg.projectName,
                   taskIds: batchIds,
                   folderIds: arg.folderIds,
-                  filter: arg.filter,
-                  folderFilter: arg.folderFilter,
-                  search: arg.search,
                 } as any,
                 { forceRefetch: true },
               ),
