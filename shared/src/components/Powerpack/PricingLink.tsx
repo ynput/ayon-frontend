@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-export const pricingUrl = 'https://ynput.io/ayon/pricing?utm_source=ayon'
+export const pricingUrl = 'https://ynput.cloud/free-trial'
 
 export interface PricingLinkProps extends React.HTMLAttributes<HTMLAnchorElement> {}
 
