@@ -80,6 +80,7 @@ export type ProjectFolderModel = {
   label: string
   parentId?: string
   position?: number
+  isEmpty?: boolean
   data?: ProjectFolderData
 }
 export type ProjectFoldersResponseModel = {

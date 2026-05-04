@@ -37,6 +37,8 @@ export interface BuildHierarchicalRowsConfig<TFolder, TItem> {
   getFolderColor: (folder: TFolder) => string | undefined
   /** Function to get item count for display */
   getItemCount: (node: HierarchicalFolderNode<TFolder, TItem>) => number
+  /** Optional: returns true if the folder is genuinely empty, false if it has items the user can't see (e.g. restricted projects). Hides folders with restricted content regardless of showEmptyFolders. */
+  getFolderIsEmpty?: (folder: TFolder) => boolean | undefined
 }
 
 /**
@@ -58,13 +60,20 @@ export const buildHierarchicalTableRows = <TFolder, TItem>(
     getFolderIcon,
     getFolderColor,
     getItemCount,
+    getFolderIsEmpty,
   } = config
+
+  const isFolderVisible = (node: HierarchicalFolderNode<TFolder, TItem>): boolean => {
+    if (node.hasAnyItems) return true
+    if (getFolderIsEmpty?.(node.folder) === false) return false
+    return showEmptyFolders
+  }
 
   const result: SimpleTableRow[] = []
 
   // Get root folders and sort them
   const rootNodes = Array.from(folderNodes.values()).filter(
-    (node) => rootFolderIds.has(node.id) && (showEmptyFolders || node.hasAnyItems),
+    (node) => rootFolderIds.has(node.id) && isFolderVisible(node),
   )
   const sortedRootNodes = sortFolderNodes(rootNodes)
 
@@ -134,9 +143,7 @@ export const buildHierarchicalTableRows = <TFolder, TItem>(
     }
 
     // Get child folders and sort them
-    const childNodes = Array.from(node.children.values()).filter(
-      (child) => showEmptyFolders || child.hasAnyItems,
-    )
+    const childNodes = Array.from(node.children.values()).filter(isFolderVisible)
     const sortedChildNodes = sortFolderNodes(childNodes)
 
     // Add child folders to stack in reverse order (for correct processing order)

@@ -130,6 +130,7 @@ const buildProjectsTableData = (
     getItemCount: (node) =>
       node.items.length +
       Array.from(node.children.values()).reduce((acc, child) => acc + child.items.length, 0),
+    getFolderIsEmpty: (folder) => folder.isEmpty,
   })
 
   // Create rows for root projects (projects not in folders)
