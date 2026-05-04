@@ -218,10 +218,10 @@ const buildTreeTableColumns = ({
       header: nameLabel,
       minSize: COLUMN_MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
-      enableSorting: groupBy ? false : canSort('name'),
+      enableSorting: groupBy && groupBy.id !== 'folder' ? false : canSort('name'),
       enableResizing: true,
       enablePinning: true,
-      enableHiding: groupBy ? false : true,
+      enableHiding: !(groupBy && groupBy.id !== 'folder'),
       cell: ({ row, column, table }) => {
         const { value, id, type } = getValueIdType(row, column.id)
         const meta = table.options.meta
