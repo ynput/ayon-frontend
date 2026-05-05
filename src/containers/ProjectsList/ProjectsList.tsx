@@ -269,13 +269,15 @@ const ProjectsList: FC<ProjectsListProps> = ({
     handleOpenFolderDialog,
   })
 
+  const canEditProjectLabel = !!(user?.data?.isAdmin || user?.data?.isManager)
+
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
       'add-project': !canCreateProject,
-      'delete-project': !user?.data?.isAdmin && !user?.data?.isManager,
-      'archive-project': !user?.data?.isAdmin && !user?.data?.isManager,
-      'edit-label': !user?.data?.isAdmin && !user?.data?.isManager,
+      'delete-project': !canEditProjectLabel,
+      'archive-project': !canEditProjectLabel,
+      'edit-label': !canEditProjectLabel,
     },
     projects: projects,
     folders: folders || [],
@@ -301,7 +303,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     powerLicense,
     onEditFolder,
     onRenameFolder,
-    onRenameProject,
+    onRenameProject: canEditProjectLabel ? onRenameProject : undefined,
   })
 
   return (
@@ -355,7 +357,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         folders={folders || []}
         onOpenFolderDialog={handleOpenFolderDialog}
         onRenameFolder={onRenameFolder}
-        onRenameProject={onRenameProject}
+        onRenameProject={canEditProjectLabel ? onRenameProject : undefined}
         disabled={!powerLicense}
       />
     </>
