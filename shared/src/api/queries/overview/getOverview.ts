@@ -316,12 +316,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           return { error }
         }
       },
-      // Participate in the project-scoped overviewTask tag so an attrib mutation
-      // refreshes the matching folder set for THIS project only — using a global
-      // 'LIST' id would cascade across all projects (without forcing a visible
-      // loading state — see useFetchOverviewData where this query uses isLoading
-      // not isFetching).
-      providesTags: (_r, _e, { projectName }) => [{ type: 'overviewTask', id: projectName }],
+      providesTags: (_r, _e, { projectName }) => [{ type: 'tasksFolder', id: projectName }],
     }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<

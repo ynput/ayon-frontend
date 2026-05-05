@@ -94,8 +94,8 @@ const TasksProgress: FC<TasksProgressProps> = ({
     persistentRowSelectionData,
   } = useSlicerContext()
 
-  // Sync slicer slice type with view settings, selection with localStorage
-  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews, `slicer-selection-progress-${projectName}`)
+  // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
 
   const persistedHierarchySelection = isEmpty(persistentRowSelectionData)
     ? null
