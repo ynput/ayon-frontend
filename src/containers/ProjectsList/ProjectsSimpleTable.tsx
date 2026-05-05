@@ -14,6 +14,9 @@ interface ProjectsSimpleTableProps extends React.HTMLAttributes<HTMLDivElement> 
   renamingFolder?: string | null
   onSubmitRenameFolder?: (value: string) => void
   closeRenameFolder?: () => void
+  renamingProject?: string | null
+  onSubmitRenameProject?: (value: string) => void
+  closeRenameProject?: () => void
   onOpenProject?: (projectName: string) => void
   fitContent?: boolean
   hidePinned?: boolean
@@ -31,6 +34,9 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
   renamingFolder,
   onSubmitRenameFolder,
   closeRenameFolder,
+  renamingProject,
+  onSubmitRenameProject,
+  closeRenameProject,
   onOpenProject,
   fitContent,
   hidePinned,
@@ -61,6 +67,9 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
         renamingFolder,
         onSubmitRenameFolder,
         closeRenameFolder,
+        renamingProject,
+        onSubmitRenameProject,
+        closeRenameProject,
       }}
       {...props}
     >
@@ -87,9 +96,25 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
           isRowExpandable={row.getCanExpand()}
           isRowExpanded={row.getIsExpanded()}
           onExpandClick={row.getToggleExpandedHandler()}
-          isRenaming={row.id === table.options.meta?.renamingFolder}
-          onSubmitRename={(v) => table.options.meta?.onSubmitRenameFolder?.(v)}
-          onCancelRename={table.options.meta?.closeRenameFolder}
+          isRenaming={
+            row.id === table.options.meta?.renamingFolder ||
+            row.id === table.options.meta?.renamingProject
+          }
+          renameInitialValue={
+            row.id === table.options.meta?.renamingProject
+              ? row.original.data.projectLabel || ''
+              : undefined
+          }
+          onSubmitRename={(v) =>
+            row.id === table.options.meta?.renamingProject
+              ? table.options.meta?.onSubmitRenameProject?.(v)
+              : table.options.meta?.onSubmitRenameFolder?.(v)
+          }
+          onCancelRename={
+            row.id === table.options.meta?.renamingProject
+              ? table.options.meta?.closeRenameProject
+              : table.options.meta?.closeRenameFolder
+          }
           count={row.original.data.count}
           onSettingsClick={() => onSettings(row.id)}
         />

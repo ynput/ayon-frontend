@@ -120,6 +120,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
     const foldersToExpand = new Set()
 
+    const searchLower = search.toLowerCase()
     const filterNodes = (nodes) => {
       return nodes.reduce((acc, node) => {
         if (node.data?.isFolder) {
@@ -129,7 +130,10 @@ const ProjectMenu = ({ isOpen, onHide }) => {
             foldersToExpand.add(node.id)
             acc.push({ ...node, subRows: filteredChildren })
           }
-        } else if (node.name?.toLowerCase().includes(search.toLowerCase())) {
+        } else if (
+          node.name?.toLowerCase().includes(searchLower) ||
+          node.label?.toLowerCase().includes(searchLower)
+        ) {
           acc.push(node)
         }
         return acc

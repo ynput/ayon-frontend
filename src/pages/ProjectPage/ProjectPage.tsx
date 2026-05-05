@@ -14,6 +14,7 @@ import ProjectListsPage from '../ProjectListsPage'
 
 import { selectProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
+import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@shared/containers/Slicer'
@@ -70,7 +71,7 @@ const ProjectPageInner = () => {
    */
   const { siteInfo } = useGlobalContext()
   const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
-  const { projectName, isLoading, error } = useProjectContext()
+  const { projectName, label: projectLabel, isLoading, error } = useProjectContext()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
@@ -235,7 +236,11 @@ const ProjectPageInner = () => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
 
-  const title = useTitle(module, links, projectName || 'AYON')
+  const title = useTitle(
+    module,
+    links,
+    getProjectDisplayName({ name: projectName, label: projectLabel }) || 'AYON',
+  )
 
   const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
   const isAddon = !!addonName // Check if we're on an addon page

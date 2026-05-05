@@ -29,6 +29,33 @@ const enhancedProjectApi = projectApi.enhanceEndpoints({
               { type: 'projects', id: 'LIST' },
             ],
       transformErrorResponse: (error: any) => error.data.detail,
+      // Optimistically patch listProjects cache for fields exposed in the list view
+      // so the UI updates instantly without waiting for refetch.
+      async onQueryStarted({ projectName, projectPatchModel }, { dispatch, queryFulfilled }) {
+        if (!('label' in projectPatchModel)) return
+
+        const newLabel = projectPatchModel.label ?? undefined
+        const patches = [
+          dispatch(
+            projectApi.util.updateQueryData('listProjects', { active: true }, (draft) => {
+              const project = draft.find((p) => p.name === projectName)
+              if (project) project.label = newLabel
+            }),
+          ),
+          dispatch(
+            projectApi.util.updateQueryData('listProjects', { active: undefined }, (draft) => {
+              const project = draft.find((p) => p.name === projectName)
+              if (project) project.label = newLabel
+            }),
+          ),
+        ]
+
+        try {
+          await queryFulfilled
+        } catch {
+          patches.forEach((patch) => patch.undo())
+        }
+      },
     },
     setProjectBundle: {
       invalidatesTags: (_r, _e, { projectName }) => [
