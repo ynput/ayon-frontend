@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useUpdateProjectMutation } from '@shared/api'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
+import { getProjectDisplayName } from '@shared/util'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
@@ -73,7 +74,7 @@ const ProjectDetails = ({ projectName }) => {
     }
   }, [data, isFetching, fields])
 
-  const { attrib = {}, active, code, library } = data
+  const { attrib = {}, active, code, library, label } = data
 
   // Every thing below creates the attribute table
   // this is where we add new fields to the attribute table
@@ -177,7 +178,7 @@ const ProjectDetails = ({ projectName }) => {
       title={
         !isFetching && (
           <Toolbar style={{ gap: 8 }}>
-            <h1>{projectName}</h1>
+            <h1>{getProjectDisplayName({ name: projectName, label })}</h1>
             <Styled.Code>{code}</Styled.Code>
           </Toolbar>
         )
