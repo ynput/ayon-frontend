@@ -91,6 +91,7 @@ const tagTypes = [
   'login',
   'marketAddon',
   'overviewTask',
+  'tasksFolder',
   'product',
   'progress',
   'project',

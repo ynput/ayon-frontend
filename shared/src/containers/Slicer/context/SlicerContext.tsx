@@ -61,6 +61,7 @@ export interface SlicerContextValue {
   setPersistentRowSelectionData: React.Dispatch<React.SetStateAction<SelectionData>>
   config: SlicerConfig
   useExtraSlices: UseExtraSlices
+  isLoadingExtraSlices: boolean
   SlicerDropdown: ForwardRefExoticComponent<
     SlicerDropdownFallbackProps & RefAttributes<DropdownRef>
   >
@@ -138,7 +139,7 @@ export const SlicerProvider = ({
     },
   }
 
-  const { useExtraSlices, SlicerDropdown } = useSlicerRemotes()
+  const { useExtraSlices, isLoadingExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
   const getSelectionData = (selection: RowSelectionState, data: SliceMap) => {
     // for each selected row, get the data
@@ -225,6 +226,7 @@ export const SlicerProvider = ({
         setPersistentRowSelectionData,
         config,
         useExtraSlices,
+        isLoadingExtraSlices,
         SlicerDropdown,
       }}
     >
@@ -249,7 +251,7 @@ const useSlicerRemotes = () => {
   const { powerLicense } = usePowerpack()
 
   // slicer transformers
-  const [useExtraSlices] = useLoadModule({
+  const [useExtraSlices, { isLoading: isLoadingExtraSlices }] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'useExtraSlices',
@@ -265,7 +267,7 @@ const useSlicerRemotes = () => {
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
-  return { useExtraSlices, SlicerDropdown: SlicerDropdown }
+  return { useExtraSlices, isLoadingExtraSlices, SlicerDropdown: SlicerDropdown }
 }
 
 export const useSlicerContext = () => {
