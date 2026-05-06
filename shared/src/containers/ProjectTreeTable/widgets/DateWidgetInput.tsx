@@ -1,7 +1,8 @@
 import { forwardRef, useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
-import { format, isValid, parseISO } from 'date-fns'
+import { isValid, parseISO } from 'date-fns'
 import { WidgetBaseProps } from './CellWidget'
+import { formatUTCDate } from '@shared/util/formatUTCDate'
 
 interface DateWidgetInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>,
@@ -33,7 +34,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       if (initialValue) {
         const parsedDate = parseISO(initialValue)
         if (isValid(parsedDate)) {
-          return format(parsedDate, 'yyyy-MM-dd')
+          return formatUTCDate(parsedDate, 'yyyy-MM-dd')
         }
       }
       return ''
@@ -43,7 +44,7 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
       if (initialValue) {
         const parsedDate = parseISO(initialValue)
         if (isValid(parsedDate)) {
-          setValue(format(parsedDate, 'yyyy-MM-dd'))
+          setValue(formatUTCDate(parsedDate, 'yyyy-MM-dd'))
         } else {
           setValue('')
         }
@@ -78,11 +79,10 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
 
     const handleDateSubmit = (event?: 'Click' | 'Enter') => {
       if (value) {
-        const parsed = Date.parse(value)
-        if (isValid(parsed)) {
-          const dateWithZeroTime = new Date(parsed)
-          dateWithZeroTime.setUTCHours(0, 0, 0, 0)
-          const newISOValue = dateWithZeroTime.toISOString()
+        const [y, m, d] = value.split('-').map(Number)
+        if (y && m && d) {
+          const utcDate = new Date(Date.UTC(y, m - 1, d))
+          const newISOValue = utcDate.toISOString()
 
           // For Click/Blur: only save if value changed
           // For Enter: always save
