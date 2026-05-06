@@ -48,7 +48,9 @@ export const Thumbnail = ({
         ? `/api/projects/${projectName}/thumbnail`
         : `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
     }
-    if (url) url += `?updatedAt=${entityUpdatedAt}`
+    if (url && !/[?&]updatedAt=/.test(url)) {
+      url += (url.includes('?') ? '&' : '?') + `updatedAt=${entityUpdatedAt}`
+    }
   }
 
   const [error, setError] = useState(false)

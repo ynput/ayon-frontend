@@ -45,6 +45,13 @@ export const ProjectThumbnailUploader = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+      abortControllerRef.current = null
+    }
+  }, [])
+
   const resetState = () => {
     setIsDraggingFile(false)
     setIsDropZoneActive(false)
@@ -107,15 +114,15 @@ export const ProjectThumbnailUploader = ({
   }
 
   const handleDragEnter = (e: React.DragEvent) => {
-    if (disabled) return
     e.preventDefault()
+    if (disabled) return
     dragCounterRef.current++
     if (dragCounterRef.current === 1) setIsDraggingFile(true)
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
-    if (disabled) return
     e.preventDefault()
+    if (disabled) return
     dragCounterRef.current--
     if (dragCounterRef.current === 0) {
       setIsDraggingFile(false)
@@ -124,13 +131,12 @@ export const ProjectThumbnailUploader = ({
   }
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (disabled) return
     e.preventDefault()
   }
 
   const handleDrop = (e: React.DragEvent) => {
-    if (disabled) return
     e.preventDefault()
+    if (disabled) return
     dragCounterRef.current = 0
     setIsDraggingFile(false)
     setIsDropZoneActive(false)
