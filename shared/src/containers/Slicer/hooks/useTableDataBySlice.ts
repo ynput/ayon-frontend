@@ -85,7 +85,7 @@ const useTableDataBySlice = ({
   sliceFields,
   entityTypes = [],
 }: TableDataBySliceProps): TableData => {
-  const { sliceType, onSliceTypeChange, useExtraSlices } = useSlicerContext()
+  const { sliceType, onSliceTypeChange, useExtraSlices, isLoadingExtraSlices } = useSlicerContext()
   const { projectName } = useProjectContext()
   const { formatAttribute } = useExtraSlices()
 
@@ -141,7 +141,12 @@ const useTableDataBySlice = ({
   })
   //   Entity Lists
   const { getData: getEntityListsData, isLoading: isLoadingLists, isExpandable: isEntityListExpandable } = useEntityListsSlice(entityTypes)
-  const isLoadingData = isLoadingHierarchy || isLoadingProject || isUsersLoading
+  const isLoadingData =
+    isLoadingHierarchy ||
+    isLoadingProject ||
+    isUsersLoading ||
+    isLoadingExtraSlices ||
+    isLoadingAttribs
 
   const builtInSlices: Record<SliceType, SliceData> = {
     hierarchy: {
