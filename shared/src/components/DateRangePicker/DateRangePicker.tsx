@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { format, isValid, parseISO } from 'date-fns'
+import { formatUTCDate } from '../../util/formatUTCDate'
 import * as Styled from './DateRangePicker.styled'
 import clsx from 'clsx'
 import { BLOCK_DIALOG_CLOSE_CLASS } from '../LinksManager/CellEditingDialog'
@@ -72,7 +73,7 @@ const formatDateForInput = (dateStr: string | null): string => {
   try {
     const date = parseISO(dateStr)
     if (isValid(date)) {
-      return format(date, 'yyyy-MM-dd')
+      return formatUTCDate(date, 'yyyy-MM-dd')
     }
   } catch {
     return ''
@@ -85,7 +86,7 @@ const formatDateForDisplay = (dateStr: string | null, formatStr: string): string
   try {
     const date = parseISO(dateStr)
     if (isValid(date)) {
-      return format(date, formatStr)
+      return formatUTCDate(date, formatStr)
     }
   } catch {
     return null
@@ -96,10 +97,9 @@ const formatDateForDisplay = (dateStr: string | null, formatStr: string): string
 const parseDateInput = (value: string): string | null => {
   if (!value) return null
   try {
-    const date = new Date(value)
-    if (isValid(date)) {
-      date.setUTCHours(0, 0, 0, 0)
-      return date.toISOString()
+    const [y, m, d] = value.split('-').map(Number)
+    if (y && m && d) {
+      return new Date(Date.UTC(y, m - 1, d)).toISOString()
     }
   } catch {
     return null
