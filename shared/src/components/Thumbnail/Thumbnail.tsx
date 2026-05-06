@@ -35,14 +35,23 @@ export const Thumbnail = ({
   showBorder = true,
   ...props
 }: ThumbnailProps) => {
-  let url = ''
-  if (entityType && entityId && entityUpdatedAt) {
-    url =
-      src || (projectName && `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`)
-    const queryArgs = `?updatedAt=${entityUpdatedAt}`
-    url += queryArgs
-  }
+  const isProject = entityType === 'project'
   const isWrongEntity = ['product'].includes(entityType)
+  const hasIdentity = isProject ? !!projectName : !!entityId
+
+  let url = ''
+  if (entityType && entityUpdatedAt && hasIdentity) {
+    if (src) {
+      url = src
+    } else if (projectName) {
+      url = isProject
+        ? `/api/projects/${projectName}/thumbnail`
+        : `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail`
+    }
+    if (url && !/[?&]updatedAt=/.test(url)) {
+      url += (url.includes('?') ? '&' : '?') + `updatedAt=${entityUpdatedAt}`
+    }
+  }
 
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -91,8 +100,8 @@ export const Thumbnail = ({
       {(!isLoading || !loaded) && !disabled && (
         <Icon style={{ color: color || undefined }} icon={icon || 'image'} className="type-icon" />
       )}
-      {entityType && projectName && !(isWrongEntity || !entityId) && (
-        <Styled.Image alt={`Entity thumbnail ${entityId}`} src={url} />
+      {entityType && projectName && !isWrongEntity && hasIdentity && (
+        <Styled.Image alt={`Entity thumbnail ${entityId || projectName}`} src={url} />
       )}
       {hoverIcon && <Icon icon={hoverIcon} className="hover-icon" />}
     </Styled.Card>
