@@ -15,7 +15,7 @@ import clsx from 'clsx'
 import ProjectThumbnailUploader from './ProjectThumbnailUploader'
 
 const ProjectDetails = ({ projectName }) => {
-  const isUser = useSelector((state) => state.user.data.isUser)
+  const isManager = useSelector((state) => state.user.data.isManager)
 
   // GET DATA
   const { data = {}, isFetching, isError } = useGetProjectQuery({ projectName })
@@ -184,7 +184,7 @@ const ProjectDetails = ({ projectName }) => {
         )
       }
       header={
-        !isUser && (
+        isManager && (
           <Styled.Header>
             {!editing ? (
               <Button
@@ -214,7 +214,7 @@ const ProjectDetails = ({ projectName }) => {
         projectName={projectName}
         projectUpdatedAt={data?.updatedAt}
         isFetching={isFetching}
-        disabled={isUser}
+        disabled={!isManager}
       >
         {editing ? (
           <AttribForm
