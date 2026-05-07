@@ -2,6 +2,7 @@ import { ListProjectsItemModel, ProjectFolderModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import {
   buildHierarchicalTableRows,
+  getProjectDisplayName,
   HierarchicalFolderNode,
 } from '@shared/util'
 
@@ -94,13 +95,14 @@ const buildProjectsTableData = (
   ): SimpleTableRow => ({
     id: project.name,
     name: project.name,
-    label: project.name,
+    label: getProjectDisplayName(project),
     inactive: !project.active,
     subRows: [],
     data: {
       id: project.name,
       active: project.active,
       code: project.code || project.name,
+      projectLabel: project.label || undefined,
     },
   })
 

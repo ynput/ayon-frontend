@@ -5,6 +5,7 @@ import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { $Any } from '@types'
 import { getProjectAccessSearchFilterBuiler } from './mappers'
 import { SearchFilter } from '@ynput/ayon-react-components'
+import { getProjectDisplayName } from '@shared/util'
 
 type Props = {
   filters: $Any
@@ -24,7 +25,10 @@ const ProjectUserAccessSearchFilterWrapper = ({
   })
 
   const options = getProjectAccessSearchFilterBuiler({
-    projects: projects.map((project: $Any) => ({ id: project.name, label: project.name })),
+    projects: projects.map((project: $Any) => ({
+      id: project.name,
+      label: getProjectDisplayName(project),
+    })),
     users: users.map((user: $Any) => ({
       id: user.name,
       label: user.name,

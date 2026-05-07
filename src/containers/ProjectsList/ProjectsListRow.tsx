@@ -21,6 +21,7 @@ export interface ProjectsListRowProps extends React.HTMLAttributes<HTMLDivElemen
   isRowExpanded?: boolean
   isPinned?: boolean
   hidePinned?: boolean
+  renameInitialValue?: string
   onSubmitRename?: (value: string) => void
   onCancelRename?: () => void
   onExpandClick?: () => void
@@ -49,6 +50,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
       isRowExpanded,
       isPinned,
       hidePinned,
+      renameInitialValue,
       onSubmitRename,
       onCancelRename,
       onExpandClick,
@@ -61,13 +63,13 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
     },
     ref,
   ) => {
-    const [renameValue, setRenameValue] = useState(value)
+    const [renameValue, setRenameValue] = useState(renameInitialValue ?? value)
 
     useEffect(() => {
       if (isRenaming) {
-        setRenameValue(value)
+        setRenameValue(renameInitialValue ?? value)
       }
-    }, [value, isRenaming])
+    }, [value, isRenaming, renameInitialValue])
 
     // Check if this is a folder row using the canonical folder ID parser
     const isFolder = !!parseProjectFolderRowId(id || '')
@@ -97,12 +99,13 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
             style={iconColor ? { color: iconColor } : undefined}
           />
         )}
-        {isRenaming && isFolder ? (
+        {isRenaming ? (
           <InputText
             autoFocus
             style={{ flex: 1 }}
             onChange={(e) => setRenameValue(e.target.value)}
             value={renameValue}
+            placeholder={!isFolder ? 'Project label' : undefined}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 onSubmitRename?.(renameValue)

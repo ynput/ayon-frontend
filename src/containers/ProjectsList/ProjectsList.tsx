@@ -1,4 +1,5 @@
 import { useGetProjectFoldersQuery, useListProjectsQuery } from '@shared/api'
+import { getProjectDisplayName } from '@shared/util'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
@@ -67,12 +68,12 @@ const ProjectsList: FC<ProjectsListProps> = ({
   const { data: folders } = useGetProjectFoldersQuery()
 
   // transformations
-  // sort projects by active pinned, active, inactive (active=false) and then alphabetically
+  // sort projects by active pinned, active, inactive (active=false) and then alphabetically by display name (label || name)
   const projects = useMemo(() => {
     return [...data].sort((a, b) => {
       if (a.active && !b.active) return -1
       if (!a.active && b.active) return 1
-      return a.name.localeCompare(b.name)
+      return getProjectDisplayName(a).localeCompare(getProjectDisplayName(b))
     })
   }, [data, rowPinning])
 
@@ -258,18 +259,25 @@ const ProjectsList: FC<ProjectsListProps> = ({
     renamingFolder,
     onSubmitRenameFolder,
     closeRenameFolder,
+    onRenameProject,
+    renamingProject,
+    onSubmitRenameProject,
+    closeRenameProject,
   } = useProjectFolderActions({
     folders,
     onSelect,
     handleOpenFolderDialog,
   })
 
+  const canEditProjectLabel = !!(user?.data?.isAdmin || user?.data?.isManager)
+
   // Generate menu items used in both header and context menu
   const buildMenuItems = useProjectsListMenuItems({
     hidden: {
       'add-project': !canCreateProject,
-      'delete-project': !user?.data?.isAdmin && !user?.data?.isManager,
-      'archive-project': !user?.data?.isAdmin && !user?.data?.isManager,
+      'delete-project': !canEditProjectLabel,
+      'archive-project': !canEditProjectLabel,
+      'edit-label': !canEditProjectLabel,
     },
     projects: projects,
     folders: folders || [],
@@ -295,6 +303,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     powerLicense,
     onEditFolder,
     onRenameFolder,
+    onRenameProject: canEditProjectLabel ? onRenameProject : undefined,
   })
 
   return (
@@ -326,6 +335,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
         renamingFolder={renamingFolder}
         onSubmitRenameFolder={onSubmitRenameFolder}
         closeRenameFolder={closeRenameFolder}
+        renamingProject={renamingProject}
+        onSubmitRenameProject={onSubmitRenameProject}
+        closeRenameProject={closeRenameProject}
         pt={pt}
       />
       <ProjectFolderFormDialog
@@ -345,6 +357,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
         folders={folders || []}
         onOpenFolderDialog={handleOpenFolderDialog}
         onRenameFolder={onRenameFolder}
+        onRenameProject={canEditProjectLabel ? onRenameProject : undefined}
         disabled={!powerLicense}
       />
     </>

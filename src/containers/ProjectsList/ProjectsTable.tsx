@@ -38,6 +38,9 @@ interface ProjectsTableProps {
   renamingFolder?: string | null
   onSubmitRenameFolder?: (value: string) => void
   closeRenameFolder?: () => void
+  renamingProject?: string | null
+  onSubmitRenameProject?: (value: string) => void
+  closeRenameProject?: () => void
   containerClassName?: string
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
@@ -71,6 +74,9 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   renamingFolder,
   onSubmitRenameFolder,
   closeRenameFolder,
+  renamingProject,
+  onSubmitRenameProject,
+  closeRenameProject,
   containerClassName,
   pt,
 }) => {
@@ -212,6 +218,9 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
             renamingFolder={renamingFolder}
             onSubmitRenameFolder={onSubmitRenameFolder}
             closeRenameFolder={closeRenameFolder}
+            renamingProject={renamingProject}
+            onSubmitRenameProject={onSubmitRenameProject}
+            closeRenameProject={closeRenameProject}
             onOpenProject={onOpenProject}
             onSettingsClick={onSettingsClick}
             fitContent
@@ -241,6 +250,9 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
           renamingFolder={renamingFolder}
           onSubmitRenameFolder={onSubmitRenameFolder}
           closeRenameFolder={closeRenameFolder}
+          renamingProject={renamingProject}
+          onSubmitRenameProject={onSubmitRenameProject}
+          closeRenameProject={closeRenameProject}
           onOpenProject={onOpenProject}
           onSettingsClick={onSettingsClick}
           hidePinned={!search}

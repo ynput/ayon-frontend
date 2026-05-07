@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useUpdateProjectMutation } from '@shared/api'
 import { useGetProjectQuery } from '@queries/project/enhancedProject'
+import { getProjectDisplayName } from '@shared/util'
 import DashboardPanelWrapper from '../DashboardPanelWrapper'
 import AttributeTable from '@containers/attributeTable'
 import { format } from 'date-fns'
@@ -29,10 +30,20 @@ const ProjectDetails = ({ projectName }) => {
 
   // this where we add new fields to the editing form
   const projectFormInit = {
-    active: false,
+    name: '',
+    label: '',
     code: '',
+    active: false,
     library: false,
     attrib: {},
+  }
+
+  const topLevelFields = {
+    name: { type: 'string', title: 'Name', disabled: true },
+    label: { type: 'string', title: 'Label' },
+    code: { type: 'string', title: 'Code' },
+    active: { type: 'boolean', title: 'Active' },
+    library: { type: 'boolean', title: 'Library' },
   }
 
   // This is the start, used to compare changes
@@ -46,9 +57,11 @@ const ProjectDetails = ({ projectName }) => {
       if (key === 'attrib') {
         updatedProjectForm[key] = { ...projectData[key] }
       } else {
-        updatedProjectForm[key] = projectData[key]
+        updatedProjectForm[key] = projectData[key] ?? projectFormInit[key]
       }
     }
+    // name is immutable — always source from projectName prop
+    updatedProjectForm.name = projectName
 
     // add any fields that have not been added to the form
     for (const key in fields) {
@@ -74,7 +87,7 @@ const ProjectDetails = ({ projectName }) => {
     }
   }, [data, isFetching, fields])
 
-  const { attrib = {}, active, code, library } = data
+  const { attrib = {}, active, code, library, label } = data
 
   // Every thing below creates the attribute table
   // this is where we add new fields to the attribute table
@@ -103,6 +116,18 @@ const ProjectDetails = ({ projectName }) => {
   attribArray.unshift({
     name: 'Code',
     value: code,
+  })
+
+  // editable label
+  attribArray.unshift({
+    name: 'Label',
+    value: label || '',
+  })
+
+  // immutable name
+  attribArray.unshift({
+    name: 'Name',
+    value: projectName,
   })
 
   // Active status
@@ -136,7 +161,9 @@ const ProjectDetails = ({ projectName }) => {
 
   const handleAttribSubmit = async () => {
     try {
-      const data = { ...projectForm }
+      // strip name — immutable, not part of patch model
+      const { name: _name, ...patchData } = projectForm
+      const data = { ...patchData }
       // validate dates inside attrib
       const attrib = { ...projectForm['attrib'] }
       for (const key in attrib) {
@@ -178,7 +205,7 @@ const ProjectDetails = ({ projectName }) => {
       title={
         !isFetching && (
           <Toolbar style={{ gap: 8 }}>
-            <h1>{projectName}</h1>
+            <h1>{getProjectDisplayName({ name: projectName, label })}</h1>
             <Styled.Code>{code}</Styled.Code>
           </Toolbar>
         )
@@ -221,6 +248,7 @@ const ProjectDetails = ({ projectName }) => {
             form={projectForm}
             onChange={(field, value) => handleProjectChange(field, value)}
             fields={fields}
+            topLevelFields={topLevelFields}
             isLoading={isFetching}
           />
         ) : (
