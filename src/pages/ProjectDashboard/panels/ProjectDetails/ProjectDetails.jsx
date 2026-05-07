@@ -13,6 +13,7 @@ import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
+import ProjectThumbnailUploader from './ProjectThumbnailUploader'
 
 const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
@@ -253,6 +254,29 @@ const ProjectDetails = ({ projectName }) => {
           isLoading={isFetching}
         />
       )}
+      <ProjectThumbnailUploader
+        projectName={projectName}
+        projectUpdatedAt={data?.updatedAt}
+        isFetching={isFetching}
+        disabled={isUser}
+      >
+        {editing ? (
+          <AttribForm
+            form={projectForm}
+            onChange={(field, value) => handleProjectChange(field, value)}
+            fields={fields}
+            isLoading={isFetching}
+          />
+        ) : (
+          <AttributeTable
+            projectAttrib={attribArray}
+            style={{
+              overflow: 'auto',
+            }}
+            isLoading={isFetching}
+          />
+        )}
+      </ProjectThumbnailUploader>
     </DashboardPanelWrapper>
   )
 }

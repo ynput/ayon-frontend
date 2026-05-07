@@ -108,8 +108,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateSliceType,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
-  // Sync slicer slice type with view settings, selection with localStorage
-  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews, `slicer-selection-overview-${projectName}`)
+  // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
+  useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
 
   // Derive effective showHierarchy from viewGroupBy.
   // null = explicit hierarchy, undefined = not loaded yet — both default to

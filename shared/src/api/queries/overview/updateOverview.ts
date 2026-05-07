@@ -646,8 +646,10 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
         type Tags = { id: string; type: string }[]
         const userDashboardTags: Tags = [{ type: 'kanban', id: 'project-' + projectName }],
           taskProgressTags: Tags = [],
-          entityListItemTags: Tags = []
+          entityListItemTags: Tags = [],
+          tasksFolderTags: Tags = []
 
+        let hasAttribOp = false
         operationsRequestModel.operations?.forEach((op) => {
           const { entityId } = op
           if (entityId) {
@@ -658,9 +660,19 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
             // new entity created, so we should invalidate everything
             taskProgressTags.push({ type: 'progress', id: 'LIST' })
           }
+          if ((op.data as any)?.attrib) hasAttribOp = true
         })
+        
+        if (hasAttribOp) {
+          tasksFolderTags.push({ type: 'tasksFolder', id: projectName })
+        }
 
-        return [...userDashboardTags, ...taskProgressTags, ...entityListItemTags]
+        return [
+          ...userDashboardTags,
+          ...taskProgressTags,
+          ...entityListItemTags,
+          ...tasksFolderTags,
+        ]
       },
     }),
   }),

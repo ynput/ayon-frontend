@@ -137,8 +137,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     useVPViewsContext()
   const { isLoadingViews } = useViewsContext()
 
-  // Sync slicer slice type with view settings, selection with localStorage
-  useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, isLoadingViews, `slicer-selection-versions-${projectName}`)
+  // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
+  useSlicerViewSync(slicerType || undefined, onUpdateSlicerType, isLoadingViews)
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
 
