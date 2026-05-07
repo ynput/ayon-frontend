@@ -237,23 +237,6 @@ const ProjectDetails = ({ projectName }) => {
       stylePanel={{ height: 'calc(100% - 8px)', flex: 1, overflow: 'hidden', minHeight: 'unset' }}
       style={{ height: '100%', overflow: 'hidden' }}
     >
-      {editing ? (
-        <AttribForm
-          form={projectForm}
-          onChange={(field, value) => handleProjectChange(field, value)}
-          fields={fields}
-          topLevelFields={topLevelFields}
-          isLoading={isFetching}
-        />
-      ) : (
-        <AttributeTable
-          projectAttrib={attribArray}
-          style={{
-            overflow: 'auto',
-          }}
-          isLoading={isFetching}
-        />
-      )}
       <ProjectThumbnailUploader
         projectName={projectName}
         projectUpdatedAt={data?.updatedAt}
@@ -265,6 +248,7 @@ const ProjectDetails = ({ projectName }) => {
             form={projectForm}
             onChange={(field, value) => handleProjectChange(field, value)}
             fields={fields}
+            topLevelFields={topLevelFields}
             isLoading={isFetching}
           />
         ) : (
