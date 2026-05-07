@@ -105,7 +105,7 @@ const ProjectsListRow = forwardRef<HTMLDivElement, ProjectsListRowProps>(
             style={{ flex: 1 }}
             onChange={(e) => setRenameValue(e.target.value)}
             value={renameValue}
-            placeholder={!isFolder ? 'Project label (empty for none)' : undefined}
+            placeholder={!isFolder ? 'Project label' : undefined}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 onSubmitRename?.(renameValue)
