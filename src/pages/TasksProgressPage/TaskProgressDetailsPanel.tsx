@@ -10,6 +10,7 @@ import { useScopedDetailsPanel } from '@shared/context'
 import useGoToEntity from '@hooks/useGoToEntity'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { selectProgress } from '@state/progress'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 type TaskProgressDetailsPanelProps = {
   projectInfo: $Any
@@ -53,26 +54,31 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
   }
 
   return (
-    <>
-      {/* @ts-ignore */}
-      <DetailsPanel
-        // entitySubTypes={subTypes}
-        isOpen={isOpen && !!entities.length}
-        entityType={selected.type}
-        entities={entities as any}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName] as any}
-        tagsOptions={projectInfo.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="progress"
-        onClose={() => setOpen(false)}
-        onOpenViewer={handleOpenViewer}
-        onUriOpen={handleUriOpen}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          {/* @ts-ignore */}
+          <DetailsPanel
+            // entitySubTypes={subTypes}
+            isOpen={isOpen && !!entities.length}
+            entityType={selected.type}
+            entities={entities as any}
+            projectsInfo={projectsInfo}
+            projectNames={[projectName] as any}
+            tagsOptions={projectInfo.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="progress"
+            entityListsContext={entityListsContext}
+            onClose={() => setOpen(false)}
+            onOpenViewer={handleOpenViewer}
+            onUriOpen={handleUriOpen}
+          />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="progress" />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

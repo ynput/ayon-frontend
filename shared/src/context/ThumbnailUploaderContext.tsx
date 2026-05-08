@@ -1,11 +1,10 @@
 import { createContext, useState } from 'react'
 
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-
 export const ThumbnailUploadContext = createContext<{
-  onContextMenu?: Function
   resetFileUploadState?: Function
-  inputRef?: HTMLInputElement
+  triggerThumbnailUpload?: () => void
+  triggerVersionUpload?: () => void
+  canUploadVersion?: boolean
 }>({})
 
 export type ThumbnailUploadProviderProps = {
@@ -13,6 +12,10 @@ export type ThumbnailUploadProviderProps = {
   entities: any
   thumbnailInputRef: any
   versionsInputRef?: any
+  /** Whether version upload is supported for the current selection. Passed explicitly
+   *  by the host (EntityPanelUploader) — don't infer from `!!versionsInputRef` because
+   *  a ref object is always truthy regardless of whether the input is mounted. */
+  canUploadVersion?: boolean
   children?: JSX.Element | JSX.Element[]
 }
 
@@ -20,41 +23,34 @@ export const ThumbnailUploadProvider = ({
   children = [],
   thumbnailInputRef,
   versionsInputRef,
+  canUploadVersion = false,
 }: ThumbnailUploadProviderProps) => {
   const [_, setFileUploadInProgress] = useState(false)
-  const [ctxMenuShow] = useCreateContextMenu()
   const resetFileUploadState = () => setFileUploadInProgress(false)
 
-  const ctxMenuItems = () => [
-    {
-      label: 'Upload thumbnail',
-      icon: 'add_photo_alternate',
-      command: () => {
-        if (thumbnailInputRef) {
-          thumbnailInputRef.current!.click()
-        }
-        return setFileUploadInProgress(true)
-      },
-    },
-    {
-      label: 'Upload version',
-      icon: 'layers',
-      command: () => {
-        if (versionsInputRef) {
-          versionsInputRef.current!.click()
-        }
-        return setFileUploadInProgress(true)
-      },
-    },
-  ]
+  const triggerThumbnailUpload = () => {
+    if (thumbnailInputRef?.current) {
+      thumbnailInputRef.current.click()
+      setFileUploadInProgress(true)
+    }
+  }
 
-  const onContextMenu = (event: MouseEvent) => {
-    // @ts-expect-error - I just can't do this right now
-    ctxMenuShow(event, ctxMenuItems())
+  const triggerVersionUpload = () => {
+    if (versionsInputRef?.current) {
+      versionsInputRef.current.click()
+      setFileUploadInProgress(true)
+    }
   }
 
   return (
-    <ThumbnailUploadContext.Provider value={{ onContextMenu, resetFileUploadState }}>
+    <ThumbnailUploadContext.Provider
+      value={{
+        resetFileUploadState,
+        triggerThumbnailUpload,
+        triggerVersionUpload,
+        canUploadVersion,
+      }}
+    >
       {children}
     </ThumbnailUploadContext.Provider>
   )

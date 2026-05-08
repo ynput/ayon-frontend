@@ -371,6 +371,7 @@ export const EntityPanelUploader = ({
       handleThumbnailUpload={handleThumbnailFileUploaded}
       thumbnailInputRef={thumbnailInputRef}
       versionsInputRef={canUploadVersions ? versionsInputRef : undefined}
+      canUploadVersion={canUploadVersions}
     >
       <Styled.DragAndDropWrapper
         className={clsx({ dragging: isDraggingFile })}

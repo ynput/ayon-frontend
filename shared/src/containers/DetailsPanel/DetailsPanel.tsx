@@ -20,6 +20,10 @@ import {
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
+import {
+  DetailsPanelMoreMenu,
+  type DetailsPanelEntityListsContext,
+} from './components/DetailsPanelMoreMenu'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './containers/FeedWrapper'
@@ -59,6 +63,13 @@ export type DetailsPanelProps = {
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
   entityListId?: string
   guestCategories?: Record<string, string> // only used for guests to find if they have access to any categories
+  /** Optional EntityListsContext for the "Add to list" sub-menu in the more-menu.
+   *  Hosts that already mount EntityListsProvider can pass the resolved context here;
+   *  otherwise wrap the panel with EntityListsContextBoundary. The shape mirrors
+   *  `EntityListsContextType` from `src/pages/ProjectListsPage/context` — it lives as a
+   *  structural type in shared/ so the layering rule (shared cannot import src/pages)
+   *  is preserved. */
+  entityListsContext?: DetailsPanelEntityListsContext
   // optional tab state for independent tab management
 }
 
@@ -92,6 +103,7 @@ const DetailsPanelInner = ({
   exportAnnotationComposite,
   entityListId,
   guestCategories = {},
+  entityListsContext,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -364,18 +376,26 @@ DetailsPanelProps) => {
             entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
+            <DetailsPanelMoreMenu
+              entityType={activeEntityType}
+              entityId={firstEntityData?.id}
+              entityIds={entitiesToQuery.map((e) => e.id).filter(Boolean)}
+              projectName={firstProject}
+              selectedEntities={entityDetailsData
+                .filter((e) => !!e?.id)
+                .map((e) => ({ entityId: e.id, entityType: e.entityType || activeEntityType }))}
+              entityListsContext={entityListsContext}
+              onOpenPip={handleOpenPip}
+              productId={firstEntityData?.product?.id}
+              taskId={firstEntityData?.task?.id}
+              folderId={firstEntityData?.folder?.id}
+            />
             <Watchers
               entities={entitiesToQuery}
               entityType={activeEntityType}
               options={projectUsers || []}
               onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
               userName={user.name}
-            />
-            <Button
-              icon="picture_in_picture"
-              variant={'text'}
-              data-tooltip="Picture in Picture"
-              onClick={handleOpenPip}
             />
 
             {onClose && (

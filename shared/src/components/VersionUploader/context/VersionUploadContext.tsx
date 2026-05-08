@@ -487,6 +487,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   return <VersionUploadContext.Provider value={value}>{children}</VersionUploadContext.Provider>
 }
 
+export const useOptionalVersionUploadContext = () => useContext(VersionUploadContext)
+
 export const useVersionUploadContext = (): VersionUploadContextType => {
   const context = useContext(VersionUploadContext)
   if (context === undefined) {

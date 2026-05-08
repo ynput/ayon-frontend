@@ -563,4 +563,6 @@ export const useEntityListsContext = () => {
   return context
 }
 
+export const useOptionalEntityListsContext = () => useContext(EntityListsContext)
+
 export default EntityListsContext

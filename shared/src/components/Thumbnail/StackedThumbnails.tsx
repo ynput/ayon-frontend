@@ -1,8 +1,7 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import styled, { css } from 'styled-components'
 import { Thumbnail } from './Thumbnail'
 import clsx from 'clsx'
-import { ThumbnailUploadContext } from '@shared/context'
 import { ThumbnailProps } from '@shared/components'
 
 type StackedStyledProps = {
@@ -75,7 +74,6 @@ export const StackedThumbnails = ({
   style,
   ...props
 }: StackedThumbnailsProps) => {
-  const { onContextMenu } = useContext(ThumbnailUploadContext)
   // limit to 5 users
   thumbnails = thumbnails.slice(0, 5)
   const isStacking = thumbnails.length > 1
@@ -100,8 +98,6 @@ export const StackedThumbnails = ({
             entityUpdatedAt={thumb.updatedAt}
             isLoading={isLoading}
             src={thumb.src}
-            // @ts-ignore
-            onContextMenu={onContextMenu}
             {...props}
           />
         ) : null,

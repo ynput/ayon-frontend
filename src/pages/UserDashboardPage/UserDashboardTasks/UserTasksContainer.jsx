@@ -22,6 +22,7 @@ import clsx from 'clsx'
 import { openViewer } from '@state/viewer'
 import RelatedTasksModule from './RelatedTasks'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 const StyledSplitter = styled(Splitter)`
   .details-panel-splitter {
@@ -288,25 +289,39 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           minWidth: isDragging ? 0 : detailsMinWidth,
         }}
       >
-        <DetailsPanel
-          isOpen={isPanelOpen}
-          onClose={handlePanelClose}
-          entitiesData={selectedTasksData}
-          disabledStatuses={disabledStatuses}
-          tagsOptions={tagsOptions}
-          projectUsers={projectUsers}
-          activeProjectUsers={activeProjectUsers}
-          disabledProjectUsers={disabledProjectUsers}
-          selectedTasksProjects={selectedTasksProjects}
-          projectsInfo={projectsInfo}
-          projectNames={selectedTasksProjects}
-          entityType="task"
-          entitySubTypes={taskTypes}
-          scope="dashboard"
-          onOpenViewer={handleOpenViewer}
-          onUriOpen={handleUri}
-        />
-        <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
+        {/* Lists are project-scoped — only resolve a context when the selection is in
+            exactly one project. Multi-project selections fall through with no context,
+            which hides "Add to list" in the more-menu (correct: you cannot add a task
+            from project B to a list in project A). */}
+        <EntityListsContextBoundary
+          projectName={selectedTasksProjects?.length === 1 ? selectedTasksProjects[0] : undefined}
+          entityTypes={['task']}
+        >
+          {(entityListsContext) => (
+            <>
+              <DetailsPanel
+                isOpen={isPanelOpen}
+                onClose={handlePanelClose}
+                entitiesData={selectedTasksData}
+                disabledStatuses={disabledStatuses}
+                tagsOptions={tagsOptions}
+                projectUsers={projectUsers}
+                activeProjectUsers={activeProjectUsers}
+                disabledProjectUsers={disabledProjectUsers}
+                selectedTasksProjects={selectedTasksProjects}
+                projectsInfo={projectsInfo}
+                projectNames={selectedTasksProjects}
+                entityType="task"
+                entitySubTypes={taskTypes}
+                scope="dashboard"
+                entityListsContext={entityListsContext}
+                onOpenViewer={handleOpenViewer}
+                onUriOpen={handleUri}
+              />
+              <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="dashboard" />
+            </>
+          )}
+        </EntityListsContextBoundary>
       </SplitterPanel>
     </DetailsPanelSplitter>
   )
