@@ -28,6 +28,29 @@ const stripLeafIcons = (items: MenuItemType[]): MenuItemType[] =>
     return next
   })
 
+/**
+ * The EntityLists context emits PrimeReact-style menu items with a `command` field
+ * for click handlers. The shared Menu component calls `onClick`. Translate the field
+ * recursively so nested items (folder hierarchies, "+ New list", etc.) actually fire
+ * their handlers when clicked.
+ */
+const adoptCommandsAsOnClick = (items: MenuItemType[]): MenuItemType[] =>
+  items.map((item) => {
+    const { command, items: children, onClick: existingOnClick, ...rest } = item as any
+    const next: any = { ...rest }
+    if (Array.isArray(children) && children.length) {
+      next.items = adoptCommandsAsOnClick(children)
+    }
+    if (typeof command === 'function' || typeof existingOnClick === 'function') {
+      next.onClick = (e: React.MouseEvent) => {
+        if (item.disabled) return
+        if (typeof command === 'function') command()
+        if (typeof existingOnClick === 'function') existingOnClick(e)
+      }
+    }
+    return next as MenuItemType
+  })
+
 export const useMenuOptions = ({
   entityType,
   entityId,
@@ -115,12 +138,17 @@ export const useMenuOptions = ({
       const sanitized = stripLeafIcons(combined)
       const addToList = entityListsContext.buildAddToListMenu?.(sanitized)
 
-      if (addToList && sanitized.length) {
+      // Resolve the inner items, then translate `command` -> `onClick` recursively
+      // so leaf clicks (add-to-existing-list, create-new-list) actually fire.
+      const innerItems = addToList?.items?.length ? addToList.items : sanitized
+      const wiredItems = adoptCommandsAsOnClick(innerItems)
+
+      if (addToList && wiredItems.length) {
         items.push({
           id: addToList.id || 'add-to-list',
           label: addToList.label || 'Add to list',
           icon: addToList.icon || 'playlist_add',
-          items: addToList.items?.length ? addToList.items : sanitized,
+          items: wiredItems,
         })
       }
     }
