@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { RefObject, useMemo, useRef } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
 import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
@@ -39,6 +39,8 @@ type DetailsPanelHeaderProps = {
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
   entityTypeIcons: EntityTypeIcons
+  thumbnailInputRef: RefObject<HTMLInputElement>
+  versionsInputRef: RefObject<HTMLInputElement>
 }
 
 const DetailsPanelHeader = ({
@@ -56,6 +58,8 @@ const DetailsPanelHeader = ({
   entityTypeIcons,
   onOpenViewer,
   onEntityFocus,
+  thumbnailInputRef,
+  versionsInputRef,
 }: DetailsPanelHeaderProps) => {
   const { useSearchParams, useNavigate, isDeveloperMode } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -191,6 +195,8 @@ const DetailsPanelHeader = ({
         entities={entities}
         entityType={entityType}
         projectName={projectName}
+        thumbnailInputRef={thumbnailInputRef}
+        versionsInputRef={versionsInputRef}
         onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
       >
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>

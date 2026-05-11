@@ -12,6 +12,7 @@ import { extractEntityHierarchyFromParents } from '@shared/util'
 import {
   ProjectContextProvider,
   ProjectModelWithProducts,
+  ThumbnailUploadProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
   useURIContext,
@@ -334,6 +335,13 @@ DetailsPanelProps) => {
 
   const { requestPipWindow } = usePiPWindow()
 
+  // Hoisted so ThumbnailUploadProvider (wrapping the toolbar) and EntityPanelUploader
+  // (inside DetailsPanelHeader) share the same ref identity — otherwise the toolbar's
+  // more-menu, which sits as a sibling above the header, can't reach the inputs.
+  const thumbnailInputRef = useRef<HTMLInputElement>(null)
+  const versionsInputRef = useRef<HTMLInputElement>(null)
+  const canUploadVersion = entityDetailsData.length === 1 && activeEntityType !== 'representation'
+
   const handleOpenPip = () => {
     openPip({
       entityType: activeEntityType,
@@ -360,7 +368,11 @@ DetailsPanelProps) => {
   }
 
   return (
-    <>
+    <ThumbnailUploadProvider
+      thumbnailInputRef={thumbnailInputRef}
+      versionsInputRef={versionsInputRef}
+      canUploadVersion={canUploadVersion}
+    >
       <Styled.Panel className="details-panel">
         <Styled.Toolbar>
           {/* TODO FIX PATH */}
@@ -425,6 +437,8 @@ DetailsPanelProps) => {
           entityTypeIcons={entityTypeIcons}
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
+          thumbnailInputRef={thumbnailInputRef}
+          versionsInputRef={versionsInputRef}
         />
 
         <ProjectContextProvider projectName={firstProject}>
@@ -489,7 +503,7 @@ DetailsPanelProps) => {
           )}
         </ProjectContextProvider>
       </Styled.Panel>
-    </>
+    </ThumbnailUploadProvider>
   )
 }
 

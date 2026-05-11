@@ -1,4 +1,4 @@
-import { createContext, useState } from 'react'
+import { createContext, ReactNode, RefObject, useState } from 'react'
 
 export const ThumbnailUploadContext = createContext<{
   resetFileUploadState?: Function
@@ -8,19 +8,17 @@ export const ThumbnailUploadContext = createContext<{
 }>({})
 
 export type ThumbnailUploadProviderProps = {
-  handleThumbnailUpload: (thumbnails: any[]) => {}
-  entities: any
-  thumbnailInputRef: any
-  versionsInputRef?: any
+  thumbnailInputRef: RefObject<HTMLInputElement>
+  versionsInputRef?: RefObject<HTMLInputElement>
   /** Whether version upload is supported for the current selection. Passed explicitly
-   *  by the host (EntityPanelUploader) — don't infer from `!!versionsInputRef` because
-   *  a ref object is always truthy regardless of whether the input is mounted. */
+   *  by the host — don't infer from `!!versionsInputRef` because a ref object is
+   *  always truthy regardless of whether the input is mounted. */
   canUploadVersion?: boolean
-  children?: JSX.Element | JSX.Element[]
+  children?: ReactNode
 }
 
 export const ThumbnailUploadProvider = ({
-  children = [],
+  children,
   thumbnailInputRef,
   versionsInputRef,
   canUploadVersion = false,

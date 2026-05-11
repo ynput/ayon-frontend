@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState } from 'react'
+import { ChangeEvent, RefObject, useRef, useState } from 'react'
 import clsx from 'clsx'
 
 import { ThumbnailWrapper } from '@shared/containers'
@@ -8,7 +8,6 @@ import {
   useCreateProductMutation,
 } from '@shared/api'
 import * as Styled from './EntityPanelUploader.styled'
-import { ThumbnailUploadProvider } from '../../context/ThumbnailUploaderContext'
 import Dropzone, { DropzoneType } from './Dropzone'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -33,6 +32,10 @@ export type EntityPanelUploaderProps = {
   entityType: string
   entities: any[]
   projectName: any
+  /** Hoisted by the parent so ThumbnailUploadProvider (also hoisted) and the
+   *  underlying <input> share the same ref identity. */
+  thumbnailInputRef: RefObject<HTMLInputElement>
+  versionsInputRef: RefObject<HTMLInputElement>
   children?: JSX.Element | JSX.Element[]
   onUploaded?: (operations: Operation[]) => void
   resetFileUploadState?: () => void
@@ -50,6 +53,8 @@ export const EntityPanelUploader = ({
   entityType,
   entities = [],
   projectName,
+  thumbnailInputRef,
+  versionsInputRef,
   onUploaded,
   onVersionCreated,
 }: EntityPanelUploaderProps) => {
@@ -362,17 +367,8 @@ export const EntityPanelUploader = ({
     }
   }
 
-  const thumbnailInputRef = useRef<HTMLInputElement>(null)
-  const versionsInputRef = useRef<HTMLInputElement>(null)
-
   return (
-    <ThumbnailUploadProvider
-      entities={entities}
-      handleThumbnailUpload={handleThumbnailFileUploaded}
-      thumbnailInputRef={thumbnailInputRef}
-      versionsInputRef={canUploadVersions ? versionsInputRef : undefined}
-      canUploadVersion={canUploadVersions}
-    >
+    <>
       <Styled.DragAndDropWrapper
         className={clsx({ dragging: isDraggingFile })}
         onDragEnter={handleDragEnter}
@@ -430,6 +426,6 @@ export const EntityPanelUploader = ({
         onSubmit={handleDialogSubmit}
         onCancel={handleDialogCancel}
       />
-    </ThumbnailUploadProvider>
+    </>
   )
 }
