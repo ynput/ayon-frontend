@@ -29,11 +29,11 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
 
   const editingFolder = listFolders?.find((f) => f.id === folderId)
 
+  const reviewScope = isStoryboards ? 'storyboard' : 'review-session'
+
   const initFolderForm: ListFolderFormData = {
     label: '',
-    scope: [isReview
-      ? isStoryboards ? 'review-session' : 'storyboard'
-      : 'generic'],
+    scope: [isReview ? reviewScope : 'generic'],
   }
   const [folderForm, setFolderForm] = useState<ListFolderFormData>(initFolderForm)
   const [isSaving, setIsSaving] = useState(false)
