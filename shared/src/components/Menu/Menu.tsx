@@ -63,20 +63,27 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
     if (!disableClose && onClose) onClose()
   }
 
-  const onMenuEnter = (e: React.MouseEvent, menu: Partial<SubMenu> & { items: MenuItemType[] }) => {
+  const onMenuEnter = (
+    e: React.MouseEvent,
+    menu: Partial<SubMenu> & { items: MenuItemType[]; parentEl?: HTMLElement | null },
+  ) => {
     // check to see if we need to open a submenu
     if (menu.items.length) {
       // yes, there is a submenu
       // open it if it is not already open
       if (!subMenus.find((m) => m.id === menu.id)) {
         // also close any other submenus on the same level
+        // Prefer the explicit element passed from the source MenuItem ref; fall back to
+        // currentTarget (the <li>) over target (which can be a nested span/icon).
+        const parentEl =
+          menu.parentEl ?? (e.currentTarget as HTMLElement) ?? (e.target as HTMLElement)
         setSubMenus([
           ...subMenus.filter((m) => m.level < (menu.level || 0) + 1),
           {
             ...menu,
             id: menu.id!,
             level: (menu.level || 0) + 1,
-            parentRef: e.target as HTMLElement,
+            parentRef: parentEl,
           } as SubMenu,
         ])
       }

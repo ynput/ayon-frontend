@@ -48,7 +48,7 @@ export interface DetailsPanelEntityListsContext {
     items: MenuItemType[]
   }
   newListMenuItem?: (
-    entityType: string,
+    entityType: 'folder' | 'task' | 'version',
     selected: SelectedEntityRef[],
   ) => MenuItemType | undefined
 }

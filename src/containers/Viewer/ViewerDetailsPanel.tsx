@@ -34,7 +34,7 @@ const ViewerDetailsPanel = ({ versionIds = [], projectName, noVersions }: Props)
   const projectInfo = projectsInfo[projectName]
 
   return (
-    <EntityListsContextBoundary projectName={projectName} entityTypes={['version']}>
+    <EntityListsContextBoundary projectName={projectName}>
       {(entityListsContext) => (
         <ViewerDetailsPanelWrapper
           className="viewer-details-panel"

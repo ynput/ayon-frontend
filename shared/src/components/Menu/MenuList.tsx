@@ -129,6 +129,9 @@ export const MenuList: React.FC<MenuListProps> = ({
       items,
       level: level,
       placement: nextPlacement,
+      // Pass the actual menu-item element so sub-menu measurement uses the <li>
+      // instead of whatever inner span the mouse event bubbled from.
+      parentEl: itemEl,
     })
   }
 

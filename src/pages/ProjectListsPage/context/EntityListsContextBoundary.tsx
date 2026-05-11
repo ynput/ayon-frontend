@@ -6,16 +6,12 @@ import {
   useEntityListsContext,
   useOptionalEntityListsContext,
 } from './EntityListsContext'
-import { ListEntityType } from '@pages/ProjectListsPage/components/NewListDialog/NewListDialog'
 
 interface EntityListsContextBoundaryProps {
   projectName?: string
-  entityTypes?: ListEntityType[]
   includeDialog?: boolean
   children: (context: EntityListsContextType | undefined) => ReactNode
 }
-
-const DEFAULT_ENTITY_TYPES: ListEntityType[] = ['folder', 'task', 'version']
 
 const ContextBridge: FC<{ children: (context: EntityListsContextType) => ReactNode }> = ({
   children,
@@ -26,7 +22,6 @@ const ContextBridge: FC<{ children: (context: EntityListsContextType) => ReactNo
 
 export const EntityListsContextBoundary: FC<EntityListsContextBoundaryProps> = ({
   projectName,
-  entityTypes = DEFAULT_ENTITY_TYPES,
   includeDialog = true,
   children,
 }) => {
@@ -37,7 +32,7 @@ export const EntityListsContextBoundary: FC<EntityListsContextBoundaryProps> = (
   }
 
   return (
-    <EntityListsProvider projectName={projectName} entityTypes={entityTypes}>
+    <EntityListsProvider projectName={projectName}>
       <ContextBridge>{children}</ContextBridge>
       {includeDialog && <NewListFromContext />}
     </EntityListsProvider>

@@ -25,7 +25,7 @@ export const ThumbnailUploadProvider = ({
   versionsInputRef,
   canUploadVersion = false,
 }: ThumbnailUploadProviderProps) => {
-  const [_, setFileUploadInProgress] = useState(false)
+  const [, setFileUploadInProgress] = useState(false)
   const resetFileUploadState = () => setFileUploadInProgress(false)
 
   const triggerThumbnailUpload = () => {

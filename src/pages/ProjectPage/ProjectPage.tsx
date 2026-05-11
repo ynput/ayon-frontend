@@ -375,7 +375,7 @@ const ProjectPageInner = () => {
         dispatch={dispatch}
         onVersionCreated={handleNewVersionUploaded}
       >
-        <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
+        <EntityListsProvider projectName={projectName}>
           <SlicerProvider>
             <WithViews viewType={page.viewType} projectName={projectName}>
               {page.component}

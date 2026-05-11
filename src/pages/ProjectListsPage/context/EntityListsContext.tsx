@@ -16,7 +16,6 @@ import { useSearchParams } from 'react-router-dom'
 import { usePowerpack } from '@shared/context'
 
 interface EntityListsContextProps {
-  entityTypes: ListEntityType[]
   projectName: string
 }
 

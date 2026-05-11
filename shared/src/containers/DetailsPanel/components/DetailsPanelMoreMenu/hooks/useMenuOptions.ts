@@ -162,7 +162,10 @@ export const useMenuOptions = ({
         targetEntityType === 'version'
 
       const newListItem = allowNewList
-        ? entityListsContext.newListMenuItem?.(targetEntityType, normalizedSelected)
+        ? entityListsContext.newListMenuItem?.(
+            targetEntityType as 'folder' | 'task' | 'version',
+            normalizedSelected,
+          )
         : undefined
 
       const combined = [...treeItems, ...(newListItem ? [newListItem] : [])]
