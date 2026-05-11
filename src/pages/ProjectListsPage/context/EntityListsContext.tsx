@@ -23,7 +23,7 @@ interface EntityListsContextProps {
 // Define a new interface for the newListData state
 interface NewListData {
   entityType: ListEntityType
-  selectedEntities: { entityId: string; entityType: string | undefined }[]
+  selectedEntities: ListEntityInput[]
 }
 
 type ListSubMenuItem = {
@@ -36,6 +36,12 @@ type ListSubMenuItem = {
   hidden?: boolean
 }
 
+export type ListEntityInput = {
+  entityId: string
+  entityType: string | undefined
+  hasReviewables?: boolean
+}
+
 export interface EntityListsContextType {
   allLists: UseGetListsDataReturn
   folders: EntityList[]
@@ -43,16 +49,13 @@ export interface EntityListsContextType {
   products: EntityList[]
   versions: EntityList[]
   reviews: EntityList[]
-  addToList: (
-    listId: string,
-    entityType: string,
-    entities: { entityId: string; entityType: string | undefined }[],
-  ) => Promise<void>
+  addToList: (listId: string, entityType: string, entities: ListEntityInput[]) => Promise<void>
   menuItems: (filter?: (item: ListSubMenuItem) => boolean) => ContextMenuItemConstructor
   buildListMenuItem: (
     list: EntityList,
-    selected: { entityId: string; entityType: string | undefined }[],
+    selected: ListEntityInput[],
     showIcon?: boolean,
+    disabled?: boolean,
   ) => ListSubMenuItem
   buildAddToListMenu: (
     items: ListSubMenuItem[],
@@ -65,15 +68,12 @@ export interface EntityListsContextType {
   }
   newListMenuItem: (
     entityType: ListEntityType,
-    selected: { entityId: string; entityType: string | undefined }[],
+    selected: ListEntityInput[],
   ) => ListSubMenuItem
   // Update the type of newListData
   newListData: NewListData | null
   // Update the signature of openCreateNewList
-  openCreateNewList: (
-    entityType: ListEntityType,
-    selectedEntities: { entityId: string; entityType: string | undefined }[],
-  ) => void
+  openCreateNewList: (entityType: ListEntityType, selectedEntities: ListEntityInput[]) => void
   closeCreateNewList: () => void
   // Remove entities parameter as it will be stored in newListData
   createNewList: (label: string) => Promise<void>
@@ -81,8 +81,9 @@ export interface EntityListsContextType {
   // Build hierarchical menu items for arbitrary list collections (folders grouping)
   buildHierarchicalMenuItems: (
     lists: EntityList[],
-    selected: { entityId: string; entityType: string | undefined }[],
+    selected: ListEntityInput[],
     getShowIcon?: (list: EntityList) => boolean,
+    getDisabled?: (list: EntityList) => boolean,
   ) => ListSubMenuItem[]
 }
 
@@ -156,7 +157,30 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       }
 
       // filter out entities that do not match entityType
-      const filteredEntities = entities.filter((entity) => entity.entityType === entityType)
+      let filteredEntities = entities.filter((entity) => entity.entityType === entityType)
+
+      // Review sessions only accept versions with reviewables
+      const targetList = allLists.data.find((l) => l.id === listId)
+      if (targetList?.entityListType === 'review-session') {
+        const eligible = filteredEntities.filter((e) => e.hasReviewables !== false)
+        const skippedCount = filteredEntities.length - eligible.length
+        if (skippedCount > 0 && eligible.length === 0) {
+          toast.error(
+            skippedCount === 1
+              ? 'Cannot add version without reviewables to review session'
+              : `Cannot add ${skippedCount} versions without reviewables to review session`,
+          )
+          return Promise.reject(new Error('No reviewable versions to add'))
+        }
+        if (skippedCount > 0) {
+          toast.warn(
+            skippedCount === 1
+              ? '1 version skipped (no reviewables)'
+              : `${skippedCount} versions skipped (no reviewables)`,
+          )
+        }
+        filteredEntities = eligible
+      }
 
       if (filteredEntities.length === 0) {
         toast.error('No entities to add')
@@ -184,7 +208,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         return Promise.reject(error)
       }
     },
-    [projectName],
+    [projectName, allLists.data],
   )
 
   // Update the state type and initialize as null
@@ -192,10 +216,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
   // Update openCreateNewList to store selected entities
   const openCreateNewList = useCallback(
-    (
-      entityType: ListEntityType,
-      selectedEntities: { entityId: string; entityType: string | undefined }[],
-    ) => setNewListData({ entityType, selectedEntities }),
+    (entityType: ListEntityType, selectedEntities: ListEntityInput[]) =>
+      setNewListData({ entityType, selectedEntities }),
     [setNewListData],
   )
   const closeCreateNewList = useCallback(() => setNewListData(null), [setNewListData])
@@ -273,16 +295,23 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   }
 
   const buildListMenuItem: EntityListsContextType['buildListMenuItem'] = useCallback(
-    (list, selected, showIcon?) => ({
+    (list, selected, showIcon?, disabled?) => ({
       id: list.id,
       label: list.label,
       icon: showIcon ? getListIcon(list.entityType, list.entityListType) : undefined,
-      command: () =>
-        addToList(
-          list.id,
-          list.entityType,
-          selected.map((i) => ({ entityId: i.entityId, entityType: i.entityType })),
-        ),
+      disabled,
+      command: disabled
+        ? undefined
+        : () =>
+            addToList(
+              list.id,
+              list.entityType,
+              selected.map((i) => ({
+                entityId: i.entityId,
+                entityType: i.entityType,
+                hasReviewables: i.hasReviewables,
+              })),
+            ),
     }),
     [addToList],
   )
@@ -303,15 +332,16 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const buildHierarchicalMenuItems = useCallback(
     (
       lists: EntityList[],
-      selected: { entityId: string; entityType: string | undefined }[],
+      selected: ListEntityInput[],
       getShowIcon?: (list: EntityList) => boolean,
+      getDisabled?: (list: EntityList) => boolean,
     ): ListSubMenuItem[] => {
       // Simple cache keyed by folder+list ids + selection length + powerLicense flag
       // This prevents rebuilding identical structures across repeated context menu openings.
       // (Selection identities beyond length don't affect structure of destination list tree).
       type CacheValue = {
         items: ListSubMenuItem[]
-        selectedRef: { entityId: string; entityType: string | undefined }[]
+        selectedRef: ListEntityInput[]
       }
       const staticCache = (buildHierarchicalMenuItems as any)._cache as
         | Map<string, CacheValue>
@@ -321,13 +351,15 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         ;(buildHierarchicalMenuItems as any)._cache = cache
       }
 
+      // When getDisabled is supplied, results depend on per-call selection state — skip cache
+      const useCache = !getDisabled
       const folderSig = powerLicense
         ? listFolders.map((f) => `${f.id}:${f.parentId || ''}:${f.label}`).join('|')
         : 'nofolders'
       const listSig = lists.map((l) => `${l.id}:${l.entityListFolderId || ''}`).join('|')
       const key = `${folderSig}::${listSig}::${selected.length}::${powerLicense}`
 
-      const cached = cache.get(key)
+      const cached = useCache ? cache.get(key) : undefined
       if (cached) {
         // Recreate command closures with current selection (list items carry command depending on selected)
         const rebindCommands = (items: ListSubMenuItem[]): ListSubMenuItem[] => {
@@ -359,12 +391,15 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       }
 
       const resolveShowIcon = getShowIcon || (() => false)
+      const resolveDisabled = getDisabled || (() => false)
 
       // Filter lists to only include those with editor access (accessLevel >= 20)
       const editableLists = lists.filter((list) => (list.accessLevel ?? 0) >= 20)
 
       if (!powerLicense || !listFolders.length) {
-        return editableLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+        return editableLists.map((l) =>
+          buildListMenuItem(l, selected, resolveShowIcon(l), resolveDisabled(l)),
+        )
       }
 
       // folder node structure
@@ -411,7 +446,9 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           .filter((n) => hasAnyLists(n.folder.id))
           .map((n) => {
             const childFolders = buildFolderItems(n.children)
-            const listItems = n.lists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+            const listItems = n.lists.map((l) =>
+              buildListMenuItem(l, selected, resolveShowIcon(l), resolveDisabled(l)),
+            )
             return {
               id: `folder-${n.folder.id}`,
               label: n.folder.label,
@@ -432,10 +469,12 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
       // lists without a folder (root lists)
       const rootLists = editableLists.filter((l) => !l.entityListFolderId)
-      const rootListItems = rootLists.map((l) => buildListMenuItem(l, selected, resolveShowIcon(l)))
+      const rootListItems = rootLists.map((l) =>
+        buildListMenuItem(l, selected, resolveShowIcon(l), resolveDisabled(l)),
+      )
 
       const result = [...folderItems, ...rootListItems]
-      cache.set(key, { items: result, selectedRef: selected })
+      if (useCache) cache.set(key, { items: result, selectedRef: selected })
       return result
     },
     [buildListMenuItem, listFolders, powerLicense],
@@ -477,7 +516,19 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
         }
       } else if (cell.entityType === 'version') {
         const combined = [...versions, ...reviews]
-        subMenuItems = buildHierarchicalMenuItems(combined, selected, (l) => getShowIconVersion(l))
+        // Cells expose hasReviewables on .data — propagate so addToList + UI gating can consume it
+        const selectedWithReviewable: ListEntityInput[] = selected.map((s) => ({
+          entityId: s.entityId,
+          entityType: s.entityType,
+          hasReviewables: (s.data as any)?.hasReviewables,
+        }))
+        const hasAnyNonReviewable = selectedWithReviewable.some((s) => s.hasReviewables === false)
+        subMenuItems = buildHierarchicalMenuItems(
+          combined,
+          selectedWithReviewable,
+          (l) => getShowIconVersion(l),
+          (l) => l.entityListType === 'review-session' && hasAnyNonReviewable,
+        )
       }
 
       // Apply filter if provided
