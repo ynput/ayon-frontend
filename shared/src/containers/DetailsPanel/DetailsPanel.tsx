@@ -386,6 +386,7 @@ DetailsPanelProps) => {
                 .map((e) => ({ entityId: e.id, entityType: e.entityType || activeEntityType }))}
               entityListsContext={entityListsContext}
               onOpenPip={handleOpenPip}
+              onOpenViewer={onOpenViewer}
               productId={firstEntityData?.product?.id}
               taskId={firstEntityData?.task?.id}
               folderId={firstEntityData?.folder?.id}

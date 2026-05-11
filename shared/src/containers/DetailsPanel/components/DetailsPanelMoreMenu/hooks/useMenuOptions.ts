@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { MenuItemType } from '@shared/components'
+import { copyToClipboard } from '@shared/util'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from '../types'
 
 interface UseMenuOptionsParams {
@@ -10,11 +11,30 @@ interface UseMenuOptionsParams {
   canUploadThumbnail: boolean
   canUploadVersion: boolean
   canOpenPip: boolean
+  canOpenViewer: boolean
   entityListsContext: DetailsPanelEntityListsContext | undefined
   onPip: () => void
+  onOpenViewer: () => void
   onUploadThumbnail: () => void
   onUploadVersion: () => void
   onViewData: () => void
+}
+
+// folder/task open in Overview; product/version/representation open in Products.
+const buildEntityShareLink = (
+  entityType: string,
+  entityId: string,
+  projectName: string,
+): string | null => {
+  const path =
+    entityType === 'folder' || entityType === 'task'
+      ? 'overview'
+      : entityType === 'product' || entityType === 'version' || entityType === 'representation'
+        ? 'products'
+        : null
+  if (!path) return null
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  return `${origin}/projects/${projectName}/${path}?project=${projectName}&type=${entityType}&id=${entityId}`
 }
 
 const stripLeafIcons = (items: MenuItemType[]): MenuItemType[] =>
@@ -59,8 +79,10 @@ export const useMenuOptions = ({
   canUploadThumbnail,
   canUploadVersion,
   canOpenPip,
+  canOpenViewer,
   entityListsContext,
   onPip,
+  onOpenViewer,
   onUploadThumbnail,
   onUploadVersion,
   onViewData,
@@ -77,6 +99,15 @@ export const useMenuOptions = ({
 
   return useMemo<MenuItemType[]>(() => {
     const items: MenuItemType[] = []
+
+    if (canOpenViewer) {
+      items.push({
+        id: 'open-in-viewer',
+        label: 'Open in viewer',
+        icon: 'play_circle',
+        onClick: onOpenViewer,
+      })
+    }
 
     if (canOpenPip) {
       items.push({
@@ -153,6 +184,23 @@ export const useMenuOptions = ({
       }
     }
 
+    const shareTarget = normalizedSelected[0]
+    if (shareTarget?.entityId && projectName) {
+      const shareLink = buildEntityShareLink(
+        shareTarget.entityType || entityType,
+        shareTarget.entityId,
+        projectName,
+      )
+      if (shareLink) {
+        items.push({
+          id: 'copy-link',
+          label: 'Copy link',
+          icon: 'link',
+          onClick: () => copyToClipboard(shareLink, true),
+        })
+      }
+    }
+
     items.push({
       id: 'view-data',
       label: 'View data',
@@ -163,6 +211,7 @@ export const useMenuOptions = ({
     return items
   }, [
     canOpenPip,
+    canOpenViewer,
     canUploadThumbnail,
     canUploadVersion,
     entityListsContext,
@@ -170,6 +219,7 @@ export const useMenuOptions = ({
     normalizedSelected,
     entityType,
     onPip,
+    onOpenViewer,
     onUploadThumbnail,
     onUploadVersion,
     onViewData,

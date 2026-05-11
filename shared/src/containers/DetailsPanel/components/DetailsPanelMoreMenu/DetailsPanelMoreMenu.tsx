@@ -16,9 +16,34 @@ export interface DetailsPanelMoreMenuProps {
   selectedEntities?: SelectedEntityRef[]
   entityListsContext?: DetailsPanelEntityListsContext
   onOpenPip?: () => void
+  onOpenViewer?: (args: any) => void
   productId?: string
   taskId?: string
   folderId?: string
+}
+
+const buildViewerArgs = (
+  entityType: string,
+  entityId: string,
+  projectName: string,
+  parentProductId?: string,
+): Record<string, unknown> | null => {
+  const base = { projectName, quickView: true }
+  switch (entityType) {
+    case 'folder':
+      return { ...base, folderId: entityId }
+    case 'task':
+      return { ...base, taskId: entityId }
+    case 'product':
+      return { ...base, productId: entityId }
+    case 'version':
+      // ViewerDialog opens on productId; version is selected within that product.
+      return parentProductId
+        ? { ...base, productId: parentProductId, versionIds: [entityId] }
+        : null
+    default:
+      return null
+  }
 }
 
 export const DetailsPanelMoreMenu = ({
@@ -29,6 +54,7 @@ export const DetailsPanelMoreMenu = ({
   selectedEntities = [],
   entityListsContext,
   onOpenPip,
+  onOpenViewer,
   productId,
   taskId,
   folderId,
@@ -58,6 +84,12 @@ export const DetailsPanelMoreMenu = ({
     onOpenVersionUpload?.({ productId, taskId, folderId })
   }
 
+  const viewerArgs =
+    entityId && projectName
+      ? buildViewerArgs(entityType, entityId, projectName, productId)
+      : null
+  const canOpenViewer = !!onOpenViewer && !!viewerArgs
+
   const items = useMenuOptions({
     entityType,
     entityId,
@@ -66,8 +98,10 @@ export const DetailsPanelMoreMenu = ({
     canUploadThumbnail,
     canUploadVersion: canUploadVersionItem,
     canOpenPip: !!onOpenPip,
+    canOpenViewer,
     entityListsContext,
     onPip: () => onOpenPip?.(),
+    onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
     onUploadThumbnail: () => triggerThumbnailUpload?.(),
     onUploadVersion: handleUploadVersion,
     onViewData: () => setShowDataDialog(true),
