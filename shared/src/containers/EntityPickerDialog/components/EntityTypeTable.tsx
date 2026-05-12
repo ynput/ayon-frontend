@@ -38,7 +38,8 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   const handleDoubleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     e.preventDefault()
     const id = e.currentTarget.id
-    if (id) {
+    const row = tableData.find((r) => r.id === id)
+    if (id && !row?.isDisabled) {
       onRowSubmit?.(id)
     }
   }
