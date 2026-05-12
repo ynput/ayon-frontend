@@ -6,6 +6,9 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { openViewer } from '@state/viewer'
+import { productSelected } from '@state/context'
+import { UploadVersionDialog, VersionUploadProvider } from '@shared/components'
+import { ProjectContextProvider } from '@shared/context'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import type { GroupedMessage, ProjectsInfo } from './types'
 
@@ -39,10 +42,20 @@ const InboxDetailsPanel = ({
 
   const projectInfo = projectName ? projectsInfo[projectName] : undefined
 
+  const handleNewVersionUploaded = (productId: string, versionId: string) => {
+    dispatch(productSelected({ products: [productId], versions: [versionId] }))
+  }
+
   return (
     <EntityListsContextBoundary projectName={projectName}>
       {(entityListsContext) => (
-        <>
+
+        <ProjectContextProvider key={projectName ?? ''} projectName={projectName ?? ''}>
+          <VersionUploadProvider
+            projectName={projectName ?? ''}
+            dispatch={dispatch}
+            onVersionCreated={handleNewVersionUploaded}
+          >
           <DetailsPanel
             isOpen={!!selected.length}
             entities={[{ id: entityId ?? '', projectName: projectName ?? '' }]}
@@ -67,7 +80,8 @@ const InboxDetailsPanel = ({
             onOpenViewer={handleOpenViewer}
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo as Record<string, any>} scope="inbox" />
-        </>
+            <UploadVersionDialog />
+          </VersionUploadProvider>
       )}
     </EntityListsContextBoundary>
   )

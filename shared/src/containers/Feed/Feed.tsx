@@ -342,7 +342,7 @@ export const Feed = ({
                 />
               ))}
           {/* message when no versions published */}
-          {transformedActivitiesData.length === 1 &&
+          {transformedActivitiesData.length === 0 &&
             isVersionsFilter &&
             !hasCommentLikeFilter &&
             !isLoadingNew && (

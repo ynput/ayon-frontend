@@ -14,6 +14,7 @@ import { toast } from 'react-toastify'
 import { useReviewablesUpload } from '../ReviewablesList'
 import { useDetailsPanelContext } from '@shared/context'
 import EntityPanelUploaderDialog from './EntityPanelUploaderDialog'
+import { useOptionalVersionUploadContext } from '@shared/components'
 import {
   sanitizeProductName,
   createProductHelper,
@@ -59,6 +60,7 @@ export const EntityPanelUploader = ({
   onVersionCreated,
 }: EntityPanelUploaderProps) => {
   const { dispatch } = useDetailsPanelContext()
+  const versionUploadCtx = useOptionalVersionUploadContext()
   // Dragging and dropping state
   const [isDraggingFile, setIsDraggingFile] = useState(false)
   const [draggingZone, setDraggingZone] = useState<UploadType | null>(null)
@@ -171,6 +173,37 @@ export const EntityPanelUploader = ({
     if (!canUploadVersions || !singleEntity) {
       toast.error('Please select exactly one version to upload reviewables')
       return resetState()
+    }
+
+    if (versionUploadCtx) {
+      const fileArray = Array.from(files)
+      const pending = fileArray.map((file) => ({
+        file,
+        preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+      }))
+      versionUploadCtx.setPendingFiles((prev) => [...prev, ...pending])
+
+      const product = singleEntity.product
+      const linkedTask = singleEntity.task
+        ? {
+            id: singleEntity.task.id,
+            name: singleEntity.task.name,
+            label: singleEntity.task.label,
+            taskType: singleEntity.task.taskType,
+          }
+        : undefined
+
+      versionUploadCtx.onOpenVersionUpload({
+        productId: product?.id,
+        folderId: singleEntity.folder?.id,
+        taskId: singleEntity.task?.id,
+        linkedTask,
+        latestVersionNumber: product?.latestVersion?.version,
+        latestVersionId: product?.latestVersion?.id,
+      })
+      // Reset local upload UI; the dialog now drives the flow.
+      resetState()
+      return
     }
 
     const productId = singleEntity.product?.id
