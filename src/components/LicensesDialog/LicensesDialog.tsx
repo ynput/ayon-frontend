@@ -208,7 +208,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
       style={{ maxHeight: '90vh' }}
     >
       <a
-        href={`https://ynput.cloud/org/${cloud?.orgName}/instances/${cloud?.instanceId}/billing`}
+        href={`https://ynput.cloud/instances/${cloud?.instanceId}/licenses`}
         target="_blank"
         rel="noreferrer"
         style={{ width: 'fit-content', marginBottom: 8 }}

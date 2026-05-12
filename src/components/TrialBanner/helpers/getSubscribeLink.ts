@@ -1,4 +1,4 @@
-const getSubscribeLink = (quantity: number, orgName: string) =>
-  `https://ynput.cloud/subscribe/ayon/?org=${orgName}&activeQuantity=${quantity}`
+const getSubscribeLink = (quantity: number, instanceId: string) =>
+  `https://ynput.cloud/instances/${instanceId}/subscribe?seats=${quantity}`
 
 export default getSubscribeLink
