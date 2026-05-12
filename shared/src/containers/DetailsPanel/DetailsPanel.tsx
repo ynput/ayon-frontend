@@ -52,7 +52,7 @@ export type DetailsPanelProps = {
   onOpenViewer?: (entity: any) => void
   onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   onOpen?: () => void
-  onUriOpen?: (entity: DetailsPanelEntityData) => void
+  onUriOpen?: (entity: DetailsPanelEntityData, source: 'uri' | 'url') => void
   // annotations
   annotations?: any
   removeAnnotation?: (id: string) => void
@@ -210,8 +210,7 @@ DetailsPanelProps) => {
     if (isFetchingEntitiesDetails) return
 
     if (
-      contextEntities?.source &&
-      ['uri', 'url'].includes(contextEntities.source) &&
+      (contextEntities?.source === 'uri' || contextEntities?.source === 'url') &&
       contextEntities?.entities?.length &&
       !!onUriOpen
     ) {
@@ -220,7 +219,7 @@ DetailsPanelProps) => {
       )
       if (!uriEntity) return
 
-      onUriOpen(uriEntity)
+      onUriOpen(uriEntity, contextEntities.source)
     }
   }, [entityDetailsData, isFetchingEntitiesDetails])
 

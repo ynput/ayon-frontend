@@ -34,14 +34,16 @@ const TaskProgressDetailsPanel = ({ projectInfo, projectName }: TaskProgressDeta
 
   const { getGoToEntityData } = useGoToEntity()
 
-  const handleUriOpen = (entity: any) => {
+  const handleUriOpen = (entity: any, source: 'uri' | 'url') => {
     // Get the data needed to navigate to this entity
     const data = getGoToEntityData(entity.id, entity.entityType, {
       folder: entity.folder?.id,
     })
 
-    // Reset filters
-    setQueryFilters({})
+    // Only reset filters
+    if (source === 'uri') {
+      setQueryFilters({})
+    }
 
     // Expand folders in slicer
     slicer.setExpanded(data.expandedFolders)

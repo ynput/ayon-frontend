@@ -17,7 +17,7 @@ type ProjectOverviewDetailsPanelProps = {
   projectInfo?: ProjectModel
   projectName: string
   isOpen?: boolean
-  onUriOpen?: (entity: DetailsPanelEntityData) => void
+  onUriOpen?: (entity: DetailsPanelEntityData, source: 'uri' | 'url') => void
   onClose?: () => void
 }
 
