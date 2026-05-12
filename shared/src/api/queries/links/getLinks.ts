@@ -25,6 +25,7 @@ export type SearchEntityLink = {
   label: string
   icon: string | undefined
   subType: string | undefined
+  hasReviewables?: boolean
 }
 
 export type GetSearchedEntitiesLinksResult = {
@@ -201,6 +202,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     name: versionNode.name,
                     label: versionNode.name,
                     parents: versionNode.parents || [],
+                    hasReviewables: versionNode.hasReviewables,
                   }
                 case 'representation':
                   const representationNode = node as SearchedRepresentationNode

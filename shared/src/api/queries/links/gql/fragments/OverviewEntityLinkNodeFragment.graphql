@@ -11,4 +11,7 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }
