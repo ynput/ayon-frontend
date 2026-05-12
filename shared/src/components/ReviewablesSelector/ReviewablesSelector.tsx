@@ -63,6 +63,7 @@ const ReviewablesSelector = forwardRef<ReviewablesSelectorHandle, ReviewablesSel
         if (el) {
           const top = el.offsetTop + el.offsetHeight / 2 - getScrollTop()
           setLabelTooltipYPos(top)
+          el.focus({ preventScroll: true })
         }
       },
     }),
