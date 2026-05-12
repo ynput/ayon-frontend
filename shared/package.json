@@ -148,6 +148,6 @@
     "remark-gfm": "4.0.1",
     "short-uuid": "4.2.2",
     "turndown": "7.2.4",
-    "uuid": "9.0.1"
+    "uuid": "14.0.0"
   }
 }
