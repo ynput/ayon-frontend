@@ -1610,7 +1610,7 @@ export type GetVersionLinkDataQueryVariables = Exact<{
 }>;
 
 
-export type GetVersionLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', version?: { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } | null } };
+export type GetVersionLinkDataQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', version?: { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> } | null } };
 
 export type GetWorkfileLinkDataQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1631,7 +1631,7 @@ export type GetFoldersLinksQuery = { __typename?: 'Query', project: { __typename
                 | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
+                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1646,7 +1646,7 @@ export type GetProductsLinksQuery = { __typename?: 'Query', project: { __typenam
                 | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
+                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1661,7 +1661,7 @@ export type GetTasksLinksQuery = { __typename?: 'Query', project: { __typename?:
                 | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
+                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1676,7 +1676,7 @@ export type GetVersionsLinksQuery = { __typename?: 'Query', project: { __typenam
                 | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
+                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1691,7 +1691,7 @@ export type GetWorkfilesLinksQuery = { __typename?: 'Query', project: { __typena
                 | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
+                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1706,7 +1706,7 @@ export type GetRepresentationsLinksQuery = { __typename?: 'Query', project: { __
                 | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
                 | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-                | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
+                | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
                 | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
                | null }> } } }> } } };
 
@@ -1772,7 +1772,7 @@ export type GetSearchedVersionsQueryVariables = Exact<{
 }>;
 
 
-export type GetSearchedVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename: 'VersionNode', id: string, name: string, parents: Array<string> } }> } } };
+export type GetSearchedVersionsQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string, versions: { __typename?: 'VersionsConnection', pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean }, edges: Array<{ __typename?: 'VersionEdge', cursor?: string | null, node: { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> } }> } } };
 
 export type GetSearchedWorkfilesQueryVariables = Exact<{
   projectName: Scalars['String']['input'];
@@ -1792,7 +1792,7 @@ export type OverviewEntityLinkFragmentFragment = { __typename?: 'LinkEdge', id: 
     | { __typename: 'ProductNode', id: string, name: string, parents: Array<string> }
     | { __typename: 'RepresentationNode', id: string, name: string, parents: Array<string> }
     | { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string }
-    | { __typename: 'VersionNode', id: string, name: string, parents: Array<string> }
+    | { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> }
     | { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> }
    | null };
 
@@ -1804,7 +1804,7 @@ type OverviewEntityLinkNodeFragment_RepresentationNode_Fragment = { __typename: 
 
 type OverviewEntityLinkNodeFragment_TaskNode_Fragment = { __typename: 'TaskNode', label?: string | null, id: string, name: string, parents: Array<string>, subType: string };
 
-type OverviewEntityLinkNodeFragment_VersionNode_Fragment = { __typename: 'VersionNode', id: string, name: string, parents: Array<string> };
+type OverviewEntityLinkNodeFragment_VersionNode_Fragment = { __typename: 'VersionNode', hasReviewables: boolean, id: string, name: string, parents: Array<string> };
 
 type OverviewEntityLinkNodeFragment_WorkfileNode_Fragment = { __typename: 'WorkfileNode', id: string, name: string, parents: Array<string> };
 
@@ -1831,6 +1831,9 @@ export const OverviewEntityLinkNodeFragmentFragmentDoc = new TypedDocumentString
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }
     `, {"fragmentName":"OverviewEntityLinkNodeFragment"});
 export const OverviewEntityLinkFragmentFragmentDoc = new TypedDocumentString(`
@@ -1856,6 +1859,9 @@ export const OverviewEntityLinkFragmentFragmentDoc = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`, {"fragmentName":"OverviewEntityLinkFragment"});
 export const GetFolderLinkDataDocument = new TypedDocumentString(`
     query GetFolderLinkData($projectName: String!, $folderId: String!) {
@@ -1877,6 +1883,9 @@ export const GetFolderLinkDataDocument = new TypedDocumentString(`
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 export const GetProductLinkDataDocument = new TypedDocumentString(`
@@ -1900,6 +1909,9 @@ export const GetProductLinkDataDocument = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetRepresentationLinkDataDocument = new TypedDocumentString(`
     query GetRepresentationLinkData($projectName: String!, $representationId: String!) {
@@ -1921,6 +1933,9 @@ export const GetRepresentationLinkDataDocument = new TypedDocumentString(`
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 export const GetTaskLinkDataDocument = new TypedDocumentString(`
@@ -1944,6 +1959,9 @@ export const GetTaskLinkDataDocument = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetVersionLinkDataDocument = new TypedDocumentString(`
     query GetVersionLinkData($projectName: String!, $versionId: String!) {
@@ -1966,6 +1984,9 @@ export const GetVersionLinkDataDocument = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetWorkfileLinkDataDocument = new TypedDocumentString(`
     query GetWorkfileLinkData($projectName: String!, $workfileId: String!) {
@@ -1987,6 +2008,9 @@ export const GetWorkfileLinkDataDocument = new TypedDocumentString(`
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 export const GetFoldersLinksDocument = new TypedDocumentString(`
@@ -2028,6 +2052,9 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetProductsLinksDocument = new TypedDocumentString(`
     query GetProductsLinks($projectName: String!, $entityIds: [String!]) {
@@ -2067,6 +2094,9 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 export const GetTasksLinksDocument = new TypedDocumentString(`
@@ -2108,6 +2138,9 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetVersionsLinksDocument = new TypedDocumentString(`
     query GetVersionsLinks($projectName: String!, $entityIds: [String!]) {
@@ -2147,6 +2180,9 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 export const GetWorkfilesLinksDocument = new TypedDocumentString(`
@@ -2188,6 +2224,9 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetRepresentationsLinksDocument = new TypedDocumentString(`
     query GetRepresentationsLinks($projectName: String!, $entityIds: [String!]) {
@@ -2227,6 +2266,9 @@ fragment OverviewEntityLinkNodeFragment on BaseNode {
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 export const GetSearchedFoldersDocument = new TypedDocumentString(`
@@ -2271,6 +2313,9 @@ export const GetSearchedFoldersDocument = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetSearchedProductsDocument = new TypedDocumentString(`
     query GetSearchedProducts($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
@@ -2314,6 +2359,9 @@ export const GetSearchedProductsDocument = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetSearchedRepresentationsDocument = new TypedDocumentString(`
     query GetSearchedRepresentations($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
@@ -2354,6 +2402,9 @@ export const GetSearchedRepresentationsDocument = new TypedDocumentString(`
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 export const GetSearchedTasksDocument = new TypedDocumentString(`
@@ -2399,6 +2450,9 @@ export const GetSearchedTasksDocument = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetSearchedVersionsDocument = new TypedDocumentString(`
     query GetSearchedVersions($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
@@ -2440,6 +2494,9 @@ export const GetSearchedVersionsDocument = new TypedDocumentString(`
     label
     subType: folderType
   }
+  ... on VersionNode {
+    hasReviewables
+  }
 }`);
 export const GetSearchedWorkfilesDocument = new TypedDocumentString(`
     query GetSearchedWorkfiles($projectName: String!, $search: String, $parentIds: [String!], $after: String, $first: Int, $before: String, $last: Int) {
@@ -2480,6 +2537,9 @@ export const GetSearchedWorkfilesDocument = new TypedDocumentString(`
   ... on FolderNode {
     label
     subType: folderType
+  }
+  ... on VersionNode {
+    hasReviewables
   }
 }`);
 

@@ -302,9 +302,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       disabled,
       command: disabled
         ? undefined
-        : () => {
-            // Fire-and-forget from context menu — swallow rejections (errors are already toasted)
-            void addToList(
+        : () =>
+            addToList(
               list.id,
               list.entityType,
               selected.map((i) => ({
@@ -312,8 +311,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
                 entityType: i.entityType,
                 hasReviewables: i.hasReviewables,
               })),
-            ).catch(() => {})
-          },
+            ),
     }),
     [addToList],
   )
