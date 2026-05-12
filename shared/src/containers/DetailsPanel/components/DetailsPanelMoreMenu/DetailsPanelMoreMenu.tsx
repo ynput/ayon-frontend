@@ -6,12 +6,14 @@ import { useMenuContext, ThumbnailUploadContext } from '@shared/context'
 
 import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'
+import { ShareDialog } from './components/ShareDialog'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from './types'
 
 export interface DetailsPanelMoreMenuProps {
   entityType: string
   entityId?: string
   entityIds?: string[]
+  entityLabel?: string
   projectName?: string
   selectedEntities?: SelectedEntityRef[]
   entityListsContext?: DetailsPanelEntityListsContext
@@ -50,6 +52,7 @@ export const DetailsPanelMoreMenu = ({
   entityType,
   entityId,
   entityIds,
+  entityLabel,
   projectName,
   selectedEntities = [],
   entityListsContext,
@@ -61,6 +64,7 @@ export const DetailsPanelMoreMenu = ({
 }: DetailsPanelMoreMenuProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [showDataDialog, setShowDataDialog] = useState(false)
+  const [shareDialogLink, setShareDialogLink] = useState<string | null>(null)
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
 
   const { triggerThumbnailUpload, canUploadVersion } = useContext(ThumbnailUploadContext)
@@ -90,7 +94,7 @@ export const DetailsPanelMoreMenu = ({
       : null
   const canOpenViewer = !!onOpenViewer && !!viewerArgs
 
-  const items = useMenuOptions({
+  const { items } = useMenuOptions({
     entityType,
     entityId,
     projectName,
@@ -104,10 +108,12 @@ export const DetailsPanelMoreMenu = ({
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
     onUploadThumbnail: () => triggerThumbnailUpload?.(),
     onUploadVersion: handleUploadVersion,
+    onShare: (link) => setShareDialogLink(link),
     onViewData: () => setShowDataDialog(true),
   })
 
   const dialogIds = entityIds?.length ? entityIds : entityId ? [entityId] : []
+  const shareLabel = entityLabel || entityId || ''
 
   return (
     <>
@@ -130,6 +136,14 @@ export const DetailsPanelMoreMenu = ({
           entityIds={dialogIds}
           visible={showDataDialog}
           onHide={() => setShowDataDialog(false)}
+        />
+      )}
+      {shareDialogLink && (
+        <ShareDialog
+          link={shareDialogLink}
+          entityLabel={shareLabel}
+          visible
+          onHide={() => setShareDialogLink(null)}
         />
       )}
     </>

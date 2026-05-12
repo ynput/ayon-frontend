@@ -392,10 +392,15 @@ DetailsPanelProps) => {
               entityType={activeEntityType}
               entityId={firstEntityData?.id}
               entityIds={entitiesToQuery.map((e) => e.id).filter(Boolean)}
+              entityLabel={firstEntityData?.label || firstEntityData?.name}
               projectName={firstProject}
               selectedEntities={entityDetailsData
                 .filter((e) => !!e?.id)
-                .map((e) => ({ entityId: e.id, entityType: e.entityType || activeEntityType }))}
+                .map((e) => ({
+                  entityId: e.id,
+                  entityType: e.entityType || activeEntityType,
+                  hasReviewables: !!e.hasReviewables,
+                }))}
               entityListsContext={entityListsContext}
               onOpenPip={handleOpenPip}
               onOpenViewer={onOpenViewer}

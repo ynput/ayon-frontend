@@ -1,10 +1,12 @@
 import { createContext, ReactNode, RefObject, useState } from 'react'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 export const ThumbnailUploadContext = createContext<{
   resetFileUploadState?: Function
   triggerThumbnailUpload?: () => void
   triggerVersionUpload?: () => void
   canUploadVersion?: boolean
+  onContextMenu?: (event: MouseEvent) => void
 }>({})
 
 export type ThumbnailUploadProviderProps = {
@@ -24,6 +26,7 @@ export const ThumbnailUploadProvider = ({
   canUploadVersion = false,
 }: ThumbnailUploadProviderProps) => {
   const [, setFileUploadInProgress] = useState(false)
+  const [ctxMenuShow] = useCreateContextMenu()
   const resetFileUploadState = () => setFileUploadInProgress(false)
 
   const triggerThumbnailUpload = () => {
@@ -40,6 +43,29 @@ export const ThumbnailUploadProvider = ({
     }
   }
 
+  // Right-click on thumbnails opens the same upload actions exposed in the more-menu.
+  // Kept after the more-menu refactor because Innders relies on the muscle memory.
+  const onContextMenu = (event: MouseEvent) => {
+    const items = [
+      {
+        label: 'Upload thumbnail',
+        icon: 'add_photo_alternate',
+        command: triggerThumbnailUpload,
+      },
+      ...(canUploadVersion
+        ? [
+            {
+              label: 'Upload version',
+              icon: 'upload',
+              command: triggerVersionUpload,
+            },
+          ]
+        : []),
+    ]
+    // @ts-expect-error - primereact ContextMenu typing
+    ctxMenuShow(event, items)
+  }
+
   return (
     <ThumbnailUploadContext.Provider
       value={{
@@ -47,6 +73,7 @@ export const ThumbnailUploadProvider = ({
         triggerThumbnailUpload,
         triggerVersionUpload,
         canUploadVersion,
+        onContextMenu,
       }}
     >
       {children}

@@ -6,6 +6,9 @@ import type { MenuItemType } from '@shared/components'
 export interface SelectedEntityRef {
   entityId: string
   entityType?: string
+  // YN-0683 / issue #1947: review-session lists are skipped when no selected
+  // version has reviewables. Optional because non-version selections never set it.
+  hasReviewables?: boolean
 }
 
 /**

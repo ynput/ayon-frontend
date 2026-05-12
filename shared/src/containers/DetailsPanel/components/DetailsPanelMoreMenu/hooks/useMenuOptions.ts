@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import type { MenuItemType } from '@shared/components'
-import { copyToClipboard } from '@shared/util'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from '../types'
 
 interface UseMenuOptionsParams {
@@ -17,7 +16,13 @@ interface UseMenuOptionsParams {
   onOpenViewer: () => void
   onUploadThumbnail: () => void
   onUploadVersion: () => void
+  onShare: (link: string) => void
   onViewData: () => void
+}
+
+export interface MenuOptionsResult {
+  items: MenuItemType[]
+  shareLink: string | null
 }
 
 // folder/task open in Overview; product/version/representation open in Products.
@@ -37,15 +42,28 @@ const buildEntityShareLink = (
   return `${origin}/projects/${projectName}/${path}?project=${projectName}&type=${entityType}&id=${entityId}`
 }
 
-const stripLeafIcons = (items: MenuItemType[]): MenuItemType[] =>
+/**
+ * Recursively walk the add-to-list tree and disable any leaf whose id matches a
+ * review-session list. Folder containers stay enabled but their disabled review
+ * leaves render greyed out with an explanatory tooltip (YN-0683 / issue #1947).
+ */
+const markReviewLeavesDisabled = (
+  items: MenuItemType[],
+  reviewListIds: Set<string>,
+): MenuItemType[] =>
   items.map((item) => {
-    const childItems = Array.isArray(item.items) ? stripLeafIcons(item.items) : undefined
-    const next: MenuItemType = { ...item, ...(childItems ? { items: childItems } : {}) }
-    if ((!childItems || childItems.length === 0) && next.id !== '__new-list__') {
-      const { icon: _, ...rest } = next
-      return rest as MenuItemType
+    const children = Array.isArray(item.items) ? item.items : undefined
+    if (children?.length) {
+      return { ...item, items: markReviewLeavesDisabled(children, reviewListIds) }
     }
-    return next
+    if (item.id && reviewListIds.has(item.id)) {
+      return {
+        ...item,
+        disabled: true,
+        ['data-tooltip' as any]: 'No reviewables on selected version',
+      }
+    }
+    return item
   })
 
 /**
@@ -85,19 +103,24 @@ export const useMenuOptions = ({
   onOpenViewer,
   onUploadThumbnail,
   onUploadVersion,
+  onShare,
   onViewData,
-}: UseMenuOptionsParams): MenuItemType[] => {
+}: UseMenuOptionsParams): MenuOptionsResult => {
   const normalizedSelected = useMemo<SelectedEntityRef[]>(() => {
     if (selectedEntities.length) {
       return selectedEntities
         .filter((e) => !!e?.entityId)
-        .map((e) => ({ entityId: e.entityId, entityType: e.entityType || entityType }))
+        .map((e) => ({
+          entityId: e.entityId,
+          entityType: e.entityType || entityType,
+          hasReviewables: e.hasReviewables,
+        }))
     }
     if (entityId) return [{ entityId, entityType }]
     return []
   }, [selectedEntities, entityId, entityType])
 
-  return useMemo<MenuItemType[]>(() => {
+  return useMemo<MenuOptionsResult>(() => {
     const items: MenuItemType[] = []
 
     if (canOpenViewer) {
@@ -149,6 +172,14 @@ export const useMenuOptions = ({
                 ? [...(entityListsContext.versions || []), ...(entityListsContext.reviews || [])]
                 : []
 
+      // YN-0683 / issue #1947: review-session lists stay visible but are disabled
+      // when no selected version has reviewables. Mirrors entity-picker behavior.
+      const anyHasReviewables = normalizedSelected.some((e) => e.hasReviewables === true)
+      const reviewListIds = new Set(
+        (entityListsContext.reviews || []).map((l) => l.id).filter(Boolean) as string[],
+      )
+      const disableReviewLeaves = !anyHasReviewables && reviewListIds.size > 0
+
       const treeItems: MenuItemType[] =
         entityListsContext.buildHierarchicalMenuItems?.(
           sourceLists,
@@ -169,13 +200,15 @@ export const useMenuOptions = ({
         : undefined
 
       const combined = [...treeItems, ...(newListItem ? [newListItem] : [])]
-      const sanitized = stripLeafIcons(combined)
-      const addToList = entityListsContext.buildAddToListMenu?.(sanitized)
+      const addToList = entityListsContext.buildAddToListMenu?.(combined)
 
       // Resolve the inner items, then translate `command` -> `onClick` recursively
       // so leaf clicks (add-to-existing-list, create-new-list) actually fire.
-      const innerItems = addToList?.items?.length ? addToList.items : sanitized
-      const wiredItems = adoptCommandsAsOnClick(innerItems)
+      const innerItems = addToList?.items?.length ? addToList.items : combined
+      const gatedItems = disableReviewLeaves
+        ? markReviewLeavesDisabled(innerItems, reviewListIds)
+        : innerItems
+      const wiredItems = adoptCommandsAsOnClick(gatedItems)
 
       if (addToList && wiredItems.length) {
         items.push({
@@ -188,20 +221,21 @@ export const useMenuOptions = ({
     }
 
     const shareTarget = normalizedSelected[0]
-    if (shareTarget?.entityId && projectName) {
-      const shareLink = buildEntityShareLink(
-        shareTarget.entityType || entityType,
-        shareTarget.entityId,
-        projectName,
-      )
-      if (shareLink) {
-        items.push({
-          id: 'copy-link',
-          label: 'Copy link',
-          icon: 'link',
-          onClick: () => copyToClipboard(shareLink, true),
-        })
-      }
+    const shareLink =
+      shareTarget?.entityId && projectName
+        ? buildEntityShareLink(
+            shareTarget.entityType || entityType,
+            shareTarget.entityId,
+            projectName,
+          )
+        : null
+    if (shareLink) {
+      items.push({
+        id: 'share',
+        label: 'Share',
+        icon: 'ios_share',
+        onClick: () => onShare(shareLink),
+      })
     }
 
     items.push({
@@ -211,7 +245,7 @@ export const useMenuOptions = ({
       onClick: onViewData,
     })
 
-    return items
+    return { items, shareLink }
   }, [
     canOpenPip,
     canOpenViewer,
@@ -225,6 +259,7 @@ export const useMenuOptions = ({
     onOpenViewer,
     onUploadThumbnail,
     onUploadVersion,
+    onShare,
     onViewData,
   ])
 }
