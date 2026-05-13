@@ -6,6 +6,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import api from '@shared/api'
 import { Thumbnail } from '@shared/components'
+import { useCreateContextMenu } from '@shared/containers'
 import * as Styled from './ProjectThumbnailUploader.styled'
 
 export interface ProjectThumbnailUploaderProps {
@@ -158,6 +159,19 @@ export const ProjectThumbnailUploader = ({
     fileInputRef.current?.click()
   }
 
+  const [ctxMenuShow] = useCreateContextMenu()
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    if (disabled) return
+    ctxMenuShow(event, [
+      {
+        label: 'Upload thumbnail',
+        icon: 'add_photo_alternate',
+        command: openFilePicker,
+      },
+    ])
+  }
+
   return (
     <Styled.Wrapper
       onDragEnter={handleDragEnter}
@@ -167,6 +181,7 @@ export const ProjectThumbnailUploader = ({
     >
       <Styled.ThumbnailSlot
         onClick={disabled ? undefined : openFilePicker}
+        onContextMenu={disabled ? undefined : handleContextMenu}
         style={disabled ? { cursor: 'default' } : undefined}
       >
         <Thumbnail
