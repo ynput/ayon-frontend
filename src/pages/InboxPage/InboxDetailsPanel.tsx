@@ -82,6 +82,7 @@ const InboxDetailsPanel = ({
           <DetailsPanelSlideOut projectsInfo={projectsInfo as Record<string, any>} scope="inbox" />
             <UploadVersionDialog />
           </VersionUploadProvider>
+        </ProjectContextProvider>
       )}
     </EntityListsContextBoundary>
   )
