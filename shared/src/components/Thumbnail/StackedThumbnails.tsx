@@ -100,7 +100,7 @@ export const StackedThumbnails = ({
             entityUpdatedAt={thumb.updatedAt}
             isLoading={isLoading}
             src={thumb.src}
-            // @ts-ignore
+            // @ts-ignore — Thumbnail forwards onContextMenu to its root element
             onContextMenu={onContextMenu}
             {...props}
           />

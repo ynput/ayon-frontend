@@ -16,7 +16,6 @@ import { useSearchParams } from 'react-router-dom'
 import { usePowerpack } from '@shared/context'
 
 interface EntityListsContextProps {
-  entityTypes: ListEntityType[]
   projectName: string
 }
 
@@ -613,5 +612,7 @@ export const useEntityListsContext = () => {
   }
   return context
 }
+
+export const useOptionalEntityListsContext = () => useContext(EntityListsContext)
 
 export default EntityListsContext
