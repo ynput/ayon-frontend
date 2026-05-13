@@ -180,7 +180,7 @@ const ProjectOverviewPage: FC = () => {
   const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
-  const handleUriOpen = (entity: DetailsPanelEntityData) => {
+  const handleUriOpen = (entity: DetailsPanelEntityData, source: 'uri' | 'url') => {
     console.debug('URI found, selecting and expanding folders to entity:', entity.name)
 
     // Get the data needed to navigate to this entity
@@ -188,9 +188,11 @@ const ProjectOverviewPage: FC = () => {
       folder: entity.folder?.id,
     })
 
-    // Reset view state
-    setQueryFilters({})
-    updateViewGroupBy(null) // switches to hierarchy and syncs groupBy in one server call
+    // Only reset view state
+    if (source === 'uri') {
+      setQueryFilters({})
+      updateViewGroupBy(null) // switches to hierarchy and syncs groupBy in one server call
+    }
 
     // Expand folders in both table and slicer
     updateExpanded(data.expandedFolders)

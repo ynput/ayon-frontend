@@ -74,14 +74,15 @@ const VPToolbar: FC = () => {
   }, [viewGroupBy, viewGroupByOptions, columns.groupBy, sorting])
 
   const handleViewGroupByChange = useCallback(
-    (values: { id: string; sortOrder?: boolean }[]) => {
+    async (values: { id: string; sortOrder?: boolean }[]) => {
       const value = values[0]
 
       // Get the grouping selection from the dropdown (what the user selected)
       const selectedGrouping = !value ? undefined : value.id === 'product' ? 'hierarchy' : value.id
+      const isGroupingChange = selectedGrouping !== viewGroupBy
 
       // Handle sort order changes by updating the columns config
-      if (value && value.sortOrder !== undefined) {
+      if (value && value.sortOrder !== undefined && !isGroupingChange) {
         const newDesc = !value.sortOrder // invert sortOrder to desc
 
         // When grouping (not hierarchy), toggle group sorting (groupBy.desc)
@@ -105,14 +106,14 @@ const VPToolbar: FC = () => {
       }
 
       // Handle grouping selection change (only if selection actually changed)
-      if (selectedGrouping !== viewGroupBy) {
+      if (isGroupingChange) {
         if (!value) {
           // X clicked — flat list (no grouping, no products)
-          onUpdateViewGroupBy(undefined)
+          await onUpdateViewGroupBy(undefined)
         } else if (value.id === 'product') {
-          onUpdateViewGroupBy('hierarchy')
+          await onUpdateViewGroupBy('hierarchy')
         } else {
-          onUpdateViewGroupBy(value.id)
+          await onUpdateViewGroupBy(value.id)
         }
       }
     },

@@ -85,7 +85,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
-  const handleUriOpen = (entity: DetailsPanelEntityData) => {
+  const handleUriOpen = (entity: DetailsPanelEntityData, source: 'uri' | 'url') => {
     console.debug('URI found, selecting and expanding folders to entity:', entity.name)
 
     // Get the data needed to navigate to this entity
@@ -94,9 +94,11 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
       product: entity.product?.id,
     })
 
-    // Reset view state
-    onUpdateFilters({})
-    onUpdateViewGroupBy(undefined)
+    // Only reset view state
+    if (source === 'uri') {
+      onUpdateFilters({})
+      onUpdateViewGroupBy(undefined)
+    }
 
     // Expand folders in slicer
     slicer.setExpanded(data.expandedFolders)
