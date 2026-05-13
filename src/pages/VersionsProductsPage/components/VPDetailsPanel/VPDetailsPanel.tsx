@@ -19,6 +19,7 @@ import useGoToEntity from '@hooks/useGoToEntity'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
 import { useSlicerContext } from '@shared/containers/Slicer'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 type VPDetailsPanelProps = {}
 
@@ -116,25 +117,30 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   }
 
   return (
-    <>
-      <DetailsPanel
-        isOpen={showVersionDetails}
-        entityType={'version'}
-        entities={entities}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName]}
-        tagsOptions={projectInfo?.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="overview"
-        onClose={handleClose}
-        onOpenViewer={handleOpenViewer}
-        onOpen={handleDetailsOpen}
-        onUriOpen={handleUriOpen}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          <DetailsPanel
+            isOpen={showVersionDetails}
+            entityType={'version'}
+            entities={entities}
+            projectsInfo={projectsInfo}
+            projectNames={[projectName]}
+            tagsOptions={projectInfo?.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="overview"
+            entityListsContext={entityListsContext}
+            onClose={handleClose}
+            onOpenViewer={handleOpenViewer}
+            onOpen={handleDetailsOpen}
+            onUriOpen={handleUriOpen}
+          />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

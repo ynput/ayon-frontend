@@ -60,7 +60,7 @@ const Row = styled.button`
 export const ShareDialog = ({ link, entityLabel, visible, onHide }: ShareDialogProps) => {
   if (!visible) return null
 
-  const markdown = `[AYON - ${entityLabel}](${link})`
+  const markdown = `[${entityLabel}](${link})`
 
   const copy = (value: string) => {
     copyToClipboard(value, true)

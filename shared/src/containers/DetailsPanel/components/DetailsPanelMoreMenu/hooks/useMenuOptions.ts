@@ -233,7 +233,7 @@ export const useMenuOptions = ({
       items.push({
         id: 'share',
         label: 'Share',
-        icon: 'ios_share',
+        icon: 'share',
         onClick: () => onShare(shareLink),
       })
     }

@@ -342,6 +342,28 @@ DetailsPanelProps) => {
   const versionsInputRef = useRef<HTMLInputElement>(null)
   const canUploadVersion = entityDetailsData.length === 1 && activeEntityType !== 'representation'
 
+  const shareEntityLabel = useMemo(() => {
+    const name = firstEntityData?.label || firstEntityData?.name || ''
+    const parents: string[] = firstEntityData?.parents || []
+    const parts: (string | undefined)[] = [firstProject]
+    switch (activeEntityType) {
+      case 'folder':
+      case 'task':
+      case 'product':
+        parts.push(parents.at(-1), name)
+        break
+      case 'version':
+        parts.push(parents.at(-2), parents.at(-1), name)
+        break
+      case 'representation':
+        parts.push(parents.at(-3), parents.at(-2), parents.at(-1), name)
+        break
+      default:
+        parts.push(name)
+    }
+    return parts.filter(Boolean).join(' - ')
+  }, [firstEntityData, activeEntityType, firstProject])
+
   const handleOpenPip = () => {
     openPip({
       entityType: activeEntityType,
@@ -392,7 +414,7 @@ DetailsPanelProps) => {
               entityType={activeEntityType}
               entityId={firstEntityData?.id}
               entityIds={entitiesToQuery.map((e) => e.id).filter(Boolean)}
-              entityLabel={firstEntityData?.label || firstEntityData?.name}
+              entityLabel={shareEntityLabel}
               projectName={firstProject}
               selectedEntities={entityDetailsData
                 .filter((e) => !!e?.id)
