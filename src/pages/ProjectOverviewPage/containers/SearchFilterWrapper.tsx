@@ -314,6 +314,27 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
     let validFilters = [...filters]
 
+    // Expand comma-separated custom values into individual values so pasted lists
+    // from spreadsheets (newlines/tabs are normalised to commas on paste) become
+    // multiple OR-ed conditions rather than a single LIKE on the joined string.
+    validFilters = validFilters.map((f) => {
+      if (!f.values?.length) return f
+      const expanded = f.values.flatMap((v) => {
+        const id = (v as any).id
+        const isCustom = (v as any).isCustom === true
+        if (!isCustom || typeof id !== 'string' || !id.includes(',')) return [v]
+        return id
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((p) => ({ ...(v as any), id: p, label: p }))
+      })
+      const deduped = Array.from(
+        new Map(expanded.map((v) => [String((v as any).id), v])).values(),
+      )
+      return { ...f, values: deduped }
+    })
+
     // Merge multiple text search filters (SEARCH_FILTER_ID) into one filter
     const searchFilters = validFilters.filter((f) => f.id.startsWith(SEARCH_FILTER_ID))
     if (searchFilters.length > 1) {
@@ -345,6 +366,41 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   }
 
   const { dropdown, searchBar, ...ptRest } = pt || {}
+
+  // Spreadsheet paste: replace newlines/tabs with commas so the list becomes
+  // multiple OR-ed values (downstream split happens in validateFilters and the
+  // auto-fill onClick path). The input is React-controlled, so we preventDefault
+  // and inject via the native setter to trigger its onChange.
+  const handleDropdownPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    if (!(target instanceof HTMLInputElement)) return
+    const text = e.clipboardData?.getData('text') ?? ''
+    if (!/[\r\n\t]/.test(text)) return
+    e.preventDefault()
+    e.stopPropagation()
+
+    const normalized = text
+      .replace(/[\r\n\t]+/g, ',')
+      .replace(/,+/g, ',')
+      .replace(/^,|,$/g, '')
+
+    const input = target
+    const start = input.selectionStart ?? input.value.length
+    const end = input.selectionEnd ?? input.value.length
+    const newValue = input.value.slice(0, start) + normalized + input.value.slice(end)
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    )?.set
+    if (nativeSetter) {
+      nativeSetter.call(input, newValue)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    const caret = start + normalized.length
+    input.setSelectionRange(caret, caret)
+  }
 
   // Set the dropdown search input value via native setter to trigger React's
   // controlled onChange inside SearchFilterDropdown
@@ -494,6 +550,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         enableMultipleSameFilters={false}
         enableGlobalSearch={true}
         disabledFilters={disabledFilters}
+        onPasteCapture={handleDropdownPaste}
         pt={{
           searchBar: {
             style: {
@@ -542,12 +599,20 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                       const matchingOption = options.find((o) => o.id === optionId)
                       if (matchingOption?.allowsCustomValues) {
                         const newId = buildFilterId(optionId)
+                        const parts = searchText
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                        const values =
+                          parts.length > 1
+                            ? parts.map((v) => ({ id: v, label: v, isCustom: true }))
+                            : [{ id: searchText, label: searchText, isCustom: true }]
                         const newFilter: Filter = {
                           id: newId,
                           label: matchingOption.label,
                           type: matchingOption.type,
                           icon: matchingOption.icon,
-                          values: [{ id: searchText, label: searchText, isCustom: true }],
+                          values,
                         }
 
                         handleFinish([...localFilters, newFilter])
