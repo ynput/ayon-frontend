@@ -11,7 +11,7 @@ const useVideoPlayback = (
 
   const frameCallbackRef = useRef<(() => void) | null>(null)
 
-  const currentFrame = Math.round(currentTime * frameRate)
+  const currentFrame = Math.floor(currentTime * frameRate)
   const frameCount = Math.round(duration * frameRate)
 
   // requestVideoFrameCallback loop to track currentTime

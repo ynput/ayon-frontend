@@ -15,7 +15,7 @@ const useGoToFrame = ({ setCurrentTime, frameRate, duration, videoElement }: Pro
 
   useEffect(() => {
     if (frame !== null) {
-      const time = Math.max(0, Math.min(duration, frame / frameRate))
+      const time = Math.max(0, Math.min(duration, (frame + 0.5) / frameRate))
       videoElement.currentTime = time
       setCurrentTime(time)
       dispatch(goToFrame(null))

@@ -32,7 +32,7 @@ const useVideoSeeking = (
   }
 
   const seekToFrame = (newFrame: number) => {
-    const newTime = newFrame / frameRate
+    const newTime = (newFrame + 0.5) / frameRate
     seekToTime(newTime)
   }
 
@@ -76,7 +76,7 @@ const useVideoSeeking = (
     if (isTransitioning.current) return
     const rawTime = videoRef.current?.currentTime
     if (rawTime == null) return
-    initialPosition.current = Math.round(rawTime * frameRate) / frameRate
+    initialPosition.current = (Math.floor(rawTime * frameRate) + 0.5) / frameRate
     seekToTime(initialPosition.current)
     setTimeout(() => {
       if (videoRef.current?.paused) {
