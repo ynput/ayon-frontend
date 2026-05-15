@@ -1,6 +1,9 @@
 import { FC, useState } from 'react'
 import { useGetProjectsData, useProjectColumns } from './hooks'
 import { DataTable } from '@shared/containers/ListTable'
+import * as Styled from './ProjectsPage.styled'
+import { Button, Dialog } from '@ynput/ayon-react-components'
+import { PROJECTS_PER_PAGE } from '@shared/api'
 
 interface ProjectsPageProps {}
 
@@ -16,17 +19,32 @@ export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([])
 
   return (
-    <DataTable
-      data={tableRows}
-      columns={columns}
-      fetchNextPage={fetchNextPage}
-      hasNextPage={hasNextPage}
-      isFetchingNextPage={isFetchingNextPage}
-      selectedRows={selectedProjectIds}
-      onSelectedRowsChange={setSelectedProjectIds}
-      onUpdateRow={() => {}}
-      onOpenViewer={() => {}}
-      onReorderRows={() => {}}
-    />
+    <Styled.PageContainer>
+      <DataTable
+        data={tableRows}
+        columns={columns}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        selectedRows={selectedProjectIds}
+        onSelectedRowsChange={setSelectedProjectIds}
+        onUpdateRow={() => {}}
+        onOpenViewer={() => {}}
+        onReorderRows={() => {}}
+      />
+      {hasNextPage && (
+        <Dialog
+          size="sm"
+          isOpen={true}
+          onClose={() => {}}
+          hideCancelButton
+          showCloseButton={false}
+          header={`Congratulations you have more than ${tableRows.length} projects.`}
+        >
+          <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+            {isFetchingNextPage ? 'Loading...' : `Click here to load ${PROJECTS_PER_PAGE} more`}
+          </Button>
+        </Dialog>
+      )}
+    </Styled.PageContainer>
   )
 }

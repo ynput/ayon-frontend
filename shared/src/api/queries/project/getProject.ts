@@ -59,8 +59,8 @@ type GQLDefinitions = DefinitionsFromApi<typeof gqlApi>
 type GQLUpdatedDefinitions = Omit<GQLDefinitions, 'GetProjects'> & {
   GetProjects: OverrideResultType<GQLDefinitions['GetProjects'], GetProjectsResult>
 }
-
-const PROJECTS_PER_PAGE = 30
+//  it is impossible to group by folder or search with pagination, so just load tons and hope no one has more than 5 k projects.
+export const PROJECTS_PER_PAGE = 2000
 
 // enhance graphql - used only for the infinite query below
 const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>({

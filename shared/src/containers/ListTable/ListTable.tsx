@@ -42,9 +42,9 @@ declare module '@tanstack/react-table' {
 export interface DataTableProps<TData> {
   data: TData[]
   columns: ColumnDef<TData, any>[]
-  fetchNextPage: () => void
-  hasNextPage: boolean
-  isFetchingNextPage: boolean
+  fetchNextPage?: () => void
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
   onUpdateRow: (rowIndex: number, columnId: string, value: unknown) => void
   onOpenViewer: (row: TData) => void
   onReorderRows: (startIndex: number, endIndex: number) => void
@@ -175,7 +175,7 @@ export function DataTable<TData>({
     if (!lastItem) return
 
     if (lastItem.index >= rows.length - 1 && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage()
+      fetchNextPage?.()
     }
   }, [hasNextPage, fetchNextPage, rows.length, isFetchingNextPage, virtualRows])
 
