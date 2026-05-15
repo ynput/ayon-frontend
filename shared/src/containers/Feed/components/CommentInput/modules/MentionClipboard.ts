@@ -81,8 +81,15 @@ class MentionClipboard {
     const range = sel.getRangeAt(0)
     if (!this.root.contains(range.startContainer) || !this.root.contains(range.endContainer)) return
 
+    const fragment = range.cloneContents()
+    // only preempt Quill's clipboard when the selection actually contains a mention;
+    // otherwise the default handler preserves block formatting correctly
+    if (!fragment.querySelector('MENTION, a[href^="@"]')) return
+
     let text = ''
     let html = ''
+    // match quillToMarkdown encoding: only spaces, so plain-text round-trips through the paste regex
+    const encodeIdSpaces = (s: string) => s.replaceAll(' ', '%20')
     const walk = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const data = (node as Text).data
@@ -98,20 +105,22 @@ class MentionClipboard {
       const el = node as HTMLElement
       if (el.tagName === 'MENTION') {
         const value = el.getAttribute('data-value') || ''
-        const label = (el.textContent || '').replace(/^@/, '')
+        const label = (el.textContent || '').replace(/^@+/, '')
         if (value && label) {
-          text += `[${label}](${value})`
-          html += `<a href="@${escapeHtml(value)}">@${escapeHtml(label)}</a>`
+          const encoded = encodeIdSpaces(value)
+          text += `[${label}](${encoded})`
+          html += `<a href="@${escapeHtml(encoded)}">@${escapeHtml(label)}</a>`
         }
         return
       }
       if (el.tagName === 'A') {
         const href = (el.getAttribute('href') || '').replace(/^@/, '')
         const refType = href.split(':')[0]
-        const label = (el.textContent || '').replace(/^@/, '')
+        const label = (el.textContent || '').replace(/^@+/, '')
         if (this.refTypes.includes(refType) && label) {
-          text += `[${label}](${href})`
-          html += `<a href="@${escapeHtml(href)}">@${escapeHtml(label)}</a>`
+          const encoded = encodeIdSpaces(href)
+          text += `[${label}](${encoded})`
+          html += `<a href="@${escapeHtml(encoded)}">@${escapeHtml(label)}</a>`
           return
         }
       }
@@ -122,7 +131,7 @@ class MentionClipboard {
       }
       node.childNodes.forEach(walk)
     }
-    walk(range.cloneContents())
+    walk(fragment)
 
     if (!text) return
     // stop Quill's clipboard from also handling this event
@@ -166,6 +175,8 @@ class MentionClipboard {
     if (selection.length) change.delete(selection.length)
     this.quill.updateContents(change.concat(delta), 'user')
     this.quill.setSelection(selection.index + delta.length(), 0, 'user')
+    // clear lingering mention format so the next typed char isn't absorbed into the trailing mention
+    this.quill.format('mention', false, 'user')
   }
 }
 

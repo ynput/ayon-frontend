@@ -104,7 +104,7 @@ export const Comment = styled.div<CommentProps>`
   .ql-editor {
     .mention {
       border-radius: var(--border-radius-m);
-      user-select: none;
+      user-select: text;
       padding: 0 4px;
       margin-right: -2px;
       /* remove underline */
