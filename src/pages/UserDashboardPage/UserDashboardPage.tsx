@@ -31,6 +31,7 @@ import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
+import { ProjectsPage } from '@pages/ProjectsPage'
 
 interface DashboardAddon {
   name: string
@@ -154,6 +155,13 @@ const UserDashboardPage: React.FC = () => {
         // viewType: 'tasks',
         showProjectList: true,
         isMultiSelect: true,
+      },
+      {
+        name: 'Projects',
+        path: '/dashboard/projects',
+        module: 'projects',
+        component: <ProjectsPage />,
+        showProjectList: false,
       },
       {
         name: 'Dashboard',

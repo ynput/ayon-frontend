@@ -1,0 +1,16 @@
+query GetProjects($last: Int, $before: String) {
+  projects(last: $last, before: $before) {
+    edges {
+      cursor
+      node {
+        ...ProjectFragment
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+      hasPreviousPage
+      startCursor
+    }
+  }
+}

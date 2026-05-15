@@ -1,0 +1,14 @@
+fragment ProjectFragment on ProjectNode {
+  allAttrib
+  active
+  code
+  color
+  createdAt
+  label
+  library
+  name
+  projectFolder
+  projectName
+  skeleton
+  updatedAt
+}
