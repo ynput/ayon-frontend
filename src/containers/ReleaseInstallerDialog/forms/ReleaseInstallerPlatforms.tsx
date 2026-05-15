@@ -12,6 +12,8 @@ interface ReleaseInstallerPlatformsProps {
   onConfirm: (selected: string[]) => void
 }
 
+const DEFAULT_PLATFORMS = ['windows', 'linux', 'darwin']
+
 export const ReleaseInstallerPlatforms: FC<ReleaseInstallerPlatformsProps> = ({
   releaseInstallers,
   releaseForm,
@@ -38,13 +40,19 @@ export const ReleaseInstallerPlatforms: FC<ReleaseInstallerPlatformsProps> = ({
 
   const handleConfirm = () => onConfirm(selected)
 
+  // fall back to standard platforms so the user always has options, even when
+  // the release manifest has no installers — install pipeline filters by manifest anyway
+  const manifestPlatforms = releaseInstallers.map((i) => i.platform)
+  const platforms = manifestPlatforms.length ? manifestPlatforms : DEFAULT_PLATFORMS
+
   return (
     <>
       <span>Select launcher platforms</span>
       <PlatformSelect
-        platforms={releaseInstallers.map((i) => i.platform)}
+        platforms={platforms}
         selected={selected}
         onSelect={handleSelectPlatform}
+        isLoading={isLoading}
       />
       <Footer onCancel={onCancel} onConfirm={handleConfirm} />
     </>

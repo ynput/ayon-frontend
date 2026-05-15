@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import clsx from 'clsx'
 import styled from 'styled-components'
 import AddonCard from '@components/AddonCard/AddonCard'
 import { getPlatformIcon, getPlatformLabel } from '@pages/AccountPage/DownloadsPage/DownloadsPage'
@@ -15,12 +16,23 @@ interface PlatformSelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>,
   platforms: string[]
   selected: string[]
   onSelect: (platform: string) => void
+  isLoading?: boolean
+  placeholderCount?: number
 }
 
 const linuxInfo = 'This will install Rocky 9 specific environment that should be compatible with all EL9 linux variants'
 
 const PlatformSelect = forwardRef<HTMLDivElement, PlatformSelectProps>(
-  ({ platforms, selected, onSelect, ...props }, ref) => {
+  ({ platforms, selected, onSelect, isLoading, placeholderCount = 3, ...props }, ref) => {
+    if (isLoading) {
+      return (
+        <Container ref={ref} {...props}>
+          {Array.from({ length: placeholderCount }).map((_, i) => (
+            <AddonCard key={`placeholder-${i}`} icon="" className={clsx('loading')} />
+          ))}
+        </Container>
+      )
+    }
     return (
       <Container ref={ref} {...props}>
         {platforms.map((platform) => (
