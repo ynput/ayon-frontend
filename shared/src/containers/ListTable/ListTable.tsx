@@ -50,6 +50,7 @@ export interface DataTableProps<TData> {
   onReorderRows: (startIndex: number, endIndex: number) => void
   selectedRows?: string[]
   onSelectedRowsChange?: (ids: string[]) => void
+  multiSelection?: boolean
 }
 
 export function DataTable<TData>({
@@ -63,6 +64,7 @@ export function DataTable<TData>({
   onReorderRows,
   selectedRows = [],
   onSelectedRowsChange,
+  multiSelection = false,
 }: DataTableProps<TData>) {
   // --- State Management ---
   const [grouping, setGrouping] = useState<string[]>([])
@@ -109,7 +111,7 @@ export function DataTable<TData>({
   // --- Selection & Keyboard ---
   const handleRowClick = useCallback(
     (rowId: string, rowIndex: number, e: React.MouseEvent) => {
-      if (e.shiftKey && lastSelectedIndexRef.current >= 0) {
+      if (multiSelection && e.shiftKey && lastSelectedIndexRef.current >= 0) {
         const start = Math.min(lastSelectedIndexRef.current, rowIndex)
         const end = Math.max(lastSelectedIndexRef.current, rowIndex)
         const rangeIds = rows.slice(start, end + 1).map((r) => r.id)
@@ -118,7 +120,7 @@ export function DataTable<TData>({
         } else {
           onSelectedRowsChange?.(rangeIds)
         }
-      } else if (e.metaKey || e.ctrlKey) {
+      } else if (multiSelection && (e.metaKey || e.ctrlKey)) {
         if (selectedRows.includes(rowId)) {
           onSelectedRowsChange?.(selectedRows.filter((id) => id !== rowId))
         } else {
