@@ -79,7 +79,7 @@ const enhancedGraphql = gqlApi.enhanceEndpoints<TagTypes, GQLUpdatedDefinitions>
 
 type ProjectsPageParam = { cursor: string; last?: number }
 
-const injectedGraphql = enhancedGraphql.injectEndpoints({
+export const getProjectsGraphql = enhancedGraphql.injectEndpoints({
   endpoints: (build) => ({
     getProjectsInfinite: build.infiniteQuery<
       GetProjectsResult,
@@ -139,6 +139,6 @@ const injectedGraphql = enhancedGraphql.injectEndpoints({
   overrideExisting: true,
 })
 
-export const { useGetProjectsInfiniteInfiniteQuery } = injectedGraphql
+export const { useGetProjectsInfiniteInfiniteQuery } = getProjectsGraphql
 
 export default enhancedProject

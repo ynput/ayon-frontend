@@ -1,6 +1,7 @@
 import { FC, useState } from 'react'
-import { useGetProjectsData, useProjectColumns } from './hooks'
-import { ListTable } from '@shared/containers/ListTable'
+import { useGetProjectsData, useProjectColumns, useUpdateProjectTableRow } from './hooks'
+import type { ProjectTableRow } from './hooks'
+import { getDefaultListTableDataTypeWidgets, ListTable } from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import { PROJECTS_PER_PAGE } from '@shared/api'
@@ -14,22 +15,27 @@ export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
     groupByDesc: undefined,
   })
 
-  const columns = useProjectColumns(tableRows)
+  const { columns, columnAttributeData } = useProjectColumns(tableRows)
+  const dataTypeWidgets = getDefaultListTableDataTypeWidgets<ProjectTableRow>()
 
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([])
 
+  const handleProjectUpdate = useUpdateProjectTableRow(tableRows)
+
   return (
     <Styled.PageContainer>
-      <ListTable
+      <ListTable<ProjectTableRow>
         data={tableRows}
         columns={columns}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
         selectedRows={selectedProjectIds}
         onSelectedRowsChange={setSelectedProjectIds}
-        onUpdateRow={() => {}}
+        onUpdateRow={handleProjectUpdate}
         onOpenViewer={() => {}}
         onReorderRows={() => {}}
+        columnAttributeData={columnAttributeData}
+        dataTypeWidgets={dataTypeWidgets}
       />
       {hasNextPage && (
         <Dialog

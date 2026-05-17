@@ -30,12 +30,17 @@ import {
 import { DraggableRow } from './ListTableRow'
 import { CellWrapperRenderer, RowCells } from './ListTableCell'
 import * as Styled from './ListTable.styled'
+import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
 
 // 1. Extend TanStack Table Meta to strongly type our mutation and dialog handlers
 declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    listTableCustomCell?: boolean
+  }
+
   interface TableMeta<TData extends RowData> {
-    updateData: (rowIndex: number, columnId: string, value: unknown) => void
-    openViewerDialog: (row: TData) => void
+    updateData: (columnId: string, value: unknown, rowIndex: number) => void
+    openViewerDialog?: (row: TData) => void
   }
 }
 
@@ -45,16 +50,18 @@ export interface ListTableProps<TData> {
   fetchNextPage?: () => void
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
-  onUpdateRow: (rowIndex: number, columnId: string, value: unknown) => void
-  onOpenViewer: (row: TData) => void
-  onReorderRows: (startIndex: number, endIndex: number) => void
+  onUpdateRow: (columnId: string, value: unknown, rowIndex: number) => void
+  onOpenViewer?: (row: TData) => void
+  onReorderRows?: (startIndex: number, endIndex: number) => void
   selectedRows?: string[]
   onSelectedRowsChange?: (ids: string[]) => void
   multiSelection?: boolean
   cellWrapper?: CellWrapperRenderer<TData>
+  columnAttributeData?: ListTableColumnAttributeData
+  dataTypeWidgets?: ListTableDataTypeWidgets<TData>
 }
 
-export function ListTable<TData>({
+export function ListTable<TData extends RowData>({
   data,
   columns,
   fetchNextPage,
@@ -67,6 +74,8 @@ export function ListTable<TData>({
   onSelectedRowsChange,
   multiSelection = false,
   cellWrapper,
+  columnAttributeData,
+  dataTypeWidgets,
 }: ListTableProps<TData>) {
   // --- State Management ---
   const [grouping, setGrouping] = useState<string[]>([])
@@ -75,6 +84,8 @@ export function ListTable<TData>({
   )
   const [activeId, setActiveId] = useState<string | null>(null)
   const [activeRowIndex, setActiveRowIndex] = useState(-1)
+  const [editingCellId, setEditingCellId] = useState<string | null>(null)
+  const [editingDraft, setEditingDraft] = useState<string | null>(null)
   const lastSelectedIndexRef = useRef(-1)
 
   // --- Table Instance ---
@@ -203,12 +214,34 @@ export function ListTable<TData>({
     if (over && active.id !== over.id) {
       const oldIndex = rows.findIndex((row) => row.id === active.id)
       const newIndex = rows.findIndex((row) => row.id === over.id)
-      onReorderRows(oldIndex, newIndex)
+      onReorderRows?.(oldIndex, newIndex)
     }
   }
 
   const handleDragCancel = () => {
     setActiveId(null)
+  }
+
+  const startEditingCell = useCallback((cellId: string) => {
+    setEditingCellId(cellId)
+  }, [])
+
+  const stopEditingCell = useCallback(() => {
+    setEditingCellId(null)
+    setEditingDraft(null)
+  }, [])
+
+  const callbacks = {
+    onUpdateRow,
+    onOpenViewer,
+  }
+
+  const editingState = {
+    editingCellId,
+    startEditingCell,
+    stopEditingCell,
+    getDraftValue: () => editingDraft,
+    setDraftValue: setEditingDraft,
   }
 
   return (
@@ -266,6 +299,10 @@ export function ListTable<TData>({
                     rowIndex={virtualRow.index}
                     onRowClick={handleRowClick}
                     cellWrapper={cellWrapper}
+                    columnAttributeData={columnAttributeData}
+                    dataTypeWidgets={dataTypeWidgets}
+                    editingState={editingState}
+                    callbacks={callbacks}
                   />
                 )
               })}
@@ -283,7 +320,14 @@ export function ListTable<TData>({
               <table style={{ width: '100%' }}>
                 <Styled.TBody>
                   <Styled.OverlayTR>
-                    <RowCells row={activeRow} cellWrapper={cellWrapper} />
+                    <RowCells
+                      row={activeRow}
+                      cellWrapper={cellWrapper}
+                      columnAttributeData={columnAttributeData}
+                      dataTypeWidgets={dataTypeWidgets}
+                      editingState={editingState}
+                      callbacks={callbacks}
+                    />
                   </Styled.OverlayTR>
                 </Styled.TBody>
               </table>

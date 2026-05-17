@@ -52,11 +52,29 @@ export const TD = styled.td`
 export const ListTableCellWrapper = styled.div`
   position: relative;
   display: flex;
-  justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
   padding: var(--padding-s);
+`
+
+export const EditableCellValue = styled.div<{ $isEditing?: boolean }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 var(--padding-s);
+  border-radius: var(--border-radius-m);
+  transition: background-color 120ms ease, outline-color 120ms ease;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-high);
+  }
+
+  &.editing {
+    background-color: var(--md-sys-color-surface-container);
+  }
 `
 
 export const TableWrapper = styled.div`

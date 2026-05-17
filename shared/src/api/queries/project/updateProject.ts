@@ -1,4 +1,21 @@
-import projectApi from './getProject'
+import projectApi, { getProjectsGraphql } from './getProject'
+
+const patchProjectFromModel = (
+  project: Record<string, any>,
+  projectPatchModel: Record<string, any>,
+) => {
+  for (const [key, value] of Object.entries(projectPatchModel)) {
+    if (key === 'attrib' && value && typeof value === 'object' && !Array.isArray(value)) {
+      project.attrib = {
+        ...project.attrib,
+        ...value,
+      }
+      continue
+    }
+
+    project[key] = value
+  }
+}
 
 const enhancedProjectApi = projectApi.enhanceEndpoints({
   endpoints: {
@@ -29,23 +46,33 @@ const enhancedProjectApi = projectApi.enhanceEndpoints({
               { type: 'projects', id: 'LIST' },
             ],
       transformErrorResponse: (error: any) => error.data.detail,
-      // Optimistically patch listProjects cache for fields exposed in the list view
-      // so the UI updates instantly without waiting for refetch.
+      // Optimistically patch project list caches so table edits update instantly.
       async onQueryStarted({ projectName, projectPatchModel }, { dispatch, queryFulfilled }) {
-        if (!('label' in projectPatchModel)) return
-
-        const newLabel = projectPatchModel.label ?? undefined
         const patches = [
           dispatch(
             projectApi.util.updateQueryData('listProjects', { active: true }, (draft) => {
               const project = draft.find((p) => p.name === projectName)
-              if (project) project.label = newLabel
+              if (project) {
+                patchProjectFromModel(project as Record<string, any>, projectPatchModel)
+              }
             }),
           ),
           dispatch(
             projectApi.util.updateQueryData('listProjects', { active: undefined }, (draft) => {
               const project = draft.find((p) => p.name === projectName)
-              if (project) project.label = newLabel
+              if (project) {
+                patchProjectFromModel(project as Record<string, any>, projectPatchModel)
+              }
+            }),
+          ),
+          dispatch(
+            getProjectsGraphql.util.updateQueryData('getProjectsInfinite', {}, (draft) => {
+              for (const page of draft.pages) {
+                const project = page.projects.find((p) => p.name === projectName)
+                if (!project) continue
+
+                patchProjectFromModel(project as Record<string, any>, projectPatchModel)
+              }
             }),
           ),
         ]
