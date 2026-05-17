@@ -48,6 +48,17 @@ export const TD = styled.td`
   }
 `
 
+// convenience cell wrapper div use of cell container prop
+export const ListTableCellWrapper = styled.div`
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: var(--padding-s);
+`
+
 export const TableWrapper = styled.div`
   overflow: hidden;
   position: absolute;

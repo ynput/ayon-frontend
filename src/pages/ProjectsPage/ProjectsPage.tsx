@@ -1,6 +1,6 @@
 import { FC, useState } from 'react'
 import { useGetProjectsData, useProjectColumns } from './hooks'
-import { DataTable } from '@shared/containers/ListTable'
+import { ListTable } from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import { PROJECTS_PER_PAGE } from '@shared/api'
@@ -20,7 +20,7 @@ export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
 
   return (
     <Styled.PageContainer>
-      <DataTable
+      <ListTable
         data={tableRows}
         columns={columns}
         hasNextPage={hasNextPage}

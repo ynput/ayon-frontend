@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Row, RowData } from '@tanstack/react-table'
 import clsx from 'clsx'
 import * as Styled from './ListTable.styled'
-import { RowCells } from './ListTableCell'
+import { CellWrapperRenderer, RowCells } from './ListTableCell'
 
 interface DraggableRowProps<TData extends RowData> {
   row: Row<TData>
@@ -11,6 +11,7 @@ interface DraggableRowProps<TData extends RowData> {
   isSelected: boolean
   rowIndex: number
   onRowClick: (rowId: string, rowIndex: number, e: React.MouseEvent) => void
+  cellWrapper?: CellWrapperRenderer<TData>
 }
 
 export const DraggableRow = <TData extends RowData>({
@@ -19,6 +20,7 @@ export const DraggableRow = <TData extends RowData>({
   isSelected,
   rowIndex,
   onRowClick,
+  cellWrapper,
 }: DraggableRowProps<TData>) => {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.id,
@@ -38,7 +40,7 @@ export const DraggableRow = <TData extends RowData>({
       onClick={(e) => onRowClick(row.id, rowIndex, e)}
       className={clsx('table-list-row', { dragging: isDragging, selected: isSelected })}
     >
-      <RowCells row={row} />
+      <RowCells row={row} cellWrapper={cellWrapper} />
     </Styled.TR>
   )
 }

@@ -244,15 +244,17 @@ const ProjectDetails = ({ projectName }) => {
         isFetching={isFetching}
         disabled={isUser}
         Thumbnail={({ projectName, updatedAt, isFetching, disabled }) => (
-          <Thumbnail
-            entityType="project"
-            projectName={projectName}
-            entityUpdatedAt={updatedAt}
-            icon="add_photo_alternate"
-            shimmer={isFetching}
-            disabled={disabled}
-            style={{ height: 'auto', aspectRatio: 1.7 }}
-          />
+          <Styled.ThumbnailWrapper>
+            <Thumbnail
+              entityType="project"
+              projectName={projectName}
+              entityUpdatedAt={updatedAt}
+              icon="add_photo_alternate"
+              shimmer={isFetching}
+              disabled={disabled}
+              style={{ height: 'auto', aspectRatio: 1.7 }}
+            />
+          </Styled.ThumbnailWrapper>
         )}
       >
         {editing ? (

@@ -26,3 +26,9 @@ export const Header = styled(Toolbar)`
     width: 72px;
   }
 `
+
+export const ThumbnailWrapper = styled.div`
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  cursor: pointer;
+`

@@ -1,10 +1,28 @@
 import { useMemo } from 'react'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import type { ProjectTableRow } from './useGetProjectsData'
+import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader'
+import * as Styled from '../ProjectsPage.styled'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
 
 const STATIC_COLUMNS: ColumnDef<ProjectTableRow, any>[] = [
+  columnHelper.accessor('name', {
+    id: 'thumbnail',
+    header: 'Thumbnail',
+    size: 70,
+    cell: (info) => (
+      <ProjectThumbnailUploader
+        projectName={info.getValue()}
+        Thumbnail={({ projectName, updatedAt }) => (
+          <Styled.Thumbnail
+            src={`/api/projects/${projectName}/thumbnail?updatedAt=${updatedAt}`}
+            alt={`${projectName} thumbnail`}
+          />
+        )}
+      />
+    ),
+  }),
   columnHelper.accessor('name', {
     id: 'name',
     header: 'Name',

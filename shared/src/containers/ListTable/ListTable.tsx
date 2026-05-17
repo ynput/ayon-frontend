@@ -28,7 +28,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { DraggableRow } from './ListTableRow'
-import { RowCells } from './ListTableCell'
+import { CellWrapperRenderer, RowCells } from './ListTableCell'
 import * as Styled from './ListTable.styled'
 
 // 1. Extend TanStack Table Meta to strongly type our mutation and dialog handlers
@@ -39,7 +39,7 @@ declare module '@tanstack/react-table' {
   }
 }
 
-export interface DataTableProps<TData> {
+export interface ListTableProps<TData> {
   data: TData[]
   columns: ColumnDef<TData, any>[]
   fetchNextPage?: () => void
@@ -51,9 +51,10 @@ export interface DataTableProps<TData> {
   selectedRows?: string[]
   onSelectedRowsChange?: (ids: string[]) => void
   multiSelection?: boolean
+  cellWrapper?: CellWrapperRenderer<TData>
 }
 
-export function DataTable<TData>({
+export function ListTable<TData>({
   data,
   columns,
   fetchNextPage,
@@ -65,7 +66,8 @@ export function DataTable<TData>({
   selectedRows = [],
   onSelectedRowsChange,
   multiSelection = false,
-}: DataTableProps<TData>) {
+  cellWrapper,
+}: ListTableProps<TData>) {
   // --- State Management ---
   const [grouping, setGrouping] = useState<string[]>([])
   const [columnOrder, setColumnOrder] = useState<ColumnOrderState>(() =>
@@ -263,6 +265,7 @@ export function DataTable<TData>({
                     isSelected={selectedRows.includes(row.id)}
                     rowIndex={virtualRow.index}
                     onRowClick={handleRowClick}
+                    cellWrapper={cellWrapper}
                   />
                 )
               })}
@@ -280,7 +283,7 @@ export function DataTable<TData>({
               <table style={{ width: '100%' }}>
                 <Styled.TBody>
                   <Styled.OverlayTR>
-                    <RowCells row={activeRow} />
+                    <RowCells row={activeRow} cellWrapper={cellWrapper} />
                   </Styled.OverlayTR>
                 </Styled.TBody>
               </table>

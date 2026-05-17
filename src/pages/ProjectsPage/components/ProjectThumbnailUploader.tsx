@@ -6,7 +6,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import api from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers'
-import * as Styled from '../../ProjectDashboard/panels/ProjectDetails/ProjectThumbnailUploader.styled'
+import * as Styled from './ProjectThumbnailUploader.styled'
 
 type ThumbnailRenderProps = {
   projectName: string
@@ -193,14 +193,11 @@ export const ProjectThumbnailUploader = ({
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onClick={disabled ? undefined : openFilePicker}
+      onContextMenu={disabled ? undefined : handleContextMenu}
+      style={disabled ? { cursor: 'default' } : undefined}
     >
-      <Styled.ThumbnailSlot
-        onClick={disabled ? undefined : openFilePicker}
-        onContextMenu={disabled ? undefined : handleContextMenu}
-        style={disabled ? { cursor: 'default' } : undefined}
-      >
-        {renderedThumbnail}
-      </Styled.ThumbnailSlot>
+      {renderedThumbnail}
 
       {children}
 
@@ -226,6 +223,8 @@ export const ProjectThumbnailUploader = ({
           <Styled.CancelButton icon="close" variant="text" onClick={handleCancel} />
         </Styled.Overlay>
       )}
+
+      <Icon icon="add" className="add-thumbnail" />
 
       <input type="file" accept="image/*" ref={fileInputRef} onChange={handleInputChange} />
     </Styled.Wrapper>

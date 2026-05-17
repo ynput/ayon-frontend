@@ -13,12 +13,21 @@ export const Wrapper = styled.div`
   > input[type='file'] {
     display: none;
   }
-`
 
-export const ThumbnailSlot = styled.div`
-  flex-shrink: 0;
-  margin-bottom: 8px;
-  cursor: pointer;
+  .add-thumbnail {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover .add-thumbnail {
+    opacity: 1;
+  }
 `
 
 export const Overlay = styled.div`
