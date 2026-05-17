@@ -13,7 +13,8 @@ import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
-import ProjectThumbnailUploader from './ProjectThumbnailUploader'
+import ProjectThumbnailUploader from '../../../ProjectsPage/components/ProjectThumbnailUploader'
+import { Thumbnail } from '@shared/components'
 
 const ProjectDetails = ({ projectName }) => {
   const isUser = useSelector((state) => state.user.data.isUser)
@@ -242,6 +243,17 @@ const ProjectDetails = ({ projectName }) => {
         projectUpdatedAt={data?.updatedAt}
         isFetching={isFetching}
         disabled={isUser}
+        Thumbnail={({ projectName, updatedAt, isFetching, disabled }) => (
+          <Thumbnail
+            entityType="project"
+            projectName={projectName}
+            entityUpdatedAt={updatedAt}
+            icon="add_photo_alternate"
+            shimmer={isFetching}
+            disabled={disabled}
+            style={{ height: 'auto', aspectRatio: 1.7 }}
+          />
+        )}
       >
         {editing ? (
           <AttribForm

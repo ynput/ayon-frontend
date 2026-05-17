@@ -5,15 +5,22 @@ import { useDispatch } from 'react-redux'
 import { Icon } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import api from '@shared/api'
-import { Thumbnail } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers'
-import * as Styled from './ProjectThumbnailUploader.styled'
+import * as Styled from '../../ProjectDashboard/panels/ProjectDetails/ProjectThumbnailUploader.styled'
+
+type ThumbnailRenderProps = {
+  projectName: string
+  updatedAt?: string
+  isFetching?: boolean
+  disabled?: boolean
+}
 
 export interface ProjectThumbnailUploaderProps {
   projectName: string
   projectUpdatedAt?: string
   isFetching?: boolean
   disabled?: boolean
+  Thumbnail: (props: ThumbnailRenderProps) => JSX.Element
   children?: ReactNode
 }
 
@@ -22,6 +29,7 @@ export const ProjectThumbnailUploader = ({
   projectUpdatedAt,
   isFetching,
   disabled = false,
+  Thumbnail,
   children,
 }: ProjectThumbnailUploaderProps) => {
   const dispatch = useDispatch()
@@ -103,9 +111,7 @@ export const ProjectThumbnailUploader = ({
         return
       }
       console.error(error)
-      toast.error(
-        error?.response?.data?.detail || error?.message || 'Failed to upload thumbnail',
-      )
+      toast.error(error?.response?.data?.detail || error?.message || 'Failed to upload thumbnail')
       resetState()
     } finally {
       if (abortControllerRef.current === controller) {
@@ -172,6 +178,15 @@ export const ProjectThumbnailUploader = ({
     ])
   }
 
+  const thumbnailRenderProps: ThumbnailRenderProps = {
+    projectName,
+    updatedAt: effectiveUpdatedAt,
+    isFetching,
+    disabled,
+  }
+
+  const renderedThumbnail = <Thumbnail {...thumbnailRenderProps} />
+
   return (
     <Styled.Wrapper
       onDragEnter={handleDragEnter}
@@ -184,14 +199,7 @@ export const ProjectThumbnailUploader = ({
         onContextMenu={disabled ? undefined : handleContextMenu}
         style={disabled ? { cursor: 'default' } : undefined}
       >
-        <Thumbnail
-          entityType="project"
-          projectName={projectName}
-          entityUpdatedAt={effectiveUpdatedAt}
-          icon="add_photo_alternate"
-          shimmer={isFetching}
-          style={{ height: 'auto', aspectRatio: 1.7 }}
-        />
+        {renderedThumbnail}
       </Styled.ThumbnailSlot>
 
       {children}
