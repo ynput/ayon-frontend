@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { AttributeData, AttributeModel, useGetAttributeListQuery } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import type { ProjectTableRow } from './useGetProjectsData'
-import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader'
+import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader/ProjectThumbnailUploader'
 import * as Styled from '../ProjectsPage.styled'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()

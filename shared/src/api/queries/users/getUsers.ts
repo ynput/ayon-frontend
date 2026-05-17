@@ -127,13 +127,15 @@ const injectedApi = gqlApi.injectEndpoints({
           throw new Error(res.errors[0].message)
         }
 
-        return res?.data?.users.edges.filter((e:any) => e.node.name !== 'CloudServiceWorker').map((e: any) => ({
-          ...e.node,
-          self: e.node.name === selfName,
-          avatarUrl: `/api/users/${e.node.name}/avatar`,
-          accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
-          attrib: parseAllAttribs(e.node.allAttrib),
-        }))
+        return res?.data?.users.edges
+          .filter((e: any) => e.node.name !== 'CloudServiceWorker')
+          .map((e: any) => ({
+            ...e.node,
+            self: e.node.name === selfName,
+            avatarUrl: `/api/users/${e.node.name}/avatar`,
+            accessGroups: e.node.accessGroups ? JSON.parse(e.node.accessGroups) : {},
+            attrib: parseAllAttribs(e.node.allAttrib),
+          }))
       },
       providesTags: (users) =>
         users
@@ -194,11 +196,12 @@ const injectedApi = gqlApi.injectEndpoints({
 })
 
 type AssigneeNode = GetAllProjectUsersAsAssigneeQuery['users']['edges'][0]['node']
-export type Assignees = {
+export type Assignee = {
   name: AssigneeNode['name']
   fullName: AssigneeNode['attrib']['fullName']
   updatedAt: AssigneeNode['updatedAt']
-}[]
+}
+export type Assignees = Assignee[]
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>

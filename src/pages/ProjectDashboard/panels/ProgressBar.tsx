@@ -1,7 +1,18 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React, { FC, useState } from 'react'
 import styled, { css, keyframes } from 'styled-components'
-import { useState } from 'react'
+
+interface Value {
+  value: number
+  color?: string
+  label: string | null
+}
+
+interface ProgressBarProps {
+  values?: Value[]
+  backgroundColor?: string
+  isLoading?: boolean
+  onClick?: (item: { value: number; label: string | null }) => void
+}
 
 const ProgressStyled = styled.div`
   position: relative;
@@ -14,7 +25,7 @@ const ProgressStyled = styled.div`
   background-color: black;
 `
 
-const LinesAnimation = (left) => keyframes`
+const LinesAnimation = (left: number) => keyframes`
     from {
         left: ${-left}%;
         transform: scaleX(0);
@@ -24,7 +35,17 @@ const LinesAnimation = (left) => keyframes`
     }
 `
 
-const LineStyled = styled.hr`
+interface LineStyledProps {
+  color?: string
+  flex: number
+  label: string | null
+  index: number
+  length: number
+  animation: boolean
+  left: number
+}
+
+const LineStyled = styled.hr<LineStyledProps>`
   /* default border color */
   border: 2.5px solid var(--md-sys-color-primary);
   /* custom line color */
@@ -112,6 +133,7 @@ const LineStyled = styled.hr`
         }
       }
       /* flex below 25 and index either start or end */
+
       ${({ index, length, animation }) =>
         (index === 0 || index === length - 1) &&
         !animation &&
@@ -128,20 +150,23 @@ const LineStyled = styled.hr`
     `}
 `
 
-const ProgressBar = ({ values = [], backgroundColor, onClick }) => {
+const ProgressBar: FC<ProgressBarProps> = ({ values = [], backgroundColor, onClick }) => {
   // block all animations once played once
   const [animation, setAnimation] = useState(true)
+
+  let normalizedValues = [...values]
+
   // add placeholder line if only one value is provided
-  if (values.length === 1) {
-    values.push({
-      value: 100 - values[0].value,
+  if (normalizedValues.length === 1) {
+    normalizedValues.push({
+      value: 100 - normalizedValues[0].value,
       color: 'transparent',
       label: null,
     })
-  } else {
+  } else if (normalizedValues.length > 0) {
     // normalize values between 0 and 100
-    const total = values.reduce((acc, { value }) => acc + value, 0)
-    values = values.map(({ value, ...rest }) => ({
+    const total = normalizedValues.reduce((acc, { value }) => acc + value, 0)
+    normalizedValues = normalizedValues.map(({ value, ...rest }) => ({
       value: Math.round((value / total) * 100),
       ...rest,
     }))
@@ -149,7 +174,7 @@ const ProgressBar = ({ values = [], backgroundColor, onClick }) => {
 
   return (
     <ProgressStyled style={{ backgroundColor }} onAnimationEnd={() => setAnimation(false)}>
-      {values.map(({ value, color, label }, i, arr) => (
+      {normalizedValues.map(({ value, color, label }, i, arr) => (
         <LineStyled
           animation={animation}
           color={color}
@@ -164,21 +189,6 @@ const ProgressBar = ({ values = [], backgroundColor, onClick }) => {
       ))}
     </ProgressStyled>
   )
-}
-
-ProgressBar.propTypes = {
-  backgroundColor: PropTypes.string,
-  isLoading: PropTypes.bool,
-  onClick: PropTypes.func,
-  values: PropTypes.oneOfType([
-    PropTypes.arrayOf(
-      PropTypes.shape({
-        value: PropTypes.number.isRequired,
-        color: PropTypes.string,
-        label: PropTypes.string.isRequired,
-      }),
-    ),
-  ]),
 }
 
 export default ProgressBar

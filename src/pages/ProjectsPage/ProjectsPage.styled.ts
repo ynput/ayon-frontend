@@ -6,7 +6,6 @@ export const PageContainer = styled.div`
   width: 100%;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
 `
 export const Thumbnail = styled.img`
   width: 100%;

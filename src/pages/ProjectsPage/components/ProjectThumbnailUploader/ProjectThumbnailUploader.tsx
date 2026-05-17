@@ -193,7 +193,6 @@ export const ProjectThumbnailUploader = ({
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      onClick={disabled ? undefined : openFilePicker}
       onContextMenu={disabled ? undefined : handleContextMenu}
       style={disabled ? { cursor: 'default' } : undefined}
     >
@@ -223,8 +222,6 @@ export const ProjectThumbnailUploader = ({
           <Styled.CancelButton icon="close" variant="text" onClick={handleCancel} />
         </Styled.Overlay>
       )}
-
-      <Icon icon="add" className="add-thumbnail" />
 
       <input type="file" accept="image/*" ref={fileInputRef} onChange={handleInputChange} />
     </Styled.Wrapper>

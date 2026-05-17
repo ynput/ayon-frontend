@@ -13,7 +13,7 @@ import { isEmpty, isEqual } from 'lodash'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import clsx from 'clsx'
-import ProjectThumbnailUploader from '../../../ProjectsPage/components/ProjectThumbnailUploader'
+import ProjectThumbnailUploader from '../../../ProjectsPage/components/ProjectThumbnailUploader/ProjectThumbnailUploader'
 import { Thumbnail } from '@shared/components'
 
 const ProjectDetails = ({ projectName }) => {

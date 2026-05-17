@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   getExpandedRowModel,
   getGroupedRowModel,
+  Row,
   RowData,
   useReactTable,
 } from '@tanstack/react-table'
@@ -47,6 +48,7 @@ declare module '@tanstack/react-table' {
 export interface ListTableProps<TData> {
   data: TData[]
   columns: ColumnDef<TData, any>[]
+  getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string
   fetchNextPage?: () => void
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
@@ -64,6 +66,7 @@ export interface ListTableProps<TData> {
 export function ListTable<TData extends RowData>({
   data,
   columns,
+  getRowId,
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
@@ -92,6 +95,7 @@ export function ListTable<TData extends RowData>({
   const table = useReactTable({
     data,
     columns,
+    getRowId,
     state: {
       grouping,
       columnOrder,
@@ -140,6 +144,9 @@ export function ListTable<TData extends RowData>({
           onSelectedRowsChange?.([...selectedRows, rowId])
         }
         lastSelectedIndexRef.current = rowIndex
+      } else if (selectedRows.includes(rowId)) {
+        // If the clicked row is already selected, deselect it
+        onSelectedRowsChange?.(selectedRows.filter((id) => id !== rowId))
       } else {
         onSelectedRowsChange?.([rowId])
         lastSelectedIndexRef.current = rowIndex

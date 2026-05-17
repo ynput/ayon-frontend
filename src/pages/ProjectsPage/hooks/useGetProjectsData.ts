@@ -23,9 +23,12 @@ type Props = {
   showArchived: boolean
 }
 
+type ProjectMap = Map<string, Project>
+
 type Value = {
   projects: Project[]
   tableRows: ProjectTableRow[]
+  projectsMap: ProjectMap
   fetchNextPage: () => void
   hasNextPage: boolean
   isFetchingNextPage: boolean
@@ -71,9 +74,18 @@ export const useGetProjectsData = ({
     [projects],
   )
 
+  const projectsMap = useMemo<ProjectMap>(() => {
+    const map = new Map<string, Project>()
+    projects.forEach((project) => {
+      map.set(project.name, project)
+    })
+    return map
+  }, [projects])
+
   return {
     projects,
     tableRows,
+    projectsMap,
     fetchNextPage,
     hasNextPage: hasNextPage ?? false,
     isFetchingNextPage,
