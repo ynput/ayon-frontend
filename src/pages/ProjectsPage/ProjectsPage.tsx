@@ -54,8 +54,6 @@ export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
             selectedRows={selectedProjectIds}
             onSelectedRowsChange={setSelectedProjectIds}
             onUpdateRow={handleProjectUpdate}
-            onOpenViewer={() => {}}
-            onReorderRows={() => {}}
             columnAttributeData={columnAttributeData}
             dataTypeWidgets={dataTypeWidgets}
           />

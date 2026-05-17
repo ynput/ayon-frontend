@@ -3,6 +3,7 @@ import { AttributeData, AttributeModel, useGetAttributeListQuery } from '@shared
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import type { ProjectTableRow } from './useGetProjectsData'
 import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader/ProjectThumbnailUploader'
+import ProjectHeartbeat from '../components/ProjectDetailsPanel/components/ProjectHeartbeat'
 import * as Styled from '../ProjectsPage.styled'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
@@ -29,15 +30,24 @@ const STATIC_COLUMNS: ColumnDef<ProjectTableRow, any>[] = [
       />
     ),
   }),
+  columnHelper.accessor('label', {
+    id: 'label',
+    header: 'Label',
+    size: 200,
+  }),
   columnHelper.accessor('name', {
     id: 'name',
     header: 'Name',
     size: 200,
   }),
-  columnHelper.accessor('label', {
-    id: 'label',
-    header: 'Label',
-    size: 200,
+  columnHelper.accessor('name', {
+    id: 'heartbeat',
+    header: 'Heartbeat',
+    size: 150,
+    meta: {
+      listTableCustomCell: true,
+    },
+    cell: (info) => <ProjectHeartbeat projectName={info.getValue()} />,
   }),
   columnHelper.accessor('code', {
     id: 'code',
