@@ -2,10 +2,18 @@
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import * as Styled from './TableSettings.styled'
+import {
+  ColumnOrderState,
+  ColumnPinningState,
+  ColumnSizingState,
+  SortingState,
+  VisibilityState,
+} from '@tanstack/react-table'
 
 // Context and Components imports
 import {
   ColumnsConfig,
+  TableGroupBy,
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable/context/ColumnSettingsContext'
 import ColumnItem from './ColumnItem'
@@ -33,22 +41,32 @@ import { SettingHighlightedId } from '@shared/context'
 interface ColumnsSettingsProps {
   columns: SettingsPanelItem[]
   highlighted?: SettingHighlightedId
+  columnVisibility: VisibilityState
+  updateColumnVisibility: (visibility: VisibilityState) => void
+  columnPinning: ColumnPinningState
+  updateColumnPinning: (pinning: ColumnPinningState) => void
+  columnOrder: ColumnOrderState
+  setColumnsConfig: (config: ColumnsConfig) => void
+  columnSizing: ColumnSizingState
+  groupBy?: TableGroupBy
+  sorting: SortingState
+  rowHeight?: number
 }
 
-const ColumnsSettings: FC<ColumnsSettingsProps> = ({ columns, highlighted }) => {
-  const {
-    columnVisibility,
-    updateColumnVisibility,
-    columnPinning,
-    updateColumnPinning,
-    columnOrder,
-    setColumnsConfig,
-    columnSizing,
-    groupBy,
-    sorting,
-    rowHeight,
-  } = useColumnSettingsContext()
-
+export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
+  columns,
+  highlighted,
+  columnVisibility,
+  updateColumnVisibility,
+  columnPinning,
+  updateColumnPinning,
+  columnOrder,
+  setColumnsConfig,
+  columnSizing,
+  groupBy,
+  sorting,
+  rowHeight,
+}) => {
   // State for the currently dragged column
   const [activeId, setActiveId] = useState<string | null>(null)
   const [isHiddenOverVisible, setIsHiddenOverVisible] = useState(false)
@@ -487,3 +505,37 @@ const SectionTitle = styled.div`
 `
 
 export default ColumnsSettings
+
+// Backward-compat wrapper that reads all data from ColumnSettingsContext
+type ColumnsSettingsWithContextProps = Pick<ColumnsSettingsProps, 'columns' | 'highlighted'>
+
+export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (props) => {
+  const {
+    columnVisibility,
+    updateColumnVisibility,
+    columnPinning,
+    updateColumnPinning,
+    columnOrder,
+    setColumnsConfig,
+    columnSizing,
+    groupBy,
+    sorting,
+    rowHeight,
+  } = useColumnSettingsContext()
+
+  return (
+    <ColumnsSettings
+      {...props}
+      columnVisibility={columnVisibility}
+      updateColumnVisibility={updateColumnVisibility}
+      columnPinning={columnPinning}
+      updateColumnPinning={updateColumnPinning}
+      columnOrder={columnOrder}
+      setColumnsConfig={setColumnsConfig}
+      columnSizing={columnSizing}
+      groupBy={groupBy}
+      sorting={sorting}
+      rowHeight={rowHeight}
+    />
+  )
+}
