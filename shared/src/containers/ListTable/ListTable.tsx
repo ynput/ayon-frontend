@@ -7,6 +7,8 @@ import {
   getSortedRowModel,
   RowData,
   SortingState,
+  VisibilityState,
+  ColumnSizingState,
   useReactTable,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -30,6 +32,7 @@ import { useTableColumnOrder } from './hooks/useTableColumnOrder'
 import { useTableSelection } from './hooks/useTableSelection'
 import { useTableEditing } from './hooks/useTableEditing'
 import { useTableDnd } from './hooks/useTableDnd'
+import { useColumnWidthVars } from './hooks/useColumnWidthVars'
 import type { ListTableProps } from './ListTable.types'
 
 export type { ListTableProps }
@@ -53,12 +56,20 @@ export function ListTable<TData extends RowData>({
   enableColumnReordering = false,
   columnOrder: columnOrderProp,
   onColumnOrderChange,
+  enableColumnVisibility = false,
+  columnVisibility: columnVisibilityProp,
+  onColumnVisibilityChange,
+  enableColumnResizing = false,
+  columnSizing: columnSizingProp,
+  onColumnSizingChange,
   enableSorting = false,
   sorting: sortingProp,
   onSortingChange,
 }: ListTableProps<TData>) {
   const [grouping, setGrouping] = React.useState<string[]>([])
   const [sortingLocal, setSortingLocal] = useState<SortingState>([])
+  const [columnVisibilityLocal, setColumnVisibilityLocal] = useState<VisibilityState>({})
+  const [columnSizingLocal, setColumnSizingLocal] = useState<ColumnSizingState>({})
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   // Use controlled sorting if provided, otherwise internal state
@@ -69,6 +80,26 @@ export function ListTable<TData extends RowData>({
     onSortingChange?.(next)
   }
 
+  // Use controlled column visibility if provided, otherwise internal state
+  const columnVisibility = columnVisibilityProp ?? columnVisibilityLocal
+  const handleColumnVisibilityChange = (
+    updater: VisibilityState | ((prev: VisibilityState) => VisibilityState),
+  ) => {
+    const next = typeof updater === 'function' ? updater(columnVisibility) : updater
+    setColumnVisibilityLocal(next)
+    onColumnVisibilityChange?.(next)
+  }
+
+  // Use controlled column sizing if provided, otherwise internal state
+  const columnSizing = columnSizingProp ?? columnSizingLocal
+  const handleColumnSizingChange = (
+    updater: ColumnSizingState | ((prev: ColumnSizingState) => ColumnSizingState),
+  ) => {
+    const next = typeof updater === 'function' ? updater(columnSizing) : updater
+    setColumnSizingLocal(next)
+    onColumnSizingChange?.(next)
+  }
+
   // --- Column order ---
   const { columnOrder, setColumnOrder } = useTableColumnOrder(columns, columnOrderProp)
 
@@ -77,12 +108,15 @@ export function ListTable<TData extends RowData>({
     data,
     columns,
     getRowId,
-    state: { grouping, columnOrder, sorting },
+    state: { grouping, columnOrder, sorting, columnVisibility, columnSizing },
     filterFns: { fuzzy: () => true }, // Placeholder for fuzzy filtering
     onGroupingChange: setGrouping,
     onColumnOrderChange: setColumnOrder,
     onSortingChange: handleSortingChange,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
+    onColumnSizingChange: handleColumnSizingChange,
     enableSorting,
+    columnResizeMode: 'onEnd',
     getCoreRowModel: getCoreRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -134,6 +168,10 @@ export function ListTable<TData extends RowData>({
   // Memoize stable callbacks so React.memo on DraggableRow can bail out during column drag
   const callbacks = useMemo(() => ({ onUpdateRow, onOpenViewer }), [onUpdateRow, onOpenViewer])
 
+  // --- CSS variable-based column widths (avoids row re-renders during resize) ---
+  const columnSizeVars = useColumnWidthVars(table)
+
+  const isResizingColumn = !!table.getState().columnSizingInfo.isResizingColumn
   // --- Infinite loading ---
   useEffect(() => {
     const [lastItem] = virtualRows.slice(-1)
@@ -149,8 +187,13 @@ export function ListTable<TData extends RowData>({
     : null
 
   return (
-    <Styled.TableContainer ref={tableContainerRef} tabIndex={0} onKeyDown={handleKeyDown}>
-      <Styled.Table>
+    <Styled.TableContainer
+      ref={tableContainerRef}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      style={isResizingColumn ? { cursor: 'col-resize' } : undefined}
+    >
+      <Styled.Table style={columnSizeVars as React.CSSProperties}>
         {/* Column DndContext — isolated so row useSortable hooks are unaffected during column drag */}
         <DndContext
           sensors={sensors}
@@ -173,6 +216,8 @@ export function ListTable<TData extends RowData>({
                       header={header}
                       enabled={enableColumnReordering}
                       enableSorting={enableSorting}
+                      enableColumnVisibility={enableColumnVisibility}
+                      enableColumnResizing={enableColumnResizing}
                     />
                   ))}
                 </SortableContext>

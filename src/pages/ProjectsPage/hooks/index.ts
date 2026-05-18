@@ -1,5 +1,5 @@
 export * from './useGetProjectsData'
 export * from './useProjectColumns'
 export * from './useUpdateProjectTableRow'
-export * from './useProjectColumnOrder'
+export * from './useProjectColumnConfig'
 export * from './useProjectSorting'

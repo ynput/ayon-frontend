@@ -1,4 +1,12 @@
-import { ColumnDef, ColumnOrderState, Row, RowData, SortingState } from '@tanstack/react-table'
+import {
+  ColumnDef,
+  ColumnOrderState,
+  ColumnSizingState,
+  Row,
+  RowData,
+  SortingState,
+  VisibilityState,
+} from '@tanstack/react-table'
 import { CellWrapperRenderer } from './ListTableCell'
 import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
 
@@ -34,6 +42,14 @@ export interface ListTableProps<TData> {
   enableColumnReordering?: boolean
   columnOrder?: ColumnOrderState
   onColumnOrderChange?: (order: ColumnOrderState) => void
+  // Column visibility
+  enableColumnVisibility?: boolean
+  columnVisibility?: VisibilityState
+  onColumnVisibilityChange?: (visibility: VisibilityState) => void
+  // Column resizing
+  enableColumnResizing?: boolean
+  columnSizing?: ColumnSizingState
+  onColumnSizingChange?: (sizing: ColumnSizingState) => void
   // Sorting
   enableSorting?: boolean
   sorting?: SortingState

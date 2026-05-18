@@ -6,17 +6,22 @@ import * as Styled from './ListTable.styled'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components'
 import HeaderActionButton from '@shared/containers/ProjectTreeTable/components/HeaderActionButton'
 import { useMenuContext } from '@shared/context'
+import React from 'react'
 
 interface SortableTHProps<TData> {
   header: Header<TData, any>
   enabled: boolean
   enableSorting?: boolean
+  enableColumnVisibility?: boolean
+  enableColumnResizing?: boolean
 }
 
 export function SortableTHComponent<TData extends RowData>({
   header,
   enabled,
   enableSorting = false,
+  enableColumnVisibility = false,
+  enableColumnResizing = false,
 }: SortableTHProps<TData>) {
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: header.id,
@@ -51,6 +56,30 @@ export function SortableTHComponent<TData extends RowData>({
       ]
     : []
 
+  const canHide = enableColumnVisibility && column.getCanHide()
+  const hideMenuItems: ColumnMenuItemType[] = canHide
+    ? [
+        ...(sortMenuItems.length > 0
+          ? [{ id: 'divider-visibility', type: 'divider' as const }]
+          : []),
+        {
+          id: 'hide',
+          label: 'Hide column',
+          icon: 'visibility_off',
+          onClick: () => column.toggleVisibility(false),
+        },
+      ]
+    : []
+
+  const allMenuItems: ColumnMenuItemType[] = [...sortMenuItems, ...hideMenuItems]
+
+  const canResize = enableColumnResizing && column.getCanResize()
+  const isResizing = column.getIsResizing()
+  const { columnSizingInfo } = header.getContext().table.getState()
+  const resizeOffset =
+    columnSizingInfo.isResizingColumn === column.id ? columnSizingInfo.deltaOffset ?? 0 : 0
+  const anyResizing = !!columnSizingInfo.isResizingColumn
+
   // Prevent drag from starting when clicking action buttons
   const preventDrag = {
     onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
@@ -61,11 +90,17 @@ export function SortableTHComponent<TData extends RowData>({
     <Styled.SortableTHStyled
       ref={setNodeRef}
       style={{
-        width: header.getSize(),
+        width: `calc(var(--header-${header.id}-size) * 1px)`,
         transform: CSS.Transform.toString(transform) ?? undefined,
         transition,
       }}
-      className={clsx({ grab: enabled, dragging: isDragging, 'menu-open': isMenuOpen })}
+      className={clsx({
+        grab: enabled,
+        dragging: isDragging,
+        'menu-open': isMenuOpen,
+        resizing: anyResizing,
+        sorted: !!isSorted,
+      })}
       {...(enabled ? { ...attributes, ...listeners } : {})}
     >
       <Styled.THContent>
@@ -73,10 +108,10 @@ export function SortableTHComponent<TData extends RowData>({
           ? null
           : flexRender(header.column.columnDef.header, header.getContext())}
       </Styled.THContent>
-      {(sortMenuItems.length > 0 || canSort) && (
+      {(allMenuItems.length > 0 || canSort) && (
         <Styled.THActions {...preventDrag}>
-          {sortMenuItems.length > 0 && (
-            <ColumnHeaderMenuUI menuItems={sortMenuItems} menuId={menuId} className="header-menu" />
+          {allMenuItems.length > 0 && (
+            <ColumnHeaderMenuUI menuItems={allMenuItems} menuId={menuId} className="header-menu" />
           )}
           {canSort && (
             <HeaderActionButton
@@ -90,6 +125,19 @@ export function SortableTHComponent<TData extends RowData>({
             />
           )}
         </Styled.THActions>
+      )}
+      {canResize && (
+        <Styled.ResizeHandle
+          className={clsx('resize-handle', { resizing: isResizing })}
+          style={{ transform: resizeOffset ? `translateX(${resizeOffset}px)` : undefined }}
+          onDoubleClick={() => column.resetSize()}
+          onMouseDown={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            header.getResizeHandler()(e)
+          }}
+          onTouchStart={header.getResizeHandler()}
+          onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}
+        />
       )}
     </Styled.SortableTHStyled>
   )

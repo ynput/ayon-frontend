@@ -95,6 +95,11 @@ export const TableContainer = styled.div`
   padding-top: 0;
   outline: none;
 
+  &[data-hover-frozen] .th-actions {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
   table {
     height: fit-content;
     width: 100%;
@@ -183,6 +188,7 @@ export const SortableTHStyled = styled.th`
   white-space: nowrap;
   min-height: fit-content;
   cursor: default;
+  user-select: none;
   transition: opacity 100ms ease, transform 200ms ease;
 
   &.grab {
@@ -200,10 +206,28 @@ export const SortableTHStyled = styled.th`
   }
 
   &:hover .th-actions,
-  &.menu-open .th-actions,
-  &:focus-within .th-actions {
+  &.menu-open .th-actions {
     visibility: visible;
     pointer-events: auto;
+    background-color: var(--md-sys-color-background);
+  }
+
+  &:hover .resize-handle {
+    opacity: 1;
+  }
+
+  &.sorted .th-actions {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  &.resizing .th-actions {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  &.resizing .resize-handle:not(.resizing) {
+    opacity: 0;
   }
 `
 
@@ -232,6 +256,7 @@ export const THContent = styled.span`
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+  user-select: none;
 `
 
 export const THActions = styled.div.attrs({ className: 'th-actions' })`
@@ -244,4 +269,21 @@ export const THActions = styled.div.attrs({ className: 'th-actions' })`
   gap: 2px;
   flex-shrink: 0;
   z-index: 1;
+`
+
+export const ResizeHandle = styled.div`
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  z-index: 2;
+  opacity: 0;
+  background-color: var(--md-sys-color-surface-container-high);
+
+  &.resizing {
+    background-color: var(--md-sys-color-primary);
+    opacity: 1;
+  }
 `

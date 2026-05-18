@@ -146,7 +146,7 @@ export const RowCells = <TData extends RowData>({
             key={cell.id}
             id={cellId}
             className="p-3 truncate flex-1 flex items-center"
-            style={{ width: cell.column.getSize() }}
+            style={{ width: `calc(var(--col-${cell.column.id}-size) * 1px)` }}
             onDoubleClick={
               canStartTypedEdit ? () => editingState.startEditingCell(cellId) : undefined
             }

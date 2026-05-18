@@ -1,7 +1,7 @@
 import { FC, useMemo, useState } from 'react'
 import {
   useGetProjectsData,
-  useProjectColumnOrder,
+  useProjectColumnConfig,
   useProjectColumns,
   useProjectSorting,
   useUpdateProjectTableRow,
@@ -28,7 +28,14 @@ const ProjectsPageContent: FC = () => {
     })
 
   const { columns, columnAttributeData } = useProjectColumns(tableRows)
-  const { columnOrder, handleColumnOrderChange } = useProjectColumnOrder({ columns })
+  const {
+    columnOrder,
+    columnVisibility,
+    columnSizing,
+    handleColumnOrderChange,
+    handleColumnVisibilityChange,
+    handleColumnSizingChange,
+  } = useProjectColumnConfig({ columns })
   const { sorting, handleSortingChange } = useProjectSorting()
   const dataTypeWidgets = getDefaultListTableDataTypeWidgets<ProjectTableRow>()
 
@@ -71,6 +78,12 @@ const ProjectsPageContent: FC = () => {
             onSortingChange={handleSortingChange}
             columnOrder={columnOrder}
             onColumnOrderChange={handleColumnOrderChange}
+            enableColumnVisibility
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={handleColumnVisibilityChange}
+            enableColumnResizing
+            columnSizing={columnSizing}
+            onColumnSizingChange={handleColumnSizingChange}
           />
         </SplitterPanel>
         <SplitterPanel size={30} className="details">
