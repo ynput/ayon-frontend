@@ -1,7 +1,11 @@
 // hook that loads projects data and transforms it into maps and table data
 
 import type { Project } from '@shared/api'
-import { useGetProjectFoldersQuery, useGetProjectsInfiniteInfiniteQuery } from '@shared/api'
+import {
+  useGetProjectFoldersQuery,
+  useGetProjectsInfiniteInfiniteQuery,
+  type ProjectFolderModel,
+} from '@shared/api'
 import { GROUP_BY_FOLDER_KEY } from '../constants'
 import { useMemo } from 'react'
 
@@ -24,11 +28,13 @@ type Props = {
 }
 
 type ProjectMap = Map<string, Project>
+type FolderMap = Map<string, ProjectFolderModel>
 
 type Value = {
   projects: Project[]
   tableRows: ProjectTableRow[]
   projectsMap: ProjectMap
+  foldersMap: FolderMap
   fetchNextPage: () => void
   hasNextPage: boolean
   isFetchingNextPage: boolean
@@ -52,9 +58,17 @@ export const useGetProjectsData = ({
   } = useGetProjectsInfiniteInfiniteQuery({})
 
   //   get project folders if grouping by folder
-  const { data: _folders } = useGetProjectFoldersQuery(undefined, {
+  const { data: foldersData } = useGetProjectFoldersQuery(undefined, {
     skip: GROUP_BY_FOLDER_KEY !== groupBy,
   })
+
+  const foldersMap = useMemo<FolderMap>(() => {
+    const map = new Map<string, ProjectFolderModel>()
+    for (const folder of foldersData ?? []) {
+      map.set(folder.id, folder)
+    }
+    return map
+  }, [foldersData])
 
   const projects = useMemo(() => pages.flatMap((page) => page.projects), [pages])
 
@@ -68,10 +82,13 @@ export const useGetProjectsData = ({
         active: project.active,
         library: project.library,
         color: project.color ?? null,
-        projectFolder: project.projectFolder ?? null,
+        projectFolder:
+          project.projectFolder && foldersMap.has(project.projectFolder)
+            ? project.projectFolder
+            : null,
         attrib: project.attrib,
       })),
-    [projects],
+    [foldersMap, projects],
   )
 
   const projectsMap = useMemo<ProjectMap>(() => {
@@ -86,6 +103,7 @@ export const useGetProjectsData = ({
     projects,
     tableRows,
     projectsMap,
+    foldersMap,
     fetchNextPage,
     hasNextPage: hasNextPage ?? false,
     isFetchingNextPage,

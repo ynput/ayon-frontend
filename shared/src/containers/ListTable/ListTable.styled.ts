@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Button } from '@ynput/ayon-react-components'
 
 export const TR = styled.tr`
   display: flex;
@@ -7,45 +8,101 @@ export const TR = styled.tr`
   left: 0;
   width: 100%;
   height: 36px;
-  background-color: var(--md-sys-color-surface-container-high);
+
   border-radius: var(--border-radius-m);
   overflow: hidden;
-  box-shadow: var(--md-sys-shadow-1);
 
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-high-hover);
+  .inner-td {
+    background-color: var(--md-sys-color-surface-container-high);
+    border-top: 2px solid var(--md-sys-color-surface-container-high);
+    border-bottom: 2px solid var(--md-sys-color-surface-container-high);
   }
 
-  &:focus {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: -2px;
+  td:first-child .inner-td {
+    border-left: 2px solid var(--md-sys-color-surface-container-high);
+  }
+
+  td:last-child .inner-td {
+    border-right: 2px solid var(--md-sys-color-surface-container-high);
+  }
+
+  &:hover {
+    .inner-td {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+      border-top-color: var(--md-sys-color-surface-container-high-hover);
+      border-bottom-color: var(--md-sys-color-surface-container-high-hover);
+    }
+
+    td:first-child .inner-td {
+      border-left-color: var(--md-sys-color-surface-container-high-hover);
+    }
+
+    td:last-child .inner-td {
+      border-right-color: var(--md-sys-color-surface-container-high-hover);
+    }
   }
 
   &.selected {
-    background-color: var(--md-sys-color-primary-container);
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: -2px;
+    .inner-td {
+      background-color: var(--md-sys-color-primary-container);
+      border-top: 2px solid var(--md-sys-color-primary);
+      border-bottom: 2px solid var(--md-sys-color-primary);
+    }
+  }
+
+  &.selected td:first-child .inner-td {
+    border-left: 2px solid var(--md-sys-color-primary);
+  }
+
+  &.selected td:last-child .inner-td {
+    border-right: 2px solid var(--md-sys-color-primary);
   }
 
   &.dragging {
     opacity: 0;
+  }
+
+  &.group-row {
+    background-color: transparent;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container);
+    }
   }
 `
 
 export const TD = styled.td`
   position: relative;
   height: 100%;
+
+  background-color: transparent;
+  user-select: none;
+
+  &:first-child .inner-td {
+    border-top-left-radius: var(--border-radius-m);
+    border-bottom-left-radius: var(--border-radius-m);
+  }
+
+  &:last-child .inner-td {
+    border-top-right-radius: var(--border-radius-m);
+    border-bottom-right-radius: var(--border-radius-m);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+`
+
+export const TDInner = styled.div`
+  position: absolute;
+  inset: 0;
+
   padding: 0 var(--padding-m);
   display: flex;
   align-items: center;
   overflow: hidden;
   cursor: pointer;
-  background-color: transparent;
-  user-select: none;
-
-  &:focus-visible {
-    outline: none;
-  }
+  box-sizing: border-box;
 `
 
 // convenience cell wrapper div use of cell container prop
@@ -231,12 +288,59 @@ export const SortableTHStyled = styled.th`
   }
 `
 
+export const GroupRowContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--padding-m);
+  width: 100%;
+  height: 100%;
+  font-size: var(--font-size-s);
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  user-select: none;
+`
+
+export const Expander = styled(Button)`
+  &.expander {
+    background-color: unset;
+    padding: 2px;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+    }
+  }
+  cursor: pointer;
+`
+
+export const GroupTD = styled.td`
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+`
+
+export const GroupCount = styled.span`
+  margin-left: auto;
+  font-weight: 400;
+  color: var(--md-sys-color-outline);
+  padding-right: var(--padding-s);
+`
+
+export const GroupColorDot = styled.span`
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+`
+
 export const DraggedColumnHeader = styled.th`
   position: relative;
   cursor: grabbing;
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: var(--border-radius-m);
-  box-shadow: var(--md-sys-shadow-2);
   display: flex;
   align-items: center;
   padding: 0 var(--padding-m);

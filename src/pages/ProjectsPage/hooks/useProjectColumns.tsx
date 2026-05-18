@@ -6,10 +6,22 @@ import type { ProjectTableRow } from './useGetProjectsData'
 import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader/ProjectThumbnailUploader'
 import ProjectHeartbeat from '../components/ProjectDetailsPanel/components/ProjectHeartbeat'
 import * as Styled from '../ProjectsPage.styled'
+import type { ProjectFolderModel } from '@shared/api'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
 
+const STATIC_GROUP_OPTIONS = [
+  { id: 'active', label: 'Active' },
+  { id: 'library', label: 'Library' },
+  { id: 'projectFolder', label: 'Folder' },
+]
+
 export type ProjectTableColumnAttributeData = Record<string, AttributeData>
+export type ProjectGroupOption = {
+  id: string
+  label: string
+}
+type FolderMap = Map<string, ProjectFolderModel>
 
 const STATIC_COLUMNS_BEFORE_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
   columnHelper.accessor('name', {
@@ -59,17 +71,27 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     header: 'Library',
     size: 80,
   }),
+  columnHelper.accessor('projectFolder', {
+    id: 'projectFolder',
+    header: 'Folder',
+    size: 150,
+  }),
 ]
 
 const isProjectScopedAttribute = (attribute: AttributeModel) => attribute.scope?.includes('project')
+const isGroupableProjectAttribute = (attribute: AttributeModel) =>
+  isProjectScopedAttribute(attribute) &&
+  (attribute.data.type === 'boolean' || !!attribute.data.enum?.length)
 
 export type ProjectColumn = ColumnDef<ProjectTableRow, any>
 
 export const useProjectColumns = (
   rows: ProjectTableRow[],
+  foldersMap: FolderMap = new Map(),
 ): {
   columns: ProjectColumn[]
   columnAttributeData: ProjectTableColumnAttributeData
+  groupOptions: ProjectGroupOption[]
 } => {
   const { data: attributes = [] } = useGetAttributeListQuery()
   const store = useStore()
@@ -85,6 +107,10 @@ export const useProjectColumns = (
   }, [rows])
 
   const projectAttributes = useMemo(() => attributes.filter(isProjectScopedAttribute), [attributes])
+  const groupableProjectAttributes = useMemo(
+    () => attributes.filter(isGroupableProjectAttribute),
+    [attributes],
+  )
 
   const columnAttribsAttributeData = useMemo<ProjectTableColumnAttributeData>(
     () =>
@@ -116,9 +142,27 @@ export const useProjectColumns = (
           id: `attrib_${key}`,
           header: key,
           size: 150,
+          sortingFn: (rowA, rowB) => {
+            const attribute = columnAttribsAttributeData[`attrib_${key}`]
+            const valueA = rowA.original.attrib[key]
+            const valueB = rowB.original.attrib[key]
+
+            if (attribute?.enum?.length) {
+              const values = attribute.enum.map((item) => String(item.value))
+              const indexA = values.indexOf(String(valueA))
+              const indexB = values.indexOf(String(valueB))
+              const normalizedA = indexA === -1 ? Number.MAX_SAFE_INTEGER : indexA
+              const normalizedB = indexB === -1 ? Number.MAX_SAFE_INTEGER : indexB
+              return normalizedA - normalizedB
+            }
+
+            return String(valueA ?? '').localeCompare(String(valueB ?? ''), undefined, {
+              sensitivity: 'base',
+            })
+          },
         }),
       ),
-    [attribKeys],
+    [attribKeys, columnAttribsAttributeData],
   )
 
   const heartbeatColumn = useMemo<ColumnDef<ProjectTableRow, any>>(
@@ -150,11 +194,43 @@ export const useProjectColumns = (
     () => [
       ...STATIC_COLUMNS_BEFORE_HEARTBEAT,
       heartbeatColumn,
-      ...STATIC_COLUMNS_AFTER_HEARTBEAT,
+      ...STATIC_COLUMNS_AFTER_HEARTBEAT.map((column) =>
+        column.id === 'projectFolder'
+          ? {
+              ...column,
+              sortingFn: (
+                rowA: { original: ProjectTableRow },
+                rowB: { original: ProjectTableRow },
+              ) => {
+                const labelA =
+                  foldersMap.get(rowA.original.projectFolder ?? '')?.label ?? 'No folder'
+                const labelB =
+                  foldersMap.get(rowB.original.projectFolder ?? '')?.label ?? 'No folder'
+                return labelA.localeCompare(labelB, undefined, { sensitivity: 'base' })
+              },
+            }
+          : column,
+      ),
       ...attribColumns,
     ],
-    [heartbeatColumn, attribColumns],
+    [attribColumns, foldersMap, heartbeatColumn],
   )
 
-  return useMemo(() => ({ columns, columnAttributeData }), [columns, columnAttributeData])
+  const groupOptions = useMemo<ProjectGroupOption[]>(
+    () => [
+      ...STATIC_GROUP_OPTIONS,
+      ...groupableProjectAttributes
+        .filter((attribute) => attribKeys.includes(attribute.name))
+        .map((attribute) => ({
+          id: `attrib_${attribute.name}`,
+          label: attribute.data.title || attribute.name,
+        })),
+    ],
+    [attribKeys, groupableProjectAttributes],
+  )
+
+  return useMemo(
+    () => ({ columns, columnAttributeData, groupOptions }),
+    [columns, columnAttributeData, groupOptions],
+  )
 }

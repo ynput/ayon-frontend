@@ -10,6 +10,17 @@ import {
 import { CellWrapperRenderer } from './ListTableCell'
 import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
 
+export type ListTableGroupDisplay = {
+  value?: unknown
+  label?: string
+  icon?: string
+  color?: string
+  sortValue?: string | number
+  sortIndex?: number
+}
+
+export type ListTableGroupingPathItem = unknown | ListTableGroupDisplay
+
 // Extend TanStack Table Meta to strongly type our mutation and dialog handlers
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -54,4 +65,12 @@ export interface ListTableProps<TData> {
   enableSorting?: boolean
   sorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
+  // Grouping
+  grouping?: string[]
+  onGroupingChange?: (grouping: string[]) => void
+  groupSortByDesc?: boolean
+  /** Expand one grouping column into nested subgroup levels for a row. */
+  getGroupingPath?: (columnId: string, row: TData) => ListTableGroupingPathItem[] | undefined
+  /** Resolve label/icon/color for grouped row headers. */
+  getGroupDisplay?: (columnId: string, value: unknown) => ListTableGroupDisplay | undefined
 }

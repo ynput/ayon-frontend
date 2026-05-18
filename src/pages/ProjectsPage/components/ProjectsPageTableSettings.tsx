@@ -10,7 +10,7 @@ import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import { ColumnsSettings } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SettingsPanelItem } from '@shared/components/SettingsPanel'
 import { SettingsSortingDropdown, SortCardType } from '@ynput/ayon-react-components'
-import type { ProjectTableRow } from '../hooks'
+import type { ProjectGroupOption, ProjectTableRow } from '../hooks'
 
 const SORT_OPTIONS = [
   { id: 'label', label: 'Label' },
@@ -28,9 +28,13 @@ interface ProjectsPageTableSettingsProps {
   columnVisibility: VisibilityState
   columnSizing: ColumnSizingState
   sorting: SortingState
+  grouping: string[]
+  groupSortByDesc: boolean
+  groupOptions: ProjectGroupOption[]
   onColumnVisibilityChange: (visibility: VisibilityState) => void
   onColumnsConfigChange: (order: ColumnOrderState, visibility: VisibilityState) => void
   onSortingChange: (sorting: SortingState) => void
+  onGroupingChange: (grouping: string[], groupSortByDesc?: boolean) => void
 }
 
 export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
@@ -39,9 +43,13 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
   columnVisibility,
   columnSizing,
   sorting,
+  grouping,
+  groupSortByDesc,
+  groupOptions,
   onColumnVisibilityChange,
   onColumnsConfigChange,
   onSortingChange,
+  onGroupingChange,
 }) => {
   const settingsColumns = useMemo<SettingsPanelItem[]>(
     () =>
@@ -73,6 +81,28 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
   const handleSortChange = (v: SortCardType[]) => {
     onSortingChange(v.map((item) => ({ id: item.id, desc: !item.sortOrder })))
   }
+
+  const groupValue = useMemo<SortCardType[]>(
+    () =>
+      grouping
+        .map((id) => {
+          const option = groupOptions.find((o) => o.id === id)
+          if (!option) return null
+          return { ...option, sortOrder: !groupSortByDesc }
+        })
+        .filter(Boolean) as SortCardType[],
+    [groupOptions, groupSortByDesc, grouping],
+  )
+
+  const handleGroupChange = (v: SortCardType[]) => {
+    const nextGrouping = v.map((item) => item.id)
+    const nextGroupSortByDesc = v[0]?.sortOrder === undefined ? groupSortByDesc : !v[0].sortOrder
+    onGroupingChange(nextGrouping, nextGroupSortByDesc)
+  }
+
+  const groupPreview = grouping.length
+    ? grouping.map((id) => groupOptions.find((o) => o.id === id)?.label ?? id).join(' › ')
+    : 'None'
 
   const settings: SettingConfig[] = [
     {
@@ -107,6 +137,19 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
           options={SORT_OPTIONS}
           onChange={handleSortChange}
           multiSelect={false}
+        />
+      ),
+    },
+    {
+      id: 'group-by',
+      component: (
+        <SettingsSortingDropdown
+          title="Group by"
+          icon="splitscreen"
+          value={groupValue}
+          options={groupOptions}
+          onChange={handleGroupChange}
+          multiSelect
         />
       ),
     },

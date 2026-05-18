@@ -1,6 +1,6 @@
 import React from 'react'
 import { Cell, flexRender, Row, RowData } from '@tanstack/react-table'
-import * as styled from './ListTable.styled'
+import * as Styled from './ListTable.styled'
 import {
   getListTableCellId,
   ListTableColumnAttributeData,
@@ -100,7 +100,7 @@ export const RowCells = <TData extends RowData>({
 }: RowCellsProps<TData>) => {
   return (
     <>
-      {row.getVisibleCells().map((cell) => {
+      {row.getVisibleCells().map((cell, cellIndex, visibleCells) => {
         const cellId = getListTableCellId(row.id, cell.column.id)
         const attributeData = columnAttributeData?.[cell.column.id]
         const hasCustomCellRenderer = !!cell.column.columnDef.meta?.listTableCustomCell
@@ -128,25 +128,27 @@ export const RowCells = <TData extends RowData>({
           if (cellWrapper) {
             wrappedContent = cellWrapper(row, content) || content
           } else {
-            wrappedContent = <styled.ListTableCellWrapper>{content}</styled.ListTableCellWrapper>
+            wrappedContent = <Styled.ListTableCellWrapper>{content}</Styled.ListTableCellWrapper>
           }
         }
 
         const canStartTypedEdit = shouldUseTypedWidget && hasTypedWidget
         if (canStartTypedEdit) {
           wrappedContent = (
-            <styled.EditableCellValue className={clsx({ editing: isEditing })}>
+            <Styled.EditableCellValue className={clsx({ editing: isEditing })}>
               {wrappedContent}
-            </styled.EditableCellValue>
+            </Styled.EditableCellValue>
           )
         }
 
         return (
-          <styled.TD
+          <Styled.TD
             key={cell.id}
             id={cellId}
-            className="p-3 truncate flex-1 flex items-center"
-            style={{ width: `calc(var(--col-${cell.column.id}-size) * 1px)` }}
+            style={{
+              width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+              paddingRight: cellIndex === visibleCells.length - 1 ? 'var(--padding-m)' : undefined,
+            }}
             onDoubleClick={
               canStartTypedEdit ? () => editingState.startEditingCell(cellId) : undefined
             }
@@ -164,8 +166,15 @@ export const RowCells = <TData extends RowData>({
               }
             }}
           >
-            {wrappedContent}
-          </styled.TD>
+            <Styled.TDInner
+              className="inner-td"
+              style={{
+                left: cellIndex === 0 ? `calc(var(--padding-m) + ${row.depth * 16}px)` : undefined,
+              }}
+            >
+              {wrappedContent}
+            </Styled.TDInner>
+          </Styled.TD>
         )
       })}
     </>

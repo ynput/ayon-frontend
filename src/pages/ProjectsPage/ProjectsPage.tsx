@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
 import {
   useGetProjectsData,
   useProjectColumnConfig,
@@ -6,6 +6,7 @@ import {
   useProjectSorting,
   useUpdateProjectTableRow,
   useProjectFilters,
+  useProjectGrouping,
   applyProjectFilters,
 } from './hooks'
 import type { ProjectTableRow } from './hooks'
@@ -22,20 +23,26 @@ import useShortcuts from '@hooks/useShortcuts'
 import { WithViews } from '@/hoc/WithViews'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
 import { CustomizeButton } from '@shared/components'
+import { GROUP_BY_FOLDER_KEY } from './constants'
+import type { ListTableGroupingPathItem } from '@shared/containers/ListTable/ListTable.types'
 
 interface ProjectsPageProps {
   onNewProject: () => void
 }
 
 const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
-  const { tableRows, fetchNextPage, hasNextPage, isFetchingNextPage, projectsMap } =
+  const { grouping, groupSortByDesc, handleGroupingChange } = useProjectGrouping()
+
+  // Load folder metadata whenever folder grouping is active, even at nested levels.
+  const groupBy = grouping.includes(GROUP_BY_FOLDER_KEY) ? GROUP_BY_FOLDER_KEY : grouping[0]
+  const { tableRows, fetchNextPage, hasNextPage, isFetchingNextPage, projectsMap, foldersMap } =
     useGetProjectsData({
       showArchived: false,
-      groupBy: undefined,
+      groupBy,
       groupByDesc: undefined,
     })
 
-  const { columns, columnAttributeData } = useProjectColumns(tableRows)
+  const { columns, columnAttributeData, groupOptions } = useProjectColumns(tableRows, foldersMap)
   const {
     columnOrder,
     columnVisibility,
@@ -57,6 +64,69 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
 
   const handleProjectUpdate = useUpdateProjectTableRow(tableRows)
   const { isPanelOpen } = useSettingsPanel()
+
+  const getGroupingPath = useCallback(
+    (columnId: string, row: ProjectTableRow): ListTableGroupingPathItem[] | undefined => {
+      if (columnId !== GROUP_BY_FOLDER_KEY) return undefined
+      if (!row.projectFolder) {
+        return [{ value: null, label: 'No folder', sortValue: 'No folder' }]
+      }
+
+      const path: ListTableGroupingPathItem[] = []
+      let currentFolder = foldersMap.get(row.projectFolder)
+
+      while (currentFolder) {
+        path.unshift({
+          value: currentFolder.id,
+          label: currentFolder.label,
+          icon: currentFolder.data?.icon ?? undefined,
+          color: currentFolder.data?.color ?? undefined,
+          sortValue: currentFolder.label,
+        })
+
+        currentFolder = currentFolder.parentId ? foldersMap.get(currentFolder.parentId) : undefined
+      }
+
+      return path.length ? path : [{ value: null, label: 'No folder', sortValue: 'No folder' }]
+    },
+    [foldersMap],
+  )
+
+  const getGroupDisplay = useCallback(
+    (columnId: string, value: unknown) => {
+      if (columnId === GROUP_BY_FOLDER_KEY) {
+        if (value === null || value === undefined) return { label: 'No folder' }
+        const folder = foldersMap.get(String(value))
+        return {
+          label: folder?.label ?? String(value),
+          icon: folder?.data?.icon,
+          color: folder?.data?.color,
+        }
+      }
+
+      const attribute = columnAttributeData[columnId]
+      if (!attribute) return undefined
+
+      if (attribute.enum?.length) {
+        const option = attribute.enum.find((item) => String(item.value) === String(value))
+        return option
+          ? {
+              label: String(option.label ?? option.value),
+              icon: typeof option.icon === 'string' ? option.icon : undefined,
+              color: option.color,
+            }
+          : { label: String(value) }
+      }
+
+      if (attribute.type === 'boolean') {
+        if (value === null || value === undefined) return { label: '(None)' }
+        return { label: String(value) === 'true' ? 'True' : 'False' }
+      }
+
+      return undefined
+    },
+    [columnAttributeData, foldersMap],
+  )
 
   useShortcuts(
     useMemo(
@@ -112,6 +182,11 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
                 enableColumnResizing
                 columnSizing={columnSizing}
                 onColumnSizingChange={handleColumnSizingChange}
+                grouping={grouping}
+                onGroupingChange={handleGroupingChange}
+                groupSortByDesc={groupSortByDesc}
+                getGroupingPath={getGroupingPath}
+                getGroupDisplay={getGroupDisplay}
               />
             </SplitterPanel>
             <SplitterPanel size={30} className="details">
@@ -133,9 +208,13 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
               columnVisibility={columnVisibility}
               columnSizing={columnSizing}
               sorting={sorting}
+              grouping={grouping}
+              groupSortByDesc={groupSortByDesc}
+              groupOptions={groupOptions}
               onColumnVisibilityChange={handleColumnVisibilityChange}
               onColumnsConfigChange={handleColumnsConfigChange}
               onSortingChange={handleSortingChange}
+              onGroupingChange={handleGroupingChange}
             />
           </SplitterPanel>
         ) : (

@@ -11,6 +11,10 @@ import {
   RowCells,
 } from './ListTableCell'
 import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
+import type { ListTableGroupDisplay } from './ListTable.types'
+import { GroupRow, isCustomGroupRowValue } from './ListTableGroupRow'
+
+// --- DraggableRow (regular data row) ---
 
 interface DraggableRowProps<TData extends RowData> {
   row: Row<TData>
@@ -23,6 +27,7 @@ interface DraggableRowProps<TData extends RowData> {
   dataTypeWidgets?: ListTableDataTypeWidgets<TData>
   editingState: ListTableCellEditingState
   callbacks: ListTableCellCallbacks<TData>
+  getGroupDisplay?: (columnId: string, value: unknown) => ListTableGroupDisplay | undefined
 }
 
 function DraggableRowInner<TData extends RowData>({
@@ -36,10 +41,34 @@ function DraggableRowInner<TData extends RowData>({
   dataTypeWidgets,
   editingState,
   callbacks,
+  getGroupDisplay,
 }: DraggableRowProps<TData>) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.id,
   })
+
+  // Group rows get a different, simpler rendering
+  if (row.getIsGrouped() || isCustomGroupRowValue(row.original)) {
+    const customGroupRow = isCustomGroupRowValue(row.original)
+      ? (row.original as { __groupColumnId: string; __groupValue: unknown })
+      : null
+    const columnId = row.getIsGrouped()
+      ? row.groupingColumnId ?? ''
+      : customGroupRow?.__groupColumnId ?? ''
+    const groupValue = row.getIsGrouped() ? row.getValue(columnId) : customGroupRow?.__groupValue
+    return (
+      <GroupRow
+        groupColumnId={columnId}
+        groupValue={groupValue}
+        count={row.getLeafRows().length}
+        depth={row.depth}
+        isExpanded={row.getIsExpanded()}
+        onToggle={row.getToggleExpandedHandler()}
+        getGroupDisplay={getGroupDisplay}
+        virtualStart={virtualRow.start}
+      />
+    )
+  }
 
   const virtualTransform = `translateY(${virtualRow.start}px)`
   const dndTransform = transform ? CSS.Transform.toString(transform) : ''

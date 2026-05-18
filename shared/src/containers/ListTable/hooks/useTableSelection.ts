@@ -11,6 +11,13 @@ interface UseTableSelectionOptions<TData extends RowData> {
   tableContainerRef: React.RefObject<HTMLDivElement>
 }
 
+const isGroupRow = <TData extends RowData>(row: Row<TData>) => {
+  return (
+    row.getIsGrouped() ||
+    (!!row.original && typeof row.original === 'object' && '__listTableGroup' in row.original)
+  )
+}
+
 export function useTableSelection<TData extends RowData>({
   rows,
   selectedRows,
@@ -24,6 +31,9 @@ export function useTableSelection<TData extends RowData>({
 
   const handleRowClick = useCallback(
     (rowId: string, rowIndex: number, e: React.MouseEvent) => {
+      const row = rows[rowIndex]
+      if (row && isGroupRow(row)) return
+
       if (multiSelection && e.shiftKey && lastSelectedIndexRef.current >= 0) {
         const start = Math.min(lastSelectedIndexRef.current, rowIndex)
         const end = Math.max(lastSelectedIndexRef.current, rowIndex)
@@ -58,15 +68,26 @@ export function useTableSelection<TData extends RowData>({
       e.preventDefault()
 
       const direction = e.key === 'ArrowDown' ? 1 : -1
-      const currentIndex = activeRowIndex < 0 ? (direction > 0 ? -1 : rows.length) : activeRowIndex
-      const newIndex = Math.max(0, Math.min(rows.length - 1, currentIndex + direction))
+      let currentIndex = activeRowIndex < 0 ? (direction > 0 ? -1 : rows.length) : activeRowIndex
 
-      if (newIndex === activeRowIndex) return
+      let newIndex = currentIndex
+      while (true) {
+        newIndex += direction
+        if (newIndex < 0 || newIndex >= rows.length) {
+          newIndex = Math.max(0, Math.min(rows.length - 1, newIndex))
+          break
+        }
+        if (!isGroupRow(rows[newIndex])) {
+          break
+        }
+      }
+
+      if (newIndex === activeRowIndex || isGroupRow(rows[newIndex])) return
 
       const newRowId = rows[newIndex]?.id
       if (!newRowId) return
 
-      if (e.shiftKey) {
+      if (e.shiftKey && multiSelection) {
         if (selectedRows.includes(newRowId)) {
           // Shrink: deselect the row we're moving away from
           const currentRowId = rows[activeRowIndex]?.id

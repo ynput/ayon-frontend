@@ -1,1 +1,1 @@
-export const GROUP_BY_FOLDER_KEY = 'folder'
+export const GROUP_BY_FOLDER_KEY = 'projectFolder'
