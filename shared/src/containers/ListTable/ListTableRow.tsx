@@ -1,3 +1,4 @@
+import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Row, RowData } from '@tanstack/react-table'
@@ -24,7 +25,7 @@ interface DraggableRowProps<TData extends RowData> {
   callbacks: ListTableCellCallbacks<TData>
 }
 
-export const DraggableRow = <TData extends RowData>({
+function DraggableRowInner<TData extends RowData>({
   row,
   virtualRow,
   isSelected,
@@ -35,7 +36,7 @@ export const DraggableRow = <TData extends RowData>({
   dataTypeWidgets,
   editingState,
   callbacks,
-}: DraggableRowProps<TData>) => {
+}: DraggableRowProps<TData>) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.id,
   })
@@ -65,3 +66,5 @@ export const DraggableRow = <TData extends RowData>({
     </Styled.TR>
   )
 }
+
+export const DraggableRow = React.memo(DraggableRowInner) as typeof DraggableRowInner

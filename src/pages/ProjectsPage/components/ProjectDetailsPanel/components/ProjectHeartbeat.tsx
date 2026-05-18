@@ -1,6 +1,7 @@
 import { Chart } from 'primereact/chart'
 import styled from 'styled-components'
 import { useGetProjectDashboardQuery } from '@queries/getProjectDashboard'
+import { memo } from 'react'
 
 const ChartStyled = styled(Chart)`
   width: 100%;
@@ -60,9 +61,10 @@ const ProjectHeartbeat = ({ projectName }: ProjectHeartbeatProps) => {
       legend: { display: false },
     },
     aspectRatio: false,
+    animation: false,
   }
 
   return <ChartStyled data={chart} type="line" options={options} />
 }
 
-export default ProjectHeartbeat
+export default memo(ProjectHeartbeat)

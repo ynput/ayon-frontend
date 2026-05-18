@@ -169,3 +169,44 @@ export const OverlayTR = styled.tr`
   cursor: grabbing;
   z-index: 50;
 `
+
+export const SortableTHStyled = styled.th`
+  position: relative;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--padding-m);
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-height: fit-content;
+  cursor: default;
+  transition: opacity 100ms ease, transform 200ms ease;
+
+  &.grab {
+    cursor: grab;
+  }
+
+  &.dragging {
+    opacity: 0;
+  }
+`
+
+export const DraggedColumnHeader = styled.th`
+  position: relative;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--border-radius-m);
+  cursor: grabbing;
+  box-shadow: var(--md-sys-shadow-2);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--padding-m);
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  z-index: 50;
+`

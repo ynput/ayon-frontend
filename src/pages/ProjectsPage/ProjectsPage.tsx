@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
 import { useGetProjectsData, useProjectColumns, useUpdateProjectTableRow } from './hooks'
 import type { ProjectTableRow } from './hooks'
 import { getDefaultListTableDataTypeWidgets, ListTable } from '@shared/containers/ListTable'
@@ -9,10 +9,19 @@ import { ProjectDetailsPanel } from './components/ProjectDetailsPanel/ProjectDet
 import { SplitterPanel } from 'primereact/splitter'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
+import { WithViews } from '@/hoc/WithViews'
+import { useViewsContext } from '@shared/containers'
+import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
+import {
+  convertColumnConfigToTanstackStates,
+  convertTanstackStatesToColumnConfig,
+} from '@shared/util'
+import type { OverviewSettings } from '@shared/api/generated/views'
+import { ColumnOrderState } from '@tanstack/react-table'
 
 interface ProjectsPageProps {}
 
-export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
+const ProjectsPageContent: FC = () => {
   const { tableRows, fetchNextPage, hasNextPage, isFetchingNextPage, projectsMap } =
     useGetProjectsData({
       showArchived: false,
@@ -28,6 +37,37 @@ export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
   const clearSelection = () => setSelectedProjectIds([])
 
   const handleProjectUpdate = useUpdateProjectTableRow(tableRows)
+
+  // --- Column order (views persistence) ---
+  const { viewSettings } = useViewsContext()
+  const { updateViewSettings } = useViewUpdateHelper()
+  const [localColumnOrder, setLocalColumnOrder] = useState<ColumnOrderState | null>(null)
+
+  const storedColumnOrder = useMemo<ColumnOrderState | undefined>(() => {
+    const settings = viewSettings as OverviewSettings | undefined
+    if (!settings?.columns?.length) return undefined
+    const config = convertColumnConfigToTanstackStates(settings)
+    return config.columnOrder.length > 0 ? config.columnOrder : undefined
+  }, [viewSettings])
+
+  const columnOrder = localColumnOrder ?? storedColumnOrder
+
+  const handleColumnOrderChange = useCallback(
+    async (newOrder: ColumnOrderState) => {
+      const allColumnIds = columns.map((c) => c.id as string)
+      const columnConfig = convertTanstackStatesToColumnConfig(
+        {
+          columnOrder: newOrder,
+          columnVisibility: {},
+          columnPinning: {},
+          columnSizing: {},
+        },
+        allColumnIds,
+      )
+      await updateViewSettings({ columns: columnConfig.columns }, setLocalColumnOrder, newOrder, {})
+    },
+    [columns, updateViewSettings],
+  )
 
   useShortcuts(
     useMemo(
@@ -56,6 +96,9 @@ export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
             onUpdateRow={handleProjectUpdate}
             columnAttributeData={columnAttributeData}
             dataTypeWidgets={dataTypeWidgets}
+            enableColumnReordering
+            columnOrder={columnOrder}
+            onColumnOrderChange={handleColumnOrderChange}
           />
         </SplitterPanel>
         <SplitterPanel size={30} className="details">
@@ -83,5 +126,13 @@ export const ProjectsPage: FC<ProjectsPageProps> = ({}) => {
         </Dialog>
       )}
     </Styled.PageContainer>
+  )
+}
+
+export const ProjectsPage: FC<ProjectsPageProps> = () => {
+  return (
+    <WithViews viewType="projects-overview">
+      <ProjectsPageContent />
+    </WithViews>
   )
 }

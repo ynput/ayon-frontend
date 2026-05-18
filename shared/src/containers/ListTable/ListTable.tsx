@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   getExpandedRowModel,
   getGroupedRowModel,
+  Header,
   Row,
   RowData,
   useReactTable,
@@ -23,11 +24,17 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
+import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
+  arrayMove,
+  horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
+  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import clsx from 'clsx'
 import { DraggableRow } from './ListTableRow'
 import { CellWrapperRenderer, RowCells } from './ListTableCell'
 import * as Styled from './ListTable.styled'
@@ -61,6 +68,42 @@ export interface ListTableProps<TData> {
   cellWrapper?: CellWrapperRenderer<TData>
   columnAttributeData?: ListTableColumnAttributeData
   dataTypeWidgets?: ListTableDataTypeWidgets<TData>
+  // Column reordering
+  enableColumnReordering?: boolean
+  columnOrder?: ColumnOrderState
+  onColumnOrderChange?: (order: ColumnOrderState) => void
+}
+
+// Sortable column header cell
+function SortableTHComponent<TData>({
+  header,
+  enabled,
+}: {
+  header: Header<TData, any>
+  enabled: boolean
+}) {
+  const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
+    id: header.id,
+    data: { type: 'column' },
+    disabled: !enabled,
+  })
+
+  return (
+    <Styled.SortableTHStyled
+      ref={setNodeRef}
+      style={{
+        width: header.getSize(),
+        transform: CSS.Transform.toString(transform) ?? undefined,
+        transition,
+      }}
+      className={clsx({ grab: enabled, dragging: isDragging })}
+      {...(enabled ? { ...attributes, ...listeners } : {})}
+    >
+      {header.isPlaceholder
+        ? null
+        : flexRender(header.column.columnDef.header, header.getContext())}
+    </Styled.SortableTHStyled>
+  )
 }
 
 export function ListTable<TData extends RowData>({
@@ -79,13 +122,32 @@ export function ListTable<TData extends RowData>({
   cellWrapper,
   columnAttributeData,
   dataTypeWidgets,
+  enableColumnReordering = false,
+  columnOrder: columnOrderProp,
+  onColumnOrderChange,
 }: ListTableProps<TData>) {
   // --- State Management ---
   const [grouping, setGrouping] = useState<string[]>([])
-  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>(() =>
-    columns.map((c) => c.id as string),
-  )
+  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>(() => {
+    if (columnOrderProp && columnOrderProp.length > 0) {
+      const allIds = columns.map((c) => c.id as string)
+      const missing = allIds.filter((id) => !columnOrderProp.includes(id))
+      return [...columnOrderProp, ...missing]
+    }
+    return columns.map((c) => c.id as string)
+  })
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeColumnId, setActiveColumnId] = useState<string | null>(null)
+
+  // Sync external column order when it changes (e.g. after view settings load)
+  useEffect(() => {
+    if (columnOrderProp && columnOrderProp.length > 0) {
+      const allIds = columns.map((c) => c.id as string)
+      const missing = allIds.filter((id) => !columnOrderProp.includes(id))
+      setColumnOrder([...columnOrderProp, ...missing])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnOrderProp])
   const [activeRowIndex, setActiveRowIndex] = useState(-1)
   const [editingCellId, setEditingCellId] = useState<string | null>(null)
   const [editingDraft, setEditingDraft] = useState<string | null>(null)
@@ -210,12 +272,37 @@ export function ListTable<TData extends RowData>({
   )
 
   const activeRow = activeId ? rows.find((row) => row.id === activeId) : null
+  const activeColumnHeader = activeColumnId
+    ? table.getHeaderGroups()[0]?.headers.find((h) => h.id === activeColumnId)
+    : null
 
-  const handleDragStart = (event: DragStartEvent) => {
+  // --- Column drag handlers (separate DndContext) ---
+  const handleColumnDragStart = (event: DragStartEvent) => {
+    setActiveColumnId(event.active.id as string)
+  }
+
+  const handleColumnDragEnd = (event: DragEndEvent) => {
+    setActiveColumnId(null)
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setColumnOrder((prevOrder) => {
+        const oldIndex = prevOrder.indexOf(active.id as string)
+        const newIndex = prevOrder.indexOf(over.id as string)
+        const newOrder = arrayMove(prevOrder, oldIndex, newIndex)
+        onColumnOrderChange?.(newOrder)
+        return newOrder
+      })
+    }
+  }
+
+  const handleColumnDragCancel = () => setActiveColumnId(null)
+
+  // --- Row drag handlers (separate DndContext) ---
+  const handleRowDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleRowDragEnd = (event: DragEndEvent) => {
     setActiveId(null)
     const { active, over } = event
     if (over && active.id !== over.id) {
@@ -225,9 +312,7 @@ export function ListTable<TData extends RowData>({
     }
   }
 
-  const handleDragCancel = () => {
-    setActiveId(null)
-  }
+  const handleRowDragCancel = () => setActiveId(null)
 
   const startEditingCell = useCallback((cellId: string) => {
     setEditingCellId(cellId)
@@ -238,42 +323,87 @@ export function ListTable<TData extends RowData>({
     setEditingDraft(null)
   }, [])
 
-  const callbacks = {
-    onUpdateRow,
-    onOpenViewer,
-  }
+  // Memoize stable objects so React.memo on DraggableRow can bail out during column drag
+  const callbacks = React.useMemo(
+    () => ({ onUpdateRow, onOpenViewer }),
+    [onUpdateRow, onOpenViewer],
+  )
 
-  const editingState = {
-    editingCellId,
-    startEditingCell,
-    stopEditingCell,
-    getDraftValue: () => editingDraft,
-    setDraftValue: setEditingDraft,
-  }
+  const editingState = React.useMemo(
+    () => ({
+      editingCellId,
+      startEditingCell,
+      stopEditingCell,
+      getDraftValue: () => editingDraft,
+      setDraftValue: setEditingDraft,
+    }),
+    [editingCellId, editingDraft, startEditingCell, stopEditingCell],
+  )
 
   return (
     <Styled.TableContainer ref={tableContainerRef} tabIndex={0} onKeyDown={handleKeyDown}>
       <Styled.Table>
-        <Styled.THead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <Styled.HeaderTR key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <Styled.TH key={header.id} style={{ width: header.getSize() }}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </Styled.TH>
-              ))}
-            </Styled.HeaderTR>
-          ))}
-        </Styled.THead>
-
+        {/* Column DndContext — isolated so row useSortable hooks are unaffected during column drag */}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragCancel={handleDragCancel}
+          onDragStart={handleColumnDragStart}
+          onDragEnd={handleColumnDragEnd}
+          onDragCancel={handleColumnDragCancel}
+          modifiers={[restrictToHorizontalAxis]}
+        >
+          <Styled.THead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <Styled.HeaderTR key={headerGroup.id}>
+                <SortableContext
+                  items={headerGroup.headers.map((h) => h.id)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  {headerGroup.headers.map((header) => (
+                    <SortableTHComponent
+                      key={header.id}
+                      header={header}
+                      enabled={enableColumnReordering}
+                    />
+                  ))}
+                </SortableContext>
+              </Styled.HeaderTR>
+            ))}
+          </Styled.THead>
+          <DragOverlay
+            dropAnimation={{
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: { active: { opacity: '0.4' } },
+              }),
+            }}
+          >
+            {activeColumnHeader ? (
+              <table>
+                <thead>
+                  <tr>
+                    <Styled.DraggedColumnHeader style={{ width: activeColumnHeader.getSize() }}>
+                      {activeColumnHeader.isPlaceholder
+                        ? null
+                        : flexRender(
+                            activeColumnHeader.column.columnDef.header,
+                            activeColumnHeader.getContext(),
+                          )}
+                    </Styled.DraggedColumnHeader>
+                  </tr>
+                </thead>
+              </table>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+
+        {/* Row DndContext — isolated so column drag doesn't trigger row useSortable re-renders */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleRowDragStart}
+          onDragEnd={handleRowDragEnd}
+          onDragCancel={handleRowDragCancel}
+          modifiers={[restrictToVerticalAxis]}
         >
           <Styled.TBody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
             <SortableContext
@@ -315,7 +445,6 @@ export function ListTable<TData extends RowData>({
               })}
             </SortableContext>
           </Styled.TBody>
-
           <DragOverlay
             dropAnimation={{
               sideEffects: defaultDropAnimationSideEffects({
