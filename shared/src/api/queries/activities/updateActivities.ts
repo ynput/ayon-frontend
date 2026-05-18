@@ -34,16 +34,20 @@ const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   }
 }
 
+const serializeFilter = (filter: unknown): string =>
+  typeof filter === 'string' ? filter : JSON.stringify(filter)
+
 const patchActivities = async (
   { patch, entityIds = [], filter, refs = [] }: any,
   { dispatch, queryFulfilled, getState }: any,
   method: 'create' | 'update' | 'delete',
 ) => {
   const refIds = refs.map((ref: any) => ref.id) || []
+  const serializedFilter = serializeFilter(filter)
   // build tags that would be affected by this activity
   const invalidatingTags = [...entityIds, ...refIds].map((id) => ({
     type: 'entityActivities',
-    id: id + '-' + filter,
+    id: `${id}-${serializedFilter}`,
   }))
 
   const state = getState()

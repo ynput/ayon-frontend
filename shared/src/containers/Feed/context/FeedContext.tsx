@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
 import useGetFeedActivitiesData from '../hooks/useGetFeedActivitiesData'
+import { buildBackendFilter } from '../helpers/buildBackendFilter'
 
 // Queries
 import {
@@ -90,6 +91,7 @@ interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   categories: ActivityCategory[]
   feedFilter: FeedFilter
   setFeedFilter: (filter: FeedFilter) => void
+  backendFilter: string | undefined
 }
 
 const FeedContext = createContext<FeedContextType | undefined>(undefined)
@@ -146,10 +148,12 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
     await deleteReactionToActivity(args).unwrap()
 
   const activityTypes = getFilterActivityTypes(feedFilter)
+  const backendFilter = useMemo(() => buildBackendFilter(feedFilter), [feedFilter])
 
   const activitiesDataProps = useGetFeedActivitiesData({
     entities: props.entities,
     filter: feedFilter,
+    backendFilter,
     activityTypes: activityTypes,
     projectName: props.projectName,
     entityType: props.entityType,
@@ -194,6 +198,7 @@ export const FeedProvider = ({ children, ...props }: FeedContextProps) => {
         activityTypes,
         feedFilter,
         setFeedFilter,
+        backendFilter,
         isGuest,
         editingId,
         setEditingId,

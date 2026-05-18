@@ -26,7 +26,15 @@ import TabHeaderAndFilters, {
 // number of activities to get
 export const activitiesLast = 30
 
-const feedFilters: FilterItem<string>[] = [
+const baseFeedFilters: FilterItem<string>[] = [
+  {
+    id: 'body',
+    tooltip: 'Search in comments',
+    icon: 'search',
+    type: 'search',
+    operator: 'like',
+    placeholder: 'Search…',
+  },
   {
     id: 'comments',
     tooltip: 'Comments',
@@ -46,6 +54,11 @@ const feedFilters: FilterItem<string>[] = [
     id: 'updates',
     tooltip: 'Entity updates',
     icon: 'arrow_circle_right',
+  },
+  {
+    id: 'has_attachments',
+    tooltip: 'Has attachments',
+    icon: 'attach_file',
   },
 ]
 
@@ -99,6 +112,30 @@ export const Feed = ({
   )
   const hasCommentLikeFilter = feedFilter.conditions?.some(
     (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
+  )
+
+  const userOptions = useMemo(
+    () =>
+      users.map((u) => ({
+        value: u.name,
+        label: u.attrib?.fullName || u.name,
+      })),
+    [users],
+  )
+
+  const feedFilters: FilterItem<string>[] = useMemo(
+    () => [
+      ...baseFeedFilters,
+      {
+        id: 'author',
+        tooltip: 'User (author or assignee)',
+        icon: 'person',
+        type: 'enum',
+        operator: 'in',
+        options: userOptions,
+      },
+    ],
+    [userOptions],
   )
 
   // check activities permission for commenting
@@ -303,7 +340,7 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <TabHeaderAndFilters
+        <TabHeaderAndFilters<FeedFilter>
           label="Activity Feed"
           filters={feedFilters}
           currentFilter={feedFilter}
@@ -347,6 +384,12 @@ export const Feed = ({
             !hasCommentLikeFilter &&
             !isLoadingNew && (
             <EmptyPlaceholder message="No versions published yet" icon="layers" />
+          )}
+          {transformedActivitiesData.length === 0 &&
+            !isVersionsFilter &&
+            (feedFilter.conditions?.length ?? 0) > 0 &&
+            !isLoadingNew && (
+              <EmptyPlaceholder message="No activities match your filters" icon="search_off" />
           )}
           {hasNextPage && loadNextPage && (
             <InView

@@ -756,6 +756,7 @@ export type ProjectNodeActivitiesArgs = {
   entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
   entityType?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;

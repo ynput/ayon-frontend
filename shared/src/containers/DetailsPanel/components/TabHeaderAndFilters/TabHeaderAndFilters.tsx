@@ -7,7 +7,10 @@ import { QueryFilter, QueryCondition } from '@shared/api'
 import { AttributeEnumItem } from '../../../../containers/ProjectTreeTable/types'
 import { EnumWidget } from '../../../../containers/ProjectTreeTable/widgets/EnumWidget'
 import { useState, useRef, useEffect } from 'react'
+import { useDebouncedValue } from '@shared/hooks'
 import clsx from 'clsx'
+
+const SEARCH_DEBOUNCE_MS = 300
 
 export interface FilterItem<T = string> {
   id: T
@@ -197,14 +200,25 @@ const TabHeaderAndFilters = <T, K = string>({
     }
   }
 
+  const pendingSearchFilterRef = useRef<FilterItem<K> | null>(null)
+  const debouncedSearchValue = useDebouncedValue(searchValue, SEARCH_DEBOUNCE_MS)
+
+  useEffect(() => {
+    const filter = pendingSearchFilterRef.current
+    if (!filter) return
+    handleToggle(filter, debouncedSearchValue)
+    pendingSearchFilterRef.current = null
+  }, [debouncedSearchValue])
+
   const handleSearchChange = (filter: FilterItem<K>, value: string) => {
     setSearchValue(value)
-    handleToggle(filter, value)
+    pendingSearchFilterRef.current = filter
   }
 
   const handleSearchClear = (filter: FilterItem<K>) => {
     setSearchValue('')
     setExpandedSearchId(null)
+    pendingSearchFilterRef.current = null
     handleToggle(filter, '')
   }
 

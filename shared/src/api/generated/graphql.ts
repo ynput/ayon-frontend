@@ -760,6 +760,7 @@ export type ProjectNodeActivitiesArgs = {
   entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
   entityType?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1603,6 +1604,7 @@ export type GetActivitiesQueryVariables = Exact<{
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   activityTypes?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  activityFilter?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -2439,7 +2441,7 @@ export const GetActivityUsersDocument = new TypedDocumentString(`
 }
     `);
 export const GetActivitiesDocument = new TypedDocumentString(`
-    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!]) {
+    query GetActivities($projectName: String!, $entityIds: [String!]!, $after: String, $first: Int, $before: String, $last: Int, $referenceTypes: [String!], $activityTypes: [String!], $activityFilter: String) {
   project(name: $projectName) {
     name
     activities(
@@ -2450,6 +2452,7 @@ export const GetActivitiesDocument = new TypedDocumentString(`
       last: $last
       referenceTypes: $referenceTypes
       activityTypes: $activityTypes
+      filter: $activityFilter
     ) {
       pageInfo {
         hasPreviousPage
