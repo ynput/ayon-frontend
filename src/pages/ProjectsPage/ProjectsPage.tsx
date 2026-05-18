@@ -5,8 +5,11 @@ import {
   useProjectColumns,
   useProjectSorting,
   useUpdateProjectTableRow,
+  useProjectFilters,
+  applyProjectFilters,
 } from './hooks'
 import type { ProjectTableRow } from './hooks'
+import ProjectsSearchFilterWrapper from './components/ProjectsSearchFilterWrapper'
 import { getDefaultListTableDataTypeWidgets, ListTable } from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
 import { Button, Dialog, Toolbar } from '@ynput/ayon-react-components'
@@ -42,7 +45,10 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     handleColumnSizingChange,
   } = useProjectColumnConfig({ columns })
   const { sorting, handleSortingChange } = useProjectSorting()
+  const { filters, handleFiltersChange } = useProjectFilters()
   const dataTypeWidgets = getDefaultListTableDataTypeWidgets<ProjectTableRow>()
+
+  const filteredRows = useMemo(() => applyProjectFilters(tableRows, filters), [tableRows, filters])
 
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([])
   const selectedProjectName = selectedProjectIds[0]
@@ -64,11 +70,12 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   )
 
   return (
-    <Styled.PageContainer style={{ flexDirection: 'column' }}>
+    <Styled.PageContainer style={{ flexDirection: 'column', gap: 8 }}>
       <Toolbar>
         <Button icon="add" variant="filled" onClick={() => onNewProject()}>
           Create new project
         </Button>
+        <ProjectsSearchFilterWrapper queryFilters={filters} onChange={handleFiltersChange} />
         <CustomizeButton />
       </Toolbar>
       <Splitter
@@ -82,7 +89,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
           <DetailsPanelSplitter style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
             <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
               <ListTable<ProjectTableRow>
-                data={tableRows}
+                data={filteredRows}
                 columns={columns}
                 getRowId={(row) => row.id}
                 hasNextPage={hasNextPage}
