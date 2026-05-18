@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useEffect, useRef, useMemo } from 'react'
 import {
-  ColumnDef,
-  ColumnOrderState,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
   getGroupedRowModel,
-  Header,
-  Row,
   RowData,
   useReactTable,
 } from '@tanstack/react-table'
@@ -16,95 +12,25 @@ import {
   closestCenter,
   defaultDropAnimationSideEffects,
   DndContext,
-  DragEndEvent,
   DragOverlay,
-  DragStartEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
 } from '@dnd-kit/core'
 import { restrictToHorizontalAxis, restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import {
-  arrayMove,
   horizontalListSortingStrategy,
   SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import clsx from 'clsx'
 import { DraggableRow } from './ListTableRow'
-import { CellWrapperRenderer, RowCells } from './ListTableCell'
+import { RowCells } from './ListTableCell'
 import * as Styled from './ListTable.styled'
-import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
+import { SortableTHComponent } from './ListTableHeader'
+import { useTableColumnOrder } from './hooks/useTableColumnOrder'
+import { useTableSelection } from './hooks/useTableSelection'
+import { useTableEditing } from './hooks/useTableEditing'
+import { useTableDnd } from './hooks/useTableDnd'
+import type { ListTableProps } from './ListTable.types'
 
-// 1. Extend TanStack Table Meta to strongly type our mutation and dialog handlers
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData extends RowData, TValue> {
-    listTableCustomCell?: boolean
-  }
-
-  interface TableMeta<TData extends RowData> {
-    updateData: (columnId: string, value: unknown, rowIndex: number) => void
-    openViewerDialog?: (row: TData) => void
-  }
-}
-
-export interface ListTableProps<TData> {
-  data: TData[]
-  columns: ColumnDef<TData, any>[]
-  getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string
-  fetchNextPage?: () => void
-  hasNextPage?: boolean
-  isFetchingNextPage?: boolean
-  onUpdateRow: (columnId: string, value: unknown, rowIndex: number) => void
-  onOpenViewer?: (row: TData) => void
-  onReorderRows?: (startIndex: number, endIndex: number) => void
-  selectedRows?: string[]
-  onSelectedRowsChange?: (ids: string[]) => void
-  multiSelection?: boolean
-  cellWrapper?: CellWrapperRenderer<TData>
-  columnAttributeData?: ListTableColumnAttributeData
-  dataTypeWidgets?: ListTableDataTypeWidgets<TData>
-  // Column reordering
-  enableColumnReordering?: boolean
-  columnOrder?: ColumnOrderState
-  onColumnOrderChange?: (order: ColumnOrderState) => void
-}
-
-// Sortable column header cell
-function SortableTHComponent<TData>({
-  header,
-  enabled,
-}: {
-  header: Header<TData, any>
-  enabled: boolean
-}) {
-  const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-    id: header.id,
-    data: { type: 'column' },
-    disabled: !enabled,
-  })
-
-  return (
-    <Styled.SortableTHStyled
-      ref={setNodeRef}
-      style={{
-        width: header.getSize(),
-        transform: CSS.Transform.toString(transform) ?? undefined,
-        transition,
-      }}
-      className={clsx({ grab: enabled, dragging: isDragging })}
-      {...(enabled ? { ...attributes, ...listeners } : {})}
-    >
-      {header.isPlaceholder
-        ? null
-        : flexRender(header.column.columnDef.header, header.getContext())}
-    </Styled.SortableTHStyled>
-  )
-}
+export type { ListTableProps }
 
 export function ListTable<TData extends RowData>({
   data,
@@ -126,42 +52,18 @@ export function ListTable<TData extends RowData>({
   columnOrder: columnOrderProp,
   onColumnOrderChange,
 }: ListTableProps<TData>) {
-  // --- State Management ---
-  const [grouping, setGrouping] = useState<string[]>([])
-  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>(() => {
-    if (columnOrderProp && columnOrderProp.length > 0) {
-      const allIds = columns.map((c) => c.id as string)
-      const missing = allIds.filter((id) => !columnOrderProp.includes(id))
-      return [...columnOrderProp, ...missing]
-    }
-    return columns.map((c) => c.id as string)
-  })
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [activeColumnId, setActiveColumnId] = useState<string | null>(null)
+  const [grouping, setGrouping] = React.useState<string[]>([])
+  const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  // Sync external column order when it changes (e.g. after view settings load)
-  useEffect(() => {
-    if (columnOrderProp && columnOrderProp.length > 0) {
-      const allIds = columns.map((c) => c.id as string)
-      const missing = allIds.filter((id) => !columnOrderProp.includes(id))
-      setColumnOrder([...columnOrderProp, ...missing])
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnOrderProp])
-  const [activeRowIndex, setActiveRowIndex] = useState(-1)
-  const [editingCellId, setEditingCellId] = useState<string | null>(null)
-  const [editingDraft, setEditingDraft] = useState<string | null>(null)
-  const lastSelectedIndexRef = useRef(-1)
+  // --- Column order ---
+  const { columnOrder, setColumnOrder } = useTableColumnOrder(columns, columnOrderProp)
 
   // --- Table Instance ---
   const table = useReactTable({
     data,
     columns,
     getRowId,
-    state: {
-      grouping,
-      columnOrder,
-    },
+    state: { grouping, columnOrder },
     filterFns: { fuzzy: () => true }, // Placeholder for fuzzy filtering
     onGroupingChange: setGrouping,
     onColumnOrderChange: setColumnOrder,
@@ -177,7 +79,6 @@ export function ListTable<TData extends RowData>({
   const { rows } = table.getRowModel()
 
   // --- Virtualization ---
-  const tableContainerRef = useRef<HTMLDivElement>(null)
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? rows.length + 1 : rows.length,
     getScrollElement: () => tableContainerRef.current,
@@ -188,157 +89,47 @@ export function ListTable<TData extends RowData>({
   const virtualRows = rowVirtualizer.getVirtualItems()
 
   // --- Selection & Keyboard ---
-  const handleRowClick = useCallback(
-    (rowId: string, rowIndex: number, e: React.MouseEvent) => {
-      if (multiSelection && e.shiftKey && lastSelectedIndexRef.current >= 0) {
-        const start = Math.min(lastSelectedIndexRef.current, rowIndex)
-        const end = Math.max(lastSelectedIndexRef.current, rowIndex)
-        const rangeIds = rows.slice(start, end + 1).map((r) => r.id)
-        if (e.metaKey || e.ctrlKey) {
-          onSelectedRowsChange?.(Array.from(new Set([...selectedRows, ...rangeIds])))
-        } else {
-          onSelectedRowsChange?.(rangeIds)
-        }
-      } else if (multiSelection && (e.metaKey || e.ctrlKey)) {
-        if (selectedRows.includes(rowId)) {
-          onSelectedRowsChange?.(selectedRows.filter((id) => id !== rowId))
-        } else {
-          onSelectedRowsChange?.([...selectedRows, rowId])
-        }
-        lastSelectedIndexRef.current = rowIndex
-      } else if (selectedRows.includes(rowId)) {
-        // If the clicked row is already selected, deselect it
-        onSelectedRowsChange?.(selectedRows.filter((id) => id !== rowId))
-      } else {
-        onSelectedRowsChange?.([rowId])
-        lastSelectedIndexRef.current = rowIndex
-      }
-      setActiveRowIndex(rowIndex)
-      tableContainerRef.current?.focus()
-    },
-    [selectedRows, rows, onSelectedRowsChange],
-  )
+  const { handleRowClick, handleKeyDown } = useTableSelection({
+    rows,
+    selectedRows,
+    onSelectedRowsChange,
+    multiSelection,
+    rowVirtualizer,
+    tableContainerRef,
+  })
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
-      e.preventDefault()
+  // --- Editing ---
+  const { editingState } = useTableEditing()
 
-      const direction = e.key === 'ArrowDown' ? 1 : -1
-      const currentIndex = activeRowIndex < 0 ? (direction > 0 ? -1 : rows.length) : activeRowIndex
-      const newIndex = Math.max(0, Math.min(rows.length - 1, currentIndex + direction))
+  // --- Drag & Drop ---
+  const {
+    sensors,
+    activeRowId,
+    activeColumnId,
+    handleColumnDragStart,
+    handleColumnDragEnd,
+    handleColumnDragCancel,
+    handleRowDragStart,
+    handleRowDragEnd,
+    handleRowDragCancel,
+  } = useTableDnd({ rows, onReorderRows, setColumnOrder, onColumnOrderChange })
 
-      if (newIndex === activeRowIndex) return
+  // Memoize stable callbacks so React.memo on DraggableRow can bail out during column drag
+  const callbacks = useMemo(() => ({ onUpdateRow, onOpenViewer }), [onUpdateRow, onOpenViewer])
 
-      const newRowId = rows[newIndex]?.id
-      if (!newRowId) return
-
-      if (e.shiftKey) {
-        if (selectedRows.includes(newRowId)) {
-          // Shrink: deselect the row we're moving away from
-          const currentRowId = rows[activeRowIndex]?.id
-          if (currentRowId) {
-            onSelectedRowsChange?.(selectedRows.filter((id) => id !== currentRowId))
-          }
-        } else {
-          onSelectedRowsChange?.([...selectedRows, newRowId])
-        }
-      } else {
-        onSelectedRowsChange?.([newRowId])
-        lastSelectedIndexRef.current = newIndex
-      }
-
-      setActiveRowIndex(newIndex)
-      rowVirtualizer.scrollToIndex(newIndex, { behavior: 'smooth' })
-    },
-    [activeRowIndex, rows, selectedRows, onSelectedRowsChange, rowVirtualizer],
-  )
-
+  // --- Infinite loading ---
   useEffect(() => {
     const [lastItem] = virtualRows.slice(-1)
     if (!lastItem) return
-
     if (lastItem.index >= rows.length - 1 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage?.()
     }
   }, [hasNextPage, fetchNextPage, rows.length, isFetchingNextPage, virtualRows])
 
-  // --- Drag & Drop ---
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
-
-  const activeRow = activeId ? rows.find((row) => row.id === activeId) : null
+  const activeRow = activeRowId ? rows.find((row) => row.id === activeRowId) : null
   const activeColumnHeader = activeColumnId
     ? table.getHeaderGroups()[0]?.headers.find((h) => h.id === activeColumnId)
     : null
-
-  // --- Column drag handlers (separate DndContext) ---
-  const handleColumnDragStart = (event: DragStartEvent) => {
-    setActiveColumnId(event.active.id as string)
-  }
-
-  const handleColumnDragEnd = (event: DragEndEvent) => {
-    setActiveColumnId(null)
-    const { active, over } = event
-    if (over && active.id !== over.id) {
-      setColumnOrder((prevOrder) => {
-        const oldIndex = prevOrder.indexOf(active.id as string)
-        const newIndex = prevOrder.indexOf(over.id as string)
-        const newOrder = arrayMove(prevOrder, oldIndex, newIndex)
-        onColumnOrderChange?.(newOrder)
-        return newOrder
-      })
-    }
-  }
-
-  const handleColumnDragCancel = () => setActiveColumnId(null)
-
-  // --- Row drag handlers (separate DndContext) ---
-  const handleRowDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
-  }
-
-  const handleRowDragEnd = (event: DragEndEvent) => {
-    setActiveId(null)
-    const { active, over } = event
-    if (over && active.id !== over.id) {
-      const oldIndex = rows.findIndex((row) => row.id === active.id)
-      const newIndex = rows.findIndex((row) => row.id === over.id)
-      onReorderRows?.(oldIndex, newIndex)
-    }
-  }
-
-  const handleRowDragCancel = () => setActiveId(null)
-
-  const startEditingCell = useCallback((cellId: string) => {
-    setEditingCellId(cellId)
-  }, [])
-
-  const stopEditingCell = useCallback(() => {
-    setEditingCellId(null)
-    setEditingDraft(null)
-  }, [])
-
-  // Memoize stable objects so React.memo on DraggableRow can bail out during column drag
-  const callbacks = React.useMemo(
-    () => ({ onUpdateRow, onOpenViewer }),
-    [onUpdateRow, onOpenViewer],
-  )
-
-  const editingState = React.useMemo(
-    () => ({
-      editingCellId,
-      startEditingCell,
-      stopEditingCell,
-      getDraftValue: () => editingDraft,
-      setDraftValue: setEditingDraft,
-    }),
-    [editingCellId, editingDraft, startEditingCell, stopEditingCell],
-  )
 
   return (
     <Styled.TableContainer ref={tableContainerRef} tabIndex={0} onKeyDown={handleKeyDown}>
@@ -417,9 +208,7 @@ export function ListTable<TData extends RowData>({
                   return (
                     <Styled.LoaderTR
                       key="loader"
-                      style={{
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
+                      style={{ transform: `translateY(${virtualRow.start}px)` }}
                     >
                       <td>Loading more data...</td>
                     </Styled.LoaderTR>
