@@ -34,8 +34,10 @@ const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   }
 }
 
-const serializeFilter = (filter: unknown): string =>
-  typeof filter === 'string' ? filter : JSON.stringify(filter)
+const serializeFilter = (filter: unknown): string => {
+  if (filter === undefined || filter === null) return ''
+  return typeof filter === 'string' ? filter : JSON.stringify(filter)
+}
 
 const patchActivities = async (
   { patch, entityIds = [], filter, refs = [] }: any,

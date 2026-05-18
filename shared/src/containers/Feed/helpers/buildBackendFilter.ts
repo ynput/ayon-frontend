@@ -19,7 +19,7 @@ const translateCondition = (c: QueryCondition): QueryCondition | QueryFilter | n
   const mappedKey = UI_KEY_TO_BACKEND_KEY[c.key] ?? c.key
 
   if (c.key === 'has_attachments') {
-    return c.value ? { key: mappedKey, operator: 'notnull' } : null
+    return c.value ? { key: mappedKey, operator: 'ne', value: [] } : null
   }
 
   // "Author" UI filter matches actor OR assignee, so picking a user surfaces

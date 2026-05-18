@@ -201,12 +201,14 @@ const TabHeaderAndFilters = <T, K = string>({
   }
 
   const pendingSearchFilterRef = useRef<FilterItem<K> | null>(null)
+  const handleToggleRef = useRef(handleToggle)
+  handleToggleRef.current = handleToggle
   const debouncedSearchValue = useDebouncedValue(searchValue, SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
     const filter = pendingSearchFilterRef.current
     if (!filter) return
-    handleToggle(filter, debouncedSearchValue)
+    handleToggleRef.current(filter, debouncedSearchValue)
     pendingSearchFilterRef.current = null
   }, [debouncedSearchValue])
 
