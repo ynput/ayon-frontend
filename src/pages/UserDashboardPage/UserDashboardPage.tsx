@@ -160,7 +160,7 @@ const UserDashboardPage: React.FC = () => {
         name: 'Projects',
         path: '/dashboard/projects',
         module: 'projects',
-        component: <ProjectsPage />,
+        component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
       },
       {

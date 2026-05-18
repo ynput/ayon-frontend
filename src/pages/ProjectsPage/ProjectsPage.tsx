@@ -9,17 +9,22 @@ import {
 import type { ProjectTableRow } from './hooks'
 import { getDefaultListTableDataTypeWidgets, ListTable } from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
-import { Button, Dialog } from '@ynput/ayon-react-components'
+import { Button, Dialog, Toolbar } from '@ynput/ayon-react-components'
 import { PROJECTS_PER_PAGE } from '@shared/api'
 import { ProjectDetailsPanel } from './components/ProjectDetailsPanel/ProjectDetailsPanel'
-import { SplitterPanel } from 'primereact/splitter'
+import { ProjectsPageTableSettings } from './components/ProjectsPageTableSettings'
+import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
 import { WithViews } from '@/hoc/WithViews'
+import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
+import { CustomizeButton } from '@shared/components'
 
-interface ProjectsPageProps {}
+interface ProjectsPageProps {
+  onNewProject: () => void
+}
 
-const ProjectsPageContent: FC = () => {
+const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { tableRows, fetchNextPage, hasNextPage, isFetchingNextPage, projectsMap } =
     useGetProjectsData({
       showArchived: false,
@@ -44,6 +49,7 @@ const ProjectsPageContent: FC = () => {
   const clearSelection = () => setSelectedProjectIds([])
 
   const handleProjectUpdate = useUpdateProjectTableRow(tableRows)
+  const { isPanelOpen } = useSettingsPanel()
 
   useShortcuts(
     useMemo(
@@ -58,44 +64,76 @@ const ProjectsPageContent: FC = () => {
   )
 
   return (
-    <Styled.PageContainer>
-      <DetailsPanelSplitter style={{ overflow: 'hidden' }}>
-        <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
-          <ListTable<ProjectTableRow>
-            data={tableRows}
-            columns={columns}
-            getRowId={(row) => row.id}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            selectedRows={selectedProjectIds}
-            onSelectedRowsChange={setSelectedProjectIds}
-            onUpdateRow={handleProjectUpdate}
-            columnAttributeData={columnAttributeData}
-            dataTypeWidgets={dataTypeWidgets}
-            enableColumnReordering
-            enableSorting
-            sorting={sorting}
-            onSortingChange={handleSortingChange}
-            columnOrder={columnOrder}
-            onColumnOrderChange={handleColumnOrderChange}
-            enableColumnVisibility
-            columnVisibility={columnVisibility}
-            onColumnVisibilityChange={handleColumnVisibilityChange}
-            enableColumnResizing
-            columnSizing={columnSizing}
-            onColumnSizingChange={handleColumnSizingChange}
-          />
+    <Styled.PageContainer style={{ flexDirection: 'column' }}>
+      <Toolbar>
+        <Button icon="add" variant="filled" onClick={() => onNewProject()}>
+          Create new project
+        </Button>
+        <CustomizeButton />
+      </Toolbar>
+      <Splitter
+        layout="horizontal"
+        stateKey="projects-splitter-settings"
+        stateStorage="local"
+        style={{ flex: 1, overflow: 'hidden' }}
+        gutterSize={isPanelOpen ? 4 : 0}
+      >
+        <SplitterPanel size={82} style={{ overflow: 'hidden' }}>
+          <DetailsPanelSplitter style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
+            <SplitterPanel size={70} style={{ overflow: 'hidden' }}>
+              <ListTable<ProjectTableRow>
+                data={tableRows}
+                columns={columns}
+                getRowId={(row) => row.id}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                selectedRows={selectedProjectIds}
+                onSelectedRowsChange={setSelectedProjectIds}
+                onUpdateRow={handleProjectUpdate}
+                columnAttributeData={columnAttributeData}
+                dataTypeWidgets={dataTypeWidgets}
+                enableColumnReordering
+                enableSorting
+                sorting={sorting}
+                onSortingChange={handleSortingChange}
+                columnOrder={columnOrder}
+                onColumnOrderChange={handleColumnOrderChange}
+                enableColumnVisibility
+                columnVisibility={columnVisibility}
+                onColumnVisibilityChange={handleColumnVisibilityChange}
+                enableColumnResizing
+                columnSizing={columnSizing}
+                onColumnSizingChange={handleColumnSizingChange}
+              />
+            </SplitterPanel>
+            <SplitterPanel size={30} className="details">
+              {selectedProjectName && (
+                <ProjectDetailsPanel
+                  projectName={selectedProjectName}
+                  data={projectsMap.get(selectedProjectName)}
+                  onClose={clearSelection}
+                />
+              )}
+            </SplitterPanel>
+          </DetailsPanelSplitter>
         </SplitterPanel>
-        <SplitterPanel size={30} className="details">
-          {selectedProjectName && (
-            <ProjectDetailsPanel
-              projectName={selectedProjectName}
-              data={projectsMap.get(selectedProjectName)}
-              onClose={clearSelection}
+        {isPanelOpen ? (
+          <SplitterPanel size={18} style={{ zIndex: 500 }}>
+            <ProjectsPageTableSettings
+              columns={columns}
+              columnOrder={columnOrder ?? []}
+              columnVisibility={columnVisibility}
+              columnSizing={columnSizing}
+              sorting={sorting}
+              onColumnOrderChange={handleColumnOrderChange}
+              onColumnVisibilityChange={handleColumnVisibilityChange}
+              onSortingChange={handleSortingChange}
             />
-          )}
-        </SplitterPanel>
-      </DetailsPanelSplitter>
+          </SplitterPanel>
+        ) : (
+          <SplitterPanel style={{ maxWidth: 0 }} />
+        )}
+      </Splitter>
       {hasNextPage && (
         <Dialog
           size="sm"
@@ -114,10 +152,12 @@ const ProjectsPageContent: FC = () => {
   )
 }
 
-export const ProjectsPage: FC<ProjectsPageProps> = () => {
+export const ProjectsPage: FC<ProjectsPageProps> = (props) => {
   return (
     <WithViews viewType="projects-overview">
-      <ProjectsPageContent />
+      <SettingsPanelProvider>
+        <ProjectsPageContent {...props} />
+      </SettingsPanelProvider>
     </WithViews>
   )
 }
