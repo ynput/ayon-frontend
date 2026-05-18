@@ -22,10 +22,6 @@ const translateCondition = (c: QueryCondition): QueryCondition | QueryFilter | n
     return c.value ? { key: mappedKey, operator: 'notnull' } : null
   }
 
-  if (c.key === 'body' && c.operator === 'like' && typeof c.value === 'string') {
-    return { ...c, key: mappedKey, value: `%${c.value}%` }
-  }
-
   // "Author" UI filter matches actor OR assignee, so picking a user surfaces
   // both their comments/versions AND assignment events involving them.
   if (c.key === 'author') {
