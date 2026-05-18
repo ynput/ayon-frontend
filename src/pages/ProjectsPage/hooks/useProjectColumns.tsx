@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useStore } from 'react-redux'
 import { AttributeData, AttributeModel, useGetAttributeListQuery } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import type { ProjectTableRow } from './useGetProjectsData'
@@ -10,7 +11,7 @@ const columnHelper = createColumnHelper<ProjectTableRow>()
 
 export type ProjectTableColumnAttributeData = Record<string, AttributeData>
 
-const STATIC_COLUMNS: ColumnDef<ProjectTableRow, any>[] = [
+const STATIC_COLUMNS_BEFORE_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
   columnHelper.accessor('name', {
     id: 'thumbnail',
     header: 'Thumbnail',
@@ -40,15 +41,9 @@ const STATIC_COLUMNS: ColumnDef<ProjectTableRow, any>[] = [
     header: 'Name',
     size: 200,
   }),
-  columnHelper.accessor('name', {
-    id: 'heartbeat',
-    header: 'Heartbeat',
-    size: 150,
-    meta: {
-      listTableCustomCell: true,
-    },
-    cell: (info) => <ProjectHeartbeat projectName={info.getValue()} />,
-  }),
+]
+
+const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
   columnHelper.accessor('code', {
     id: 'code',
     header: 'Code',
@@ -68,13 +63,16 @@ const STATIC_COLUMNS: ColumnDef<ProjectTableRow, any>[] = [
 
 const isProjectScopedAttribute = (attribute: AttributeModel) => attribute.scope?.includes('project')
 
+export type ProjectColumn = ColumnDef<ProjectTableRow, any>
+
 export const useProjectColumns = (
   rows: ProjectTableRow[],
 ): {
-  columns: ColumnDef<ProjectTableRow, any>[]
+  columns: ProjectColumn[]
   columnAttributeData: ProjectTableColumnAttributeData
 } => {
   const { data: attributes = [] } = useGetAttributeListQuery()
+  const store = useStore()
 
   const attribKeys = useMemo(() => {
     const keys = new Set<string>()
@@ -123,7 +121,40 @@ export const useProjectColumns = (
     [attribKeys],
   )
 
-  const columns = useMemo(() => [...STATIC_COLUMNS, ...attribColumns], [attribColumns])
+  const heartbeatColumn = useMemo<ColumnDef<ProjectTableRow, any>>(
+    () =>
+      columnHelper.accessor('name', {
+        id: 'heartbeat',
+        header: 'Heartbeat',
+        size: 150,
+        meta: {
+          listTableCustomCell: true,
+        },
+        cell: (info) => <ProjectHeartbeat projectName={info.getValue()} />,
+        sortingFn: (rowA, rowB) => {
+          const getScore = (projectName: string): number => {
+            const state = store.getState() as any
+            // RTK Query default cache key: `endpointName({...args sorted by key})`
+            const cacheKey = `getProjectDashboard({"panel":"activity","projectName":"${projectName}"})`
+            const activity: number[] = state?.restApi?.queries?.[cacheKey]?.data?.activity ?? []
+            // Weighted sum: later entries (more recent) get higher weight
+            return activity.reduce((sum, val, i) => sum + val * (i + 1), 0)
+          }
+          return getScore(rowA.original.name) - getScore(rowB.original.name)
+        },
+      }),
+    [store],
+  )
+
+  const columns = useMemo(
+    () => [
+      ...STATIC_COLUMNS_BEFORE_HEARTBEAT,
+      heartbeatColumn,
+      ...STATIC_COLUMNS_AFTER_HEARTBEAT,
+      ...attribColumns,
+    ],
+    [heartbeatColumn, attribColumns],
+  )
 
   return useMemo(() => ({ columns, columnAttributeData }), [columns, columnAttributeData])
 }

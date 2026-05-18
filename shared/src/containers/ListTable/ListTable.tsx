@@ -1,10 +1,12 @@
-import React, { useEffect, useRef, useMemo } from 'react'
+import React, { useEffect, useRef, useMemo, useState } from 'react'
 import {
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
   getGroupedRowModel,
+  getSortedRowModel,
   RowData,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -51,9 +53,21 @@ export function ListTable<TData extends RowData>({
   enableColumnReordering = false,
   columnOrder: columnOrderProp,
   onColumnOrderChange,
+  enableSorting = false,
+  sorting: sortingProp,
+  onSortingChange,
 }: ListTableProps<TData>) {
   const [grouping, setGrouping] = React.useState<string[]>([])
+  const [sortingLocal, setSortingLocal] = useState<SortingState>([])
   const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  // Use controlled sorting if provided, otherwise internal state
+  const sorting = sortingProp ?? sortingLocal
+  const handleSortingChange = (updater: SortingState | ((prev: SortingState) => SortingState)) => {
+    const next = typeof updater === 'function' ? updater(sorting) : updater
+    setSortingLocal(next)
+    onSortingChange?.(next)
+  }
 
   // --- Column order ---
   const { columnOrder, setColumnOrder } = useTableColumnOrder(columns, columnOrderProp)
@@ -63,13 +77,16 @@ export function ListTable<TData extends RowData>({
     data,
     columns,
     getRowId,
-    state: { grouping, columnOrder },
+    state: { grouping, columnOrder, sorting },
     filterFns: { fuzzy: () => true }, // Placeholder for fuzzy filtering
     onGroupingChange: setGrouping,
     onColumnOrderChange: setColumnOrder,
+    onSortingChange: handleSortingChange,
+    enableSorting,
     getCoreRowModel: getCoreRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     meta: {
       updateData: onUpdateRow,
       openViewerDialog: onOpenViewer,
@@ -155,6 +172,7 @@ export function ListTable<TData extends RowData>({
                       key={header.id}
                       header={header}
                       enabled={enableColumnReordering}
+                      enableSorting={enableSorting}
                     />
                   ))}
                 </SortableContext>

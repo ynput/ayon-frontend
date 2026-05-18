@@ -1,4 +1,4 @@
-import { ColumnDef, ColumnOrderState, Row, RowData } from '@tanstack/react-table'
+import { ColumnDef, ColumnOrderState, Row, RowData, SortingState } from '@tanstack/react-table'
 import { CellWrapperRenderer } from './ListTableCell'
 import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
 
@@ -34,4 +34,8 @@ export interface ListTableProps<TData> {
   enableColumnReordering?: boolean
   columnOrder?: ColumnOrderState
   onColumnOrderChange?: (order: ColumnOrderState) => void
+  // Sorting
+  enableSorting?: boolean
+  sorting?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
 }

@@ -178,7 +178,7 @@ export const SortableTHStyled = styled.th`
   padding: 0 var(--padding-m);
   font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-height: fit-content;
@@ -191,6 +191,19 @@ export const SortableTHStyled = styled.th`
 
   &.dragging {
     opacity: 0;
+  }
+
+  /* Hide action buttons by default — they are absolutely positioned so no layout space */
+  .th-actions {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  &:hover .th-actions,
+  &.menu-open .th-actions,
+  &:focus-within .th-actions {
+    visibility: visible;
+    pointer-events: auto;
   }
 `
 
@@ -208,4 +221,27 @@ export const DraggedColumnHeader = styled.th`
   white-space: nowrap;
   z-index: 50;
   height: 30px;
+`
+
+export const THContent = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+`
+
+export const THActions = styled.div.attrs({ className: 'th-actions' })`
+  position: absolute;
+  right: var(--padding-m);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  z-index: 1;
 `
