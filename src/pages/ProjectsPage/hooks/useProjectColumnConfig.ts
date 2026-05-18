@@ -104,6 +104,37 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
     [allColumnIds, updateViewSettings],
   )
 
+  /**
+   * Unified handler for when both column order and visibility change atomically
+   * (e.g. drag-to-reorder in the settings panel). Sends a single PATCH instead of
+   * two separate ones that would race and cause the second to overwrite the first.
+   */
+  const handleColumnsConfigChange = useCallback(
+    async (newOrder: ColumnOrderState, newVisibility: VisibilityState) => {
+      const columnConfig = convertTanstackStatesToColumnConfig(
+        {
+          columnOrder: newOrder,
+          columnVisibility: newVisibility,
+          columnPinning: {},
+          columnSizing: columnSizingRef.current,
+        },
+        allColumnIds,
+      )
+      type Combined = { order: ColumnOrderState; visibility: VisibilityState }
+      const combinedSetter = (value: Combined | null) => {
+        setLocalColumnOrder(value?.order ?? null)
+        setLocalColumnVisibility(value?.visibility ?? null)
+      }
+      await updateViewSettings(
+        { columns: columnConfig.columns },
+        combinedSetter,
+        { order: newOrder, visibility: newVisibility },
+        {},
+      )
+    },
+    [allColumnIds, updateViewSettings],
+  )
+
   return {
     columnOrder,
     columnVisibility,
@@ -111,5 +142,6 @@ export const useProjectColumnConfig = ({ columns }: Props) => {
     handleColumnOrderChange,
     handleColumnVisibilityChange,
     handleColumnSizingChange,
+    handleColumnsConfigChange,
   }
 }

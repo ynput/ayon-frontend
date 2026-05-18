@@ -43,6 +43,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     handleColumnOrderChange,
     handleColumnVisibilityChange,
     handleColumnSizingChange,
+    handleColumnsConfigChange,
   } = useProjectColumnConfig({ columns })
   const { sorting, handleSortingChange } = useProjectSorting()
   const { filters, handleFiltersChange } = useProjectFilters()
@@ -132,8 +133,8 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
               columnVisibility={columnVisibility}
               columnSizing={columnSizing}
               sorting={sorting}
-              onColumnOrderChange={handleColumnOrderChange}
               onColumnVisibilityChange={handleColumnVisibilityChange}
+              onColumnsConfigChange={handleColumnsConfigChange}
               onSortingChange={handleSortingChange}
             />
           </SplitterPanel>

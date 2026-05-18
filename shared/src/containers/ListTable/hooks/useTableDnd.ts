@@ -12,6 +12,7 @@ import { ColumnOrderState, Row, RowData } from '@tanstack/react-table'
 
 interface UseTableDndOptions<TData extends RowData> {
   rows: Row<TData>[]
+  columnOrder: ColumnOrderState
   onReorderRows?: (startIndex: number, endIndex: number) => void
   setColumnOrder: (updater: (prev: ColumnOrderState) => ColumnOrderState) => void
   onColumnOrderChange?: (order: ColumnOrderState) => void
@@ -19,6 +20,7 @@ interface UseTableDndOptions<TData extends RowData> {
 
 export function useTableDnd<TData extends RowData>({
   rows,
+  columnOrder,
   onReorderRows,
   setColumnOrder,
   onColumnOrderChange,
@@ -39,13 +41,13 @@ export function useTableDnd<TData extends RowData>({
     setActiveColumnId(null)
     const { active, over } = event
     if (over && active.id !== over.id) {
-      setColumnOrder((prevOrder) => {
-        const oldIndex = prevOrder.indexOf(active.id as string)
-        const newIndex = prevOrder.indexOf(over.id as string)
-        const newOrder = arrayMove(prevOrder, oldIndex, newIndex)
+      const oldIndex = columnOrder.indexOf(active.id as string)
+      const newIndex = columnOrder.indexOf(over.id as string)
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(columnOrder, oldIndex, newIndex)
+        setColumnOrder(() => newOrder)
         onColumnOrderChange?.(newOrder)
-        return newOrder
-      })
+      }
     }
   }
 

@@ -163,7 +163,7 @@ export function ListTable<TData extends RowData>({
     handleRowDragStart,
     handleRowDragEnd,
     handleRowDragCancel,
-  } = useTableDnd({ rows, onReorderRows, setColumnOrder, onColumnOrderChange })
+  } = useTableDnd({ rows, columnOrder, onReorderRows, setColumnOrder, onColumnOrderChange })
 
   // Memoize stable callbacks so React.memo on DraggableRow can bail out during column drag
   const callbacks = useMemo(() => ({ onUpdateRow, onOpenViewer }), [onUpdateRow, onOpenViewer])

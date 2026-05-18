@@ -6,9 +6,8 @@ import {
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
-import { ColumnSettingsContext, ColumnSettingsContextType } from '@shared/containers'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
-import ColumnsSettings from '@shared/components/ProjectTableSettings/ColumnsSettings'
+import { ColumnsSettings } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SettingsPanelItem } from '@shared/components/SettingsPanel'
 import { SettingsSortingDropdown, SortCardType } from '@ynput/ayon-react-components'
 import type { ProjectTableRow } from '../hooks'
@@ -29,8 +28,8 @@ interface ProjectsPageTableSettingsProps {
   columnVisibility: VisibilityState
   columnSizing: ColumnSizingState
   sorting: SortingState
-  onColumnOrderChange: (order: ColumnOrderState) => void
   onColumnVisibilityChange: (visibility: VisibilityState) => void
+  onColumnsConfigChange: (order: ColumnOrderState, visibility: VisibilityState) => void
   onSortingChange: (sorting: SortingState) => void
 }
 
@@ -40,8 +39,8 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
   columnVisibility,
   columnSizing,
   sorting,
-  onColumnOrderChange,
   onColumnVisibilityChange,
+  onColumnsConfigChange,
   onSortingChange,
 }) => {
   const settingsColumns = useMemo<SettingsPanelItem[]>(
@@ -53,53 +52,6 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
           label: typeof col.header === 'string' ? col.header : (col.id as string),
         })),
     [columns],
-  )
-
-  const contextValue = useMemo<ColumnSettingsContextType>(
-    () => ({
-      setAllColumns: () => {},
-      columnVisibility,
-      setColumnVisibility: onColumnVisibilityChange,
-      updateColumnVisibility: onColumnVisibilityChange,
-      columnVisibilityOnChange: (updater) => {
-        const newVal = typeof updater === 'function' ? updater(columnVisibility) : updater
-        onColumnVisibilityChange(newVal)
-      },
-      columnPinning: {},
-      setColumnPinning: () => {},
-      updateColumnPinning: () => {},
-      columnPinningOnChange: () => {},
-      columnOrder,
-      setColumnOrder: onColumnOrderChange,
-      updateColumnOrder: onColumnOrderChange,
-      columnOrderOnChange: (updater) => {
-        const newVal = typeof updater === 'function' ? updater(columnOrder) : updater
-        onColumnOrderChange(newVal)
-      },
-      columnSizing,
-      setColumnSizing: () => {},
-      columnSizingOnChange: () => {},
-      sorting,
-      updateSorting: onSortingChange,
-      sortingOnChange: (updater) => {
-        const newVal = typeof updater === 'function' ? updater(sorting) : updater
-        onSortingChange(newVal)
-      },
-      groupBy: undefined,
-      updateGroupBy: () => {},
-      groupByConfig: {},
-      updateGroupByConfig: () => {},
-      rowHeight: 34,
-      updateRowHeight: () => {},
-      updateRowHeightWithPersistence: () => {},
-      setColumnsConfig: (config) => {
-        onColumnOrderChange(config.columnOrder)
-        onColumnVisibilityChange(config.columnVisibility)
-        if (config.sorting) onSortingChange(config.sorting)
-      },
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [columnVisibility, columnOrder, columnSizing, sorting],
   )
 
   const visibleCount = settingsColumns.filter(
@@ -128,7 +80,22 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${settingsColumns.length}`,
-      component: <ColumnsSettings columns={settingsColumns} />,
+      component: (
+        <ColumnsSettings
+          columns={settingsColumns}
+          columnVisibility={columnVisibility}
+          updateColumnVisibility={onColumnVisibilityChange}
+          columnPinning={{}}
+          updateColumnPinning={() => {}}
+          columnOrder={columnOrder}
+          setColumnsConfig={(config) => {
+            onColumnsConfigChange(config.columnOrder, config.columnVisibility)
+          }}
+          columnSizing={columnSizing}
+          sorting={sorting}
+          rowHeight={34}
+        />
+      ),
     },
     {
       id: 'sort-by',
@@ -145,9 +112,5 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
     },
   ]
 
-  return (
-    <ColumnSettingsContext.Provider value={contextValue}>
-      <SettingsPanel settings={settings} />
-    </ColumnSettingsContext.Provider>
-  )
+  return <SettingsPanel settings={settings} />
 }
