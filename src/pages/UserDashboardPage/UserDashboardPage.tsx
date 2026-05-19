@@ -31,6 +31,8 @@ import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
+import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
+import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
 
 interface DashboardAddon {
   name: string
@@ -83,6 +85,11 @@ const UserDashboardPage: React.FC = () => {
     moduleKey: 'Studio',
     skip: false,
   })
+
+  const { addonVersions: matchedDashboardAddons } = useGetBundleAddonVersions({
+    addons: ['planner'],
+  })
+  const hasPlanner = matchedDashboardAddons.has('planner')
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
@@ -164,6 +171,20 @@ const UserDashboardPage: React.FC = () => {
         showProjectList: true,
         isMultiSelect: false,
       },
+      // Show bookings splash when planner addon is not installed;
+      // when installed the remote page from the planner addon handles /dashboard/bookings
+      ...(!hasPlanner
+        ? [
+            {
+              name: 'Planner',
+              path: '/dashboard/planner',
+              module: 'planner',
+              accessLevels: [],
+              component: <BookingsSplashscreen />,
+              showProjectList: false,
+            },
+          ]
+        : []),
       // Add legacy dashboard addons
       ...(addonsData as DashboardAddon[])
         .filter((addon) => {
@@ -220,6 +241,7 @@ const UserDashboardPage: React.FC = () => {
       isManager,
       addonName,
       module,
+      hasPlanner,
     ],
   )
 
