@@ -22,6 +22,26 @@ const translateCondition = (c: QueryCondition): QueryCondition | QueryFilter | n
     return c.value ? { key: mappedKey, operator: 'ne', value: [] } : null
   }
 
+  if (c.key === 'in_review_session') {
+    return c.value ? { key: 'activity_data.entityList', operator: 'notnull' } : null
+  }
+
+  if (c.key === 'category') {
+    const values = Array.isArray(c.value) ? (c.value as string[]) : []
+    const hasNone = values.includes('__none__')
+    const named = values.filter((v) => v !== '__none__')
+    const nullCond: QueryCondition = { key: 'activity_data.category', operator: 'isnull' }
+    const namedCond: QueryCondition = {
+      key: 'activity_data.category',
+      operator: 'in',
+      value: named,
+    }
+    if (hasNone && named.length) return { operator: 'or', conditions: [nullCond, namedCond] }
+    if (hasNone) return nullCond
+    if (named.length) return namedCond
+    return null
+  }
+
   if (c.key === 'body' && c.operator === 'like' && typeof c.value === 'string') {
     return { ...c, key: mappedKey, value: `%${c.value}%` }
   }

@@ -91,6 +91,7 @@ export const Feed = ({
     loadNextPage,
     hasNextPage,
     users,
+    categories,
     feedFilter,
     setFeedFilter,
   } = useFeedContext()
@@ -119,13 +120,36 @@ export const Feed = ({
       users.map((u) => ({
         value: u.name,
         label: u.attrib?.fullName || u.name,
+        icon: `/api/users/${u.name}/avatar`,
       })),
     [users],
+  )
+
+  const categoryOptions = useMemo(
+    () => [
+      { value: '__none__', label: 'No category', icon: 'clear' },
+      ...categories.map((cat) => ({
+        value: cat.name,
+        label: cat.name,
+        icon: 'crop_square',
+        color: cat.color,
+      })),
+    ],
+    [categories],
   )
 
   const feedFilters: FilterItem<string>[] = useMemo(
     () => [
       ...baseFeedFilters,
+      ...(entityType === 'version'
+        ? [
+            {
+              id: 'in_review_session',
+              tooltip: 'In review session',
+              icon: 'subscriptions',
+            },
+          ]
+        : []),
       {
         id: 'author',
         tooltip: 'User (author or assignee)',
@@ -134,8 +158,20 @@ export const Feed = ({
         operator: 'in',
         options: userOptions,
       },
+      ...(categories.length
+        ? [
+            {
+              id: 'category',
+              tooltip: 'Category',
+              icon: 'label',
+              type: 'enum' as const,
+              operator: 'in' as const,
+              options: categoryOptions,
+            },
+          ]
+        : []),
     ],
-    [userOptions],
+    [userOptions, entityType, categories.length, categoryOptions],
   )
 
   // check activities permission for commenting
