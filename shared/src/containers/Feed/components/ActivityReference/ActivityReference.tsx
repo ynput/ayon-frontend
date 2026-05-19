@@ -13,6 +13,8 @@ interface ActivityReferenceProps extends Omit<React.HTMLAttributes<HTMLElement>,
   onMouseEnter?: (e: React.MouseEvent<HTMLElement>, pos: { left: number; top: number }) => void
   categoryPrimary?: string
   categorySecondary?: string
+  'data-mention-value'?: string
+  'data-mention-label'?: string
 }
 
 const ActivityReference: React.FC<ActivityReferenceProps> = ({
