@@ -88,6 +88,7 @@ export const Body = styled.div`
     .reference {
       margin-right: -2px;
       top: 5px;
+      user-select: all;
     }
 
     /* target empty lines with &nbsp; or br */
