@@ -13,6 +13,16 @@ const updateUserApi = usersApi.enhanceEndpoints({
         { type: 'user', id: 'LIST' },
       ],
     },
+    inviteUser: {
+      transformErrorResponse: (res) => res.data,
+      invalidatesTags: (_result, _error, { userName }) => [
+        { type: 'user', id: userName },
+        { type: 'user', id: 'LIST' },
+      ],
+    },
+    acceptInvite: {
+      transformErrorResponse: (res) => res.data,
+    },
     setFrontendPreferences: {
       // @ts-expect-error - disableInvalidations is not in the api
       invalidatesTags: (_result, _error, { userName, disableInvalidations }) =>
@@ -147,5 +157,7 @@ export const {
   useUpdateUserAPIKeyMutation,
   useInvalidateUserSessionMutation,
   useSetFrontendPreferencesMutation,
+  useInviteUserMutation,
+  useAcceptInviteMutation,
 } = updateUser2
 export { updateUser2 as userQueries }

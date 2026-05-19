@@ -11,6 +11,7 @@ import {
 } from '@ynput/ayon-react-components'
 import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
+import { formatDistance } from 'date-fns'
 import styled from 'styled-components'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -195,6 +196,7 @@ const UserDetail = ({
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
+  setShowDeleteUser,
   setSelectedUsers,
   isSelfSelected,
   selectedUserList,
@@ -272,6 +274,19 @@ const UserDetail = ({
   const singleUserEdit = selectedUsers.length === 1 ? formUsers[0] : null
   // check if any users have the userLevel of service
   const hasServiceUser = formUsers.some((user) => user.isService)
+
+  const deleteLabel = formUsers.length === 1 ? 'Delete user' : 'Delete users'
+
+  const headerMenuItems = [
+    {
+      id: 'delete',
+      label: deleteLabel,
+      icon: 'delete',
+      danger: true,
+      disabled: !selectedUsers.length || isSelfSelected || managerDisabled,
+      onClick: () => setShowDeleteUser?.(selectedUsers),
+    },
+  ]
 
   const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation()
 
@@ -392,6 +407,7 @@ const UserDetail = ({
         users={formUsers}
         onClose={onClose}
         subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
+        menuItems={headerMenuItems}
       />
       {hasServiceUser && singleUserEdit ? (
         <FormsStyled>
@@ -417,6 +433,15 @@ const UserDetail = ({
                   disabled={managerDisabled}
                 />
               </FormRow>
+              {singleUserEdit.inviteSent && (
+                <FormRow label="Invited" key="Invited">
+                  <span style={{ opacity: 0.7 }}>
+                    {formatDistance(new Date(singleUserEdit.inviteSent), new Date(), {
+                      addSuffix: true,
+                    })}
+                  </span>
+                </FormRow>
+              )}
               {formData && (
                 <UserAttribForm
                   formData={formData}

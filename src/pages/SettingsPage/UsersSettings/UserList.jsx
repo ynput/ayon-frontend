@@ -67,9 +67,11 @@ const UserList = ({
   setShowRenameUser,
   setShowDeleteUser,
   setShowSetPassword,
+  setShowInviteUser,
   isLoading,
   onSelectUsers,
   isSelfSelected,
+  managerDisabled,
 }) => {
   // GET LICENSE USER POOLS
   const { data: userPools = [] } = useGetUserPoolsQuery()
@@ -97,6 +99,15 @@ const UserList = ({
 
   // IDEA: Can these go into the details panel as well?
   const ctxMenuItems = (newSelectedUsers) => {
+    const ctxSelection = userList.filter((u) => newSelectedUsers.includes(u.name))
+    const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
+    const inviteLabel =
+      ctxSelection.length === 1
+        ? ctxSelection[0]?.inviteSent
+          ? 'Resend invite'
+          : 'Invite user'
+        : 'Invite users'
+
     return [
       {
         label: 'Set username',
@@ -109,6 +120,12 @@ const UserList = ({
         disabled: selection.length !== 1,
         command: () => setShowSetPassword(true),
         icon: 'key',
+      },
+      {
+        label: inviteLabel,
+        disabled: !ctxHasInvitable || managerDisabled,
+        command: () => setShowInviteUser(true),
+        icon: 'mail',
       },
       {
         label: 'Delete selected',

@@ -1,65 +1,68 @@
-import axios from 'axios'
 import { useDispatch } from 'react-redux'
 import { login } from '@state/user'
-import api from '@shared/api'
+import api, { useAcceptInviteMutation } from '@shared/api'
 import { toast } from 'react-toastify'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import * as Styled from '@pages/LoginPage/LoginPage.styled'
-import { InputPassword, Button, Panel } from '@ynput/ayon-react-components'
+import { Button, InputPassword, Panel } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-
 
 interface AcceptInviteFormProps {
   token: string
 }
 
-const AcceptInviteForm = ({ token }:AcceptInviteFormProps) => {
+const AcceptInviteForm = ({ token }: AcceptInviteFormProps) => {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(true)
   const [tokenOk, setTokenOk] = useState(false)
   const dispatch = useDispatch()
+  const [acceptInvite] = useAcceptInviteMutation()
 
   useEffect(() => {
-    // Check if token is valid
-    // passwordReset will return 200 if token is valid,
-    // if a password is not set, it won't be changed
-    axios
-      .post('/api/users/acceptInvite', { token })
+    // Probe token: backend returns 200 + "Token is valid" when password omitted.
+    acceptInvite({ acceptInviteRequest: { token } })
+      .unwrap()
       .then(() => setTokenOk(true))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, acceptInvite])
 
   if (loading) {
     return <p>Loading...</p>
   }
 
   if (!tokenOk) {
-    return <p>Invalid invite token</p>
+    return (
+      <>
+        <h1>Invalid invite</h1>
+        <p>This invite link is invalid or has expired. Ask the person who invited you to send a new one.</p>
+        <a href="/login">Back to login page</a>
+      </>
+    )
   }
 
-  const handleSubmit = (e) => {
+  const passwordsMismatch = !!confirmPassword && password !== confirmPassword
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    axios
-      .post('/api/users/acceptInvite', { token, password })
-      .then((response) => {
-        const data = response.data
-        dispatch(login({ user: data.user, accessToken: data.token }))
-        dispatch(api.util.resetApiState())
-        toast.success('Password set successfully')
-        window.history.replaceState({}, '', '/')
-      })
-      .catch((err) => {
-        console.error(err)
-        toast.error(err.response?.data?.detail || 'Unable to set password')
-      })
+    try {
+      const data = await acceptInvite({ acceptInviteRequest: { token, password } }).unwrap()
+      dispatch(login({ user: data.user, accessToken: data.token }))
+      dispatch(api.util.resetApiState())
+      toast.success('Password set. Welcome to AYON.')
+      window.history.replaceState({}, '', '/')
+    } catch (err) {
+      console.error(err)
+      const detail = (err as { data?: { detail?: string } })?.data?.detail
+      toast.error(detail || 'Unable to set password')
+    }
   }
 
   return (
     <>
-      <h1>Create a new password</h1>
-      <p>Enter a new password for your account.</p>
+      <h1>Set a password for your AYON account</h1>
+      <p>Choose a password to finish activating your account and log in.</p>
       <form onSubmit={handleSubmit}>
         <InputPassword
           autoFocus
@@ -77,8 +80,13 @@ const AcceptInviteForm = ({ token }:AcceptInviteFormProps) => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
+
+        {passwordsMismatch && (
+          <p style={{ color: 'var(--md-sys-color-error)', margin: 0 }}>Passwords do not match.</p>
+        )}
+
         <Button
-          label="Set new password and log in"
+          label={<strong>Set password and log in</strong>}
           type="submit"
           disabled={!password || password !== confirmPassword}
         />
@@ -88,39 +96,29 @@ const AcceptInviteForm = ({ token }:AcceptInviteFormProps) => {
 }
 
 const AcceptInvitePage = () => {
-  //get token from query string
   const urlParams = new URLSearchParams(window.location.search)
   const token = urlParams.get('token')
 
-  if(!token) {
-    return (
-      <>
-        <DocumentTitle title="Password reset • AYON" />
-        <main className="center">
-          <Styled.LoginForm>
-            <Panel>
-              <p>Missing password reset token</p>
-            </Panel>
-          </Styled.LoginForm>
-        </main>
-      </>
-    )
-  }
-
-
   return (
     <>
-      <DocumentTitle title="Password reset • AYON" />
+      <DocumentTitle title="Accept invite • AYON" />
       <main className="center">
-      <Styled.LoginForm>
-        <Panel>
-          <AcceptInviteForm token={token} />
-        </Panel>
-      </Styled.LoginForm>
-    </main>
+        <Styled.LoginForm>
+          <Panel>
+            {token ? (
+              <AcceptInviteForm token={token} />
+            ) : (
+              <>
+                <h1>Missing invite token</h1>
+                <p>This page expects an invite link. Open the link from your invitation email.</p>
+                <a href="/login">Back to login page</a>
+              </>
+            )}
+          </Panel>
+        </Styled.LoginForm>
+      </main>
     </>
   )
 }
 
 export default AcceptInvitePage
-
