@@ -64,7 +64,7 @@ const ProjectStoryboardsPage: FC<ProjectStoryboardsPageProps> = ({
         label="Storyboards"
         description="Create storyboards directly in AYON."
         isCloseable={false}
-        addon={{ icon: 'subscriptions' }}
+        addon={{ icon: 'subscriptions', name: 'storyboards' }}
         features={{
           playback: {
             icon: 'speed',
