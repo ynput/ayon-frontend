@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useMemo, useState } from 'react'
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
-  getGroupedRowModel,
   getSortedRowModel,
-  RowData,
+  type RowData,
   SortingState,
   VisibilityState,
   ColumnSizingState,
@@ -34,199 +32,13 @@ import { useTableSelection } from './hooks/useTableSelection'
 import { useTableEditing } from './hooks/useTableEditing'
 import { useTableDnd } from './hooks/useTableDnd'
 import { useColumnWidthVars } from './hooks/useColumnWidthVars'
-import type {
+import type { ListTableProps } from './ListTable.types'
+
+export type {
   ListTableGroupDisplay,
   ListTableGroupingPathItem,
   ListTableProps,
 } from './ListTable.types'
-
-export type { ListTableGroupDisplay, ListTableGroupingPathItem, ListTableProps }
-
-type CustomGroupRow<TData> = {
-  id: string
-  __listTableGroup: true
-  __groupColumnId: string
-  __groupValue: ListTableGroupingPathItem
-  __groupKey: string
-  subRows: Array<CustomGroupRow<TData> | TData>
-}
-
-const isGroupDisplayObject = (value: unknown): value is ListTableGroupDisplay =>
-  !!value &&
-  typeof value === 'object' &&
-  ('label' in (value as object) || 'value' in (value as object))
-
-const getPathItemValue = (value: ListTableGroupingPathItem | undefined) =>
-  isGroupDisplayObject(value) && 'value' in value ? value.value : value
-
-const getComparableValue = (value: ListTableGroupingPathItem | undefined) => {
-  if (isGroupDisplayObject(value)) {
-    if ('sortIndex' in value && typeof value.sortIndex === 'number') return value.sortIndex
-    if ('sortValue' in value && value.sortValue !== undefined) return value.sortValue
-    if ('label' in value && value.label !== undefined) return value.label
-    if ('value' in value) return value.value
-  }
-  return value
-}
-
-const compareGroupingPathItems = (
-  left: ListTableGroupingPathItem | undefined,
-  right: ListTableGroupingPathItem | undefined,
-) => {
-  const comparableLeft = getComparableValue(left)
-  const comparableRight = getComparableValue(right)
-
-  if (typeof comparableLeft === 'number' && typeof comparableRight === 'number') {
-    return comparableLeft - comparableRight
-  }
-
-  return String(comparableLeft ?? '').localeCompare(String(comparableRight ?? ''), undefined, {
-    sensitivity: 'base',
-  })
-}
-
-const getColumnValue = <TData extends RowData>(
-  row: TData,
-  columnId: string,
-  columns: ColumnDef<TData, any>[],
-) => {
-  const column = columns.find((item) => item.id === columnId)
-  if (!column) return (row as Record<string, unknown>)[columnId]
-  if ('accessorFn' in column && typeof column.accessorFn === 'function') {
-    return column.accessorFn(row, 0)
-  }
-  if ('accessorKey' in column && typeof column.accessorKey === 'string') {
-    return (row as Record<string, unknown>)[column.accessorKey]
-  }
-  return (row as Record<string, unknown>)[columnId]
-}
-
-const compareLeafRows = <TData extends RowData>(
-  left: TData,
-  right: TData,
-  sorting: SortingState,
-  columns: ColumnDef<TData, any>[],
-) => {
-  for (const sortItem of sorting) {
-    const column = columns.find((item) => item.id === sortItem.id)
-    let result = 0
-
-    if (column && 'sortingFn' in column && typeof column.sortingFn === 'function') {
-      result = column.sortingFn({ original: left } as any, { original: right } as any, sortItem.id)
-    } else {
-      const valueLeft = getColumnValue(left, sortItem.id, columns)
-      const valueRight = getColumnValue(right, sortItem.id, columns)
-
-      if (typeof valueLeft === 'number' && typeof valueRight === 'number') {
-        result = valueLeft - valueRight
-      } else {
-        result = String(valueLeft ?? '').localeCompare(String(valueRight ?? ''), undefined, {
-          sensitivity: 'base',
-        })
-      }
-    }
-
-    if (result !== 0) {
-      return sortItem.desc ? -result : result
-    }
-  }
-
-  return 0
-}
-
-const isCustomGroupRow = <TData extends RowData>(
-  row: CustomGroupRow<TData> | TData,
-): row is CustomGroupRow<TData> =>
-  !!row && typeof row === 'object' && '__listTableGroup' in (row as object)
-
-const sortCustomGroupRows = <TData extends RowData>(
-  rows: Array<CustomGroupRow<TData> | TData>,
-  groupSortByDesc: boolean,
-) => {
-  const groupRows = rows.filter(isCustomGroupRow)
-  const leafRows = rows.filter((row) => !isCustomGroupRow(row))
-
-  groupRows.sort((left, right) => {
-    const result = compareGroupingPathItems(left.__groupValue, right.__groupValue)
-    return groupSortByDesc ? -result : result
-  })
-
-  groupRows.forEach((row) => {
-    row.subRows = sortCustomGroupRows(row.subRows, groupSortByDesc)
-  })
-
-  return [...groupRows, ...leafRows]
-}
-
-const buildCustomGroupedData = <TData extends RowData>(
-  data: TData[],
-  grouping: string[],
-  columns: ColumnDef<TData, any>[],
-  sorting: SortingState,
-  groupSortByDesc: boolean,
-  getGroupingPath?: (columnId: string, row: TData) => ListTableGroupingPathItem[] | undefined,
-): Array<CustomGroupRow<TData> | TData> => {
-  const insertRow = (
-    rows: Array<CustomGroupRow<TData> | TData>,
-    row: TData,
-    groupingIds: string[],
-    parentKey: string,
-  ) => {
-    if (!groupingIds.length) {
-      rows.push(row)
-      return
-    }
-
-    const [columnId, ...restGrouping] = groupingIds
-    const segments = getGroupingPath?.(columnId, row) ?? [getColumnValue(row, columnId, columns)]
-    const safeSegments = segments.length ? segments : [null]
-
-    const insertSegments = (
-      container: Array<CustomGroupRow<TData> | TData>,
-      level: number,
-      currentParentKey: string,
-    ) => {
-      const segment = safeSegments[level]
-      const segmentValue = getPathItemValue(segment)
-      const groupKey = `${currentParentKey}|${columnId}:${level}:${JSON.stringify(segmentValue)}`
-      let groupRow = container.find(
-        (item): item is CustomGroupRow<TData> =>
-          isCustomGroupRow(item) && item.__groupKey === groupKey,
-      )
-
-      if (!groupRow) {
-        groupRow = {
-          id: groupKey,
-          __listTableGroup: true,
-          __groupColumnId: columnId,
-          __groupValue: segment,
-          __groupKey: groupKey,
-          subRows: [],
-        }
-        container.push(groupRow)
-      }
-
-      if (level < safeSegments.length - 1) {
-        insertSegments(groupRow.subRows, level + 1, groupKey)
-        return
-      }
-
-      insertRow(groupRow.subRows, row, restGrouping, groupKey)
-    }
-
-    insertSegments(rows, 0, parentKey)
-  }
-
-  const leafSorting = sorting.filter((item) => !grouping.includes(item.id))
-  const sortedLeafRows = [...data].sort((left, right) =>
-    compareLeafRows(left, right, leafSorting, columns),
-  )
-  const groupedRows: Array<CustomGroupRow<TData> | TData> = []
-
-  sortedLeafRows.forEach((row) => insertRow(groupedRows, row, grouping, 'root'))
-
-  return sortCustomGroupRows(groupedRows, groupSortByDesc)
-}
 
 export function ListTable<TData extends RowData>({
   data,
@@ -256,21 +68,7 @@ export function ListTable<TData extends RowData>({
   enableSorting = false,
   sorting: sortingProp,
   onSortingChange,
-  grouping: groupingProp,
-  onGroupingChange,
-  groupSortByDesc = false,
-  getGroupingPath,
-  getGroupDisplay,
 }: ListTableProps<TData>) {
-  const [groupingLocal, setGroupingLocal] = React.useState<string[]>([])
-
-  // Use controlled grouping if provided, otherwise internal state
-  const grouping = groupingProp ?? groupingLocal
-  const setGrouping = (updater: string[] | ((prev: string[]) => string[])) => {
-    const next = typeof updater === 'function' ? updater(grouping) : updater
-    setGroupingLocal(next)
-    onGroupingChange?.(next)
-  }
   const [sortingLocal, setSortingLocal] = useState<SortingState>([])
   const [columnVisibilityLocal, setColumnVisibilityLocal] = useState<VisibilityState>({})
   const [columnSizingLocal, setColumnSizingLocal] = useState<ColumnSizingState>({})
@@ -278,21 +76,7 @@ export function ListTable<TData extends RowData>({
 
   // Use controlled sorting if provided, otherwise internal state
   const sorting = sortingProp ?? sortingLocal
-  const hasNestedGroupingPath = useMemo(
-    () =>
-      !!getGroupingPath &&
-      grouping.some((columnId) =>
-        data.some((row) => (getGroupingPath(columnId, row)?.length ?? 0) > 1),
-      ),
-    [data, getGroupingPath, grouping],
-  )
-  const customGroupedData = useMemo(
-    () =>
-      hasNestedGroupingPath
-        ? buildCustomGroupedData(data, grouping, columns, sorting, groupSortByDesc, getGroupingPath)
-        : data,
-    [columns, data, getGroupingPath, groupSortByDesc, grouping, hasNestedGroupingPath, sorting],
-  )
+
   const handleSortingChange = (updater: SortingState | ((prev: SortingState) => SortingState)) => {
     const next = typeof updater === 'function' ? updater(sorting) : updater
     setSortingLocal(next)
@@ -324,19 +108,16 @@ export function ListTable<TData extends RowData>({
 
   // --- Table Instance ---
   const table = useReactTable({
-    data: customGroupedData as TData[],
+    data,
     columns,
     getRowId,
     state: {
-      grouping: hasNestedGroupingPath ? [] : grouping,
       columnOrder,
       sorting,
       columnVisibility,
       columnSizing,
     },
-    groupedColumnMode: false,
     filterFns: { fuzzy: () => true }, // Placeholder for fuzzy filtering
-    onGroupingChange: setGrouping,
     onColumnOrderChange: setColumnOrder,
     onSortingChange: handleSortingChange,
     onColumnVisibilityChange: handleColumnVisibilityChange,
@@ -344,10 +125,10 @@ export function ListTable<TData extends RowData>({
     enableSorting,
     columnResizeMode: 'onEnd',
     getCoreRowModel: getCoreRowModel(),
-    getGroupedRowModel: hasNestedGroupingPath ? undefined : getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    getSortedRowModel: hasNestedGroupingPath ? undefined : getSortedRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getSubRows: (row: any) => row.subRows,
+    getRowCanExpand: (row) => row.subRows.length > 0,
     meta: {
       updateData: onUpdateRow,
       openViewerDialog: onOpenViewer,
@@ -519,7 +300,6 @@ export function ListTable<TData extends RowData>({
                     dataTypeWidgets={dataTypeWidgets}
                     editingState={editingState}
                     callbacks={callbacks}
-                    getGroupDisplay={getGroupDisplay}
                   />
                 )
               })}

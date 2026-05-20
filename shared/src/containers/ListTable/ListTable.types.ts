@@ -2,7 +2,6 @@ import {
   ColumnDef,
   ColumnOrderState,
   ColumnSizingState,
-  Row,
   RowData,
   SortingState,
   VisibilityState,
@@ -28,7 +27,7 @@ declare module '@tanstack/react-table' {
   }
 
   interface TableMeta<TData extends RowData> {
-    updateData: (columnId: string, value: unknown, rowIndex: number) => void
+    updateData: (columnId: string, value: unknown, rowId: string) => void
     openViewerDialog?: (row: TData) => void
   }
 }
@@ -36,11 +35,11 @@ declare module '@tanstack/react-table' {
 export interface ListTableProps<TData> {
   data: TData[]
   columns: ColumnDef<TData, any>[]
-  getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string
+  getRowId?: (originalRow: TData, index: number) => string
   fetchNextPage?: () => void
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
-  onUpdateRow: (columnId: string, value: unknown, rowIndex: number) => void
+  onUpdateRow: (columnId: string, value: unknown, rowId: string) => void
   onOpenViewer?: (row: TData) => void
   onReorderRows?: (startIndex: number, endIndex: number) => void
   selectedRows?: string[]
@@ -65,12 +64,4 @@ export interface ListTableProps<TData> {
   enableSorting?: boolean
   sorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
-  // Grouping
-  grouping?: string[]
-  onGroupingChange?: (grouping: string[]) => void
-  groupSortByDesc?: boolean
-  /** Expand one grouping column into nested subgroup levels for a row. */
-  getGroupingPath?: (columnId: string, row: TData) => ListTableGroupingPathItem[] | undefined
-  /** Resolve label/icon/color for grouped row headers. */
-  getGroupDisplay?: (columnId: string, value: unknown) => ListTableGroupDisplay | undefined
 }

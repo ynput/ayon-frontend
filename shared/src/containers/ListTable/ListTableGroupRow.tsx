@@ -50,7 +50,6 @@ interface GroupRowProps {
   depth: number
   isExpanded: boolean
   onToggle: () => void
-  getGroupDisplay?: (columnId: string, value: unknown) => ListTableGroupDisplay | undefined
   virtualStart: number
 }
 
@@ -61,18 +60,13 @@ export function GroupRow({
   depth,
   isExpanded,
   onToggle,
-  getGroupDisplay,
   virtualStart,
 }: GroupRowProps) {
   const parsedColumnId = parseInternalGroupingColumnId(groupColumnId)
   const resolvedColumnId = parsedColumnId?.baseColumnId ?? groupColumnId
   const displayFromValue = isGroupDisplayValue(groupValue) ? groupValue : undefined
   const resolvedValue = displayFromValue?.value ?? groupValue
-  const display = {
-    ...displayFromValue,
-    ...getGroupDisplay?.(resolvedColumnId, resolvedValue),
-  }
-  const label = display.label ?? defaultGroupLabel(resolvedColumnId, resolvedValue)
+  const label = displayFromValue?.label ?? defaultGroupLabel(resolvedColumnId, resolvedValue)
 
   return (
     <Styled.TR
@@ -90,10 +84,14 @@ export function GroupRow({
             icon={isExpanded ? 'expand_more' : 'chevron_right'}
             variant="text"
           />
-          {display?.icon ? (
-            <Icon icon={display.icon as any} style={{ color: display.color }} filled />
-          ) : display?.color ? (
-            <Styled.GroupColorDot style={{ backgroundColor: display.color }} />
+          {displayFromValue?.icon ? (
+            <Icon
+              icon={displayFromValue.icon as any}
+              style={{ color: displayFromValue.color }}
+              filled
+            />
+          ) : displayFromValue?.color ? (
+            <Styled.GroupColorDot style={{ backgroundColor: displayFromValue.color }} />
           ) : null}
           <span>{label}</span>
           <Styled.GroupCount>{count}</Styled.GroupCount>

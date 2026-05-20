@@ -25,7 +25,7 @@ export interface ListTableCellEditingState {
 }
 
 export interface ListTableCellCallbacks<TData extends RowData> {
-  onUpdateRow: (columnId: string, value: unknown, rowIndex: number) => void
+  onUpdateRow: (columnId: string, value: unknown, rowId: string) => void
   onOpenViewer?: (row: TData) => void
 }
 
@@ -79,7 +79,7 @@ const renderTypedCellContent = <TData extends RowData>({
     startEditing: () => editingState.startEditingCell(cellId),
     stopEditing: editingState.stopEditingCell,
     updateValue: (value) => {
-      callbacks.onUpdateRow(columnId, value, rowIndex)
+      callbacks.onUpdateRow(columnId, value, row.id)
       editingState.stopEditingCell()
     },
     openViewer: () => callbacks.onOpenViewer?.(row.original),

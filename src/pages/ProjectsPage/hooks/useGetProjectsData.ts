@@ -6,6 +6,7 @@ import {
   useGetProjectsInfiniteInfiniteQuery,
   type ProjectFolderModel,
 } from '@shared/api'
+import type { ListTableGroupingPathItem } from '@shared/containers/ListTable'
 import { GROUP_BY_FOLDER_KEY } from '../constants'
 import { useMemo } from 'react'
 
@@ -19,6 +20,11 @@ export type ProjectTableRow = {
   color: string | null
   projectFolder: string | null
   attrib: Record<string, any>
+  subRows?: ProjectTableRow[]
+  __listTableGroup?: true
+  __groupColumnId?: string
+  __groupValue?: ListTableGroupingPathItem
+  __groupKey?: string
 }
 
 type Props = {

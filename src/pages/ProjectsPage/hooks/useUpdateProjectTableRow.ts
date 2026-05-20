@@ -26,44 +26,43 @@ const getAttribKeyFromColumnId = (columnId: string) => {
   return null
 }
 
-export const useUpdateProjectTableRow = (
-  rows: ProjectTableRow[],
-): ListTableCellCallbacks<ProjectTableRow>['onUpdateRow'] => {
-  const [updateProject] = useUpdateProjectMutation()
+export const useUpdateProjectTableRow =
+  (): ListTableCellCallbacks<ProjectTableRow>['onUpdateRow'] => {
+    const [updateProject] = useUpdateProjectMutation()
 
-  return useCallback(
-    (columnId, value, rowIndex) => {
-      const projectName = rows[rowIndex]?.name
-      if (!projectName) {
-        return
-      }
-
-      const attribKey = getAttribKeyFromColumnId(columnId)
-
-      let projectPatchModel: ProjectPatchModel | null = null
-
-      if (attribKey) {
-        projectPatchModel = {
-          attrib: {
-            [attribKey]: value,
-          },
+    return useCallback(
+      (columnId, value, rowId) => {
+        const projectName = rowId
+        if (!projectName) {
+          return
         }
-      } else if (isEditableProjectField(columnId)) {
-        projectPatchModel = {
-          [columnId]: value,
+
+        const attribKey = getAttribKeyFromColumnId(columnId)
+
+        let projectPatchModel: ProjectPatchModel | null = null
+
+        if (attribKey) {
+          projectPatchModel = {
+            attrib: {
+              [attribKey]: value,
+            },
+          }
+        } else if (isEditableProjectField(columnId)) {
+          projectPatchModel = {
+            [columnId]: value,
+          }
         }
-      }
 
-      if (!projectPatchModel) {
-        return
-      }
+        if (!projectPatchModel) {
+          return
+        }
 
-      void updateProject({ projectName, projectPatchModel })
-        .unwrap()
-        .catch((error) => {
-          getErrorMessage(error, `Failed to update project ${projectName}`)
-        })
-    },
-    [rows, updateProject],
-  )
-}
+        void updateProject({ projectName, projectPatchModel })
+          .unwrap()
+          .catch((error) => {
+            getErrorMessage(error, `Failed to update project ${projectName}`)
+          })
+      },
+      [updateProject],
+    )
+  }

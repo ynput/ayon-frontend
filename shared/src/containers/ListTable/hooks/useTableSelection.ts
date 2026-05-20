@@ -12,10 +12,7 @@ interface UseTableSelectionOptions<TData extends RowData> {
 }
 
 const isGroupRow = <TData extends RowData>(row: Row<TData>) => {
-  return (
-    row.getIsGrouped() ||
-    (!!row.original && typeof row.original === 'object' && '__listTableGroup' in row.original)
-  )
+  return !!row.original && typeof row.original === 'object' && '__listTableGroup' in row.original
 }
 
 export function useTableSelection<TData extends RowData>({
@@ -37,7 +34,10 @@ export function useTableSelection<TData extends RowData>({
       if (multiSelection && e.shiftKey && lastSelectedIndexRef.current >= 0) {
         const start = Math.min(lastSelectedIndexRef.current, rowIndex)
         const end = Math.max(lastSelectedIndexRef.current, rowIndex)
-        const rangeIds = rows.slice(start, end + 1).map((r) => r.id)
+        const rangeIds = rows
+          .slice(start, end + 1)
+          .filter((candidateRow) => !isGroupRow(candidateRow))
+          .map((candidateRow) => candidateRow.id)
         if (e.metaKey || e.ctrlKey) {
           onSelectedRowsChange?.(Array.from(new Set([...selectedRows, ...rangeIds])))
         } else {
