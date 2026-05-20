@@ -217,7 +217,7 @@ const UserDashboardKanBan = ({
     }
   }
 
-  const handleDragCancel = (event) => {
+  const handleDragCancel = () => {
     setActiveDraggingId(null)
   }
 
