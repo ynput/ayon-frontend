@@ -100,10 +100,6 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
     onGroupingChange(nextGrouping, nextGroupSortByDesc)
   }
 
-  const groupPreview = grouping.length
-    ? grouping.map((id) => groupOptions.find((o) => o.id === id)?.label ?? id).join(' › ')
-    : 'None'
-
   const settings: SettingConfig[] = [
     {
       id: 'columns',

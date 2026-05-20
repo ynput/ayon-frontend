@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useStore } from 'react-redux'
-import { AttributeData, AttributeModel, useGetAttributeListQuery } from '@shared/api'
+import { AttributeData, AttributeModel } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
 import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader/ProjectThumbnailUploader'
 import ProjectHeartbeat from '../components/ProjectDetailsPanel/components/ProjectHeartbeat'
@@ -11,17 +11,7 @@ import { useGlobalContext } from '@shared/context'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
 
-const STATIC_GROUP_OPTIONS = [
-  { id: 'active', label: 'Active' },
-  { id: 'library', label: 'Library' },
-  { id: 'projectFolder', label: 'Folder' },
-]
-
 export type ProjectTableColumnAttributeData = Record<string, AttributeData>
-export type ProjectGroupOption = {
-  id: string
-  label: string
-}
 type FolderMap = Map<string, ProjectFolderModel>
 
 const STATIC_COLUMNS_BEFORE_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
@@ -80,9 +70,6 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
 ]
 
 const isProjectScopedAttribute = (attribute: AttributeModel) => attribute.scope?.includes('project')
-const isGroupableProjectAttribute = (attribute: AttributeModel) =>
-  isProjectScopedAttribute(attribute) &&
-  (attribute.data.type === 'boolean' || !!attribute.data.enum?.length)
 
 export type ProjectColumn = ColumnDef<ProjectTableRow, any>
 
@@ -91,7 +78,6 @@ export const useProjectColumns = (
 ): {
   columns: ProjectColumn[]
   columnAttributeData: ProjectTableColumnAttributeData
-  groupOptions: ProjectGroupOption[]
 } => {
   const { attributes } = useGlobalContext()
   const store = useStore()
@@ -105,11 +91,6 @@ export const useProjectColumns = (
     })
     return Array.from(keys)
   }, [attributes])
-
-  const groupableProjectAttributes = useMemo(
-    () => attributes.filter(isGroupableProjectAttribute),
-    [attributes],
-  )
 
   const columnAttribsAttributeData = useMemo<ProjectTableColumnAttributeData>(
     () =>
@@ -215,21 +196,5 @@ export const useProjectColumns = (
     [attribColumns, foldersMap, heartbeatColumn],
   )
 
-  const groupOptions = useMemo<ProjectGroupOption[]>(
-    () => [
-      ...STATIC_GROUP_OPTIONS,
-      ...groupableProjectAttributes
-        .filter((attribute) => attribKeys.includes(attribute.name))
-        .map((attribute) => ({
-          id: `attrib_${attribute.name}`,
-          label: attribute.data.title || attribute.name,
-        })),
-    ],
-    [attribKeys, groupableProjectAttributes],
-  )
-
-  return useMemo(
-    () => ({ columns, columnAttributeData, groupOptions }),
-    [columns, columnAttributeData, groupOptions],
-  )
+  return useMemo(() => ({ columns, columnAttributeData }), [columns, columnAttributeData])
 }

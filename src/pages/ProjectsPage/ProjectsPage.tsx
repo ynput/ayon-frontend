@@ -13,7 +13,13 @@ import type { ProjectTableRow } from './hooks'
 import ProjectsSearchFilterWrapper from './components/ProjectsSearchFilterWrapper'
 import { getDefaultListTableDataTypeWidgets, ListTable } from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
-import { Button, Dialog, Toolbar } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Dialog,
+  SortCardType,
+  SortingDropdown,
+  Toolbar,
+} from '@ynput/ayon-react-components'
 import { PROJECTS_PER_PAGE } from '@shared/api'
 import { ProjectDetailsPanel } from './components/ProjectDetailsPanel/ProjectDetailsPanel'
 import { ProjectsPageTableSettings } from './components/ProjectsPageTableSettings'
@@ -30,7 +36,8 @@ interface ProjectsPageProps {
 }
 
 const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
-  const { grouping, groupSortByDesc, handleGroupingChange } = useProjectGrouping()
+  // SETTINGS: grouping
+  const { grouping, groupSortByDesc, handleGroupingChange, groupOptions } = useProjectGrouping()
 
   // Load folder metadata whenever folder grouping is active, even at nested levels.
   const groupBy = grouping.includes(GROUP_BY_FOLDER_KEY) ? GROUP_BY_FOLDER_KEY : grouping[0]
@@ -40,7 +47,19 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     useGetProjectsData({ showArchived: false, groupBy, groupByDesc: undefined })
 
   // TABLE: build table columns
-  const { columns, columnAttributeData, groupOptions } = useProjectColumns(foldersMap)
+  const { columns, columnAttributeData } = useProjectColumns(foldersMap)
+
+  const groupValue = useMemo<SortCardType[]>(
+    () =>
+      grouping
+        .map((id) => {
+          const option = groupOptions.find((o) => o.id === id)
+          if (!option) return null
+          return { ...option, sortOrder: !groupSortByDesc }
+        })
+        .filter(Boolean) as SortCardType[],
+    [groupOptions, groupSortByDesc, grouping],
+  )
 
   // SETTINGS: column order, visibility, sizing
   const {
@@ -56,6 +75,13 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { sorting, handleSortingChange } = useProjectSorting()
   // SETTINGS: Filters
   const { filters, handleFiltersChange } = useProjectFilters()
+
+  const handleGroupChange = (v: SortCardType[]) => {
+    const nextGrouping = v.map((item) => item.id)
+    const nextGroupSortByDesc = v[0]?.sortOrder === undefined ? groupSortByDesc : !v[0].sortOrder
+    handleGroupingChange(nextGrouping, nextGroupSortByDesc)
+  }
+
   const dataTypeWidgets = getDefaultListTableDataTypeWidgets<ProjectTableRow>()
 
   // TABLE: apply filters and grouping
@@ -94,6 +120,14 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
           Create new project
         </Button>
         <ProjectsSearchFilterWrapper queryFilters={filters} onChange={handleFiltersChange} />
+        <SortingDropdown
+          title="Group by"
+          value={groupValue}
+          options={groupOptions}
+          onChange={handleGroupChange}
+          multiSelect
+          style={{ minWidth: 'fit-content' }}
+        />
         <CustomizeButton />
       </Toolbar>
       <Splitter

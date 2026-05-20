@@ -2,6 +2,25 @@ import { useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import type { OverviewSettings } from '@shared/api/generated/views'
 import { useCallback, useMemo, useState } from 'react'
+import { AttributeModel } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
+import { getAttributeIcon } from '@shared/util'
+
+export type ProjectGroupOption = {
+  id: string
+  label: string
+  icon?: string
+}
+
+const STATIC_GROUP_OPTIONS: ProjectGroupOption[] = [
+  { id: 'projectFolder', label: 'Folder', icon: 'folder' },
+  { id: 'active', label: 'Active', icon: 'check_box' },
+  { id: 'library', label: 'Library', icon: 'local_library' },
+]
+
+const isGroupableProjectAttribute = (attribute: AttributeModel) =>
+  attribute.scope?.includes('project') &&
+  (attribute.data.type === 'boolean' || !!attribute.data.enum?.length)
 
 /**
  * Manages groupBy state for the ProjectsPage, persisting to the working view.
@@ -11,6 +30,7 @@ import { useCallback, useMemo, useState } from 'react'
 export const useProjectGrouping = () => {
   const { viewSettings } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
+  const { attributes } = useGlobalContext()
   const [localGrouping, setLocalGrouping] = useState<string[] | null>(null)
   const [localGroupSortByDesc, setLocalGroupSortByDesc] = useState<boolean | null>(null)
 
@@ -26,6 +46,23 @@ export const useProjectGrouping = () => {
     return settings?.groupSortByDesc ?? false
   }, [viewSettings])
   const groupSortByDesc = localGroupSortByDesc ?? storedGroupSortByDesc
+
+  const groupableProjectAttributes = useMemo(
+    () => attributes.filter(isGroupableProjectAttribute),
+    [attributes],
+  )
+
+  const groupOptions = useMemo<ProjectGroupOption[]>(
+    () => [
+      ...STATIC_GROUP_OPTIONS,
+      ...groupableProjectAttributes.map((attribute) => ({
+        id: `attrib_${attribute.name}`,
+        label: attribute.data.title || attribute.name,
+        icon: getAttributeIcon(attribute.name, attribute.data.type, !!attribute.data.enum?.length),
+      })),
+    ],
+    [groupableProjectAttributes],
+  )
 
   const handleGroupingChange = useCallback(
     async (newGrouping: string[], newGroupSortByDesc?: boolean) => {
@@ -54,5 +91,5 @@ export const useProjectGrouping = () => {
     [groupSortByDesc, updateViewSettings],
   )
 
-  return { grouping, groupSortByDesc, handleGroupingChange }
+  return { grouping, groupSortByDesc, handleGroupingChange, groupOptions }
 }
