@@ -12,7 +12,11 @@ import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '@state/context'
-import { useDeleteProjectMutation, useListProjectsQuery, useUpdateProjectMutation } from '@shared/api'
+import {
+  useDeleteProjectMutation,
+  useListProjectsQuery,
+  useUpdateProjectMutation,
+} from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
@@ -85,9 +89,7 @@ const ProjectManagerPage = () => {
     const project = allProjects.find((p) => p.name === sel)
     const displayName = project ? getProjectDisplayName(project) : sel
     const confirmLabel =
-      displayName && displayName !== sel
-        ? `Project: ${displayName} (${sel})`
-        : `Project: ${sel}`
+      displayName && displayName !== sel ? `Project: ${displayName} (${sel})` : `Project: ${sel}`
     confirmDelete({
       label: confirmLabel,
       accept: async () => {
@@ -95,10 +97,6 @@ const ProjectManagerPage = () => {
         setSelectedProject(null)
       },
     })
-  }
-
-  const handleActivateProject = async (sel, active) => {
-    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
   }
 
   const links = []

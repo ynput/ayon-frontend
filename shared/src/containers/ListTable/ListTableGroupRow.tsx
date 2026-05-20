@@ -51,6 +51,7 @@ interface GroupRowProps {
   isExpanded: boolean
   onToggle: () => void
   virtualStart: number
+  onContextMenu?: React.MouseEventHandler<HTMLTableRowElement>
 }
 
 export function GroupRow({
@@ -61,6 +62,7 @@ export function GroupRow({
   isExpanded,
   onToggle,
   virtualStart,
+  onContextMenu,
 }: GroupRowProps) {
   const parsedColumnId = parseInternalGroupingColumnId(groupColumnId)
   const resolvedColumnId = parsedColumnId?.baseColumnId ?? groupColumnId
@@ -75,6 +77,7 @@ export function GroupRow({
         paddingLeft: depth * 16,
       }}
       onClick={onToggle}
+      onContextMenu={onContextMenu}
       className="group-row"
     >
       <Styled.GroupTD>

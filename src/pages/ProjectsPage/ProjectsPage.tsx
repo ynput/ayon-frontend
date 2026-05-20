@@ -11,7 +11,11 @@ import {
 } from './hooks'
 import type { ProjectTableRow } from './hooks'
 import ProjectsSearchFilterWrapper from './components/ProjectsSearchFilterWrapper'
-import { getDefaultListTableDataTypeWidgets, ListTable } from '@shared/containers/ListTable'
+import {
+  getDefaultListTableDataTypeWidgets,
+  ListTable,
+  type ListTableRowContextMenuBuilder,
+} from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
 import {
   Button,
@@ -30,6 +34,8 @@ import { WithViews } from '@/hoc/WithViews'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
 import { CustomizeButton } from '@shared/components'
 import { GROUP_BY_FOLDER_KEY } from './constants'
+import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
+import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 
 interface ProjectsPageProps {
   onNewProject: () => void
@@ -43,8 +49,15 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const groupBy = grouping.includes(GROUP_BY_FOLDER_KEY) ? GROUP_BY_FOLDER_KEY : grouping[0]
 
   // Get all projects data
-  const { projects, fetchNextPage, hasNextPage, isFetchingNextPage, projectsMap, foldersMap } =
-    useGetProjectsData({ showArchived: false, groupBy, groupByDesc: undefined })
+  const {
+    projects,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    projectsMap,
+    foldersMap,
+    projectFolders,
+  } = useGetProjectsData({ showArchived: false, groupBy, groupByDesc: undefined })
 
   // TABLE: build table columns
   const { columns, columnAttributeData } = useProjectColumns(foldersMap)
@@ -100,6 +113,28 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
 
   const handleProjectUpdate = useUpdateProjectTableRow()
   const { isPanelOpen } = useSettingsPanel()
+  const { canCreateProject, buildListTableContextMenuItems, folderDialogProps } =
+    useProjectMenuController({
+      // @ts-expect-error - just dif between label null and undefined
+      projects,
+      folders: projectFolders,
+      selection: selectedProjectIds,
+      onSelect: setSelectedProjectIds,
+      onNewProject,
+      hidden: {
+        search: true,
+        'select-all': true,
+        'pin-project': true,
+        'show-archived': true,
+        'rename-folder': true,
+        'edit-label': true,
+      },
+    })
+
+  const rowContextMenuBuilders = useMemo<ListTableRowContextMenuBuilder<ProjectTableRow>[]>(
+    () => [(_event, context) => buildListTableContextMenuItems(context)],
+    [buildListTableContextMenuItems],
+  )
 
   useShortcuts(
     useMemo(
@@ -116,9 +151,11 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   return (
     <Styled.PageContainer style={{ flexDirection: 'column', gap: 8 }}>
       <Toolbar>
-        <Button icon="add" variant="filled" onClick={() => onNewProject()}>
-          Create new project
-        </Button>
+        {canCreateProject && (
+          <Button icon="add" variant="filled" onClick={() => onNewProject()}>
+            Create new project
+          </Button>
+        )}
         <ProjectsSearchFilterWrapper queryFilters={filters} onChange={handleFiltersChange} />
         <SortingDropdown
           title="Group by"
@@ -146,6 +183,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
                 getRowId={(row) => row.id}
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
+                rowContextMenuBuilders={rowContextMenuBuilders}
                 selectedRows={selectedProjectIds}
                 onSelectedRowsChange={setSelectedProjectIds}
                 onUpdateRow={handleProjectUpdate}
@@ -211,6 +249,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
           </Button>
         </Dialog>
       )}
+      <ProjectFolderFormDialog {...folderDialogProps} />
     </Styled.PageContainer>
   )
 }

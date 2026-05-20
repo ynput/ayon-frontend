@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -32,13 +32,24 @@ import { useTableSelection } from './hooks/useTableSelection'
 import { useTableEditing } from './hooks/useTableEditing'
 import { useTableDnd } from './hooks/useTableDnd'
 import { useColumnWidthVars } from './hooks/useColumnWidthVars'
+import { useCreateContextMenu } from '../ContextMenu'
+import { isCustomGroupRowValue } from './ListTableGroupRow'
 import type { ListTableProps } from './ListTable.types'
 
 export type {
   ListTableGroupDisplay,
   ListTableGroupingPathItem,
   ListTableProps,
+  ListTableRowContextMenuBuilder,
+  ListTableRowContextMenuContext,
 } from './ListTable.types'
+
+const toMenuItems = (
+  items: ReturnType<NonNullable<ListTableProps<RowData>['rowContextMenuBuilders']>[number]>,
+) => {
+  if (!items) return []
+  return Array.isArray(items) ? items.filter(Boolean) : [items]
+}
 
 export function ListTable<TData extends RowData>({
   data,
@@ -50,6 +61,7 @@ export function ListTable<TData extends RowData>({
   onUpdateRow,
   onOpenViewer,
   onReorderRows,
+  rowContextMenuBuilders = [],
   selectedRows = [],
   onSelectedRowsChange,
   multiSelection = false,
@@ -73,6 +85,7 @@ export function ListTable<TData extends RowData>({
   const [columnVisibilityLocal, setColumnVisibilityLocal] = useState<VisibilityState>({})
   const [columnSizingLocal, setColumnSizingLocal] = useState<ColumnSizingState>({})
   const tableContainerRef = useRef<HTMLDivElement>(null)
+  const [showRowContextMenu] = useCreateContextMenu()
 
   // Use controlled sorting if provided, otherwise internal state
   const sorting = sortingProp ?? sortingLocal
@@ -156,6 +169,53 @@ export function ListTable<TData extends RowData>({
     rowVirtualizer,
     tableContainerRef,
   })
+
+  const handleRowContextMenu = useCallback(
+    (rowId: string, rowIndex: number, e: React.MouseEvent<HTMLTableRowElement>) => {
+      const row = rows[rowIndex]
+      if (!row || row.original === undefined) return
+      const isGroupRow = isCustomGroupRowValue(row.original)
+      let groupContext: { groupColumnId?: string; groupValue?: unknown } = {}
+      if (isGroupRow) {
+        const customGroupRow = row.original as { __groupColumnId: string; __groupValue: unknown }
+        groupContext = {
+          groupColumnId: customGroupRow.__groupColumnId,
+          groupValue: customGroupRow.__groupValue,
+        }
+      }
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const nextSelectedRows = isGroupRow
+        ? selectedRows
+        : selectedRows.includes(rowId)
+        ? selectedRows
+        : [rowId]
+      if (!isGroupRow && !selectedRows.includes(rowId)) {
+        onSelectedRowsChange?.(nextSelectedRows)
+      }
+
+      const menuItems = rowContextMenuBuilders.flatMap((builder) =>
+        toMenuItems(
+          builder(e, {
+            rowId,
+            rowIndex,
+            row,
+            selectedRows: nextSelectedRows,
+            isSelected: nextSelectedRows.includes(rowId),
+            isGroupRow,
+            ...groupContext,
+          }),
+        ),
+      )
+
+      if (menuItems.length > 0) {
+        showRowContextMenu(e, menuItems)
+      }
+    },
+    [rowContextMenuBuilders, rows, selectedRows, onSelectedRowsChange, showRowContextMenu],
+  )
 
   // --- Editing ---
   const { editingState } = useTableEditing()
@@ -295,6 +355,9 @@ export function ListTable<TData extends RowData>({
                     isSelected={selectedRows.includes(row.id)}
                     rowIndex={virtualRow.index}
                     onRowClick={handleRowClick}
+                    onRowContextMenu={
+                      rowContextMenuBuilders.length > 0 ? handleRowContextMenu : undefined
+                    }
                     cellWrapper={cellWrapper}
                     columnAttributeData={columnAttributeData}
                     dataTypeWidgets={dataTypeWidgets}

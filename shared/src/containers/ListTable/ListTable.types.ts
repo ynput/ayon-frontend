@@ -1,11 +1,13 @@
 import {
   ColumnDef,
   ColumnOrderState,
+  Row,
   ColumnSizingState,
   RowData,
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
+import { ContextMenuItemType } from '../ContextMenu'
 import { CellWrapperRenderer } from './ListTableCell'
 import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
 
@@ -19,6 +21,22 @@ export type ListTableGroupDisplay = {
 }
 
 export type ListTableGroupingPathItem = unknown | ListTableGroupDisplay
+
+export type ListTableRowContextMenuContext<TData extends RowData> = {
+  rowId: string
+  rowIndex: number
+  row: Row<TData>
+  selectedRows: string[]
+  isSelected: boolean
+  isGroupRow: boolean
+  groupColumnId?: string
+  groupValue?: unknown
+}
+
+export type ListTableRowContextMenuBuilder<TData extends RowData> = (
+  e: React.MouseEvent<HTMLTableRowElement>,
+  context: ListTableRowContextMenuContext<TData>,
+) => ContextMenuItemType | ContextMenuItemType[] | undefined
 
 // Extend TanStack Table Meta to strongly type our mutation and dialog handlers
 declare module '@tanstack/react-table' {
@@ -42,6 +60,7 @@ export interface ListTableProps<TData> {
   onUpdateRow: (columnId: string, value: unknown, rowId: string) => void
   onOpenViewer?: (row: TData) => void
   onReorderRows?: (startIndex: number, endIndex: number) => void
+  rowContextMenuBuilders?: ListTableRowContextMenuBuilder<TData>[]
   selectedRows?: string[]
   onSelectedRowsChange?: (ids: string[]) => void
   multiSelection?: boolean

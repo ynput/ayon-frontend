@@ -9,8 +9,6 @@ import { useGetProjectsInfoQuery } from '@shared/api'
 import { useListProjectsQuery } from '@shared/api'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
-import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
-import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
@@ -117,24 +115,6 @@ const UserDashboardPage: React.FC = () => {
     }
     return projectsInfoWithProjects
   }, [projectsInfo, isLoadingInfo])
-
-  // UPDATE/DELETE PROJECT
-  const [updateProject] = useUpdateProjectMutation()
-  const [deleteProject] = useDeleteProjectMutation()
-
-  const handleDeleteProject = (sel: string) => {
-    confirmDelete({
-      label: `Project: ${sel}`,
-      accept: async () => {
-        await deleteProject({ projectName: sel }).unwrap()
-        setSelectedProjects([])
-      },
-    })
-  }
-
-  const handleActivateProject = async (sel: string, active: boolean) => {
-    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
-  }
 
   // Build pages configuration - single source of truth for navigation and components
   const pages: PageLink[] = useMemo(
@@ -271,8 +251,6 @@ const UserDashboardPage: React.FC = () => {
                       selection={selectedProjects}
                       onSelect={setSelectedProjects}
                       onNewProject={() => setShowNewProject(true)}
-                      onDeleteProject={handleDeleteProject}
-                      onActivateProject={handleActivateProject}
                     />
                   </SplitterPanel>
                   <SplitterPanel size={100} style={{ overflow: 'hidden' }}>

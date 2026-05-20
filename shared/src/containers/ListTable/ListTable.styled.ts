@@ -151,6 +151,8 @@ export const TableContainer = styled.div`
   padding: 8px;
   padding-top: 0;
   outline: none;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--border-radius-m);
 
   &[data-hover-frozen] .th-actions {
     visibility: hidden !important;
@@ -183,7 +185,7 @@ export const THead = styled.thead`
   top: 0;
   min-height: 34px;
   z-index: 10;
-  background-color: var(--md-sys-color-background);
+  background-color: var(--md-sys-color-surface-container-low);
 `
 
 export const HeaderTR = styled.tr`

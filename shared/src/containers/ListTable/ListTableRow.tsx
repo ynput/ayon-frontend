@@ -21,6 +21,11 @@ interface DraggableRowProps<TData extends RowData> {
   isSelected: boolean
   rowIndex: number
   onRowClick: (rowId: string, rowIndex: number, e: React.MouseEvent) => void
+  onRowContextMenu?: (
+    rowId: string,
+    rowIndex: number,
+    e: React.MouseEvent<HTMLTableRowElement>,
+  ) => void
   cellWrapper?: CellWrapperRenderer<TData>
   columnAttributeData?: ListTableColumnAttributeData
   dataTypeWidgets?: ListTableDataTypeWidgets<TData>
@@ -34,6 +39,7 @@ function DraggableRowInner<TData extends RowData>({
   isSelected,
   rowIndex,
   onRowClick,
+  onRowContextMenu,
   cellWrapper,
   columnAttributeData,
   dataTypeWidgets,
@@ -58,6 +64,7 @@ function DraggableRowInner<TData extends RowData>({
         isExpanded={row.getIsExpanded()}
         onToggle={row.getToggleExpandedHandler()}
         virtualStart={virtualRow.start}
+        onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
       />
     )
   }
@@ -74,6 +81,7 @@ function DraggableRowInner<TData extends RowData>({
       }}
       tabIndex={-1}
       onClick={(e) => onRowClick(row.id, rowIndex, e)}
+      onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
       className={clsx('table-list-row', { dragging: isDragging, selected: isSelected })}
     >
       <RowCells

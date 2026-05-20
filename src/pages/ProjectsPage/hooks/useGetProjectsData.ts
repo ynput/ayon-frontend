@@ -21,6 +21,7 @@ type FolderMap = Map<string, ProjectFolderModel>
 type Value = {
   projects: Project[]
   projectsMap: ProjectMap
+  projectFolders: ProjectFolderModel[]
   foldersMap: FolderMap
   fetchNextPage: () => void
   hasNextPage: boolean
@@ -44,18 +45,18 @@ export const useGetProjectsData = ({
     isFetchingNextPage,
   } = useGetProjectsInfiniteInfiniteQuery({})
 
-  //   get project folders if grouping by folder
-  const { data: foldersData } = useGetProjectFoldersQuery(undefined, {
+  //   get project projectFolders if grouping by folder
+  const { data: projectFolders = [] } = useGetProjectFoldersQuery(undefined, {
     skip: GROUP_BY_FOLDER_KEY !== groupBy,
   })
 
   const foldersMap = useMemo<FolderMap>(() => {
     const map = new Map<string, ProjectFolderModel>()
-    for (const folder of foldersData ?? []) {
+    for (const folder of projectFolders ?? []) {
       map.set(folder.id, folder)
     }
     return map
-  }, [foldersData])
+  }, [projectFolders])
 
   const projects = useMemo(() => pages.flatMap((page) => page.projects), [pages])
 
@@ -70,6 +71,7 @@ export const useGetProjectsData = ({
   return {
     projects,
     projectsMap,
+    projectFolders,
     foldersMap,
     fetchNextPage,
     hasNextPage: hasNextPage ?? false,
