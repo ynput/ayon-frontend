@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import type { Project, ProjectFolderModel } from '@shared/api'
 import {
   buildGroupedData,
+  compareGroupingPathItems,
   isListTableGroupDisplayObject,
   isListTableGroupRow,
   type ListTableGroupRow,
@@ -19,14 +20,15 @@ export type ProjectTableRow = {
   id: string
   name: string
   label: string
-  code: string
-  active: boolean
-  library: boolean
+  code: string | null
+  active: boolean | null
+  library: boolean | null
   color: string | null
   projectFolder: string | null
   attrib: Record<string, any>
   subRows?: ProjectTableRow[]
   __listTableGroup?: true
+  __listTablePlaceholder?: true
   __groupColumnId?: string
   __groupValue?: ListTableGroupingPathItem
   __groupKey?: string
@@ -36,8 +38,100 @@ type FolderMap = Map<string, ProjectFolderModel>
 
 export type ProjectGroupRow = ProjectTableRow & ListTableGroupRow<ProjectTableRow>
 
+type ProjectRowEntry = ProjectTableRow | ProjectGroupRow
+
+const EMPTY_FOLDER_PLACEHOLDER_LABEL = 'No projects in this folder'
+
 export const isProjectGroupRow = (row: ProjectTableRow): row is ProjectGroupRow =>
   isListTableGroupRow(row)
+
+export const isEmptyFolderPlaceholderRow = (
+  row: ProjectTableRow | undefined,
+): row is ProjectTableRow & { __listTablePlaceholder: true } => !!row?.__listTablePlaceholder
+
+const createEmptyFolderPlaceholderRow = (groupKey: string): ProjectTableRow => ({
+  id: `${groupKey}|__empty-folder-placeholder`,
+  name: '',
+  label: EMPTY_FOLDER_PLACEHOLDER_LABEL,
+  code: null,
+  active: null,
+  library: null,
+  color: null,
+  projectFolder: null,
+  attrib: {},
+  __listTablePlaceholder: true,
+})
+
+const sortProjectRowEntries = (
+  rows: ProjectRowEntry[],
+  groupSortByDesc: boolean,
+): ProjectRowEntry[] => {
+  const groupRows = rows.filter(isProjectGroupRow)
+  const leafRows = rows.filter((row) => !isProjectGroupRow(row))
+
+  groupRows.sort((left, right) => {
+    const result = compareGroupingPathItems(left.__groupValue, right.__groupValue)
+    return groupSortByDesc ? -result : result
+  })
+
+  groupRows.forEach((row) => {
+    row.subRows = sortProjectRowEntries(row.subRows as ProjectRowEntry[], groupSortByDesc)
+  })
+
+  return [...groupRows, ...leafRows]
+}
+
+const ensureEmptyFolderGroups = (
+  rows: ProjectRowEntry[],
+  foldersMap: FolderMap,
+  groupSortByDesc: boolean,
+): ProjectTableRow[] => {
+  const childFoldersByParentId = new Map<string | null, ProjectFolderModel[]>()
+
+  for (const folder of foldersMap.values()) {
+    const parentId = folder.parentId ?? null
+    const siblingFolders = childFoldersByParentId.get(parentId) ?? []
+    siblingFolders.push(folder)
+    childFoldersByParentId.set(parentId, siblingFolders)
+  }
+
+  const ensureBranch = (
+    container: ProjectRowEntry[],
+    parentId: string | null,
+    parentKey: string,
+    level: number,
+  ) => {
+    const childFolders = childFoldersByParentId.get(parentId)
+    if (!childFolders?.length) return
+
+    for (const folder of childFolders) {
+      const groupKey = `${parentKey}|${GROUP_BY_FOLDER_KEY}:${level}:${JSON.stringify(folder.id)}`
+      let groupRow = container.find(
+        (row): row is ProjectGroupRow => isProjectGroupRow(row) && row.__groupKey === groupKey,
+      )
+
+      if (!groupRow) {
+        groupRow = createProjectGroupRow(GROUP_BY_FOLDER_KEY, groupKey, {
+          value: folder.id,
+          label: folder.label,
+          icon: folder.data?.icon ?? undefined,
+          color: folder.data?.color ?? undefined,
+          sortValue: folder.label,
+        }) as ProjectGroupRow
+        container.push(groupRow)
+      }
+
+      ensureBranch(groupRow.subRows as ProjectRowEntry[], folder.id, groupKey, level + 1)
+
+      if (!groupRow.subRows.length) {
+        groupRow.subRows.push(createEmptyFolderPlaceholderRow(groupKey))
+      }
+    }
+  }
+
+  ensureBranch(rows, null, 'root', 0)
+  return sortProjectRowEntries(rows, groupSortByDesc)
+}
 
 const getProjectGroupingValue = (row: ProjectTableRow, columnId: string): unknown => {
   if (columnId.startsWith('attrib_')) return row.attrib[columnId.slice(7)]
@@ -174,7 +268,7 @@ export const useProjectTableRows = ({
     (columnId: string, row: ProjectTableRow): ListTableGroupingPathItem[] | undefined => {
       if (columnId === GROUP_BY_FOLDER_KEY) {
         if (!row.projectFolder) {
-          return [{ value: null, label: 'No folder', sortValue: 'No folder' }]
+          return []
         }
 
         const path: ListTableGroupingPathItem[] = []
@@ -193,7 +287,7 @@ export const useProjectTableRows = ({
             : undefined
         }
 
-        return path.length ? path : [{ value: null, label: 'No folder', sortValue: 'No folder' }]
+        return path
       }
 
       return [getGroupDisplay(columnId, getProjectGroupingValue(row, columnId))]
@@ -205,13 +299,19 @@ export const useProjectTableRows = ({
 
   return useMemo(() => {
     if (!grouping.length) return filteredRows
-    return buildGroupedData(
+    const groupedRows = buildGroupedData(
       filteredRows,
       grouping,
       groupSortByDesc,
       getGroupingPath,
       createProjectGroupRow,
       getProjectGroupingValue,
-    ) as ProjectTableRow[]
-  }, [filteredRows, grouping, groupSortByDesc, getGroupingPath])
+    ) as ProjectRowEntry[]
+
+    if (grouping[0] === GROUP_BY_FOLDER_KEY) {
+      return ensureEmptyFolderGroups(groupedRows, foldersMap, groupSortByDesc)
+    }
+
+    return groupedRows as ProjectTableRow[]
+  }, [filteredRows, foldersMap, grouping, groupSortByDesc, getGroupingPath])
 }

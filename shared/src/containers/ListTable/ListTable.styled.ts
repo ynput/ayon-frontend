@@ -69,6 +69,22 @@ export const TR = styled.tr`
       background-color: var(--md-sys-color-surface-container);
     }
   }
+
+  &.placeholder-row {
+    background-color: transparent;
+
+    .inner-td {
+      background-color: transparent;
+      border-color: transparent;
+    }
+
+    &:hover {
+      .inner-td {
+        background-color: transparent;
+        border-color: transparent;
+      }
+    }
+  }
 `
 
 export const TD = styled.td`
@@ -103,6 +119,16 @@ export const TDInner = styled.div`
   overflow: hidden;
   cursor: pointer;
   box-sizing: border-box;
+`
+
+export const PlaceholderRowContent = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--md-sys-color-on-surface-variant);
+  font-style: italic;
+  pointer-events: none;
 `
 
 // convenience cell wrapper div use of cell container prop

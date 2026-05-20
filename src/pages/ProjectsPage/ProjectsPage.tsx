@@ -1,6 +1,7 @@
 import { FC, useMemo, useState } from 'react'
 import {
   useGetProjectsData,
+  isEmptyFolderPlaceholderRow,
   useProjectColumnConfig,
   useProjectColumns,
   useProjectSorting,
@@ -108,7 +109,10 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   })
 
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([])
-  const selectedProjectName = selectedProjectIds[0]
+  const selectedProjectName =
+    selectedProjectIds[0] && projectsMap.has(selectedProjectIds[0])
+      ? selectedProjectIds[0]
+      : undefined
   const clearSelection = () => setSelectedProjectIds([])
 
   const handleProjectUpdate = useUpdateProjectTableRow()
@@ -132,7 +136,15 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     })
 
   const rowContextMenuBuilders = useMemo<ListTableRowContextMenuBuilder<ProjectTableRow>[]>(
-    () => [(_event, context) => buildListTableContextMenuItems(context)],
+    () => [
+      (_event, context) => {
+        if (isEmptyFolderPlaceholderRow(context.row.original)) {
+          return []
+        }
+
+        return buildListTableContextMenuItems(context)
+      },
+    ],
     [buildListTableContextMenuItems],
   )
 

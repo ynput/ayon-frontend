@@ -11,6 +11,9 @@ import {
 import clsx from 'clsx'
 import { EDIT_TRIGGER_CLASS } from '../ProjectTreeTable'
 
+const isPlaceholderRowValue = (value: unknown): value is { __listTablePlaceholder: true } =>
+  !!value && typeof value === 'object' && '__listTablePlaceholder' in (value as object)
+
 // 1. Refactored Type: Pass 'content' to the function so it can wrap it naturally
 export type CellWrapperRenderer<TData extends RowData> =
   | ((row: Row<TData>, content: React.ReactNode) => React.ReactElement | null)
@@ -98,6 +101,25 @@ export const RowCells = <TData extends RowData>({
   editingState,
   callbacks,
 }: RowCellsProps<TData>) => {
+  const isPlaceholderRow = isPlaceholderRowValue(row.original)
+
+  if (isPlaceholderRow) {
+    const message =
+      row.original && typeof row.original === 'object' && 'label' in row.original
+        ? String((row.original as { label?: string }).label ?? '')
+        : ''
+
+    return (
+      <Styled.TD key={`${row.id}-placeholder`} style={{ width: '100%' }}>
+        <Styled.TDInner
+          style={{ left: 0, paddingLeft: `calc(var(--padding-m) + ${row.depth * 16}px)` }}
+        >
+          <Styled.PlaceholderRowContent>{message}</Styled.PlaceholderRowContent>
+        </Styled.TDInner>
+      </Styled.TD>
+    )
+  }
+
   return (
     <>
       {row.getVisibleCells().map((cell, cellIndex, visibleCells) => {
@@ -107,21 +129,23 @@ export const RowCells = <TData extends RowData>({
         const shouldUseTypedWidget = !!attributeData?.type && !hasCustomCellRenderer
         const hasTypedWidget = !!(attributeData?.type && dataTypeWidgets?.[attributeData.type])
         const isEditing = editingState.editingCellId === cellId
-        const typedContent = !shouldUseTypedWidget
-          ? null
-          : renderTypedCellContent({
-              cell,
-              row,
-              rowIndex: row.index,
-              attributeData,
-              dataTypeWidgets,
-              editingState,
-              callbacks,
-            })
+        const typedContent =
+          !shouldUseTypedWidget || isPlaceholderRow
+            ? null
+            : renderTypedCellContent({
+                cell,
+                row,
+                rowIndex: row.index,
+                attributeData,
+                dataTypeWidgets,
+                editingState,
+                callbacks,
+              })
 
-        const content = !shouldUseTypedWidget
-          ? flexRender(cell.column.columnDef.cell, cell.getContext())
-          : typedContent ?? renderListTableFallbackValue(cell.getValue())
+        const content =
+          !shouldUseTypedWidget || isPlaceholderRow
+            ? flexRender(cell.column.columnDef.cell, cell.getContext())
+            : typedContent ?? renderListTableFallbackValue(cell.getValue())
         let wrappedContent: React.ReactNode = content
 
         if (cellWrapper !== null) {
@@ -132,7 +156,7 @@ export const RowCells = <TData extends RowData>({
           }
         }
 
-        const canStartTypedEdit = shouldUseTypedWidget && hasTypedWidget
+        const canStartTypedEdit = shouldUseTypedWidget && hasTypedWidget && !isPlaceholderRow
         if (canStartTypedEdit) {
           wrappedContent = (
             <Styled.EditableCellValue className={clsx({ editing: isEditing })}>

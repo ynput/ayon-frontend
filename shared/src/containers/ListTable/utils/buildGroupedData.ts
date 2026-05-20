@@ -128,14 +128,18 @@ export const buildGroupedData = <TData extends RowData>(
 
     const [columnId, ...restGrouping] = groupingIds
     const segments = getGroupingPath(columnId, row) ?? [getRowColumnValue(row, columnId)]
-    const safeSegments = segments.length ? segments : [null]
+
+    if (!segments.length) {
+      insertRow(container, row, restGrouping, parentKey)
+      return
+    }
 
     const insertSegments = (
       segmentContainer: (ListTableGroupRow<TData> | TData)[],
       level: number,
       currentParentKey: string,
     ) => {
-      const segment = safeSegments[level]
+      const segment = segments[level]
       const segmentValue = getGroupItemValue(segment)
       const groupKey = `${currentParentKey}|${columnId}:${level}:${JSON.stringify(segmentValue)}`
 
@@ -149,7 +153,7 @@ export const buildGroupedData = <TData extends RowData>(
         segmentContainer.push(groupRow)
       }
 
-      if (level < safeSegments.length - 1) {
+      if (level < segments.length - 1) {
         insertSegments(groupRow.subRows, level + 1, groupKey)
         return
       }

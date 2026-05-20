@@ -13,6 +13,9 @@ import {
 import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
 import { GroupRow, isCustomGroupRowValue } from './ListTableGroupRow'
 
+const isPlaceholderRowValue = (value: unknown): value is { __listTablePlaceholder: true } =>
+  !!value && typeof value === 'object' && '__listTablePlaceholder' in (value as object)
+
 // --- DraggableRow (regular data row) ---
 
 interface DraggableRowProps<TData extends RowData> {
@@ -47,9 +50,10 @@ function DraggableRowInner<TData extends RowData>({
   callbacks,
 }: DraggableRowProps<TData>) {
   const isGroupRow = isCustomGroupRowValue(row.original)
+  const isPlaceholderRow = isPlaceholderRowValue(row.original)
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.id,
-    disabled: isGroupRow,
+    disabled: isGroupRow || isPlaceholderRow,
   })
 
   // Group rows get a different, simpler rendering
@@ -59,7 +63,9 @@ function DraggableRowInner<TData extends RowData>({
       <GroupRow
         groupColumnId={customGroupRow.__groupColumnId}
         groupValue={customGroupRow.__groupValue}
-        count={row.getLeafRows().length}
+        count={
+          row.getLeafRows().filter((leafRow) => !isPlaceholderRowValue(leafRow.original)).length
+        }
         depth={row.depth}
         isExpanded={row.getIsExpanded()}
         onToggle={row.getToggleExpandedHandler()}
@@ -82,7 +88,11 @@ function DraggableRowInner<TData extends RowData>({
       tabIndex={-1}
       onClick={(e) => onRowClick(row.id, rowIndex, e)}
       onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
-      className={clsx('table-list-row', { dragging: isDragging, selected: isSelected })}
+      className={clsx('table-list-row', {
+        dragging: isDragging,
+        selected: isSelected,
+        'placeholder-row': isPlaceholderRow,
+      })}
     >
       <RowCells
         row={row}

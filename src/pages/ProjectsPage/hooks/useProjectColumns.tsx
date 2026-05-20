@@ -6,7 +6,7 @@ import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader/Pro
 import ProjectHeartbeat from '../components/ProjectDetailsPanel/components/ProjectHeartbeat'
 import * as Styled from '../ProjectsPage.styled'
 import type { ProjectFolderModel } from '@shared/api'
-import { ProjectTableRow } from './useProjectTableRows'
+import { isEmptyFolderPlaceholderRow, ProjectTableRow } from './useProjectTableRows'
 import { useGlobalContext } from '@shared/context'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
@@ -22,17 +22,21 @@ const STATIC_COLUMNS_BEFORE_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     meta: {
       listTableCustomCell: true,
     },
-    cell: (info) => (
-      <ProjectThumbnailUploader
-        projectName={info.getValue()}
-        Thumbnail={({ projectName, updatedAt }) => (
-          <Styled.Thumbnail
-            src={`/api/projects/${projectName}/thumbnail?updatedAt=${updatedAt}`}
-            alt={`${projectName} thumbnail`}
-          />
-        )}
-      />
-    ),
+    cell: (info) => {
+      if (isEmptyFolderPlaceholderRow(info.row.original)) return null
+
+      return (
+        <ProjectThumbnailUploader
+          projectName={info.getValue()}
+          Thumbnail={({ projectName, updatedAt }) => (
+            <Styled.Thumbnail
+              src={`/api/projects/${projectName}/thumbnail?updatedAt=${updatedAt}`}
+              alt={`${projectName} thumbnail`}
+            />
+          )}
+        />
+      )
+    },
   }),
   columnHelper.accessor('label', {
     id: 'label',
@@ -154,8 +158,18 @@ export const useProjectColumns = (
         meta: {
           listTableCustomCell: true,
         },
-        cell: (info) => <ProjectHeartbeat projectName={info.getValue()} />,
+        cell: (info) =>
+          isEmptyFolderPlaceholderRow(info.row.original) ? null : (
+            <ProjectHeartbeat projectName={info.getValue()} />
+          ),
         sortingFn: (rowA, rowB) => {
+          if (
+            isEmptyFolderPlaceholderRow(rowA.original) ||
+            isEmptyFolderPlaceholderRow(rowB.original)
+          ) {
+            return 0
+          }
+
           const getScore = (projectName: string): number => {
             const state = store.getState() as any
             // RTK Query default cache key: `endpointName({...args sorted by key})`
