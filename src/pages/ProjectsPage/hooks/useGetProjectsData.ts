@@ -1,4 +1,4 @@
-// hook that loads projects data and transforms it into maps and table data
+// hook that loads projects data and transforms it into maps and flat table rows
 
 import type { Project } from '@shared/api'
 import {
@@ -6,26 +6,8 @@ import {
   useGetProjectsInfiniteInfiniteQuery,
   type ProjectFolderModel,
 } from '@shared/api'
-import type { ListTableGroupingPathItem } from '@shared/containers/ListTable'
 import { GROUP_BY_FOLDER_KEY } from '../constants'
 import { useMemo } from 'react'
-
-export type ProjectTableRow = {
-  id: string
-  name: string
-  label: string
-  code: string
-  active: boolean
-  library: boolean
-  color: string | null
-  projectFolder: string | null
-  attrib: Record<string, any>
-  subRows?: ProjectTableRow[]
-  __listTableGroup?: true
-  __groupColumnId?: string
-  __groupValue?: ListTableGroupingPathItem
-  __groupKey?: string
-}
 
 type Props = {
   groupBy?: string | null
@@ -38,7 +20,6 @@ type FolderMap = Map<string, ProjectFolderModel>
 
 type Value = {
   projects: Project[]
-  tableRows: ProjectTableRow[]
   projectsMap: ProjectMap
   foldersMap: FolderMap
   fetchNextPage: () => void
@@ -78,25 +59,6 @@ export const useGetProjectsData = ({
 
   const projects = useMemo(() => pages.flatMap((page) => page.projects), [pages])
 
-  const tableRows = useMemo<ProjectTableRow[]>(
-    () =>
-      projects.map((project) => ({
-        id: project.name,
-        name: project.name,
-        label: project.label ?? project.name,
-        code: project.code,
-        active: project.active,
-        library: project.library,
-        color: project.color ?? null,
-        projectFolder:
-          project.projectFolder && foldersMap.has(project.projectFolder)
-            ? project.projectFolder
-            : null,
-        attrib: project.attrib,
-      })),
-    [foldersMap, projects],
-  )
-
   const projectsMap = useMemo<ProjectMap>(() => {
     const map = new Map<string, Project>()
     projects.forEach((project) => {
@@ -107,7 +69,6 @@ export const useGetProjectsData = ({
 
   return {
     projects,
-    tableRows,
     projectsMap,
     foldersMap,
     fetchNextPage,

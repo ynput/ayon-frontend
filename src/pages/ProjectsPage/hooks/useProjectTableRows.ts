@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import type { ProjectFolderModel } from '@shared/api'
+import type { Project, ProjectFolderModel } from '@shared/api'
 import {
   buildGroupedData,
   isListTableGroupDisplayObject,
@@ -12,7 +12,25 @@ import type {
 } from '@shared/containers/ListTable/ListTable.types'
 import { GROUP_BY_FOLDER_KEY } from '../constants'
 import type { ProjectTableColumnAttributeData } from './useProjectColumns'
-import type { ProjectTableRow } from './useGetProjectsData'
+import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import { applyProjectFilters } from './utils/filterProjects'
+
+export type ProjectTableRow = {
+  id: string
+  name: string
+  label: string
+  code: string
+  active: boolean
+  library: boolean
+  color: string | null
+  projectFolder: string | null
+  attrib: Record<string, any>
+  subRows?: ProjectTableRow[]
+  __listTableGroup?: true
+  __groupColumnId?: string
+  __groupValue?: ListTableGroupingPathItem
+  __groupKey?: string
+}
 
 type FolderMap = Map<string, ProjectFolderModel>
 
@@ -53,21 +71,42 @@ const createProjectGroupRow = (
   } as unknown as ListTableGroupRow<ProjectTableRow>
 }
 
-interface UseProjectGroupedRowsOptions {
-  rows: ProjectTableRow[]
+interface UseProjectTableRowsOptions {
+  projects: Project[]
   grouping: string[]
   groupSortByDesc: boolean
   foldersMap: FolderMap
   columnAttributeData: ProjectTableColumnAttributeData
+  filters: QueryFilter
 }
 
-export const useProjectGroupedRows = ({
-  rows,
+export const useProjectTableRows = ({
+  projects,
   grouping,
   groupSortByDesc,
   foldersMap,
   columnAttributeData,
-}: UseProjectGroupedRowsOptions): ProjectTableRow[] => {
+  filters,
+}: UseProjectTableRowsOptions): ProjectTableRow[] => {
+  const tableRows = useMemo<ProjectTableRow[]>(
+    () =>
+      projects.map((project) => ({
+        id: project.name,
+        name: project.name,
+        label: project.label ?? project.name,
+        code: project.code,
+        active: project.active,
+        library: project.library,
+        color: project.color ?? null,
+        projectFolder:
+          project.projectFolder && foldersMap.has(project.projectFolder)
+            ? project.projectFolder
+            : null,
+        attrib: project.attrib,
+      })),
+    [foldersMap, projects],
+  )
+
   const getGroupDisplay = useCallback(
     (columnId: string, value: unknown): ListTableGroupDisplay => {
       if (columnId === GROUP_BY_FOLDER_KEY) {
@@ -162,15 +201,17 @@ export const useProjectGroupedRows = ({
     [foldersMap, getGroupDisplay],
   )
 
+  const filteredRows = useMemo(() => applyProjectFilters(tableRows, filters), [tableRows, filters])
+
   return useMemo(() => {
-    if (!grouping.length) return rows
+    if (!grouping.length) return filteredRows
     return buildGroupedData(
-      rows,
+      filteredRows,
       grouping,
       groupSortByDesc,
       getGroupingPath,
       createProjectGroupRow,
       getProjectGroupingValue,
     ) as ProjectTableRow[]
-  }, [rows, grouping, groupSortByDesc, getGroupingPath])
+  }, [filteredRows, grouping, groupSortByDesc, getGroupingPath])
 }

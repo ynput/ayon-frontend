@@ -7,8 +7,7 @@ import {
   useUpdateProjectTableRow,
   useProjectFilters,
   useProjectGrouping,
-  useProjectGroupedRows,
-  applyProjectFilters,
+  useProjectTableRows,
 } from './hooks'
 import type { ProjectTableRow } from './hooks'
 import ProjectsSearchFilterWrapper from './components/ProjectsSearchFilterWrapper'
@@ -35,10 +34,15 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
 
   // Load folder metadata whenever folder grouping is active, even at nested levels.
   const groupBy = grouping.includes(GROUP_BY_FOLDER_KEY) ? GROUP_BY_FOLDER_KEY : grouping[0]
-  const { tableRows, fetchNextPage, hasNextPage, isFetchingNextPage, projectsMap, foldersMap } =
+
+  // Get all projects data
+  const { projects, fetchNextPage, hasNextPage, isFetchingNextPage, projectsMap, foldersMap } =
     useGetProjectsData({ showArchived: false, groupBy, groupByDesc: undefined })
 
-  const { columns, columnAttributeData, groupOptions } = useProjectColumns(tableRows, foldersMap)
+  // TABLE: build table columns
+  const { columns, columnAttributeData, groupOptions } = useProjectColumns(foldersMap)
+
+  // SETTINGS: column order, visibility, sizing
   const {
     columnOrder,
     columnVisibility,
@@ -48,18 +52,20 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     handleColumnSizingChange,
     handleColumnsConfigChange,
   } = useProjectColumnConfig({ columns })
+  // SETTINGS: sorting
   const { sorting, handleSortingChange } = useProjectSorting()
+  // SETTINGS: Filters
   const { filters, handleFiltersChange } = useProjectFilters()
   const dataTypeWidgets = getDefaultListTableDataTypeWidgets<ProjectTableRow>()
 
-  const filteredRows = useMemo(() => applyProjectFilters(tableRows, filters), [tableRows, filters])
-
-  const displayRows = useProjectGroupedRows({
-    rows: filteredRows,
+  // TABLE: apply filters and grouping
+  const displayRows = useProjectTableRows({
+    projects,
     grouping,
     groupSortByDesc,
     foldersMap,
     columnAttributeData,
+    filters,
   })
 
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([])
@@ -164,7 +170,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
           onClose={() => {}}
           hideCancelButton
           showCloseButton={false}
-          header={`Congratulations you have more than ${tableRows.length} projects.`}
+          header={`Congratulations you have more than ${projects.length} projects.`}
         >
           <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
             {isFetchingNextPage ? 'Loading...' : `Click here to load ${PROJECTS_PER_PAGE} more`}

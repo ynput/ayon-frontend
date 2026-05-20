@@ -2,11 +2,12 @@ import { useMemo } from 'react'
 import { useStore } from 'react-redux'
 import { AttributeData, AttributeModel, useGetAttributeListQuery } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
-import type { ProjectTableRow } from './useGetProjectsData'
 import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader/ProjectThumbnailUploader'
 import ProjectHeartbeat from '../components/ProjectDetailsPanel/components/ProjectHeartbeat'
 import * as Styled from '../ProjectsPage.styled'
 import type { ProjectFolderModel } from '@shared/api'
+import { ProjectTableRow } from './useProjectTableRows'
+import { useGlobalContext } from '@shared/context'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
 
@@ -86,27 +87,25 @@ const isGroupableProjectAttribute = (attribute: AttributeModel) =>
 export type ProjectColumn = ColumnDef<ProjectTableRow, any>
 
 export const useProjectColumns = (
-  rows: ProjectTableRow[],
   foldersMap: FolderMap = new Map(),
 ): {
   columns: ProjectColumn[]
   columnAttributeData: ProjectTableColumnAttributeData
   groupOptions: ProjectGroupOption[]
 } => {
-  const { data: attributes = [] } = useGetAttributeListQuery()
+  const { attributes } = useGlobalContext()
   const store = useStore()
 
   const attribKeys = useMemo(() => {
     const keys = new Set<string>()
-    for (const row of rows) {
-      for (const key of Object.keys(row.attrib)) {
-        keys.add(key)
+    attributes.forEach((attribute) => {
+      if (isProjectScopedAttribute(attribute)) {
+        keys.add(attribute.name)
       }
-    }
+    })
     return Array.from(keys)
-  }, [rows])
+  }, [attributes])
 
-  const projectAttributes = useMemo(() => attributes.filter(isProjectScopedAttribute), [attributes])
   const groupableProjectAttributes = useMemo(
     () => attributes.filter(isGroupableProjectAttribute),
     [attributes],
@@ -115,13 +114,13 @@ export const useProjectColumns = (
   const columnAttribsAttributeData = useMemo<ProjectTableColumnAttributeData>(
     () =>
       attribKeys.reduce<ProjectTableColumnAttributeData>((acc, key) => {
-        const attribute = projectAttributes.find((item) => item.name === key)
+        const attribute = attributes.find((item) => item.name === key)
         if (attribute?.data) {
           acc[`attrib_${key}`] = attribute.data
         }
         return acc
       }, {}),
-    [attribKeys, projectAttributes],
+    [attribKeys, attributes],
   )
 
   const columnAttributeData = useMemo<ProjectTableColumnAttributeData>(
