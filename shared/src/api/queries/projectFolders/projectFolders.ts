@@ -1,5 +1,5 @@
 import { projectFoldersApi, ProjectFoldersResponseModel } from '@shared/api/generated'
-import enhancedProject from '../project/getProject'
+import enhancedProject, { getProjectsGraphql } from '../project/getProject'
 
 const PROJECT_FOLDER_LIST_TAG = { type: 'projectFolder' as const, id: 'LIST' }
 
@@ -123,7 +123,10 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
         }
       },
       transformErrorResponse,
-      invalidatesTags: (_r, _e, arg) => [{ type: 'projectFolder', id: arg.folderId }],
+      invalidatesTags: (_r, _e, arg) => [
+        PROJECT_FOLDER_LIST_TAG,
+        { type: 'projectFolder', id: arg.folderId },
+      ],
     },
 
     assignProjectsToFolder: {
@@ -150,6 +153,17 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
               })
             }),
           ),
+          dispatch(
+            getProjectsGraphql.util.updateQueryData('getProjectsInfinite', {}, (draft) => {
+              for (const page of draft.pages) {
+                page.projects.forEach((project) => {
+                  if (projectNames.includes(project.name)) {
+                    project.projectFolder = folderId || undefined
+                  }
+                })
+              }
+            }),
+          ),
         ]
 
         try {
@@ -160,6 +174,11 @@ const enhancedProjectFoldersApi = projectFoldersApi.enhanceEndpoints<TagTypes, U
         }
       },
       transformErrorResponse,
+      invalidatesTags: (_r, _e, { assignProjectRequest: { projectNames } }) => [
+        { type: 'project', id: 'LIST' },
+        ...projectNames.map((projectName) => ({ type: 'project' as const, id: projectName })),
+        PROJECT_FOLDER_LIST_TAG,
+      ],
     },
   },
 })
