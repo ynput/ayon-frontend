@@ -8,12 +8,11 @@ import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { useListProjectsQuery } from '@shared/api'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
-import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
 import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@shared/api'
-import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
+import DashboardAddon from './DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -162,15 +161,6 @@ const UserDashboardPage: React.FC = () => {
         module: 'projects',
         component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
-      },
-      {
-        name: 'Dashboard',
-        path: '/dashboard/dashboard',
-        module: 'dashboard',
-        accessLevels: [],
-        component: <ProjectDashboard projectName={selectedProjectNames[0]} />,
-        showProjectList: true,
-        isMultiSelect: false,
       },
       // Add legacy dashboard addons
       ...(addonsData as DashboardAddon[])
