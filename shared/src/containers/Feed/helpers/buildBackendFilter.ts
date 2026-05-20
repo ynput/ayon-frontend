@@ -30,7 +30,13 @@ const translateCondition = (c: QueryCondition): QueryCondition | QueryFilter | n
     const values = Array.isArray(c.value) ? (c.value as string[]) : []
     const hasNone = values.includes('__none__')
     const named = values.filter((v) => v !== '__none__')
-    const nullCond: QueryCondition = { key: 'activity_data.category', operator: 'isnull' }
+    const nullCond: QueryFilter = {
+      operator: 'or',
+      conditions: [
+        { key: 'activity_data.category', operator: 'isnull' },
+        { key: 'activity_data.category', operator: 'eq', value: '' },
+      ],
+    }
     const namedCond: QueryCondition = {
       key: 'activity_data.category',
       operator: 'in',

@@ -127,7 +127,7 @@ export const Feed = ({
 
   const categoryOptions = useMemo(
     () => [
-      { value: '__none__', label: 'No category', icon: 'clear' },
+      { value: '__none__', label: 'No category' },
       ...categories.map((cat) => ({
         value: cat.name,
         label: cat.name,
@@ -138,10 +138,12 @@ export const Feed = ({
     [categories],
   )
 
+  const supportsReviewSession = entityType === 'version' || entityType === 'folder'
+
   const feedFilters: FilterItem<string>[] = useMemo(
     () => [
       ...baseFeedFilters,
-      ...(entityType === 'version'
+      ...(supportsReviewSession
         ? [
             {
               id: 'in_review_session',
@@ -150,14 +152,6 @@ export const Feed = ({
             },
           ]
         : []),
-      {
-        id: 'author',
-        tooltip: 'User (author or assignee)',
-        icon: 'person',
-        type: 'enum',
-        operator: 'in',
-        options: userOptions,
-      },
       ...(categories.length
         ? [
             {
@@ -170,8 +164,16 @@ export const Feed = ({
             },
           ]
         : []),
+      {
+        id: 'author',
+        tooltip: 'User (author or assignee)',
+        icon: 'person',
+        type: 'enum',
+        operator: 'in',
+        options: userOptions,
+      },
     ],
-    [userOptions, entityType, categories.length, categoryOptions],
+    [userOptions, supportsReviewSession, categories.length, categoryOptions],
   )
 
   // check activities permission for commenting
