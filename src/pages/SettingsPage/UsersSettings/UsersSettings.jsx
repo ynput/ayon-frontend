@@ -249,11 +249,7 @@ const UsersSettings = () => {
               onClick={() => setShowInviteUser(true)}
               label="Send Invite"
               icon="mail"
-              disabled={
-                !selectedUsers.length ||
-                !selectedUserList.some((u) => !!u.attrib?.email) ||
-                managerDisabled
-              }
+              disabled={!selectedUsers.length}
             />
             <ImportDialogButton importContext="user" />
             <Button label="Licenses" icon="groups" onClick={() => setShowLicenses(true)} />

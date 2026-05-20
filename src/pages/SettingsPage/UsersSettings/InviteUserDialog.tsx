@@ -10,6 +10,7 @@ export type InviteCandidate = {
   name: string
   attrib?: { email?: string; fullName?: string }
   inviteSent?: string | null
+  active?: boolean
 }
 
 type Props = {
@@ -24,15 +25,13 @@ const InviteUserDialog = ({ isOpen, onHide, selectedUserList }: Props) => {
 
   if (!isOpen) return null
 
-  const invitable = selectedUserList.filter((u) => !!u.attrib?.email)
-  const skipped = selectedUserList.filter((u) => !u.attrib?.email)
+  const invitable = selectedUserList.filter((u) => !!u.attrib?.email && u.active)
+  const skipped = selectedUserList.filter((u) => !u.attrib?.email || !u.active)
 
   const handleSend = async () => {
     setSending(true)
     const results = await Promise.allSettled(
-      invitable.map((u) =>
-        inviteUser({ userName: u.name, inviteUserRequest: {} }).unwrap(),
-      ),
+      invitable.map((u) => inviteUser({ userName: u.name, inviteUserRequest: {} }).unwrap()),
     )
     setSending(false)
 
@@ -57,11 +56,7 @@ const InviteUserDialog = ({ isOpen, onHide, selectedUserList }: Props) => {
     onHide()
   }
 
-  const headerCount = invitable.length || selectedUserList.length
-  const header =
-    headerCount === 1
-      ? `Invite ${(invitable[0] ?? selectedUserList[0]).name}`
-      : `Invite ${invitable.length} of ${selectedUserList.length} users`
+  const header = 'Invite users to AYON by email'
 
   return (
     <Styled.StyledDialog
@@ -73,7 +68,12 @@ const InviteUserDialog = ({ isOpen, onHide, selectedUserList }: Props) => {
             <Button label="Cancel" onClick={onHide} disabled={sending} />
             <Button
               variant="filled"
-              label={sending ? 'Sending...' : 'Send invite'}
+              label={
+                sending
+                  ? 'Sending...'
+                  : `Send ${invitable.length} ${invitable.length > 1 ? 'invites' : 'invite'}`
+              }
+              icon="send"
               onClick={handleSend}
               disabled={sending || invitable.length === 0}
             />
@@ -89,15 +89,14 @@ const InviteUserDialog = ({ isOpen, onHide, selectedUserList }: Props) => {
           variant="warning"
           message={
             invitable.length === 0
-              ? 'None of the selected users have an email. Nothing to send.'
-              : `${invitable.length} of ${selectedUserList.length} will be invited — ${skipped.length} have no email.`
+              ? 'None of the selected users are active and have an email.'
+              : `${invitable.length} of ${selectedUserList.length} will be invited — ${skipped.length} skipped (no email or inactive).`
           }
         />
       )}
 
       {invitable.length > 0 && (
         <>
-          <Styled.FooterLabel>Will be invited</Styled.FooterLabel>
           <Styled.UserList>
             {invitable.map((u) => (
               <div
@@ -111,9 +110,7 @@ const InviteUserDialog = ({ isOpen, onHide, selectedUserList }: Props) => {
               >
                 <span>
                   {u.name}
-                  {u.attrib?.email && (
-                    <span style={{ opacity: 0.6 }}> — {u.attrib.email}</span>
-                  )}
+                  {u.attrib?.email && <span style={{ opacity: 0.6 }}> — {u.attrib.email}</span>}
                 </span>
                 {u.inviteSent && (
                   <span style={{ opacity: 0.6 }}>
@@ -129,10 +126,13 @@ const InviteUserDialog = ({ isOpen, onHide, selectedUserList }: Props) => {
 
       {skipped.length > 0 && (
         <>
-          <Styled.FooterLabel style={{ marginTop: 16 }}>Skipped (no email)</Styled.FooterLabel>
+          <Styled.FooterLabel style={{ marginTop: 16 }}>Skipped</Styled.FooterLabel>
           <Styled.UserList>
             {skipped.map((u) => (
-              <div key={u.name}>{u.name}</div>
+              <div key={u.name}>
+                {u.name}
+                <span style={{ opacity: 0.6 }}>{!u.active ? ' — inactive' : ' — no email'}</span>
+              </div>
             ))}
           </Styled.UserList>
         </>
