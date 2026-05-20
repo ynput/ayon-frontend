@@ -9,7 +9,8 @@ import * as Styled from './DeleteUserDialog.styled'
 export type InviteCandidate = {
   name: string
   attrib?: { email?: string; fullName?: string }
-  inviteSent?: string | null
+  inviteSentAt?: string | null
+  inviteAcceptedAt?: string | null
   active?: boolean
 }
 
@@ -112,12 +113,17 @@ const InviteUserDialog = ({ isOpen, onHide, selectedUserList }: Props) => {
                   {u.name}
                   {u.attrib?.email && <span style={{ opacity: 0.6 }}> — {u.attrib.email}</span>}
                 </span>
-                {u.inviteSent && (
+                {u.inviteAcceptedAt ? (
+                  <span style={{ opacity: 0.6 }}>
+                    Accepted{' '}
+                    {formatDistance(new Date(u.inviteAcceptedAt), new Date(), { addSuffix: true })}
+                  </span>
+                ) : u.inviteSentAt ? (
                   <span style={{ opacity: 0.6 }}>
                     Last invited{' '}
-                    {formatDistance(new Date(u.inviteSent), new Date(), { addSuffix: true })}
+                    {formatDistance(new Date(u.inviteSentAt), new Date(), { addSuffix: true })}
                   </span>
-                )}
+                ) : null}
               </div>
             ))}
           </Styled.UserList>

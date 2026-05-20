@@ -54,7 +54,8 @@ const AcceptInviteForm = ({ token }: AcceptInviteFormProps) => {
       window.history.replaceState({}, '', '/')
     } catch (err) {
       console.error(err)
-      const detail = (err as { data?: { detail?: string } })?.data?.detail
+      const e = err as { detail?: string; data?: { detail?: string } }
+      const detail = e?.detail || e?.data?.detail
       toast.error(detail || 'Unable to set password')
     }
   }

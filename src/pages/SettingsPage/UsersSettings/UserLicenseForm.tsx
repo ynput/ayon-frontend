@@ -1,13 +1,27 @@
 import { useGetUserPoolsQuery, UserPoolModel } from '@shared/api'
-import { Dropdown, FormLayout, FormRow, InputSwitch } from '@ynput/ayon-react-components'
+import { Button, Dropdown, FormLayout, FormRow, InputSwitch } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
+import InvitationStatus, { getInvitationState } from './InvitationStatus'
 
 const FormRowStyled = styled(FormRow)`
   .label {
     min-width: 160px;
   }
 `
+
+const InvitationRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+  flex-wrap: wrap;
+`
+
+interface InvitationUser {
+  inviteSentAt?: string | null
+  inviteAcceptedAt?: string | null
+  attrib?: { email?: string }
+}
 
 interface UserLicenseFormProps {
   active: boolean
@@ -16,6 +30,10 @@ interface UserLicenseFormProps {
   isDisabled?: boolean
   onActiveChange: (value: boolean) => void
   onPoolChange: (value: string) => void
+  user?: InvitationUser | null
+  onInvite?: () => void
+  isInviting?: boolean
+  inviteDisabled?: boolean
 }
 
 const UserLicenseForm: FC<UserLicenseFormProps> = ({
@@ -25,6 +43,10 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
   isDisabled,
   onActiveChange,
   onPoolChange,
+  user,
+  onInvite,
+  isInviting,
+  inviteDisabled,
 }) => {
   // GET LICENSE USER POOLS
   const { data: userPools = [], isLoading: isLoadingPools } = useGetUserPoolsQuery()
@@ -62,6 +84,26 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
               data-tooltip-as="markdown"
               onChange={(value) => onPoolChange(value[0])}
             />
+          </FormRowStyled>
+        )}
+        {user && onInvite && (
+          <FormRowStyled label="Invitation">
+            <InvitationRow>
+              <Button
+                label={
+                  isInviting
+                    ? 'Sending...'
+                    : getInvitationState(user) === 'pending'
+                      ? 'Resend'
+                      : 'Invite'
+                }
+                icon="mail"
+                onClick={onInvite}
+                disabled={inviteDisabled || isInviting || !user.attrib?.email}
+                data-tooltip={!user.attrib?.email ? 'User has no email' : undefined}
+              />
+              <InvitationStatus user={user} />
+            </InvitationRow>
           </FormRowStyled>
         )}
       </FormLayout>

@@ -12,6 +12,17 @@ import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useGetUserPoolsQuery } from '@shared/api'
 import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
+import InvitationStatus, { getInvitationState } from './InvitationStatus'
+
+const INVITE_SORT_RANK = { none: 0, expired: 1, pending: 2, accepted: 3 }
+
+const inviteStatusSortFunction = (event) => {
+  const { data, order } = event
+  return [...data].sort((a, b) => {
+    const diff = INVITE_SORT_RANK[getInvitationState(a)] - INVITE_SORT_RANK[getInvitationState(b)]
+    return order === 1 ? diff : -diff
+  })
+}
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -103,7 +114,7 @@ const UserList = ({
     const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
     const inviteLabel =
       ctxSelection.length === 1
-        ? ctxSelection[0]?.inviteSent
+        ? ctxSelection[0]?.inviteSentAt
           ? 'Resend invite'
           : 'Invite user'
         : 'Invite users'
@@ -214,17 +225,18 @@ const UserList = ({
             resizeable
           />
           <Column
-            header="Guest (legacy)"
-            body={(rowData) => (rowData.isGuest ? 'yes' : '')}
-            field="isGuest"
-            sortable
-            resizeable
-          />
-          <Column
             header="Active"
             body={(rowData) => (rowData.active ? 'yes' : '')}
             field="active"
             sortable
+            resizeable
+          />
+          <Column
+            header="Invitation"
+            field="inviteSentAt"
+            body={(rowData) => <InvitationStatus user={rowData} />}
+            sortable
+            sortFunction={inviteStatusSortFunction}
             resizeable
           />
         </DataTable>

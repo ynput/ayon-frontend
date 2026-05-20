@@ -9,9 +9,8 @@ import {
   LockedInput,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { useUpdateUsersMutation } from '@shared/api'
+import { useUpdateUsersMutation, useInviteUserMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
-import { formatDistance } from 'date-fns'
 import styled from 'styled-components'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
@@ -289,6 +288,20 @@ const UserDetail = ({
   ]
 
   const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation()
+  const [inviteUser, { isLoading: isInviting }] = useInviteUserMutation()
+
+  const handleInvite = async () => {
+    if (!singleUserEdit) return
+    try {
+      await inviteUser({
+        userName: singleUserEdit.name,
+        inviteUserRequest: {},
+      }).unwrap()
+      toast.success(`Invite sent to ${singleUserEdit.attrib?.email || singleUserEdit.name}`)
+    } catch (err) {
+      toast.error(err?.data?.detail || err?.message || 'Invite failed')
+    }
+  }
 
   //
   // API
@@ -433,15 +446,6 @@ const UserDetail = ({
                   disabled={managerDisabled}
                 />
               </FormRow>
-              {singleUserEdit.inviteSent && (
-                <FormRow label="Invited" key="Invited">
-                  <span style={{ opacity: 0.7 }}>
-                    {formatDistance(new Date(singleUserEdit.inviteSent), new Date(), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </FormRow>
-              )}
               {formData && (
                 <UserAttribForm
                   formData={formData}
@@ -461,6 +465,12 @@ const UserDetail = ({
                 isPoolMixed={formData._mixedFields.includes('userPool')}
                 onPoolChange={(value) => setFormData({ ...formData, userPool: value })}
                 isDisabled={isSelfSelected}
+                user={singleUserEdit}
+                onInvite={handleInvite}
+                isInviting={isInviting}
+                inviteDisabled={
+                  managerDisabled || !singleUserEdit?.active || !singleUserEdit?.attrib?.email
+                }
               />
             </Panel>
           )}
