@@ -16,12 +16,7 @@ import { toast } from 'react-toastify'
 
 import ColumnsWrapper from './ColumnsWrapper'
 import DashboardTasksToolbar from './DashboardTasksToolbar/DashboardTasksToolbar'
-import {
-  onCollapsedColumnsChanged,
-  onDraggingEnd,
-  onDraggingStart,
-  onTaskSelected,
-} from '@state/dashboard'
+import { onCollapsedColumnsChanged, onTaskSelected } from '@state/dashboard'
 import KanBanCardOverlay from './KanBanCard/KanBanCardOverlay'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import UserDashboardList from './UserDashboardList/UserDashboardList'
@@ -213,15 +208,6 @@ const UserDashboardKanBan = ({
   const [activeDraggingId, setActiveDraggingId] = useState(null)
 
   const handleDragStart = (event) => {
-    const isSelected = selectedTasks.includes(event.active.id)
-
-    let draggingTasks = []
-    // set dragging id
-    if (isSelected) draggingTasks = selectedTasks
-    else draggingTasks = [event.active.id]
-
-    dispatch(onDraggingStart(draggingTasks))
-
     setActiveDraggingId(event.active.id)
     // select card
     if (!selectedTasks.includes(event.active.id)) {
@@ -232,13 +218,10 @@ const UserDashboardKanBan = ({
   }
 
   const handleDragCancel = (event) => {
-    dispatch(onDraggingEnd())
     setActiveDraggingId(null)
   }
 
   const handleDragEnd = async (event) => {
-    dispatch(onDraggingEnd())
-
     setActiveDraggingId(null)
     // first check if field can be edited on task
     if (splitByField.isEditable === false)
