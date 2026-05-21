@@ -12,6 +12,7 @@ import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import * as Styled from './LoginPage.styled'
 import remarkGfm from 'remark-gfm'
 import Markdown from 'react-markdown'
+import LoginTerms from './LoginTerms'
 
 const LoginPage = ({ isFirstTime = false }) => {
   const dispatch = useDispatch()
@@ -34,7 +35,6 @@ const LoginPage = ({ isFirstTime = false }) => {
   const { data: info = {}, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
   const { motd, loginPageBrand = '', loginPageBackground = '' } = info
 
-
   // store the current url in local storage to preserve the redirect across auth flows
 
   useEffect(() => {
@@ -42,7 +42,6 @@ const LoginPage = ({ isFirstTime = false }) => {
     console.debug('Storing preferred URL in local storage:', window.location.href)
     localStorage.setItem('auth-preferred-url', window.location.href)
   }, [])
-
 
   // Password login handler
 
@@ -71,11 +70,9 @@ const LoginPage = ({ isFirstTime = false }) => {
 
     localStorage.removeItem('auth-preferred-url')
     toast.info(response.data.detail)
-    dispatch(login({ user: response.data.user, accessToken: response.data.token, }))
+    dispatch(login({ user: response.data.user, accessToken: response.data.token }))
     dispatch(api.util.resetApiState())
   } // handleSubmit
-
-
 
   const handleSSOCallback = async (ssoOptions) => {
     // First we check if there's a provider name in the URL
@@ -85,7 +82,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     console.debug('handleSSOCallback', provider)
 
     // If we don't have any SSO options, we can't proceed. Abort
-    if (!ssoOptions?.length && provider !== "_token") return
+    if (!ssoOptions?.length && provider !== '_token') return
 
     // Get the query string from the URL to use in the callback
     const qs = new URLSearchParams(window.location.search)
@@ -93,20 +90,18 @@ const LoginPage = ({ isFirstTime = false }) => {
     // If the query string is empty, we can't proceed. Abort
     if (!qs.toString()) return
 
-
     // Clear the query string from the URL
     // This is important to avoid confusion with the next login attempts
     // (we don't want to keep the query string in the URL after login)
-    
-    window.history.replaceState({}, '', window.location.pathname)
 
+    window.history.replaceState({}, '', window.location.pathname)
 
     // Get the provider config
     // We need to handle the situation ssoOptions is undefined.
     // That happens, when user is already logged in
     // but wants to re-login using a token
     let providerConfig = (info?.ssoOptions || []).find((o) => o.name === provider)
-    if (provider === "_token") {
+    if (provider === '_token') {
       // special case for token auth
       // we don't have a providerConfig for this, but we can still proceed
       providerConfig = {
@@ -144,7 +139,7 @@ const LoginPage = ({ isFirstTime = false }) => {
     }
 
     // If we have a response and it contains user data, we're good to go
-    
+
     let user = null
     let accessToken = null
 
@@ -166,13 +161,12 @@ const LoginPage = ({ isFirstTime = false }) => {
       success = false
     }
 
-
     if (success) {
       // Still, we need to figure out where to redirect the user after login
-      // At this point we may have redirect URL from the response, but that 
+      // At this point we may have redirect URL from the response, but that
       // is optional and used sparsely.
 
-      if ((!redirectUrl) && localStorage.getItem('auth-preferred-url')) {
+      if (!redirectUrl && localStorage.getItem('auth-preferred-url')) {
         redirectUrl = localStorage.getItem('auth-preferred-url')
       }
 
@@ -185,8 +179,6 @@ const LoginPage = ({ isFirstTime = false }) => {
       localStorage.removeItem('auth-preferred-url')
       dispatch(login({ user, accessToken, redirectUrl }))
       dispatch(api.util.resetApiState())
-
-
     } else {
       // we don't want to retry!
       // Clear everything
@@ -194,9 +186,7 @@ const LoginPage = ({ isFirstTime = false }) => {
       setIsLoading(false)
       localStorage.removeItem('auth-preferred-url')
     }
-
   } // handleSSOCallback
-
 
   // Handle SSO callback after redirection from SSO provider
   // (this needs to be called after sso options are loaded)
@@ -205,18 +195,17 @@ const LoginPage = ({ isFirstTime = false }) => {
     handleSSOCallback(info.ssoOptions)
   }, [info.ssoOptions])
 
-
   //
   // Render logic (what are we showing?)
   //
 
   // Should we show the password login?
 
-  let showPasswordLogin = (
-    showAllProviders
-    || !info?.hidePasswordAuth
-    || (featuredProviders?.length && featuredProviders.includes('password'))
-  ) || null
+  let showPasswordLogin =
+    showAllProviders ||
+    !info?.hidePasswordAuth ||
+    (featuredProviders?.length && featuredProviders.includes('password')) ||
+    null
 
   // Should we show "Show all login options" button?
 
@@ -228,7 +217,11 @@ const LoginPage = ({ isFirstTime = false }) => {
     if (!info.ssoOptions?.length) return null
 
     return info.ssoOptions
-      .filter(({ name, hidden }) => !hidden && (!featuredProviders?.length || featuredProviders.includes(name) || showAllProviders))
+      .filter(
+        ({ name, hidden }) =>
+          !hidden &&
+          (!featuredProviders?.length || featuredProviders.includes(name) || showAllProviders),
+      )
       .map(({ name, title, url, args, redirectKey, icon, color, textColor }) => {
         const queryDict = { ...args }
         const redirect_uri = `${window.location.origin}/login/${name}`
@@ -254,7 +247,6 @@ const LoginPage = ({ isFirstTime = false }) => {
 
   if (isLoading || isLoadingInfo) return isFirstTime ? null : <LoadingPage />
 
-
   //
   // Render the login page
   //
@@ -263,76 +255,70 @@ const LoginPage = ({ isFirstTime = false }) => {
     <>
       <DocumentTitle title="Login • AYON" />
       <main className="center">
-      {loginPageBackground && <Styled.BG src={loginPageBackground} />}
-      <Styled.LoginForm>
-        {(motd || loginPageBrand) && (
+        {loginPageBackground && <Styled.BG src={loginPageBackground} />}
+        <Styled.LoginForm>
+          {(motd || loginPageBrand) && (
+            <Panel>
+              {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
+              <Styled.MessageMarkdown>
+                <Markdown remarkPlugins={remarkGfm}>{motd}</Markdown>
+              </Styled.MessageMarkdown>
+            </Panel>
+          )}
           <Panel>
-            {loginPageBrand && <Styled.Logo src={loginPageBrand} />}
-            <Styled.MessageMarkdown>
-              <Markdown remarkPlugins={remarkGfm}>{motd}</Markdown>
-            </Styled.MessageMarkdown>
-          </Panel>
-        )}
-        <Panel>
-          <Styled.Ayon src="/AYON.svg" />
+            <Styled.Ayon src="/AYON.svg" />
 
-          <Styled.Methods>
-            {showPasswordLogin ? (
-              <form onSubmit={handleSubmit}>
-                <label id="username">Username</label>
-                <InputText
-                  autoFocus
-                  placeholder="Enter your username"
-                  name="username"
-                  aria-label="Username"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <label id="password">Password</label>
-                <InputPassword
-                  placeholder="Enter password"
-                  name="password"
-                  aria-label="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <Button type="submit">
-                  <span className="label">Login with password</span>
-                </Button>
-              </form>
-            ) : (
+            <Styled.Methods>
+              {showPasswordLogin ? (
+                <form onSubmit={handleSubmit}>
+                  <label id="username">Username</label>
+                  <InputText
+                    autoFocus
+                    placeholder="Enter your username"
+                    name="username"
+                    aria-label="Username"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  <label id="password">Password</label>
+                  <InputPassword
+                    placeholder="Enter password"
+                    name="password"
+                    aria-label="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <Button type="submit">
+                    <span className="label">Login with password</span>
+                  </Button>
+                </form>
+              ) : (
                 <>
-                {/* we need a margin between the logo and the SSO buttons */}
-                <div style={{ marginBottom: '8px' }} />
+                  {/* we need a margin between the logo and the SSO buttons */}
+                  <div style={{ marginBottom: '8px' }} />
                 </>
+              )}
+
+              {ssoButtons}
+            </Styled.Methods>
+            {info?.passwordRecoveryAvailable && showPasswordLogin && (
+              <a href="/passwordReset" style={{ margin: '8px 0' }}>
+                Reset password
+              </a>
             )}
-
-            {ssoButtons}
-
-          </Styled.Methods>
-          {info?.passwordRecoveryAvailable && showPasswordLogin && (
-            <a href="/passwordReset" style={{ margin: '8px 0' }}>
-              Reset password
-            </a>
-          )}
-          {showAllButton && (
-            <Button style={{ width: '100%' }} variant="text" onClick={() => setShowAllProviders(true)}>
-              Show all login options
-            </Button>
-          )}
-          <Styled.TandCs>
-            By logging in you agree to our{' '}
-            <a href={'https://ynput.io/terms/'} target="_blank">
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href={'https://ynput.io/privacy-policy'} target="_blank">
-              Privacy Policy
-            </a>
-          </Styled.TandCs>
-        </Panel>
-      </Styled.LoginForm>
-    </main>
+            {showAllButton && (
+              <Button
+                style={{ width: '100%' }}
+                variant="text"
+                onClick={() => setShowAllProviders(true)}
+              >
+                Show all login options
+              </Button>
+            )}
+            <LoginTerms />
+          </Panel>
+        </Styled.LoginForm>
+      </main>
     </>
   )
 }

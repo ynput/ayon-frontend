@@ -1,4 +1,3 @@
-import Markdown from 'react-markdown'
 import styled from 'styled-components'
 import { markdownStyle } from './markdown'
 import { theme } from '@ynput/ayon-react-components'
@@ -94,6 +93,13 @@ export const Methods = styled.div`
 export const Ayon = styled.img`
   height: 60px;
 `
+
+export const AyonNav = styled.img`
+  height: 32px;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+`
 export const Logo = styled.img`
   max-height: 100%;
   width: 100%;
@@ -124,4 +130,17 @@ export const TandCs = styled.p`
     color: var(--md-sys-color-outline);
     ${theme.bodySmall}
   }
+`
+
+export const Title = styled.h1`
+  ${theme.titleMedium}
+`
+
+export const SubTitle = styled.span`
+  ${theme.bodyMedium}
+`
+
+export const Note = styled.span`
+  ${theme.labelMedium}
+  color: var(--md-sys-color-outline);
 `

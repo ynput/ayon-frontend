@@ -1,17 +1,19 @@
 import { useDispatch } from 'react-redux'
 import { login } from '@state/user'
-import api, { useAcceptInviteMutation } from '@shared/api'
+import api, { useAcceptInviteMutation, useGetSiteInfoQuery } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useEffect, useState } from 'react'
 import * as Styled from '@pages/LoginPage/LoginPage.styled'
 import { Button, InputPassword, Panel } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
+import LoginTerms from './LoginPage/LoginTerms'
 
 interface AcceptInviteFormProps {
   token: string
+  logo?: string
 }
 
-const AcceptInviteForm = ({ token }: AcceptInviteFormProps) => {
+const AcceptInviteForm = ({ token, logo }: AcceptInviteFormProps) => {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(true)
@@ -36,7 +38,10 @@ const AcceptInviteForm = ({ token }: AcceptInviteFormProps) => {
     return (
       <>
         <h1>Invalid invite</h1>
-        <p>This invite link is invalid or has expired. Ask the person who invited you to send a new one.</p>
+        <p>
+          This invite link is invalid or has expired. Ask the person who invited you to send a new
+          one.
+        </p>
         <a href="/login">Back to login page</a>
       </>
     )
@@ -62,8 +67,16 @@ const AcceptInviteForm = ({ token }: AcceptInviteFormProps) => {
 
   return (
     <>
-      <h1>Set a password for your AYON account</h1>
-      <p>Choose a password to finish activating your account and log in.</p>
+      {logo && (
+        <Styled.Logo
+          src={logo}
+          style={{ maxWidth: '100%', height: 'auto', maxHeight: 64, objectFit: 'contain' }}
+        />
+      )}
+      <Styled.Title>You have been invited to join AYON</Styled.Title>
+      <Styled.SubTitle>
+        Please set a password to finish activating your account and log in.
+      </Styled.SubTitle>
       <form onSubmit={handleSubmit}>
         <InputPassword
           autoFocus
@@ -86,11 +99,13 @@ const AcceptInviteForm = ({ token }: AcceptInviteFormProps) => {
           <p style={{ color: 'var(--md-sys-color-error)', margin: 0 }}>Passwords do not match.</p>
         )}
 
-        <Button
-          label={<strong>Set password and log in</strong>}
-          type="submit"
-          disabled={!password || password !== confirmPassword}
-        />
+        <Styled.Note>
+          Password must be at least 8 characters and contain digits and special characters.
+        </Styled.Note>
+        <Button type="submit" variant="filled" disabled={!password || password !== confirmPassword}>
+          Set password and log in
+        </Button>
+        <LoginTerms />
       </form>
     </>
   )
@@ -100,14 +115,21 @@ const AcceptInvitePage = () => {
   const urlParams = new URLSearchParams(window.location.search)
   const token = urlParams.get('token')
 
+  const { data: info, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
+  const { loginPageBrand = '', loginPageBackground = '' } = info || {}
+
+  if (isLoadingInfo) return 'Loading...'
+
   return (
     <>
       <DocumentTitle title="Accept invite • AYON" />
       <main className="center">
+        {loginPageBackground && <Styled.BG src={loginPageBackground} />}
+        <Styled.AyonNav src="/AYON.svg" />
         <Styled.LoginForm>
           <Panel>
             {token ? (
-              <AcceptInviteForm token={token} />
+              <AcceptInviteForm token={token} logo={loginPageBrand || '/AYON.svg'} />
             ) : (
               <>
                 <h1>Missing invite token</h1>
