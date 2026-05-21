@@ -32,8 +32,8 @@ import { ProjectsPageTableSettings } from './components/ProjectsPageTableSetting
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
-import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
-import { CustomizeButton } from '@shared/components'
+import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/context'
+import { CustomizeButton, PowerpackButton } from '@shared/components'
 import { GROUP_BY_FOLDER_KEY } from './constants'
 import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
@@ -43,6 +43,7 @@ interface ProjectsPageProps {
 }
 
 const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
+  const { powerLicense } = usePowerpack()
   // SETTINGS: grouping
   const { grouping, groupSortByDesc, handleGroupingChange, groupOptions } = useProjectGrouping()
 
@@ -188,9 +189,21 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
             Create new project
           </Button>
         )}
-        <Button icon="create_new_folder" onClick={() => handleOpenFolderDialog()}>
-          Create folder
-        </Button>
+        {powerLicense ? (
+          <Button icon="create_new_folder" onClick={() => handleOpenFolderDialog()}>
+            Create folder
+          </Button>
+        ) : (
+          <PowerpackButton
+            rounded={false}
+            feature="projectFolders"
+            variant="surface"
+            icon="create_new_folder"
+            bolt
+          >
+            Create folder
+          </PowerpackButton>
+        )}
         <ProjectsSearchFilterWrapper queryFilters={filters} onChange={handleFiltersChange} />
         <SortingDropdown
           title="Group by"

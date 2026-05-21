@@ -1,40 +1,53 @@
 import { PowerpackFeature, usePowerpack } from '@shared/context'
-import { Button, ButtonProps } from '@ynput/ayon-react-components'
+import { Button, ButtonProps, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, MouseEvent } from 'react'
 import styled from 'styled-components'
 
 const StyledButton = styled(Button)`
-  background-color: unset !important;
-  color: var(--md-sys-color-tertiary);
   transition: color 0.2s, background-color 0.2s, opacity 0.2s;
-  border-radius: var(--border-radius-xl);
+
+  .bolt {
+    color: var(--md-sys-color-tertiary);
+  }
+
+  &.outline {
+    color: var(--md-sys-color-tertiary);
+    background-color: unset !important;
+    border: 1px solid var(--md-sys-color-tertiary);
+    &:hover {
+      color: var(--md-sys-color-on-tertiary);
+    }
+  }
 
   &.filled {
+    color: var(--md-sys-color-tertiary);
     background-color: var(--md-sys-color-tertiary) !important;
     color: var(--md-sys-color-on-tertiary);
+
+    .bolt {
+      color: var(--md-sys-color-on-tertiary);
+    }
+
+    &:hover {
+      color: var(--md-sys-color-on-tertiary);
+    }
   }
 
-  &.border {
-    border: 1px solid var(--md-sys-color-tertiary);
-  }
-
-  &:hover {
-    color: var(--md-sys-color-on-tertiary);
-  }
-
-  .icon {
-    font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  &.rounded {
+    border-radius: var(--border-radius-xl);
   }
 `
 
-export interface PowerpackButtonProps extends ButtonProps {
+export interface PowerpackButtonProps extends Omit<ButtonProps, 'variant'> {
   feature: PowerpackFeature
-  filled?: boolean
+  variant?: 'filled' | 'surface' | 'outline'
+  rounded?: boolean
+  bolt?: boolean
 }
 
 export const PowerpackButton = forwardRef<HTMLButtonElement, PowerpackButtonProps>(
-  ({ feature, filled, ...props }, ref) => {
+  ({ feature, variant = 'outline', rounded = true, bolt = false, ...props }, ref) => {
     const { setPowerpackDialog } = usePowerpack()
 
     const handleOnClick = (e: MouseEvent<HTMLButtonElement>) => {
@@ -46,19 +59,19 @@ export const PowerpackButton = forwardRef<HTMLButtonElement, PowerpackButtonProp
 
     return (
       <StyledButton
-        variant={props.variant || 'tertiary'}
         icon={props.icon || 'bolt'}
         {...props}
         ref={ref}
         onClick={handleOnClick}
-        className={clsx('cloud-button', props.className || '', {
-          border: !!props.children,
-          filled,
-        })}
+        iconProps={{
+          filled: variant === 'filled',
+        }}
+        className={clsx('cloud-button', props.className, { rounded })}
         data-tooltip={`Power feature`}
         data-tooltip-delay={0}
       >
         {props.children}
+        {bolt && <Icon icon="bolt" filled className="bolt" />}
       </StyledButton>
     )
   },
