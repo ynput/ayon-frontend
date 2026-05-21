@@ -41,12 +41,12 @@ export const useBuildProjectFilterOptions = (): ProjectFilterOption[] => {
       {
         id: 'active',
         type: 'boolean',
-        label: 'Active',
-        icon: getAttributeIcon('active', 'boolean'),
+        label: 'Archived',
+        icon: 'inventory_2',
         singleSelect: true,
         values: [
+          { id: 'false', label: 'Archived', icon: 'inventory_2' },
           { id: 'true', label: 'Active', icon: 'check_circle' },
-          { id: 'false', label: 'Inactive', icon: 'cancel' },
         ],
       },
       // Library flag
