@@ -19,7 +19,7 @@ import { applyProjectFilters } from './utils/filterProjects'
 export type ProjectTableRow = {
   id: string
   name: string
-  label: string
+  label?: string | null
   code: string | null
   active: boolean | null
   library: boolean | null
@@ -187,7 +187,7 @@ export const useProjectTableRows = ({
       projects.map((project) => ({
         id: project.name,
         name: project.name,
-        label: project.label ?? project.name,
+        label: project.label,
         code: project.code,
         active: project.active,
         library: project.library,

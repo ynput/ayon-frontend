@@ -62,6 +62,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   // TABLE: build table columns
   const { columns, columnAttributeData } = useProjectColumns(foldersMap)
 
+  // GROUPING: convert grouping state to the format used by the UI component
   const groupValue = useMemo<SortCardType[]>(
     () =>
       grouping
@@ -97,7 +98,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
 
   const dataTypeWidgets = getDefaultListTableDataTypeWidgets<ProjectTableRow>()
 
-  // TABLE: apply filters and grouping
+  // TABLE: Build table rows and apply filters and grouping
   const displayRows = useProjectTableRows({
     projects,
     grouping,
@@ -107,6 +108,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     filters,
   })
 
+  // SELECTION
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([])
   const selectedProjectName =
     selectedProjectIds[0] && projectsMap.has(selectedProjectIds[0])
@@ -116,6 +118,8 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
 
   const handleProjectUpdate = useUpdateProjectTableRow()
   const { isPanelOpen } = useSettingsPanel()
+
+  // CONTEXT: build context menu for project and folder rows
   const { canCreateProject, buildListTableContextMenuItems, folderDialogProps } =
     useProjectMenuController({
       // @ts-expect-error - just dif between label null and undefined
