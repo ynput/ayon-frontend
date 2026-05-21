@@ -1,7 +1,9 @@
-import { useState } from 'react'
-import { format, differenceInDays } from 'date-fns'
-import styled, { css, keyframes } from 'styled-components'
+import { useRef } from 'react'
+import { format, differenceInDays, isValid, parseISO } from 'date-fns'
+import styled from 'styled-components'
 import ProgressBar from '@pages/ProjectDashboard/panels/ProgressBar'
+import { formatUTCDate } from '@shared/util/formatUTCDate'
+import { Button, theme } from '@ynput/ayon-react-components'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -11,144 +13,161 @@ const StyledContainer = styled.div`
   width: 100%;
 `
 
-const TailStyled = styled.div<{ $end?: boolean }>`
-  border-radius: var(--border-radius);
+const TailButtonStyled = styled(Button)`
+  ${theme.labelMedium};
   background-color: var(--md-sys-color-surface-container-high);
-  white-space: nowrap;
-  min-width: 80px;
+  width: 90px;
   height: 28px;
   z-index: 50;
   color: var(--md-sys-color-on-surface-variant);
-  font-weight: 600;
-  font-size: 11px;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
 
-  ${({ $end }) =>
-    $end &&
-    css`
-      background-color: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface-variant);
-      z-index: 10;
-    `}
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+  }
 `
 
-const ProgressStyled = styled.div<{ $animation: boolean }>`
+const HiddenDateInput = styled.input`
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+`
+
+const ProgressStyled = styled.div`
   position: relative;
   display: flex;
   flex: 1;
   align-items: center;
-
-  ${({ $animation }) =>
-    !$animation &&
-    css`
-      & > * {
-        animation: none !important;
-      }
-    `}
-
-  &:hover {
-    div:last-child {
-      scale: 0;
-    }
-  }
-
-  div:first-child {
-    border-radius: 0 !important;
-  }
-
-  hr {
-    border-radius: 0 !important;
-
-    ::after {
-      left: 50% !important;
-      transform: translateX(-50%) scale(0.5) !important;
-      transform-origin: center !important;
-      color: var(--md-sys-color-on-secondary);
-      font-weight: bold;
-      font-size: 10px;
-      bottom: 4px;
-    }
-  }
 `
 
-const MarkerAnimation = (left: number) => keyframes`
-  from {
-    left: 0%;
-    translate: -110%;
-  }
-  to {
-    left: ${left}%;
-    translate: ${-left}%;
-  }
-`
-
-const MarkerStyled = styled(TailStyled)<{ $left: number }>`
-  font-size: 10px;
-  height: 20px;
-  min-width: unset;
-  padding: 0 4px;
-  transition: left 1s, translate 1s, scale 0.3s;
+const MarkerStyled = styled.div<{ $left: number }>`
   position: absolute;
-  left: ${({ $left }) => $left}%;
-  translate: ${({ $left }) => -$left}%;
-  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   background-color: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
 
-  animation: ${({ $left }) => MarkerAnimation($left)} 1s forwards;
+  padding: 4px 8px;
+
+  font-size: ${theme.labelSmall};
+  border-radius: var(--border-radius-m);
+  user-select: none;
+  white-space: nowrap;
+  z-index: 30;
 `
+
+interface DateTailButtonProps {
+  value?: string
+  placeholder: string
+  onChange?: (value: string) => void | Promise<void>
+  min?: string
+  max?: string
+}
+
+const toInputDateValue = (value?: string) => {
+  if (!value) return ''
+
+  const parsedValue = parseISO(value)
+  if (!isValid(parsedValue)) return ''
+
+  return formatUTCDate(parsedValue, 'yyyy-MM-dd')
+}
+
+const toDisplayDate = (value?: string) => {
+  if (!value) return undefined
+
+  const parsedValue = parseISO(value)
+  if (!isValid(parsedValue)) return undefined
+
+  return format(parsedValue, 'd MMM yyyy')
+}
+
+const openDatePicker = (input: HTMLInputElement | null) => {
+  if (!input) return
+
+  input.focus()
+
+  try {
+    input.showPicker()
+  } catch {
+    input.click()
+  }
+}
+
+const DateTailButton = ({ value, placeholder, onChange, min, max }: DateTailButtonProps) => {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleDateChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value
+    if (!nextValue) return
+
+    const [year, month, day] = nextValue.split('-').map(Number)
+    if (!year || !month || !day) return
+
+    const nextDate = new Date(Date.UTC(year, month - 1, day))
+    await onChange?.(nextDate.toISOString())
+  }
+
+  return (
+    <TailButtonStyled type="button" onClick={() => openDatePicker(inputRef.current)}>
+      {toDisplayDate(value) || placeholder}
+      <HiddenDateInput
+        ref={inputRef}
+        type="date"
+        value={toInputDateValue(value)}
+        min={toInputDateValue(min)}
+        max={toInputDateValue(max)}
+        onChange={handleDateChange}
+        onClick={(event) => event.stopPropagation()}
+      />
+    </TailButtonStyled>
+  )
+}
 
 interface ProjectTimelineProps {
   startDate?: string
   endDate?: string
   isLoading?: boolean
+  onStartDateChange?: (value: string) => void | Promise<void>
+  onEndDateChange?: (value: string) => void | Promise<void>
 }
 
-const ProjectTimeline = ({ startDate, endDate, isLoading }: ProjectTimelineProps) => {
-  const [animation, setAnimation] = useState(true)
+const ProjectTimeline = ({
+  startDate,
+  endDate,
+  isLoading,
+  onStartDateChange,
+  onEndDateChange,
+}: ProjectTimelineProps) => {
+  const parsedStart = startDate ? parseISO(startDate) : undefined
+  const parsedEnd = endDate ? parseISO(endDate) : undefined
+  const hasValidStart = !!parsedStart && isValid(parsedStart)
+  const hasValidEnd = !!parsedEnd && isValid(parsedEnd)
+  const length =
+    hasValidStart && hasValidEnd ? Math.max(0, differenceInDays(parsedEnd, parsedStart)) : 0
+  const hasCompleteRange = hasValidStart && hasValidEnd && length > 0
 
-  let done = 0,
-    left = 0,
-    length = 0,
-    percentage = 0,
-    startString = '',
-    endString = ''
+  let done = 0
+  let left = 100
+  let percentage = 0
 
-  if (startDate || endDate) {
-    let start = new Date(startDate || '')
-    let end = new Date(endDate || '')
-
-    if (isNaN(start.getTime())) {
-      start = new Date()
-    }
-
-    if (isNaN(end.getTime())) {
-      end = new Date(start.getTime() + 10 * 24 * 60 * 60 * 1000)
-    }
-
-    startString = format(start, 'd MMM yyyy')
-    endString = format(end, 'd MMM yyyy')
-    length = differenceInDays(end, start)
-    done = Math.max(0, Math.min(differenceInDays(new Date(), start), length))
-    left = length - done
+  if (hasCompleteRange && parsedStart) {
+    done = Math.max(0, Math.min(differenceInDays(new Date(), parsedStart), length))
+    left = Math.max(0, length - done)
     percentage = Math.round((done / length) * 100)
-  } else {
-    startString = 'No start date'
-    endString = 'No end date'
   }
 
   if (isLoading) {
     return (
       <StyledContainer>
-        <TailStyled
+        <TailButtonStyled
+          as="div"
           style={{ background: 'var(--md-sys-color-surface-container-low)', width: 90 }}
         />
         <ProgressStyled
-          $animation={false}
           style={{
             flex: 1,
             height: 4,
@@ -156,8 +175,8 @@ const ProjectTimeline = ({ startDate, endDate, isLoading }: ProjectTimelineProps
             borderRadius: 2,
           }}
         />
-        <TailStyled
-          $end
+        <TailButtonStyled
+          as="div"
           style={{ background: 'var(--md-sys-color-surface-container-low)', width: 90 }}
         />
       </StyledContainer>
@@ -166,25 +185,52 @@ const ProjectTimeline = ({ startDate, endDate, isLoading }: ProjectTimelineProps
 
   return (
     <StyledContainer>
-      <TailStyled data-tooltip="Start date">{startString}</TailStyled>
-      <ProgressStyled $animation={animation} onAnimationEnd={() => setAnimation(false)}>
+      <DateTailButton
+        value={startDate}
+        placeholder="Set start date"
+        onChange={onStartDateChange}
+        max={endDate}
+      />
+      <ProgressStyled>
         <ProgressBar
           isLoading={false}
-          values={[
-            { value: done, label: `${done}/${length}` },
-            {
-              value: left,
-              label: `${length - done} Left`,
-              color: 'var(--md-sys-color-surface-container-highest)',
-            },
-          ]}
+          values={
+            hasCompleteRange
+              ? [
+                  { value: done, label: `${done}/${length}` },
+                  {
+                    value: left,
+                    label: `${length - done} Left`,
+                    color: 'var(--md-sys-color-surface-container-highest)',
+                  },
+                ].filter((v) => v.value > 0)
+              : [
+                  {
+                    value: 100,
+                    label: null,
+                    color: 'var(--md-sys-color-surface-container-highest)',
+                  },
+                ]
+          }
           backgroundColor="var(--md-sys-color-surface-container-highest)"
         />
-        <MarkerStyled $left={percentage}>{`Day ${done}`}</MarkerStyled>
+        {hasCompleteRange && done > 0 && done < length && (
+          <MarkerStyled
+            data-role="timeline-marker"
+            $left={percentage}
+            style={{
+              left: `${percentage}%`,
+              translate: `-${percentage}%`,
+            }}
+          >{`Day ${done}`}</MarkerStyled>
+        )}
       </ProgressStyled>
-      <TailStyled $end data-tooltip="End date">
-        {endString}
-      </TailStyled>
+      <DateTailButton
+        value={endDate}
+        placeholder="Set end date"
+        onChange={onEndDateChange}
+        min={startDate}
+      />
     </StyledContainer>
   )
 }

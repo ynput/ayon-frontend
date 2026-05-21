@@ -1,7 +1,8 @@
-import { Project, useGetProjectQuery } from '@shared/api'
+import { Project, useGetProjectQuery, useUpdateProjectMutation } from '@shared/api'
 import { FC, useState } from 'react'
 import { Thumbnail } from '@shared/components'
 import { getProjectDisplayName } from '@shared/util'
+import { toast } from 'react-toastify'
 import * as Styled from './ProjectDetailsPanel.styled'
 import ProjectTimeline from './components/ProjectTimeline'
 import ProjectHeartbeat from './components/ProjectHeartbeat'
@@ -23,11 +24,37 @@ export const ProjectDetailsPanel: FC<ProjectDetailsPanelProps> = ({
   onClose,
 }) => {
   const { data: projectData, isFetching } = useGetProjectQuery({ projectName })
+  const [updateProject] = useUpdateProjectMutation()
   const project = projectData || data
 
   const [currentTab, setCurrentTab] = useState<ProjectDetailsTab>('details')
 
   const displayName = getProjectDisplayName({ name: projectName, label: project?.label })
+
+  const updateProjectDate = async (key: 'startDate' | 'endDate', value: string) => {
+    // Check if the new range is valid
+    const currentAttribs = (project as any)?.attrib || {}
+    const start = key === 'startDate' ? value : currentAttribs.startDate
+    const end = key === 'endDate' ? value : currentAttribs.endDate
+
+    if (start && end && new Date(start) > new Date(end)) {
+      toast.error(
+        key === 'startDate'
+          ? 'Start date cannot be after end date'
+          : 'End date cannot be before start date',
+      )
+      return
+    }
+
+    try {
+      await updateProject({
+        projectName,
+        projectPatchModel: { attrib: { [key]: value } },
+      }).unwrap()
+    } catch (error: any) {
+      toast.error(`Failed to update ${key}: ` + (error?.message ?? 'Unknown error'))
+    }
+  }
 
   return (
     <Styled.Container>
@@ -43,6 +70,8 @@ export const ProjectDetailsPanel: FC<ProjectDetailsPanelProps> = ({
                   startDate={(project as any)?.attrib?.startDate}
                   endDate={(project as any)?.attrib?.endDate}
                   isLoading={isFetching && !project}
+                  onStartDateChange={(value) => updateProjectDate('startDate', value)}
+                  onEndDateChange={(value) => updateProjectDate('endDate', value)}
                 />
                 <Button icon="close" variant="text" onClick={onClose} />
               </Styled.HeaderTop>

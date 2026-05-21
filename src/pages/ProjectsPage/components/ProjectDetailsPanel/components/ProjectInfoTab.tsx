@@ -93,6 +93,24 @@ const ProjectInfoTab: FC<ProjectInfoTabProps> = ({ projectName, project, isLoadi
     try {
       if (key.startsWith('attrib.')) {
         const attribKey = key.replace('attrib.', '')
+
+        // Validation for startDate/endDate
+        if (attribKey === 'startDate' || attribKey === 'endDate') {
+          const currentAttribs = (project as any)?.attrib || {}
+          const start = attribKey === 'startDate' ? value : currentAttribs.startDate
+          const end = attribKey === 'endDate' ? value : currentAttribs.endDate
+
+          if (start && end && new Date(start) > new Date(end)) {
+            toast.error(
+              attribKey === 'startDate'
+                ? 'Start date cannot be after end date'
+                : 'End date cannot be before start date',
+            )
+            setForm(buildFormFromProject(project))
+            return
+          }
+        }
+
         await updateProject({
           projectName,
           projectPatchModel: { attrib: { [attribKey]: value } },
