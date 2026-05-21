@@ -113,6 +113,8 @@ export const aTag = (
       onMouseEnter={(e, pos) => onReferenceTooltip({ type, id: domSafeId, label, name: id, pos })}
       categoryPrimary={categoryPrimary}
       categorySecondary={categorySecondary}
+      data-mention-value={`${type}:${id}`}
+      data-mention-label={label}
     >
       {label}
     </ActivityReference>

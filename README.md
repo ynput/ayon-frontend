@@ -109,7 +109,7 @@ The following environment variables should be configured in `.env.local`:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `SERVER_URL` | AYON server base URL | `http://localhost:8000` |
+| `SERVER_URL` | AYON server base URL | `http://localhost:5000` |
 
 ## Development Tips
 
