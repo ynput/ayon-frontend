@@ -1,48 +1,29 @@
-import { useMemo, memo } from 'react'
+import { useMemo } from 'react'
 import { useStore } from 'react-redux'
 import { AttributeData, AttributeModel } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
-import ProjectThumbnailUploader from '../components/ProjectThumbnailUploader/ProjectThumbnailUploader'
+import {
+  ProjectThumbnailCell,
+  THUMBNAIL_WIDTH,
+} from '../components/ProjectThumbnailCell/ProjectThumbnailCell'
 import ProjectHeartbeat from '../components/ProjectDetailsPanel/components/ProjectHeartbeat'
-import * as Styled from '../ProjectsPage.styled'
 import type { ProjectFolderModel } from '@shared/api'
 import { isEmptyFolderPlaceholderRow, ProjectTableRow } from './useProjectTableRows'
 import { useGlobalContext } from '@shared/context'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
 
-const ProjectThumbnailCell = memo(({ info }: { info: any }) => {
-  if (isEmptyFolderPlaceholderRow(info.row.original)) return null
-
-  return (
-    <ProjectThumbnailUploader
-      projectName={info.getValue()}
-      projectUpdatedAt={info.row.original.updatedAt}
-      Thumbnail={({ projectName, updatedAt }) => (
-        <Styled.Thumbnail
-          src={`/api/projects/${projectName}/thumbnail?updatedAt=${updatedAt}`}
-          alt={`${projectName} thumbnail`}
-        />
-      )}
-    />
-  )
-})
-
-ProjectThumbnailCell.displayName = 'ProjectThumbnailCell'
-
 export type ProjectTableColumnAttributeData = Record<string, AttributeData>
 type FolderMap = Map<string, ProjectFolderModel>
 
-const STATIC_COLUMNS_BEFORE_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
-  columnHelper.accessor('name', {
-    id: 'thumbnail',
-    header: 'Thumbnail',
-    size: 70,
-    meta: {
-      listTableCustomCell: true,
-    },
-    cell: (info) => <ProjectThumbnailCell info={info} />,
-  }),
+// Padding constants matching ListTable cell indent calculation:
+// TDInner left = var(--padding-m) + depth * 16 = 8 + depth * 16
+// TDInner internal padding = 8px each side
+// Minimum column size for thumbnail: 8 + maxDepth * 16 + 8 + THUMBNAIL_WIDTH + 8 = 24 + maxDepth * 16 + THUMBNAIL_WIDTH
+const THUMBNAIL_BASE_SIZE = 24 + THUMBNAIL_WIDTH // = 66px at depth 0
+const THUMBNAIL_INDENT_PER_DEPTH = 16
+
+const STATIC_COLUMNS_AFTER_THUMBNAIL: ColumnDef<ProjectTableRow, any>[] = [
   columnHelper.accessor('label', {
     id: 'label',
     header: 'Label',
@@ -89,6 +70,7 @@ export type ProjectColumn = ColumnDef<ProjectTableRow, any>
 
 export const useProjectColumns = (
   foldersMap: FolderMap = new Map(),
+  maxGroupDepth: number = 0,
 ): {
   columns: ProjectColumn[]
   columnAttributeData: ProjectTableColumnAttributeData
@@ -194,9 +176,27 @@ export const useProjectColumns = (
     [store],
   )
 
+  const thumbnailColumn = useMemo<ColumnDef<ProjectTableRow, any>>(() => {
+    const thumbnailSize = Math.max(
+      70,
+      THUMBNAIL_BASE_SIZE + maxGroupDepth * THUMBNAIL_INDENT_PER_DEPTH,
+    )
+    return columnHelper.accessor('name', {
+      id: 'thumbnail',
+      header: 'Thumbnail',
+      size: thumbnailSize,
+      minSize: thumbnailSize,
+      meta: {
+        listTableCustomCell: true,
+      },
+      cell: (info) => <ProjectThumbnailCell info={info} />,
+    })
+  }, [maxGroupDepth])
+
   const columns = useMemo(
     () => [
-      ...STATIC_COLUMNS_BEFORE_HEARTBEAT,
+      thumbnailColumn,
+      ...STATIC_COLUMNS_AFTER_THUMBNAIL,
       heartbeatColumn,
       ...STATIC_COLUMNS_AFTER_HEARTBEAT.map((column) =>
         column.id === 'projectFolder'
@@ -217,7 +217,7 @@ export const useProjectColumns = (
       ),
       ...attribColumns,
     ],
-    [attribColumns, foldersMap, heartbeatColumn],
+    [attribColumns, foldersMap, heartbeatColumn, thumbnailColumn],
   )
 
   return useMemo(() => ({ columns, columnAttributeData }), [columns, columnAttributeData])

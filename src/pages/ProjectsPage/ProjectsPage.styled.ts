@@ -10,7 +10,7 @@ export const PageContainer = styled.div`
 export const Thumbnail = styled.img`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: var(--border-radius-m);
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);

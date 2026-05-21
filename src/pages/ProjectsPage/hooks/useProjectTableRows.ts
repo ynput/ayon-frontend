@@ -14,7 +14,7 @@ import type {
 import { GROUP_BY_FOLDER_KEY } from '../constants'
 import type { ProjectTableColumnAttributeData } from './useProjectColumns'
 import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
-import { applyProjectFilters } from './utils/filterProjects'
+import { applyProjectFilters } from '../utils'
 
 export type ProjectTableRow = {
   id: string

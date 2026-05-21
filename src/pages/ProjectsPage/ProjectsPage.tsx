@@ -37,6 +37,7 @@ import { CustomizeButton, PowerpackButton } from '@shared/components'
 import { GROUP_BY_FOLDER_KEY } from './constants'
 import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import { getMaxDepth } from './utils'
 
 interface ProjectsPageProps {
   onNewProject: () => void
@@ -61,8 +62,12 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     projectFolders,
   } = useGetProjectsData({ showArchived: false, groupBy, groupByDesc: undefined })
 
+  // GROUPING: compute max row depth for thumbnail column sizing
+  // At max depth, the thumbnail column must be wide enough: 8 (indent base) + depth * 16 + 8 (inner pad) + 42 (thumb) + 8 (right pad)
+  const maxGroupDepth = useMemo(() => getMaxDepth(foldersMap, grouping), [grouping, foldersMap])
+
   // TABLE: build table columns
-  const { columns, columnAttributeData } = useProjectColumns(foldersMap)
+  const { columns, columnAttributeData } = useProjectColumns(foldersMap, maxGroupDepth + 1)
 
   // GROUPING: convert grouping state to the format used by the UI component
   const groupValue = useMemo<SortCardType[]>(

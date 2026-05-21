@@ -1,4 +1,4 @@
-import { ProjectTableRow } from '../useProjectTableRows'
+import { ProjectTableRow } from '../hooks/useProjectTableRows'
 import type {
   QueryFilter,
   QueryCondition,

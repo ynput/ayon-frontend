@@ -16,7 +16,7 @@ type Props = {
 }
 
 type ProjectMap = Map<string, Project>
-type FolderMap = Map<string, ProjectFolderModel>
+export type FolderMap = Map<string, ProjectFolderModel>
 
 type Value = {
   projects: Project[]
