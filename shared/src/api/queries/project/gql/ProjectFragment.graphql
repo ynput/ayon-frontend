@@ -4,11 +4,11 @@ fragment ProjectFragment on ProjectNode {
   code
   color
   createdAt
+  updatedAt
   label
   library
   name
   projectFolder
   projectName
   skeleton
-  updatedAt
 }

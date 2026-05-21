@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, memo } from 'react'
 import { useStore } from 'react-redux'
 import { AttributeData, AttributeModel } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
@@ -11,6 +11,25 @@ import { useGlobalContext } from '@shared/context'
 
 const columnHelper = createColumnHelper<ProjectTableRow>()
 
+const ProjectThumbnailCell = memo(({ info }: { info: any }) => {
+  if (isEmptyFolderPlaceholderRow(info.row.original)) return null
+
+  return (
+    <ProjectThumbnailUploader
+      projectName={info.getValue()}
+      projectUpdatedAt={info.row.original.updatedAt}
+      Thumbnail={({ projectName, updatedAt }) => (
+        <Styled.Thumbnail
+          src={`/api/projects/${projectName}/thumbnail?updatedAt=${updatedAt}`}
+          alt={`${projectName} thumbnail`}
+        />
+      )}
+    />
+  )
+})
+
+ProjectThumbnailCell.displayName = 'ProjectThumbnailCell'
+
 export type ProjectTableColumnAttributeData = Record<string, AttributeData>
 type FolderMap = Map<string, ProjectFolderModel>
 
@@ -22,22 +41,7 @@ const STATIC_COLUMNS_BEFORE_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     meta: {
       listTableCustomCell: true,
     },
-    cell: (info) => {
-      if (isEmptyFolderPlaceholderRow(info.row.original)) return null
-
-      return (
-        <ProjectThumbnailUploader
-          projectName={info.getValue()}
-          projectUpdatedAt={info.row.original.updatedAt}
-          Thumbnail={({ projectName, updatedAt }) => (
-            <Styled.Thumbnail
-              src={`/api/projects/${projectName}/thumbnail?updatedAt=${updatedAt}`}
-              alt={`${projectName} thumbnail`}
-            />
-          )}
-        />
-      )
-    },
+    cell: (info) => <ProjectThumbnailCell info={info} />,
   }),
   columnHelper.accessor('label', {
     id: 'label',

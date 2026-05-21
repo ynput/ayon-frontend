@@ -27,6 +27,8 @@ export type ProjectTableRow = {
   projectFolder: string | null
   skeleton?: boolean
   pipeline?: string // opposite of skeleton for easier handling in the UI
+  updatedAt?: string
+  createdAt?: string
   attrib: Record<string, any>
   subRows?: ProjectTableRow[]
   __listTableGroup?: true
@@ -197,6 +199,8 @@ export const useProjectTableRows = ({
         skeleton: project.skeleton,
         pipeline: project.skeleton ? 'No' : 'Yes',
         color: project.color ?? null,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
         projectFolder:
           project.projectFolder && foldersMap.has(project.projectFolder)
             ? project.projectFolder

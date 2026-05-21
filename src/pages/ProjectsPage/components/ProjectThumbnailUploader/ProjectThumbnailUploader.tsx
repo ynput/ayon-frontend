@@ -42,14 +42,14 @@ export const ProjectThumbnailUploader = ({
   const [progress, setProgress] = useState(0)
 
   const [localUpdatedAt, setLocalUpdatedAt] = useState<string | undefined>(undefined)
+  const localUpdatedAtProjectNameRef = useRef<string | undefined>(undefined)
+  // Use the local updatedAt if it's set and newer than the projectUpdatedAt, otherwise use projectUpdatedAt
   const effectiveUpdatedAt =
-    localUpdatedAt && (!projectUpdatedAt || localUpdatedAt > projectUpdatedAt)
+    localUpdatedAtProjectNameRef.current === projectName &&
+    localUpdatedAt &&
+    (!projectUpdatedAt || localUpdatedAt > projectUpdatedAt)
       ? localUpdatedAt
       : projectUpdatedAt
-
-  useEffect(() => {
-    setLocalUpdatedAt(undefined)
-  }, [projectName])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -103,6 +103,7 @@ export const ProjectThumbnailUploader = ({
         },
       })
 
+      localUpdatedAtProjectNameRef.current = projectName
       setLocalUpdatedAt(new Date().toISOString())
       dispatch(api.util.invalidateTags([{ type: 'project', id: projectName }]))
       resetState()
