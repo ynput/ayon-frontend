@@ -1,4 +1,4 @@
-import { useGetProjectFoldersQuery, useListProjectsQuery } from '@shared/api'
+import { useGetProjectFoldersQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
@@ -9,7 +9,7 @@ import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
 import { useLocalStorage } from '@shared/hooks'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
-import { usePowerpack } from '@shared/context'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import ProjectsTable from './ProjectsTable'
 import ProjectsShortcuts from './ProjectsShortcuts'
 
@@ -36,15 +36,18 @@ const ProjectsList: FC<ProjectsListProps> = ({
 }) => {
   // GET USER PREFERENCES (moved to hook)
   const { powerLicense } = usePowerpack()
+  const {
+    projects: globalProjects,
+    isLoading: globalIsLoading,
+    error: globalError,
+  } = useGlobalContext()
   const [expanded, setExpanded] = useState<ExpandedState>({})
   // Show archived state (stored in local storage)
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
 
-  const {
-    data = [],
-    isLoading,
-    error,
-  } = useListProjectsQuery({ active: showArchived ? undefined : true })
+  const data = showArchived ? globalProjects.all : globalProjects.active
+  const isLoading = globalIsLoading.projects
+  const error = globalError.projects
   const { data: folders } = useGetProjectFoldersQuery()
 
   // transformations

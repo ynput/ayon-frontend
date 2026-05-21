@@ -6,7 +6,7 @@ import { Section } from '@ynput/ayon-react-components'
 import { useDispatch } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
-import { useListProjectsQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
 import { useGetDashboardAddonsQuery } from '@shared/api'
@@ -84,6 +84,10 @@ const UserDashboardPage: React.FC = () => {
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
+  const {
+    projects: { all: projects },
+    isLoading: globalIsLoading,
+  } = useGlobalContext()
 
   //   redux states
   const dispatch = useDispatch()
@@ -103,8 +107,7 @@ const UserDashboardPage: React.FC = () => {
     { skip: !selectedProjectNames?.length },
   )
 
-  // get projects list
-  const { data: projects = [], isLoading: isLoadingProjects } = useListProjectsQuery({})
+  const isLoadingProjects = globalIsLoading.projects
 
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {

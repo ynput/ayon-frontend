@@ -12,11 +12,7 @@ import ProjectRoots from './ProjectRoots'
 import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '@state/context'
-import {
-  useDeleteProjectMutation,
-  useListProjectsQuery,
-  useUpdateProjectMutation,
-} from '@shared/api'
+import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
@@ -29,7 +25,7 @@ import ProjectPermissions from './ProjectPermissions'
 import { isActiveDecider, projectSorter, Module, ModuleList, ModulePath } from './mappers'
 import { replaceQueryParams } from '@helpers/url'
 import HelpButton from '@components/HelpButton/HelpButton'
-import { ProjectContextProvider } from '@shared/context'
+import { ProjectContextProvider, useGlobalContext } from '@shared/context'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -49,6 +45,9 @@ const SiteSettings = ({ projectList, projectManager, projectName }) => {
 const ProjectManagerPage = () => {
   const isUser = useSelector((state) => state.user.data.isUser)
   const projectName = useSelector((state) => state.project.name)
+  const {
+    projects: { all: allProjects },
+  } = useGlobalContext()
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
@@ -83,7 +82,6 @@ const ProjectManagerPage = () => {
   }, [])
 
   const [deleteProject] = useDeleteProjectMutation()
-  const { data: allProjects = [] } = useListProjectsQuery({ active: undefined })
 
   const handleDeleteProject = (sel) => {
     const project = allProjects.find((p) => p.name === sel)
