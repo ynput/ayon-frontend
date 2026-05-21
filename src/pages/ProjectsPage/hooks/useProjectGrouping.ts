@@ -14,7 +14,7 @@ export type ProjectGroupOption = {
 
 const STATIC_GROUP_OPTIONS: ProjectGroupOption[] = [
   { id: 'projectFolder', label: 'Folder', icon: 'folder' },
-  { id: 'active', label: 'Active', icon: 'check_box' },
+  { id: 'active', label: 'Archived', icon: 'inventory_2' },
   { id: 'library', label: 'Library', icon: 'local_library' },
 ]
 

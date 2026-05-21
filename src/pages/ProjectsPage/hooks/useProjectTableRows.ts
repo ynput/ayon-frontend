@@ -242,7 +242,7 @@ export const useProjectTableRows = ({
             columnId === 'active'
               ? normalizedValue
                 ? 'Active'
-                : 'Inactive'
+                : 'Archived'
               : columnId === 'library'
               ? normalizedValue
                 ? 'Library'
@@ -252,6 +252,7 @@ export const useProjectTableRows = ({
               : 'No',
           sortIndex: normalizedValue ? 0 : 1,
           sortValue: normalizedValue ? 0 : 1,
+          icon: columnId === 'active' ? (normalizedValue ? 'check' : 'archive') : undefined,
         }
       }
 
