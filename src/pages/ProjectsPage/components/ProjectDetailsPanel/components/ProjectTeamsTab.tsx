@@ -8,7 +8,6 @@ import {
   useGetUsersAssigneeQuery,
   Assignee,
 } from '@shared/api'
-import TeamMembersStacked from '@components/TeamMembersStacked/TeamMembersStacked'
 
 const StyledContainer = styled.div`
   display: flex;
