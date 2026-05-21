@@ -33,10 +33,22 @@ export type ListTableRowContextMenuContext<TData extends RowData> = {
   groupValue?: unknown
 }
 
+export type ListTableRowDoubleClickContext<TData extends RowData> = {
+  rowId: string
+  rowIndex: number
+  row: Row<TData>
+  isSelected: boolean
+}
+
 export type ListTableRowContextMenuBuilder<TData extends RowData> = (
   e: React.MouseEvent<HTMLTableRowElement>,
   context: ListTableRowContextMenuContext<TData>,
 ) => ContextMenuItemType | ContextMenuItemType[] | undefined
+
+export type ListTableRowDoubleClickHandler<TData extends RowData> = (
+  e: React.MouseEvent<HTMLTableRowElement>,
+  context: ListTableRowDoubleClickContext<TData>,
+) => void
 
 // Extend TanStack Table Meta to strongly type our mutation and dialog handlers
 declare module '@tanstack/react-table' {
@@ -61,6 +73,7 @@ export interface ListTableProps<TData> {
   onOpenViewer?: (row: TData) => void
   onReorderRows?: (startIndex: number, endIndex: number) => void
   rowContextMenuBuilders?: ListTableRowContextMenuBuilder<TData>[]
+  onRowDoubleClick?: ListTableRowDoubleClickHandler<TData>
   selectedRows?: string[]
   onSelectedRowsChange?: (ids: string[]) => void
   multiSelection?: boolean

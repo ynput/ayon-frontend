@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
 import {
   useGetProjectsData,
   isEmptyFolderPlaceholderRow,
@@ -15,6 +15,7 @@ import ProjectsSearchFilterWrapper from './components/ProjectsSearchFilterWrappe
 import {
   getDefaultListTableDataTypeWidgets,
   ListTable,
+  type ListTableRowDoubleClickHandler,
   type ListTableRowContextMenuBuilder,
 } from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
@@ -120,7 +121,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { isPanelOpen } = useSettingsPanel()
 
   // CONTEXT: build context menu for project and folder rows
-  const { canCreateProject, buildListTableContextMenuItems, folderDialogProps } =
+  const { canCreateProject, buildListTableContextMenuItems, folderDialogProps, onOpenProject } =
     useProjectMenuController({
       // @ts-expect-error - just dif between label null and undefined
       projects,
@@ -149,6 +150,17 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
       },
     ],
     [buildListTableContextMenuItems],
+  )
+
+  const handleRowDoubleClick = useCallback<ListTableRowDoubleClickHandler<ProjectTableRow>>(
+    (_event, context) => {
+      if (isEmptyFolderPlaceholderRow(context.row.original)) {
+        return
+      }
+
+      onOpenProject(context.row.original.name)
+    },
+    [onOpenProject],
   )
 
   useShortcuts(
@@ -199,6 +211,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
                 rowContextMenuBuilders={rowContextMenuBuilders}
+                onRowDoubleClick={handleRowDoubleClick}
                 selectedRows={selectedProjectIds}
                 onSelectedRowsChange={setSelectedProjectIds}
                 onUpdateRow={handleProjectUpdate}

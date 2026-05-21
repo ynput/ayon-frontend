@@ -40,6 +40,8 @@ export type {
   ListTableGroupDisplay,
   ListTableGroupingPathItem,
   ListTableProps,
+  ListTableRowDoubleClickContext,
+  ListTableRowDoubleClickHandler,
   ListTableRowContextMenuBuilder,
   ListTableRowContextMenuContext,
 } from './ListTable.types'
@@ -62,6 +64,7 @@ export function ListTable<TData extends RowData>({
   onOpenViewer,
   onReorderRows,
   rowContextMenuBuilders = [],
+  onRowDoubleClick,
   selectedRows = [],
   onSelectedRowsChange,
   multiSelection = false,
@@ -169,6 +172,23 @@ export function ListTable<TData extends RowData>({
     rowVirtualizer,
     tableContainerRef,
   })
+
+  const handleRowDoubleClick = useCallback(
+    (rowId: string, rowIndex: number, e: React.MouseEvent<HTMLTableRowElement>) => {
+      if (!onRowDoubleClick) return
+
+      const row = rows[rowIndex]
+      if (!row || row.original === undefined || isCustomGroupRowValue(row.original)) return
+
+      onRowDoubleClick(e, {
+        rowId,
+        rowIndex,
+        row,
+        isSelected: selectedRows.includes(rowId),
+      })
+    },
+    [onRowDoubleClick, rows, selectedRows],
+  )
 
   const handleRowContextMenu = useCallback(
     (rowId: string, rowIndex: number, e: React.MouseEvent<HTMLTableRowElement>) => {
@@ -355,6 +375,7 @@ export function ListTable<TData extends RowData>({
                     isSelected={selectedRows.includes(row.id)}
                     rowIndex={virtualRow.index}
                     onRowClick={handleRowClick}
+                    onRowDoubleClick={onRowDoubleClick ? handleRowDoubleClick : undefined}
                     onRowContextMenu={
                       rowContextMenuBuilders.length > 0 ? handleRowContextMenu : undefined
                     }

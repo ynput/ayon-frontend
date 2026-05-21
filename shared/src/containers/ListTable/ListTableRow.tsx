@@ -24,6 +24,11 @@ interface DraggableRowProps<TData extends RowData> {
   isSelected: boolean
   rowIndex: number
   onRowClick: (rowId: string, rowIndex: number, e: React.MouseEvent) => void
+  onRowDoubleClick?: (
+    rowId: string,
+    rowIndex: number,
+    e: React.MouseEvent<HTMLTableRowElement>,
+  ) => void
   onRowContextMenu?: (
     rowId: string,
     rowIndex: number,
@@ -42,6 +47,7 @@ function DraggableRowInner<TData extends RowData>({
   isSelected,
   rowIndex,
   onRowClick,
+  onRowDoubleClick,
   onRowContextMenu,
   cellWrapper,
   columnAttributeData,
@@ -87,6 +93,7 @@ function DraggableRowInner<TData extends RowData>({
       }}
       tabIndex={-1}
       onClick={(e) => onRowClick(row.id, rowIndex, e)}
+      onDoubleClick={onRowDoubleClick ? (e) => onRowDoubleClick(row.id, rowIndex, e) : undefined}
       onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
       className={clsx('table-list-row', {
         dragging: isDragging,

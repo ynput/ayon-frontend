@@ -179,7 +179,12 @@ export const RowCells = <TData extends RowData>({
               paddingRight: cellIndex === visibleCells.length - 1 ? 'var(--padding-m)' : undefined,
             }}
             onDoubleClick={
-              canStartTypedEdit ? () => editingState.startEditingCell(cellId) : undefined
+              canStartTypedEdit
+                ? (e) => {
+                    e.stopPropagation()
+                    editingState.startEditingCell(cellId)
+                  }
+                : undefined
             }
             onClick={(e) => {
               const target = e.target as HTMLElement
