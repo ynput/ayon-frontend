@@ -139,6 +139,7 @@ const UserDashboardPage: React.FC = () => {
         name: 'Projects',
         path: '/dashboard/projects',
         module: 'projects',
+        viewType: 'projects-overview',
         component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
       },

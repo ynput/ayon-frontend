@@ -31,7 +31,6 @@ import { ProjectsPageTableSettings } from './components/ProjectsPageTableSetting
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
-import { WithViews } from '@/hoc/WithViews'
 import { SettingsPanelProvider, useSettingsPanel } from '@shared/context'
 import { CustomizeButton } from '@shared/components'
 import { GROUP_BY_FOLDER_KEY } from './constants'
@@ -268,10 +267,8 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
 
 export const ProjectsPage: FC<ProjectsPageProps> = (props) => {
   return (
-    <WithViews viewType="projects-overview">
-      <SettingsPanelProvider>
-        <ProjectsPageContent {...props} />
-      </SettingsPanelProvider>
-    </WithViews>
+    <SettingsPanelProvider>
+      <ProjectsPageContent {...props} />
+    </SettingsPanelProvider>
   )
 }
