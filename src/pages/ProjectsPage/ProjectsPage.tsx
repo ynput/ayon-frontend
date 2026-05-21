@@ -121,23 +121,28 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { isPanelOpen } = useSettingsPanel()
 
   // CONTEXT: build context menu for project and folder rows
-  const { canCreateProject, buildListTableContextMenuItems, folderDialogProps, onOpenProject } =
-    useProjectMenuController({
-      // @ts-expect-error - just dif between label null and undefined
-      projects,
-      folders: projectFolders,
-      selection: selectedProjectIds,
-      onSelect: setSelectedProjectIds,
-      onNewProject,
-      hidden: {
-        search: true,
-        'select-all': true,
-        'pin-project': true,
-        'show-archived': true,
-        'rename-folder': true,
-        'edit-label': true,
-      },
-    })
+  const {
+    canCreateProject,
+    buildListTableContextMenuItems,
+    folderDialogProps,
+    onOpenProject,
+    handleOpenFolderDialog,
+  } = useProjectMenuController({
+    // @ts-expect-error - just dif between label null and undefined
+    projects,
+    folders: projectFolders,
+    selection: selectedProjectIds,
+    onSelect: setSelectedProjectIds,
+    onNewProject,
+    hidden: {
+      search: true,
+      'select-all': true,
+      'pin-project': true,
+      'show-archived': true,
+      'rename-folder': true,
+      'edit-label': true,
+    },
+  })
 
   const rowContextMenuBuilders = useMemo<ListTableRowContextMenuBuilder<ProjectTableRow>[]>(
     () => [
@@ -183,6 +188,9 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
             Create new project
           </Button>
         )}
+        <Button icon="create_new_folder" onClick={() => handleOpenFolderDialog()}>
+          Create folder
+        </Button>
         <ProjectsSearchFilterWrapper queryFilters={filters} onChange={handleFiltersChange} />
         <SortingDropdown
           title="Group by"
