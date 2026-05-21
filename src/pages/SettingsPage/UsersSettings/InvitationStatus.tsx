@@ -23,7 +23,8 @@ const Pill = styled.span<{ $state: Exclude<InvitationState, 'none'> }>`
   display: inline-flex;
   align-items: center;
   gap: var(--base-gap-small);
-  padding: 2px 8px;
+  height: 32px;
+  padding: 0 8px;
   border-radius: var(--border-radius-m);
   font-size: 0.9rem;
   white-space: nowrap;

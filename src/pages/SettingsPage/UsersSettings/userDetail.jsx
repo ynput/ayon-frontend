@@ -9,7 +9,7 @@ import {
   LockedInput,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { useUpdateUsersMutation, useInviteUserMutation } from '@shared/api'
+import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
 import styled from 'styled-components'
 import ayonClient from '@/ayon'
@@ -196,6 +196,7 @@ const UserDetail = ({
   selectedUsers,
   setShowSetPassword,
   setShowDeleteUser,
+  setShowInviteUser,
   setSelectedUsers,
   isSelfSelected,
   selectedUserList,
@@ -288,19 +289,10 @@ const UserDetail = ({
   ]
 
   const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation()
-  const [inviteUser, { isLoading: isInviting }] = useInviteUserMutation()
 
-  const handleInvite = async () => {
+  const handleInvite = () => {
     if (!singleUserEdit) return
-    try {
-      await inviteUser({
-        userName: singleUserEdit.name,
-        inviteUserRequest: {},
-      }).unwrap()
-      toast.success(`Invite sent to ${singleUserEdit.attrib?.email || singleUserEdit.name}`)
-    } catch (err) {
-      toast.error(err?.data?.detail || err?.message || 'Invite failed')
-    }
+    setShowInviteUser?.(true)
   }
 
   //
@@ -467,10 +459,7 @@ const UserDetail = ({
                 isDisabled={isSelfSelected}
                 user={singleUserEdit}
                 onInvite={handleInvite}
-                isInviting={isInviting}
-                inviteDisabled={
-                  managerDisabled || !singleUserEdit?.active || !singleUserEdit?.attrib?.email
-                }
+                inviteDisabled={managerDisabled}
               />
             </Panel>
           )}

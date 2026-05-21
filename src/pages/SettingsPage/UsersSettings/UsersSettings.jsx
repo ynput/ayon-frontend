@@ -235,7 +235,6 @@ const UsersSettings = () => {
               data-shortcut="n"
             />
             <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
-            <UsersOverview users={userList} />
             <form style={{ flex: 1 }} autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <InputText
                 style={{ width: '100%', minWidth: 150 }}
@@ -245,6 +244,7 @@ const UsersSettings = () => {
                 autoComplete="search-users"
               />
             </form>
+            <UsersOverview users={userList} />
             <Button
               onClick={() => setShowInviteUser(true)}
               label="Send Invite"
@@ -289,6 +289,7 @@ const UsersSettings = () => {
                   selectedUsers={selectedUsers}
                   setShowSetPassword={setShowSetPassword}
                   setShowDeleteUser={setShowDeleteUser}
+                  setShowInviteUser={setShowInviteUser}
                   setSelectedUsers={setSelectedUsers}
                   isSelfSelected={isSelfSelected}
                   selectedUserList={selectedUserList}

@@ -32,7 +32,6 @@ interface UserLicenseFormProps {
   onPoolChange: (value: string) => void
   user?: InvitationUser | null
   onInvite?: () => void
-  isInviting?: boolean
   inviteDisabled?: boolean
 }
 
@@ -45,7 +44,6 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
   onPoolChange,
   user,
   onInvite,
-  isInviting,
   inviteDisabled,
 }) => {
   // GET LICENSE USER POOLS
@@ -90,17 +88,10 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
           <FormRowStyled label="Invitation">
             <InvitationRow>
               <Button
-                label={
-                  isInviting
-                    ? 'Sending...'
-                    : getInvitationState(user) === 'pending'
-                      ? 'Resend'
-                      : 'Invite'
-                }
+                label={getInvitationState(user) === 'pending' ? 'Resend' : 'Invite'}
                 icon="mail"
                 onClick={onInvite}
-                disabled={inviteDisabled || isInviting || !user.attrib?.email}
-                data-tooltip={!user.attrib?.email ? 'User has no email' : undefined}
+                disabled={inviteDisabled}
               />
               <InvitationStatus user={user} />
             </InvitationRow>

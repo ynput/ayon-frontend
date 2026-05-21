@@ -113,11 +113,9 @@ const UserList = ({
     const ctxSelection = userList.filter((u) => newSelectedUsers.includes(u.name))
     const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
     const inviteLabel =
-      ctxSelection.length === 1
-        ? ctxSelection[0]?.inviteSentAt
-          ? 'Resend invite'
-          : 'Invite user'
-        : 'Invite users'
+      ctxSelection.length === 1 && getInvitationState(ctxSelection[0]) === 'pending'
+        ? 'Resend'
+        : 'Invite'
 
     return [
       {
