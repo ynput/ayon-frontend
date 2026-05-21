@@ -28,6 +28,7 @@ const STATIC_COLUMNS_BEFORE_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
       return (
         <ProjectThumbnailUploader
           projectName={info.getValue()}
+          projectUpdatedAt={info.row.original.updatedAt}
           Thumbnail={({ projectName, updatedAt }) => (
             <Styled.Thumbnail
               src={`/api/projects/${projectName}/thumbnail?updatedAt=${updatedAt}`}
@@ -70,6 +71,11 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     id: 'pipeline',
     header: 'Pipeline',
     size: 80,
+  }),
+  columnHelper.accessor('createdAt', {
+    id: 'createdAt',
+    header: 'Created at',
+    size: 150,
   }),
 ]
 
@@ -159,7 +165,7 @@ export const useProjectColumns = (
           listTableCustomCell: true,
         },
         cell: (info) =>
-          isEmptyFolderPlaceholderRow(info.row.original) ? null : (
+          isEmptyFolderPlaceholderRow(info.row.original) || !!info.row.original.skeleton ? null : (
             <ProjectHeartbeat projectName={info.getValue()} />
           ),
         sortingFn: (rowA, rowB) => {
