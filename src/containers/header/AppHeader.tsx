@@ -175,7 +175,7 @@ const Header: React.FC = () => {
       <FlexWrapper>
         {user.uiExposureLevel >= 500 && (
           <ProjectsButton
-            icon="event_list"
+            icon="left_panel_open"
             variant="nav"
             onClick={() => handleToggleMenu('project')}
           />
