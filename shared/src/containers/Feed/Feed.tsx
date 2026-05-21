@@ -379,7 +379,6 @@ export const Feed = ({
           </Styled.Warning>
         )}
         <TabHeaderAndFilters<FeedFilter>
-          label="Activity Feed"
           filters={feedFilters}
           currentFilter={feedFilter}
           onFilterChange={setFeedFilter}

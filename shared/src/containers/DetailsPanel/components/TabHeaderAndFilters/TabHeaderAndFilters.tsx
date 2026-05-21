@@ -23,7 +23,7 @@ export interface FilterItem<T = string> {
 }
 
 interface TabHeaderAndFiltersProps<T, K = string> {
-  label: string
+  label?: string
   filters: FilterItem<K>[]
   currentFilter: T
   onFilterChange: (filter: T) => void
@@ -105,7 +105,8 @@ const TabHeaderAndFilters = <T, K = string>({
   onFilterChange,
   isLoading,
 }: TabHeaderAndFiltersProps<T, K>) => {
-  const [expandedSearchId, setExpandedSearchId] = useState<string | null>(null)
+  const searchFilterId = filters.find((f) => (f.type || 'boolean') === 'search')?.id
+  const searchFilterIdStr = searchFilterId !== undefined ? String(searchFilterId) : null
   const [searchValue, setSearchValue] = useState<string>('')
   const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -113,21 +114,14 @@ const TabHeaderAndFilters = <T, K = string>({
     return typeof f === 'object' && f !== null && !Array.isArray(f)
   }
 
-  // Focus input when search expands
-  useEffect(() => {
-    if (expandedSearchId && searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
-  }, [expandedSearchId])
-
   // Sync search value with current filter
   useEffect(() => {
-    if (expandedSearchId && isQueryFilter(currentFilter)) {
+    if (searchFilterIdStr && isQueryFilter(currentFilter)) {
       if (document.activeElement === searchInputRef.current) return
-      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, expandedSearchId))
+      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, searchFilterIdStr))
       setSearchValue(searchItem ? stringifySearchFilter(searchItem) : '')
     }
-  }, [expandedSearchId, currentFilter])
+  }, [searchFilterIdStr, currentFilter])
 
   const handleToggle = (filter: FilterItem<K>, value?: any) => {
     if (!isQueryFilter(currentFilter)) {
@@ -187,19 +181,6 @@ const TabHeaderAndFilters = <T, K = string>({
     onFilterChange(newFilter as T)
   }
 
-  const handleSearchClick = (filter: FilterItem<K>) => {
-    const filterId = String(filter.id)
-    if (expandedSearchId === filterId) {
-      return // Already expanded
-    }
-    setExpandedSearchId(filterId)
-    // Load existing value if any
-    if (isQueryFilter(currentFilter)) {
-      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, filterId))
-      setSearchValue(searchItem ? stringifySearchFilter(searchItem) : '')
-    }
-  }
-
   const pendingSearchFilterRef = useRef<FilterItem<K> | null>(null)
   const handleToggleRef = useRef(handleToggle)
   handleToggleRef.current = handleToggle
@@ -219,7 +200,6 @@ const TabHeaderAndFilters = <T, K = string>({
 
   const handleSearchClear = (filter: FilterItem<K>) => {
     setSearchValue('')
-    setExpandedSearchId(null)
     pendingSearchFilterRef.current = null
     handleToggle(filter, '')
   }
@@ -241,8 +221,12 @@ const TabHeaderAndFilters = <T, K = string>({
 
   return (
     <Styled.HeaderContainer className={clsx('panel-tabs', { loading: isLoading })}>
-      <Styled.HeaderLabel className="panel-header-label">{label}</Styled.HeaderLabel>
-      <Spacer />
+      {label ? (
+        <>
+          <Styled.HeaderLabel className="panel-header-label">{label}</Styled.HeaderLabel>
+          <Spacer />
+        </>
+      ) : null}
       <Styled.FiltersContainer className="panel-header-filters">
         {filters.map((filter) => {
           const isSelected = getIsSelected(filter)
@@ -274,40 +258,30 @@ const TabHeaderAndFilters = <T, K = string>({
           }
 
           if (type === 'search') {
-            const isExpanded = expandedSearchId === String(filter.id)
             return (
               <Styled.SearchFilterContainer
                 key={String(filter.id)}
-                className={clsx('panel-filter', 'panel-filter-search', { expanded: isExpanded })}
+                className={clsx('panel-filter', 'panel-filter-search', {
+                  selected: !!isSelected,
+                })}
               >
-                <Styled.FilterButton
-                  selected={isSelected || isExpanded}
-                  onClick={() => handleSearchClick(filter)}
-                  icon={filter.icon}
-                  data-tooltip={!isExpanded ? filter.tooltip : undefined}
-                  data-tooltip-delay={0}
+                <Styled.SearchInput
+                  ref={searchInputRef}
+                  value={searchValue}
+                  onChange={(e) => handleSearchChange(filter, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') handleSearchClear(filter)
+                  }}
+                  placeholder={filter.placeholder || 'Search...'}
                 />
-                {isExpanded && (
-                  <>
-                    <Styled.SearchInput
-                      ref={searchInputRef}
-                      value={searchValue}
-                      onChange={(e) => handleSearchChange(filter, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          handleSearchClear(filter)
-                        }
-                      }}
-                      placeholder={filter.placeholder || 'Search...'}
-                    />
-                    <Styled.ClearButton
-                      icon="close"
-                      onClick={() => handleSearchClear(filter)}
-                      data-tooltip="Clear"
-                      data-tooltip-delay={0}
-                    />
-                  </>
-                )}
+                {searchValue ? (
+                  <Styled.ClearButton
+                    icon="close"
+                    onClick={() => handleSearchClear(filter)}
+                    data-tooltip="Clear"
+                    data-tooltip-delay={0}
+                  />
+                ) : null}
               </Styled.SearchFilterContainer>
             )
           }

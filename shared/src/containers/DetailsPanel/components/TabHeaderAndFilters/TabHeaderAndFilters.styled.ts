@@ -17,6 +17,9 @@ export const HeaderLabel = styled.span`
 export const FiltersContainer = styled.div`
   display: flex;
   gap: var(--base-gap-small);
+  flex: 1;
+  min-width: 0;
+  align-items: center;
 `
 
 export const FilterButton = styled(Button)`
@@ -32,16 +35,15 @@ export const SearchFilterContainer = styled.div`
   gap: var(--base-gap-small);
   border-radius: var(--border-radius-m);
   overflow: hidden;
-  transition: width 0.2s ease;
-  width: 28px;
   height: 28px;
-  box-shadow: none;
-  padding-right: 4px;
+  padding: 0 4px 0 8px;
+  flex: 1;
+  min-width: 0;
+  background-color: var(--md-sys-color-surface-container-lowest);
 
-  &.expanded {
-    width: 200px;
+  &.selected,
+  &:focus-within {
     box-shadow: 0 0 0 1px var(--md-sys-color-primary-container);
-    background-color: var(--md-sys-color-surface-container-lowest);
   }
 `
 
