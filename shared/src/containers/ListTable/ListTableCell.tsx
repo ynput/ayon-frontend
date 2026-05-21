@@ -11,6 +11,8 @@ import {
 import clsx from 'clsx'
 import { EDIT_TRIGGER_CLASS } from '../ProjectTreeTable'
 
+const EDITABLE_CELL_CLASS = 'editable'
+
 const isPlaceholderRowValue = (value: unknown): value is { __listTablePlaceholder: true } =>
   !!value && typeof value === 'object' && '__listTablePlaceholder' in (value as object)
 
@@ -126,8 +128,9 @@ export const RowCells = <TData extends RowData>({
         const cellId = getListTableCellId(row.id, cell.column.id)
         const attributeData = columnAttributeData?.[cell.column.id]
         const hasCustomCellRenderer = !!cell.column.columnDef.meta?.listTableCustomCell
-        const shouldUseTypedWidget = !!attributeData?.type && !hasCustomCellRenderer
-        const hasTypedWidget = !!(attributeData?.type && dataTypeWidgets?.[attributeData.type])
+        const attributeType = attributeData?.type
+        const shouldUseTypedWidget = !!attributeType && !hasCustomCellRenderer
+        const hasTypedWidget = !!(attributeType && dataTypeWidgets?.[attributeType])
         const isEditing = editingState.editingCellId === cellId
         const typedContent =
           !shouldUseTypedWidget || isPlaceholderRow
@@ -159,7 +162,9 @@ export const RowCells = <TData extends RowData>({
         const canStartTypedEdit = shouldUseTypedWidget && hasTypedWidget && !isPlaceholderRow
         if (canStartTypedEdit) {
           wrappedContent = (
-            <Styled.EditableCellValue className={clsx({ editing: isEditing })}>
+            <Styled.EditableCellValue
+              className={clsx(EDITABLE_CELL_CLASS, attributeType, { editing: isEditing })}
+            >
               {wrappedContent}
             </Styled.EditableCellValue>
           )
@@ -178,15 +183,19 @@ export const RowCells = <TData extends RowData>({
             }
             onClick={(e) => {
               const target = e.target as HTMLElement
-              // check for trigger elements like the dropdown
-              if (target.closest(`.${EDIT_TRIGGER_CLASS}`)) {
-                if (!isEditing) {
-                  editingState.startEditingCell(cellId)
-                }
-              }
               // check if the click is within an editing cell
               if (isEditing && target.closest('.editing')) {
                 e.stopPropagation() // prevent row click when interacting with the editing cell
+              } else {
+                // check if clicking an editable input or trigger element
+                const editableElement = target.closest(`.${EDITABLE_CELL_CLASS}`)
+                const triggerElement = target.closest(
+                  `.${EDIT_TRIGGER_CLASS}, input, textarea, select, [contenteditable="true"]`,
+                )
+                if (editableElement || triggerElement) {
+                  editingState.startEditingCell(cellId)
+                  e.stopPropagation() // prevent row click when interacting with the editing cell
+                }
               }
             }}
           >

@@ -151,11 +151,11 @@ export const EditableCellValue = styled.div<{ $isEditing?: boolean }>`
   border-radius: var(--border-radius-m);
   transition: background-color 120ms ease, outline-color 120ms ease;
 
-  &:hover {
+  &:hover:not(.editing):not(.boolean) {
     background-color: var(--md-sys-color-surface-container-high);
   }
 
-  &.editing {
+  &.editing:not(.boolean) {
     background-color: var(--md-sys-color-surface-container);
   }
 `
