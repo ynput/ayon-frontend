@@ -2,6 +2,7 @@ import React from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './ListTable.styled'
 import type { ListTableGroupDisplay } from './ListTable.types'
+import clsx from 'clsx'
 
 export const INTERNAL_GROUPING_COLUMN_PREFIX = '__group_path__'
 
@@ -77,7 +78,7 @@ export function GroupRow({
       }}
       onClick={onToggle}
       onContextMenu={onContextMenu}
-      className="group-row"
+      className={clsx('group-row', { expanded: isExpanded })}
     >
       <Styled.GroupTD>
         <Styled.GroupRowContent>

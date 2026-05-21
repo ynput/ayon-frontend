@@ -12,33 +12,34 @@ export const TR = styled.tr`
   border-radius: var(--border-radius-m);
   overflow: hidden;
 
+  /* ROW COLOR */
   .inner-td {
-    background-color: var(--md-sys-color-surface-container-high);
-    border-top: 2px solid var(--md-sys-color-surface-container-high);
-    border-bottom: 2px solid var(--md-sys-color-surface-container-high);
+    background-color: var(--md-sys-color-surface-container);
+    border-top: 2px solid var(--md-sys-color-surface-container);
+    border-bottom: 2px solid var(--md-sys-color-surface-container);
   }
 
   td:first-child .inner-td {
-    border-left: 2px solid var(--md-sys-color-surface-container-high);
+    border-left: 2px solid var(--md-sys-color-surface-container);
   }
 
   td:last-child .inner-td {
-    border-right: 2px solid var(--md-sys-color-surface-container-high);
+    border-right: 2px solid var(--md-sys-color-surface-container);
   }
 
   &:hover {
     .inner-td {
-      background-color: var(--md-sys-color-surface-container-high-hover);
-      border-top-color: var(--md-sys-color-surface-container-high-hover);
-      border-bottom-color: var(--md-sys-color-surface-container-high-hover);
+      background-color: var(--md-sys-color-surface-container-hover);
+      border-top-color: var(--md-sys-color-surface-container-hover);
+      border-bottom-color: var(--md-sys-color-surface-container-hover);
     }
 
     td:first-child .inner-td {
-      border-left-color: var(--md-sys-color-surface-container-high-hover);
+      border-left-color: var(--md-sys-color-surface-container-hover);
     }
 
     td:last-child .inner-td {
-      border-right-color: var(--md-sys-color-surface-container-high-hover);
+      border-right-color: var(--md-sys-color-surface-container-hover);
     }
   }
 
@@ -65,8 +66,9 @@ export const TR = styled.tr`
   &.group-row {
     background-color: transparent;
 
-    &:hover {
-      background-color: var(--md-sys-color-surface-container);
+    &:hover,
+    &.expanded {
+      background-color: var(--md-sys-color-surface-container-hover);
     }
   }
 
@@ -294,7 +296,7 @@ export const SortableTHStyled = styled.th`
   &.menu-open .th-actions {
     visibility: visible;
     pointer-events: auto;
-    background-color: var(--md-sys-color-background);
+    background-color: var(--md-sys-color-surface-container-low);
   }
 
   &:hover .resize-handle {
