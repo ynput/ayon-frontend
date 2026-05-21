@@ -1,5 +1,4 @@
 import React from 'react'
-import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './ListTable.styled'
 import type { ListTableGroupDisplay } from './ListTable.types'
