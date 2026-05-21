@@ -124,7 +124,7 @@ export const useProjectColumns = (
       attribKeys.map((key) =>
         columnHelper.accessor((row) => row.attrib[key], {
           id: `attrib_${key}`,
-          header: key,
+          header: columnAttributeData[`attrib_${key}`]?.title || key,
           size: 150,
           sortingFn: (rowA, rowB) => {
             const attribute = columnAttribsAttributeData[`attrib_${key}`]
