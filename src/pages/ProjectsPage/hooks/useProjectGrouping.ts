@@ -16,6 +16,7 @@ const STATIC_GROUP_OPTIONS: ProjectGroupOption[] = [
   { id: 'projectFolder', label: 'Folder', icon: 'folder' },
   { id: 'active', label: 'Archived', icon: 'inventory_2' },
   { id: 'library', label: 'Library', icon: 'local_library' },
+  { id: 'skeleton', label: 'Pipeline', icon: 'valve' },
 ]
 
 const isGroupableProjectAttribute = (attribute: AttributeModel) =>

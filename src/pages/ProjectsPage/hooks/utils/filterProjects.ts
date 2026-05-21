@@ -1,4 +1,4 @@
-import type { ProjectTableRow } from '../useGetProjectsData'
+import { ProjectTableRow } from '../useProjectTableRows'
 import type {
   QueryFilter,
   QueryCondition,
@@ -38,6 +38,8 @@ const getRowValue = (row: ProjectTableRow, key: string): unknown => {
       return row.active
     case 'library':
       return row.library
+    case 'pipeline':
+      return row.pipeline
     case 'name':
       return row.name
     case 'label':

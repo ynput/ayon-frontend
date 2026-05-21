@@ -25,6 +25,8 @@ export type ProjectTableRow = {
   library: boolean | null
   color: string | null
   projectFolder: string | null
+  skeleton?: boolean
+  pipeline?: string // opposite of skeleton for easier handling in the UI
   attrib: Record<string, any>
   subRows?: ProjectTableRow[]
   __listTableGroup?: true
@@ -57,6 +59,7 @@ const createEmptyFolderPlaceholderRow = (groupKey: string): ProjectTableRow => (
   active: null,
   library: null,
   color: null,
+  skeleton: false,
   projectFolder: null,
   attrib: {},
   __listTablePlaceholder: true,
@@ -191,6 +194,8 @@ export const useProjectTableRows = ({
         code: project.code,
         active: project.active,
         library: project.library,
+        skeleton: project.skeleton,
+        pipeline: project.skeleton ? 'No' : 'Yes',
         color: project.color ?? null,
         projectFolder:
           project.projectFolder && foldersMap.has(project.projectFolder)
@@ -236,20 +241,22 @@ export const useProjectTableRows = ({
           return { value: null, label: '(None)', sortValue: '(None)' }
         }
         const normalizedValue = String(value) === 'true'
+
+        let label: string
+        switch (columnId) {
+          case 'active':
+            label = normalizedValue ? 'Active' : 'Archived'
+            break
+          case 'library':
+            label = normalizedValue ? 'Library' : 'Standard'
+            break
+          default:
+            label = normalizedValue ? 'Yes' : 'No'
+        }
+
         return {
           value: normalizedValue,
-          label:
-            columnId === 'active'
-              ? normalizedValue
-                ? 'Active'
-                : 'Archived'
-              : columnId === 'library'
-              ? normalizedValue
-                ? 'Library'
-                : 'Standard'
-              : normalizedValue
-              ? 'Yes'
-              : 'No',
+          label,
           sortIndex: normalizedValue ? 0 : 1,
           sortValue: normalizedValue ? 0 : 1,
           icon: columnId === 'active' ? (normalizedValue ? 'check' : 'archive') : undefined,
@@ -258,6 +265,17 @@ export const useProjectTableRows = ({
 
       if (value === null || value === undefined) {
         return { value: null, label: '(None)', sortValue: '(None)' }
+      }
+
+      // special handling of skeleton (pipeline) grouping for better display
+      if (columnId === 'skeleton') {
+        const normalizedSkeletonValue = String(value) === 'true'
+        return {
+          value: normalizedSkeletonValue,
+          label: normalizedSkeletonValue ? 'Standard' : 'Pipeline',
+          sortIndex: normalizedSkeletonValue ? 0 : 1,
+          sortValue: normalizedSkeletonValue ? 0 : 1,
+        }
       }
 
       return { value, label: String(value), sortValue: String(value) }

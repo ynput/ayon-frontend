@@ -66,10 +66,10 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     header: 'Library',
     size: 80,
   }),
-  columnHelper.accessor('projectFolder', {
-    id: 'projectFolder',
-    header: 'Folder',
-    size: 150,
+  columnHelper.accessor('pipeline', {
+    id: 'pipeline',
+    header: 'Pipeline',
+    size: 80,
   }),
 ]
 

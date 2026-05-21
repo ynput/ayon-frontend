@@ -1,5 +1,5 @@
 query GetProjects($last: Int, $before: String) {
-  projects(last: $last, before: $before) {
+  projects(last: $last, before: $before, includeSkeleton: true) {
     edges {
       cursor
       node {

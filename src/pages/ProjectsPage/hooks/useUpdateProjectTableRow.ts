@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { ProjectPatchModel, useUpdateProjectMutation } from '@shared/api'
 import { getErrorMessage } from '@shared/util'
 import { ListTableCellCallbacks } from '@shared/containers/ListTable/ListTableCell'
-import type { ProjectTableRow } from './useGetProjectsData'
+import { ProjectTableRow } from './useProjectTableRows'
 
 const ATTRIBUTE_COLUMN_PREFIX = 'attrib_'
 const ATTRIBUTE_COLUMN_SUFFIX = '_attrib'

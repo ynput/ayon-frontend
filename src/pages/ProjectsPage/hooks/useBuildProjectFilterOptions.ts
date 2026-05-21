@@ -61,6 +61,18 @@ export const useBuildProjectFilterOptions = (): ProjectFilterOption[] => {
           { id: 'false', label: 'Not library', icon: 'do_not_disturb_on' },
         ],
       },
+      // Pipeline flag
+      {
+        id: 'skeleton',
+        type: 'boolean',
+        label: 'Pipeline',
+        icon: 'valve',
+        singleSelect: true,
+        values: [
+          { id: 'false', label: 'Pipeline' },
+          { id: 'true', label: 'Skeleton' },
+        ],
+      },
     ]
 
     // Add project-scoped attributes that are boolean, datetime, or have enum values
