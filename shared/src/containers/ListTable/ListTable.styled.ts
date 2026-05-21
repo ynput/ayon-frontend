@@ -353,10 +353,9 @@ export const GroupTD = styled.td`
 `
 
 export const GroupCount = styled.span`
-  margin-left: auto;
   font-weight: 400;
   color: var(--md-sys-color-outline);
-  padding-right: var(--padding-s);
+  opacity: 0.7;
 `
 
 export const GroupColorDot = styled.span`

@@ -47,6 +47,7 @@ interface GroupRowProps {
   groupColumnId: string
   groupValue: unknown
   count: number
+  countLabel?: string
   depth: number
   isExpanded: boolean
   onToggle: () => void
@@ -58,6 +59,7 @@ export function GroupRow({
   groupColumnId,
   groupValue,
   count,
+  countLabel,
   depth,
   isExpanded,
   onToggle,
@@ -97,7 +99,10 @@ export function GroupRow({
             <Styled.GroupColorDot style={{ backgroundColor: displayFromValue.color }} />
           ) : null}
           <span>{label}</span>
-          <Styled.GroupCount>{count}</Styled.GroupCount>
+          <Styled.GroupCount>
+            {count}
+            {countLabel ? ` ${countLabel}` : ''}
+          </Styled.GroupCount>
         </Styled.GroupRowContent>
       </Styled.GroupTD>
     </Styled.TR>

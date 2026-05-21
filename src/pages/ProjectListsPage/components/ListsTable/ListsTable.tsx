@@ -11,9 +11,7 @@ import ListRow from '../ListRow/ListRow'
 import ListsTableHeader from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import { Row, Table } from '@tanstack/react-table'
-import useListContextMenu, {
-  type ListRowContextMenuBuilder,
-} from '@pages/ProjectListsPage/hooks/useListContextMenu'
+import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import ListFolderFormDialog from '../ListFolderFormDialog'
 
 export type {
