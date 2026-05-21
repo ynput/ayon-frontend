@@ -241,7 +241,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       const direction = key === 'ArrowUp' || (key === 'Tab' && shiftKey) ? 'prev' : 'next'
       const edgeElement = direction === 'next' ? 'firstChild' : 'lastChild'
 
-      if (['ArrowDown', 'ArrowUp'].includes(key) || (key === 'Tab' && (shiftKey || !shiftKey))) {
+      if (['ArrowDown', 'ArrowUp'].includes(key) || key === 'Tab') {
         e.preventDefault()
         const focused = document.activeElement
 
