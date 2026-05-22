@@ -44,6 +44,7 @@ const baseFeedFilters: FilterItem<string>[] = [
     id: 'checklists',
     tooltip: 'Checklists',
     icon: 'checklist',
+    isShortcut: true,
   },
   {
     id: 'versions',
@@ -166,11 +167,12 @@ export const Feed = ({
         : []),
       {
         id: 'author',
-        tooltip: 'User (author or assignee)',
+        tooltip: 'User',
         icon: 'person',
         type: 'enum',
         operator: 'in',
         options: userOptions,
+        isShortcut: true,
       },
     ],
     [userOptions, supportsReviewSession, categories.length, categoryOptions],
