@@ -8,7 +8,8 @@ export const FooterContainer = styled.div`
 `
 
 export const FooterLabel = styled.label`
-margin: 2px 0 14px 0;`
+  margin: 2px 0 14px 0;
+`
 
 export const FooterActions = styled.div`
   display: flex;
@@ -23,6 +24,7 @@ export const ConfirmInput = styled(InputText)`
 `
 
 export const StyledDialog = styled(Dialog)`
+  max-height: 600px;
   .body {
     overflow: hidden;
     display: flex;

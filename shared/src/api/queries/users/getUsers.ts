@@ -46,6 +46,8 @@ const USERS_QUERY = `
           defaultAccessGroups
           hasPassword
           disablePasswordLogin
+          inviteSentAt
+          inviteAcceptedAt
           createdAt
           updatedAt
           apiKeyPreview
