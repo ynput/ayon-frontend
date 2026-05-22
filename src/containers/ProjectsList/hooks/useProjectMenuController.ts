@@ -18,6 +18,7 @@ import type { ProjectFolderFormData } from '@pages/ProjectManagerPage/components
 import useProjectListUserPreferences from './useProjectListUserPreferences'
 import useProjectListMenuItems, { type Hidden } from './useProjectsListMenuItems'
 import { useProjectFolderActions } from './useProjectFolderActions'
+import { confirmDelete, getProjectDisplayName } from '@shared/util'
 
 type ProjectFolderDialogProps = {
   isOpen: boolean
@@ -170,16 +171,23 @@ export const useProjectMenuController = ({
   )
 
   const handleDelete = useCallback(
-    async (projectName: string) => {
-      try {
-        await deleteProject({ projectName }).unwrap()
+    (projectName: string) => {
+      const project = projects.find((p) => p.name === projectName)
+      const displayName = project ? getProjectDisplayName(project) : projectName
+      const confirmLabel =
+        displayName && displayName !== projectName
+          ? `Project: ${displayName} (${projectName})`
+          : `Project: ${projectName}`
 
-        onSelect(selection.filter((selectedId) => selectedId !== projectName))
-      } catch (error: any) {
-        toast.error(error?.data?.detail || 'Failed to delete project')
-      }
+      confirmDelete({
+        label: confirmLabel,
+        accept: async () => {
+          await deleteProject({ projectName }).unwrap()
+          onSelect(selection.filter((selectedId) => selectedId !== projectName))
+        },
+      })
     },
-    [deleteProject, onSelect, selection],
+    [deleteProject, onSelect, projects, selection],
   )
 
   const buildMenuItems = useProjectListMenuItems({
