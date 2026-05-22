@@ -197,7 +197,7 @@ export const useProjectTableRows = ({
         active: project.active,
         library: project.library,
         skeleton: project.skeleton,
-        pipeline: project.skeleton ? 'No' : 'Yes',
+        pipeline: project.skeleton ? 'Planning' : 'Production',
         color: project.color ?? null,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
@@ -271,12 +271,12 @@ export const useProjectTableRows = ({
         return { value: null, label: '(None)', sortValue: '(None)' }
       }
 
-      // special handling of skeleton (pipeline) grouping for better display
+      // special handling of skeleton (state) grouping for better display
       if (columnId === 'skeleton') {
         const normalizedSkeletonValue = String(value) === 'true'
         return {
           value: normalizedSkeletonValue,
-          label: normalizedSkeletonValue ? 'Standard' : 'Pipeline',
+          label: normalizedSkeletonValue ? 'Planning' : 'Production',
           sortIndex: normalizedSkeletonValue ? 0 : 1,
           sortValue: normalizedSkeletonValue ? 0 : 1,
         }

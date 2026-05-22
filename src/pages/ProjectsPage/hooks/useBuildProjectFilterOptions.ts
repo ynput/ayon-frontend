@@ -61,16 +61,16 @@ export const useBuildProjectFilterOptions = (): ProjectFilterOption[] => {
           { id: 'false', label: 'Not library', icon: 'do_not_disturb_on' },
         ],
       },
-      // Pipeline flag
+      // State flag
       {
         id: 'skeleton',
         type: 'boolean',
-        label: 'Pipeline',
+        label: 'State',
         icon: 'valve',
         singleSelect: true,
         values: [
-          { id: 'false', label: 'Pipeline' },
-          { id: 'true', label: 'Skeleton' },
+          { id: 'false', label: 'Production' },
+          { id: 'true', label: 'Planning' },
         ],
       },
     ]

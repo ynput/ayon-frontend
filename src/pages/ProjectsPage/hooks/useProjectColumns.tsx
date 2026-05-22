@@ -54,7 +54,7 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
   }),
   columnHelper.accessor('pipeline', {
     id: 'pipeline',
-    header: 'Pipeline',
+    header: 'State',
     size: 80,
   }),
   columnHelper.accessor('createdAt', {

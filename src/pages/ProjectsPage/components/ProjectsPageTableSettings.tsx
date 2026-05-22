@@ -18,7 +18,7 @@ const SORT_OPTIONS = [
   { id: 'code', label: 'Code' },
   { id: 'active', label: 'Active' },
   { id: 'library', label: 'Library' },
-  { id: 'pipeline', label: 'Pipeline' },
+  { id: 'pipeline', label: 'State' },
   { id: 'createdAt', label: 'Created at' },
   { id: 'updatedAt', label: 'Updated at' },
 ]
