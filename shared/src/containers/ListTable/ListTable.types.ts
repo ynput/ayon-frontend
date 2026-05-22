@@ -54,6 +54,7 @@ export type ListTableRowDoubleClickHandler<TData extends RowData> = (
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     listTableCustomCell?: boolean
+    editable?: boolean
   }
 
   interface TableMeta<TData extends RowData> {
@@ -71,6 +72,7 @@ export interface ListTableProps<TData> {
   isFetchingNextPage?: boolean
   onUpdateRow: (columnId: string, value: unknown, rowId: string) => void
   onOpenViewer?: (row: TData) => void
+  editable?: boolean
   onReorderRows?: (startIndex: number, endIndex: number) => void
   rowContextMenuBuilders?: ListTableRowContextMenuBuilder<TData>[]
   onRowDoubleClick?: ListTableRowDoubleClickHandler<TData>

@@ -39,6 +39,7 @@ interface DraggableRowProps<TData extends RowData> {
   dataTypeWidgets?: ListTableDataTypeWidgets<TData>
   editingState: ListTableCellEditingState
   callbacks: ListTableCellCallbacks<TData>
+  editable?: boolean
 }
 
 function DraggableRowInner<TData extends RowData>({
@@ -54,6 +55,7 @@ function DraggableRowInner<TData extends RowData>({
   dataTypeWidgets,
   editingState,
   callbacks,
+  editable,
 }: DraggableRowProps<TData>) {
   const isGroupRow = isCustomGroupRowValue(row.original)
   const isPlaceholderRow = isPlaceholderRowValue(row.original)
@@ -108,6 +110,7 @@ function DraggableRowInner<TData extends RowData>({
         dataTypeWidgets={dataTypeWidgets}
         editingState={editingState}
         callbacks={callbacks}
+        editable={editable}
       />
     </Styled.TR>
   )

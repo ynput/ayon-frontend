@@ -255,6 +255,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
                 enableColumnResizing
                 columnSizing={columnSizing}
                 onColumnSizingChange={handleColumnSizingChange}
+                editable={false}
               />
             </SplitterPanel>
             <SplitterPanel size={30} className="details">

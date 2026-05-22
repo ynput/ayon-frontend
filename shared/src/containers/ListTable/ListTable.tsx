@@ -62,6 +62,7 @@ export function ListTable<TData extends RowData>({
   isFetchingNextPage,
   onUpdateRow,
   onOpenViewer,
+  editable = true,
   onReorderRows,
   rowContextMenuBuilders = [],
   onRowDoubleClick,
@@ -384,6 +385,7 @@ export function ListTable<TData extends RowData>({
                     dataTypeWidgets={dataTypeWidgets}
                     editingState={editingState}
                     callbacks={callbacks}
+                    editable={editable}
                   />
                 )
               })}
@@ -407,6 +409,7 @@ export function ListTable<TData extends RowData>({
                       dataTypeWidgets={dataTypeWidgets}
                       editingState={editingState}
                       callbacks={callbacks}
+                      editable={editable}
                     />
                   </Styled.OverlayTR>
                 </Styled.TBody>

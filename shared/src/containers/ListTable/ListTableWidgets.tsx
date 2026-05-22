@@ -18,6 +18,7 @@ export interface ListTableWidgetRenderContext<TData extends RowData> {
   cellId: string
   attributeData: AttributeData
   isEditing: boolean
+  isReadOnly: boolean
   startEditing: () => void
   stopEditing: () => void
   updateValue: (value: unknown) => void
@@ -53,6 +54,7 @@ const renderEnumWidget = <TData extends RowData>({
   value,
   attributeData,
   isEditing,
+  isReadOnly,
   startEditing,
   stopEditing,
   updateValue,
@@ -70,6 +72,7 @@ const renderEnumWidget = <TData extends RowData>({
       options={attributeData.enum || []}
       type={attributeData.type}
       isEditing={isEditing}
+      isReadOnly={isReadOnly}
       onOpen={startEditing}
       onCancelEdit={stopEditing}
       onChange={(nextValue) => updateValue(nextValue)}
@@ -91,6 +94,7 @@ const textWidgetRenderer = <TData extends RowData>(
       columnId={context.columnId}
       cellId={context.cellId}
       isEditing={context.isEditing}
+      isReadOnly={context.isReadOnly}
       onRequestEdit={() => context.startEditing()}
       onCancelEdit={context.stopEditing}
       onChange={(nextValue) => context.updateValue(nextValue)}
@@ -107,6 +111,7 @@ const booleanWidgetRenderer = <TData extends RowData>(
     <BooleanWidget
       value={Boolean(context.value)}
       isEditing={context.isEditing}
+      isReadOnly={context.isReadOnly}
       onCancelEdit={context.stopEditing}
       onChange={(nextValue) => context.updateValue(nextValue)}
     />
@@ -120,6 +125,7 @@ const dateWidgetRenderer = <TData extends RowData>(
     <DateWidget
       value={typeof context.value === 'string' ? context.value : undefined}
       isEditing={context.isEditing}
+      isReadOnly={context.isReadOnly}
       onCancelEdit={context.stopEditing}
       onChange={(nextValue) => context.updateValue(nextValue)}
     />

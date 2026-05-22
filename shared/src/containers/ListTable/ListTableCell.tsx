@@ -41,6 +41,7 @@ interface RowCellsProps<TData extends RowData> {
   dataTypeWidgets?: ListTableDataTypeWidgets<TData>
   editingState: ListTableCellEditingState
   callbacks: ListTableCellCallbacks<TData>
+  editable?: boolean
 }
 
 const renderTypedCellContent = <TData extends RowData>({
@@ -51,6 +52,7 @@ const renderTypedCellContent = <TData extends RowData>({
   dataTypeWidgets,
   editingState,
   callbacks,
+  isReadOnly,
 }: {
   cell: Cell<TData, unknown>
   row: Row<TData>
@@ -59,6 +61,7 @@ const renderTypedCellContent = <TData extends RowData>({
   dataTypeWidgets?: ListTableDataTypeWidgets<TData>
   editingState: ListTableCellEditingState
   callbacks: ListTableCellCallbacks<TData>
+  isReadOnly: boolean
 }) => {
   const attributeType = attributeData?.type
   if (!attributeType || !dataTypeWidgets?.[attributeType]) {
@@ -81,6 +84,7 @@ const renderTypedCellContent = <TData extends RowData>({
     cellId,
     attributeData,
     isEditing: editingState.editingCellId === cellId,
+    isReadOnly,
     startEditing: () => editingState.startEditingCell(cellId),
     stopEditing: editingState.stopEditingCell,
     updateValue: (value) => {
@@ -102,6 +106,7 @@ export const RowCells = <TData extends RowData>({
   dataTypeWidgets,
   editingState,
   callbacks,
+  editable = true,
 }: RowCellsProps<TData>) => {
   const isPlaceholderRow = isPlaceholderRowValue(row.original)
 
@@ -132,6 +137,7 @@ export const RowCells = <TData extends RowData>({
         const shouldUseTypedWidget = !!attributeType && !hasCustomCellRenderer
         const hasTypedWidget = !!(attributeType && dataTypeWidgets?.[attributeType])
         const isEditing = editingState.editingCellId === cellId
+        const isColumnEditable = editable && cell.column.columnDef.meta?.editable !== false
         const typedContent =
           !shouldUseTypedWidget || isPlaceholderRow
             ? null
@@ -143,6 +149,7 @@ export const RowCells = <TData extends RowData>({
                 dataTypeWidgets,
                 editingState,
                 callbacks,
+                isReadOnly: !isColumnEditable,
               })
 
         const content =
@@ -159,7 +166,8 @@ export const RowCells = <TData extends RowData>({
           }
         }
 
-        const canStartTypedEdit = shouldUseTypedWidget && hasTypedWidget && !isPlaceholderRow
+        const canStartTypedEdit =
+          isColumnEditable && shouldUseTypedWidget && hasTypedWidget && !isPlaceholderRow
         if (canStartTypedEdit) {
           wrappedContent = (
             <Styled.EditableCellValue
@@ -191,7 +199,7 @@ export const RowCells = <TData extends RowData>({
               // check if the click is within an editing cell
               if (isEditing && target.closest('.editing')) {
                 e.stopPropagation() // prevent row click when interacting with the editing cell
-              } else {
+              } else if (isColumnEditable) {
                 // check if clicking an editable input or trigger element
                 const editableElement = target.closest(`.${EDITABLE_CELL_CLASS}`)
                 const triggerElement = target.closest(
