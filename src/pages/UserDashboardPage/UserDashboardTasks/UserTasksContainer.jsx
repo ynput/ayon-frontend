@@ -14,25 +14,14 @@ import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsT
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged, onTaskSelected } from '@state/dashboard'
-import { Splitter, SplitterPanel } from 'primereact/splitter'
+import { SplitterPanel } from 'primereact/splitter'
 import { getIntersectionFields, getMergedFields } from '../util'
 import transformKanbanTasks from './transformKanbanTasks'
-import styled from 'styled-components'
 import clsx from 'clsx'
 import { openViewer } from '@state/viewer'
 import RelatedTasksModule from './RelatedTasks'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
-
-const StyledSplitter = styled(Splitter)`
-  .details-panel-splitter {
-    /* This is a crazy hack to prevent the cursor being out of line with the dragging card */
-    &.dragging {
-      transition: max-width 0s, min-width 0s;
-      transition-delay: 0.1s;
-    }
-  }
-`
 
 export const getThumbnailUrl = ({ entityId, entityType, thumbnailId, updatedAt, projectName }) => {
   // If projectName is not provided or neither thumbnailId nor entityId and entityType are provided, return null
@@ -65,9 +54,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const user = useSelector((state) => state.user)
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
-  const draggingIds = useSelector((state) => state.dashboard.tasks.draggingIds)
-  const isDragging = draggingIds.length > 0
-
   const handleOpenViewer = (args) => dispatch(openViewer(args))
 
   let assignees = []
@@ -281,12 +267,10 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
       <SplitterPanel
         size={1}
-        className={clsx('details-panel-splitter', 'details', { dragging: isDragging })}
+        className={clsx('details-panel-splitter', 'details')}
         style={{
-          maxWidth: isDragging
-            ? 0
-            : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-          minWidth: isDragging ? 0 : detailsMinWidth,
+          maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+          minWidth: detailsMinWidth,
         }}
       >
         {/* Lists are project-scoped — only resolve a context when the selection is in
