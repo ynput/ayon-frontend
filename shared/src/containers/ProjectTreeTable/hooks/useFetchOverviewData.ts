@@ -121,7 +121,7 @@ export const useFetchOverviewData = ({
         taskFilter: taskFilters.filter?.conditions?.length ? taskFilters.filter : undefined,
         taskSearch: taskFilters.search,
         folderFilter: folderFilters.filter?.conditions?.length ? folderFilters.filter : undefined,
-        folderSearch: folderFilters.search,
+        folderSearch: folderFilters.search || taskFilters.search,
       },
     },
     {
