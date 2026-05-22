@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react'
+import clsx from 'clsx'
 import {
   flexRender,
   getCoreRowModel,
@@ -84,6 +85,7 @@ export function ListTable<TData extends RowData>({
   enableSorting = false,
   sorting: sortingProp,
   onSortingChange,
+  getIsRowInactive,
 }: ListTableProps<TData>) {
   const [sortingLocal, setSortingLocal] = useState<SortingState>([])
   const [columnVisibilityLocal, setColumnVisibilityLocal] = useState<VisibilityState>({})
@@ -386,6 +388,7 @@ export function ListTable<TData extends RowData>({
                     editingState={editingState}
                     callbacks={callbacks}
                     editable={editable}
+                    isInactive={getIsRowInactive?.(row.original)}
                   />
                 )
               })}
@@ -401,7 +404,9 @@ export function ListTable<TData extends RowData>({
             {activeRow ? (
               <table style={{ width: '100%' }}>
                 <Styled.TBody>
-                  <Styled.OverlayTR>
+                  <Styled.OverlayTR
+                    className={clsx({ inactive: getIsRowInactive?.(activeRow.original) })}
+                  >
                     <RowCells
                       row={activeRow}
                       cellWrapper={cellWrapper}

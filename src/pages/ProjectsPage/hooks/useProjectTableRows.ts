@@ -119,7 +119,7 @@ const ensureEmptyFolderGroups = (
         groupRow = createProjectGroupRow(GROUP_BY_FOLDER_KEY, groupKey, {
           value: folder.id,
           label: folder.label,
-          icon: folder.data?.icon ?? undefined,
+          icon: folder.data?.icon || 'folder',
           color: folder.data?.color ?? undefined,
           sortValue: folder.label,
         }) as ProjectGroupRow
@@ -220,7 +220,7 @@ export const useProjectTableRows = ({
         return {
           value,
           label: folder?.label ?? String(value),
-          icon: folder?.data?.icon,
+          icon: folder?.data?.icon || 'folder',
           color: folder?.data?.color,
           sortValue: folder?.label ?? String(value),
         }
@@ -301,7 +301,7 @@ export const useProjectTableRows = ({
           path.unshift({
             value: currentFolder.id,
             label: currentFolder.label,
-            icon: currentFolder.data?.icon ?? undefined,
+            icon: currentFolder.data?.icon || 'folder',
             color: currentFolder.data?.color ?? undefined,
             sortValue: currentFolder.label,
           })

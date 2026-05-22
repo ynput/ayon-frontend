@@ -256,6 +256,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
                 columnSizing={columnSizing}
                 onColumnSizingChange={handleColumnSizingChange}
                 editable={false}
+                getIsRowInactive={(row) => row.active === false}
               />
             </SplitterPanel>
             <SplitterPanel size={30} className="details">

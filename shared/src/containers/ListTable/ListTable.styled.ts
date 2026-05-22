@@ -59,6 +59,10 @@ export const TR = styled.tr`
     border-right: 2px solid var(--md-sys-color-primary);
   }
 
+  &.inactive {
+    color: var(--md-sys-color-outline);
+  }
+
   &.dragging {
     opacity: 0;
   }
@@ -279,6 +283,10 @@ export const OverlayTR = styled.tr`
   border-radius: var(--border-radius-m);
   cursor: grabbing;
   z-index: 50;
+
+  &.inactive {
+    color: var(--md-sys-color-on-surface-variant);
+  }
 `
 
 export const SortableTHStyled = styled.th`

@@ -98,4 +98,5 @@ export interface ListTableProps<TData> {
   enableSorting?: boolean
   sorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
+  getIsRowInactive?: (row: TData) => boolean
 }

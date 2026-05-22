@@ -40,6 +40,7 @@ interface DraggableRowProps<TData extends RowData> {
   editingState: ListTableCellEditingState
   callbacks: ListTableCellCallbacks<TData>
   editable?: boolean
+  isInactive?: boolean
 }
 
 function DraggableRowInner<TData extends RowData>({
@@ -56,6 +57,7 @@ function DraggableRowInner<TData extends RowData>({
   editingState,
   callbacks,
   editable,
+  isInactive,
 }: DraggableRowProps<TData>) {
   const isGroupRow = isCustomGroupRowValue(row.original)
   const isPlaceholderRow = isPlaceholderRowValue(row.original)
@@ -108,6 +110,7 @@ function DraggableRowInner<TData extends RowData>({
       className={clsx('table-list-row', {
         dragging: isDragging,
         selected: isSelected,
+        inactive: isInactive,
         'placeholder-row': isPlaceholderRow,
       })}
     >
