@@ -24,8 +24,8 @@ import { camelCase } from 'lodash'
 const PROJECT_NAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9_]*[a-zA-Z0-9]$/
 const PROJECT_CODE_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9_]*[a-zA-Z0-9]$/
 const PROJECT_STATES = [
-  { value: 'production', label: 'Production' },
   { value: 'planning', label: 'Planning' },
+  { value: 'production', label: 'Production' },
 ]
 
 const DialogContent = styled.div`
