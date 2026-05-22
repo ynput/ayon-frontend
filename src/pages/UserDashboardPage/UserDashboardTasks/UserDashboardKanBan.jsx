@@ -32,7 +32,6 @@ const UserDashboardKanBan = ({
   priorities,
   projectUsers = [],
   isLoadingProjectUsers,
-  onDragStateChange,
 }) => {
   const dispatch = useDispatch()
 
@@ -209,7 +208,6 @@ const UserDashboardKanBan = ({
   const [activeDraggingId, setActiveDraggingId] = useState(null)
 
   const handleDragStart = (event) => {
-    onDragStateChange?.(true)
     setActiveDraggingId(event.active.id)
     // select card
     if (!selectedTasks.includes(event.active.id)) {
@@ -220,12 +218,10 @@ const UserDashboardKanBan = ({
   }
 
   const handleDragCancel = () => {
-    onDragStateChange?.(false)
     setActiveDraggingId(null)
   }
 
   const handleDragEnd = async (event) => {
-    onDragStateChange?.(false)
     setActiveDraggingId(null)
     // first check if field can be edited on task
     if (splitByField.isEditable === false)

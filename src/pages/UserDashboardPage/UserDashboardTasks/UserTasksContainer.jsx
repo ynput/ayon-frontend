@@ -12,7 +12,7 @@ import { EmptyPlaceholder } from '@shared/components'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { onAssigneesChanged, onTaskSelected } from '@state/dashboard'
 import { SplitterPanel } from 'primereact/splitter'
 import { getIntersectionFields, getMergedFields } from '../util'
@@ -55,22 +55,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
   const assigneesState = useSelector((state) => state.dashboard.tasks.assignees)
   const assigneesFilter = useSelector((state) => state.dashboard.tasks.assigneesFilter)
   const handleOpenViewer = (args) => dispatch(openViewer(args))
-
-  const [isDragging, setIsDragging] = useState(false)
-  const handleDragStateChange = useCallback((dragging) => setIsDragging(dragging), [])
-
-  // Safety net: if dnd-kit fails to fire dragEnd/dragCancel (view switch mid-drag,
-  // double-click race), a global pointerup forces the panel back to visible.
-  useEffect(() => {
-    if (!isDragging) return
-    const reset = () => setIsDragging(false)
-    window.addEventListener('pointerup', reset)
-    window.addEventListener('pointercancel', reset)
-    return () => {
-      window.removeEventListener('pointerup', reset)
-      window.removeEventListener('pointercancel', reset)
-    }
-  }, [isDragging])
 
   let assignees = []
   switch (assigneesFilter) {
@@ -271,7 +255,6 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
           priorities={priorities}
           projectUsers={projectUsers}
           isLoadingProjectUsers={isLoadingProjectUsers}
-          onDragStateChange={handleDragStateChange}
         />
         <RelatedTasksModule
           isPanelOpen={isPanelOpen}
@@ -284,12 +267,10 @@ const UserTasksContainer = ({ projectsInfo = {}, isLoadingInfo }) => {
 
       <SplitterPanel
         size={1}
-        className={clsx('details-panel-splitter', 'details', { dragging: isDragging })}
+        className={clsx('details-panel-splitter', 'details')}
         style={{
-          maxWidth: isDragging
-            ? 0
-            : `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
-          minWidth: isDragging ? 0 : detailsMinWidth,
+          maxWidth: `clamp(${detailsMinWidth}px, ${detailsMaxWidth}, ${detailsMaxMaxWidth}px)`,
+          minWidth: detailsMinWidth,
         }}
       >
         {/* Lists are project-scoped — only resolve a context when the selection is in
