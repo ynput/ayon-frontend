@@ -295,6 +295,7 @@ const UserDashboardPage: React.FC = () => {
               setShowNewProject(false)
               if (name) navigate(`/manageProjects/anatomy?project=${name}`)
             }}
+            redirect={module !== 'projects'}
           />
         )}
       </UserDashboardProvider>

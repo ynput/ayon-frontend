@@ -24,10 +24,14 @@ const enhancedProjectApi = projectApi.enhanceEndpoints({
       invalidatesTags: () => [
         { type: 'projects', id: 'LIST' },
         { type: 'kanBanTask', id: 'LIST' },
+        { type: 'project', id: 'LIST' },
       ],
     },
     deleteProject: {
-      invalidatesTags: () => [{ type: 'projects', id: 'LIST' }],
+      invalidatesTags: () => [
+        { type: 'projects', id: 'LIST' },
+        { type: 'project', id: 'LIST' },
+      ],
     },
     setProjectAnatomy: {
       invalidatesTags: (result, error, { projectName }) =>
