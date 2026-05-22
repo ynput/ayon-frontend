@@ -232,7 +232,7 @@ const UserList = ({
           <Column
             header="Invitation"
             field="inviteSentAt"
-            body={(rowData) => <InvitationStatus user={rowData} />}
+            body={(rowData) => <InvitationStatus user={rowData} plain />}
             sortable
             sortFunction={inviteStatusSortFunction}
             resizeable

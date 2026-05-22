@@ -19,33 +19,62 @@ export const getInvitationState = (user: InvitationFields): InvitationState => {
   return Date.now() - sentMs > INVITE_TTL_MS ? 'expired' : 'pending'
 }
 
-const Pill = styled.span<{ $state: Exclude<InvitationState, 'none'> }>`
+const Pill = styled.span<{ $state: Exclude<InvitationState, 'none'>; $plain?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: var(--base-gap-small);
   font-size: 0.9rem;
   white-space: nowrap;
 
-  .icon {
-    ${({ $state }) => {
-      if ($state === 'pending') return `color: var(--md-sys-color-primary);`
-      if ($state === 'accepted') return `color: var(--md-sys-color-tertiary);`
-      return `color: var(--md-sys-color-warning);`
-    }}
-  }
+  ${({ $plain, $state }) =>
+    $plain
+      ? `
+        .icon {
+          ${
+            $state === 'pending'
+              ? 'color: var(--md-sys-color-primary);'
+              : $state === 'accepted'
+                ? 'color: var(--md-sys-color-tertiary);'
+                : 'color: var(--md-sys-color-warning);'
+          }
+        }
+      `
+      : `
+        height: 32px;
+        padding: 0 8px;
+        border-radius: var(--border-radius-m);
+        .icon { color: inherit; }
+        ${
+          $state === 'pending'
+            ? `
+              background-color: var(--md-sys-color-primary-container);
+              color: var(--md-sys-color-on-primary-container);
+            `
+            : $state === 'accepted'
+              ? `
+                background-color: var(--md-sys-color-tertiary-container);
+                color: var(--md-sys-color-on-tertiary-container);
+              `
+              : `
+                background-color: var(--md-sys-color-warning-container);
+                color: var(--md-sys-color-on-warning-container);
+              `
+        }
+      `}
 `
 
 interface InvitationStatusProps {
   user: InvitationFields
+  plain?: boolean
 }
 
-export const InvitationStatus: FC<InvitationStatusProps> = ({ user }) => {
+export const InvitationStatus: FC<InvitationStatusProps> = ({ user, plain }) => {
   const state = getInvitationState(user)
   if (state === 'none') return null
 
   if (state === 'accepted') {
     return (
-      <Pill $state="accepted">
+      <Pill $state="accepted" $plain={plain}>
         <Icon icon="check_circle" />
         {`Accepted - ${formatDistance(new Date(user.inviteAcceptedAt!), new Date(), { addSuffix: true })}`}
       </Pill>
@@ -57,7 +86,7 @@ export const InvitationStatus: FC<InvitationStatusProps> = ({ user }) => {
 
   if (state === 'expired') {
     return (
-      <Pill $state="expired">
+      <Pill $state="expired" $plain={plain}>
         <Icon icon="cancel" />
         {`Expired - sent ${sentText}`}
       </Pill>
@@ -65,7 +94,7 @@ export const InvitationStatus: FC<InvitationStatusProps> = ({ user }) => {
   }
 
   return (
-    <Pill $state="pending">
+    <Pill $state="pending" $plain={plain}>
       <Icon icon="hourglass" />
       {`Pending - Sent ${sentText}`}
     </Pill>
