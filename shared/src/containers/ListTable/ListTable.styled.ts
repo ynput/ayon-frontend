@@ -121,6 +121,7 @@ export const TDInner = styled.div`
   overflow: hidden;
   cursor: pointer;
   box-sizing: border-box;
+  min-width: 0;
 `
 
 export const PlaceholderRowContent = styled.div`
@@ -141,6 +142,15 @@ export const ListTableCellWrapper = styled.div`
   width: 100%;
   height: 100%;
   padding: var(--padding-s);
+  overflow: hidden;
+  min-width: 0;
+
+  & > * {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0;
+  }
 `
 
 export const EditableCellValue = styled.div<{ $isEditing?: boolean }>`
@@ -152,6 +162,15 @@ export const EditableCellValue = styled.div<{ $isEditing?: boolean }>`
   padding: 0 var(--padding-s);
   border-radius: var(--border-radius-m);
   transition: background-color 120ms ease, outline-color 120ms ease;
+  overflow: hidden;
+  min-width: 0;
+
+  & > * {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0;
+  }
 
   &:hover:not(.editing):not(.boolean) {
     background-color: var(--md-sys-color-surface-container-high);

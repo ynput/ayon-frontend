@@ -121,6 +121,7 @@ export const useProjectColumns = (
   const columnAttributeData = useMemo<ProjectTableColumnAttributeData>(
     () => ({
       label: { type: 'string' },
+      name: { type: 'string' },
       code: { type: 'string' },
       active: { type: 'boolean' },
       library: { type: 'boolean' },
@@ -133,21 +134,27 @@ export const useProjectColumns = (
 
   const attribColumns = useMemo<ColumnDef<ProjectTableRow, any>[]>(
     () =>
-      attribKeys.map((key) =>
-        columnHelper.accessor((row) => row.attrib[key], {
+      attribKeys.map((key) => {
+        const attribute = columnAttributeData[`attrib_${key}`]
+        const isDateTime = attribute?.type === 'datetime'
+
+        return columnHelper.accessor((row) => row.attrib[key], {
           id: `attrib_${key}`,
-          header: columnAttributeData[`attrib_${key}`]?.title || key,
+          header: attribute?.title || key,
           size: 150,
-          cell: (info) => {
-            const val = info.getValue()
-            if (val === undefined || val === null) return ''
-            const attribute = columnAttributeData[`attrib_${key}`]
-            if (attribute?.type === 'datetime') {
-              const date = parseISO(val)
-              return isValid(date) ? format(date, 'dd MMM yyyy') : val
-            }
-            return String(val)
-          },
+          cell: isDateTime
+            ? (info) => {
+                const val = info.getValue()
+                if (val === undefined || val === null) return ''
+                const date = parseISO(val)
+                return isValid(date) ? format(date, 'dd MMM yyyy') : val
+              }
+            : undefined,
+          meta: isDateTime
+            ? {
+                listTableCustomCell: true,
+              }
+            : undefined,
           sortingFn: (rowA, rowB) => {
             const attribute = columnAttribsAttributeData[`attrib_${key}`]
             const valueA = rowA.original.attrib[key]
@@ -166,8 +173,8 @@ export const useProjectColumns = (
               sensitivity: 'base',
             })
           },
-        }),
-      ),
+        })
+      }),
     [attribKeys, columnAttribsAttributeData, columnAttributeData],
   )
 
