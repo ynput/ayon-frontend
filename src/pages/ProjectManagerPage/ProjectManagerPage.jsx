@@ -97,6 +97,10 @@ const ProjectManagerPage = () => {
     })
   }
 
+  const handleActivateProject = async (sel, active) => {
+    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
+  }
+
   const links = []
   if (!isUser || (!isLoadingUserPermissions && userPermissions.projectSettingsAreEnabled())) {
     if (userPermissions.canViewAny(UserPermissionsEntity.anatomy) || module === Module.anatomy) {
