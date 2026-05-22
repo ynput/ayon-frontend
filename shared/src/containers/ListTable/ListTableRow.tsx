@@ -72,7 +72,15 @@ function DraggableRowInner<TData extends RowData>({
         groupColumnId={customGroupRow.__groupColumnId}
         groupValue={customGroupRow.__groupValue}
         count={
-          row.getLeafRows().filter((leafRow) => !isPlaceholderRowValue(leafRow.original)).length
+          row.getLeafRows().filter((leafRow) => {
+            const original = leafRow.original as any
+            return (
+              !isPlaceholderRowValue(original) &&
+              !isCustomGroupRowValue(original) &&
+              original?.entityType !== 'folder' &&
+              original?.type !== 'folder'
+            )
+          }).length
         }
         depth={row.depth}
         isExpanded={row.getIsExpanded()}
