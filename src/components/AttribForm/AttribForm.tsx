@@ -68,19 +68,19 @@ const AttribForm: React.FC<AttribFormProps> = ({
       //   check if we need to use the default value
       switch (field.type) {
         case 'string':
-          value = value ?? field.default ?? ''
+          value = value ?? field['default'] ?? ''
           break
         case 'number':
-          value = value ?? field.default ?? 0
+          value = value ?? field['default'] ?? 0
           break
         case 'boolean':
-          value = value ?? field.default ?? false
+          value = value ?? field['default'] ?? false
           break
         case 'array':
-          value = value ?? field.default ?? []
+          value = value ?? field['default'] ?? []
           break
         default:
-          value = value ?? field.default ?? undefined
+          value = value ?? field['default'] ?? undefined
           break
       }
 

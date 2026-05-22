@@ -36,8 +36,8 @@ const updateChangedKeys = (props: $Any, changed: $Any, path: $Any) => {
 
 const getDefaultValue = (props: $Any) => {
   if (props.schema.widget === 'color' && !props.value) {
-    if (props.schema.default) {
-      return props.schema.default
+    if (props.schema['default']) {
+      return props.schema['default']
     }
     if (props.schema.colorFormat === 'hex') {
       return props.schema.colorAlpha ? '#00000000' : '#000000'
@@ -49,15 +49,15 @@ const getDefaultValue = (props: $Any) => {
   }
 
   if (props.schema.type === 'boolean') {
-    return props.schema.default || false
+    return props.schema['default'] || false
   }
 
   if (props.schema.type === 'string') {
-    return props.schema.default || ''
+    return props.schema['default'] || ''
   }
 
   if (props.schema.type === 'integer') {
-    return props.schema.default || 0
+    return props.schema['default'] || 0
   }
 }
 export { getDefaultValue, equiv, parseContext, updateChangedKeys }

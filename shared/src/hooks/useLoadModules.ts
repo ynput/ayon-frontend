@@ -63,7 +63,7 @@ export const useLoadModules = <T extends any[]>(
       const result = await loadRemote<{ default: T[number] }>(`${remote}/${module}`, {
         from: 'runtime',
       })
-      updateResultWithLoaded(addon, remote, module, result?.default || fallback, minVersion)
+      updateResultWithLoaded(addon, remote, module, result?.['default'] || fallback, minVersion)
     } catch (error) {
       console.error('Error loading remote module', remote, module, error)
       throw error
