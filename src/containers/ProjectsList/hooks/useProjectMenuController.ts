@@ -153,16 +153,6 @@ export const useProjectMenuController = ({
     async (projectName: string, active: boolean) => {
       try {
         await updateProject({ projectName, projectPatchModel: { active } }).unwrap()
-
-        if (!active && !showArchived) {
-          const newSelection = selection.filter((selectedId) => selectedId !== projectName)
-          if (newSelection.length === 0 && projects.length > 0) {
-            const firstAvailable = projects.find((project) => project.name !== projectName)
-            onSelect(firstAvailable ? [firstAvailable.name] : [])
-          } else {
-            onSelect(newSelection)
-          }
-        }
       } catch (error: any) {
         toast.error(error?.data?.detail || 'Failed to update project state')
       }
