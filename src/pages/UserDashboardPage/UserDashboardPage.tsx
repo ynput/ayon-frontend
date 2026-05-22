@@ -6,14 +6,11 @@ import { Section } from '@ynput/ayon-react-components'
 import { useDispatch } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
-import { useListProjectsQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 import UserDashboardNoProjects from './UserDashboardNoProjects/UserDashboardNoProjects'
-import ProjectDashboard from '../ProjectDashboard'
 import NewProjectDialog from '../ProjectManagerPage/NewProjectDialog'
-import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
-import { confirmDelete } from '@shared/util'
 import { useGetDashboardAddonsQuery } from '@shared/api'
-import DashboardAddon from '@pages/ProjectDashboard/DashboardAddon'
+import DashboardAddon from './DashboardAddon'
 import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -31,6 +28,7 @@ import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
+import { ProjectsPage } from '@pages/ProjectsPage'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
 
@@ -93,6 +91,10 @@ const UserDashboardPage: React.FC = () => {
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
+  const {
+    projects: { all: projects },
+    isLoading: globalIsLoading,
+  } = useGlobalContext()
 
   //   redux states
   const dispatch = useDispatch()
@@ -112,8 +114,7 @@ const UserDashboardPage: React.FC = () => {
     { skip: !selectedProjectNames?.length },
   )
 
-  // get projects list
-  const { data: projects = [], isLoading: isLoadingProjects } = useListProjectsQuery({})
+  const isLoadingProjects = globalIsLoading.projects
 
   // attach projects: ['project_name'] to each projectInfo
   const projectsInfoWithProjects = useMemo(() => {
@@ -124,24 +125,6 @@ const UserDashboardPage: React.FC = () => {
     }
     return projectsInfoWithProjects
   }, [projectsInfo, isLoadingInfo])
-
-  // UPDATE/DELETE PROJECT
-  const [updateProject] = useUpdateProjectMutation()
-  const [deleteProject] = useDeleteProjectMutation()
-
-  const handleDeleteProject = (sel: string) => {
-    confirmDelete({
-      label: `Project: ${sel}`,
-      accept: async () => {
-        await deleteProject({ projectName: sel }).unwrap()
-        setSelectedProjects([])
-      },
-    })
-  }
-
-  const handleActivateProject = async (sel: string, active: boolean) => {
-    await updateProject({ projectName: sel, projectPatchModel: { active } }).unwrap()
-  }
 
   // Build pages configuration - single source of truth for navigation and components
   const pages: PageLink[] = useMemo(
@@ -163,13 +146,12 @@ const UserDashboardPage: React.FC = () => {
         isMultiSelect: true,
       },
       {
-        name: 'Dashboard',
-        path: '/dashboard/dashboard',
-        module: 'dashboard',
-        accessLevels: [],
-        component: <ProjectDashboard projectName={selectedProjectNames[0]} />,
-        showProjectList: true,
-        isMultiSelect: false,
+        name: 'Projects',
+        path: '/dashboard/projects',
+        module: 'projects',
+        viewType: 'projects-overview',
+        component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
+        showProjectList: false,
       },
       // Show bookings splash when planner addon is not installed;
       // when installed the remote page from the planner addon handles /dashboard/bookings
@@ -295,8 +277,6 @@ const UserDashboardPage: React.FC = () => {
                       selection={selectedProjects}
                       onSelect={setSelectedProjects}
                       onNewProject={() => setShowNewProject(true)}
-                      onDeleteProject={handleDeleteProject}
-                      onActivateProject={handleActivateProject}
                     />
                   </SplitterPanel>
                   <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
@@ -315,6 +295,7 @@ const UserDashboardPage: React.FC = () => {
               setShowNewProject(false)
               if (name) navigate(`/manageProjects/anatomy?project=${name}`)
             }}
+            redirect={module !== 'projects'}
           />
         )}
       </UserDashboardProvider>

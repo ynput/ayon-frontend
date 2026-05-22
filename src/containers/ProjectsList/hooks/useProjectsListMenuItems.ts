@@ -8,7 +8,7 @@ import {
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
 
-type Hidden = {
+export type Hidden = {
   search?: boolean
   'add-project'?: boolean
   'manage-projects'?: boolean
@@ -17,7 +17,10 @@ type Hidden = {
   'select-all'?: boolean
   'archive-project'?: boolean
   'delete-project'?: boolean
+  'delete-folder'?: boolean
   'edit-label'?: boolean
+  'edit-folder'?: boolean
+  'rename-folder'?: boolean
   'show-archived'?: boolean
   'create-folder'?: boolean
   'move-project'?: boolean
@@ -75,7 +78,7 @@ type MenuItem = {
   powerFeature?: string
 }
 
-type BuildMenuItems = (
+export type BuildMenuItems = (
   selection: string[],
   config?: { command?: boolean; dividers?: boolean; hidden?: Hidden },
 ) => MenuItem[]

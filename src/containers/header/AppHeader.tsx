@@ -173,6 +173,14 @@ const Header: React.FC = () => {
   return (
     <nav className="primary" onClick={handleNavClick}>
       <FlexWrapper>
+        {user.uiExposureLevel >= 500 && (
+          <ProjectsButton
+            icon="left_panel_open"
+            variant="nav"
+            onClick={() => handleToggleMenu('project')}
+          />
+        )}
+
         <Link to={'/dashboard/tasks'}>
           <HeaderButton
             icon="home"
@@ -180,17 +188,9 @@ const Header: React.FC = () => {
             variant="nav"
             className={clsx({ selected: location.pathname.startsWith('/dashboard') })}
             id="home-button"
+            iconProps={{ filled: true }}
           />
         </Link>
-
-        {user.uiExposureLevel >= 500 && (
-          <ProjectsButton
-            icon="event_list"
-            label="Projects"
-            variant="nav"
-            onClick={() => handleToggleMenu('project')}
-          />
-        )}
 
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </FlexWrapper>

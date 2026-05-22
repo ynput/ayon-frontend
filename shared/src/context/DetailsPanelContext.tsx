@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import React, { ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import { QueryFilter, UserModel, DetailsPanelEntityType } from '@shared/api'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SavedAnnotationMetadata } from '@shared/containers'
@@ -13,6 +6,7 @@ import { PowerpackFeature, usePowerpack } from './PowerpackContext'
 import { useURIContext } from './UriContext'
 import { useLocalStorage } from '@shared/hooks'
 import type { SubtasksManagerProps } from '@shared/components'
+import { DetailsPanelContext } from './DetailsPanelContextInstance'
 
 // High-level tabs for the details panel
 export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
@@ -125,9 +119,6 @@ export interface DetailsPanelContextType extends DetailsPanelContextProps {
   // powerpack
   onPowerFeature: (feature: PowerpackFeature) => void
 }
-
-// Create the context
-const DetailsPanelContext = createContext<DetailsPanelContextType | undefined>(undefined)
 
 // Provider component
 export interface DetailsPanelProviderProps extends DetailsPanelContextProps {

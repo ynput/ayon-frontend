@@ -1,4 +1,4 @@
-import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
+import { useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
 import { type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
 import {
   GetDefaultViewApiResponse,
@@ -87,9 +87,7 @@ export interface ViewsContextValue {
   dispatch: any // dispatch is used to dispatch api mutations in pp like the share one.
 }
 
-const DEFAULT_VIEW_ALIAS = "view"
-
-const ViewsContext = createContext<ViewsContextValue | null>(null)
+const DEFAULT_VIEW_ALIAS = 'view'
 
 export interface ViewsProviderProps {
   children: ReactNode
@@ -357,4 +355,5 @@ export const useViewsContext = (): ViewsContextValue => {
 }
 
 import { isViewStudioScope } from '../utils/isViewStudioScope'
+import { ViewsContext } from './ViewsContextInstance'
 export { isViewStudioScope }

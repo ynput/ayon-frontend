@@ -55,35 +55,16 @@ export const Thumbnail = ({
 
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
+
   useEffect(() => {
     if (url === '') {
       setLoaded(true)
       setError(true)
       return
     }
-    // Reset loaded and error states when src changes
+
     setLoaded(false)
     setError(false)
-    const imageUrl = src || `${url}`
-
-    // Function to fetch image and check status code
-    const fetchImage = async () => {
-      try {
-        const response = await fetch(imageUrl, { cache: 'force-cache' })
-        if (response.status === 200) {
-          setLoaded(true)
-        } else {
-          throw new Error('Image not OK')
-        }
-      } catch (error) {
-        setError(true) // Handle error (e.g., set error state)
-        setLoaded(true)
-      }
-    }
-
-    if (url) {
-      fetchImage()
-    }
   }, [url])
 
   return (
@@ -101,7 +82,18 @@ export const Thumbnail = ({
         <Icon style={{ color: color || undefined }} icon={icon || 'image'} className="type-icon" />
       )}
       {entityType && projectName && !isWrongEntity && hasIdentity && (
-        <Styled.Image alt={`Entity thumbnail ${entityId || projectName}`} src={url} />
+        <Styled.Image
+          alt={`Entity thumbnail ${entityId || projectName}`}
+          src={url}
+          onLoad={() => {
+            setLoaded(true)
+            setError(false)
+          }}
+          onError={() => {
+            setLoaded(true)
+            setError(true)
+          }}
+        />
       )}
       {hoverIcon && <Icon icon={hoverIcon} className="hover-icon" />}
     </Styled.Card>

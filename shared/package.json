@@ -89,6 +89,11 @@
       "types": "./dist/types/containers/EntityPickerDialog/index.d.ts",
       "import": "./dist/EntityPickerDialog.es.js",
       "require": "./dist/EntityPickerDialog.cjs.js"
+    },
+    "./ListTable": {
+      "types": "./dist/types/containers/ListTable/index.d.ts",
+      "import": "./dist/ListTable.es.js",
+      "require": "./dist/ListTable.cjs.js"
     }
   },
   "files": [

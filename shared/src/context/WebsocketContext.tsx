@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext, useCallback, useRef, useContext } from 'react'
+import { useEffect, useState, useCallback, useRef, useContext } from 'react'
 import { toast } from 'react-toastify'
 import { PubSub } from '@shared/util'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
@@ -7,14 +7,13 @@ import api from '@shared/api'
 import { RefreshToast } from '@shared/components'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { WebSocketLike } from 'react-use-websocket/dist/lib/types'
+import { SocketContext } from './WebsocketContextInstance'
 
 export type WebsocketContextType = {
   getWebSocket: () => WebSocketLike | null
   readyState: ReadyState
   serverRestartingVisible: boolean
 }
-
-export const SocketContext = createContext<WebsocketContextType | undefined>(undefined)
 
 const proto = window.location.protocol.replace('http', 'ws')
 const wsAddress = `${proto}//${window.location.host}/ws`

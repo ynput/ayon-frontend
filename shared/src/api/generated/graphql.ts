@@ -26,7 +26,6 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -291,6 +290,7 @@ export type FolderAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -299,6 +299,7 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type FolderEdge = {
@@ -661,6 +662,7 @@ export type ProjectAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -681,6 +683,33 @@ export type ProjectEdge = {
   __typename?: 'ProjectEdge';
   cursor?: Maybe<Scalars['String']['output']>;
   node: ProjectNode;
+};
+
+export type ProjectLinkEdge = {
+  __typename?: 'ProjectLinkEdge';
+  author?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  cursor?: Maybe<Scalars['String']['output']>;
+  data: Scalars['JSON']['output'];
+  id: Scalars['String']['output'];
+  inputId: Scalars['String']['output'];
+  /** Input node */
+  inputNode?: Maybe<BaseNode>;
+  inputType: Scalars['String']['output'];
+  linkType: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  outputId: Scalars['String']['output'];
+  /** Output node */
+  outputNode?: Maybe<BaseNode>;
+  outputType: Scalars['String']['output'];
+  projectName: Scalars['String']['output'];
+};
+
+export type ProjectLinksConnection = {
+  __typename?: 'ProjectLinksConnection';
+  edges: Array<ProjectLinkEdge>;
+  /** Pagination information */
+  pageInfo: PageInfo;
 };
 
 export type ProjectNode = {
@@ -708,6 +737,8 @@ export type ProjectNode = {
   library: Scalars['Boolean']['output'];
   /** List of project's link types */
   linkTypes: Array<LinkType>;
+  /** List all links in the project, with optional filters. */
+  links: ProjectLinksConnection;
   name: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   product?: Maybe<ProductNode>;
@@ -760,6 +791,7 @@ export type ProjectNodeActivitiesArgs = {
   entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
   entityNames?: InputMaybe<Array<Scalars['String']['input']>>;
   entityType?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -823,6 +855,21 @@ export type ProjectNodeFoldersArgs = {
 
 export type ProjectNodeLinkTypesArgs = {
   activeOnly?: Scalars['Boolean']['input'];
+};
+
+
+export type ProjectNodeLinksArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  first?: Scalars['Int']['input'];
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  inputIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  inputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  nameEx?: InputMaybe<Scalars['String']['input']>;
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+  outputIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  outputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 
@@ -1061,6 +1108,7 @@ export type QueryUsersArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   emails?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  isSupport?: InputMaybe<Scalars['Boolean']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1204,6 +1252,7 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type TaskEdge = {
@@ -1365,6 +1414,8 @@ export type UserNode = {
   deleted: Scalars['Boolean']['output'];
   disablePasswordLogin: Scalars['Boolean']['output'];
   hasPassword: Scalars['Boolean']['output'];
+  inviteAcceptedAt?: Maybe<Scalars['DateTime']['output']>;
+  inviteSentAt?: Maybe<Scalars['DateTime']['output']>;
   isAdmin: Scalars['Boolean']['output'];
   isDeveloper: Scalars['Boolean']['output'];
   isGuest: Scalars['Boolean']['output'];
@@ -1783,6 +1834,16 @@ export type GetProjectLatestQueryVariables = Exact<{
 
 export type GetProjectLatestQuery = { __typename?: 'Query', project: { __typename?: 'ProjectNode', name: string } };
 
+export type GetProjectsQueryVariables = Exact<{
+  last?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetProjectsQuery = { __typename?: 'Query', projects: { __typename?: 'ProjectsConnection', edges: Array<{ __typename?: 'ProjectEdge', cursor?: string | null, node: { __typename?: 'ProjectNode', allAttrib: string, active: boolean, code: string, color?: string | null, createdAt: any, label?: string | null, library: boolean, name: string, projectFolder?: string | null, projectName: string, skeleton: boolean, updatedAt: any } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } };
+
+export type ProjectFragmentFragment = { __typename?: 'ProjectNode', allAttrib: string, active: boolean, code: string, color?: string | null, createdAt: any, label?: string | null, library: boolean, name: string, projectFolder?: string | null, projectName: string, skeleton: boolean, updatedAt: any };
+
 export type GetKanbanQueryVariables = Exact<{
   projects?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
   assignees?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
@@ -2186,6 +2247,22 @@ export const TaskPropsFragmentFragmentDoc = new TypedDocumentString(`
   endDate
   isDone
 }`, {"fragmentName":"TaskPropsFragment"});
+export const ProjectFragmentFragmentDoc = new TypedDocumentString(`
+    fragment ProjectFragment on ProjectNode {
+  allAttrib
+  active
+  code
+  color
+  createdAt
+  label
+  library
+  name
+  projectFolder
+  projectName
+  skeleton
+  updatedAt
+}
+    `, {"fragmentName":"ProjectFragment"});
 export const KanbanFragmentFragmentDoc = new TypedDocumentString(`
     fragment KanbanFragment on KanbanNode {
   id
@@ -3125,6 +3202,37 @@ export const GetProjectLatestDocument = new TypedDocumentString(`
   }
 }
     `);
+export const GetProjectsDocument = new TypedDocumentString(`
+    query GetProjects($last: Int, $before: String) {
+  projects(last: $last, before: $before, includeSkeleton: true) {
+    edges {
+      cursor
+      node {
+        ...ProjectFragment
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+      hasPreviousPage
+      startCursor
+    }
+  }
+}
+    fragment ProjectFragment on ProjectNode {
+  allAttrib
+  active
+  code
+  color
+  createdAt
+  label
+  library
+  name
+  projectFolder
+  projectName
+  skeleton
+  updatedAt
+}`);
 export const GetKanbanDocument = new TypedDocumentString(`
     query GetKanban($projects: [String!], $assignees: [String!]) {
   kanban(projects: $projects, assigneesAny: $assignees, last: 2000) {
@@ -3773,6 +3881,9 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     GetProjectLatest: build.query<GetProjectLatestQuery, GetProjectLatestQueryVariables>({
       query: (variables) => ({ document: GetProjectLatestDocument, variables })
+    }),
+    GetProjects: build.query<GetProjectsQuery, GetProjectsQueryVariables | void>({
+      query: (variables) => ({ document: GetProjectsDocument, variables })
     }),
     GetKanban: build.query<GetKanbanQuery, GetKanbanQueryVariables | void>({
       query: (variables) => ({ document: GetKanbanDocument, variables })
