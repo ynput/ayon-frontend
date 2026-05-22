@@ -8,12 +8,38 @@ import { Button, InputPassword, Panel } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import LoginTerms from './LoginPage/LoginTerms'
 
+const AcceptInviteSkeleton = ({ logo }: { logo?: string }) => (
+  <>
+    {logo && (
+      <Styled.Logo
+        src={logo}
+        style={{ maxWidth: '100%', height: 'auto', maxHeight: 64, objectFit: 'contain' }}
+      />
+    )}
+    <Styled.Title className="loading">You have been invited to join AYON</Styled.Title>
+    <Styled.SubTitle className="loading">
+      Please set a password to finish activating your account and log in.
+    </Styled.SubTitle>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 'var(--base-gap-large)' }}>
+      <InputPassword className="loading" placeholder="Enter your new password" readOnly />
+      <InputPassword className="loading" placeholder="Confirm your new password" readOnly />
+      <Styled.Note className="loading">
+        Password must be at least 8 characters and contain digits and special characters.
+      </Styled.Note>
+      <Button className="loading" variant="filled" disabled>
+        Set password and log in
+      </Button>
+    </div>
+  </>
+)
+
 interface AcceptInviteFormProps {
   token: string
   logo?: string
+  ssoLabel?: string
 }
 
-const AcceptInviteForm = ({ token, logo }: AcceptInviteFormProps) => {
+const AcceptInviteForm = ({ token, logo, ssoLabel }: AcceptInviteFormProps) => {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(true)
@@ -31,7 +57,7 @@ const AcceptInviteForm = ({ token, logo }: AcceptInviteFormProps) => {
   }, [token, acceptInvite])
 
   if (loading) {
-    return <p>Loading...</p>
+    return <AcceptInviteSkeleton logo={logo} />
   }
 
   if (!tokenOk) {
@@ -105,6 +131,11 @@ const AcceptInviteForm = ({ token, logo }: AcceptInviteFormProps) => {
         <Button type="submit" variant="filled" disabled={!password || password !== confirmPassword}>
           Set password and log in
         </Button>
+        {ssoLabel && (
+          <Styled.Note style={{ textAlign: 'center' }}>
+            Or <a href="/login">{ssoLabel}</a> instead.
+          </Styled.Note>
+        )}
         <LoginTerms />
       </form>
     </>
@@ -116,9 +147,15 @@ const AcceptInvitePage = () => {
   const token = urlParams.get('token')
 
   const { data: info, isLoading: isLoadingInfo } = useGetSiteInfoQuery({ full: true })
-  const { loginPageBrand = '', loginPageBackground = '' } = info || {}
-
-  if (isLoadingInfo) return 'Loading...'
+  const { loginPageBrand = '', loginPageBackground = '', ssoOptions = [] } = info || {}
+  const visibleSso = ssoOptions.filter((opt) => !opt.hidden)
+  const capitalize = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s)
+  const ssoLabel =
+    visibleSso.length === 1
+      ? capitalize(visibleSso[0].title || `sign in with ${visibleSso[0].name}`)
+      : visibleSso.length > 1
+        ? 'Use another sign-in method'
+        : undefined
 
   return (
     <>
@@ -128,8 +165,10 @@ const AcceptInvitePage = () => {
         <Styled.AyonNav src="/AYON.svg" />
         <Styled.LoginForm>
           <Panel>
-            {token ? (
-              <AcceptInviteForm token={token} logo={loginPageBrand || '/AYON.svg'} />
+            {isLoadingInfo ? (
+              <AcceptInviteSkeleton logo="/AYON.svg" />
+            ) : token ? (
+              <AcceptInviteForm token={token} logo={loginPageBrand || '/AYON.svg'} ssoLabel={ssoLabel} />
             ) : (
               <>
                 <h1>Missing invite token</h1>

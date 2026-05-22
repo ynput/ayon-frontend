@@ -23,32 +23,16 @@ const Pill = styled.span<{ $state: Exclude<InvitationState, 'none'> }>`
   display: inline-flex;
   align-items: center;
   gap: var(--base-gap-small);
-  height: 32px;
-  padding: 0 8px;
-  border-radius: var(--border-radius-m);
   font-size: 0.9rem;
   white-space: nowrap;
 
   .icon {
-    color: inherit;
+    ${({ $state }) => {
+      if ($state === 'pending') return `color: var(--md-sys-color-primary);`
+      if ($state === 'accepted') return `color: var(--md-sys-color-tertiary);`
+      return `color: var(--md-sys-color-warning);`
+    }}
   }
-
-  ${({ $state }) => {
-    if ($state === 'pending')
-      return `
-        background-color: var(--md-sys-color-primary-container);
-        color: var(--md-sys-color-on-primary-container);
-      `
-    if ($state === 'accepted')
-      return `
-        background-color: var(--md-sys-color-tertiary-container);
-        color: var(--md-sys-color-on-tertiary-container);
-      `
-    return `
-      background-color: var(--md-sys-color-warning-container);
-      color: var(--md-sys-color-on-warning-container);
-    `
-  }}
 `
 
 interface InvitationStatusProps {
