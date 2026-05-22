@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useStore } from 'react-redux'
 import { AttributeData, AttributeModel } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
+import { format, isValid, parseISO } from 'date-fns'
 import {
   ProjectThumbnailCell,
   THUMBNAIL_WIDTH,
@@ -61,6 +62,23 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     id: 'createdAt',
     header: 'Created at',
     size: 150,
+    cell: (info) => {
+      const val = info.getValue()
+      if (!val) return ''
+      const date = parseISO(val)
+      return isValid(date) ? format(date, 'dd MMM yyyy') : val
+    },
+  }),
+  columnHelper.accessor('updatedAt', {
+    id: 'updatedAt',
+    header: 'Updated at',
+    size: 150,
+    cell: (info) => {
+      const val = info.getValue()
+      if (!val) return ''
+      const date = parseISO(val)
+      return isValid(date) ? format(date, 'dd MMM yyyy') : val
+    },
   }),
 ]
 
@@ -106,6 +124,8 @@ export const useProjectColumns = (
       code: { type: 'string' },
       active: { type: 'boolean' },
       library: { type: 'boolean' },
+      createdAt: { type: 'datetime' },
+      updatedAt: { type: 'datetime' },
       ...columnAttribsAttributeData,
     }),
     [columnAttribsAttributeData],
@@ -118,6 +138,16 @@ export const useProjectColumns = (
           id: `attrib_${key}`,
           header: columnAttributeData[`attrib_${key}`]?.title || key,
           size: 150,
+          cell: (info) => {
+            const val = info.getValue()
+            if (val === undefined || val === null) return ''
+            const attribute = columnAttributeData[`attrib_${key}`]
+            if (attribute?.type === 'datetime') {
+              const date = parseISO(val)
+              return isValid(date) ? format(date, 'dd MMM yyyy') : val
+            }
+            return String(val)
+          },
           sortingFn: (rowA, rowB) => {
             const attribute = columnAttribsAttributeData[`attrib_${key}`]
             const valueA = rowA.original.attrib[key]
@@ -138,7 +168,7 @@ export const useProjectColumns = (
           },
         }),
       ),
-    [attribKeys, columnAttribsAttributeData],
+    [attribKeys, columnAttribsAttributeData, columnAttributeData],
   )
 
   const heartbeatColumn = useMemo<ColumnDef<ProjectTableRow, any>>(
