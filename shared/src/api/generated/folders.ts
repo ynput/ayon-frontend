@@ -325,6 +325,8 @@ export type FolderSearchRequest = {
   folderFilter?: QueryFilter
   /** 'fulltext' search used to resolve the folders */
   folderSearch?: string
+  /** Unified 'fulltext' search applied to both tasks and folders */
+  search?: string
 }
 export type HierarchyFolderModel = {
   /** Folder ID */
