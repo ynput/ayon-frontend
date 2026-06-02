@@ -156,6 +156,11 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
+  const SCOPES = useMemo(
+    () => (selectedList?.entityType ? [selectedList.entityType] : []),
+    [selectedList],
+  )
+
   return (
     <SettingsPanelProvider>
       <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
@@ -178,7 +183,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 showHierarchy={false}
                 isLoading={props.isLoadingAll}
                 contextMenuItems={contextMenuItems}
-                scopes={[selectedList?.entityType]}
+                scopes={SCOPES}
                 playerOpen={viewerOpen}
                 onOpenPlayer={handleOpenPlayer}
                 onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
