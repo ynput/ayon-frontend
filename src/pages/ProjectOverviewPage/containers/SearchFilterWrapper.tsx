@@ -12,7 +12,6 @@ import {
   SearchFilterProps,
   SearchFilterRef,
   SEARCH_FILTER_ID,
-  buildFilterId,
 } from '@ynput/ayon-react-components'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
@@ -486,45 +485,10 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                     return false // prevent SearchFilter from selecting this value
                   }
 
-                  // Auto-fill: if user typed text and then clicked a filter type,
-                  // create the filter with that text as value and prevent normal flow
-                  // (which would reopen the dropdown to the values panel)
-                  const searchInput = searchFilterRef.current
-                    ?.getContainerElement()
-                    ?.querySelector('.search-bar input') as HTMLInputElement
-                  const searchText = searchInput?.value?.trim() || ''
-
-                  if (searchText) {
-                    const optionId = listItem.id
-                    // Only for top-level filter types (no data-parent = not a value item)
-                    const parentAttr = listItem.getAttribute('data-parent')
-                    if (!parentAttr) {
-                      const matchingOption = options.find((o) => o.id === optionId)
-                      if (matchingOption?.allowsCustomValues) {
-                        const newId = buildFilterId(optionId)
-                        const parts = searchText
-                          .split(',')
-                          .map((s) => s.trim())
-                          .filter(Boolean)
-                        const values =
-                          parts.length > 1
-                            ? parts.map((v) => ({ id: v, label: v, isCustom: true }))
-                            : [{ id: searchText, label: searchText, isCustom: true }]
-                        const newFilter: Filter = {
-                          id: newId,
-                          label: matchingOption.label,
-                          type: matchingOption.type,
-                          icon: matchingOption.icon,
-                          values,
-                        }
-
-                        handleFinish([...localFilters, newFilter])
-                        searchFilterRef.current?.close()
-                        return false // prevent SearchFilter from reopening values panel
-                      }
-                    }
-                  }
-
+                  // Clicking a filter type opens its value panel (search clears) so
+                  // the typed text is treated as "find the filter", matching the
+                  // keyboard Enter flow. (Previously this auto-filled the typed text
+                  // as the value, e.g. "cust" -> Custom Id = "cust", which was a bug.)
                   return true
                 },
               },
