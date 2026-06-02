@@ -150,7 +150,10 @@ const convertConditionToFilter = (
       id: SEARCH_FILTER_ID,
       type: 'string',
       label: '',
-      values: valuesArray.map((v) => ({ id: String(v), label: String(v) })),
+      values: valuesArray.map((v) => {
+        const str = String(v)
+        return { id: str, label: str.replace(/%/g, '') }
+      }),
     }
 
     return filter

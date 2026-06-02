@@ -1,13 +1,15 @@
-import { FC, useEffect, useMemo, useState } from 'react'
-import { SearchFilter, Filter, Option, SearchFilterQuickAction } from '@ynput/ayon-react-components'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  SearchFilter,
+  Filter,
+  Option,
+  SearchFilterQuickAction,
+  SearchFilterRef,
+} from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import type { QueryFilter, ActivityCategory } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
-import {
-  feedFilterToClientFilters,
-  clientFiltersToFeedFilter,
-  FEED_QUICK_ACTION_KEYS,
-} from '../helpers/feedFilterAdapter'
+import { feedFilterToClientFilters, clientFiltersToFeedFilter } from '../helpers/feedFilterAdapter'
 
 const Wrapper = styled.div`
   padding: 4px 8px;
@@ -35,14 +37,82 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
   supportsReviewSession,
   isLoading,
 }) => {
+  const searchFilterRef = useRef<SearchFilterRef>(null)
+
   const options: Option[] = useMemo(() => {
     const opts: Option[] = [
       {
+        id: 'comments',
+        label: 'Comments',
+        icon: 'chat',
+        type: 'boolean' as const,
+        values: [],
+      },
+      {
+        id: 'versions',
+        label: 'Published versions',
+        icon: 'layers',
+        type: 'boolean' as const,
+        values: [],
+      },
+      {
+        id: 'updates',
+        label: 'Entity updates',
+        icon: 'arrow_circle_right',
+        type: 'boolean' as const,
+        values: [],
+      },
+      {
+        id: 'checklists',
+        label: 'Checklists',
+        icon: 'checklist',
+        type: 'boolean' as const,
+        values: [],
+      },
+      {
+        id: 'has_attachments',
+        label: 'Has attachments',
+        icon: 'attach_file',
+        type: 'boolean' as const,
+        values: [],
+      },
+      ...(supportsReviewSession
+        ? [
+            {
+              id: 'in_review_session',
+              label: 'In review session',
+              icon: 'subscriptions',
+              type: 'boolean' as const,
+              values: [],
+            },
+          ]
+        : []),
+      ...(categories.length
+        ? [
+            {
+              id: 'category',
+              label: 'Category',
+              icon: 'label',
+              type: 'list_of_strings' as const,
+              operator: 'OR' as const,
+              values: [
+                { id: '__none__', label: 'No category', icon: 'crop_square' },
+                ...categories.map((c) => ({
+                  id: c.name,
+                  label: c.name,
+                  icon: 'crop_square',
+                  color: c.color,
+                })),
+              ],
+            },
+          ]
+        : []),
+      {
         id: 'author',
         label: 'User',
-        type: 'list_of_strings',
         icon: 'person',
-        operator: 'OR',
+        type: 'list_of_strings' as const,
+        operator: 'OR' as const,
         values: users.map((u) => ({
           id: u.name,
           label: u.attrib?.fullName || u.name,
@@ -51,27 +121,8 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
       },
     ]
 
-    if (categories.length) {
-      opts.push({
-        id: 'category',
-        label: 'Category',
-        type: 'list_of_strings',
-        icon: 'label',
-        operator: 'OR',
-        values: [
-          { id: '__none__', label: 'No category', icon: 'crop_square' },
-          ...categories.map((c) => ({
-            id: c.name,
-            label: c.name,
-            icon: 'crop_square',
-            color: c.color,
-          })),
-        ],
-      })
-    }
-
     return opts
-  }, [users, categories])
+  }, [users, categories, supportsReviewSession])
 
   const filters = useMemo(() => feedFilterToClientFilters(feedFilter, options), [feedFilter, options])
 
@@ -81,39 +132,38 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
   }, [JSON.stringify(filters)])
 
   const handleFinish = (newFilters: Filter[]) => {
-    setFeedFilter(clientFiltersToFeedFilter(newFilters, feedFilter))
+    setFeedFilter(clientFiltersToFeedFilter(newFilters))
   }
 
-  const isQuickActive = (id: string) =>
-    !!feedFilter.conditions?.some((c) => 'key' in c && c.key === id && c.value === true)
+  const hasFilter = (key: string) =>
+    !!feedFilter.conditions?.some((c) => 'key' in c && c.key === key)
 
   const quickActions: SearchFilterQuickAction[] = useMemo(
-    () =>
-      [
-        { id: 'comments', icon: 'chat', tooltip: 'Comments' },
-        { id: 'checklists', icon: 'checklist', tooltip: 'Checklists' },
-        { id: 'versions', icon: 'layers', tooltip: 'Published versions' },
-        { id: 'updates', icon: 'arrow_circle_right', tooltip: 'Entity updates' },
-        { id: 'has_attachments', icon: 'attach_file', tooltip: 'Has attachments' },
-        ...(supportsReviewSession
-          ? [{ id: 'in_review_session', icon: 'subscriptions', tooltip: 'In review session' }]
-          : []),
-      ].map((a) => ({ ...a, active: isQuickActive(a.id) })),
-    [feedFilter, supportsReviewSession],
+    () => [
+      { id: 'checklists', icon: 'checklist', tooltip: 'Checklists', active: hasFilter('checklists') },
+      { id: 'author', icon: 'person', tooltip: 'User', active: hasFilter('author') },
+    ],
+    [feedFilter],
   )
 
   const handleQuickAction = (id: string) => {
-    if (!FEED_QUICK_ACTION_KEYS.includes(id)) return
-    const conditions = feedFilter.conditions ? [...feedFilter.conditions] : []
-    const index = conditions.findIndex((c) => 'key' in c && c.key === id)
-    if (index > -1) conditions.splice(index, 1)
-    else conditions.push({ key: id, operator: 'eq', value: true })
-    setFeedFilter({ ...feedFilter, operator: feedFilter.operator || 'and', conditions })
+    // checklist is a one-click on/off toggle
+    if (id === 'checklists') {
+      const conditions = feedFilter.conditions ? [...feedFilter.conditions] : []
+      const index = conditions.findIndex((c) => 'key' in c && c.key === 'checklists')
+      if (index > -1) conditions.splice(index, 1)
+      else conditions.push({ key: 'checklists', operator: 'eq', value: true })
+      setFeedFilter({ ...feedFilter, operator: feedFilter.operator || 'and', conditions })
+      return
+    }
+    // user opens the dropdown to pick values, like selecting it from the dropdown
+    searchFilterRef.current?.openFilter(id)
   }
 
   return (
     <Wrapper className={isLoading ? 'loading' : undefined}>
       <SearchFilter
+        ref={searchFilterRef}
         options={options}
         filters={localFilters}
         onChange={setLocalFilters}

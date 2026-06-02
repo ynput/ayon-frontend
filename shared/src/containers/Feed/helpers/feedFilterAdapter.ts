@@ -7,23 +7,23 @@ import {
 } from '@ynput/ayon-react-components'
 import type { QueryCondition, QueryFilter } from '@shared/api'
 
-// Keys rendered as quick-action toggle buttons (stored as boolean conditions),
-// not as SearchFilter chips. Activity-type toggles drive getFilterActivityTypes,
-// has_attachments / in_review_session are translated by buildBackendFilter.
-export const FEED_QUICK_ACTION_KEYS = [
+// On/off filters stored as boolean conditions ({ key, eq, true }). Activity-type
+// keys drive getFilterActivityTypes; has_attachments / in_review_session are
+// translated by buildBackendFilter. All shown as dropdown chips.
+export const FEED_BOOLEAN_KEYS = [
   'comments',
-  'checklists',
   'versions',
   'updates',
+  'checklists',
   'has_attachments',
   'in_review_session',
 ]
 
 const isCondition = (c: QueryCondition | QueryFilter): c is QueryCondition => !!c && 'key' in c
 
-// QueryFilter (feedFilter) -> Filter[] consumed by SearchFilter.
-// Quick-action booleans are skipped (rendered as buttons); body becomes global
-// search chips; author/category become enum chips.
+// QueryFilter (feedFilter) -> Filter[] for SearchFilter.
+// body -> global-search chips, boolean keys -> single-value "Yes" chips,
+// author/category -> enum chips.
 export const feedFilterToClientFilters = (
   feedFilter: QueryFilter | undefined,
   options: Option[],
@@ -35,7 +35,6 @@ export const feedFilterToClientFilters = (
     if (!node) return
     if (isCondition(node)) {
       const key = node.key
-      if (FEED_QUICK_ACTION_KEYS.includes(key)) return
       if (key === 'body') {
         const value = String(node.value ?? '')
         if (value) bodyValues.push({ id: value, label: value })
@@ -43,6 +42,21 @@ export const feedFilterToClientFilters = (
       }
       const option = options.find((o) => o.id === key)
       if (!option) return
+
+      if (FEED_BOOLEAN_KEYS.includes(key)) {
+        if (node.value === true) {
+          filters.push({
+            id: buildFilterId(key),
+            label: option.label,
+            icon: option.icon,
+            type: 'boolean',
+            singleSelect: true,
+            values: [{ id: 'true', label: 'Yes' }],
+          })
+        }
+        return
+      }
+
       const rawValues = Array.isArray(node.value) ? node.value : [node.value]
       filters.push({
         id: buildFilterId(key),
@@ -63,23 +77,15 @@ export const feedFilterToClientFilters = (
   feedFilter?.conditions?.forEach(walk)
 
   if (bodyValues.length) {
-    filters.unshift({ id: SEARCH_FILTER_ID, label: '', values: bodyValues })
+    filters.push({ id: SEARCH_FILTER_ID, label: '', values: bodyValues })
   }
 
   return filters
 }
 
-// Filter[] from SearchFilter -> QueryFilter, preserving the quick-action boolean
-// conditions already held in the previous feedFilter.
-export const clientFiltersToFeedFilter = (
-  clientFilters: Filter[],
-  prevFeedFilter: QueryFilter | undefined,
-): QueryFilter => {
-  const quickConditions = (prevFeedFilter?.conditions || []).filter(
-    (c) => isCondition(c) && FEED_QUICK_ACTION_KEYS.includes(c.key) && c.value === true,
-  )
-
-  const enumConditions: QueryCondition[] = []
+// Filter[] from SearchFilter -> QueryFilter (feedFilter UI representation).
+export const clientFiltersToFeedFilter = (clientFilters: Filter[]): QueryFilter => {
+  const conditions: (QueryCondition | QueryFilter)[] = []
   const bodyConditions: QueryCondition[] = []
 
   clientFilters.forEach((filter) => {
@@ -89,17 +95,15 @@ export const clientFiltersToFeedFilter = (
 
     if (key === SEARCH_FILTER_ID) {
       values.forEach((v) => bodyConditions.push({ key: 'body', operator: 'like', value: String(v) }))
+    } else if (FEED_BOOLEAN_KEYS.includes(key)) {
+      if (values.includes('true')) conditions.push({ key, operator: 'eq', value: true })
     } else {
-      enumConditions.push({ key, operator: 'in', value: values.map(String) })
+      conditions.push({ key, operator: 'in', value: values.map(String) })
     }
   })
 
-  let bodyNode: QueryCondition | QueryFilter | undefined
-  if (bodyConditions.length === 1) bodyNode = bodyConditions[0]
-  else if (bodyConditions.length > 1) bodyNode = { operator: 'or', conditions: bodyConditions }
+  if (bodyConditions.length === 1) conditions.push(bodyConditions[0])
+  else if (bodyConditions.length > 1) conditions.push({ operator: 'or', conditions: bodyConditions })
 
-  return {
-    operator: 'and',
-    conditions: [...quickConditions, ...enumConditions, ...(bodyNode ? [bodyNode] : [])],
-  }
+  return { operator: 'and', conditions }
 }
