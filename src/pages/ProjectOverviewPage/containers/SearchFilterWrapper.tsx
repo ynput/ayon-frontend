@@ -406,7 +406,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // controlled onChange inside SearchFilterDropdown
   const prefillDropdownSearch = (text: string) => {
     const container = searchFilterRef.current?.getContainerElement()
-    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    const input = container?.querySelector('.search-bar input') as HTMLInputElement | null
     if (!input) return
     const nativeSetter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
@@ -443,7 +443,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // chip's original values to onConfirmAndClose, discarding the typed edit.
   const attachSearchEditCommitHandlers = (chipId: string) => {
     const container = searchFilterRef.current?.getContainerElement()
-    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    const input = container?.querySelector('.search-bar input') as HTMLInputElement | null
     if (!container || !input) return
 
     // Confirm button: match the child <span icon="check"> and climb to <button>.
@@ -586,9 +586,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                   // Auto-fill: if user typed text and then clicked a filter type,
                   // create the filter with that text as value and prevent normal flow
                   // (which would reopen the dropdown to the values panel)
-                  const searchInput = listItem.parentElement?.querySelector(
-                    '.search input',
-                  ) as HTMLInputElement
+                  const searchInput = searchFilterRef.current
+                    ?.getContainerElement()
+                    ?.querySelector('.search-bar input') as HTMLInputElement
                   const searchText = searchInput?.value?.trim() || ''
 
                   if (searchText) {

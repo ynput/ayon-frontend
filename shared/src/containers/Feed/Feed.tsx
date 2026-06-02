@@ -15,53 +15,14 @@ import { isFilePreviewable } from './components/FileUploadPreview/FileUploadPrev
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import { useFeedContext, FEED_NEW_COMMENT } from './context/FeedContext'
 import { Status } from '../ProjectTreeTable/types/project'
-import { useDetailsPanelContext, FeedFilter } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanelEntityType, useGetMyProjectPermissionsQuery } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import { SavedAnnotationMetadata } from '.'
-import TabHeaderAndFilters, {
-  FilterItem,
-} from '../DetailsPanel/components/TabHeaderAndFilters/TabHeaderAndFilters'
+import FeedSearchFilter from './components/FeedSearchFilter'
 
 // number of activities to get
 export const activitiesLast = 30
-
-const baseFeedFilters: FilterItem<string>[] = [
-  {
-    id: 'body',
-    tooltip: 'Search in comments',
-    icon: 'search',
-    type: 'search',
-    operator: 'like',
-    placeholder: 'Search…',
-  },
-  {
-    id: 'comments',
-    tooltip: 'Comments',
-    icon: 'chat',
-  },
-  {
-    id: 'checklists',
-    tooltip: 'Checklists',
-    icon: 'checklist',
-    isShortcut: true,
-  },
-  {
-    id: 'versions',
-    tooltip: 'Published versions',
-    icon: 'layers',
-  },
-  {
-    id: 'updates',
-    tooltip: 'Entity updates',
-    icon: 'arrow_circle_right',
-  },
-  {
-    id: 'has_attachments',
-    tooltip: 'Has attachments',
-    icon: 'attach_file',
-  },
-]
 
 export type FeedProps = {
   disabled?: boolean
@@ -116,67 +77,7 @@ export const Feed = ({
     (c) => 'key' in c && (c.key === 'comments' || c.key === 'checklists') && c.value === true,
   )
 
-  const userOptions = useMemo(
-    () =>
-      users.map((u) => ({
-        value: u.name,
-        label: u.attrib?.fullName || u.name,
-        icon: `/api/users/${u.name}/avatar`,
-      })),
-    [users],
-  )
-
-  const categoryOptions = useMemo(
-    () => [
-      { value: '__none__', label: 'No category' },
-      ...categories.map((cat) => ({
-        value: cat.name,
-        label: cat.name,
-        icon: 'crop_square',
-        color: cat.color,
-      })),
-    ],
-    [categories],
-  )
-
   const supportsReviewSession = entityType === 'version' || entityType === 'folder'
-
-  const feedFilters: FilterItem<string>[] = useMemo(
-    () => [
-      ...baseFeedFilters,
-      ...(supportsReviewSession
-        ? [
-            {
-              id: 'in_review_session',
-              tooltip: 'In review session',
-              icon: 'subscriptions',
-            },
-          ]
-        : []),
-      ...(categories.length
-        ? [
-            {
-              id: 'category',
-              tooltip: 'Category',
-              icon: 'label',
-              type: 'enum' as const,
-              operator: 'in' as const,
-              options: categoryOptions,
-            },
-          ]
-        : []),
-      {
-        id: 'author',
-        tooltip: 'User',
-        icon: 'person',
-        type: 'enum',
-        operator: 'in',
-        options: userOptions,
-        isShortcut: true,
-      },
-    ],
-    [userOptions, supportsReviewSession, categories.length, categoryOptions],
-  )
 
   // check activities permission for commenting
   const {
@@ -380,10 +281,12 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <TabHeaderAndFilters<FeedFilter>
-          filters={feedFilters}
-          currentFilter={feedFilter}
-          onFilterChange={setFeedFilter}
+        <FeedSearchFilter
+          feedFilter={feedFilter}
+          setFeedFilter={setFeedFilter}
+          users={users}
+          categories={categories}
+          supportsReviewSession={supportsReviewSession}
           isLoading={isLoadingNew}
         />
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
