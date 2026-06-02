@@ -5,54 +5,54 @@ import { ScopeWithFilterTypes } from '@shared/components/SearchFilter/useBuildFi
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
 
+const SCOPES: ScopeWithFilterTypes[] = [
+  {
+    scope: 'version',
+    filterTypes: [
+      'status',
+      'tags',
+      'productType',
+      'productBaseType',
+      'author',
+      'attributes',
+      'version',
+      'hasReviewables',
+      'createdAt',
+      'updatedAt',
+    ],
+  },
+  {
+    scope: 'product',
+    filterTypes: [
+      'status',
+      'tags',
+      'attributes',
+      'productName',
+      'productBaseType',
+      'createdAt',
+      'updatedAt',
+    ],
+  },
+  {
+    scope: 'task',
+    filterTypes: [
+      'status',
+      'tags',
+      'taskType',
+      'assignees',
+      'attributes',
+      'createdAt',
+      'updatedAt',
+    ],
+  },
+]
+
 interface VPSearchFilterProps {}
 
 const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
   const { projectName, ...projectInfo } = useProjectContext()
   const { filters, onUpdateFilters } = useVPViewsContext()
   const { productsMap, versionsMap } = useVersionsDataContext()
-
-  const scopesConfig: ScopeWithFilterTypes[] = [
-    {
-      scope: 'version',
-      filterTypes: [
-        'status',
-        'tags',
-        'productType',
-        'productBaseType',
-        'author',
-        'attributes',
-        'version',
-        'hasReviewables',
-        'createdAt',
-        'updatedAt',
-      ],
-    },
-    {
-      scope: 'product',
-      filterTypes: [
-        'status',
-        'tags',
-        'attributes',
-        'productName',
-        'productBaseType',
-        'createdAt',
-        'updatedAt',
-      ],
-    },
-    {
-      scope: 'task',
-      filterTypes: [
-        'status',
-        'tags',
-        'taskType',
-        'assignees',
-        'attributes',
-        'createdAt',
-        'updatedAt',
-      ],
-    },
-  ]
 
   const data = useMemo(
     () => ({
@@ -67,9 +67,7 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
         ...new Set(
           (productsMap.size
             ? Array.from(productsMap.values()).map((product) => product.productBaseType)
-            : Array.from(versionsMap.values()).map(
-                (version) => version.product.productBaseType,
-              )
+            : Array.from(versionsMap.values()).map((version) => version.product.productBaseType)
           ).filter((v): v is string => !!v),
         ),
       ],
@@ -82,7 +80,7 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
       // @ts-ignore
       queryFilters={filters}
       onChange={onUpdateFilters}
-      scopes={scopesConfig}
+      scopes={SCOPES}
       projectNames={[projectName]}
       projectInfo={projectInfo}
       data={data}
