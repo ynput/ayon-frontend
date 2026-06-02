@@ -119,9 +119,8 @@ export const useFetchOverviewData = ({
       projectName,
       folderSearchRequest: {
         taskFilter: taskFilters.filter?.conditions?.length ? taskFilters.filter : undefined,
-        taskSearch: taskFilters.search,
         folderFilter: folderFilters.filter?.conditions?.length ? folderFilters.filter : undefined,
-        folderSearch: folderFilters.search,
+        search: taskFilters.search,
       },
     },
     {
@@ -468,7 +467,10 @@ export const useFetchOverviewData = ({
       }
 
       if (tasksByFolderMap.has(folderId)) {
-        tasksByFolderMap.get(folderId)!.push(taskId)
+        // dedup like tasksMap — resolvedTasks can contain the same task twice
+        // (overlapping infinite-query pages, or a task in multiple groups)
+        const folderTaskIds = tasksByFolderMap.get(folderId)!
+        if (!folderTaskIds.includes(taskId)) folderTaskIds.push(taskId)
       } else {
         tasksByFolderMap.set(folderId, [taskId])
       }
