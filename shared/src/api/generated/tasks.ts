@@ -10,10 +10,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateTask: build.mutation<UpdateTaskApiResponse, UpdateTaskApiArg>({
@@ -21,10 +17,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
         method: 'PATCH',
         body: queryArg.taskPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     createTask: build.mutation<CreateTaskApiResponse, CreateTaskApiArg>({
@@ -32,10 +24,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/tasks`,
         method: 'POST',
         body: queryArg.taskPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     assignUsersToTask: build.mutation<AssignUsersToTaskApiResponse, AssignUsersToTaskApiArg>({
@@ -83,22 +71,16 @@ export type DeleteTaskApiResponse = unknown
 export type DeleteTaskApiArg = {
   projectName: string
   taskId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type UpdateTaskApiResponse = unknown
 export type UpdateTaskApiArg = {
   projectName: string
   taskId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   taskPatchModel: TaskPatchModel
 }
 export type CreateTaskApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateTaskApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   taskPostModel: TaskPostModel
 }
 export type AssignUsersToTaskApiResponse = unknown
@@ -148,6 +130,15 @@ export type TaskAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  airtableId?: string
+  airtablePath?: string
+  ftrackId?: string
+  ftrackPath?: string
+  jiraCurrentPhase?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
 }
 export type TaskModel = {
   /** Unique identifier of the {entity_name} */

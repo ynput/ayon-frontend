@@ -6,9 +6,9 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/files`,
         method: 'POST',
         headers: {
-          'x-file-id': queryArg['x-file-id'],
+          'X-File-ID': queryArg['X-File-ID'],
+          'X-Activity-ID': queryArg['X-Activity-ID'],
           'x-file-name': queryArg['x-file-name'],
-          'x-activity-id': queryArg['x-activity-id'],
           'content-type': queryArg['content-type'],
         },
       }),
@@ -67,9 +67,9 @@ export type UploadProjectFileApiResponse =
   /** status 201 Successful Response */ CreateFileResponseModel
 export type UploadProjectFileApiArg = {
   projectName: string
-  'x-file-id'?: string
+  'X-File-ID'?: string
+  'X-Activity-ID'?: string
   'x-file-name': string
-  'x-activity-id'?: string
   'content-type': string
 }
 export type GetProjectFileApiResponse = /** status 200 Successful Response */ any

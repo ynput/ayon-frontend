@@ -81,6 +81,11 @@ export type EnumItem = {
   /** Icon name (material symbol) or IconModel object */
   icon?: string | IconModel
   color?: string
+  shortName?: string
+  /** Enum item is visible, but not selectable */
+  disabled?: boolean
+  /** Message to show when the option is disabled */
+  disabledMessage?: string
 }
 export type AttributeData = {
   /** Type of attribute value */

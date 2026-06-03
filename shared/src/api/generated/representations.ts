@@ -23,10 +23,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateRepresentation: build.mutation<
@@ -37,10 +33,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
         method: 'PATCH',
         body: queryArg.representationPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     createRepresentation: build.mutation<
@@ -51,10 +43,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/representations`,
         method: 'POST',
         body: queryArg.representationPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
@@ -76,22 +64,16 @@ export type DeleteRepresentationApiResponse = unknown
 export type DeleteRepresentationApiArg = {
   projectName: string
   representationId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type UpdateRepresentationApiResponse = unknown
 export type UpdateRepresentationApiArg = {
   projectName: string
   representationId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   representationPatchModel: RepresentationPatchModel
 }
 export type CreateRepresentationApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateRepresentationApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   representationPostModel: RepresentationPostModel
 }
 export type LookupResponseModel = {

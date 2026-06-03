@@ -33,6 +33,8 @@ import buildTreeTableColumns, {
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
+import { TableFooter, mockColumnSummaries } from './components/TableFooter'
+import type { MainCountSummary } from './components/TableFooter'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -149,6 +151,7 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
+  showColumnSummaries?: boolean // render the fixed summary footer row (UI-first, mock data)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   pt?: {
@@ -176,6 +179,7 @@ export const ProjectTreeTable = ({
   onRowReorder,
   dndActiveId, // Destructure new prop
   columnsConfig,
+  showColumnSummaries = false,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   pt,
@@ -194,6 +198,8 @@ export const ProjectTreeTable = ({
     columnVisibilityOnChange,
     columnOrderOnChange,
     groupBy,
+    columnSummaries,
+    updateColumnSummary,
   } = useColumnSettingsContext()
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
@@ -496,6 +502,48 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
+  // UI-first column summaries (mock data until backend column_metadata lands).
+  const columnSummaryData = useMemo(() => {
+    if (!showColumnSummaries) return null
+    const columnIds = visibleColumns.map((c) => c.id)
+    const isAttributeGroup = isGrouping && !showHierarchy
+    const isVersions = scopes.includes('version')
+
+    let groups = 0
+    let leaves = 0
+    const walk = (rows: TableRow[]) => {
+      for (const r of rows) {
+        if (r.entityType === 'folder' || r.entityType === 'group') groups++
+        else leaves++
+        if (r.subRows?.length) walk(r.subRows)
+      }
+    }
+    walk(tableData)
+
+    const mainCount: MainCountSummary = {
+      groups,
+      tasks: leaves,
+      groupLabel: isAttributeGroup ? 'groups' : isVersions ? 'products' : 'folders',
+      taskLabel: isVersions ? 'versions' : 'tasks',
+    }
+    const summaries = mockColumnSummaries({
+      columnIds,
+      attribs: attribFields,
+      options,
+      total: leaves || 1,
+    })
+    return { mainCount, summaries }
+  }, [
+    showColumnSummaries,
+    visibleColumns,
+    tableData,
+    isGrouping,
+    showHierarchy,
+    scopes,
+    attribFields,
+    options,
+  ])
+
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
@@ -652,6 +700,19 @@ export const ProjectTreeTable = ({
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
             />
+            {showColumnSummaries && columnSummaryData && (
+              <TableFooter
+                columnVirtualizer={columnVirtualizer}
+                table={table}
+                virtualPaddingLeft={virtualPaddingLeft}
+                virtualPaddingRight={virtualPaddingRight}
+                attribs={attribFields}
+                summaries={columnSummaryData.summaries}
+                mainCount={columnSummaryData.mainCount}
+                calcByColumn={columnSummaries}
+                onCalcChange={updateColumnSummary}
+              />
+            )}
           </table>
         </Styled.TableContainer>
       </Styled.TableWrapper>

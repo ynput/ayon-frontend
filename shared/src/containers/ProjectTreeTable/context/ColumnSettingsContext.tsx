@@ -8,6 +8,7 @@ import {
   SortingState,
 } from '@tanstack/react-table'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
+import { SummaryCalc } from '../components/TableFooter/summaryTypes'
 
 export interface TableGroupBy {
   desc: boolean
@@ -19,6 +20,8 @@ export type ColumnsConfig = {
   columnOrder: ColumnOrderState
   columnPinning: ColumnPinningState
   columnSizing: ColumnSizingState
+  // per-column summary footer calc type, keyed by column id
+  columnSummaries?: Record<string, SummaryCalc>
   sorting?: SortingState
   groupBy?: TableGroupBy
   groupByConfig?: {
@@ -53,6 +56,10 @@ export interface ColumnSettingsContextType {
   columnSizing: ColumnSizingState
   setColumnSizing: (columnSizing: ColumnSizingState) => void
   columnSizingOnChange: OnChangeFn<ColumnSizingState>
+
+  // Column summary calc type (footer)
+  columnSummaries: Record<string, SummaryCalc>
+  updateColumnSummary: (columnId: string, calc: SummaryCalc) => void
 
   // Sorting
   sorting: SortingState

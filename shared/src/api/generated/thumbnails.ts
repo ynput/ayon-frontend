@@ -109,6 +109,27 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProjectThumbnail: build.query<GetProjectThumbnailApiResponse, GetProjectThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
+        },
+      }),
+    }),
+    createProjectThumbnail: build.mutation<
+      CreateProjectThumbnailApiResponse,
+      CreateProjectThumbnailApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/thumbnail`,
+        method: 'POST',
+        headers: {
+          'content-type': queryArg['content-type'],
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -186,6 +207,18 @@ export type CreateTaskThumbnailApiResponse =
 export type CreateTaskThumbnailApiArg = {
   projectName: string
   taskId: string
+  'content-type'?: string
+}
+export type GetProjectThumbnailApiResponse = /** status 200 Successful Response */ any
+export type GetProjectThumbnailApiArg = {
+  projectName: string
+  placeholder?: 'empty' | 'none'
+  original?: boolean
+}
+export type CreateProjectThumbnailApiResponse =
+  /** status 201 Successful Response */ CreateThumbnailResponseModel
+export type CreateProjectThumbnailApiArg = {
+  projectName: string
   'content-type'?: string
 }
 export type CreateThumbnailResponseModel = {

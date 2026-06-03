@@ -81,6 +81,8 @@ export type YnputCloudInfoModel = {
   subscriptions?: YnputCloudSubscriptionModel[]
   /** Is the instance connected to Ynput Cloud? */
   connected?: boolean
+  /** AYON is in offline mode */
+  offlineMode?: boolean
 }
 export type ValidationError = {
   loc: (string | number)[]

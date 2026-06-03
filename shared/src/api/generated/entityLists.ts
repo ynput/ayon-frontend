@@ -6,7 +6,7 @@ const injectedRtkApi = api.injectEndpoints({
       GetEntityListAttributesDefinitionApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/attributes`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/attributes`,
       }),
     }),
     setEntityListAttributesDefinition: build.mutation<
@@ -14,14 +14,14 @@ const injectedRtkApi = api.injectEndpoints({
       SetEntityListAttributesDefinitionApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/attributes`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/attributes`,
         method: 'PUT',
         body: queryArg.payload,
       }),
     }),
     getListEntities: build.query<GetListEntitiesApiResponse, GetListEntitiesApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/entities`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/entities`,
       }),
     }),
     getEntityListFolders: build.query<GetEntityListFoldersApiResponse, GetEntityListFoldersApiArg>({
@@ -35,10 +35,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/entityListFolders`,
         method: 'POST',
         body: queryArg.entityListFolderPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     deleteEntityListFolder: build.mutation<
@@ -48,10 +44,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/entityListFolders/${queryArg.folderId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateEntityListFolder: build.mutation<
@@ -62,10 +54,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/entityListFolders/${queryArg.folderId}`,
         method: 'PATCH',
         body: queryArg.entityListFolderPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     setEntityListFoldersOrder: build.mutation<
@@ -76,10 +64,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/entityListFolders/order`,
         method: 'POST',
         body: queryArg.entityListFolderOrderModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     createEntityListItem: build.mutation<
@@ -87,9 +71,32 @@ const injectedRtkApi = api.injectEndpoints({
       CreateEntityListItemApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/items`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/items`,
         method: 'POST',
         body: queryArg.entityListItemPostModel,
+      }),
+    }),
+    deleteEntityListItem: build.mutation<
+      DeleteEntityListItemApiResponse,
+      DeleteEntityListItemApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/items/${queryArg.entityListItemId}`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
+    }),
+    updateEntityListItem: build.mutation<
+      UpdateEntityListItemApiResponse,
+      UpdateEntityListItemApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/items/${queryArg.entityListItemId}`,
+        method: 'PATCH',
+        body: queryArg.entityListItemPatchModel,
         headers: {
           'x-sender': queryArg['x-sender'],
           'x-sender-type': queryArg['x-sender-type'],
@@ -110,47 +117,16 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    deleteEntityListItem: build.mutation<
-      DeleteEntityListItemApiResponse,
-      DeleteEntityListItemApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/items/${queryArg.listItemId}`,
-        method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
-      }),
-    }),
-    updateEntityListItem: build.mutation<
-      UpdateEntityListItemApiResponse,
-      UpdateEntityListItemApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/items/${queryArg.listItemId}`,
-        method: 'PATCH',
-        body: queryArg.entityListItemPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
-      }),
-    }),
     createEntityList: build.mutation<CreateEntityListApiResponse, CreateEntityListApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/lists`,
         method: 'POST',
         body: queryArg.entityListPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     getEntityList: build.query<GetEntityListApiResponse, GetEntityListApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}`,
         params: {
           metadata_only: queryArg.metadataOnly,
         },
@@ -158,23 +134,15 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     deleteEntityList: build.mutation<DeleteEntityListApiResponse, DeleteEntityListApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateEntityList: build.mutation<UpdateEntityListApiResponse, UpdateEntityListApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}`,
         method: 'PATCH',
         body: queryArg.entityListPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     materializeEntityList: build.mutation<
@@ -182,12 +150,8 @@ const injectedRtkApi = api.injectEndpoints({
       MaterializeEntityListApiArg
     >({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/materialize`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/materialize`,
         method: 'POST',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
@@ -197,18 +161,18 @@ export { injectedRtkApi as api }
 export type GetEntityListAttributesDefinitionApiResponse =
   /** status 200 Successful Response */ EntityListAttributeDefinition[]
 export type GetEntityListAttributesDefinitionApiArg = {
-  listId: string
+  entityListId: string
   projectName: string
 }
 export type SetEntityListAttributesDefinitionApiResponse = /** status 200 Successful Response */ any
 export type SetEntityListAttributesDefinitionApiArg = {
-  listId: string
+  entityListId: string
   projectName: string
   payload: EntityListAttributeDefinition[]
 }
 export type GetListEntitiesApiResponse = /** status 200 Successful Response */ EntityListEnities
 export type GetListEntitiesApiArg = {
-  listId: string
+  entityListId: string
   projectName: string
 }
 export type GetEntityListFoldersApiResponse =
@@ -220,39 +184,46 @@ export type CreateEntityListFolderApiResponse =
   /** status 200 Successful Response */ EntityIdResponse
 export type CreateEntityListFolderApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   entityListFolderPostModel: EntityListFolderPostModel
 }
 export type DeleteEntityListFolderApiResponse = /** status 200 Successful Response */ any
 export type DeleteEntityListFolderApiArg = {
   projectName: string
   folderId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type UpdateEntityListFolderApiResponse = /** status 200 Successful Response */ any
 export type UpdateEntityListFolderApiArg = {
   projectName: string
   folderId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   entityListFolderPatchModel: EntityListFolderPatchModel
 }
 export type SetEntityListFoldersOrderApiResponse = /** status 200 Successful Response */ any
 export type SetEntityListFoldersOrderApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   entityListFolderOrderModel: EntityListFolderOrderModel
 }
 export type CreateEntityListItemApiResponse = /** status 201 Successful Response */ any
 export type CreateEntityListItemApiArg = {
-  listId: string
   projectName: string
+  entityListId: string
+  entityListItemPostModel: EntityListItemPostModel
+}
+export type DeleteEntityListItemApiResponse = /** status 200 Successful Response */ any
+export type DeleteEntityListItemApiArg = {
+  projectName: string
+  entityListId: string
+  entityListItemId: string
   'x-sender'?: string
   'x-sender-type'?: string
-  entityListItemPostModel: EntityListItemPostModel
+}
+export type UpdateEntityListItemApiResponse = /** status 200 Successful Response */ any
+export type UpdateEntityListItemApiArg = {
+  projectName: string
+  entityListId: string
+  entityListItemId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
+  entityListItemPatchModel: EntityListItemPatchModel
 }
 export type UpdateEntityListItemsApiResponse = /** status 200 Successful Response */ any
 export type UpdateEntityListItemsApiArg = {
@@ -262,59 +233,34 @@ export type UpdateEntityListItemsApiArg = {
   'x-sender-type'?: string
   entityListMultiPatchModel: EntityListMultiPatchModel
 }
-export type DeleteEntityListItemApiResponse = /** status 200 Successful Response */ any
-export type DeleteEntityListItemApiArg = {
-  listId: string
-  listItemId: string
-  projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
-}
-export type UpdateEntityListItemApiResponse = /** status 200 Successful Response */ any
-export type UpdateEntityListItemApiArg = {
-  listId: string
-  listItemId: string
-  projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
-  entityListItemPatchModel: EntityListItemPatchModel
-}
 export type CreateEntityListApiResponse = /** status 201 Successful Response */ EntityListSummary
 export type CreateEntityListApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   entityListPostModel: EntityListPostModel
 }
 export type GetEntityListApiResponse = /** status 200 Successful Response */ EntityListModel
 export type GetEntityListApiArg = {
-  listId: string
   projectName: string
+  entityListId: string
   /** When true, only return metadata */
   metadataOnly?: boolean
 }
 export type DeleteEntityListApiResponse = /** status 200 Successful Response */ any
 export type DeleteEntityListApiArg = {
-  listId: string
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
+  entityListId: string
 }
 export type UpdateEntityListApiResponse = /** status 200 Successful Response */ any
 export type UpdateEntityListApiArg = {
-  listId: string
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
+  entityListId: string
   entityListPatchModel: EntityListPatchModel
 }
 export type MaterializeEntityListApiResponse =
   /** status 200 Successful Response */ EntityListSummary
 export type MaterializeEntityListApiArg = {
-  listId: string
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
+  entityListId: string
 }
 export type IconModel = {
   type?: 'material-symbols' | 'url'
@@ -334,6 +280,11 @@ export type EnumItem = {
   /** Icon name (material symbol) or IconModel object */
   icon?: string | IconModel
   color?: string
+  shortName?: string
+  /** Enum item is visible, but not selectable */
+  disabled?: boolean
+  /** Message to show when the option is disabled */
+  disabledMessage?: string
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -453,6 +404,20 @@ export type EntityListItemPostModel = {
   /** Tags associated with the item */
   tags?: string[]
 }
+export type EntityListItemPatchModel = {
+  /** ID of the entity in the list */
+  entityId?: string
+  /** Position of the item in the list */
+  position?: number
+  /** Label of the item */
+  label?: string
+  /** Overrides of the listed entity attributes */
+  attrib?: object
+  /** Additional data associated with the item */
+  data?: Record<string, any>
+  /** Tags associated with the item */
+  tags?: string[]
+}
 export type EntityListMultiPatchItemModel = {
   id?: string
   /** ID of the entity in the list */
@@ -472,20 +437,6 @@ export type EntityListMultiPatchModel = {
   items?: EntityListMultiPatchItemModel[]
   /** The mode of the operation. `replace` will replace all items with the provided ones. `merge` will merge the provided items with the existing ones.`delete` will delete items with matching ids from the list. */
   mode?: 'replace' | 'merge' | 'delete'
-}
-export type EntityListItemPatchModel = {
-  /** ID of the entity in the list */
-  entityId?: string
-  /** Position of the item in the list */
-  position?: number
-  /** Label of the item */
-  label?: string
-  /** Overrides of the listed entity attributes */
-  attrib?: object
-  /** Additional data associated with the item */
-  data?: Record<string, any>
-  /** Tags associated with the item */
-  tags?: string[]
 }
 export type EntityListSummary = {
   id?: string

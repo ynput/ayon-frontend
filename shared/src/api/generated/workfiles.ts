@@ -31,10 +31,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateWorkfile: build.mutation<UpdateWorkfileApiResponse, UpdateWorkfileApiArg>({
@@ -42,10 +38,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
         method: 'PATCH',
         body: queryArg.workfilePatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     createWorkfile: build.mutation<CreateWorkfileApiResponse, CreateWorkfileApiArg>({
@@ -53,10 +45,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/workfiles`,
         method: 'POST',
         body: queryArg.workfilePostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
@@ -86,22 +74,16 @@ export type DeleteWorkfileApiResponse = unknown
 export type DeleteWorkfileApiArg = {
   projectName: string
   workfileId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type UpdateWorkfileApiResponse = unknown
 export type UpdateWorkfileApiArg = {
   projectName: string
   workfileId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   workfilePatchModel: WorkfilePatchModel
 }
 export type CreateWorkfileApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateWorkfileApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   workfilePostModel: WorkfilePostModel
 }
 export type ValidationError = {

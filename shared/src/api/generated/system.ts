@@ -191,6 +191,11 @@ export type EnumItem = {
   /** Icon name (material symbol) or IconModel object */
   icon?: string | IconModel
   color?: string
+  shortName?: string
+  /** Enum item is visible, but not selectable */
+  disabled?: boolean
+  /** Message to show when the option is disabled */
+  disabledMessage?: string
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -280,9 +285,6 @@ export type InfoResponseModel = {
   /** No admin user exists, display 'Create admin user' form */
   noAdminUser?: boolean
   onboarding?: boolean
-  disableChangelog?: boolean
-  disableFeedback?: boolean
-  offlineMode?: boolean
   /** Password authentication will not be shown on the login page */
   hidePasswordAuth?: boolean
   passwordRecoveryAvailable?: boolean
@@ -292,6 +294,10 @@ export type InfoResponseModel = {
   ssoOptions?: SsoOption[]
   frontendFlags?: string[]
   extras?: string
+  /** If set, the changelog will not be shown to the user */
+  disableChangelog?: boolean
+  disableFeedback?: boolean
+  offlineMode?: boolean
 }
 export type SystemMetricsData = {
   cpuUsage?: number

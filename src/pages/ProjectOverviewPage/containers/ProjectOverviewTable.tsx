@@ -42,6 +42,7 @@ const ProjectOverviewTable = ({}: Props) => {
         // metadata
         onOpenNew={onOpenNew}
         clientSorting={showHierarchy || isFlatFolderView}
+        showColumnSummaries
       />
     </Section>
   )

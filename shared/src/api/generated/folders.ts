@@ -10,10 +10,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
         params: {
           force: queryArg.force,
         },
@@ -24,10 +20,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
         method: 'PATCH',
         body: queryArg.folderPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     getFolderList: build.query<GetFolderListApiResponse, GetFolderListApiArg>({
@@ -43,10 +35,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/folders`,
         method: 'POST',
         body: queryArg.folderPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     searchFolders: build.mutation<SearchFoldersApiResponse, SearchFoldersApiArg>({
@@ -101,15 +89,11 @@ export type DeleteFolderApiArg = {
   folderId: string
   /** Allow recursive deletion */
   force?: boolean
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type UpdateFolderApiResponse = unknown
 export type UpdateFolderApiArg = {
   projectName: string
   folderId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   folderPatchModel: FolderPatchModel
 }
 export type GetFolderListApiResponse = /** status 200 Successful Response */ FolderListModel
@@ -121,8 +105,6 @@ export type GetFolderListApiArg = {
 export type CreateFolderApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateFolderApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   folderPostModel: FolderPostModel
 }
 export type SearchFoldersApiResponse = /** status 200 Successful Response */ FolderSearchResponse
@@ -174,6 +156,14 @@ export type FolderAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  airtableId?: string
+  airtablePath?: string
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
 }
 export type FolderModel = {
   /** Unique identifier of the {entity_name} */
@@ -187,7 +177,7 @@ export type FolderModel = {
   path?: string
   hasVersions?: boolean
   attrib?: FolderAttribModel
-  data?: object
+  data?: Record<string, any>
   /** Whether the folder is active */
   active?: boolean
   ownAttrib?: string[]
@@ -228,7 +218,7 @@ export type FolderPatchModel = {
   /** Who last updated the folder */
   updatedBy?: string
   attrib?: FolderAttribModel
-  data?: object
+  data?: Record<string, any>
   /** Whether the folder is active */
   active?: boolean
 }
@@ -277,7 +267,7 @@ export type FolderPostModel = {
   /** Who last updated the folder */
   updatedBy?: string
   attrib?: FolderAttribModel
-  data?: object
+  data?: Record<string, any>
   /** Whether the folder is active */
   active?: boolean
 }
@@ -325,8 +315,6 @@ export type FolderSearchRequest = {
   folderFilter?: QueryFilter
   /** 'fulltext' search used to resolve the folders */
   folderSearch?: string
-  /** Unified 'fulltext' search applied to both tasks and folders */
-  search?: string
 }
 export type HierarchyFolderModel = {
   /** Folder ID */

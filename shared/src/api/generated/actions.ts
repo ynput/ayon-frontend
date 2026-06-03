@@ -107,6 +107,11 @@ export type IconModel = {
   /** The URL of the icon (for type url) */
   url?: string
 }
+export type FormFileData = {
+  filename: string
+  payload: string
+  download?: boolean
+}
 export type FormSelectOption = {
   value: string
   label: string
@@ -115,11 +120,20 @@ export type FormSelectOption = {
   badges?: string[]
 }
 export type SimpleFormField = {
-  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label' | 'file'
+  type:
+    | 'text'
+    | 'boolean'
+    | 'select'
+    | 'multiselect'
+    | 'hidden'
+    | 'integer'
+    | 'float'
+    | 'label'
+    | 'file'
   name: string
   label?: string
   placeholder?: any
-  value?: string | number | number | boolean | string[] | number[] | number[]
+  value?: string | number | number | boolean | string[] | number[] | number[] | FormFileData
   regex?: string
   multiline?: boolean
   syntax?: string
@@ -127,7 +141,7 @@ export type SimpleFormField = {
   highlight?: 'info' | 'warning' | 'error'
   min?: number | number
   max?: number | number
-  valid_extensions?: string[]
+  validExtensions?: string[]
 }
 export type BaseActionManifest = {
   /** The identifier of the action */

@@ -705,6 +705,17 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  airtableId?: string
+  airtablePath?: string
+  airtablePush?: boolean
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
+  shotgridPush?: boolean
 }
 export type FolderType = {
   name: string
@@ -896,7 +907,7 @@ export type LinkTypeModel = {
   /** Output entity type */
   outputType: string
   /** Additional link type data */
-  data?: object
+  data?: Record<string, any>
 }
 export type ProjectAttribModel2 = {
   priority?: 'urgent' | 'high' | 'normal' | 'low'
@@ -919,6 +930,17 @@ export type ProjectAttribModel2 = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
+  airtableId?: string
+  airtablePath?: string
+  airtablePush?: boolean
+  ftrackId?: string
+  ftrackPath?: string
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: string
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: string
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
+  shotgridPush?: boolean
 }
 export type ProjectModel = {
   /** Name is an unique id of the {entity_name} */
@@ -934,7 +956,7 @@ export type ProjectModel = {
   config?: object
   skeleton?: boolean
   attrib?: ProjectAttribModel2
-  data?: object
+  data?: Record<string, any>
   /** Whether the project is active */
   active?: boolean
   ownAttrib?: string[]
@@ -954,7 +976,7 @@ export type ProjectPostModel = {
   tags?: Tag[]
   config?: object
   attrib?: ProjectAttribModel2
-  data?: object
+  data?: Record<string, any>
   /** Whether the project is active */
   active?: boolean
 }
@@ -969,7 +991,7 @@ export type ProjectPatchModel = {
   tags?: Tag[]
   config?: object
   attrib?: ProjectAttribModel2
-  data?: object
+  data?: Record<string, any>
   /** Whether the project is active */
   active?: boolean
 }
