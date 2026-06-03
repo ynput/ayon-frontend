@@ -1,5 +1,5 @@
 // React imports
-import { createContext, useCallback, useContext, useMemo } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
@@ -22,6 +22,7 @@ import {
   ProjectOverviewContextType,
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
+  checkColumnVisibility,
 } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
@@ -33,7 +34,11 @@ import {
 } from '@shared/containers'
 
 // Local context and hooks
-import { useSlicerContext, useSelectedEntityIds, useSlicerViewSync } from '@shared/containers/Slicer'
+import {
+  useSlicerContext,
+  useSelectedEntityIds,
+  useSlicerViewSync,
+} from '@shared/containers/Slicer'
 import useOverviewContextMenu from '../hooks/useOverviewContextMenu'
 import { useProjectContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
@@ -106,7 +111,17 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateFilters: setQueryFilters,
     sliceType: viewSliceType,
     onUpdateSliceType,
+    columns,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
+
+  const [linksVisible, setLinksVisible] = useState(false)
+
+  const hasLinkColumn = useMemo(
+    () => checkColumnVisibility(columns.columnVisibility, 'link_'),
+    [columns],
+  )
+
+  const skipLinks = !hasLinkColumn || !linksVisible
 
   // Sync slicer slice type with view settings (selection is in-memory, project-scoped)
   useSlicerViewSync(viewSliceType, onUpdateSliceType, isLoadingViews)
@@ -271,6 +286,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isFlatFolderView,
     attribFields,
     modules,
+    skipLinks,
   })
 
   // combine foldersMap and tasksMap into a single map
@@ -335,6 +351,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         setExpanded,
         // context menu item
         contextMenuItems,
+        setLinksVisible,
       }}
     >
       {children}

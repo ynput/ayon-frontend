@@ -84,6 +84,9 @@ export interface ProjectOverviewContextType {
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
 
+  // links visibility
+  setLinksVisible: (visible: boolean) => void
+
   // move dialog
   openMoveDialog?: (entityData: EntityMoveData) => void
 }
