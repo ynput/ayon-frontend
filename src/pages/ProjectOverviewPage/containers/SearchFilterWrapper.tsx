@@ -12,6 +12,7 @@ import {
   SearchFilterProps,
   SearchFilterRef,
   SEARCH_FILTER_ID,
+  buildFilterId,
 } from '@ynput/ayon-react-components'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
@@ -122,6 +123,15 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // Track which datetime filter the user is currently interacting with
   const activeDatetimeFilterRef = useRef<string | null>(null)
   const lastInteractedFilterRef = useRef<string | null>(null)
+
+  // Active search-chip edit: set when user clicks a search chip to edit it.
+  // The dropdown opens in edit mode; our Enter interceptor updates/removes the chip.
+  const editingSearchChipRef = useRef<string | null>(null)
+
+  // Mirror of localFilters for use inside async DOM event handlers (keydown on
+  // the dropdown input) that need the latest filters without stale closures.
+  const localFiltersRef = useRef<Filter[]>(localFilters)
+  localFiltersRef.current = localFilters
 
   useEffect(() => {
     setLocalFilters(filters)
@@ -346,6 +356,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   }
 
   const handleFinish = (filters: Filter[]) => {
+    // Dropdown closed (or filters committed) — search-chip edit session ends
+    editingSearchChipRef.current = null
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
       const queryFilter = clientFilterToQueryFilter(validFilters)
@@ -390,7 +402,83 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     input.setSelectionRange(caret, caret)
   }
 
-  // Intercept clicks on filter chips (datetime edit dialog)
+  // Set the dropdown search input value via native setter to trigger React's
+  // controlled onChange inside SearchFilterDropdown
+  const prefillDropdownSearch = (text: string) => {
+    const container = searchFilterRef.current?.getContainerElement()
+    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    if (!input) return
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    )?.set
+    if (nativeSetter) {
+      nativeSetter.call(input, text)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    input.focus()
+    input.select()
+  }
+
+  // Commit the current dropdown input value to the chip being edited.
+  // Empty input removes the chip; non-empty input replaces its single value.
+  const commitSearchChipEdit = (chipId: string, input: HTMLInputElement) => {
+    const text = input.value.trim()
+    const currentFilters = localFiltersRef.current
+    if (!text) {
+      handleFinish(currentFilters.filter((f) => f.id !== chipId))
+    } else {
+      const updated = currentFilters.map((f) =>
+        f.id === chipId ? { ...f, values: [{ id: text, label: text }] } : f,
+      )
+      handleFinish(updated)
+    }
+    editingSearchChipRef.current = null
+    searchFilterRef.current?.close()
+  }
+
+  // While editing a search chip, intercept Enter on the dropdown input AND clicks
+  // on the dropdown's Confirm button so the chip's value gets updated (or removed
+  // if cleared). Without these intercepts the default Confirm path passes the
+  // chip's original values to onConfirmAndClose, discarding the typed edit.
+  const attachSearchEditCommitHandlers = (chipId: string) => {
+    const container = searchFilterRef.current?.getContainerElement()
+    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    if (!container || !input) return
+
+    // Confirm button: match the child <span icon="check"> and climb to <button>.
+    // textContent equality fails because it concatenates the icon's "check" text.
+    const confirmBtn = container
+      .querySelector('.toolbar span[icon="check"]')
+      ?.closest('button') as HTMLButtonElement | null
+
+    const cleanup = () => {
+      input.removeEventListener('keydown', onKeyDown, true)
+      confirmBtn?.removeEventListener('click', onConfirmClick, true)
+    }
+
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key !== 'Enter') return
+      if (editingSearchChipRef.current !== chipId) return
+      ev.preventDefault()
+      ev.stopPropagation()
+      cleanup()
+      commitSearchChipEdit(chipId, input)
+    }
+
+    const onConfirmClick = (ev: MouseEvent) => {
+      if (editingSearchChipRef.current !== chipId) return
+      ev.preventDefault()
+      ev.stopPropagation()
+      cleanup()
+      commitSearchChipEdit(chipId, input)
+    }
+
+    input.addEventListener('keydown', onKeyDown, true) // capture phase: run before React's bubble handler
+    confirmBtn?.addEventListener('click', onConfirmClick, true)
+  }
+
+  // Intercept clicks on filter chips (search prefill + datetime edit dialog)
   const handleSearchBarClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
 
@@ -405,6 +493,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // so the input's Enter handler updates it instead of creating a new filter.
     const chipId = chipEl.id
     if (chipId === SEARCH_FILTER_ID || chipId.startsWith(SEARCH_FILTER_ID + '__')) {
+      const filter = localFilters.find((f) => f.id === chipId)
+      if (filter?.values?.length) {
+        const text = (filter.values[0].label || String(filter.values[0].id)).replace(/%/g, '')
+        editingSearchChipRef.current = chipId
+        // Wait for the dropdown to render (after default click handlers fire)
+        requestAnimationFrame(() => {
+          prefillDropdownSearch(text)
+          attachSearchEditCommitHandlers(chipId)
+        })
+      }
       return
     }
 
@@ -485,10 +583,45 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                     return false // prevent SearchFilter from selecting this value
                   }
 
-                  // Clicking a filter type opens its value panel (search clears) so
-                  // the typed text is treated as "find the filter", matching the
-                  // keyboard Enter flow. (Previously this auto-filled the typed text
-                  // as the value, e.g. "cust" -> Custom Id = "cust", which was a bug.)
+                  // Auto-fill: if user typed text and then clicked a filter type,
+                  // create the filter with that text as value and prevent normal flow
+                  // (which would reopen the dropdown to the values panel)
+                  const searchInput = listItem.parentElement?.querySelector(
+                    '.search input',
+                  ) as HTMLInputElement
+                  const searchText = searchInput?.value?.trim() || ''
+
+                  if (searchText) {
+                    const optionId = listItem.id
+                    // Only for top-level filter types (no data-parent = not a value item)
+                    const parentAttr = listItem.getAttribute('data-parent')
+                    if (!parentAttr) {
+                      const matchingOption = options.find((o) => o.id === optionId)
+                      if (matchingOption?.allowsCustomValues) {
+                        const newId = buildFilterId(optionId)
+                        const parts = searchText
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                        const values =
+                          parts.length > 1
+                            ? parts.map((v) => ({ id: v, label: v, isCustom: true }))
+                            : [{ id: searchText, label: searchText, isCustom: true }]
+                        const newFilter: Filter = {
+                          id: newId,
+                          label: matchingOption.label,
+                          type: matchingOption.type,
+                          icon: matchingOption.icon,
+                          values,
+                        }
+
+                        handleFinish([...localFilters, newFilter])
+                        searchFilterRef.current?.close()
+                        return false // prevent SearchFilter from reopening values panel
+                      }
+                    }
+                  }
+
                   return true
                 },
               },
