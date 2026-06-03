@@ -28,12 +28,12 @@ const STATIC_COLUMNS_AFTER_THUMBNAIL: ColumnDef<ProjectTableRow, any>[] = [
   columnHelper.accessor('label', {
     id: 'label',
     header: 'Label / Name',
-    size: 200,
+    size: 400,
   }),
   columnHelper.accessor('name', {
     id: 'name',
     header: 'Name',
-    size: 200,
+    size: 400,
   }),
 ]
 
@@ -56,7 +56,7 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
   columnHelper.accessor('pipeline', {
     id: 'pipeline',
     header: 'State',
-    size: 80,
+    size: 200,
   }),
   columnHelper.accessor('createdAt', {
     id: 'createdAt',
@@ -183,7 +183,7 @@ export const useProjectColumns = (
       columnHelper.accessor('name', {
         id: 'heartbeat',
         header: 'Heartbeat',
-        size: 150,
+        size: 250,
         meta: {
           listTableCustomCell: true,
         },
