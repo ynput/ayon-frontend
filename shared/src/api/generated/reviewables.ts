@@ -22,8 +22,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
         method: 'POST',
         headers: {
-          'x-file-name': queryArg['x-file-name'],
           'content-type': queryArg['content-type'],
+          'x-file-name': queryArg['x-file-name'],
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
         },
         params: {
           label: queryArg.label,
@@ -85,8 +87,10 @@ export type UploadReviewableApiArg = {
   versionId: string
   /** Label */
   label?: string
-  'x-file-name': string
   'content-type': string
+  'x-file-name': string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type SortVersionReviewablesApiResponse = /** status 200 Successful Response */ any
 export type SortVersionReviewablesApiArg = {

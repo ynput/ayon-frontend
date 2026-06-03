@@ -1,8 +1,6 @@
 import { FC, useState } from 'react'
-import { AssigneeField } from '@ynput/ayon-react-components'
 import * as Styled from './TableFooter.styled'
 import { ProportionBar } from './ProportionBar'
-import { SummaryBreakdown } from './SummaryBreakdown'
 import { CalcSelector } from './CalcSelector'
 import {
   DEFAULT_CALC,
@@ -58,20 +56,6 @@ const EditableSummary: FC<{
   )
 }
 
-const AssigneeSummary: FC<{ summary: ColumnSummary }> = ({ summary }) => {
-  const [open, setOpen] = useState(false)
-  const items = summary.distribution || []
-  const total = summary.total || items.reduce((a, i) => a + i.count, 0)
-  if (!items.length) return null
-  const users = items.map((i) => ({ name: i.value, fullName: i.fullName, avatarUrl: i.avatarUrl }))
-  return (
-    <Styled.Clickable onMouseDown={(e) => e.stopPropagation()} onClick={() => setOpen((v) => !v)}>
-      <AssigneeField users={users} />
-      {open && <SummaryBreakdown items={items} total={total} onClose={() => setOpen(false)} />}
-    </Styled.Clickable>
-  )
-}
-
 export const SummaryCell: FC<Props> = ({ kind, summary, mainCount, calc, onCalcChange }) => {
   if (isEditableKind(kind)) {
     return summary ? (
@@ -105,7 +89,9 @@ export const SummaryCell: FC<Props> = ({ kind, summary, mainCount, calc, onCalcC
       ) : null
 
     case 'assignee':
-      return summary ? <AssigneeSummary summary={summary} /> : null
+      return summary?.distribution?.length ? (
+        <ProportionBar items={summary.distribution} />
+      ) : null
 
     default:
       return null

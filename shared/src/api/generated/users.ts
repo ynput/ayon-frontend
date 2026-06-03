@@ -101,10 +101,21 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}`,
         method: 'PUT',
         body: queryArg.newUserModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     deleteUser: build.mutation<DeleteUserApiResponse, DeleteUserApiArg>({
-      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}`, method: 'DELETE' }),
+      query: (queryArg) => ({
+        url: `/api/users/${queryArg.userName}`,
+        method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
+      }),
     }),
     patchUser: build.mutation<PatchUserApiResponse, PatchUserApiArg>({
       query: (queryArg) => ({
@@ -127,18 +138,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.checkPasswordRequestModel,
       }),
     }),
-    renameUser: build.mutation<RenameUserApiResponse, RenameUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}/rename`,
-        method: 'POST',
-        body: queryArg.renameUserRequestModel,
-      }),
-    }),
     changeUserName: build.mutation<ChangeUserNameApiResponse, ChangeUserNameApiArg>({
       query: (queryArg) => ({
         url: `/api/users/${queryArg.userName}/rename`,
         method: 'PATCH',
         body: queryArg.changeUserNameRequestModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     getUserSessions: build.query<GetUserSessionsApiResponse, GetUserSessionsApiArg>({
@@ -250,11 +258,15 @@ export type GetUserApiArg = {
 export type CreateUserApiResponse = /** status 200 Successful Response */ any
 export type CreateUserApiArg = {
   userName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   newUserModel: NewUserModel
 }
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any
 export type DeleteUserApiArg = {
   userName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type PatchUserApiResponse = /** status 200 Successful Response */ any
 export type PatchUserApiArg = {
@@ -271,14 +283,11 @@ export type CheckPasswordApiArg = {
   userName: string
   checkPasswordRequestModel: CheckPasswordRequestModel
 }
-export type RenameUserApiResponse = /** status 200 Successful Response */ any
-export type RenameUserApiArg = {
-  userName: string
-  renameUserRequestModel: RenameUserRequestModel
-}
 export type ChangeUserNameApiResponse = /** status 200 Successful Response */ any
 export type ChangeUserNameApiArg = {
   userName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   changeUserNameRequestModel: ChangeUserNameRequestModel
 }
 export type GetUserSessionsApiResponse =
@@ -339,6 +348,9 @@ export type ApiKeyPatchModel = {
 export type InviteUserRequest = {
   message?: string
 }
+export type PasswordResetRequestModel = {
+  email: string
+}
 export type UserAttribModel = {
   fullName?: string
   email?: string
@@ -371,9 +383,6 @@ export type LoginResponseModel = {
 export type AcceptInviteRequest = {
   token: string
   password?: string
-}
-export type PasswordResetRequestModel = {
-  email: string
 }
 export type PasswordResetModel = {
   token: string
@@ -491,10 +500,6 @@ export type ChangePasswordRequestModel = {
 }
 export type CheckPasswordRequestModel = {
   password: string
-}
-export type RenameUserRequestModel = {
-  /** New user name */
-  name: string
 }
 export type ChangeUserNameRequestModel = {
   /** New user name */

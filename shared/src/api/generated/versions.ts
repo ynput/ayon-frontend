@@ -31,6 +31,10 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
         method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     updateVersion: build.mutation<UpdateVersionApiResponse, UpdateVersionApiArg>({
@@ -38,6 +42,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
         method: 'PATCH',
         body: queryArg.versionPatchModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     createVersion: build.mutation<CreateVersionApiResponse, CreateVersionApiArg>({
@@ -45,6 +53,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions`,
         method: 'POST',
         body: queryArg.versionPostModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
   }),
@@ -74,16 +86,22 @@ export type DeleteVersionApiResponse = unknown
 export type DeleteVersionApiArg = {
   projectName: string
   versionId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type UpdateVersionApiResponse = unknown
 export type UpdateVersionApiArg = {
   projectName: string
   versionId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   versionPatchModel: VersionPatchModel
 }
 export type CreateVersionApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateVersionApiArg = {
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   versionPostModel: VersionPostModel
 }
 export type ValidationError = {
@@ -120,13 +138,6 @@ export type VersionAttribModel = {
   colorSpace?: string
   /** Textual description of the entity */
   description?: string
-  airtableId?: string
-  airtablePath?: string
-  ftrackId?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
 }
 export type VersionModel = {
   /** Unique identifier of the {entity_name} */

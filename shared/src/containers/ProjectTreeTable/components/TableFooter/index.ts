@@ -1,4 +1,8 @@
 export { TableFooter } from './TableFooter'
 export { mockColumnSummaries } from './mockColumnSummaries'
 export { classifyColumnSummary } from './classifyColumnSummary'
+export { useColumnSummaries } from './useColumnSummaries'
+export type { ColumnSummariesResult } from './useColumnSummaries'
+export { mapColumnStatsToSummary } from './mapColumnStats'
+export type { BackendColumnStats } from './mapColumnStats'
 export * from './summaryTypes'

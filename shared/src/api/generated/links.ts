@@ -22,12 +22,20 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/links`,
         method: 'POST',
         body: queryArg.createLinkRequestModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     deleteEntityLink: build.mutation<DeleteEntityLinkApiResponse, DeleteEntityLinkApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/links/${queryArg.linkId}`,
         method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
   }),
@@ -52,12 +60,16 @@ export type DeleteLinkTypeApiArg = {
 export type CreateEntityLinkApiResponse = /** status 200 Successful Response */ EntityIdResponse
 export type CreateEntityLinkApiArg = {
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   createLinkRequestModel: CreateLinkRequestModel
 }
 export type DeleteEntityLinkApiResponse = unknown
 export type DeleteEntityLinkApiArg = {
   projectName: string
   linkId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type LinkTypeModel = {
   /** Name of the link type */

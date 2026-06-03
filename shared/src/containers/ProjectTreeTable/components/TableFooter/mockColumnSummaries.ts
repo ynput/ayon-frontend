@@ -91,10 +91,9 @@ export const mockColumnSummaries = ({
       }
       case 'assignee': {
         const users = options.assignee || []
-        const shown = users.slice(0, 10)
-        if (shown.length) {
-          const counts = splitCounts(total, shown.length, columnId)
-          summary.distribution = shown.map<SummaryDistributionItem>((u, i) => ({
+        if (users.length) {
+          const counts = splitCounts(total, users.length, columnId)
+          summary.distribution = users.map<SummaryDistributionItem>((u, i) => ({
             value: String(u.value),
             label: u.label,
             fullName: u.label,

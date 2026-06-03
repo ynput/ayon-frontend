@@ -10,6 +10,10 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}`,
         method: 'DELETE',
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     updateProduct: build.mutation<UpdateProductApiResponse, UpdateProductApiArg>({
@@ -17,6 +21,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}`,
         method: 'PATCH',
         body: queryArg.productPatchModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     createProduct: build.mutation<CreateProductApiResponse, CreateProductApiArg>({
@@ -24,6 +32,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/products`,
         method: 'POST',
         body: queryArg.productPostModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
       }),
     }),
     getProductTypes: build.query<GetProductTypesApiResponse, GetProductTypesApiArg>({
@@ -51,16 +63,22 @@ export type DeleteProductApiResponse = unknown
 export type DeleteProductApiArg = {
   projectName: string
   productId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type UpdateProductApiResponse = unknown
 export type UpdateProductApiArg = {
   projectName: string
   productId: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   productPatchModel: ProductPatchModel
 }
 export type CreateProductApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateProductApiArg = {
   projectName: string
+  'x-sender'?: string
+  'x-sender-type'?: string
   productPostModel: ProductPostModel
 }
 export type GetProductTypesApiResponse = /** status 200 Successful Response */ ProductTypesList

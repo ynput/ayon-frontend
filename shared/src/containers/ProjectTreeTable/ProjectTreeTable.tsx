@@ -33,8 +33,7 @@ import buildTreeTableColumns, {
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
-import { TableFooter, mockColumnSummaries } from './components/TableFooter'
-import type { MainCountSummary } from './components/TableFooter'
+import { TableFooter, useColumnSummaries } from './components/TableFooter'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -502,47 +501,18 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  // UI-first column summaries (mock data until backend column_metadata lands).
-  const columnSummaryData = useMemo(() => {
-    if (!showColumnSummaries) return null
-    const columnIds = visibleColumns.map((c) => c.id)
-    const isAttributeGroup = isGrouping && !showHierarchy
-    const isVersions = scopes.includes('version')
-
-    let groups = 0
-    let leaves = 0
-    const walk = (rows: TableRow[]) => {
-      for (const r of rows) {
-        if (r.entityType === 'folder' || r.entityType === 'group') groups++
-        else leaves++
-        if (r.subRows?.length) walk(r.subRows)
-      }
-    }
-    walk(tableData)
-
-    const mainCount: MainCountSummary = {
-      groups,
-      tasks: leaves,
-      groupLabel: isAttributeGroup ? 'groups' : isVersions ? 'products' : 'folders',
-      taskLabel: isVersions ? 'versions' : 'tasks',
-    }
-    const summaries = mockColumnSummaries({
-      columnIds,
-      attribs: attribFields,
-      options,
-      total: leaves || 1,
-    })
-    return { mainCount, summaries }
-  }, [
-    showColumnSummaries,
-    visibleColumns,
+  // Column summaries footer data. Renders mock until real `fieldStats` is
+  // passed through; flipping to real backend data is a one-line change here.
+  const columnSummaryData = useColumnSummaries({
+    enabled: showColumnSummaries,
+    columnIds: visibleColumns.map((c) => c.id),
+    attribs: attribFields,
+    options,
     tableData,
+    scopes,
     isGrouping,
     showHierarchy,
-    scopes,
-    attribFields,
-    options,
-  ])
+  })
 
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()

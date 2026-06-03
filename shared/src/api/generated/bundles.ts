@@ -14,6 +14,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/bundles`,
         method: 'POST',
         body: queryArg.bundleModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
         params: {
           force: queryArg.force,
         },
@@ -47,6 +51,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/bundles/${queryArg.bundleName}`,
         method: 'PATCH',
         body: queryArg.bundlePatchModel,
+        headers: {
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
+        },
         params: {
           build: queryArg.build,
           force: queryArg.force,
@@ -76,6 +84,8 @@ export type CreateNewBundleApiResponse = /** status 201 Successful Response */ a
 export type CreateNewBundleApiArg = {
   /** Force creation of bundle */
   force?: boolean
+  'x-sender'?: string
+  'x-sender-type'?: string
   bundleModel: BundleModel
 }
 export type CheckBundleCompatibilityApiResponse =
@@ -99,6 +109,8 @@ export type UpdateBundleApiArg = {
   build?: ('windows' | 'linux' | 'darwin')[]
   /** Force creation of bundle */
   force?: boolean
+  'x-sender'?: string
+  'x-sender-type'?: string
   bundlePatchModel: BundlePatchModel
 }
 export type MigrateSettingsByBundleApiResponse = /** status 200 Successful Response */ any

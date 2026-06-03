@@ -160,17 +160,6 @@ export type ProjectAttribModel = {
   endDate?: string
   /** Textual description of the entity */
   description?: string
-  airtableId?: string
-  airtablePath?: string
-  airtablePush?: boolean
-  ftrackId?: string
-  ftrackPath?: string
-  /** The Shotgrid ID of this entity. */
-  shotgridId?: string
-  /** The Shotgrid Type of this entity. */
-  shotgridType?: string
-  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
-  shotgridPush?: boolean
 }
 export type FolderType = {
   name: string

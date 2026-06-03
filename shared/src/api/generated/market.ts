@@ -193,11 +193,10 @@ export type ReleaseListModel = {
 export type SourceModel = {
   /** If set to server, the file is stored on the server. If set to http, the file is downloaded from the specified URL. */
   type: 'server' | 'http'
-  /** URL to download the file from. Only used if type is http */
+  /** URL to download the file from. Only used if type is url */
   url?: string
 }
 export type InstallerManifest = {
-  /** Name of the package file */
   filename: string
   platform: 'windows' | 'linux' | 'darwin'
   size?: number
@@ -205,12 +204,10 @@ export type InstallerManifest = {
   checksumAlgorithm?: 'md5' | 'sha1' | 'sha256'
   /** List of sources to download the file from. Server source is added automatically by the server if the file is uploaded. */
   sources?: SourceModel[]
-  /** Used Python version */
-  pythonVersion?: string
-  /** Short name of the Linux distribution */
-  distroShort?: string
   /** Version of the installer */
   version: string
+  /** Version of Python that the installer is created with */
+  pythonVersion: string
   /** mapping of module name:version used to create the installer */
   pythonModules?: {
     [key: string]:
@@ -219,13 +216,12 @@ export type InstallerManifest = {
           [key: string]: string
         }
   }
-  /** mapping of module_name:version used to run the installer */
+  /** mapping of module_name:module_version used to run the installer */
   runtimePythonModules?: {
     [key: string]: string
   }
 }
 export type DependencyPackageManifest = {
-  /** Name of the package file */
   filename: string
   platform: 'windows' | 'linux' | 'darwin'
   size?: number
@@ -233,17 +229,13 @@ export type DependencyPackageManifest = {
   checksumAlgorithm?: 'md5' | 'sha1' | 'sha256'
   /** List of sources to download the file from. Server source is added automatically by the server if the file is uploaded. */
   sources?: SourceModel[]
-  /** Used Python version */
-  pythonVersion?: string
-  /** Short name of the Linux distribution */
-  distroShort?: string
   /** Version of the Ayon installer this package is created with */
   installerVersion: string
-  /** mapping of addon_name:version used to create the package */
+  /** mapping of addon_name:addon_version used to create the package */
   sourceAddons?: {
     [key: string]: string
   }
-  /** mapping of module_name:version used to create the package */
+  /** mapping of module_name:module_version used to create the package */
   pythonModules?: {
     [key: string]:
       | string
