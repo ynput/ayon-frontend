@@ -124,8 +124,15 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   modules,
 }) => {
   const { projectName, ...projectInfo } = useProjectContext()
-  const { selectedListId, contextMenuItems, attribFields, columns, onUpdateColumns, ...props } =
-    useListItemsDataContext()
+  const {
+    selectedListId,
+    contextMenuItems,
+    attribFields,
+    columns,
+    onUpdateColumns,
+    defaultColumnVisibility,
+    ...props
+  } = useListItemsDataContext()
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
@@ -163,7 +170,11 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
 
   return (
     <SettingsPanelProvider>
-      <ColumnSettingsProvider config={columns} onChange={onUpdateColumns}>
+      <ColumnSettingsProvider
+        config={columns}
+        onChange={onUpdateColumns}
+        defaultColumnVisibility={defaultColumnVisibility}
+      >
         <DndContextWrapper reorderListItem={reorderListItem}>
           {(dndActiveId) => (
             <ProjectTableQueriesProvider {...{ updateEntities: updateListItems, getFoldersTasks }}>

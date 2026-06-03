@@ -14,9 +14,15 @@ import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorde
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
-import { SortingState } from '@tanstack/react-table'
+import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext } from '@shared/context'
 import { useReviewCardsSettingsContext } from './ReviewCardsSettingsContext'
+import {
+  DEFAULT_COLUMNS_FOLDER,
+  DEFAULT_COLUMNS_PRODUCT,
+  DEFAULT_COLUMNS_TASK,
+  DEFAULT_COLUMNS_VERSION,
+} from '@pages/ProjectsPage/constants'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
@@ -26,6 +32,7 @@ export interface ListItemsDataContextValue {
   selectedListId?: string
   // Attributes
   attribFields: ProjectDataContextProps['attribFields']
+  defaultColumnVisibility?: VisibilityState
 
   // LIST ITEMS DATA
   listItemsData: EntityListItemWithLinks[]
@@ -73,6 +80,18 @@ const reviewSortKeys = new Map([
   ['versionAuthor', 'author'],
 ])
 
+const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
+  'link_*': false,
+  tags: true,
+}
+
+const DEFAULT_COLUMNS_BY_TYPE: Record<string, VisibilityState> = {
+  folder: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_FOLDER },
+  task: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_TASK },
+  version: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_VERSION },
+  product: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_PRODUCT },
+}
+
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
   // Get project data from the new context
@@ -82,6 +101,12 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const { selectedList, isReview } = useListsContext()
   const selectedListId = selectedList?.id
+  const listEntityType = selectedList?.entityType
+
+  const defaultColumnVisibility = useMemo(
+    () => (listEntityType ? DEFAULT_COLUMNS_BY_TYPE[listEntityType] : DEFAULT_COLUMN_VISIBILITY),
+    [listEntityType],
+  )
 
   const [linksVisible, setLinksVisible] = useState(false)
 
@@ -94,8 +119,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   } = useListsViewSettings()
 
   const hasLinkColumn = useMemo(
-    () => checkColumnVisibility(columns.columnVisibility, 'link_'),
-    [columns],
+    () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
+    [columns, defaultColumnVisibility],
   )
 
   const skipLinks = displayStyle !== 'table' || !hasLinkColumn || !linksVisible
@@ -217,6 +242,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         selectedListId,
         attribFields: scopedAttribFields,
         users,
+        defaultColumnVisibility,
         // list items
         listItemsData,
         listItemsTableData,

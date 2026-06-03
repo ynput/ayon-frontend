@@ -69,7 +69,12 @@ import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
+import {
+  checkColumnVisibility,
+  getEntityViewierIds,
+  getReadOnlyLists,
+  getTableFieldOptions,
+} from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
@@ -213,6 +218,7 @@ export const ProjectTreeTable = ({
     sortingOnChange,
     columnPinningOnChange,
     columnSizingOnChange,
+    defaultColumnVisibility,
     columnVisibilityOnChange,
     columnOrderOnChange,
     groupBy,
@@ -411,6 +417,19 @@ export const ProjectTreeTable = ({
     setAllColumns(ids)
   }, [columns, setAllColumns])
 
+  const resolvedColumnVisibility = useMemo(() => {
+    const merged = { ...columnVisibility }
+    columns.forEach((col) => {
+      if (col.id && merged[col.id] === undefined) {
+        const defaultVal = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+        if (defaultVal === false) {
+          merged[col.id] = false
+        }
+      }
+    })
+    return merged
+  }, [columnVisibility, defaultColumnVisibility, columns])
+
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
@@ -466,7 +485,7 @@ export const ProjectTreeTable = ({
         }
       })(),
       columnSizing,
-      columnVisibility,
+      columnVisibility: resolvedColumnVisibility,
       columnOrder,
     },
     meta: {

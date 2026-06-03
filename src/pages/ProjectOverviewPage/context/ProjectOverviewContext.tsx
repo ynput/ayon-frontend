@@ -53,7 +53,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const { rowSelection, rowSelectionData, sliceType, persistentRowSelectionData } =
     useSlicerContext()
 
-  const { sorting, groupBy: panelGroupBy } = useColumnSettingsContext()
+  const { sorting, groupBy: panelGroupBy, defaultColumnVisibility } = useColumnSettingsContext()
 
   const sliceFilter = createFilterFromSlicer({
     type: sliceType,
@@ -117,8 +117,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const [linksVisible, setLinksVisible] = useState(false)
 
   const hasLinkColumn = useMemo(
-    () => checkColumnVisibility(columns.columnVisibility, 'link_'),
-    [columns],
+    () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
+    [columns, defaultColumnVisibility],
   )
 
   const skipLinks = !hasLinkColumn || !linksVisible
