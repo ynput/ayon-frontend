@@ -14,7 +14,6 @@ const Wrapper = styled.div`
   }
 `
 
-const yesValue = [{ id: 'true', label: 'Yes' }]
 
 interface FeedSearchFilterProps {
   feedFilter: QueryFilter
@@ -34,13 +33,14 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
   isLoading,
 }) => {
   const options: Option[] = useMemo(() => {
+    // no values -> ARC adds it in one click (select "Yes"), no value-panel prompt
     const boolean = (id: string, label: string, icon: string): Option => ({
       id,
       label,
       icon,
       type: 'boolean',
       singleSelect: true,
-      values: yesValue,
+      values: [],
     })
 
     const opts: Option[] = [

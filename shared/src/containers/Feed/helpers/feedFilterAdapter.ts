@@ -51,7 +51,9 @@ export const feedFilterToClientFilters = (
             icon: option.icon,
             type: 'boolean',
             singleSelect: true,
-            values: [{ id: 'true', label: 'Yes' }],
+            // value label = filter name so the compact chip (label hidden) reads
+            // e.g. "Checklists" instead of "Yes"
+            values: [{ id: 'true', label: option.label }],
           })
         }
         return
