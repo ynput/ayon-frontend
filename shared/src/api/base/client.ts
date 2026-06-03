@@ -82,6 +82,7 @@ const tagTypes = [
   'entityListFolder',
   'feedback',
   'folder',
+  'folderColumnStats',
   'hierarchy',
   'inbox',
   'info',

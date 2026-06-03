@@ -1,17 +1,26 @@
 import { FC, useEffect, useRef } from 'react'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 import * as Styled from './TableFooter.styled'
-import { SummaryCalc } from './summaryTypes'
+import { RowScope, SummaryCalc, DEFAULT_ROW_SCOPE } from './summaryTypes'
 import { EditableKind, CALC_OPTIONS } from './calcOptions'
 
 type Props = {
   kind: EditableKind
   selected: SummaryCalc
   onSelect: (calc: SummaryCalc) => void
+  scope?: RowScope
+  onScopeChange?: (scope: RowScope) => void
   onClose: () => void
 }
 
-export const CalcSelector: FC<Props> = ({ kind, selected, onSelect, onClose }) => {
+export const CalcSelector: FC<Props> = ({
+  kind,
+  selected,
+  onSelect,
+  scope,
+  onScopeChange,
+  onClose,
+}) => {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -22,8 +31,11 @@ export const CalcSelector: FC<Props> = ({ kind, selected, onSelect, onClose }) =
     return () => document.removeEventListener('mousedown', handle)
   }, [onClose])
 
+  const effectiveScope = scope ?? DEFAULT_ROW_SCOPE
+  const includesGroups = effectiveScope === 'all'
+
   return (
-    <Styled.Popover ref={ref}>
+    <Styled.Popover ref={ref} onClick={(e) => e.stopPropagation()}>
       {CALC_OPTIONS[kind].map((opt) => (
         <Styled.SelectorItem
           key={opt.value}
@@ -37,6 +49,21 @@ export const CalcSelector: FC<Props> = ({ kind, selected, onSelect, onClose }) =
           {opt.value === selected && <Icon icon="check" />}
         </Styled.SelectorItem>
       ))}
+
+      {onScopeChange && (
+        <>
+          <Styled.SelectorDivider />
+          <Styled.ScopeToggleRow>
+            <span>Include groups & folders</span>
+            <InputSwitch
+              checked={includesGroups}
+              onChange={(e) =>
+                onScopeChange((e.target as HTMLInputElement).checked ? 'all' : 'tasks')
+              }
+            />
+          </Styled.ScopeToggleRow>
+        </>
+      )}
     </Styled.Popover>
   )
 }

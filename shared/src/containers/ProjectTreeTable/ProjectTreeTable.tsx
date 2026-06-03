@@ -34,6 +34,7 @@ import buildTreeTableColumns, {
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooter, useColumnSummaries } from './components/TableFooter'
+import type { FieldStats } from './components/TableFooter'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -150,7 +151,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onRowReorder?: (active: UniqueIdentifier, over: UniqueIdentifier | null) => void // Adjusted type for active/over if needed, or keep as Active, Over
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
-  showColumnSummaries?: boolean // render the fixed summary footer row (UI-first, mock data)
+  showColumnSummaries?: boolean // render the fixed summary footer row
+  fieldStats?: FieldStats[] // backend column stats (connection.fieldStats) feeding the footer
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   pt?: {
@@ -179,6 +181,7 @@ export const ProjectTreeTable = ({
   dndActiveId, // Destructure new prop
   columnsConfig,
   showColumnSummaries = false,
+  fieldStats,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   pt,
@@ -199,6 +202,8 @@ export const ProjectTreeTable = ({
     groupBy,
     columnSummaries,
     updateColumnSummary,
+    columnSummaryScopes,
+    updateColumnSummaryScope,
   } = useColumnSettingsContext()
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
@@ -505,13 +510,7 @@ export const ProjectTreeTable = ({
   // passed through; flipping to real backend data is a one-line change here.
   const columnSummaryData = useColumnSummaries({
     enabled: showColumnSummaries,
-    columnIds: visibleColumns.map((c) => c.id),
-    attribs: attribFields,
-    options,
-    tableData,
-    scopes,
-    isGrouping,
-    showHierarchy,
+    fieldStats,
   })
 
   // Calculate dynamic row height based on user setting from Customize panel
@@ -638,6 +637,10 @@ export const ProjectTreeTable = ({
               ...columnSizeVars,
               width: table.getTotalSize(),
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
+              // keep the summary footer pinned to the bottom even when rows don't fill the view
+              ...(showColumnSummaries
+                ? { minHeight: '100%', gridTemplateRows: 'auto 1fr auto' }
+                : {}),
             }}
           >
             <TableHead
@@ -678,9 +681,10 @@ export const ProjectTreeTable = ({
                 virtualPaddingRight={virtualPaddingRight}
                 attribs={attribFields}
                 summaries={columnSummaryData.summaries}
-                mainCount={columnSummaryData.mainCount}
                 calcByColumn={columnSummaries}
                 onCalcChange={updateColumnSummary}
+                scopeByColumn={columnSummaryScopes}
+                onScopeChange={updateColumnSummaryScope}
               />
             )}
           </table>

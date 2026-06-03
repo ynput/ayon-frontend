@@ -8,12 +8,13 @@ import {
 import { ColumnItemModel, OverviewSettings } from '@shared/api/generated/views'
 import { ColumnsConfig, TableGroupBy } from '@shared/containers'
 import { GroupByConfig } from '@shared/containers/ProjectTreeTable/components/GroupSettingsFallback'
-import { SummaryCalc } from '@shared/containers/ProjectTreeTable/components/TableFooter/summaryTypes'
+import {
+  SummaryCalc,
+  RowScope,
+} from '@shared/containers/ProjectTreeTable/components/TableFooter/summaryTypes'
 
-// Backend ColumnItemModel does not yet carry the summary calc (see ayon-backend
-// handoff). Frontend persists it optimistically; survives a server round-trip
-// once the backend field lands.
-type ColumnItem = ColumnItemModel & { summary?: SummaryCalc }
+
+type ColumnItem = ColumnItemModel & { summary?: SummaryCalc; summaryScope?: RowScope }
 
 /**
  * Converts ColumnItemModel array from OverviewSettings to TanStack table states
@@ -35,10 +36,11 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
   const columnOrder: ColumnOrderState = []
   const columnSizing: ColumnSizingState = {}
   const columnSummaries: Record<string, SummaryCalc> = {}
+  const columnSummaryScopes: Record<string, RowScope> = {}
 
   // Process each column from the settings
   columns.forEach((column) => {
-    const { name, visible, pinned, width, summary } = column as ColumnItem
+    const { name, visible, pinned, width, summary, summaryScope } = column as ColumnItem
 
     // Column visibility: if visible is undefined, default to true
     columnVisibility[name] = visible !== false
@@ -59,6 +61,11 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     // Column summary calc type
     if (summary) {
       columnSummaries[name] = summary
+    }
+
+    // Column summary row scope
+    if (summaryScope) {
+      columnSummaryScopes[name] = summaryScope
     }
   })
 
@@ -91,6 +98,7 @@ export function convertColumnConfigToTanstackStates(settings: OverviewSettings):
     columnOrder,
     columnSizing,
     columnSummaries,
+    columnSummaryScopes,
     sorting,
     groupBy,
     groupByConfig,
@@ -155,6 +163,7 @@ function createColumnItem(
   columnPinning: ColumnPinningState,
   columnSizing: ColumnSizingState,
   columnSummaries: Record<string, SummaryCalc>,
+  columnSummaryScopes: Record<string, RowScope>,
 ): ColumnItem {
   const column: ColumnItem = {
     name: columnName,
@@ -163,6 +172,11 @@ function createColumnItem(
   // Set summary calc type if chosen for this column
   if (columnSummaries[columnName]) {
     column.summary = columnSummaries[columnName]
+  }
+
+  // Set summary row scope if chosen for this column
+  if (columnSummaryScopes[columnName]) {
+    column.summaryScope = columnSummaryScopes[columnName]
   }
 
   // Set visibility if defined in state
@@ -204,6 +218,7 @@ export function convertTanstackStatesToColumnConfig(
     columnOrder,
     columnSizing,
     columnSummaries = {},
+    columnSummaryScopes = {},
     sorting,
     groupBy,
     groupByConfig,
@@ -223,7 +238,14 @@ export function convertTanstackStatesToColumnConfig(
 
   // Create ColumnItemModel for each column in the determined order
   const columns: ColumnItem[] = finalColumnOrder.map((columnName) =>
-    createColumnItem(columnName, columnVisibility, columnPinning, columnSizing, columnSummaries),
+    createColumnItem(
+      columnName,
+      columnVisibility,
+      columnPinning,
+      columnSizing,
+      columnSummaries,
+      columnSummaryScopes,
+    ),
   )
 
   // Build the result object

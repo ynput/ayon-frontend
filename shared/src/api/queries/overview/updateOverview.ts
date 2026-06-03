@@ -275,6 +275,24 @@ const invalidateOverviewTasks = (
   dispatch(getOverviewApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 
+// The footer summary stats (getFolderColumnStats) are a separate aggregation
+// query and are not touched by the optimistic task/folder patching above. Edits
+// can change those aggregations, so refetch them — debounced so a burst of edits
+// triggers a single refetch.
+let folderStatsRefetchTimer: ReturnType<typeof setTimeout> | null = null
+const scheduleFolderStatsRefetch = (
+  dispatch: ThunkDispatch<any, any, UnknownAction>,
+  projectName: string,
+) => {
+  if (folderStatsRefetchTimer) clearTimeout(folderStatsRefetchTimer)
+  folderStatsRefetchTimer = setTimeout(() => {
+    folderStatsRefetchTimer = null
+    dispatch(
+      getOverviewApi.util.invalidateTags([{ type: 'folderColumnStats', id: projectName }]),
+    )
+  }, 500)
+}
+
 export const patchOverviewFolders = (
   folders: PatchOperation[],
   {
@@ -579,6 +597,11 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           // Early exit if no operations
           if (taskOperations.length === 0 && folderOperations.length === 0) {
             return
+          }
+
+          // Refetch footer summary stats (debounced) since data changed
+          if (projectName) {
+            scheduleFolderStatsRefetch(dispatch, projectName)
           }
 
           // Extract updated entity IDs (always needed for refetch)

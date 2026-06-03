@@ -40,6 +40,7 @@ export type Scalars = {
 export type ActivitiesConnection = {
   __typename?: 'ActivitiesConnection';
   edges: Array<ActivityEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -155,6 +156,22 @@ export type BaseNodeLinksArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type ColumnStats = {
+  __typename?: 'ColumnStats';
+  avg?: Maybe<Scalars['Float']['output']>;
+  checkedCount?: Maybe<Scalars['Int']['output']>;
+  checkedPercentage?: Maybe<Scalars['Float']['output']>;
+  columnName: Scalars['String']['output'];
+  max?: Maybe<Scalars['Float']['output']>;
+  min?: Maybe<Scalars['Float']['output']>;
+  notCheckedCount?: Maybe<Scalars['Int']['output']>;
+  notCheckedPercentage?: Maybe<Scalars['Float']['output']>;
+  percentageFilled?: Maybe<Scalars['Float']['output']>;
+  percentageNotFilled?: Maybe<Scalars['Float']['output']>;
+  valueFilledCount?: Maybe<Scalars['Int']['output']>;
+  valueNotFilledCount?: Maybe<Scalars['Int']['output']>;
+};
+
 export type EntityListEdge = {
   __typename?: 'EntityListEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -230,6 +247,7 @@ export type EntityListNodeItemsArgs = {
 export type EntityListsConnection = {
   __typename?: 'EntityListsConnection';
   edges: Array<EntityListEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -262,6 +280,7 @@ export type EventNode = {
 export type EventsConnection = {
   __typename?: 'EventsConnection';
   edges: Array<EventEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -278,6 +297,8 @@ export type FileNode = {
 
 export type FolderAttribType = {
   __typename?: 'FolderAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -288,18 +309,22 @@ export type FolderAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type FolderEdge = {
@@ -433,6 +458,7 @@ export type FolderType = {
 export type FoldersConnection = {
   __typename?: 'FoldersConnection';
   edges: Array<FolderEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -448,6 +474,7 @@ export enum HasLinksFilter {
 export type KanbanConnection = {
   __typename?: 'KanbanConnection';
   edges: Array<KanbanEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -519,8 +546,16 @@ export type LinksConnection = {
   pageInfo: PageInfo;
 };
 
+export type MetricTargetInput = {
+  /** List of statistical calculations to run */
+  aggregations: Array<StatsOperation>;
+  /** The attribute path, e.g., 'attrib.fps' */
+  field: Scalars['String']['input'];
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
+  columnMetadata?: Maybe<Array<ColumnStats>>;
   endCursor?: Maybe<Scalars['String']['output']>;
   hasNextPage: Scalars['Boolean']['output'];
   hasPreviousPage: Scalars['Boolean']['output'];
@@ -536,6 +571,8 @@ export type ProductAttribType = {
 
 export type ProductBaseType = {
   __typename?: 'ProductBaseType';
+  color: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
   name: Scalars['String']['output'];
 };
 
@@ -644,12 +681,16 @@ export type ProductType = {
 export type ProductsConnection = {
   __typename?: 'ProductsConnection';
   edges: Array<ProductEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
 
 export type ProjectAttribType = {
   __typename?: 'ProjectAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
+  airtablePush?: Maybe<Scalars['Boolean']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -660,15 +701,22 @@ export type ProjectAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
-  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** Push changes done to this project to ShotGrid. Requires the transmitter service. */
+  shotgridPush?: Maybe<Scalars['Boolean']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
 };
@@ -830,6 +878,8 @@ export type ProjectNodeFoldersArgs = {
   assignees?: InputMaybe<Array<Scalars['String']['input']>>;
   attributes?: InputMaybe<Array<AttributeFilterInput>>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
+  calculateStatistics?: Scalars['Boolean']['input'];
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1016,6 +1066,7 @@ export type ProjectNodeWorkfilesArgs = {
 export type ProjectsConnection = {
   __typename?: 'ProjectsConnection';
   edges: Array<ProjectEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1198,9 +1249,25 @@ export type RepresentationNodeLinksArgs = {
 export type RepresentationsConnection = {
   __typename?: 'RepresentationsConnection';
   edges: Array<RepresentationEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
+
+export enum StatsOperation {
+  Avg = 'AVG',
+  Checked = 'CHECKED',
+  Filled = 'FILLED',
+  Max = 'MAX',
+  Min = 'MIN',
+  NotChecked = 'NOT_CHECKED',
+  NotFilled = 'NOT_FILLED',
+  PercentageChecked = 'PERCENTAGE_CHECKED',
+  PercentageEmpty = 'PERCENTAGE_EMPTY',
+  PercentageFilled = 'PERCENTAGE_FILLED',
+  PercentageNotChecked = 'PERCENTAGE_NOT_CHECKED',
+  Sum = 'SUM'
+}
 
 export type Status = {
   __typename?: 'Status';
@@ -1232,6 +1299,8 @@ export type Tag = {
 
 export type TaskAttribType = {
   __typename?: 'TaskAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   /** Textual description of the entity */
@@ -1242,17 +1311,23 @@ export type TaskAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
+  ftrackPath?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  jiraCurrentPhase?: Maybe<Scalars['String']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
-  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type TaskEdge = {
@@ -1376,6 +1451,7 @@ export type TaskType = {
 export type TasksConnection = {
   __typename?: 'TasksConnection';
   edges: Array<TaskEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1435,12 +1511,15 @@ export type UserNodeTasksArgs = {
 export type UsersConnection = {
   __typename?: 'UsersConnection';
   edges: Array<UserEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
 
 export type VersionAttribType = {
   __typename?: 'VersionAttribType';
+  airtableId?: Maybe<Scalars['String']['output']>;
+  airtablePath?: Maybe<Scalars['String']['output']>;
   clipIn?: Maybe<Scalars['Int']['output']>;
   clipOut?: Maybe<Scalars['Int']['output']>;
   colorSpace?: Maybe<Scalars['String']['output']>;
@@ -1452,6 +1531,7 @@ export type VersionAttribType = {
   fps?: Maybe<Scalars['Float']['output']>;
   frameEnd?: Maybe<Scalars['Int']['output']>;
   frameStart?: Maybe<Scalars['Int']['output']>;
+  ftrackId?: Maybe<Scalars['String']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
   intent?: Maybe<Scalars['String']['output']>;
@@ -1461,6 +1541,10 @@ export type VersionAttribType = {
   resolutionHeight?: Maybe<Scalars['Int']['output']>;
   /** Horizontal resolution */
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
+  /** The Shotgrid ID of this entity. */
+  shotgridId?: Maybe<Scalars['String']['output']>;
+  /** The Shotgrid Type of this entity. */
+  shotgridType?: Maybe<Scalars['String']['output']>;
   site?: Maybe<Scalars['String']['output']>;
   source?: Maybe<Scalars['String']['output']>;
 };
@@ -1556,6 +1640,7 @@ export type VersionNodeRepresentationsArgs = {
 export type VersionsConnection = {
   __typename?: 'VersionsConnection';
   edges: Array<VersionEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };
@@ -1623,6 +1708,7 @@ export type WorkfileNodeLinksArgs = {
 export type WorkfilesConnection = {
   __typename?: 'WorkfilesConnection';
   edges: Array<WorkfileEdge>;
+  fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
 };

@@ -8,6 +8,7 @@ import {
 } from '@shared/api/generated'
 import { PubSub } from '@shared/util'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import type { FieldStats } from '@shared/containers/ProjectTreeTable'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -606,6 +607,43 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks, projectName),
     }),
+    // Column summary stats over the full filtered folder set.
+    // Hand-written GraphQL (folders.fieldStats) so it works without codegen.
+    getFolderColumnStats: build.query<
+      FieldStats[],
+      { projectName: string; filter?: string; search?: string }
+    >({
+      query: ({ projectName, filter, search }) => ({
+        document: `
+          query GetFolderColumnStats($projectName: String!, $filter: String, $search: String) {
+            project(name: $projectName) {
+              name
+              folders(calculateStatistics: true, filter: $filter, search: $search) {
+                fieldStats {
+                  columnName
+                  min
+                  max
+                  avg
+                  valueFilledCount
+                  percentageFilled
+                  valueNotFilledCount
+                  percentageNotFilled
+                  checkedCount
+                  checkedPercentage
+                  notCheckedCount
+                  notCheckedPercentage
+                }
+              }
+            }
+          }
+        `,
+        variables: { projectName, filter, search },
+      }),
+      transformResponse: (res: any) => res?.project?.folders?.fieldStats ?? [],
+      // Dedicated tag so entity edits can refetch the footer stats without
+      // forcing a full task-list refetch (which uses 'overviewTask').
+      providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
+    }),
   }),
 })
 
@@ -616,5 +654,6 @@ export const {
   useGetTasksListInfiniteInfiniteQuery,
   useLazyGetTasksByParentQuery,
   useGetGroupedTasksListQuery,
+  useGetFolderColumnStatsQuery,
 } = injectedApi
 export default injectedApi

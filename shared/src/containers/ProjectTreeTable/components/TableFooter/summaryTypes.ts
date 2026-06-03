@@ -13,6 +13,10 @@ export type BooleanCalc = 'checked' | 'notChecked' | 'percentChecked' | 'percent
 
 export type SummaryCalc = NumberCalc | BooleanCalc | 'filled'
 
+// Which rows feed the aggregation: 'all' = groups/folders + tasks, 'tasks' = tasks only.
+export type RowScope = 'all' | 'tasks'
+export const DEFAULT_ROW_SCOPE: RowScope = 'tasks'
+
 export type SummaryDistributionItem = {
   value: string
   label?: string
@@ -48,6 +52,10 @@ export type ColumnSummary = {
 
   distribution?: SummaryDistributionItem[]
   total?: number
+
+  // main/count column: separate folder and task (or product/version) totals
+  folderCount?: number
+  taskCount?: number
 }
 
 // The main/label column shows a dual count whose left label depends on the mode.

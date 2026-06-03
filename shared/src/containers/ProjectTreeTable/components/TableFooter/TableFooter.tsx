@@ -9,7 +9,7 @@ import { ROW_SELECTION_COLUMN_ID } from '../../context/SelectionCellsContext'
 import * as Styled from './TableFooter.styled'
 import { SummaryCell } from './SummaryCell'
 import { classifyColumnSummary } from './classifyColumnSummary'
-import { ColumnSummaryMap, MainCountSummary, SummaryCalc } from './summaryTypes'
+import { ColumnSummaryMap, SummaryCalc, RowScope } from './summaryTypes'
 
 const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
@@ -35,9 +35,10 @@ interface TableFooterProps {
   virtualPaddingRight: number | undefined
   attribs: ProjectTableAttribute[]
   summaries: ColumnSummaryMap
-  mainCount: MainCountSummary
   calcByColumn: Record<string, SummaryCalc>
   onCalcChange: (columnId: string, calc: SummaryCalc) => void
+  scopeByColumn: Record<string, RowScope>
+  onScopeChange: (columnId: string, scope: RowScope) => void
 }
 
 export const TableFooter = ({
@@ -47,9 +48,10 @@ export const TableFooter = ({
   virtualPaddingRight,
   attribs,
   summaries,
-  mainCount,
   calcByColumn,
   onCalcChange,
+  scopeByColumn,
+  onScopeChange,
 }: TableFooterProps) => {
   const visibleColumns = table.getVisibleLeafColumns()
   const virtualColumns = columnVirtualizer.getVirtualItems()
@@ -77,9 +79,10 @@ export const TableFooter = ({
                 <SummaryCell
                   kind={classifyColumnSummary(column.id, attribs)}
                   summary={summaries[column.id]}
-                  mainCount={mainCount}
                   calc={calcByColumn[column.id]}
                   onCalcChange={(c) => onCalcChange(column.id, c)}
+                  scope={scopeByColumn[column.id]}
+                  onScopeChange={(s) => onScopeChange(column.id, s)}
                 />
               )}
             </Styled.FooterCell>

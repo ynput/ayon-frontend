@@ -24,7 +24,7 @@ export const SummaryBreakdown: FC<Props> = ({ items, total, onClose }) => {
   const sorted = [...items].sort((a, b) => b.count - a.count)
 
   return (
-    <Styled.Popover ref={ref}>
+    <Styled.Popover ref={ref} onClick={(e) => e.stopPropagation()}>
       {sorted.map((item) => {
         const pct = total ? Math.round((item.count / total) * 1000) / 10 : 0
         return (

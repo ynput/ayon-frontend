@@ -17,10 +17,14 @@ import {
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
 import { UpdateViewSettingsFn } from '../../utils/viewUpdateHelper'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 
 // Import the internal QueryFilter type that the app uses
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
+import {
+  SummaryCalc,
+  RowScope,
+} from '@shared/containers/ProjectTreeTable/components/TableFooter/summaryTypes'
 
 type Return = {
   // Filter management
@@ -52,6 +56,34 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
 
+  // Per-column summary footer state. The backend currently drops summary /
+  // summaryScope from ColumnItemModel, so the post-PATCH refetch of the working
+  // view would otherwise revert the user's choice. Hold the selections here and
+  // layer them over server columns so they survive the refetch (session only —
+  // they do not persist across reload until the backend stores the fields).
+  const { selectedView, workingView, isViewWorking, editingViewId } = useViewsContext()
+  const [summaryOverrides, setSummaryOverrides] = useState<{
+    summaries: Record<string, SummaryCalc>
+    scopes: Record<string, RowScope>
+  }>({ summaries: {}, scopes: {} })
+
+  // Identity of the view whose settings are on screen. Editing a named view
+  // forks to the working view (selectedView.id flips), but editingViewId still
+  // points at the origin — so the key stays stable and editing keeps overrides.
+  const viewKey = isViewWorking
+    ? editingViewId || workingView?.id || 'working'
+    : selectedView?.id
+  const prevViewKeyRef = useRef<string | undefined>(viewKey)
+  if (prevViewKeyRef.current !== viewKey) {
+    prevViewKeyRef.current = viewKey
+    if (
+      Object.keys(summaryOverrides.summaries).length ||
+      Object.keys(summaryOverrides.scopes).length
+    ) {
+      setSummaryOverrides({ summaries: {}, scopes: {} })
+    }
+  }
+
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings
   const serverFilters = (overviewSettings?.filter as any) ?? {}
@@ -73,7 +105,21 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
   const showHierarchy = localHierarchy !== null ? localHierarchy : serverHierarchy
-  const columns = localColumns || serverColumns
+  const columnsBase = localColumns || serverColumns
+  const columns = useMemo(() => {
+    const hasOverrides =
+      Object.keys(summaryOverrides.summaries).length ||
+      Object.keys(summaryOverrides.scopes).length
+    if (!hasOverrides) return columnsBase
+    return {
+      ...columnsBase,
+      columnSummaries: { ...columnsBase.columnSummaries, ...summaryOverrides.summaries },
+      columnSummaryScopes: {
+        ...columnsBase.columnSummaryScopes,
+        ...summaryOverrides.scopes,
+      },
+    }
+  }, [columnsBase, summaryOverrides])
 
   // Slice type update handler
   const noop = useCallback(() => {}, [])
@@ -127,6 +173,15 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   // Column update handler
   const onUpdateColumns = useCallback(
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
+      // Keep the summary footer choices alive across the working-view refetch
+      // (backend drops these fields, so server state can't be trusted for them).
+      if (tableSettings.columnSummaries || tableSettings.columnSummaryScopes) {
+        setSummaryOverrides((prev) => ({
+          summaries: { ...prev.summaries, ...(tableSettings.columnSummaries || {}) },
+          scopes: { ...prev.scopes, ...(tableSettings.columnSummaryScopes || {}) },
+        }))
+      }
+
       // Derive a stable allColumnIds if not provided to preserve order and grouping on server
       const derivedAll =
         allColumnIds ||

@@ -138,6 +138,25 @@ export const SelectorItem = styled.button`
   }
 `
 
+export const SelectorDivider = styled.div`
+  height: 1px;
+  margin: 4px 0;
+  background-color: var(--md-sys-color-surface-container-highest);
+`
+
+export const ScopeToggleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+
+  span {
+    flex: 1;
+  }
+`
+
 export const BreakdownItem = styled.div`
   display: flex;
   align-items: center;
