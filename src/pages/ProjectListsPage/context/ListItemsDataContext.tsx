@@ -1,5 +1,17 @@
-import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
-import { ProjectDataContextProps, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+} from 'react'
+import {
+  checkColumnVisibility,
+  ProjectDataContextProps,
+  useProjectDataContext,
+} from '@shared/containers/ProjectTreeTable'
 import useGetListItemsData, { EntityListItemWithLinks } from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
 import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
@@ -52,6 +64,8 @@ export interface ListItemsDataContextValue {
   // reset filters
   resetFilters: () => void
   refetch: () => void
+  // links visibility
+  setLinksVisible: (visible: boolean) => void
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -77,6 +91,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const { selectedList, isReview } = useListsContext()
   const selectedListId = selectedList?.id
 
+  const [linksVisible, setLinksVisible] = useState(false)
+
   // TODO: finish setting up settings for lists
   const {
     filters: listItemsFilters,
@@ -84,6 +100,13 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     columns,
     onUpdateColumns,
   } = useListsViewSettings()
+
+  const hasLinkColumn = useMemo(
+    () => checkColumnVisibility(columns.columnVisibility, 'link_'),
+    [columns],
+  )
+
+  const skipLinks = displayStyle !== 'table' || !hasLinkColumn || !linksVisible
 
   const updateSorting = (sorting: SortingState) => {
     onUpdateColumns(
@@ -134,7 +157,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listId: selectedListId,
     sorting: reviewSorting ?? columns.sorting ?? [],
     filters: listItemsFilters,
-    skipLinks: displayStyle !== 'table',
+    skipLinks: skipLinks,
   })
 
   // convert to a Map for easier access
@@ -229,6 +252,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         reorderListItem,
         resetFilters,
         refetch,
+        setLinksVisible,
       }}
     >
       {children}
