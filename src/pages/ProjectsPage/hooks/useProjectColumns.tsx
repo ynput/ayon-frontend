@@ -27,7 +27,7 @@ const THUMBNAIL_INDENT_PER_DEPTH = 16
 const STATIC_COLUMNS_AFTER_THUMBNAIL: ColumnDef<ProjectTableRow, any>[] = [
   columnHelper.accessor('label', {
     id: 'label',
-    header: 'Label',
+    header: 'Label / Name',
     size: 200,
   }),
   columnHelper.accessor('name', {
