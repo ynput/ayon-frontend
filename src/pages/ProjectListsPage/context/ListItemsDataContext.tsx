@@ -12,6 +12,7 @@ import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operation
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
 import { SortingState } from '@tanstack/react-table'
 import { useProjectContext } from '@shared/context'
+import { useReviewCardsSettingsContext } from './ReviewCardsSettingsContext'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
@@ -60,10 +61,10 @@ interface ListItemsDataProviderProps {
 }
 
 const reviewSortKeys = new Map([
-  ["task", "task_id"],
-  ["product", "product_id"],
-  ["path", "name"],
-  ["versionAuthor", "author"],
+  ['task', 'task_id'],
+  ['product', 'product_id'],
+  ['path', 'name'],
+  ['versionAuthor', 'author'],
 ])
 
 // fetch all items and provide methods to update the items
@@ -71,6 +72,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   // Get project data from the new context
   const { projectName } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
+  const { displayStyle } = useReviewCardsSettingsContext()
 
   const { selectedList, isReview } = useListsContext()
   const selectedListId = selectedList?.id
@@ -111,10 +113,12 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     const sorting = selectedList?.data.sorting
     if (!sorting) return null
 
-    return [{
-      id: reviewSortKeys.get(sorting.property) ?? sorting.property,
-      desc: sorting.order,
-    }]
+    return [
+      {
+        id: reviewSortKeys.get(sorting.property) ?? sorting.property,
+        desc: sorting.order,
+      },
+    ]
   }, [isReview, selectedList?.data.sorting])
 
   const {
@@ -130,6 +134,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listId: selectedListId,
     sorting: reviewSorting ?? columns.sorting ?? [],
     filters: listItemsFilters,
+    skipLinks: displayStyle !== 'table',
   })
 
   // convert to a Map for easier access
