@@ -456,6 +456,20 @@ export const TD = styled.td<TableCellProps>`
   }
 `
 
+export const ColumnDividers = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  div {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--md-sys-color-surface-container);
+  }
+`
+
 export const TableHeader = styled.thead`
   display: grid !important;
   position: sticky;

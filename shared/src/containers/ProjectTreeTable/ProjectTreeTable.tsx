@@ -1213,10 +1213,27 @@ const TableBody = ({
 
   useKeyboardNavigation()
 
+  // vertical column lines painted behind the rows so they extend into the empty
+  // space between the last row and the summary footer
+  const visibleLeafColumns = table.getVisibleLeafColumns()
+  const columnDividerLefts = useMemo(() => {
+    const lefts: string[] = []
+    const sizeVars: string[] = []
+    for (let i = 0; i < visibleLeafColumns.length - 1; i++) {
+      const column = visibleLeafColumns[i]
+      // selection column is forced to 20px in CSS while its size var reports defaultColumn.minSize
+      sizeVars.push(
+        column.id === ROW_SELECTION_COLUMN_ID ? '20' : `var(--col-${column.id}-size)`,
+      )
+      lefts.push(`calc((${sizeVars.join(' + ')}) * 1px)`)
+    }
+    return lefts
+  }, [visibleLeafColumns])
+
   const tbodyContent = (
     <tbody
       style={{
-        height: `${rowVirtualizer.getTotalSize()}px`,
+        minHeight: `${rowVirtualizer.getTotalSize()}px`,
         position: 'relative',
         display: 'grid',
       }}
@@ -1225,6 +1242,11 @@ const TableBody = ({
         handlePreFetchTasks(e)
       }}
     >
+      <Styled.ColumnDividers aria-hidden>
+        {columnDividerLefts.map((left, i) => (
+          <div key={i} style={{ left }} />
+        ))}
+      </Styled.ColumnDividers>
       {virtualRows.map((virtualRow, i) => {
         const row = rows[virtualRow.index] as Row<TableRow>
         // Add a check for row existence to prevent potential errors if data is out of sync
