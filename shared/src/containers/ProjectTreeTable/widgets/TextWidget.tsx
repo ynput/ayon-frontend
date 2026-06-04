@@ -5,8 +5,7 @@ import rehypeRaw from 'rehype-raw'
 import { TextWidgetInput } from './TextWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
-import { AttributeData } from '../types'
-import { AttributeEnumItem } from '@shared/api'
+import { EnumItem, AttributeData } from '@shared/api'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { parseHtmlToPlainTextWithLinks } from '@shared/util'
@@ -139,7 +138,7 @@ export interface TextWidgetProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'onChange'>,
     WidgetBaseProps {
   value: string
-  option?: AttributeEnumItem
+  option?: EnumItem
   isInherited?: boolean
   type?: TextWidgetType
   columnId?: string
@@ -413,8 +412,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             // Merge external ref with internal ref
             ;(textRef as React.MutableRefObject<HTMLSpanElement | null>).current = node
             if (typeof ref === 'function') ref(node)
-            else if (ref)
-              (ref as React.MutableRefObject<HTMLSpanElement | null>).current = node
+            else if (ref) (ref as React.MutableRefObject<HTMLSpanElement | null>).current = node
           }}
         >
           {option?.icon && (

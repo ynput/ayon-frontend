@@ -1,6 +1,7 @@
 import { TableRow } from '../types/table'
 import { FolderNodeMap } from '../types/table'
-import { AttributeModel, LoadingTasks } from '../types'
+import { LoadingTasks } from '../types'
+import { AttributeModel } from '@shared/api'
 import { uuid } from 'short-uuid'
 
 /**

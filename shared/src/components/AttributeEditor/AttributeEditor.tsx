@@ -14,7 +14,7 @@ import {
 import { camelCase, upperFirst } from 'lodash'
 import { MinMaxField } from './components'
 import { EnumEditor } from '@shared/components/EnumEditor'
-import { AttributeData, AttributeModel, AttributeEnumItem } from '@shared/api'
+import { AttributeData, AttributeModel } from '@shared/api'
 import {
   UIAttributeType,
   UI_TYPE_OPTIONS,
@@ -274,7 +274,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   } = {
     enum: (value = [], onChange) => (
       <EnumEditor
-        values={value as AttributeEnumItem[]}
+        values={value}
         onChange={(val) => {
           onChange(val?.length ? val : undefined)
         }}

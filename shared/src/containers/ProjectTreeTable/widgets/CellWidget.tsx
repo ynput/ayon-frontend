@@ -17,12 +17,12 @@ import { useCellEditing } from '../context/CellEditingContext'
 import { getCellId } from '../utils/cellUtils'
 import clsx from 'clsx'
 import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { AttributeData, AttributeEnumItem } from '../types'
 import { useProjectContext } from '@shared/context'
 import { EnumCellValue } from './EnumCellValue'
 import { NameWidget } from '@shared/containers/ProjectTreeTable/widgets/NameWidget'
 import { NameWidgetData } from '@shared/components/RenameForm'
 import { READ_ONLY } from '../utils'
+import { AttributeData, EnumItem } from '@shared/api'
 
 const Cell = styled.div`
   position: absolute;
@@ -55,7 +55,10 @@ const Cell = styled.div`
 // use this class to trigger the editing mode on a single click
 export const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
-type WidgetAttributeData = { type: AttributeData['type'] | 'links' | 'name' | 'subtasks' }
+type WidgetAttributeData = {
+  type: AttributeData['type'] | 'links' | 'name' | 'subtasks'
+  widget?: AttributeData['widget']
+}
 
 export type CellValue = string | number | boolean
 export type CellValueData = Record<string, any>
@@ -66,7 +69,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
   value: CellValue | CellValue[]
   valueData?: CellValueData | CellValueData[] // extra data for the value
   attributeData?: WidgetAttributeData
-  options?: AttributeEnumItem[]
+  options?: EnumItem[]
   isCollapsed?: boolean
   isInherited?: boolean
   isPlaceholder?: boolean

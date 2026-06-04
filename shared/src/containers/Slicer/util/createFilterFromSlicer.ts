@@ -1,12 +1,6 @@
-import { AttributeModel } from '../../ProjectTreeTable'
+import { AttributeModel } from '@shared/api'
 import { ProjectTableAttribute } from '../../ProjectTreeTable/hooks/useAttributesList'
-import { SelectionData, SliceDataItem, SliceFilter, SliceType } from '../types'
-
-interface FilterMapping {
-  id: string
-  type: AttributeModel['data']['type']
-  mapValue: (items: SliceDataItem[]) => { id: string; label: string }[]
-}
+import { SelectionData, SliceFilter, SliceType } from '../types'
 
 export type CreateFilterFromSlicer = ({
   selection,

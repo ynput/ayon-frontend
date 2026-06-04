@@ -1,6 +1,6 @@
 import { ColumnDef, FilterFnOption, Row, SortingFn, sortingFns } from '@tanstack/react-table'
 import { TableRow } from './types/table'
-import { AttributeData, ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import { ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import {
   CellWidget,
   MetaWidget,
@@ -17,7 +17,7 @@ import { ROW_SELECTION_COLUMN_ID } from './context/SelectionCellsContext'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
-import { LinkTypeModel } from '@shared/api'
+import { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
 import { Icon } from '@ynput/ayon-react-components'
