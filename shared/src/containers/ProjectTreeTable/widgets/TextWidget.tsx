@@ -418,7 +418,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
         >
           {option?.icon && (
             <Icon
-              icon={option.icon}
+              icon={option.icon as string}
               style={{
                 color: option.color,
               }}

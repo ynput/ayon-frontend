@@ -91,6 +91,7 @@ interface EditorCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'on
 
 export interface WidgetBaseProps {
   isEditing?: boolean
+  isReadOnly?: boolean
   onChange: Required<EditorCellProps>['onChange']
   onCancelEdit?: () => void
 }
@@ -173,6 +174,7 @@ export const CellWidget: FC<EditorCellProps> = ({
       onChange: handleOnChange,
       onCancelEdit: handleCancel,
       isEditing: isCurrentCellEditing,
+      isReadOnly: isReadOnly,
     }
 
     const textTypes: TextWidgetType[] = ['string', 'integer', 'float']
@@ -252,7 +254,7 @@ export const CellWidget: FC<EditorCellProps> = ({
                 isInherited={isInherited}
                 columnId={columnId}
                 cellId={cellId}
-                markdown={attributeData?.widget === 'markdown'}
+                isMarkdown={attributeData?.widget === 'markdown'}
                 onRequestEdit={setEditingCellId}
                 getDraftValue={getEditingDraft}
                 setDraftValue={setEditingDraft}

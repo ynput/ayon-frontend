@@ -1,10 +1,13 @@
 import { FC } from 'react'
 import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
-import { TextWidget } from '@shared/containers/ProjectTreeTable/widgets/TextWidget'
-import { BooleanWidget } from '@shared/containers/ProjectTreeTable/widgets/BooleanWidget'
-import { DateWidget } from '@shared/containers/ProjectTreeTable/widgets/DateWidget'
-import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
+import {
+  TextWidget,
+  MarkdownWidget,
+  BooleanWidget,
+  DateWidget,
+  EnumWidget,
+} from '@shared/containers/ProjectTreeTable/widgets'
 import { useScopedStatuses, useScopedTypes } from '@shared/hooks'
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
@@ -60,6 +63,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   const { type, widget } = field.data
   const widgetCommonProps = {
     isEditing: isEditing && !isReadOnly,
+    isReadOnly: isReadOnly,
     isInherited: false,
     onChange: (newValue: CellValue | CellValue[]) => onChange(field.name, newValue),
   }
@@ -73,18 +77,11 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   let displayValue = value === null || value === undefined ? '' : value
   const labelValue = field.data.title || field.name
 
-  console.log(widget)
-
   // Handle different field types
   switch (true) {
     case type === 'boolean':
       return (
-        <BooleanWidget
-          value={Boolean(displayValue)}
-          {...widgetCommonProps}
-          style={{ margin: 0 }}
-          isReadOnly={isReadOnly}
-        />
+        <BooleanWidget value={Boolean(displayValue)} {...widgetCommonProps} style={{ margin: 0 }} />
       )
 
     case type === 'datetime':
@@ -170,7 +167,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
           onCancelEdit={onCancelEdit}
           align="right"
-          isReadOnly={isReadOnly}
           enableCustomValues={field.enableCustomValues ?? false}
           search={field.enableSearch ?? enumOptions.length >= 5}
           sortBySelected={!enumOptions}
@@ -181,16 +177,26 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
     case type === 'string' || type === 'integer' || type === 'float':
     default:
-      return (
-        <FieldValueText>
-          <TextWidget
+      if (widget === 'markdown') {
+        return (
+          <MarkdownWidget
             value={displayValue.toString()}
             onCancelEdit={onCancelEdit}
-            type={type as 'string' | 'integer' | 'float'}
             {...widgetCommonProps}
           />
-        </FieldValueText>
-      )
+        )
+      } else {
+        return (
+          <FieldValueText>
+            <TextWidget
+              value={displayValue.toString()}
+              onCancelEdit={onCancelEdit}
+              type={type as 'string' | 'integer' | 'float'}
+              {...widgetCommonProps}
+            />
+          </FieldValueText>
+        )
+      }
   }
 }
 

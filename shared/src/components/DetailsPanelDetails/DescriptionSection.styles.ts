@@ -148,6 +148,7 @@ export const StyledEditor = styled.div`
       white-space: normal;
       word-break: keep-all;
       overflow-wrap: normal;
+      padding-bottom: 12px;
 
       /* Consistent scrollbar styling across edit/read-only */
       scrollbar-width: thin;
@@ -245,10 +246,13 @@ export const StyledEditor = styled.div`
         margin-bottom: 8px;
       }
 
-      h2  {
-        a, em, strong, u {
-        font-size: 24px;
-      }
+      h2 {
+        a,
+        em,
+        strong,
+        u {
+          font-size: 24px;
+        }
 
         p {
           word-break: break-word;
@@ -288,6 +292,12 @@ export const StyledEditor = styled.div`
           min-width: 0;
         }
       }
+    }
+  }
+
+  &.compact {
+    .ql-container.ql-snow {
+      padding: 6px var(--padding-s);
     }
   }
 `
@@ -355,7 +365,7 @@ export const StyledMarkdown = styled.div`
     ul,
     ol {
       white-space: nowrap;
-      margin: 16px 0;
+      margin: -8px 0;
       padding-left: 20px !important;
     }
 

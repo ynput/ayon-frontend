@@ -32,6 +32,22 @@ const FormRow = styled.div`
   &:hover .copy-icon {
     opacity: 1;
   }
+
+  &.multi-line {
+    align-items: start;
+    .field-value {
+      height: auto;
+      min-height: 32px;
+      max-height: 112px;
+      padding-top: 0;
+      padding-bottom: 0;
+      display: block;
+    }
+    .field-label {
+      /* move down to make it feel more centered */
+      margin-top: 6px;
+    }
+  }
 `
 
 const FieldValue = styled.div`
@@ -177,10 +193,21 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
           const isMixed = mixedFields?.includes(field.name) || false
 
           return (
-            <FormRow key={field.name}>
-              <FieldLabel name={field.name} data={field.data} showDetailedTooltip />
+            <FormRow
+              key={field.name}
+              className={clsx('field-row', { 'multi-line': field.data.widget === 'markdown' })}
+            >
+              <FieldLabel
+                name={field.name}
+                data={field.data}
+                showDetailedTooltip
+                className="field-label"
+              />
               <FieldValue
-                className={clsx({ editing: isEditing, readonly: isReadOnly })}
+                className={clsx('field-value', {
+                  editing: isEditing,
+                  readonly: isReadOnly,
+                })}
                 onClick={(e) => {
                   // Allow links to work normally - don't intercept clicks on anchor elements
                   if ((e.target as HTMLElement).closest('a')) {
