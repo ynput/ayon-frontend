@@ -131,7 +131,7 @@ const extractAuthor = (item: EntityListItemWithLinks, entityType: string): strin
   switch (entityType) {
     case 'version':
       // @ts-expect-error - author field does exist on version list items
-      return item.author || undefined
+      return item.author || (item.attrib?.author as string) || undefined
     default:
       return ''
   }
