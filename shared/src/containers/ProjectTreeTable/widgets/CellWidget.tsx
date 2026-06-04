@@ -252,6 +252,7 @@ export const CellWidget: FC<EditorCellProps> = ({
                 isInherited={isInherited}
                 columnId={columnId}
                 cellId={cellId}
+                markdown={attributeData?.widget === 'markdown'}
                 onRequestEdit={setEditingCellId}
                 getDraftValue={getEditingDraft}
                 setDraftValue={setEditingDraft}
@@ -291,6 +292,12 @@ export const CellWidget: FC<EditorCellProps> = ({
             isInherited={isInherited}
             columnId={columnId}
             cellId={cellId}
+            isMarkdown={
+              attributeData?.widget === 'markdown' ||
+              // description SHOULD be default markdown, but lets have this here just in case
+              columnId === 'attrib_description' ||
+              columnId === 'description'
+            }
             type={type as TextWidgetType}
             onRequestEdit={setEditingCellId}
             getDraftValue={getEditingDraft}
