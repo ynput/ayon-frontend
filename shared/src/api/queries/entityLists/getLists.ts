@@ -6,6 +6,7 @@ import {
   TagTypesFromApi,
 } from '@reduxjs/toolkit/query'
 import type {
+  EntityList,
   GetListItemsQuery,
   GetListItemsQueryVariables,
   GetListsItemsForReviewSessionQuery,
@@ -166,41 +167,74 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         ]
       },
       async onCacheEntryAdded(
-        _args,
-        { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
+        { projectName },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData },
       ) {
-        let token
+        const topics = ['entity_list.changed', 'entity_list.created', 'entity_list.deleted']
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
           const handlePubSub = (topic: string, message: ListItemMessage) => {
-            if (topic !== 'entity_list.changed') return
             const summary = message.summary
             const id = summary.id
             if (!id) return
 
-            // We have all the data we need to update the cache
-            updateCachedData((draft) => {
-              const list = draft.pages.flatMap((page) => page.lists).find((l) => l.id === id)
-              if (!list) return
-              const newList = {
-                ...list,
+            const getListFromSummary = (list?: EntityList): EntityList => {
+              return {
+                // defaults
+                projectName: projectName,
+                tags: [],
+                data: {},
+                allAttrib: '',
+                attrib: {},
+                createdAt: new Date().toISOString(),
+                updatedAt: '',
+                active: true,
+                access: '',
+                accessLevel: 30, // default admin
+                // existing data
+                ...(list || {}),
+                // new data
+                id: summary.id as string,
                 label: summary.label,
                 entityType: summary.entity_type,
                 entityListType: summary.entity_list_type,
                 count: summary.count,
               }
+            }
 
-              Object.assign(list, newList)
-            })
-            // NOTE: We have to invalidate here as we don't know if other fields are updated not included in the updateCachedData
-            // invalidates lists list cache
-            dispatch(gqlApi.util.invalidateTags([{ type: 'entityList', id: `LIST` }]))
+            if (topic === 'entity_list.changed') {
+              // update the data of existing list in cache
+              updateCachedData((draft) => {
+                const list = draft.pages.flatMap((page) => page.lists).find((l) => l.id === id)
+                if (!list) return
+                const newList = getListFromSummary(list)
+
+                Object.assign(list, newList)
+              })
+            } else if (topic === 'entity_list.created') {
+              // Add new list to the cache using basic summary
+              updateCachedData((draft) => {
+                const newList = getListFromSummary()
+                // Insert the new list at the beginning of the first page
+                if (draft.pages.length !== 0) {
+                  draft.pages[0].lists.unshift(newList)
+                } else {
+                  // if there are no page yet, don't do anything - the user should refresh the page
+                }
+              })
+            } else if (topic === 'entity_list.deleted') {
+              // delete the list from the cache
+              updateCachedData((draft) => {
+                draft.pages.forEach((page) => {
+                  page.lists = page.lists.filter((l) => l.id !== id)
+                })
+              })
+            }
           }
 
-          // sub to websocket topic
-          token = PubSub.subscribe('entity_list.changed', handlePubSub)
+          topics.forEach((topic) => PubSub.subscribe(topic, handlePubSub))
         } catch {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
@@ -208,7 +242,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         // cacheEntryRemoved will resolve when the cache subscription is no longer active
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
-        PubSub.unsubscribe(token)
+        topics.forEach((t) => PubSub.unsubscribe(t))
       },
     }),
     getListItemsInfinite: build.infiniteQuery<
