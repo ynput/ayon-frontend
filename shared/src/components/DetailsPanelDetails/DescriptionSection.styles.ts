@@ -312,10 +312,14 @@ export const StyledFooter = styled.div`
 `
 
 export const StyledMarkdown = styled.div`
+  min-width: 0;
   .markdown-content {
     color: var(--md-sys-color-on-surface);
     line-height: 1.5;
     white-space: pre-wrap; /* prevent preserved newlines from adding extra gaps compared to editor */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow-x: clip;
 
     /* Normalize spacing to match the editor */
     /* Match editor heading sizes: Quill uses ~1.5em for H2 */

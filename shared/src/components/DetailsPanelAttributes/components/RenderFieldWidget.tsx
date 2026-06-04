@@ -45,6 +45,7 @@ interface RenderFieldWidgetProps {
   isMixed: boolean
   onChange: (fieldName: string, value: CellValue | CellValue[]) => void
   onCancelEdit: () => void
+  onExpand?: () => void
   entities?: DetailsPanelEntityData[]
   entityType?: string
 }
@@ -57,6 +58,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   isMixed,
   onChange,
   onCancelEdit,
+  onExpand,
   entities = [],
   entityType = 'task',
 }) => {
@@ -182,6 +184,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           <MarkdownWidget
             value={displayValue.toString()}
             onCancelEdit={onCancelEdit}
+            onExpand={onExpand}
+            showExpand={!!onExpand}
             {...widgetCommonProps}
           />
         )
