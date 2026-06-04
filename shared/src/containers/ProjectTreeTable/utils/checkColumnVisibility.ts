@@ -19,7 +19,7 @@ export const checkColumnVisibility = (
   }
 
   // 3. Partial match (e.g., name_*) in columns
-  const baseName = fieldName.replace('*', '')
+  const baseName = fieldName.replace(/\*/g, '')
   const partialMatchKey = Object.keys(columns).find(
     (key) => key.startsWith(baseName) && columns[key] !== undefined,
   )
