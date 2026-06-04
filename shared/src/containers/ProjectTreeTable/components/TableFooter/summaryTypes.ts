@@ -10,8 +10,9 @@ export type SummaryKind =
 
 export type NumberCalc = 'sum' | 'avg' | 'min' | 'max' | 'none'
 export type BooleanCalc = 'checked' | 'notChecked' | 'percentChecked' | 'percentNotChecked'
+export type TextCalc = 'filled' | 'notFilled' | 'percentFilled' | 'percentNotFilled'
 
-export type SummaryCalc = NumberCalc | BooleanCalc | 'filled'
+export type SummaryCalc = NumberCalc | BooleanCalc | TextCalc
 
 // Which rows feed the aggregation: 'all' = groups/folders + tasks, 'tasks' = tasks only.
 export type RowScope = 'all' | 'tasks'
@@ -67,3 +68,15 @@ export type MainCountSummary = {
 }
 
 export type ColumnSummaryMap = Record<string, ColumnSummary>
+
+// Labels for the main/count cell's dual count. Defaults to folders/tasks (Overview);
+// Versions/Products page overrides with products/versions.
+export type MainCountLabels = {
+  primary: string
+  secondary?: string
+}
+
+export const DEFAULT_MAIN_COUNT_LABELS: MainCountLabels = {
+  primary: 'folders',
+  secondary: 'tasks',
+}

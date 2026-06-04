@@ -288,7 +288,27 @@ const scheduleFolderStatsRefetch = (
   folderStatsRefetchTimer = setTimeout(() => {
     folderStatsRefetchTimer = null
     dispatch(
-      getOverviewApi.util.invalidateTags([{ type: 'folderColumnStats', id: projectName }]),
+      getOverviewApi.util.invalidateTags([
+        { type: 'folderColumnStats', id: projectName },
+        { type: 'taskColumnStats', id: projectName },
+      ]),
+    )
+  }, 500)
+}
+
+let vpStatsRefetchTimer: ReturnType<typeof setTimeout> | null = null
+const scheduleVPStatsRefetch = (
+  dispatch: ThunkDispatch<any, any, UnknownAction>,
+  projectName: string,
+) => {
+  if (vpStatsRefetchTimer) clearTimeout(vpStatsRefetchTimer)
+  vpStatsRefetchTimer = setTimeout(() => {
+    vpStatsRefetchTimer = null
+    dispatch(
+      getOverviewApi.util.invalidateTags([
+        { type: 'productColumnStats', id: projectName },
+        { type: 'versionColumnStats', id: projectName },
+      ]),
     )
   }, 500)
 }
@@ -593,15 +613,21 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
 
           const taskOperations = operationsByType.task || []
           const folderOperations = operationsByType.folder || []
+          const versionOperations = operationsByType.version || []
+          const productOperations = operationsByType.product || []
 
-          // Early exit if no operations
-          if (taskOperations.length === 0 && folderOperations.length === 0) {
-            return
+        if (projectName) {
+            if (taskOperations.length || folderOperations.length) {
+              scheduleFolderStatsRefetch(dispatch, projectName)
+            }
+            if (versionOperations.length || productOperations.length) {
+              scheduleVPStatsRefetch(dispatch, projectName)
+            }
           }
 
-          // Refetch footer summary stats (debounced) since data changed
-          if (projectName) {
-            scheduleFolderStatsRefetch(dispatch, projectName)
+
+          if (taskOperations.length === 0 && folderOperations.length === 0) {
+            return
           }
 
           // Extract updated entity IDs (always needed for refetch)
@@ -685,7 +711,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           }
           if ((op.data as any)?.attrib) hasAttribOp = true
         })
-        
+
         if (hasAttribOp) {
           tasksFolderTags.push({ type: 'tasksFolder', id: projectName })
         }

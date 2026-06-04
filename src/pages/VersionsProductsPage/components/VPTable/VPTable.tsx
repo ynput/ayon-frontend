@@ -5,7 +5,16 @@ import {
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
-import { FC } from 'react'
+import {
+  mockFieldStats,
+  mergeFieldStats,
+  buildMetricTargets,
+  useColumnSettingsContext,
+} from '@shared/containers/ProjectTreeTable'
+import type { FieldStats } from '@shared/containers/ProjectTreeTable'
+import { useProjectDataContext } from '@shared/containers'
+import { useGetProductsColumnStatsQuery, useGetVersionsColumnStatsQuery } from '@shared/api'
+import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/VPDataContext'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
@@ -16,9 +25,56 @@ interface VPTableProps {
   contextMenuItems: VPContextMenuItems
 }
 
+const totalRows = (stats: FieldStats[]): number =>
+  stats.reduce(
+    (max, s) => Math.max(max, (s.valueFilledCount ?? 0) + (s.valueNotFilledCount ?? 0)),
+    0,
+  )
+
 const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
-  const { fetchNextPage, isLoading } = useVersionsDataContext()
+  const { fetchNextPage, isLoading, columnStatsArgs } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
+  const { attribFields } = useProjectDataContext()
+  const { columnVisibility } = useColumnSettingsContext()
+
+  const productTargets = useMemo(
+    () =>
+      buildMetricTargets({
+        entity: 'product',
+        attribs: attribFields,
+        columnVisibility,
+        extraFields: columnVisibility['productBaseType'] !== false ? ['product_base_type'] : [],
+      }),
+    [attribFields, columnVisibility],
+  )
+  const versionTargets = useMemo(
+    () => buildMetricTargets({ entity: 'version', attribs: attribFields, columnVisibility }),
+    [attribFields, columnVisibility],
+  )
+
+  // Live product/version stats over the filtered set, merged with mock for the
+  // columns/fields the backend doesn't return yet (distributions, etc.).
+  const { data: productStats } = useGetProductsColumnStatsQuery(
+    { ...columnStatsArgs, targets: productTargets },
+    { skip: !columnStatsArgs.projectName },
+  )
+  const { data: versionStats } = useGetVersionsColumnStatsQuery(
+    { ...columnStatsArgs, targets: versionTargets },
+    { skip: !columnStatsArgs.projectName },
+  )
+
+  // Primary scope = versions; product stats feed the "include groups & folders"
+  // row scope via groupFieldStats.
+  const fieldStats = useMemo(() => {
+    const products = productStats ?? []
+    const versions = versionStats ?? []
+    const mainCount: FieldStats = {
+      columnName: 'name',
+      folderCount: totalRows(products),
+      taskCount: totalRows(versions),
+    }
+    return mergeFieldStats([...versions, mainCount], mockFieldStats)
+  }, [productStats, versionStats])
   const {
     uploadVersionItem,
     deleteVersionItem,
@@ -40,6 +96,10 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       isExpandable={showProducts}
       isLoading={isLoading}
       includeLinks={false}
+      showColumnSummaries
+      fieldStats={fieldStats}
+      groupFieldStats={productStats}
+      mainCountLabels={{ primary: 'products', secondary: 'versions' }}
       columnsConfig={{
         name: {
           display: { path_compact: false, path_full: true },

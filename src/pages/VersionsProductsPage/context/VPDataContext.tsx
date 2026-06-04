@@ -77,6 +77,14 @@ interface VersionsDataContextValue {
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
+  // combined filter strings (incl. slicer) for the column-summary stats queries
+  columnStatsArgs: {
+    projectName: string
+    productFilter?: string
+    versionFilter?: string
+    taskFilter?: string
+    folderIds?: string[]
+  }
   // data
   versionsTableData: TableRow[]
   versionsMap: VersionMap // root versions only
@@ -539,6 +547,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
+    columnStatsArgs: {
+      projectName,
+      productFilter: combinedProductFilter.filterString,
+      versionFilter: combinedVersionFilter.filterString,
+      taskFilter: entityListTaskFilterString,
+      folderIds: slicerFolderIds,
+    },
     // expanded
     expanded,
     setExpanded,

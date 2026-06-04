@@ -4,6 +4,7 @@ import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder } from '@shared/components'
 import { BuildTreeTableColumnsProps, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
+import { mockFieldStats } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
 import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
@@ -34,6 +35,12 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   const [hiddenColumns, readOnly] = useMemo(
     () => getColumnConfigFromType(selectedList?.entityType),
     [selectedList],
+  )
+
+  // Lists are single entity-type: label the main count by that type (versions, tasks, …).
+  const mainCountLabels = useMemo(
+    () => ({ primary: selectedList?.entityType ? `${selectedList.entityType}s` : 'items' }),
+    [selectedList?.entityType],
   )
 
   if (!selectedList) return (
@@ -71,6 +78,9 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         sortableRows={!viewOnly}
         enableSorting={!isReview}
         dndActiveId={dndActiveId} // Pass prop
+        showColumnSummaries
+        fieldStats={mockFieldStats}
+        mainCountLabels={mainCountLabels}
       />
       <ListItemsShortcuts />
       <ListsAttributesShortcutButton />

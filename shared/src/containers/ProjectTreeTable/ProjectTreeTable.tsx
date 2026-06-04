@@ -34,7 +34,7 @@ import buildTreeTableColumns, {
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooter, useColumnSummaries } from './components/TableFooter'
-import type { FieldStats } from './components/TableFooter'
+import type { FieldStats, MainCountLabels } from './components/TableFooter'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -152,7 +152,9 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   dndActiveId?: UniqueIdentifier | null // Added prop
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
   showColumnSummaries?: boolean // render the fixed summary footer row
-  fieldStats?: FieldStats[] // backend column stats (connection.fieldStats) feeding the footer
+  fieldStats?: FieldStats[] // primary-entity stats (tasks/versions) feeding the footer
+  groupFieldStats?: FieldStats[] // group-entity stats (folders/products) for the 'all' row scope
+  mainCountLabels?: MainCountLabels // labels for the main cell dual count (defaults folders/tasks)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
   pt?: {
@@ -182,6 +184,8 @@ export const ProjectTreeTable = ({
   columnsConfig,
   showColumnSummaries = false,
   fieldStats,
+  groupFieldStats,
+  mainCountLabels,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
   pt,
@@ -511,6 +515,7 @@ export const ProjectTreeTable = ({
   const columnSummaryData = useColumnSummaries({
     enabled: showColumnSummaries,
     fieldStats,
+    groupFieldStats,
   })
 
   // Calculate dynamic row height based on user setting from Customize panel
@@ -681,10 +686,12 @@ export const ProjectTreeTable = ({
                 virtualPaddingRight={virtualPaddingRight}
                 attribs={attribFields}
                 summaries={columnSummaryData.summaries}
+                allScopeSummaries={columnSummaryData.allScopeSummaries}
                 calcByColumn={columnSummaries}
                 onCalcChange={updateColumnSummary}
                 scopeByColumn={columnSummaryScopes}
                 onScopeChange={updateColumnSummaryScope}
+                mainCountLabels={mainCountLabels}
               />
             )}
           </table>

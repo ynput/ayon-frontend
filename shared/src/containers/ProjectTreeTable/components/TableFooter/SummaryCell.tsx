@@ -2,6 +2,7 @@ import { FC, useEffect, useRef, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './TableFooter.styled'
 import { ProportionBar } from './ProportionBar'
+import { SummaryBreakdown } from './SummaryBreakdown'
 import { CalcSelector } from './CalcSelector'
 import {
   DEFAULT_CALC,
@@ -9,7 +10,15 @@ import {
   formatEditableSummary,
   isEditableKind,
 } from './calcOptions'
-import { ColumnSummary, RowScope, SummaryCalc, SummaryKind } from './summaryTypes'
+import {
+  ColumnSummary,
+  DEFAULT_MAIN_COUNT_LABELS,
+  MainCountLabels,
+  RowScope,
+  SummaryCalc,
+  SummaryDistributionItem,
+  SummaryKind,
+} from './summaryTypes'
 
 type Props = {
   kind: SummaryKind
@@ -18,12 +27,7 @@ type Props = {
   onCalcChange?: (calc: SummaryCalc) => void
   scope?: RowScope
   onScopeChange?: (scope: RowScope) => void
-}
-
-const formatDate = (iso?: string) => {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  mainCountLabels?: MainCountLabels
 }
 
 const EditableSummary: FC<{
@@ -36,7 +40,7 @@ const EditableSummary: FC<{
 }> = ({ kind, summary, calc, onChange, scope, onScopeChange }) => {
   const [open, setOpen] = useState(false)
   const effective = calc ?? DEFAULT_CALC[kind]
-  const formatted = formatEditableSummary(effective, summary)
+  const formatted = formatEditableSummary(effective, summary, kind)
 
   // Close on mouse-leave like a normal dropdown. A grace delay bridges the small
   // gap between the trigger and the popover so moving onto the menu doesn't close it.
@@ -83,13 +87,13 @@ const EditableSummary: FC<{
 }
 
 type MainMode = 'both' | 'folders' | 'tasks'
-const MAIN_OPTIONS: { value: MainMode; label: string }[] = [
-  { value: 'both', label: 'Folders & Tasks' },
-  { value: 'folders', label: 'Folders' },
-  { value: 'tasks', label: 'Tasks' },
-]
 
-const MainCountCell: FC<{ summary: ColumnSummary }> = ({ summary }) => {
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = ({
+  summary,
+  labels,
+}) => {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<MainMode>('both')
   const ref = useRef<HTMLDivElement>(null)
@@ -104,7 +108,26 @@ const MainCountCell: FC<{ summary: ColumnSummary }> = ({ summary }) => {
 
   const folders = summary.folderCount ?? summary.total ?? summary.filledCount
   const tasks = summary.taskCount
+
+  // Single-type table (e.g. Lists): one static count, no dual toggle.
+  if (!labels.secondary) {
+    const count = folders ?? tasks
+    if (count == null) return null
+    return (
+      <Styled.CellContent>
+        <span className="value">{count}</span>
+        <span className="label">{labels.primary}</span>
+      </Styled.CellContent>
+    )
+  }
+
   if (folders == null && tasks == null) return null
+
+  const mainOptions: { value: MainMode; label: string }[] = [
+    { value: 'both', label: `${cap(labels.primary)} & ${cap(labels.secondary)}` },
+    { value: 'folders', label: cap(labels.primary) },
+    { value: 'tasks', label: cap(labels.secondary) },
+  ]
 
   const showFolders = (mode === 'both' || mode === 'folders') && folders != null
   const showTasks = (mode === 'both' || mode === 'tasks') && tasks != null
@@ -114,19 +137,19 @@ const MainCountCell: FC<{ summary: ColumnSummary }> = ({ summary }) => {
       {showFolders && (
         <>
           <span className="value">{folders}</span>
-          <span className="label">folders</span>
+          <span className="label">{labels.primary}</span>
         </>
       )}
       {showFolders && showTasks && <span className="label">|</span>}
       {showTasks && (
         <>
           <span className="value">{tasks}</span>
-          <span className="label">tasks</span>
+          <span className="label">{labels.secondary}</span>
         </>
       )}
       {open && (
         <Styled.Popover ref={ref} onClick={(e) => e.stopPropagation()}>
-          {MAIN_OPTIONS.map((opt) => (
+          {mainOptions.map((opt) => (
             <Styled.SelectorItem
               key={opt.value}
               className={opt.value === mode ? 'selected' : undefined}
@@ -145,6 +168,61 @@ const MainCountCell: FC<{ summary: ColumnSummary }> = ({ summary }) => {
   )
 }
 
+const EnumSummaryCell: FC<{ summary?: ColumnSummary }> = ({ summary }) => {
+  const [open, setOpen] = useState(false)
+
+  if (summary?.distribution?.length) return <ProportionBar items={summary.distribution} />
+
+  const filled = summary?.filledCount
+  const notFilled = summary?.notFilledCount
+  const total = summary?.total
+
+  const items: SummaryDistributionItem[] = []
+  if (filled != null) {
+    items.push({
+      value: '__filled__',
+      label: 'Filled',
+      count: filled,
+      color: 'var(--md-sys-color-primary)',
+    })
+  }
+  if (notFilled != null) {
+    items.push({
+      value: '__empty__',
+      label: 'Empty',
+      count: notFilled,
+      color: 'var(--md-sys-color-surface-container-highest)',
+    })
+  }
+
+  return (
+    <Styled.Clickable onMouseDown={(e) => e.stopPropagation()} onClick={() => setOpen((v) => !v)}>
+      {filled != null ? (
+        <>
+          <span className="value">{filled}</span>
+          {total != null && <span className="label">/ {total}</span>}
+        </>
+      ) : (
+        <span className="label">—</span>
+      )}
+      {open &&
+        (items.length ? (
+          <SummaryBreakdown
+            items={items}
+            total={(filled ?? 0) + (notFilled ?? 0)}
+            onClose={() => setOpen(false)}
+          />
+        ) : (
+          <Styled.Popover onClick={(e) => e.stopPropagation()}>
+            <Styled.BreakdownItem>
+              <span className="name">No data yet</span>
+            </Styled.BreakdownItem>
+          </Styled.Popover>
+        ))}
+    </Styled.Clickable>
+  )
+}
+
 export const SummaryCell: FC<Props> = ({
   kind,
   summary,
@@ -152,6 +230,7 @@ export const SummaryCell: FC<Props> = ({
   onCalcChange,
   scope,
   onScopeChange,
+  mainCountLabels = DEFAULT_MAIN_COUNT_LABELS,
 }) => {
   if (isEditableKind(kind)) {
     return summary ? (
@@ -168,25 +247,11 @@ export const SummaryCell: FC<Props> = ({
 
   switch (kind) {
     case 'main':
-      return summary ? <MainCountCell summary={summary} /> : null
-
-    case 'datetime':
-      return summary ? (
-        <Styled.CellContent>
-          <span className="value">{formatDate(summary.maxDate)}</span>
-        </Styled.CellContent>
-      ) : null
+      return summary ? <MainCountCell summary={summary} labels={mainCountLabels} /> : null
 
     case 'enum':
-      // needs backend group-by-value distribution; blank until then
-      return summary?.distribution?.length ? (
-        <ProportionBar items={summary.distribution} />
-      ) : null
-
     case 'assignee':
-      return summary?.distribution?.length ? (
-        <ProportionBar items={summary.distribution} />
-      ) : null
+      return <EnumSummaryCell summary={summary} />
 
     default:
       return null

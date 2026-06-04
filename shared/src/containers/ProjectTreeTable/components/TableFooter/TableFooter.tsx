@@ -9,7 +9,7 @@ import { ROW_SELECTION_COLUMN_ID } from '../../context/SelectionCellsContext'
 import * as Styled from './TableFooter.styled'
 import { SummaryCell } from './SummaryCell'
 import { classifyColumnSummary } from './classifyColumnSummary'
-import { ColumnSummaryMap, SummaryCalc, RowScope } from './summaryTypes'
+import { ColumnSummaryMap, SummaryCalc, RowScope, MainCountLabels } from './summaryTypes'
 
 const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
@@ -35,10 +35,12 @@ interface TableFooterProps {
   virtualPaddingRight: number | undefined
   attribs: ProjectTableAttribute[]
   summaries: ColumnSummaryMap
+  allScopeSummaries: ColumnSummaryMap
   calcByColumn: Record<string, SummaryCalc>
   onCalcChange: (columnId: string, calc: SummaryCalc) => void
   scopeByColumn: Record<string, RowScope>
   onScopeChange: (columnId: string, scope: RowScope) => void
+  mainCountLabels?: MainCountLabels
 }
 
 export const TableFooter = ({
@@ -48,12 +50,18 @@ export const TableFooter = ({
   virtualPaddingRight,
   attribs,
   summaries,
+  allScopeSummaries,
   calcByColumn,
   onCalcChange,
   scopeByColumn,
   onScopeChange,
+  mainCountLabels,
 }: TableFooterProps) => {
-  const visibleColumns = table.getVisibleLeafColumns()
+  const visibleColumns = [
+    ...table.getLeftVisibleLeafColumns(),
+    ...table.getCenterVisibleLeafColumns(),
+    ...table.getRightVisibleLeafColumns(),
+  ]
   const virtualColumns = columnVirtualizer.getVirtualItems()
 
   return (
@@ -78,11 +86,16 @@ export const TableFooter = ({
               {!isUtility && (
                 <SummaryCell
                   kind={classifyColumnSummary(column.id, attribs)}
-                  summary={summaries[column.id]}
+                  summary={
+                    scopeByColumn[column.id] === 'all'
+                      ? allScopeSummaries[column.id] ?? summaries[column.id]
+                      : summaries[column.id]
+                  }
                   calc={calcByColumn[column.id]}
                   onCalcChange={(c) => onCalcChange(column.id, c)}
                   scope={scopeByColumn[column.id]}
                   onScopeChange={(s) => onScopeChange(column.id, s)}
+                  mainCountLabels={mainCountLabels}
                 />
               )}
             </Styled.FooterCell>
