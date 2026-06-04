@@ -24,6 +24,40 @@ import {
   ListsPageParam,
 } from './types'
 
+// Helper function to batch pub/sub messages to avoid constant cache updates
+export function createBatchedCacheUpdater<TMessage, TDraft>(
+  updateCachedData: (updater: (draft: TDraft) => void) => void,
+  applyBatch: (draft: TDraft, batch: { topic: string; message: TMessage }[]) => void,
+  delay = 5000,
+) {
+  let queue: { topic: string; message: TMessage }[] = []
+  let timeout: ReturnType<typeof setTimeout> | null = null
+
+  const handler = (topic: string, message: TMessage) => {
+    queue.push({ topic, message })
+    if (!timeout) {
+      timeout = setTimeout(() => {
+        const batch = [...queue]
+        queue = []
+        timeout = null
+        if (batch.length > 0) {
+          updateCachedData((draft) => applyBatch(draft, batch))
+        }
+      }, delay)
+    }
+  }
+
+  handler.clear = () => {
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+    queue = []
+  }
+
+  return handler
+}
+
 // Helper function to safely parse entity list data field from JSON string to object
 const parseJSON = (data: string | null | undefined): Record<string, any> => {
   if (!data) return {}
@@ -171,68 +205,69 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData },
       ) {
         const topics = ['entity_list.changed', 'entity_list.created', 'entity_list.deleted']
+        let handlePubSub: any = null
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const handlePubSub = (topic: string, message: ListItemMessage) => {
-            const summary = message.summary
-            const id = summary.id
-            if (!id) return
+          handlePubSub = createBatchedCacheUpdater<ListItemMessage, any>(
+            updateCachedData,
+            (draft, batch) => {
+              batch.forEach(({ topic, message }) => {
+                const summary = message.summary
+                const id = summary.id
+                if (!id) return
 
-            const getListFromSummary = (list?: EntityList): EntityList => {
-              return {
-                // defaults
-                projectName: projectName,
-                tags: [],
-                data: {},
-                allAttrib: '',
-                attrib: {},
-                createdAt: new Date().toISOString(),
-                updatedAt: '',
-                active: true,
-                access: '',
-                accessLevel: 30, // default admin
-                // existing data
-                ...(list || {}),
-                // new data
-                id: summary.id as string,
-                label: summary.label,
-                entityType: summary.entity_type,
-                entityListType: summary.entity_list_type,
-                count: summary.count,
-              }
-            }
+                const getListFromSummary = (list?: EntityList): EntityList => {
+                  return {
+                    // defaults
+                    projectName: projectName,
+                    tags: [],
+                    data: {},
+                    allAttrib: '',
+                    attrib: {},
+                    createdAt: new Date().toISOString(),
+                    updatedAt: '',
+                    active: true,
+                    access: '',
+                    accessLevel: 30, // default admin
+                    // existing data
+                    ...(list || {}),
+                    // new data
+                    id: summary.id as string,
+                    label: summary.label,
+                    entityType: summary.entity_type,
+                    entityListType: summary.entity_list_type,
+                    count: summary.count,
+                  }
+                }
 
-            if (topic === 'entity_list.changed') {
-              // update the data of existing list in cache
-              updateCachedData((draft) => {
-                const list = draft.pages.flatMap((page) => page.lists).find((l) => l.id === id)
-                if (!list) return
-                const newList = getListFromSummary(list)
+                if (topic === 'entity_list.changed') {
+                  // update the data of existing list in cache
+                  const list = draft.pages
+                    .flatMap((page: any) => page.lists)
+                    .find((l: any) => l.id === id)
+                  if (!list) return
+                  const newList = getListFromSummary(list)
 
-                Object.assign(list, newList)
-              })
-            } else if (topic === 'entity_list.created') {
-              // Add new list to the cache using basic summary
-              updateCachedData((draft) => {
-                const newList = getListFromSummary()
-                // Insert the new list at the beginning of the first page
-                if (draft.pages.length !== 0) {
-                  draft.pages[0].lists.unshift(newList)
-                } else {
-                  // if there are no page yet, don't do anything - the user should refresh the page
+                  Object.assign(list, newList)
+                } else if (topic === 'entity_list.created') {
+                  // Add new list to the cache using basic summary
+                  const newList = getListFromSummary()
+                  // Insert the new list at the beginning of the first page
+                  if (draft.pages.length !== 0) {
+                    draft.pages[0].lists.unshift(newList)
+                  }
+                } else if (topic === 'entity_list.deleted') {
+                  // delete the list from the cache
+                  draft.pages.forEach((page: any) => {
+                    page.lists = page.lists.filter((l: any) => l.id !== id)
+                  })
                 }
               })
-            } else if (topic === 'entity_list.deleted') {
-              // delete the list from the cache
-              updateCachedData((draft) => {
-                draft.pages.forEach((page) => {
-                  page.lists = page.lists.filter((l) => l.id !== id)
-                })
-              })
-            }
-          }
+            },
+            10000, // 10 seconds debounce/batch window
+          )
 
           topics.forEach((topic) => PubSub.subscribe(topic, handlePubSub))
         } catch {
@@ -243,6 +278,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         topics.forEach((t) => PubSub.unsubscribe(t))
+        if (handlePubSub && typeof handlePubSub.clear === 'function') handlePubSub.clear()
       },
     }),
     getListItemsInfinite: build.infiniteQuery<
