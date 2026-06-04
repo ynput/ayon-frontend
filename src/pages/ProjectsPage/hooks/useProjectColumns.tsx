@@ -218,7 +218,7 @@ export const useProjectColumns = (
       70,
       THUMBNAIL_BASE_SIZE + maxGroupDepth * THUMBNAIL_INDENT_PER_DEPTH,
     )
-    return columnHelper.accessor('name', {
+    return columnHelper.accessor('updatedAt', {
       id: 'thumbnail',
       header: 'Thumbnail',
       size: thumbnailSize,

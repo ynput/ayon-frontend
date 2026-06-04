@@ -35,8 +35,10 @@ export const ProjectDetailsPanel: FC<ProjectDetailsPanelProps> = ({
   const prevProjectNameRef = useRef<string | undefined>(undefined)
   const thumbnailUpdatedAtRef = useRef<string | undefined>(undefined)
   if (prevProjectNameRef.current !== projectName) {
-    prevProjectNameRef.current = projectName
-    thumbnailUpdatedAtRef.current = data?.updatedAt
+    if (project) {
+      prevProjectNameRef.current = projectName
+      thumbnailUpdatedAtRef.current = project.updatedAt
+    }
   }
 
   const displayName = getProjectDisplayName({ name: projectName, label: project?.label })

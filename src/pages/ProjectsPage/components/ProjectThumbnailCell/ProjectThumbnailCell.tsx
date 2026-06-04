@@ -13,7 +13,7 @@ interface ProjectThumbnailCellProps {
 export const ProjectThumbnailCell = memo(({ info }: ProjectThumbnailCellProps) => {
   if (isEmptyFolderPlaceholderRow(info.row.original)) return null
 
-  const projectName = info.getValue()
+  const projectName = info.row.original.name
   const updatedAt = info.row.original.updatedAt
 
   return (
