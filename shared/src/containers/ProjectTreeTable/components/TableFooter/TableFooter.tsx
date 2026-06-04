@@ -4,12 +4,18 @@ import type { Virtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 
 import type { TableRow } from '../../types/table'
-import { ProjectTableAttribute } from '../../types'
+import { BuiltInFieldOptions, ProjectTableAttribute } from '../../types'
 import { ROW_SELECTION_COLUMN_ID } from '../../context/SelectionCellsContext'
 import * as Styled from './TableFooter.styled'
 import { SummaryCell } from './SummaryCell'
 import { classifyColumnSummary } from './classifyColumnSummary'
-import { ColumnSummaryMap, SummaryCalc, RowScope, MainCountLabels } from './summaryTypes'
+import {
+  ColumnSummary,
+  ColumnSummaryMap,
+  SummaryCalc,
+  RowScope,
+  MainCountLabels,
+} from './summaryTypes'
 
 const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
@@ -28,6 +34,49 @@ const pinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
 
 const columnWidth = (columnId: string) => `calc(var(--col-${columnId}-size) * 1px)`
 
+type OptionLike = { value?: unknown; label?: string | null; color?: string | null; icon?: string | null }
+
+// Backend distribution carries raw values + counts only; labels/colors/icons
+// come from project anatomy (status/type/tag/assignee options) or attrib enums.
+const enrichDistribution = (
+  columnId: string,
+  summary: ColumnSummary | undefined,
+  fieldOptions: BuiltInFieldOptions | undefined,
+  attribs: ProjectTableAttribute[],
+): ColumnSummary | undefined => {
+  if (!summary?.distribution?.length) return summary
+
+  let options: OptionLike[] | undefined
+  if (columnId === 'status') options = fieldOptions?.status
+  else if (columnId === 'subType')
+    options = [
+      ...(fieldOptions?.folderType ?? []),
+      ...(fieldOptions?.taskType ?? []),
+      ...(fieldOptions?.productType ?? []),
+    ]
+  else if (columnId === 'assignees') options = fieldOptions?.assignee
+  else if (columnId === 'tags') options = fieldOptions?.tag
+  else if (columnId.startsWith('attrib_'))
+    options = attribs.find((a) => a.name === columnId.slice('attrib_'.length))?.data?.enum
+
+  if (!options?.length) return summary
+
+  const byValue = new Map(options.map((o) => [String(o.value), o]))
+  return {
+    ...summary,
+    distribution: summary.distribution.map((d) => {
+      const option = byValue.get(d.value)
+      if (!option) return d
+      return {
+        ...d,
+        label: d.label ?? option.label ?? undefined,
+        color: d.color ?? option.color ?? undefined,
+        icon: d.icon ?? option.icon ?? undefined,
+      }
+    }),
+  }
+}
+
 interface TableFooterProps {
   columnVirtualizer: Virtualizer<HTMLDivElement, HTMLTableCellElement>
   table: Table<TableRow>
@@ -41,6 +90,7 @@ interface TableFooterProps {
   scopeByColumn: Record<string, RowScope>
   onScopeChange: (columnId: string, scope: RowScope) => void
   mainCountLabels?: MainCountLabels
+  fieldOptions?: BuiltInFieldOptions
 }
 
 export const TableFooter = ({
@@ -56,6 +106,7 @@ export const TableFooter = ({
   scopeByColumn,
   onScopeChange,
   mainCountLabels,
+  fieldOptions,
 }: TableFooterProps) => {
   const visibleColumns = [
     ...table.getLeftVisibleLeafColumns(),
@@ -86,11 +137,14 @@ export const TableFooter = ({
               {!isUtility && (
                 <SummaryCell
                   kind={classifyColumnSummary(column.id, attribs)}
-                  summary={
+                  summary={enrichDistribution(
+                    column.id,
                     scopeByColumn[column.id] === 'all'
                       ? allScopeSummaries[column.id] ?? summaries[column.id]
-                      : summaries[column.id]
-                  }
+                      : summaries[column.id],
+                    fieldOptions,
+                    attribs,
+                  )}
                   calc={calcByColumn[column.id]}
                   onCalcChange={(c) => onCalcChange(column.id, c)}
                   scope={scopeByColumn[column.id]}

@@ -9,6 +9,8 @@ import {
 import { PubSub } from '@shared/util'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
 import type { FieldStats, MetricTarget } from '@shared/containers/ProjectTreeTable'
+// deep import: the barrel would create a runtime circular dependency (api ↔ containers)
+import { normalizeFieldStats } from '@shared/containers/ProjectTreeTable/components/TableFooter/mapColumnStats'
 import {
   DefinitionsFromApi,
   FetchBaseQueryError,
@@ -651,6 +653,8 @@ const injectedApi = enhancedApi.injectEndpoints({
                   checkedPercentage
                   notCheckedCount
                   notCheckedPercentage
+                  sum
+                  distribution
                 }
               }
             }
@@ -658,7 +662,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         `,
         variables: { projectName, filter, search, folderIds, targets },
       }),
-      transformResponse: (res: any) => res?.project?.folders?.fieldStats ?? [],
+      transformResponse: (res: any) => normalizeFieldStats(res?.project?.folders?.fieldStats ?? []),
       // Dedicated tag so entity edits can refetch the footer stats without
       // forcing a full task-list refetch (which uses 'overviewTask').
       providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
@@ -711,6 +715,8 @@ const injectedApi = enhancedApi.injectEndpoints({
                   checkedPercentage
                   notCheckedCount
                   notCheckedPercentage
+                  sum
+                  distribution
                 }
               }
             }
@@ -718,7 +724,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         `,
         variables: { projectName, filter, folderFilter, search, folderIds, taskIds, targets },
       }),
-      transformResponse: (res: any) => res?.project?.tasks?.fieldStats ?? [],
+      transformResponse: (res: any) => normalizeFieldStats(res?.project?.tasks?.fieldStats ?? []),
       providesTags: (_r, _e, { projectName }) => [{ type: 'taskColumnStats', id: projectName }],
     }),
   }),

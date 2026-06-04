@@ -692,6 +692,7 @@ export const ProjectTreeTable = ({
                 scopeByColumn={columnSummaryScopes}
                 onScopeChange={updateColumnSummaryScope}
                 mainCountLabels={mainCountLabels}
+                fieldOptions={options}
               />
             )}
           </table>

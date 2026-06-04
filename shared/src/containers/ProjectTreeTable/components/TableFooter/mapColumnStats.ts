@@ -50,6 +50,34 @@ const canonicalColumnId = (name: string): string => {
 
 const normName = canonicalColumnId
 
+// Backend `distribution` is a JSON scalar shaped as an object map
+// ({"In progress": 540, ...}, sometimes a JSON string from asyncpg). Normalize
+// to the array form the footer works with. Arrays pass through for
+// forward-compatibility with a typed backend field.
+const normalizeDistribution = (raw: unknown): FieldStats['distribution'] => {
+  if (raw == null) return undefined
+  let value = raw
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value)
+    } catch {
+      return undefined
+    }
+  }
+  if (Array.isArray(value)) return value as FieldStats['distribution']
+  if (typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>).map(([v, count]) => ({
+      value: v,
+      count: Number(count) || 0,
+    }))
+  }
+  return undefined
+}
+
+// Normalize a raw fieldStats response (apply in transformResponse).
+export const normalizeFieldStats = (stats: FieldStats[]): FieldStats[] =>
+  stats.map((s) => ({ ...s, distribution: normalizeDistribution(s.distribution) }))
+
 // Overlay live stats onto mock, per column and per field: live's non-null
 // values win, mock fills any field (or whole column) the backend doesn't return.
 export const mergeFieldStats = (

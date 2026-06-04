@@ -7,6 +7,7 @@ export {
   mergeFieldStats,
   combineFieldStats,
   totalRowsFromStats,
+  normalizeFieldStats,
 } from './mapColumnStats'
 export type { FieldStats } from './mapColumnStats'
 export { mockFieldStats } from './mockFieldStats'

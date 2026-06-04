@@ -41,6 +41,8 @@ import {
 } from './getVersionsProductsUtils'
 import { PubSub } from '@shared/util'
 import type { FieldStats, MetricTarget } from '@shared/containers/ProjectTreeTable'
+// deep import: the barrel would create a runtime circular dependency (api ↔ containers)
+import { normalizeFieldStats } from '@shared/containers/ProjectTreeTable/components/TableFooter/mapColumnStats'
 
 // SHARED CACHE UPDATE HELPERS
 // These helpers are used by PubSub handlers to update cached data in real-time
@@ -935,6 +937,8 @@ const FIELD_STATS_SELECTION = `
     checkedPercentage
     notCheckedCount
     notCheckedPercentage
+    sum
+    distribution
   }
 `
 
@@ -998,7 +1002,8 @@ const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
           targets,
         },
       }),
-      transformResponse: (res: any) => res?.project?.products?.fieldStats ?? [],
+      transformResponse: (res: any) =>
+        normalizeFieldStats(res?.project?.products?.fieldStats ?? []),
       providesTags: (_r, _e, { projectName }) => [{ type: 'productColumnStats', id: projectName }],
     }),
     getVersionsColumnStats: build.query<FieldStats[], VPColumnStatsArgs>({
@@ -1050,7 +1055,8 @@ const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
           targets,
         },
       }),
-      transformResponse: (res: any) => res?.project?.versions?.fieldStats ?? [],
+      transformResponse: (res: any) =>
+        normalizeFieldStats(res?.project?.versions?.fieldStats ?? []),
       providesTags: (_r, _e, { projectName }) => [{ type: 'versionColumnStats', id: projectName }],
     }),
   }),

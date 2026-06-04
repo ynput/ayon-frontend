@@ -1,9 +1,17 @@
 import type { VisibilityState } from '@tanstack/react-table'
 
-// GraphQL StatsAggregation enum names (backend field_stats.py). SUM exists in
-// the enum but isn't implemented in generate_specific_stats_columns — don't
-// request it. Percentages derive from FILLED/NOT_FILLED server-side.
-export type StatsAggregation = 'MIN' | 'MAX' | 'AVG' | 'FILLED' | 'NOT_FILLED' | 'CHECKED' | 'NOT_CHECKED'
+// GraphQL StatsAggregation enum names (backend field_stats.py).
+// Percentages derive from FILLED/NOT_FILLED server-side.
+export type StatsAggregation =
+  | 'MIN'
+  | 'MAX'
+  | 'AVG'
+  | 'SUM'
+  | 'FILLED'
+  | 'NOT_FILLED'
+  | 'CHECKED'
+  | 'NOT_CHECKED'
+  | 'DISTRIBUTION'
 
 export type MetricTarget = {
   field: string // column or dot-path for JSONB, e.g. 'status' / 'attrib.fps'
@@ -13,7 +21,10 @@ export type MetricTarget = {
 export type StatsEntity = 'folder' | 'task' | 'product' | 'version'
 
 const COUNTS: StatsAggregation[] = ['FILLED', 'NOT_FILLED']
-const NUMERIC: StatsAggregation[] = ['MIN', 'MAX', 'AVG']
+// FILLED rides along so combined-scope averages can be weighted exactly
+const NUMERIC: StatsAggregation[] = ['MIN', 'MAX', 'AVG', 'SUM', 'FILLED', 'NOT_FILLED']
+// enum columns: counts power the fallback display, distribution the colored bar
+const ENUM: StatsAggregation[] = ['FILLED', 'NOT_FILLED', 'DISTRIBUTION']
 
 // The table's unified subType column per entity (result columnName maps back
 // to subType via COLUMN_ALIASES in mapColumnStats).
@@ -30,7 +41,7 @@ const SUB_TYPE_FIELD: Record<StatsEntity, string | null> = {
 type AttribFieldLike = {
   name: string
   scope?: string[] | null
-  data?: { type?: string }
+  data?: { type?: string; enum?: unknown[] }
 }
 
 type BuildMetricTargetsArgs = {
@@ -50,20 +61,21 @@ export const buildMetricTargets = ({
   columnVisibility,
   extraFields = [],
 }: BuildMetricTargetsArgs): MetricTarget[] => {
-  const isVisible = (columnId: string) => columnVisibility[columnId]
+  // TanStack visibility map only stores toggled columns — absent means visible.
+  const isVisible = (columnId: string) => columnVisibility[columnId] !== false
 
   // name counts always — they feed the main folders/tasks count cell
   const targets: MetricTarget[] = [{ field: 'name', aggregations: COUNTS }]
 
-  if (isVisible('status')) targets.push({ field: 'status', aggregations: COUNTS })
+  if (isVisible('status')) targets.push({ field: 'status', aggregations: ENUM })
 
   const subTypeField = SUB_TYPE_FIELD[entity]
   if (subTypeField && isVisible('subType')) {
-    targets.push({ field: subTypeField, aggregations: COUNTS })
+    targets.push({ field: subTypeField, aggregations: ENUM })
   }
 
   for (const field of extraFields) {
-    targets.push({ field, aggregations: COUNTS })
+    targets.push({ field, aggregations: ENUM })
   }
 
   for (const attrib of attribs) {
@@ -75,7 +87,7 @@ export const buildMetricTargets = ({
     if (type === 'integer' || type === 'float') {
       targets.push({ field, aggregations: NUMERIC })
     } else if (type === 'string') {
-      targets.push({ field, aggregations: COUNTS })
+      targets.push({ field, aggregations: attrib.data?.enum?.length ? ENUM : COUNTS })
     }
   }
 
