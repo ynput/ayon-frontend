@@ -944,6 +944,8 @@ type VPColumnStatsArgs = {
   versionFilter?: string
   taskFilter?: string
   folderIds?: string[]
+  versionIds?: string[]
+  productIds?: string[]
   // built from the visible columns (buildMetricTargets) so the backend only
   // aggregates what the footer shows
   targets: MetricTarget[]
@@ -952,7 +954,15 @@ type VPColumnStatsArgs = {
 const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
   endpoints: (build) => ({
     getProductsColumnStats: build.query<FieldStats[], VPColumnStatsArgs>({
-      query: ({ projectName, productFilter, versionFilter, taskFilter, folderIds, targets }) => ({
+      query: ({
+        projectName,
+        productFilter,
+        versionFilter,
+        taskFilter,
+        folderIds,
+        productIds,
+        targets,
+      }) => ({
         document: `
           query GetProductsColumnStats(
             $projectName: String!
@@ -960,11 +970,13 @@ const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
             $versionFilter: String
             $taskFilter: String
             $folderIds: [String!]
+            $productIds: [String!]
             $targets: [MetricTargetInput!]
           ) {
             project(name: $projectName) {
               products(
                 calculateSpecificStatistics: $targets
+                ids: $productIds
                 filter: $productFilter
                 versionFilter: $versionFilter
                 taskFilter: $taskFilter
@@ -976,13 +988,30 @@ const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
             }
           }
         `,
-        variables: { projectName, productFilter, versionFilter, taskFilter, folderIds, targets },
+        variables: {
+          projectName,
+          productFilter,
+          versionFilter,
+          taskFilter,
+          folderIds,
+          productIds,
+          targets,
+        },
       }),
       transformResponse: (res: any) => res?.project?.products?.fieldStats ?? [],
       providesTags: (_r, _e, { projectName }) => [{ type: 'productColumnStats', id: projectName }],
     }),
     getVersionsColumnStats: build.query<FieldStats[], VPColumnStatsArgs>({
-      query: ({ projectName, productFilter, versionFilter, taskFilter, folderIds, targets }) => ({
+      query: ({
+        projectName,
+        productFilter,
+        versionFilter,
+        taskFilter,
+        folderIds,
+        versionIds,
+        productIds,
+        targets,
+      }) => ({
         document: `
           query GetVersionsColumnStats(
             $projectName: String!
@@ -990,11 +1019,15 @@ const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
             $productFilter: String
             $taskFilter: String
             $folderIds: [String!]
+            $versionIds: [String!]
+            $productIds: [String!]
             $targets: [MetricTargetInput!]
           ) {
             project(name: $projectName) {
               versions(
                 calculateSpecificStatistics: $targets
+                ids: $versionIds
+                productIds: $productIds
                 filter: $versionFilter
                 productFilter: $productFilter
                 taskFilter: $taskFilter
@@ -1006,7 +1039,16 @@ const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
             }
           }
         `,
-        variables: { projectName, productFilter, versionFilter, taskFilter, folderIds, targets },
+        variables: {
+          projectName,
+          productFilter,
+          versionFilter,
+          taskFilter,
+          folderIds,
+          versionIds,
+          productIds,
+          targets,
+        },
       }),
       transformResponse: (res: any) => res?.project?.versions?.fieldStats ?? [],
       providesTags: (_r, _e, { projectName }) => [{ type: 'versionColumnStats', id: projectName }],

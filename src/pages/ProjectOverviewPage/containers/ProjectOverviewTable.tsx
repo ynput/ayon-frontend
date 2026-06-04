@@ -35,7 +35,17 @@ const ProjectOverviewTable = ({}: Props) => {
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage, attribFields } =
     useProjectTableContext()
   const { columnVisibility } = useColumnSettingsContext()
-  const { folderFilters, taskFilters } = useProjectOverviewContext()
+  const { folderFilters, taskFilters, selectedFolders, selectedTaskIds, foldersMap } =
+    useProjectOverviewContext()
+
+  // Mirror the task list query: slicer selection narrows rows to the selected
+  // subtree (foldersMap is already subtree-filtered when a slice is active);
+  // an entity-list task selection takes precedence over folder ids.
+  const statsTaskIds = selectedTaskIds.length ? selectedTaskIds : undefined
+  const statsFolderIds = useMemo(
+    () => (!statsTaskIds && selectedFolders.length ? Array.from(foldersMap.keys()) : undefined),
+    [statsTaskIds, selectedFolders, foldersMap],
+  )
 
   const { onOpenNew } = useNewEntityContext()
 
@@ -59,6 +69,7 @@ const ProjectOverviewTable = ({}: Props) => {
       projectName,
       filter: folderFilters?.filterString || undefined,
       search: folderFilters?.search || undefined,
+      folderIds: statsFolderIds,
       targets: folderTargets,
     },
     { skip: !projectName },
@@ -69,6 +80,8 @@ const ProjectOverviewTable = ({}: Props) => {
       filter: taskFilters?.filterString || undefined,
       folderFilter: folderFilters?.filterString || undefined,
       search: taskFilters?.search || undefined,
+      folderIds: statsFolderIds,
+      taskIds: statsTaskIds,
       targets: taskTargets,
     },
     { skip: !projectName },

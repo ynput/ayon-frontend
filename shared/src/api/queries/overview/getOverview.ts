@@ -613,72 +613,30 @@ const injectedApi = enhancedApi.injectEndpoints({
     // backend only aggregates what the footer shows.
     getFolderColumnStats: build.query<
       FieldStats[],
-      { projectName: string; filter?: string; search?: string; targets: MetricTarget[] }
+      {
+        projectName: string
+        filter?: string
+        search?: string
+        folderIds?: string[]
+        targets: MetricTarget[]
+      }
     >({
-      query: ({ projectName, filter, search, targets }) => ({
+      query: ({ projectName, filter, search, folderIds, targets }) => ({
         document: `
           query GetFolderColumnStats(
             $projectName: String!
             $filter: String
             $search: String
+            $folderIds: [String!]
             $targets: [MetricTargetInput!]
           ) {
             project(name: $projectName) {
               name
-              folders(calculateSpecificStatistics: $targets, filter: $filter, search: $search) {
-                fieldStats {
-                  columnName
-                  min
-                  max
-                  avg
-                  valueFilledCount
-                  percentageFilled
-                  valueNotFilledCount
-                  percentageNotFilled
-                  checkedCount
-                  checkedPercentage
-                  notCheckedCount
-                  notCheckedPercentage
-                }
-              }
-            }
-          }
-        `,
-        variables: { projectName, filter, search, targets },
-      }),
-      transformResponse: (res: any) => res?.project?.folders?.fieldStats ?? [],
-      // Dedicated tag so entity edits can refetch the footer stats without
-      // forcing a full task-list refetch (which uses 'overviewTask').
-      providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
-    }),
-    // Task-side column stats for the Overview footer (tasks.fieldStats). Filters
-    // mirror GetTasksList so the aggregation matches the visible task set.
-    getTaskColumnStats: build.query<
-      FieldStats[],
-      {
-        projectName: string
-        filter?: string
-        folderFilter?: string
-        search?: string
-        targets: MetricTarget[]
-      }
-    >({
-      query: ({ projectName, filter, folderFilter, search, targets }) => ({
-        document: `
-          query GetTaskColumnStats(
-            $projectName: String!
-            $filter: String
-            $folderFilter: String
-            $search: String
-            $targets: [MetricTargetInput!]
-          ) {
-            project(name: $projectName) {
-              name
-              tasks(
+              folders(
                 calculateSpecificStatistics: $targets
                 filter: $filter
-                folderFilter: $folderFilter
                 search: $search
+                ids: $folderIds
               ) {
                 fieldStats {
                   columnName
@@ -698,7 +656,67 @@ const injectedApi = enhancedApi.injectEndpoints({
             }
           }
         `,
-        variables: { projectName, filter, folderFilter, search, targets },
+        variables: { projectName, filter, search, folderIds, targets },
+      }),
+      transformResponse: (res: any) => res?.project?.folders?.fieldStats ?? [],
+      // Dedicated tag so entity edits can refetch the footer stats without
+      // forcing a full task-list refetch (which uses 'overviewTask').
+      providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
+    }),
+    // Task-side column stats for the Overview footer (tasks.fieldStats). Filters
+    // mirror GetTasksList so the aggregation matches the visible task set.
+    getTaskColumnStats: build.query<
+      FieldStats[],
+      {
+        projectName: string
+        filter?: string
+        folderFilter?: string
+        search?: string
+        folderIds?: string[]
+        taskIds?: string[]
+        targets: MetricTarget[]
+      }
+    >({
+      query: ({ projectName, filter, folderFilter, search, folderIds, taskIds, targets }) => ({
+        document: `
+          query GetTaskColumnStats(
+            $projectName: String!
+            $filter: String
+            $folderFilter: String
+            $search: String
+            $folderIds: [String!]
+            $taskIds: [String!]
+            $targets: [MetricTargetInput!]
+          ) {
+            project(name: $projectName) {
+              name
+              tasks(
+                calculateSpecificStatistics: $targets
+                filter: $filter
+                folderFilter: $folderFilter
+                search: $search
+                folderIds: $folderIds
+                ids: $taskIds
+              ) {
+                fieldStats {
+                  columnName
+                  min
+                  max
+                  avg
+                  valueFilledCount
+                  percentageFilled
+                  valueNotFilledCount
+                  percentageNotFilled
+                  checkedCount
+                  checkedPercentage
+                  notCheckedCount
+                  notCheckedPercentage
+                }
+              }
+            }
+          }
+        `,
+        variables: { projectName, filter, folderFilter, search, folderIds, taskIds, targets },
       }),
       transformResponse: (res: any) => res?.project?.tasks?.fieldStats ?? [],
       providesTags: (_r, _e, { projectName }) => [{ type: 'taskColumnStats', id: projectName }],
