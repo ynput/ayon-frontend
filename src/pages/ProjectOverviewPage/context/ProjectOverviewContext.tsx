@@ -1,5 +1,5 @@
 // React imports
-import { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
 // Third-party libraries
 import { ExpandedState } from '@tanstack/react-table'
