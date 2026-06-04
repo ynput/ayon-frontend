@@ -20,6 +20,12 @@ export type MetricTarget = {
 
 export type StatsEntity = 'folder' | 'task' | 'product' | 'version'
 
+// Array-column stats (tags/assignees) need backend support not yet merged
+// (cardinality/unnest templates posted on ayon-backend PR #943). On an
+// unpatched server those targets fail the whole stats query with
+// "malformed array literal". Flip to true once the backend ships it.
+export const ARRAY_STATS_READY = false
+
 const COUNTS: StatsAggregation[] = ['FILLED', 'NOT_FILLED']
 // FILLED rides along so combined-scope averages can be weighted exactly
 const NUMERIC: StatsAggregation[] = ['MIN', 'MAX', 'AVG', 'SUM', 'FILLED', 'NOT_FILLED']
@@ -64,10 +70,23 @@ export const buildMetricTargets = ({
   // TanStack visibility map only stores toggled columns — absent means visible.
   const isVisible = (columnId: string) => columnVisibility[columnId] !== false
 
-  // name counts always — they feed the main folders/tasks count cell
-  const targets: MetricTarget[] = [{ field: 'name', aggregations: COUNTS }]
-
-  if (isVisible('status')) targets.push({ field: 'status', aggregations: ENUM })
+  const targets: MetricTarget[] = []
+  if (entity === 'version') {
+    // versions have no `name` column (display name derives from the version
+    // number) — status is non-null and doubles as the row-count anchor
+    targets.push({ field: 'status', aggregations: ENUM })
+  } else {
+    // name counts always — they feed the main folders/tasks count cell
+    targets.push({ field: 'name', aggregations: COUNTS })
+    if (isVisible('status')) targets.push({ field: 'status', aggregations: ENUM })
+  }
+  if (ARRAY_STATS_READY) {
+    // array columns (VARCHAR[]) — backend unnests for distribution / cardinality for counts
+    if (isVisible('tags')) targets.push({ field: 'tags', aggregations: ENUM })
+    if (entity === 'task' && isVisible('assignees')) {
+      targets.push({ field: 'assignees', aggregations: ENUM })
+    }
+  }
 
   const subTypeField = SUB_TYPE_FIELD[entity]
   if (subTypeField && isVisible('subType')) {

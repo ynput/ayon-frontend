@@ -50,10 +50,6 @@ const canonicalColumnId = (name: string): string => {
 
 const normName = canonicalColumnId
 
-// Backend `distribution` is a JSON scalar shaped as an object map
-// ({"In progress": 540, ...}, sometimes a JSON string from asyncpg). Normalize
-// to the array form the footer works with. Arrays pass through for
-// forward-compatibility with a typed backend field.
 const normalizeDistribution = (raw: unknown): FieldStats['distribution'] => {
   if (raw == null) return undefined
   let value = raw
@@ -64,7 +60,17 @@ const normalizeDistribution = (raw: unknown): FieldStats['distribution'] => {
       return undefined
     }
   }
-  if (Array.isArray(value)) return value as FieldStats['distribution']
+  if (Array.isArray(value)) {
+    // dedupe by value (sum counts) — duplicate keys would break React lists
+    const byValue = new Map<string, { value: string; count: number }>()
+    for (const d of value) {
+      if (!d || d.value == null) continue
+      const v = String(d.value)
+      const prev = byValue.get(v)
+      byValue.set(v, { ...d, value: v, count: (prev?.count ?? 0) + (Number(d.count) || 0) })
+    }
+    return [...byValue.values()]
+  }
   if (typeof value === 'object') {
     return Object.entries(value as Record<string, unknown>).map(([v, count]) => ({
       value: v,

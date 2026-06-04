@@ -10,7 +10,6 @@ import {
   ProjectTreeTable,
 } from '@shared/containers/ProjectTreeTable'
 import {
-  mockFieldStats,
   mergeFieldStats,
   buildMetricTargets,
   totalRowsFromStats,
@@ -45,10 +44,10 @@ const ProjectOverviewTable = ({}: Props) => {
 
   const scope = `overview-${projectName}`
 
-  // Live folder + task stats (backend fieldStats) merged with mock — live values
-  // win, mock fills the columns/fields the backend doesn't return yet. Folder
-  // stats feed folder columns + folder count; task stats feed task columns +
-  // task count (filters mirror each entity's list query).
+  // Live folder + task stats (backend fieldStats) — no mock fallback, cells
+  // without backend data render blank. Folder stats feed folder columns +
+  // folder count; task stats feed task columns + task count (filters mirror
+  // each entity's list query).
   const folderTargets = useMemo(
     () => buildMetricTargets({ entity: 'folder', attribs: attribFields, columnVisibility }),
     [attribFields, columnVisibility],
@@ -85,10 +84,14 @@ const ProjectOverviewTable = ({}: Props) => {
   const fieldStats = useMemo(() => {
     const folders = liveFolderStats ?? []
     const tasks = liveTaskStats ?? []
-    const folderCount = totalRowsFromStats(folders)
-    const taskCount = totalRowsFromStats(tasks)
-    const mainCount: FieldStats = { columnName: 'name', folderCount, taskCount }
-    return mergeFieldStats([...tasks, mainCount], mockFieldStats)
+    // undefined (not 0) while stats are missing/failed so the cell stays blank
+    const mainCount: FieldStats = {
+      columnName: 'name',
+      folderCount: liveFolderStats ? totalRowsFromStats(folders) : undefined,
+      taskCount: liveTaskStats ? totalRowsFromStats(tasks) : undefined,
+    }
+    // mergeFieldStats also unifies the duplicate `name` entries field-wise
+    return mergeFieldStats([...tasks, mainCount])
   }, [liveFolderStats, liveTaskStats])
 
   const handleScrollBottomGroupBy = useCallback(

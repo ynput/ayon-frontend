@@ -555,7 +555,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productFilter: combinedProductFilter.filterString,
       versionFilter: combinedVersionFilter.filterString,
       taskFilter: entityListTaskFilterString,
-      folderIds: slicerFolderIds,
+      // empty array means "match nothing" backend-side — omit when no slice
+      folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
       versionIds: entityIds.versionIds.length ? entityIds.versionIds : undefined,
       productIds: entityIds.productIds.length ? entityIds.productIds : undefined,
     },

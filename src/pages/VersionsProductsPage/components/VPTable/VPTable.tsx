@@ -6,7 +6,6 @@ import {
   ProjectTreeTable,
 } from '@shared/containers'
 import {
-  mockFieldStats,
   mergeFieldStats,
   buildMetricTargets,
   totalRowsFromStats,
@@ -47,8 +46,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     [attribFields, columnVisibility],
   )
 
-  // Live product/version stats over the filtered set, merged with mock for the
-  // columns/fields the backend doesn't return yet (distributions, etc.).
+  // Live product/version stats over the filtered set — no mock fallback,
+  // cells without backend data render blank.
   const { data: productStats } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
     { skip: !columnStatsArgs.projectName },
@@ -63,12 +62,14 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const fieldStats = useMemo(() => {
     const products = productStats ?? []
     const versions = versionStats ?? []
+    // undefined (not 0) while stats are missing/failed so the cell stays blank
     const mainCount: FieldStats = {
       columnName: 'name',
-      folderCount: totalRowsFromStats(products),
-      taskCount: totalRowsFromStats(versions),
+      folderCount: productStats ? totalRowsFromStats(products) : undefined,
+      taskCount: versionStats ? totalRowsFromStats(versions) : undefined,
     }
-    return mergeFieldStats([...versions, mainCount], mockFieldStats)
+    // mergeFieldStats also unifies the duplicate `name` entries field-wise
+    return mergeFieldStats([...versions, mainCount])
   }, [productStats, versionStats])
   const {
     uploadVersionItem,
