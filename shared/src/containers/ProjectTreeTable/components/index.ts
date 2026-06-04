@@ -5,4 +5,9 @@ export { SelectionCell } from './SelectionCell'
 export { ColumnHeaderMenu } from './ColumnHeaderMenu'
 export { default as ColumnDndProvider } from './ColumnDndProvider'
 export type { FieldStats, MetricTarget, StatsEntity } from './TableFooter'
-export { mockFieldStats, mergeFieldStats, buildMetricTargets } from './TableFooter'
+export {
+  mockFieldStats,
+  mergeFieldStats,
+  buildMetricTargets,
+  totalRowsFromStats,
+} from './TableFooter'

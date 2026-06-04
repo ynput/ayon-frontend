@@ -99,12 +99,13 @@ const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = (
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!open) return
     const handle = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
-  }, [])
+  }, [open])
 
   const folders = summary.folderCount ?? summary.total ?? summary.filledCount
   const tasks = summary.taskCount

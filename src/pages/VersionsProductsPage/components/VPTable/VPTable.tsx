@@ -9,6 +9,7 @@ import {
   mockFieldStats,
   mergeFieldStats,
   buildMetricTargets,
+  totalRowsFromStats,
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable'
 import type { FieldStats } from '@shared/containers/ProjectTreeTable'
@@ -24,12 +25,6 @@ interface VPTableProps {
   readOnly?: string[]
   contextMenuItems: VPContextMenuItems
 }
-
-const totalRows = (stats: FieldStats[]): number =>
-  stats.reduce(
-    (max, s) => Math.max(max, (s.valueFilledCount ?? 0) + (s.valueNotFilledCount ?? 0)),
-    0,
-  )
 
 const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { fetchNextPage, isLoading, columnStatsArgs } = useVersionsDataContext()
@@ -70,8 +65,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     const versions = versionStats ?? []
     const mainCount: FieldStats = {
       columnName: 'name',
-      folderCount: totalRows(products),
-      taskCount: totalRows(versions),
+      folderCount: totalRowsFromStats(products),
+      taskCount: totalRowsFromStats(versions),
     }
     return mergeFieldStats([...versions, mainCount], mockFieldStats)
   }, [productStats, versionStats])

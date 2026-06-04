@@ -59,14 +59,6 @@ export type ColumnSummary = {
   taskCount?: number
 }
 
-// The main/label column shows a dual count whose left label depends on the mode.
-export type MainCountSummary = {
-  groups: number
-  tasks: number
-  groupLabel: string
-  taskLabel: string
-}
-
 export type ColumnSummaryMap = Record<string, ColumnSummary>
 
 // Labels for the main/count cell's dual count. Defaults to folders/tasks (Overview);

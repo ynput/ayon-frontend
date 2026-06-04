@@ -13,6 +13,7 @@ import {
   mockFieldStats,
   mergeFieldStats,
   buildMetricTargets,
+  totalRowsFromStats,
 } from '@shared/containers/ProjectTreeTable'
 import type { FieldStats } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
@@ -21,13 +22,6 @@ import { useGetFolderColumnStatsQuery, useGetTaskColumnStatsQuery } from '@share
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 
 type Props = {}
-
-// Total row count for an entity = max(filled + not-filled) across its stat columns.
-const countFromStats = (stats: FieldStats[]): number =>
-  stats.reduce(
-    (max, s) => Math.max(max, (s.valueFilledCount ?? 0) + (s.valueNotFilledCount ?? 0)),
-    0,
-  )
 
 const ProjectOverviewTable = ({}: Props) => {
   const { projectName } = useProjectContext()
@@ -91,8 +85,8 @@ const ProjectOverviewTable = ({}: Props) => {
   const fieldStats = useMemo(() => {
     const folders = liveFolderStats ?? []
     const tasks = liveTaskStats ?? []
-    const folderCount = countFromStats(folders)
-    const taskCount = countFromStats(tasks)
+    const folderCount = totalRowsFromStats(folders)
+    const taskCount = totalRowsFromStats(tasks)
     const mainCount: FieldStats = { columnName: 'name', folderCount, taskCount }
     return mergeFieldStats([...tasks, mainCount], mockFieldStats)
   }, [liveFolderStats, liveTaskStats])

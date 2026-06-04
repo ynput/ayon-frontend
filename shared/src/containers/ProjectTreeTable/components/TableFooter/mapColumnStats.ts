@@ -134,6 +134,14 @@ const combineTwo = (a: FieldStats, b: FieldStats): FieldStats => {
   }
 }
 
+// Total row count for an entity set = max(filled + not-filled) across its
+// stat columns. Feeds the main folders/tasks count cell.
+export const totalRowsFromStats = (stats: FieldStats[]): number =>
+  stats.reduce(
+    (max, s) => Math.max(max, (s.valueFilledCount ?? 0) + (s.valueNotFilledCount ?? 0)),
+    0,
+  )
+
 // Combine primary-entity stats (tasks/versions) with group-entity stats
 // (folders/products) for the "include groups & folders" row scope.
 export const combineFieldStats = (
