@@ -144,7 +144,7 @@ export const SelectorDivider = styled.div`
   background-color: var(--md-sys-color-surface-container-highest);
 `
 
-export const ScopeToggleRow = styled.div`
+export const ToggleRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-large);
@@ -152,7 +152,11 @@ export const ScopeToggleRow = styled.div`
   font-size: 12px;
   white-space: nowrap;
 
-  span {
+  label {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+    cursor: pointer;
     flex: 1;
   }
 `

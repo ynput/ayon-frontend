@@ -1,23 +1,32 @@
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, useRef, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './TableFooter.styled'
 import { ProportionBar } from './ProportionBar'
 import { SummaryBreakdown } from './SummaryBreakdown'
 import { CalcSelector } from './CalcSelector'
+import { ScopeToggles } from './SummaryToggles'
 import { useClickOutside } from './useClickOutside'
+import { useHoverClose } from './useHoverClose'
 import {
   DEFAULT_CALC,
   EditableKind,
   formatEditableSummary,
   isEditableKind,
+  normalizeCalc,
 } from './calcOptions'
 import {
   ColumnSummary,
   DEFAULT_MAIN_COUNT_LABELS,
+  DEFAULT_ROW_SCOPE,
+  DEFAULT_SUMMARY_FORMAT,
+  EnumCalc,
   MainCountLabels,
   RowScope,
+  scopeHasGroups,
+  scopeHasRows,
   SummaryCalc,
   SummaryDistributionItem,
+  SummaryFormat,
   SummaryKind,
 } from './summaryTypes'
 
@@ -26,9 +35,13 @@ type Props = {
   summary?: ColumnSummary
   calc?: SummaryCalc
   onCalcChange?: (calc: SummaryCalc) => void
+  format?: SummaryFormat
+  onFormatChange?: (format: SummaryFormat) => void
   scope?: RowScope
   onScopeChange?: (scope: RowScope) => void
   mainCountLabels?: MainCountLabels
+  // false for always-filled enums (status, type, priority): no Filled & empty mode
+  allowFillMode?: boolean
 }
 
 const EditableSummary: FC<{
@@ -36,27 +49,19 @@ const EditableSummary: FC<{
   summary: ColumnSummary
   calc?: SummaryCalc
   onChange?: (calc: SummaryCalc) => void
-  scope?: RowScope
+  format?: SummaryFormat
+  onFormatChange?: (format: SummaryFormat) => void
+  scope: RowScope
   onScopeChange?: (scope: RowScope) => void
-}> = ({ kind, summary, calc, onChange, scope, onScopeChange }) => {
+  labels: MainCountLabels
+}> = ({ kind, summary, calc, onChange, format, onFormatChange, scope, onScopeChange, labels }) => {
   const [open, setOpen] = useState(false)
-  const effective = calc ?? DEFAULT_CALC[kind]
-  const formatted = formatEditableSummary(effective, summary, kind)
+  const effectiveCalc = normalizeCalc(calc) ?? DEFAULT_CALC[kind]
+  const effectiveFormat = format ?? DEFAULT_SUMMARY_FORMAT
+  const formatted =
+    scope === 'none' ? null : formatEditableSummary(effectiveCalc, summary, kind, effectiveFormat)
 
-  // Close on mouse-leave like a normal dropdown. A grace delay bridges the small
-  // gap between the trigger and the popover so moving onto the menu doesn't close it.
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const cancelClose = () => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current)
-      closeTimer.current = null
-    }
-  }
-  const scheduleClose = () => {
-    cancelClose()
-    closeTimer.current = setTimeout(() => setOpen(false), 250)
-  }
-  useEffect(() => cancelClose, [])
+  const { cancelClose, scheduleClose } = useHoverClose(() => setOpen(false))
 
   return (
     <Styled.Clickable
@@ -67,8 +72,14 @@ const EditableSummary: FC<{
     >
       {formatted ? (
         <>
-          <span className="value">{formatted.value}</span>
+          {formatted.count != null && <span className="value">{formatted.count}</span>}
+          {formatted.count == null && formatted.percent != null && (
+            <span className="value">{formatted.percent}</span>
+          )}
           <span className="label">{formatted.label}</span>
+          {formatted.count != null && formatted.percent != null && (
+            <span className="label">({formatted.percent})</span>
+          )}
         </>
       ) : (
         <span className="label">—</span>
@@ -76,10 +87,13 @@ const EditableSummary: FC<{
       {open && (
         <CalcSelector
           kind={kind}
-          selected={effective}
+          selected={effectiveCalc}
           onSelect={(c) => onChange?.(c)}
+          format={effectiveFormat}
+          onFormatChange={onFormatChange}
           scope={scope}
           onScopeChange={onScopeChange}
+          labels={labels}
           onClose={() => setOpen(false)}
         />
       )}
@@ -87,24 +101,22 @@ const EditableSummary: FC<{
   )
 }
 
-type MainMode = 'both' | 'primary' | 'secondary'
-
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-
-const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = ({
-  summary,
-  labels,
-}) => {
+const MainCountCell: FC<{
+  summary: ColumnSummary
+  labels: MainCountLabels
+  scope: RowScope
+  onScopeChange?: (scope: RowScope) => void
+}> = ({ summary, labels, scope, onScopeChange }) => {
   const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState<MainMode>('both')
   const ref = useRef<HTMLDivElement>(null)
 
   useClickOutside(ref, () => setOpen(false), open)
+  const { cancelClose, scheduleClose } = useHoverClose(() => setOpen(false))
 
   const primary = summary.primaryCount ?? summary.total ?? summary.filledCount
   const secondary = summary.secondaryCount
 
-  // Single-type table (e.g. Lists): one static count, no dual toggle.
+  // Single-type table (e.g. Lists): one static count, no scope toggles.
   if (!labels.secondary) {
     const count = primary ?? secondary
     if (count == null) return null
@@ -118,17 +130,16 @@ const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = (
 
   if (primary == null && secondary == null) return null
 
-  const mainOptions: { value: MainMode; label: string }[] = [
-    { value: 'both', label: `${cap(labels.primary)} & ${cap(labels.secondary)}` },
-    { value: 'primary', label: cap(labels.primary) },
-    { value: 'secondary', label: cap(labels.secondary) },
-  ]
-
-  const showPrimary = (mode === 'both' || mode === 'primary') && primary != null
-  const showSecondary = (mode === 'both' || mode === 'secondary') && secondary != null
+  const showPrimary = scopeHasGroups(scope) && primary != null
+  const showSecondary = scopeHasRows(scope) && secondary != null
 
   return (
-    <Styled.Clickable onMouseDown={(e) => e.stopPropagation()} onClick={() => setOpen((v) => !v)}>
+    <Styled.Clickable
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={() => setOpen((v) => !v)}
+      onMouseEnter={cancelClose}
+      onMouseLeave={() => open && scheduleClose()}
+    >
       {showPrimary && (
         <>
           <span className="value">{primary}</span>
@@ -142,84 +153,130 @@ const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = (
           <span className="label">{labels.secondary}</span>
         </>
       )}
+      {!showPrimary && !showSecondary && <span className="label">—</span>}
       {open && (
         <Styled.Popover ref={ref} onClick={(e) => e.stopPropagation()}>
-          {mainOptions.map((opt) => (
-            <Styled.SelectorItem
-              key={opt.value}
-              className={opt.value === mode ? 'selected' : undefined}
-              onClick={() => {
-                setMode(opt.value)
-                setOpen(false)
-              }}
-            >
-              {opt.label}
-              {opt.value === mode && <Icon icon="check" />}
-            </Styled.SelectorItem>
-          ))}
+          {/* single fixed aggregation, shown for consistency with other columns */}
+          <Styled.SelectorItem className="selected">
+            Count
+            <Icon icon="check" />
+          </Styled.SelectorItem>
+          <Styled.SelectorDivider />
+          <ScopeToggles scope={scope} onChange={(s) => onScopeChange?.(s)} labels={labels} />
         </Styled.Popover>
       )}
     </Styled.Clickable>
   )
 }
 
-const EnumSummaryCell: FC<{ summary?: ColumnSummary }> = ({ summary }) => {
+const FILLED_COLOR = 'var(--md-sys-color-primary)'
+const EMPTY_COLOR = 'var(--md-sys-color-surface-container-highest)'
+
+const ENUM_MODE_OPTIONS: { value: EnumCalc; label: string }[] = [
+  { value: 'values', label: 'Value breakdown' },
+  { value: 'fill', label: 'Filled & empty' },
+]
+
+const EnumSummaryCell: FC<{
+  summary?: ColumnSummary
+  calc?: SummaryCalc
+  onCalcChange?: (calc: SummaryCalc) => void
+  scope: RowScope
+  onScopeChange?: (scope: RowScope) => void
+  labels: MainCountLabels
+  allowFillMode: boolean
+}> = ({ summary, calc, onCalcChange, scope, onScopeChange, labels, allowFillMode }) => {
+  // hover = read-only breakdown, click = configuration
   const [open, setOpen] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
 
-  if (summary?.distribution?.length)
-    return (
-      <ProportionBar
-        items={summary.distribution}
-        counts={{ filled: summary.filledCount, notFilled: summary.notFilledCount }}
-      />
-    )
+  useClickOutside(ref, () => setOpen(false), open)
+  const { cancelClose, scheduleClose } = useHoverClose(() => setOpen(false))
+  // separate timer so the hover breakdown survives the gap onto the popover
+  // (it's scrollable for long value lists)
+  const hoverClose = useHoverClose(() => setHovered(false))
 
-  const filled = summary?.filledCount
-  const notFilled = summary?.notFilledCount
-  const total = summary?.total
+  const distribution = summary?.distribution ?? []
+  const hasDistribution = distribution.length > 0
+  // one distribution at a time: value breakdown by default, filled/empty on demand
+  const mode: EnumCalc =
+    (calc === 'fill' && allowFillMode) || !hasDistribution ? 'fill' : 'values'
 
-  const items: SummaryDistributionItem[] = []
-  if (filled != null) {
-    items.push({
+  const fillItems: SummaryDistributionItem[] = []
+  if (summary?.filledCount != null)
+    fillItems.push({
       value: '__filled__',
       label: 'Filled',
-      count: filled,
-      color: 'var(--md-sys-color-primary)',
+      count: summary.filledCount,
+      color: FILLED_COLOR,
     })
-  }
-  if (notFilled != null) {
-    items.push({
+  if (summary?.notFilledCount != null)
+    fillItems.push({
       value: '__empty__',
       label: 'Empty',
-      count: notFilled,
-      color: 'var(--md-sys-color-surface-container-highest)',
+      count: summary.notFilledCount,
+      color: EMPTY_COLOR,
     })
-  }
+
+  const items =
+    mode === 'values' ? [...distribution].sort((a, b) => b.count - a.count) : fillItems
+  const total = items.reduce((a, i) => a + i.count, 0)
+  const showBar = scope !== 'none' && total > 0
+
+  // which aggregations apply here; a single entry still renders as an info row
+  const modeOptions = ENUM_MODE_OPTIONS.filter((opt) =>
+    opt.value === 'values' ? hasDistribution : allowFillMode || !hasDistribution,
+  )
+  const hasModeOptions = modeOptions.length > 0 && !!onCalcChange
+  const hasScopeToggles = !!onScopeChange && !!labels.secondary
+  const hasConfig = hasModeOptions || hasScopeToggles
 
   return (
-    <Styled.Clickable onMouseDown={(e) => e.stopPropagation()} onClick={() => setOpen((v) => !v)}>
-      {filled != null ? (
-        <>
-          <span className="value">{filled}</span>
-          {total != null && <span className="label">/ {total}</span>}
-        </>
-      ) : (
-        <span className="label">—</span>
+    <Styled.Clickable
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={() => hasConfig && setOpen((v) => !v)}
+      onMouseEnter={() => {
+        setHovered(true)
+        hoverClose.cancelClose()
+        cancelClose()
+      }}
+      onMouseLeave={() => {
+        hoverClose.scheduleClose()
+        if (open) scheduleClose()
+      }}
+    >
+      {showBar ? <ProportionBar items={items} /> : <span className="label">—</span>}
+      {hovered && !open && items.length > 0 && (
+        <Styled.Popover
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <SummaryBreakdown items={items} total={total} />
+        </Styled.Popover>
       )}
-      {open &&
-        (items.length ? (
-          <SummaryBreakdown
-            items={items}
-            total={(filled ?? 0) + (notFilled ?? 0)}
-            onClose={() => setOpen(false)}
-          />
-        ) : (
-          <Styled.Popover onClick={(e) => e.stopPropagation()}>
-            <Styled.BreakdownItem>
-              <span className="name">No data yet</span>
-            </Styled.BreakdownItem>
-          </Styled.Popover>
-        ))}
+      {open && (
+        <Styled.Popover ref={ref} onClick={(e) => e.stopPropagation()}>
+          {hasModeOptions && (
+            <>
+              {modeOptions.map((opt) => (
+                <Styled.SelectorItem
+                  key={opt.value}
+                  className={opt.value === mode ? 'selected' : undefined}
+                  onClick={() => onCalcChange?.(opt.value)}
+                >
+                  {opt.label}
+                  {opt.value === mode && <Icon icon="check" />}
+                </Styled.SelectorItem>
+              ))}
+            </>
+          )}
+          {hasModeOptions && hasScopeToggles && <Styled.SelectorDivider />}
+          {hasScopeToggles && (
+            <ScopeToggles scope={scope} onChange={onScopeChange!} labels={labels} />
+          )}
+        </Styled.Popover>
+      )}
     </Styled.Clickable>
   )
 }
@@ -229,10 +286,15 @@ export const SummaryCell: FC<Props> = ({
   summary,
   calc,
   onCalcChange,
+  format,
+  onFormatChange,
   scope,
   onScopeChange,
   mainCountLabels = DEFAULT_MAIN_COUNT_LABELS,
+  allowFillMode = true,
 }) => {
+  const effectiveScope = scope ?? DEFAULT_ROW_SCOPE
+
   if (isEditableKind(kind)) {
     return summary ? (
       <EditableSummary
@@ -240,19 +302,39 @@ export const SummaryCell: FC<Props> = ({
         summary={summary}
         calc={calc}
         onChange={onCalcChange}
-        scope={scope}
+        format={format}
+        onFormatChange={onFormatChange}
+        scope={effectiveScope}
         onScopeChange={onScopeChange}
+        labels={mainCountLabels}
       />
     ) : null
   }
 
   switch (kind) {
     case 'main':
-      return summary ? <MainCountCell summary={summary} labels={mainCountLabels} /> : null
+      return summary ? (
+        <MainCountCell
+          summary={summary}
+          labels={mainCountLabels}
+          scope={effectiveScope}
+          onScopeChange={onScopeChange}
+        />
+      ) : null
 
     case 'enum':
     case 'assignee':
-      return <EnumSummaryCell summary={summary} />
+      return (
+        <EnumSummaryCell
+          summary={summary}
+          calc={calc}
+          onCalcChange={onCalcChange}
+          scope={effectiveScope}
+          onScopeChange={onScopeChange}
+          labels={mainCountLabels}
+          allowFillMode={allowFillMode}
+        />
+      )
 
     default:
       return null

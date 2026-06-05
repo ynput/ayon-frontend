@@ -12,7 +12,7 @@ import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 import { DRAG_HANDLE_COLUMN_ID } from '../utils/pinningUtils'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
-import { SummaryCalc, RowScope } from '../components/TableFooter/summaryTypes'
+import { SummaryCalc, SummaryFormat, RowScope } from '../components/TableFooter/summaryTypes'
 import { isEqual } from 'lodash'
 
 interface ColumnSettingsProviderProps {
@@ -54,6 +54,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     rowHeight: configRowHeight = 34,
     columnSummaries: columnSummariesInit = {},
     columnSummaryScopes: columnSummaryScopesInit = {},
+    columnSummaryFormats: columnSummaryFormatsInit = {},
   } = columnsConfig || {}
 
   // Clear internal row height when config changes (e.g., when switching views)
@@ -281,6 +282,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateColumnSummaryFormat = (columnId: string, format: SummaryFormat) => {
+    onChangeWithColumns({
+      ...columnsConfig,
+      columnSummaryFormats: { ...columnSummaryFormatsInit, [columnId]: format },
+    })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
     onChangeWithColumns({
       ...columnsConfig,
@@ -417,6 +425,9 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         // column summary row scope
         columnSummaryScopes: columnSummaryScopesInit,
         updateColumnSummaryScope,
+        // column summary display format
+        columnSummaryFormats: columnSummaryFormatsInit,
+        updateColumnSummaryFormat,
         // sorting
         sorting,
         updateSorting,

@@ -1,16 +1,27 @@
 import { FC, useRef } from 'react'
-import { Icon, InputSwitch } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './TableFooter.styled'
-import { RowScope, SummaryCalc, DEFAULT_ROW_SCOPE } from './summaryTypes'
-import { EditableKind, CALC_OPTIONS } from './calcOptions'
+import {
+  DEFAULT_ROW_SCOPE,
+  DEFAULT_SUMMARY_FORMAT,
+  MainCountLabels,
+  RowScope,
+  SummaryCalc,
+  SummaryFormat,
+} from './summaryTypes'
+import { EditableKind, CALC_OPTIONS, supportsFormat } from './calcOptions'
+import { ScopeToggles, FormatToggles } from './SummaryToggles'
 import { useClickOutside } from './useClickOutside'
 
 type Props = {
   kind: EditableKind
   selected: SummaryCalc
   onSelect: (calc: SummaryCalc) => void
+  format?: SummaryFormat
+  onFormatChange?: (format: SummaryFormat) => void
   scope?: RowScope
   onScopeChange?: (scope: RowScope) => void
+  labels: MainCountLabels
   onClose: () => void
 }
 
@@ -18,19 +29,26 @@ export const CalcSelector: FC<Props> = ({
   kind,
   selected,
   onSelect,
+  format,
+  onFormatChange,
   scope,
   onScopeChange,
+  labels,
   onClose,
 }) => {
   const ref = useRef<HTMLDivElement>(null)
 
   useClickOutside(ref, onClose)
 
-  const effectiveScope = scope ?? DEFAULT_ROW_SCOPE
-  const includesGroups = effectiveScope === 'all'
-
   return (
     <Styled.Popover ref={ref} onClick={(e) => e.stopPropagation()}>
+      {supportsFormat(kind) && onFormatChange && (
+        <>
+          <FormatToggles format={format ?? DEFAULT_SUMMARY_FORMAT} onChange={onFormatChange} />
+          <Styled.SelectorDivider />
+        </>
+      )}
+
       {CALC_OPTIONS[kind].map((opt) => (
         <Styled.SelectorItem
           key={opt.value}
@@ -45,18 +63,14 @@ export const CalcSelector: FC<Props> = ({
         </Styled.SelectorItem>
       ))}
 
-      {onScopeChange && (
+      {onScopeChange && labels.secondary && (
         <>
           <Styled.SelectorDivider />
-          <Styled.ScopeToggleRow>
-            <span>Include groups & folders</span>
-            <InputSwitch
-              checked={includesGroups}
-              onChange={(e) =>
-                onScopeChange((e.target as HTMLInputElement).checked ? 'all' : 'tasks')
-              }
-            />
-          </Styled.ScopeToggleRow>
+          <ScopeToggles
+            scope={scope ?? DEFAULT_ROW_SCOPE}
+            onChange={onScopeChange}
+            labels={labels}
+          />
         </>
       )}
     </Styled.Popover>

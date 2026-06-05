@@ -12,11 +12,13 @@ import {
 } from '../../utils/pinningUtils'
 import * as Styled from './TableFooter.styled'
 import { SummaryCell } from './SummaryCell'
-import { classifyColumnSummary } from './classifyColumnSummary'
+import { classifyColumnSummary, isAlwaysFilledColumn } from './classifyColumnSummary'
 import {
   ColumnSummary,
   ColumnSummaryMap,
+  DEFAULT_ROW_SCOPE,
   SummaryCalc,
+  SummaryFormat,
   RowScope,
   MainCountLabels,
 } from './summaryTypes'
@@ -72,8 +74,11 @@ interface TableFooterProps {
   attribs: ProjectTableAttribute[]
   summaries: ColumnSummaryMap
   allScopeSummaries: ColumnSummaryMap
+  groupScopeSummaries: ColumnSummaryMap
   calcByColumn: Record<string, SummaryCalc>
   onCalcChange: (columnId: string, calc: SummaryCalc) => void
+  formatByColumn: Record<string, SummaryFormat>
+  onFormatChange: (columnId: string, format: SummaryFormat) => void
   scopeByColumn: Record<string, RowScope>
   onScopeChange: (columnId: string, scope: RowScope) => void
   mainCountLabels?: MainCountLabels
@@ -88,8 +93,11 @@ export const TableFooter = ({
   attribs,
   summaries,
   allScopeSummaries,
+  groupScopeSummaries,
   calcByColumn,
   onCalcChange,
+  formatByColumn,
+  onFormatChange,
   scopeByColumn,
   onScopeChange,
   mainCountLabels,
@@ -115,6 +123,25 @@ export const TableFooter = ({
           const isLastPinnedLeft =
             column.getIsPinned() === 'left' && column.getIsLastColumn('left')
 
+          const kind = classifyColumnSummary(column.id, attribs)
+          const scope = scopeByColumn[column.id] ?? DEFAULT_ROW_SCOPE
+
+          // main cell carries its own primary/secondary counts; other cells follow scope
+          const pickSummary = (): ColumnSummary | undefined => {
+            if (kind === 'main') return summaries[column.id]
+            let scoped: ColumnSummary | undefined
+            if (scope === 'all') scoped = allScopeSummaries[column.id] ?? summaries[column.id]
+            else if (scope === 'tasks') scoped = summaries[column.id]
+            else if (scope === 'folders') scoped = groupScopeSummaries[column.id]
+            if (scoped) return scoped
+            // empty shell keeps the cell clickable so the scope toggles stay reachable
+            const fallback =
+              summaries[column.id] ??
+              allScopeSummaries[column.id] ??
+              groupScopeSummaries[column.id]
+            return fallback ? { columnId: column.id } : undefined
+          }
+
           return (
             <Styled.FooterCell
               key={column.id}
@@ -123,20 +150,16 @@ export const TableFooter = ({
             >
               {!isUtility && (
                 <SummaryCell
-                  kind={classifyColumnSummary(column.id, attribs)}
-                  summary={enrichDistribution(
-                    column.id,
-                    scopeByColumn[column.id] === 'all'
-                      ? allScopeSummaries[column.id] ?? summaries[column.id]
-                      : summaries[column.id],
-                    fieldOptions,
-                    attribs,
-                  )}
+                  kind={kind}
+                  summary={enrichDistribution(column.id, pickSummary(), fieldOptions, attribs)}
                   calc={calcByColumn[column.id]}
                   onCalcChange={(c) => onCalcChange(column.id, c)}
-                  scope={scopeByColumn[column.id]}
+                  format={formatByColumn[column.id]}
+                  onFormatChange={(f) => onFormatChange(column.id, f)}
+                  scope={scope}
                   onScopeChange={(s) => onScopeChange(column.id, s)}
                   mainCountLabels={mainCountLabels}
+                  allowFillMode={!isAlwaysFilledColumn(column.id)}
                 />
               )}
             </Styled.FooterCell>

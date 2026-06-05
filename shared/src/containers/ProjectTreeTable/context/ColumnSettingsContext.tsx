@@ -8,7 +8,7 @@ import {
   SortingState,
 } from '@tanstack/react-table'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
-import { SummaryCalc, RowScope } from '../components/TableFooter/summaryTypes'
+import { SummaryCalc, SummaryFormat, RowScope } from '../components/TableFooter/summaryTypes'
 
 export interface TableGroupBy {
   desc: boolean
@@ -22,8 +22,10 @@ export type ColumnsConfig = {
   columnSizing: ColumnSizingState
   // per-column summary footer calc type, keyed by column id
   columnSummaries?: Record<string, SummaryCalc>
-  // per-column summary row scope (groups+tasks vs tasks only), keyed by column id
+  // per-column summary row scope (folders/tasks toggles), keyed by column id
   columnSummaryScopes?: Record<string, RowScope>
+  // per-column summary display format (count/percentage toggles), keyed by column id
+  columnSummaryFormats?: Record<string, SummaryFormat>
   sorting?: SortingState
   groupBy?: TableGroupBy
   groupByConfig?: {
@@ -66,6 +68,10 @@ export interface ColumnSettingsContextType {
   // Column summary row scope (footer)
   columnSummaryScopes: Record<string, RowScope>
   updateColumnSummaryScope: (columnId: string, scope: RowScope) => void
+
+  // Column summary display format (footer)
+  columnSummaryFormats: Record<string, SummaryFormat>
+  updateColumnSummaryFormat: (columnId: string, format: SummaryFormat) => void
 
   // Sorting
   sorting: SortingState

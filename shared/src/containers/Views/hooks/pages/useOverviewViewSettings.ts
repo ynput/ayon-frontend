@@ -23,6 +23,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   SummaryCalc,
+  SummaryFormat,
   RowScope,
 } from '@shared/containers/ProjectTreeTable/components/TableFooter/summaryTypes'
 
@@ -56,13 +57,14 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
 
-  // Backend drops summary/summaryScope from ColumnItemModel, so the post-save
-  // refetch would revert them — hold the selections here, session only.
+  // Backend drops summary/summaryScope/summaryFormat from ColumnItemModel, so
+  // the post-save refetch would revert them — hold the selections here, session only.
   const { selectedView, workingView, isViewWorking, editingViewId } = useViewsContext()
   const [summaryOverrides, setSummaryOverrides] = useState<{
     summaries: Record<string, SummaryCalc>
     scopes: Record<string, RowScope>
-  }>({ summaries: {}, scopes: {} })
+    formats: Record<string, SummaryFormat>
+  }>({ summaries: {}, scopes: {}, formats: {} })
 
   // Editing a named view forks to the working view (selectedView.id flips), but
   // editingViewId keeps pointing at the origin, so the key stays stable while editing.
@@ -72,7 +74,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
 
   // Reset overrides when a different view's settings come on screen
   useEffect(() => {
-    setSummaryOverrides({ summaries: {}, scopes: {} })
+    setSummaryOverrides({ summaries: {}, scopes: {}, formats: {} })
   }, [viewKey])
 
   // Get server settings
@@ -100,7 +102,8 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const columns = useMemo(() => {
     const hasOverrides =
       Object.keys(summaryOverrides.summaries).length ||
-      Object.keys(summaryOverrides.scopes).length
+      Object.keys(summaryOverrides.scopes).length ||
+      Object.keys(summaryOverrides.formats).length
     if (!hasOverrides) return columnsBase
     return {
       ...columnsBase,
@@ -108,6 +111,10 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
       columnSummaryScopes: {
         ...columnsBase.columnSummaryScopes,
         ...summaryOverrides.scopes,
+      },
+      columnSummaryFormats: {
+        ...columnsBase.columnSummaryFormats,
+        ...summaryOverrides.formats,
       },
     }
   }, [columnsBase, summaryOverrides])
@@ -166,10 +173,15 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     async (tableSettings: ColumnsConfig, allColumnIds?: string[]) => {
       // Keep the summary footer choices alive across the working-view refetch
       // (backend drops these fields, so server state can't be trusted for them).
-      if (tableSettings.columnSummaries || tableSettings.columnSummaryScopes) {
+      if (
+        tableSettings.columnSummaries ||
+        tableSettings.columnSummaryScopes ||
+        tableSettings.columnSummaryFormats
+      ) {
         setSummaryOverrides((prev) => ({
           summaries: { ...prev.summaries, ...(tableSettings.columnSummaries || {}) },
           scopes: { ...prev.scopes, ...(tableSettings.columnSummaryScopes || {}) },
+          formats: { ...prev.formats, ...(tableSettings.columnSummaryFormats || {}) },
         }))
       }
 

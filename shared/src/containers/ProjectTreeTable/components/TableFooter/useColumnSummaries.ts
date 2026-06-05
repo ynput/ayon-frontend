@@ -13,6 +13,7 @@ type Args = {
 export type ColumnSummariesResult = {
   summaries: ColumnSummaryMap
   allScopeSummaries: ColumnSummaryMap
+  groupScopeSummaries: ColumnSummaryMap
 } | null
 
 export const useColumnSummaries = ({
@@ -26,6 +27,9 @@ export const useColumnSummaries = ({
     const allScopeSummaries = groupFieldStats?.length
       ? mapColumnStatsToSummary(combineFieldStats(fieldStats ?? [], groupFieldStats))
       : summaries
-    return { summaries, allScopeSummaries }
+    const groupScopeSummaries = groupFieldStats?.length
+      ? mapColumnStatsToSummary(groupFieldStats)
+      : {}
+    return { summaries, allScopeSummaries, groupScopeSummaries }
   }, [enabled, fieldStats, groupFieldStats])
 }

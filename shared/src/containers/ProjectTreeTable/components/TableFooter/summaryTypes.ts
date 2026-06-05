@@ -9,20 +9,31 @@ export type SummaryKind =
   | 'blank'
 
 export type NumberCalc = 'sum' | 'avg' | 'min' | 'max' | 'none'
-export type BooleanCalc = 'checked' | 'notChecked' | 'percentChecked' | 'percentNotChecked'
-export type TextCalc = 'filled' | 'notFilled' | 'percentFilled' | 'percentNotFilled'
+export type BooleanCalc = 'checked' | 'notChecked'
+export type TextCalc = 'filled' | 'notFilled'
+// enum bar mode: value distribution vs filled/empty split
+export type EnumCalc = 'values' | 'fill'
 
-export type SummaryCalc = NumberCalc | BooleanCalc | TextCalc
+export type SummaryCalc = NumberCalc | BooleanCalc | TextCalc | EnumCalc
 
-// Which rows feed the aggregation: 'all' = groups/folders + tasks, 'tasks' = tasks only.
-export type RowScope = 'all' | 'tasks'
-export const DEFAULT_ROW_SCOPE: RowScope = 'tasks'
+// Display format for count-style summaries, driven by the Count/Percentage toggles.
+export type SummaryFormat = 'count' | 'percent' | 'both' | 'none'
+export const DEFAULT_SUMMARY_FORMAT: SummaryFormat = 'count'
 
-// filled/empty row counts shown alongside a distribution
-export type SummaryFillCounts = {
-  filled?: number
-  notFilled?: number
-}
+export const formatHasCount = (f: SummaryFormat): boolean => f === 'count' || f === 'both'
+export const formatHasPercent = (f: SummaryFormat): boolean => f === 'percent' || f === 'both'
+export const buildSummaryFormat = (count: boolean, percent: boolean): SummaryFormat =>
+  count && percent ? 'both' : count ? 'count' : percent ? 'percent' : 'none'
+
+// Which row sets feed the aggregation, driven by the Folders/Tasks (or
+// Products/Versions) toggles: groups = folders/products, rows = tasks/versions.
+export type RowScope = 'all' | 'tasks' | 'folders' | 'none'
+export const DEFAULT_ROW_SCOPE: RowScope = 'all'
+
+export const scopeHasGroups = (s: RowScope): boolean => s === 'all' || s === 'folders'
+export const scopeHasRows = (s: RowScope): boolean => s === 'all' || s === 'tasks'
+export const buildRowScope = (groups: boolean, rows: boolean): RowScope =>
+  groups && rows ? 'all' : groups ? 'folders' : rows ? 'tasks' : 'none'
 
 export type SummaryDistributionItem = {
   value: string

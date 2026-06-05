@@ -188,6 +188,8 @@ export const ProjectTreeTable = ({
     updateColumnSummary,
     columnSummaryScopes,
     updateColumnSummaryScope,
+    columnSummaryFormats,
+    updateColumnSummaryFormat,
   } = useColumnSettingsContext()
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
@@ -666,8 +668,11 @@ export const ProjectTreeTable = ({
                 attribs={attribFields}
                 summaries={columnSummaryData.summaries}
                 allScopeSummaries={columnSummaryData.allScopeSummaries}
+                groupScopeSummaries={columnSummaryData.groupScopeSummaries}
                 calcByColumn={columnSummaries}
                 onCalcChange={updateColumnSummary}
+                formatByColumn={columnSummaryFormats}
+                onFormatChange={updateColumnSummaryFormat}
                 scopeByColumn={columnSummaryScopes}
                 onScopeChange={updateColumnSummaryScope}
                 mainCountLabels={mainCountLabels}

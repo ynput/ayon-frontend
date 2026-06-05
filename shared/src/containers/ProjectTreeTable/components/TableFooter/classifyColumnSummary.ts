@@ -14,6 +14,12 @@ const BLANK_BUILTINS = new Set([
   'path',
 ])
 
+// Enum columns whose value is always set (status, type, priority, …) — a
+// filled/empty split is meaningless there, only the value breakdown applies.
+const ALWAYS_FILLED = new Set(['status', 'subType', 'productBaseType', 'attrib_priority'])
+
+export const isAlwaysFilledColumn = (columnId: string): boolean => ALWAYS_FILLED.has(columnId)
+
 export const classifyColumnSummary = (
   columnId: string,
   attribs: ProjectTableAttribute[],
