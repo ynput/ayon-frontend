@@ -18,6 +18,8 @@ import { useAppSelector } from '@state/store'
 import { useViewsContext } from '@shared/containers'
 import { ProjectTableModulesType } from '@shared/hooks'
 
+const SCOPES = ["folder", "task"]
+
 const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
   const { taskGroups, viewGroupBy, viewGroupByDesc, isFlatFolderView, ...props } =
     useProjectOverviewContext()
@@ -54,7 +56,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         powerpack={powerpack}
         modules={modules}
         groupByConfig={{ entityType: 'task' }}
-        scopes={['folder', 'task']}
+        scopes={SCOPES}
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}
         onResetView={resetWorkingView}

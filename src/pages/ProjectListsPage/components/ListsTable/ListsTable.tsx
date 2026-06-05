@@ -14,12 +14,22 @@ import { Row, Table } from '@tanstack/react-table'
 import useListContextMenu from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import ListFolderFormDialog from '../ListFolderFormDialog'
 
+export type {
+  ListRowContextMenuBuilder,
+  ListRowContextMenuContext,
+} from '@pages/ProjectListsPage/hooks/useListContextMenu'
+
 interface ListsTableProps {
   isReview?: boolean
   isStoryboards?: boolean
+  rowContextMenuBuilders?: ListRowContextMenuBuilder[]
 }
 
-const ListsTable: FC<ListsTableProps> = ({ isReview, isStoryboards }) => {
+const ListsTable: FC<ListsTableProps> = ({
+  isReview,
+  isStoryboards,
+  rowContextMenuBuilders = [],
+}) => {
   const {
     rowSelection,
     setRowSelection,
@@ -41,7 +51,7 @@ const ListsTable: FC<ListsTableProps> = ({ isReview, isStoryboards }) => {
     }
   }, [])
 
-  const { openContext: handleRowContext } = useListContextMenu()
+  const { openContext: handleRowContext } = useListContextMenu(rowContextMenuBuilders)
 
   // Memoize the render function for the row (definition remains the same)
   const renderListRow = useCallback<
@@ -87,8 +97,8 @@ const ListsTable: FC<ListsTableProps> = ({ isReview, isStoryboards }) => {
   }, [])
 
   const sessionsLabel = useMemo(
-    () => isStoryboards ? 'Storyboards' : 'Review sessions',
-    [isStoryboards]
+    () => (isStoryboards ? 'Storyboards' : 'Review sessions'),
+    [isStoryboards],
   )
 
   return (
@@ -101,10 +111,16 @@ const ListsTable: FC<ListsTableProps> = ({ isReview, isStoryboards }) => {
             title={isReview ? sessionsLabel : undefined}
             buttonLabels={{
               delete: {
-                tooltip: isReview ? `Delete selected ${sessionsLabel.toLowerCase()}` : 'Delete selected lists',
+                tooltip: isReview
+                  ? `Delete selected ${sessionsLabel.toLowerCase()}`
+                  : 'Delete selected lists',
               },
-              add: { tooltip: isReview ? `Create new ${sessionsLabel.toLowerCase()}` : 'Create new list' },
-              search: { tooltip: isReview ? `Search ${sessionsLabel.toLowerCase()}` : 'Search lists' },
+              add: {
+                tooltip: isReview ? `Create new ${sessionsLabel.toLowerCase()}` : 'Create new list',
+              },
+              search: {
+                tooltip: isReview ? `Search ${sessionsLabel.toLowerCase()}` : 'Search lists',
+              },
             }}
             hiddenButtons={isReview ? ['filter'] : []}
             search={clientSearch}

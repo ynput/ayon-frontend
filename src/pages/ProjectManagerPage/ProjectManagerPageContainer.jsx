@@ -26,8 +26,6 @@ const ProjectManagerPageContainer = ({
           <>
             <ProjectsList
               selection={selection ? [selection] : []}
-              onDeleteProject={onDeleteProject}
-              onActivateProject={onActivateProject}
               onNewProject={onNewProject}
               onNoProjectSelected={onNoProject}
               onSelect={onSelect}

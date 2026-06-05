@@ -2,13 +2,7 @@ import { createContext, useContext, useCallback } from 'react'
 import { useGetProjectQuery, useGetProjectAnatomyQuery } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 
-import type {
-  FolderType,
-  TaskType,
-  ProductTypeListItem,
-  ProjectModel,
-  Anatomy,
-} from '@shared/api'
+import type { FolderType, TaskType, ProductTypeListItem, ProjectModel, Anatomy } from '@shared/api'
 
 export type ProjectModelWithProducts = ProjectModel & {
   // Extend project with product types
@@ -85,7 +79,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
   // Shorthands to access project data and type casting
   // (we're referencing nested objects. no need to use useMemo for these)
 
-  const defaultProductType = anatomy.product_base_types?.default
+  const defaultProductType = anatomy.product_base_types?.['default']
   const productTypes: ProductTypeListItem[] = (anatomy.product_base_types?.definitions || []).map(
     (t) => ({
       name: t.name || '',

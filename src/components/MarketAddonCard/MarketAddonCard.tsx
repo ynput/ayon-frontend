@@ -5,7 +5,7 @@ import AddonIcon from '../AddonIcon/AddonIcon'
 import { Button, ButtonProps, Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { HTMLAttributes } from 'react'
-import { PowerpackButton, PricingLink } from '@shared/components/Powerpack'
+import { PowerpackButton, FreeTrialLink } from '@shared/components/Powerpack'
 
 export type ListItemType = 'addon' | 'release' | 'placeholder'
 
@@ -125,9 +125,9 @@ export const MarketAddonCard = ({
         </Styled.Buttons>
       )}
       {flags?.includes('licensed') && !available && !isPlaceholder && (
-        <PricingLink>
+        <FreeTrialLink>
           <Button variant="tertiary">Subscribe</Button>
-        </PricingLink>
+        </FreeTrialLink>
       )}
     </Styled.Container>
   )

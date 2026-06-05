@@ -17,9 +17,6 @@ const HeaderButton = styled(Button)`
   }
   /* set home icon filled */
   &#home-button {
-    .icon {
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-    }
     padding-right: 12px;
   }
 

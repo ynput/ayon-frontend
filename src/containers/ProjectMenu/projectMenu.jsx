@@ -1,10 +1,6 @@
 import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  useGetProjectFoldersQuery,
-  useListProjectsQuery,
-  useSetFrontendPreferencesMutation,
-} from '@shared/api'
+import { useGetProjectFoldersQuery, useSetFrontendPreferencesMutation } from '@shared/api'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import { useLocalStorage } from '@shared/hooks'
@@ -14,8 +10,10 @@ import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocation, useNavigate } from 'react-router-dom'
-import buildProjectsTableData, { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
-import { usePowerpack } from '@shared/context'
+import buildProjectsTableData, {
+  parseProjectFolderRowId,
+} from '@containers/ProjectsList/buildProjectsTableData'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import ProjectsTable from '@containers/ProjectsList/ProjectsTable'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
@@ -57,9 +55,11 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   // merge pinned from user and local storage
   const pinned = [...new Set([...pinnedState, ...oldPinned])]
   const { powerLicense } = usePowerpack()
+  const {
+    projects: { active: projects },
+  } = useGlobalContext()
 
-  const { data: projects = [] } = useListProjectsQuery({ active: true })
-  const { data: folders = [] } = useGetProjectFoldersQuery({active: true})
+  const { data: folders = [] } = useGetProjectFoldersQuery({ active: true })
   const projectTree = useMemo(
     () => buildProjectsTableData(projects, folders, true, powerLicense),
     [projects, folders, powerLicense],
@@ -142,7 +142,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
     return {
       filteredProjectTree: filterNodes(projectTree),
-      foldersToExpand
+      foldersToExpand,
     }
   }, [projectTree, search])
 
@@ -150,10 +150,10 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   useEffect(() => {
     if (search && foldersToExpand.size > 0) {
       const expandedState = {}
-      foldersToExpand.forEach(folderId => {
+      foldersToExpand.forEach((folderId) => {
         expandedState[folderId] = true
       })
-      setExpanded(prev => {
+      setExpanded((prev) => {
         // Only update if keys are different
         const prevKeys = Object.keys(prev).sort().join(',')
         const newKeys = Object.keys(expandedState).sort().join(',')
@@ -161,7 +161,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
       })
     } else if (!search) {
       // When not searching, auto-expand all folders
-      setExpanded(prev => {
+      setExpanded((prev) => {
         // Only update if keys are different
         const prevKeys = Object.keys(prev).sort().join(',')
         const newKeys = Object.keys(autoExpandedState).sort().join(',')
@@ -178,28 +178,34 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     setSearch('')
   }, [onHide])
 
-  const handleSettingsClick = useCallback((projectId) => {
-    handleHide()
-    navigate('/manageProjects/projectSettings?project=' + projectId)
-  }, [handleHide, navigate])
+  const handleSettingsClick = useCallback(
+    (projectId) => {
+      handleHide()
+      navigate('/manageProjects/projectSettings?project=' + projectId)
+    },
+    [handleHide, navigate],
+  )
 
-  const onProjectSelect = useCallback((projectName) => {
-    handleHide()
+  const onProjectSelect = useCallback(
+    (projectName) => {
+      handleHide()
 
-    handleProjectSelectionDispatches(projectName)
+      handleProjectSelectionDispatches(projectName)
 
-    setSearchOpen(false)
+      setSearchOpen(false)
 
-    // if projects/[project] is null, projects/[projectName]/defaultTab, else projects/[projectName]/[module]
-    const defaultTab = getDefaultTab()
-    const pathSegments = location.pathname.split('/')
-    const currentModule = pathSegments[3]
-    const link = location.pathname.includes('projects')
-      ? `/projects/${projectName}/${currentModule || defaultTab}`
-      : `/projects/${projectName}/${defaultTab}`
+      // if projects/[project] is null, projects/[projectName]/defaultTab, else projects/[projectName]/[module]
+      const defaultTab = getDefaultTab()
+      const pathSegments = location.pathname.split('/')
+      const currentModule = pathSegments[3]
+      const link = location.pathname.includes('projects')
+        ? `/projects/${projectName}/${currentModule || defaultTab}`
+        : `/projects/${projectName}/${defaultTab}`
 
-    navigate(link)
-  }, [handleHide, handleProjectSelectionDispatches, getDefaultTab, location.pathname, navigate])
+      navigate(link)
+    },
+    [handleHide, handleProjectSelectionDispatches, getDefaultTab, location.pathname, navigate],
+  )
 
   const handleRowSelectionChange = (newSelection) => {
     const selectedIds = Object.keys(newSelection).filter((id) => newSelection[id])
@@ -229,64 +235,70 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     return sibling?.tagName === 'HR' ? getSibling(sibling, direction) : sibling
   }, [])
 
-  const handleArrowKeys = useCallback((e) => {
-    const { key, shiftKey } = e
-    const direction = key === 'ArrowUp' || (key === 'Tab' && shiftKey) ? 'prev' : 'next'
-    const edgeElement = direction === 'next' ? 'firstChild' : 'lastChild'
+  const handleArrowKeys = useCallback(
+    (e) => {
+      const { key, shiftKey } = e
+      const direction = key === 'ArrowUp' || (key === 'Tab' && shiftKey) ? 'prev' : 'next'
+      const edgeElement = direction === 'next' ? 'firstChild' : 'lastChild'
 
-    if (['ArrowDown', 'ArrowUp'].includes(key) || (key === 'Tab' && (shiftKey || !shiftKey))) {
-      e.preventDefault()
-      const focused = document.activeElement
+      if (['ArrowDown', 'ArrowUp'].includes(key) || key === 'Tab') {
+        e.preventDefault()
+        const focused = document.activeElement
 
-      if (focused && focused.className.includes('project-item')) {
-        const sibling = getSibling(focused, direction)
-        focusElement(sibling || focused.parentElement[edgeElement])
-      } else {
-        const edgeItem = menuRef.current?.getElement()?.querySelector(`.project-item`)
-        focusElement(edgeItem)
-      }
-    }
-  }, [getSibling, focusElement])
-
-  // if we start typing, open the search automatically
-  const handleKeyPress = useCallback((e) => {
-    //  open search on letter
-    if (e.key?.length === 1 && !searchOpen) {
-      setSearchOpen(true)
-    }
-
-    // close search on escape
-    // close menu on escape (if search is not open)
-    if (e.key === 'Escape') {
-      if (searchOpen && search.length > 0) {
-        setSearchOpen(false)
-        setSearch('')
-      } else {
-        handleHide()
-      }
-    }
-    // pick top result on enter and search
-    else if (e.key === 'Enter') {
-      // get id of focused item
-      const id = e.target?.id
-
-      if (id) {
-        // select project
-        onProjectSelect(id)
-      } else if (searchOpen && search.length > 0 && filteredProjectTree.length > 0) {
-        // select top result
-        const topResult = filteredProjectTree[0]
-        if (topResult && !topResult.data?.isFolder) {
-          onProjectSelect(topResult.name)
+        if (focused && focused.className.includes('project-item')) {
+          const sibling = getSibling(focused, direction)
+          focusElement(sibling || focused.parentElement[edgeElement])
+        } else {
+          const edgeItem = menuRef.current?.getElement()?.querySelector(`.project-item`)
+          focusElement(edgeItem)
         }
       }
-    } else if (e.key === 'Backspace') {
-      if (searchOpen && search.length > 0) {
-        // focus on search input
-        focusElement(searchRef.current)
+    },
+    [getSibling, focusElement],
+  )
+
+  // if we start typing, open the search automatically
+  const handleKeyPress = useCallback(
+    (e) => {
+      //  open search on letter
+      if (e.key?.length === 1 && !searchOpen) {
+        setSearchOpen(true)
       }
-    } else handleArrowKeys(e)
-  }, [searchOpen, search, filteredProjectTree, handleHide, onProjectSelect, handleArrowKeys])
+
+      // close search on escape
+      // close menu on escape (if search is not open)
+      if (e.key === 'Escape') {
+        if (searchOpen && search.length > 0) {
+          setSearchOpen(false)
+          setSearch('')
+        } else {
+          handleHide()
+        }
+      }
+      // pick top result on enter and search
+      else if (e.key === 'Enter') {
+        // get id of focused item
+        const id = e.target?.id
+
+        if (id) {
+          // select project
+          onProjectSelect(id)
+        } else if (searchOpen && search.length > 0 && filteredProjectTree.length > 0) {
+          // select top result
+          const topResult = filteredProjectTree[0]
+          if (topResult && !topResult.data?.isFolder) {
+            onProjectSelect(topResult.name)
+          }
+        }
+      } else if (e.key === 'Backspace') {
+        if (searchOpen && search.length > 0) {
+          // focus on search input
+          focusElement(searchRef.current)
+        }
+      } else handleArrowKeys(e)
+    },
+    [searchOpen, search, filteredProjectTree, handleHide, onProjectSelect, handleArrowKeys],
+  )
   // Add event listeners
   useEffect(() => {
     if (isOpen) {

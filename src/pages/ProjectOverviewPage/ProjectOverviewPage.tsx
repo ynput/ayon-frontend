@@ -35,10 +35,19 @@ import useGoToEntity from '../../hooks/useGoToEntity'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 // Configure scope-specific filter types for the search filter
-const scopesConfig: ScopeWithFilterTypes[] = [
+const SCOPES: ScopeWithFilterTypes[] = [
   {
     scope: 'task',
-    filterTypes: ['status', 'tags', 'taskType', 'assignees', 'attributes', 'name', 'createdAt', 'updatedAt'],
+    filterTypes: [
+      'status',
+      'tags',
+      'taskType',
+      'assignees',
+      'attributes',
+      'name',
+      'createdAt',
+      'updatedAt',
+    ],
   },
   {
     scope: 'folder',
@@ -117,8 +126,7 @@ const ProjectOverviewPage: FC = () => {
       .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
       .map((o) => ({
         ...o,
-        sortOrder:
-          o.id === 'folder' || o.id === 'hierarchy' ? !nameSortDesc : !viewGroupByDesc,
+        sortOrder: o.id === 'folder' || o.id === 'hierarchy' ? !nameSortDesc : !viewGroupByDesc,
       }))
   }, [viewGroupBy, viewGroupByOptions, viewGroupByDesc, nameSortDesc])
 
@@ -233,7 +241,7 @@ const ProjectOverviewPage: FC = () => {
               <SearchFilterWrapper
                 queryFilters={displayFilters}
                 onChange={handleFiltersChange}
-                scopes={scopesConfig}
+                scopes={SCOPES}
                 projectNames={projectName ? [projectName] : []}
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
@@ -248,10 +256,7 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleViewGroupByChange}
                 multiSelect={false}
               />
-              <ImportDialogButton
-                importContext="hierarchy"
-                projectName={projectName}
-              />
+              <ImportDialogButton importContext="hierarchy" projectName={projectName} />
               <Actions
                 entities={[]}
                 entityType={undefined}

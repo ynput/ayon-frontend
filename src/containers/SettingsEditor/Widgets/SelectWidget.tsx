@@ -93,11 +93,7 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
     <SwitchboxContainer>
       {options.length > 0 && (
         <SwitchboxButtonGroup>
-          <SwitchboxButton
-            onClick={selectAll}
-            disabled={allSelected}
-            title="Select all options"
-          >
+          <SwitchboxButton onClick={selectAll} disabled={allSelected} title="Select all options">
             Select All
           </SwitchboxButton>
           <SwitchboxButton
@@ -114,25 +110,22 @@ const Switchbox = ({ options, value, onSelectionChange }: $Any) => {
           <div
             key={opt.value}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
           >
             <InputSwitch
               checked={isSelected(opt.value)}
               onChange={() => toggleSelection(opt.value)}
             />
-            <label style={{whiteSpace:"nowrap"}}>{opt.label}</label>
+            <label style={{ whiteSpace: 'nowrap' }}>{opt.label}</label>
           </div>
         ))}
       </SwitchboxGrid>
     </SwitchboxContainer>
   )
-
 }
-
-
 
 const SelectWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
@@ -154,9 +147,9 @@ const SelectWidget = (props: $Any) => {
 
     let defaultValue
     if (props.multiple) {
-      defaultValue = props.schema.default || []
+      defaultValue = props.schema['default'] || []
     } else {
-      defaultValue = props.schema.default || ''
+      defaultValue = props.schema['default'] || ''
     }
 
     setValue(props.value !== null && props.value !== undefined ? props.value : defaultValue)
@@ -227,13 +220,7 @@ const SelectWidget = (props: $Any) => {
   }
 
   if (widget === 'switchbox' && props.multiple) {
-    return (
-      <Switchbox
-        options={options}
-        value={value}
-        onSelectionChange={setValue}
-      />
-    )
+    return <Switchbox options={options} value={value} onSelectionChange={setValue} />
   }
 
   return (

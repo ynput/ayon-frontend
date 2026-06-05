@@ -89,6 +89,11 @@
       "types": "./dist/types/containers/EntityPickerDialog/index.d.ts",
       "import": "./dist/EntityPickerDialog.es.js",
       "require": "./dist/EntityPickerDialog.cjs.js"
+    },
+    "./ListTable": {
+      "types": "./dist/types/containers/ListTable/index.d.ts",
+      "import": "./dist/ListTable.es.js",
+      "require": "./dist/ListTable.cjs.js"
     }
   },
   "files": [
@@ -128,7 +133,7 @@
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-virtual": "3.13.23",
     "@ynput/ayon-react-components": "1.17.1",
-    "axios": "1.15.0",
+    "axios": "1.16.1",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
     "date-fns": "3.6.0",
@@ -139,7 +144,7 @@
     "quill-magic-url": "4.2.0",
     "react-markdown": "10.1.0",
     "react-perfect-scrollbar": "1.5.8",
-    "react-quill-ayon": "2.0.3",
+    "react-quill-ayon": "2.0.2",
     "react-toastify": "9.1.3",
     "rehype-raw": "7.0.0",
     "remark-directive": "3.0.1",

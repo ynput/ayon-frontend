@@ -30,10 +30,13 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
   const { SubtasksManager } = useSubtasksModulesContext()
 
   const hierarchyOptions = useMemo(
-    () => [
-      { value: 'hierarchy', label: 'Product', icon: 'inventory_2' },
-    ],
+    () => [{ value: 'hierarchy', label: 'Product', icon: 'inventory_2' }],
     [],
+  )
+
+  const SCOPES = useMemo(
+    () => (showProducts ? ['version', 'product'] : ['version']),
+    [showProducts],
   )
 
   // loading states
@@ -71,7 +74,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       updateShowHierarchy={onUpdateShowProducts}
       hierarchyActive={showProducts}
       isLoading={isLoadingAll}
-      scopes={showProducts ? ['version', 'product'] : ['version']}
+      scopes={SCOPES}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
       error={error}

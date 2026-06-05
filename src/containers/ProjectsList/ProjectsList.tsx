@@ -1,24 +1,15 @@
-import { useGetProjectFoldersQuery, useListProjectsQuery } from '@shared/api'
+import { useGetProjectFoldersQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjectsTableData'
 import { MENU_ID } from './ProjectsListTableHeader'
-import useProjectListUserPreferences from './hooks/useProjectListUserPreferences'
-import useProjectsListMenuItems from './hooks/useProjectsListMenuItems'
-import { useProjectFolderActions } from './hooks/useProjectFolderActions'
+import useProjectMenuController from './hooks/useProjectMenuController'
 import { useMenuContext } from '@shared/context/MenuContext'
 import { useQueryParam } from 'use-query-params'
-import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
-import { useNavigate } from 'react-router-dom'
-import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocalStorage } from '@shared/hooks'
-import {
-  ProjectFolderFormData,
-  ProjectFolderFormDialog,
-} from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
-import { usePowerpack } from '@shared/context'
+import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import { useGlobalContext, usePowerpack } from '@shared/context'
 import ProjectsTable from './ProjectsTable'
 import ProjectsShortcuts from './ProjectsShortcuts'
 
@@ -29,8 +20,6 @@ interface ProjectsListProps {
   onSelect: (ids: string[]) => void
   multiSelect?: boolean
   onNewProject?: () => void
-  onActivateProject?: (projectName: string, active: boolean) => void
-  onDeleteProject?: (projectName: string) => void
   onNoProjectSelected?: (projectName: string) => void
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
@@ -42,29 +31,23 @@ const ProjectsList: FC<ProjectsListProps> = ({
   onSelect,
   multiSelect,
   onNewProject,
-  onActivateProject,
-  onDeleteProject,
   onNoProjectSelected,
   pt,
 }) => {
   // GET USER PREFERENCES (moved to hook)
-  const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
   const { powerLicense } = usePowerpack()
+  const {
+    projects: globalProjects,
+    isLoading: globalIsLoading,
+    error: globalError,
+  } = useGlobalContext()
   const [expanded, setExpanded] = useState<ExpandedState>({})
   // Show archived state (stored in local storage)
   const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
-  // Folder dialog state
-  const [folderDialogState, setFolderDialogState] = useState<{
-    isOpen: boolean
-    folderId?: string
-    initial?: Partial<ProjectFolderFormData>
-  }>({ isOpen: false })
 
-  const {
-    data = [],
-    isLoading,
-    error,
-  } = useListProjectsQuery({ active: showArchived ? undefined : true })
+  const data = showArchived ? globalProjects.all : globalProjects.active
+  const isLoading = globalIsLoading.projects
+  const error = globalError.projects
   const { data: folders } = useGetProjectFoldersQuery()
 
   // transformations
@@ -75,7 +58,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
       if (!a.active && b.active) return 1
       return getProjectDisplayName(a).localeCompare(getProjectDisplayName(b))
     })
-  }, [data, rowPinning])
+  }, [data])
 
   const selectedProjects = useMemo(() => {
     return projects.filter((p) => selection.includes(p.name))
@@ -99,15 +82,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
       onSelect([projects[0].name])
     }
   }, [multiSelect, selection, selectedProjects, onSelect, projects])
-
-  // Get user permissions
-  const { isLoading: userPermissionsLoading, permissions: userPermissions } =
-    useUserProjectPermissions(user?.data?.isUser || true)
-  // Check if user can create projects
-  const canCreateProject =
-    (!userPermissionsLoading && userPermissions?.canCreateProject()) ||
-    user?.data?.isAdmin ||
-    user?.data?.isManager
 
   // state
   // search state
@@ -154,42 +128,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
       }
     }
   }
-
-  const [handleProjectSelectionDispatches] = useProjectSelectDispatcher()
-  const { getDefaultTab } = useProjectDefaultTab()
-
-  const navigate = useNavigate()
-  const onOpenProject = (project: string) => {
-    if ((user?.uiExposureLevel || 0) < 500) return
-
-    handleProjectSelectionDispatches(project)
-
-    const defaultTab = getDefaultTab()
-    const link = `/projects/${project}/${defaultTab}`
-    navigate(link)
-  }
-
-  const onOpenProjectManage = (project: string) => {
-    const link = `/manageProjects/anatomy?project=${project}`
-    navigate(link)
-  }
-  const onArchive = (projectName: string, active: boolean) => {
-    onActivateProject?.(projectName, active)
-
-    if (!active && !showArchived) {
-      const newSelection = selection.filter((p) => p !== projectName)
-      if (newSelection.length === 0 && projects.length > 0) {
-        const firstAvailable = projects.find((p) => p.name !== projectName)
-        if (firstAvailable) {
-          onSelect([firstAvailable.name])
-        } else {
-          onSelect([])
-        }
-      } else {
-        onSelect(newSelection)
-      }
-    }
-  }
   const onShowArchivedToggle = () => {
     if (showArchived) {
       const activeProjects = projects.filter((p) => p.active)
@@ -197,22 +135,6 @@ const ProjectsList: FC<ProjectsListProps> = ({
     }
     setShowArchived(!showArchived)
   }
-
-  // Folder dialog handlers
-  const handleOpenFolderDialog = useCallback(
-    (data?: Partial<ProjectFolderFormData>, folderId?: string) => {
-      setFolderDialogState({
-        isOpen: true,
-        folderId,
-        initial: data,
-      })
-    },
-    [],
-  )
-
-  const handleCloseFolderDialog = useCallback(() => {
-    setFolderDialogState({ isOpen: false })
-  }, [])
 
   // Post-creation callbacks for folder state management
   const handleFolderCreated = useCallback(
@@ -247,63 +169,34 @@ const ProjectsList: FC<ProjectsListProps> = ({
     },
     [setExpanded],
   )
-
-  // Use project folder actions hook
   const {
-    onPutProjectsInFolder,
-    onPutFolderInFolder,
-    onRemoveProjectsFromFolder,
-    onDeleteFolder,
-    onEditFolder,
-    onRenameFolder,
+    buildMenuItems,
+    canCreateProject,
+    rowPinning,
+    onRowPinningChange,
+    onOpenProject,
+    handleOpenFolderDialog,
+    folderDialogProps,
     renamingFolder,
     onSubmitRenameFolder,
     closeRenameFolder,
-    onRenameProject,
     renamingProject,
     onSubmitRenameProject,
     closeRenameProject,
-  } = useProjectFolderActions({
-    folders,
-    onSelect,
-    handleOpenFolderDialog,
-  })
-
-  const canEditProjectLabel = !!(user?.data?.isAdmin || user?.data?.isManager)
-
-  // Generate menu items used in both header and context menu
-  const buildMenuItems = useProjectsListMenuItems({
-    hidden: {
-      'add-project': !canCreateProject,
-      'delete-project': !canEditProjectLabel,
-      'archive-project': !canEditProjectLabel,
-      'edit-label': !canEditProjectLabel,
-    },
-    projects: projects,
-    folders: folders || [],
-    multiSelect,
-    pinned: rowPinning,
-    showArchived,
-    userLevel: user?.uiExposureLevel,
-    onNewProject,
-    onSearch: () => setClientSearch(''),
-    onPin: (pinned) => onRowPinningChange({ top: pinned }),
-    onSelectAll: toggleSelectAll,
-    onArchive,
-    onDelete: onDeleteProject,
-    onOpen: onOpenProject,
-    onManage: onOpenProjectManage,
-    onShowArchivedToggle,
-    onCreateFolder: ({ folderId, projectNames }) =>
-      handleOpenFolderDialog({ parentId: folderId, projectNames }),
-    onPutProjectsInFolder,
-    onPutFolderInFolder,
-    onRemoveProjectsFromFolder,
-    onDeleteFolder,
-    powerLicense,
-    onEditFolder,
     onRenameFolder,
-    onRenameProject: canEditProjectLabel ? onRenameProject : undefined,
+    onRenameProject,
+  } = useProjectMenuController({
+    projects,
+    folders: folders || [],
+    selection,
+    onSelect,
+    onNewProject,
+    multiSelect,
+    showArchived,
+    onSelectAll: toggleSelectAll,
+    onShowArchivedToggle,
+    onFolderCreated: handleFolderCreated,
+    onFoldersCreated: handleFoldersCreated,
   })
 
   return (
@@ -340,24 +233,13 @@ const ProjectsList: FC<ProjectsListProps> = ({
         closeRenameProject={closeRenameProject}
         pt={pt}
       />
-      <ProjectFolderFormDialog
-        isOpen={folderDialogState.isOpen}
-        onClose={handleCloseFolderDialog}
-        initial={folderDialogState.initial}
-        folderId={folderDialogState.folderId}
-        projectNames={selection}
-        onPutProjectsInFolder={onPutProjectsInFolder}
-        rowSelection={rowSelection}
-        folders={folders || []}
-        onFolderCreated={handleFolderCreated}
-        onFoldersCreated={handleFoldersCreated}
-      />
+      <ProjectFolderFormDialog {...folderDialogProps} />
       <ProjectsShortcuts
         rowSelection={rowSelection}
         folders={folders || []}
         onOpenFolderDialog={handleOpenFolderDialog}
         onRenameFolder={onRenameFolder}
-        onRenameProject={canEditProjectLabel ? onRenameProject : undefined}
+        onRenameProject={onRenameProject}
         disabled={!powerLicense}
       />
     </>

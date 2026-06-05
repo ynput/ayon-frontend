@@ -40,8 +40,11 @@ const StyledContent = styled.div`
   }
 
   &.with-header {
-    min-height: calc(300px - 40px);
     border-radius: 0 0 8px 8px;
+  }
+
+  &.description {
+    min-height: calc(300px - 40px);
   }
 
   &:not(.with-header):not(.auto-height) {
@@ -61,6 +64,7 @@ interface BorderedSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   autoHeight?: boolean
   enableHover?: boolean
   withPadding?: boolean
+  description?: boolean
   pt?: {
     header?: Partial<React.HTMLAttributes<HTMLDivElement>>
     content?: Partial<React.HTMLAttributes<HTMLDivElement>>
@@ -75,6 +79,7 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
   autoHeight = false,
   enableHover = false,
   withPadding = false,
+  description = false,
   onClick,
   className,
   pt,
@@ -98,6 +103,7 @@ export const BorderedSection: React.FC<BorderedSectionProps> = ({
           'with-padding': withPadding,
           'auto-height': autoHeight,
           'with-header': showHeader,
+          description,
         })}
       >
         {children}

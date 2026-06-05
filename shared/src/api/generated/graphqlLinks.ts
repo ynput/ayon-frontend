@@ -26,7 +26,6 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -291,6 +290,7 @@ export type FolderAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -299,6 +299,7 @@ export type FolderAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type FolderEdge = {
@@ -343,6 +344,10 @@ export type FolderNode = BaseNode & {
   tasks: TasksConnection;
   thumbnail?: Maybe<ThumbnailInfo>;
   thumbnailId?: Maybe<Scalars['String']['output']>;
+  totalFolderCount: Scalars['Int']['output'];
+  totalProductCount: Scalars['Int']['output'];
+  totalTaskCount: Scalars['Int']['output'];
+  totalVersionCount: Scalars['Int']['output'];
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   updatedBy?: Maybe<Scalars['String']['output']>;
@@ -657,6 +662,7 @@ export type ProjectAttribType = {
   frameStart?: Maybe<Scalars['Int']['output']>;
   handleEnd?: Maybe<Scalars['Int']['output']>;
   handleStart?: Maybe<Scalars['Int']['output']>;
+  internal?: Maybe<Scalars['Boolean']['output']>;
   pixelAspect?: Maybe<Scalars['Float']['output']>;
   priority?: Maybe<Scalars['String']['output']>;
   /** Vertical resolution */
@@ -677,6 +683,33 @@ export type ProjectEdge = {
   __typename?: 'ProjectEdge';
   cursor?: Maybe<Scalars['String']['output']>;
   node: ProjectNode;
+};
+
+export type ProjectLinkEdge = {
+  __typename?: 'ProjectLinkEdge';
+  author?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  cursor?: Maybe<Scalars['String']['output']>;
+  data: Scalars['JSON']['output'];
+  id: Scalars['String']['output'];
+  inputId: Scalars['String']['output'];
+  /** Input node */
+  inputNode?: Maybe<BaseNode>;
+  inputType: Scalars['String']['output'];
+  linkType: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  outputId: Scalars['String']['output'];
+  /** Output node */
+  outputNode?: Maybe<BaseNode>;
+  outputType: Scalars['String']['output'];
+  projectName: Scalars['String']['output'];
+};
+
+export type ProjectLinksConnection = {
+  __typename?: 'ProjectLinksConnection';
+  edges: Array<ProjectLinkEdge>;
+  /** Pagination information */
+  pageInfo: PageInfo;
 };
 
 export type ProjectNode = {
@@ -704,6 +737,8 @@ export type ProjectNode = {
   library: Scalars['Boolean']['output'];
   /** List of project's link types */
   linkTypes: Array<LinkType>;
+  /** List all links in the project, with optional filters. */
+  links: ProjectLinksConnection;
   name: Scalars['String']['output'];
   /** Return a representation node based on its ID */
   product?: Maybe<ProductNode>;
@@ -820,6 +855,21 @@ export type ProjectNodeFoldersArgs = {
 
 export type ProjectNodeLinkTypesArgs = {
   activeOnly?: Scalars['Boolean']['input'];
+};
+
+
+export type ProjectNodeLinksArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  entityIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  first?: Scalars['Int']['input'];
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
+  inputIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  inputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  linkTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  nameEx?: InputMaybe<Scalars['String']['input']>;
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+  outputIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  outputTypes?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 
@@ -1058,6 +1108,7 @@ export type QueryUsersArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   emails?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  isSupport?: InputMaybe<Scalars['Boolean']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1201,6 +1252,7 @@ export type TaskAttribType = {
   resolutionWidth?: Maybe<Scalars['Int']['output']>;
   /** Date and time when the project or task or asset was started */
   startDate?: Maybe<Scalars['DateTime']['output']>;
+  vendors?: Maybe<Scalars['String']['output']>;
 };
 
 export type TaskEdge = {
@@ -1362,6 +1414,8 @@ export type UserNode = {
   deleted: Scalars['Boolean']['output'];
   disablePasswordLogin: Scalars['Boolean']['output'];
   hasPassword: Scalars['Boolean']['output'];
+  inviteAcceptedAt?: Maybe<Scalars['DateTime']['output']>;
+  inviteSentAt?: Maybe<Scalars['DateTime']['output']>;
   isAdmin: Scalars['Boolean']['output'];
   isDeveloper: Scalars['Boolean']['output'];
   isGuest: Scalars['Boolean']['output'];

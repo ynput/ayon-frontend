@@ -348,16 +348,14 @@ const CommentInput: FC<CommentInputProps> = ({
             search: mentionSearch?.toLowerCase(),
           })
         }
-      } else {
-        // just deleting any text
+      } else if (isDelete) {
+        // backspace inside a mention deletes the whole mention
         const quill = editorRef.current.getEditor()
         const currentSelection = quill.getSelection(false)
         const currentFormat = quill.getFormat(currentSelection?.index, currentSelection?.length)
         if (currentFormat.mention) {
-          // if format is mention, delete the whole mention
           const [lineBlock] = quill.getLine(currentSelection.index - 1) || []
           const ops = lineBlock?.cache?.delta?.ops || []
-          // get last op with attributes mention: true
           const lastMentionOp = ops.reverse().find((op: any) => op.attributes?.mention)
           if (lastMentionOp) {
             const mentionLength = lastMentionOp.insert.length
@@ -591,6 +589,7 @@ const CommentInput: FC<CommentInputProps> = ({
           onUpload: handleFileUploaded,
           onUploadProgress: handleFileProgress,
         },
+        mentionTypeOptions,
       }),
     [projectName, setFiles, setFilesUploading],
   )

@@ -29,7 +29,7 @@ export const TableSettingsFallback: FC<TableSettingsFallbackProps> = ({
         <PowerpackButton
           style={{ width: '100%' }}
           icon={'add'}
-          filled
+          variant="filled"
           {...button}
           feature={feature}
         />

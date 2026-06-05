@@ -20,6 +20,7 @@ import ErrorPage from '@pages/ErrorPage'
 import LoadingPage from '@pages/LoadingPage'
 import OnBoardingPage from '@pages/OnBoarding'
 const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
+const AcceptInvitePage = lazy(() => import('@pages/AcceptInvitePage'))
 
 // components
 import ShareDialog from '@components/ShareDialog'
@@ -313,6 +314,9 @@ const App = () => {
 
   if (window.location.pathname.startsWith('/passwordReset')) {
     if (!user.name) return <PasswordResetPage />
+    else window.history.replaceState({}, document.title, '/')
+  } else if (window.location.pathname.startsWith('/acceptInvite')) {
+    if (!user.name) return <AcceptInvitePage />
     else window.history.replaceState({}, document.title, '/')
   }
 

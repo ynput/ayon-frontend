@@ -18,6 +18,7 @@ export { addonConfigs } from '../config'
 
 import type { PowerpackFeature } from '../config'
 import { powerpackFeatures } from '../config'
+import { PowerpackContext } from './PowerpackContextInstance'
 
 export type PowerpackDialogType = {
   label: string
@@ -44,8 +45,6 @@ export type PowerpackContextType = {
   powerLicense: boolean
   isLoading: boolean
 }
-
-const PowerpackContext = createContext<PowerpackContextType | undefined>(undefined)
 
 export const PowerpackProvider = ({
   children,
