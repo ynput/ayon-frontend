@@ -172,7 +172,13 @@ const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = (
 const EnumSummaryCell: FC<{ summary?: ColumnSummary }> = ({ summary }) => {
   const [open, setOpen] = useState(false)
 
-  if (summary?.distribution?.length) return <ProportionBar items={summary.distribution} />
+  if (summary?.distribution?.length)
+    return (
+      <ProportionBar
+        items={summary.distribution}
+        counts={{ filled: summary.filledCount, notFilled: summary.notFilledCount }}
+      />
+    )
 
   const filled = summary?.filledCount
   const notFilled = summary?.notFilledCount

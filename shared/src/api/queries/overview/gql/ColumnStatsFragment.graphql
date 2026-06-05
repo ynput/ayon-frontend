@@ -1,0 +1,18 @@
+# Column summary stats returned by calculateSpecificStatistics (ayon-backend PR #943)
+fragment ColumnStatsFragment on ColumnStats {
+  columnName
+  min
+  max
+  avg
+  sum
+  count
+  valueFilledCount
+  percentageFilled
+  valueNotFilledCount
+  percentageNotFilled
+  checkedCount
+  checkedPercentage
+  notCheckedCount
+  notCheckedPercentage
+  distribution
+}

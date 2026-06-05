@@ -275,10 +275,6 @@ const invalidateOverviewTasks = (
   dispatch(getOverviewApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 
-// The footer summary stats (getFolderColumnStats) are a separate aggregation
-// query and are not touched by the optimistic task/folder patching above. Edits
-// can change those aggregations, so refetch them — debounced so a burst of edits
-// triggers a single refetch.
 let folderStatsRefetchTimer: ReturnType<typeof setTimeout> | null = null
 const scheduleFolderStatsRefetch = (
   dispatch: ThunkDispatch<any, any, UnknownAction>,

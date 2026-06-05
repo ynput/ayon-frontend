@@ -17,6 +17,7 @@ import {
 import type { FieldStats } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
 import { useProjectContext } from '@shared/context'
+import { useViewsContext } from '@shared/containers'
 import { useGetFolderColumnStatsQuery, useGetTaskColumnStatsQuery } from '@shared/api'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 
@@ -28,6 +29,8 @@ const ProjectOverviewTable = ({}: Props) => {
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage, attribFields } =
     useProjectTableContext()
   const { columnVisibility } = useColumnSettingsContext()
+  // hold stats queries until views load, otherwise targets cover every column
+  const { isLoadingViews } = useViewsContext()
   const { folderFilters, taskFilters, selectedFolders, selectedTaskIds, foldersMap } =
     useProjectOverviewContext()
 
@@ -65,7 +68,7 @@ const ProjectOverviewTable = ({}: Props) => {
       folderIds: statsFolderIds,
       targets: folderTargets,
     },
-    { skip: !projectName },
+    { skip: !projectName || isLoadingViews },
   )
   const { data: liveTaskStats } = useGetTaskColumnStatsQuery(
     {
@@ -77,7 +80,7 @@ const ProjectOverviewTable = ({}: Props) => {
       taskIds: statsTaskIds,
       targets: taskTargets,
     },
-    { skip: !projectName },
+    { skip: !projectName || isLoadingViews },
   )
   // Primary scope = tasks (the table rows); folder stats feed the
   // "include groups & folders" row scope via groupFieldStats.

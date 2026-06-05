@@ -12,7 +12,7 @@ import {
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable'
 import type { FieldStats } from '@shared/containers/ProjectTreeTable'
-import { useProjectDataContext } from '@shared/containers'
+import { useProjectDataContext, useViewsContext } from '@shared/containers'
 import { useGetProductsColumnStatsQuery, useGetVersionsColumnStatsQuery } from '@shared/api'
 import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/VPDataContext'
@@ -30,6 +30,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { showProducts } = useVPViewsContext()
   const { attribFields } = useProjectDataContext()
   const { columnVisibility } = useColumnSettingsContext()
+  // hold stats queries until views load, otherwise targets cover every column
+  const { isLoadingViews } = useViewsContext()
 
   const productTargets = useMemo(
     () =>
@@ -50,11 +52,11 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   // cells without backend data render blank.
   const { data: productStats } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
-    { skip: !columnStatsArgs.projectName },
+    { skip: !columnStatsArgs.projectName || isLoadingViews },
   )
   const { data: versionStats } = useGetVersionsColumnStatsQuery(
     { ...columnStatsArgs, targets: versionTargets },
-    { skip: !columnStatsArgs.projectName },
+    { skip: !columnStatsArgs.projectName || isLoadingViews },
   )
 
   // Primary scope = versions; product stats feed the "include groups & folders"

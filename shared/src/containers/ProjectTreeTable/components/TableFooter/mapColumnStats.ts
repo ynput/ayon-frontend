@@ -61,13 +61,16 @@ const normalizeDistribution = (raw: unknown): FieldStats['distribution'] => {
     }
   }
   if (Array.isArray(value)) {
-    // dedupe by value (sum counts) — duplicate keys would break React lists
+    // dedupe by value; array buckets (tags/assignees combos) unnest per value
     const byValue = new Map<string, { value: string; count: number }>()
     for (const d of value) {
       if (!d || d.value == null) continue
-      const v = String(d.value)
-      const prev = byValue.get(v)
-      byValue.set(v, { ...d, value: v, count: (prev?.count ?? 0) + (Number(d.count) || 0) })
+      const vals = Array.isArray(d.value) ? d.value : [d.value]
+      for (const raw of vals) {
+        const v = String(raw)
+        const prev = byValue.get(v)
+        byValue.set(v, { ...d, value: v, count: (prev?.count ?? 0) + (Number(d.count) || 0) })
+      }
     }
     return [...byValue.values()]
   }

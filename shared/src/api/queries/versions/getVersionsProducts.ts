@@ -23,7 +23,13 @@ import {
 import {
   GetProductsQuery,
   GetProductsQueryVariables,
+  GetProductsColumnStatsQuery,
+  GetProductsColumnStatsQueryVariables,
+  GetProductsColumnStatsDocument,
   GetVersionsByProductIdQueryVariables,
+  GetVersionsColumnStatsQuery,
+  GetVersionsColumnStatsQueryVariables,
+  GetVersionsColumnStatsDocument,
   GetVersionsQuery,
   GetVersionsQueryVariables,
   gqlApi,
@@ -40,9 +46,12 @@ import {
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
 import { PubSub } from '@shared/util'
-import type { FieldStats, MetricTarget } from '@shared/containers/ProjectTreeTable'
-// deep import: the barrel would create a runtime circular dependency (api ↔ containers)
-import { normalizeFieldStats } from '@shared/containers/ProjectTreeTable/components/TableFooter/mapColumnStats'
+import type { FieldStats } from '@shared/containers/ProjectTreeTable'
+import {
+  normalizeFieldStats,
+  mergeFieldStats,
+} from '@shared/containers/ProjectTreeTable/components/TableFooter/mapColumnStats'
+import { hasNewTargetFields } from '@shared/containers/ProjectTreeTable/components/TableFooter/metricTargets'
 
 // SHARED CACHE UPDATE HELPERS
 // These helpers are used by PubSub handlers to update cached data in real-time
@@ -920,143 +929,26 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
   }),
 })
 
-// Column summary stats over the full filtered product/version set.
-// Hand-written GraphQL (connection.fieldStats) so it works without codegen,
-// mirroring overview's getFolderColumnStats. Filters match the table's data queries.
-const FIELD_STATS_SELECTION = `
-  fieldStats {
-    columnName
-    min
-    max
-    avg
-    valueFilledCount
-    percentageFilled
-    valueNotFilledCount
-    percentageNotFilled
-    checkedCount
-    checkedPercentage
-    notCheckedCount
-    notCheckedPercentage
-    sum
-    distribution
-  }
-`
-
-type VPColumnStatsArgs = {
-  projectName: string
-  productFilter?: string
-  versionFilter?: string
-  taskFilter?: string
-  folderIds?: string[]
-  versionIds?: string[]
-  productIds?: string[]
-  // built from the visible columns (buildMetricTargets) so the backend only
-  // aggregates what the footer shows
-  targets: MetricTarget[]
-}
-
+// footer stats: `targets` excluded from cache key + responses merged,
+// so column toggles reuse cache and only added targets refetch
 const vpStatsApi = injectedVersionsPageApi.injectEndpoints({
   endpoints: (build) => ({
-    getProductsColumnStats: build.query<FieldStats[], VPColumnStatsArgs>({
-      query: ({
-        projectName,
-        productFilter,
-        versionFilter,
-        taskFilter,
-        folderIds,
-        productIds,
-        targets,
-      }) => ({
-        document: `
-          query GetProductsColumnStats(
-            $projectName: String!
-            $productFilter: String
-            $versionFilter: String
-            $taskFilter: String
-            $folderIds: [String!]
-            $productIds: [String!]
-            $targets: [MetricTargetInput!]
-          ) {
-            project(name: $projectName) {
-              products(
-                calculateSpecificStatistics: $targets
-                ids: $productIds
-                filter: $productFilter
-                versionFilter: $versionFilter
-                taskFilter: $taskFilter
-                folderIds: $folderIds
-                includeFolderChildren: true
-              ) {
-                ${FIELD_STATS_SELECTION}
-              }
-            }
-          }
-        `,
-        variables: {
-          projectName,
-          productFilter,
-          versionFilter,
-          taskFilter,
-          folderIds,
-          productIds,
-          targets,
-        },
-      }),
-      transformResponse: (res: any) =>
+    getProductsColumnStats: build.query<FieldStats[], GetProductsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetProductsColumnStatsDocument.toString(), variables }),
+      transformResponse: (res: GetProductsColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.products?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'productColumnStats', id: projectName }],
     }),
-    getVersionsColumnStats: build.query<FieldStats[], VPColumnStatsArgs>({
-      query: ({
-        projectName,
-        productFilter,
-        versionFilter,
-        taskFilter,
-        folderIds,
-        versionIds,
-        productIds,
-        targets,
-      }) => ({
-        document: `
-          query GetVersionsColumnStats(
-            $projectName: String!
-            $versionFilter: String
-            $productFilter: String
-            $taskFilter: String
-            $folderIds: [String!]
-            $versionIds: [String!]
-            $productIds: [String!]
-            $targets: [MetricTargetInput!]
-          ) {
-            project(name: $projectName) {
-              versions(
-                calculateSpecificStatistics: $targets
-                ids: $versionIds
-                productIds: $productIds
-                filter: $versionFilter
-                productFilter: $productFilter
-                taskFilter: $taskFilter
-                folderIds: $folderIds
-                includeFolderChildren: true
-              ) {
-                ${FIELD_STATS_SELECTION}
-              }
-            }
-          }
-        `,
-        variables: {
-          projectName,
-          productFilter,
-          versionFilter,
-          taskFilter,
-          folderIds,
-          versionIds,
-          productIds,
-          targets,
-        },
-      }),
-      transformResponse: (res: any) =>
+    getVersionsColumnStats: build.query<FieldStats[], GetVersionsColumnStatsQueryVariables>({
+      query: (variables) => ({ document: GetVersionsColumnStatsDocument.toString(), variables }),
+      transformResponse: (res: GetVersionsColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.versions?.fieldStats ?? []),
+      serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
+      merge: (cache, incoming) => mergeFieldStats(incoming, cache),
+      forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'versionColumnStats', id: projectName }],
     }),
   }),

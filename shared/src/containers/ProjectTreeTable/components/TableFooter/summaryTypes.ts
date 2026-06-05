@@ -18,6 +18,12 @@ export type SummaryCalc = NumberCalc | BooleanCalc | TextCalc
 export type RowScope = 'all' | 'tasks'
 export const DEFAULT_ROW_SCOPE: RowScope = 'tasks'
 
+// filled/empty row counts shown alongside a distribution
+export type SummaryFillCounts = {
+  filled?: number
+  notFilled?: number
+}
+
 export type SummaryDistributionItem = {
   value: string
   label?: string

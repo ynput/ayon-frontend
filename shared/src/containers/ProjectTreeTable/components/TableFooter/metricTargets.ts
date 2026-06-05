@@ -1,36 +1,47 @@
 import type { VisibilityState } from '@tanstack/react-table'
-
-// GraphQL StatsAggregation enum names (backend field_stats.py).
-// Percentages derive from FILLED/NOT_FILLED server-side.
-export type StatsAggregation =
-  | 'MIN'
-  | 'MAX'
-  | 'AVG'
-  | 'SUM'
-  | 'FILLED'
-  | 'NOT_FILLED'
-  | 'CHECKED'
-  | 'NOT_CHECKED'
-  | 'DISTRIBUTION'
+import { StatsOperation } from '@shared/api/generated'
 
 export type MetricTarget = {
   field: string // column or dot-path for JSONB, e.g. 'status' / 'attrib.fps'
-  aggregations: StatsAggregation[]
+  aggregations: StatsOperation[]
 }
 
 export type StatsEntity = 'folder' | 'task' | 'product' | 'version'
 
-// Array-column stats (tags/assignees) need backend support not yet merged
-// (cardinality/unnest templates posted on ayon-backend PR #943). On an
-// unpatched server those targets fail the whole stats query with
-// "malformed array literal". Flip to true once the backend ships it.
-export const ARRAY_STATS_READY = false
+// matches both MetricTarget[] and the codegen'd single-or-array variables type
+type TargetsArg = { targets?: { field: string }[] | { field: string } | null }
+const targetFields = (arg?: TargetsArg): { field: string }[] => {
+  const t = arg?.targets
+  return Array.isArray(t) ? t : t ? [t] : []
+}
 
-const COUNTS: StatsAggregation[] = ['FILLED', 'NOT_FILLED']
+// refetch only when a target was added — hiding a column needs no query
+export const hasNewTargetFields = (current?: TargetsArg, previous?: TargetsArg): boolean => {
+  if (!current) return false
+  if (!previous) return true
+  const prevFields = new Set(targetFields(previous).map((t) => t.field))
+  return targetFields(current).some((t) => !prevFields.has(t.field))
+}
+
+// tags/assignees stats need ayon-backend PR #943, older servers fail the whole query
+export const ARRAY_STATS_READY = true
+
+const COUNTS: StatsOperation[] = [StatsOperation.Filled, StatsOperation.NotFilled]
 // FILLED rides along so combined-scope averages can be weighted exactly
-const NUMERIC: StatsAggregation[] = ['MIN', 'MAX', 'AVG', 'SUM', 'FILLED', 'NOT_FILLED']
+const NUMERIC: StatsOperation[] = [
+  StatsOperation.Min,
+  StatsOperation.Max,
+  StatsOperation.Avg,
+  StatsOperation.Sum,
+  StatsOperation.Filled,
+  StatsOperation.NotFilled,
+]
 // enum columns: counts power the fallback display, distribution the colored bar
-const ENUM: StatsAggregation[] = ['FILLED', 'NOT_FILLED', 'DISTRIBUTION']
+const ENUM: StatsOperation[] = [
+  StatsOperation.Filled,
+  StatsOperation.NotFilled,
+  StatsOperation.Distribution,
+]
 
 // The table's unified subType column per entity (result columnName maps back
 // to subType via COLUMN_ALIASES in mapColumnStats).
@@ -81,7 +92,6 @@ export const buildMetricTargets = ({
     if (isVisible('status')) targets.push({ field: 'status', aggregations: ENUM })
   }
   if (ARRAY_STATS_READY) {
-    // array columns (VARCHAR[]) — backend unnests for distribution / cardinality for counts
     if (isVisible('tags')) targets.push({ field: 'tags', aggregations: ENUM })
     if (entity === 'task' && isVisible('assignees')) {
       targets.push({ field: 'assignees', aggregations: ENUM })
