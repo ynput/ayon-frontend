@@ -8,10 +8,10 @@ import {
   SummaryKind,
 } from './summaryTypes'
 
-export type EditableKind = 'number' | 'boolean' | 'text' | 'datetime'
+export type EditableKind = 'number' | 'boolean' | 'text'
 
 export const isEditableKind = (kind: SummaryKind): kind is EditableKind =>
-  kind === 'number' || kind === 'boolean' || kind === 'text' || kind === 'datetime'
+  kind === 'number' || kind === 'boolean' || kind === 'text'
 
 // count vs percentage applies only to filled/checked style aggregations
 export const supportsFormat = (kind: EditableKind): boolean =>
@@ -32,17 +32,12 @@ export const CALC_OPTIONS: Record<EditableKind, { value: SummaryCalc; label: str
     { value: 'filled', label: 'Filled' },
     { value: 'notFilled', label: 'Empty' },
   ],
-  datetime: [
-    { value: 'min', label: 'Earliest' },
-    { value: 'max', label: 'Latest' },
-  ],
 }
 
 export const DEFAULT_CALC: Record<EditableKind, SummaryCalc> = {
   number: 'sum',
   boolean: 'checked',
   text: 'filled',
-  datetime: 'max',
 }
 
 // Older persisted configs stored percentage as its own calc; now it's a format toggle.
@@ -57,13 +52,6 @@ const LEGACY_CALC: Record<string, SummaryCalc> = {
 export const normalizeCalc = (calc?: SummaryCalc): SummaryCalc | undefined =>
   calc && calc !== 'none' ? LEGACY_CALC[calc as string] ?? calc : undefined
 
-const formatDate = (iso?: string): string | null => {
-  if (!iso) return null
-  const d = new Date(iso)
-  if (isNaN(d.getTime())) return null
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
 export type FormattedSummary = { label: string; count?: string; percent?: string }
 
 // Resolve the short label + value(s) to render for an editable summary cell.
@@ -73,18 +61,6 @@ export const formatEditableSummary = (
   kind: EditableKind,
   format: SummaryFormat = DEFAULT_SUMMARY_FORMAT,
 ): FormattedSummary | null => {
-  if (kind === 'datetime') {
-    if (calc === 'min') {
-      const date = formatDate(summary.minDate)
-      return date ? { label: 'earliest', count: date } : null
-    }
-    if (calc === 'max') {
-      const date = formatDate(summary.maxDate)
-      return date ? { label: 'latest', count: date } : null
-    }
-    return null
-  }
-
   if (kind === 'number') {
     switch (calc) {
       case 'sum':

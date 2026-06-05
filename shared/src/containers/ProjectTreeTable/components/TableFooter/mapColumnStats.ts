@@ -28,15 +28,11 @@ export const mapColumnStatsToSummary = (stats: FieldStats[]): ColumnSummaryMap =
   const map: ColumnSummaryMap = {}
   for (const s of stats) {
     const columnId = canonicalColumnId(s.columnName)
-    // min/max are numbers for number columns, ISO strings for datetime columns
-    const minIsDate = typeof s.min === 'string'
-    const maxIsDate = typeof s.max === 'string'
     const summary: ColumnSummary = {
       columnId,
+      // datetime columns aren't summarized — only numeric min/max apply
       min: typeof s.min === 'number' ? s.min : undefined,
       max: typeof s.max === 'number' ? s.max : undefined,
-      minDate: minIsDate ? (s.min as string) : undefined,
-      maxDate: maxIsDate ? (s.max as string) : undefined,
       avg: nn(s.avg),
       sum: nn(s.sum),
       filledCount: nn(s.valueFilledCount),

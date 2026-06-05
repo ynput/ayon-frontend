@@ -3,7 +3,6 @@ export type SummaryKind =
   | 'number'
   | 'boolean'
   | 'text'
-  | 'datetime'
   | 'enum'
   | 'assignee'
   | 'blank'
@@ -63,9 +62,6 @@ export type ColumnSummary = {
   avg?: number
   min?: number
   max?: number
-
-  minDate?: string
-  maxDate?: string
 
   distribution?: SummaryDistributionItem[]
   total?: number
