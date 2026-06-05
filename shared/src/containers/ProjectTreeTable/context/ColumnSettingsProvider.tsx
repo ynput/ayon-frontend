@@ -9,7 +9,7 @@ import {
   SortingState,
 } from '@tanstack/react-table'
 import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
-import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
+import { DRAG_HANDLE_COLUMN_ID } from '../utils/pinningUtils'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
 import { SummaryCalc, RowScope } from '../components/TableFooter/summaryTypes'

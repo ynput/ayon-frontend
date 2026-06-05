@@ -1,8 +1,9 @@
-import { FC, useEffect, useRef } from 'react'
+import { FC, useRef } from 'react'
 import { Icon, InputSwitch } from '@ynput/ayon-react-components'
 import * as Styled from './TableFooter.styled'
 import { RowScope, SummaryCalc, DEFAULT_ROW_SCOPE } from './summaryTypes'
 import { EditableKind, CALC_OPTIONS } from './calcOptions'
+import { useClickOutside } from './useClickOutside'
 
 type Props = {
   kind: EditableKind
@@ -23,13 +24,7 @@ export const CalcSelector: FC<Props> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const handle = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [onClose])
+  useClickOutside(ref, onClose)
 
   const effectiveScope = scope ?? DEFAULT_ROW_SCOPE
   const includesGroups = effectiveScope === 'all'

@@ -5,15 +5,16 @@ import {
   NEXT_PAGE_ID,
   ProjectTreeTable,
 } from '@shared/containers'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
+import { useProjectDataContext, useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,
   buildMetricTargets,
   totalRowsFromStats,
-  useColumnSettingsContext,
-} from '@shared/containers/ProjectTreeTable'
-import type { FieldStats } from '@shared/containers/ProjectTreeTable'
-import { useProjectDataContext, useViewsContext } from '@shared/containers'
-import { useGetProductsColumnStatsQuery, useGetVersionsColumnStatsQuery } from '@shared/api'
+  useGetProductsColumnStatsQuery,
+  useGetVersionsColumnStatsQuery,
+} from '@shared/api'
+import type { FieldStats } from '@shared/api'
 import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/VPDataContext'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
@@ -67,8 +68,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     // undefined (not 0) while stats are missing/failed so the cell stays blank
     const mainCount: FieldStats = {
       columnName: 'name',
-      folderCount: productStats ? totalRowsFromStats(products) : undefined,
-      taskCount: versionStats ? totalRowsFromStats(versions) : undefined,
+      primaryCount: productStats ? totalRowsFromStats(products) : undefined,
+      secondaryCount: versionStats ? totalRowsFromStats(versions) : undefined,
     }
     // mergeFieldStats also unifies the duplicate `name` entries field-wise
     return mergeFieldStats([...versions, mainCount])

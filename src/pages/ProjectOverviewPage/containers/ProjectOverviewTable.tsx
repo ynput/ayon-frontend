@@ -9,16 +9,17 @@ import {
   useColumnSettingsContext,
   ProjectTreeTable,
 } from '@shared/containers/ProjectTreeTable'
+import { useNewEntityContext } from '@context/NewEntityContext'
+import { useProjectContext } from '@shared/context'
+import { useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,
   buildMetricTargets,
   totalRowsFromStats,
-} from '@shared/containers/ProjectTreeTable'
-import type { FieldStats } from '@shared/containers/ProjectTreeTable'
-import { useNewEntityContext } from '@context/NewEntityContext'
-import { useProjectContext } from '@shared/context'
-import { useViewsContext } from '@shared/containers'
-import { useGetFolderColumnStatsQuery, useGetTaskColumnStatsQuery } from '@shared/api'
+  useGetFolderColumnStatsQuery,
+  useGetTaskColumnStatsQuery,
+} from '@shared/api'
+import type { FieldStats } from '@shared/api'
 import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
 
 type Props = {}
@@ -90,8 +91,8 @@ const ProjectOverviewTable = ({}: Props) => {
     // undefined (not 0) while stats are missing/failed so the cell stays blank
     const mainCount: FieldStats = {
       columnName: 'name',
-      folderCount: liveFolderStats ? totalRowsFromStats(folders) : undefined,
-      taskCount: liveTaskStats ? totalRowsFromStats(tasks) : undefined,
+      primaryCount: liveFolderStats ? totalRowsFromStats(folders) : undefined,
+      secondaryCount: liveTaskStats ? totalRowsFromStats(tasks) : undefined,
     }
     // mergeFieldStats also unifies the duplicate `name` entries field-wise
     return mergeFieldStats([...tasks, mainCount])

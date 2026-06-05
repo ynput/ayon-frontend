@@ -275,38 +275,32 @@ const invalidateOverviewTasks = (
   dispatch(getOverviewApi.util.invalidateTags(getOverviewTaskTags(tasks)))
 }
 
-let folderStatsRefetchTimer: ReturnType<typeof setTimeout> | null = null
-const scheduleFolderStatsRefetch = (
+// Debounced, per-project invalidation of the footer stats caches after entity ops.
+type StatsTagType =
+  | 'folderColumnStats'
+  | 'taskColumnStats'
+  | 'productColumnStats'
+  | 'versionColumnStats'
+const statsRefetchTimers = new Map<string, ReturnType<typeof setTimeout>>()
+const scheduleStatsRefetch = (
   dispatch: ThunkDispatch<any, any, UnknownAction>,
   projectName: string,
+  tagTypes: StatsTagType[],
 ) => {
-  if (folderStatsRefetchTimer) clearTimeout(folderStatsRefetchTimer)
-  folderStatsRefetchTimer = setTimeout(() => {
-    folderStatsRefetchTimer = null
-    dispatch(
-      getOverviewApi.util.invalidateTags([
-        { type: 'folderColumnStats', id: projectName },
-        { type: 'taskColumnStats', id: projectName },
-      ]),
-    )
-  }, 500)
-}
-
-let vpStatsRefetchTimer: ReturnType<typeof setTimeout> | null = null
-const scheduleVPStatsRefetch = (
-  dispatch: ThunkDispatch<any, any, UnknownAction>,
-  projectName: string,
-) => {
-  if (vpStatsRefetchTimer) clearTimeout(vpStatsRefetchTimer)
-  vpStatsRefetchTimer = setTimeout(() => {
-    vpStatsRefetchTimer = null
-    dispatch(
-      getOverviewApi.util.invalidateTags([
-        { type: 'productColumnStats', id: projectName },
-        { type: 'versionColumnStats', id: projectName },
-      ]),
-    )
-  }, 500)
+  const key = `${projectName}:${tagTypes.join()}`
+  const existing = statsRefetchTimers.get(key)
+  if (existing) clearTimeout(existing)
+  statsRefetchTimers.set(
+    key,
+    setTimeout(() => {
+      statsRefetchTimers.delete(key)
+      dispatch(
+        getOverviewApi.util.invalidateTags(
+          tagTypes.map((type) => ({ type, id: projectName })),
+        ),
+      )
+    }, 500),
+  )
 }
 
 export const patchOverviewFolders = (
@@ -612,16 +606,19 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const versionOperations = operationsByType.version || []
           const productOperations = operationsByType.product || []
 
-        if (projectName) {
+          if (projectName) {
             if (taskOperations.length || folderOperations.length) {
-              scheduleFolderStatsRefetch(dispatch, projectName)
+              scheduleStatsRefetch(dispatch, projectName, ['folderColumnStats', 'taskColumnStats'])
             }
             if (versionOperations.length || productOperations.length) {
-              scheduleVPStatsRefetch(dispatch, projectName)
+              scheduleStatsRefetch(dispatch, projectName, [
+                'productColumnStats',
+                'versionColumnStats',
+              ])
             }
           }
 
-
+          // Early exit if no operations
           if (taskOperations.length === 0 && folderOperations.length === 0) {
             return
           }

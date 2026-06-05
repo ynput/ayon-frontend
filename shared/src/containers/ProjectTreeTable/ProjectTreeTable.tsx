@@ -11,7 +11,6 @@ import {
   Row,
   getSortedRowModel,
   Cell,
-  Column,
   Table,
   Header,
   HeaderGroup,
@@ -35,6 +34,11 @@ import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooter, useColumnSummaries } from './components/TableFooter'
 import type { FieldStats, MainCountLabels } from './components/TableFooter'
+import {
+  DRAG_HANDLE_COLUMN_ID,
+  getCommonPinningStyles,
+  getColumnWidth,
+} from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
 import HeaderActionButton from './components/HeaderActionButton'
 
@@ -108,30 +112,6 @@ declare module '@tanstack/react-table' {
     columnsConfig?: ColumnsConfig
   }
 }
-
-//These are the important styles to make sticky column pinning work!
-//Apply styles like this using your CSS strategy of choice with this kind of logic to head cells, data cells, footer cells, etc.
-//View the index.css file for more needed styles such as border-collapse: separate
-const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
-  const isPinned = column.getIsPinned()
-  const offset =
-    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID ? -30 : 0
-
-  return {
-    left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined, // Removed offset
-    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-    position: isPinned ? 'sticky' : 'relative',
-    width: column.getSize(),
-    zIndex: isPinned ? 100 : 0,
-  }
-}
-
-const getColumnWidth = (rowId: string, columnId: string) => {
-  return `calc(var(--col-${columnId}-size) * 1px)`
-}
-// test
-
-export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
 export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivElement> {
   scope: string
@@ -510,8 +490,7 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  // Column summaries footer data. Renders mock until real `fieldStats` is
-  // passed through; flipping to real backend data is a one-line change here.
+  // Column summaries footer data, derived from the fieldStats props.
   const columnSummaryData = useColumnSummaries({
     enabled: showColumnSummaries,
     fieldStats,
@@ -753,7 +732,7 @@ export const ProjectTreeTable = ({
 
                         const cellStyleBase: CSSProperties = {
                           ...getCommonPinningStyles(cell.column),
-                          width: getColumnWidth(overlayRowInstance.id, cell.column.id),
+                          width: getColumnWidth(cell.column.id),
                           display: 'flex',
                           alignItems: 'center',
                           height: defaultRowHeight,
@@ -1044,7 +1023,7 @@ const TableHeadCell = ({
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
-        width: getColumnWidth('', column.id),
+        width: getColumnWidth(column.id),
         ...getDragStyle(),
       }}
     >
@@ -1412,7 +1391,7 @@ const TableBodyRow = ({
               key={cell.id + i.toString()}
               style={{
                 ...getCommonPinningStyles(cell.column),
-                width: getColumnWidth(row.id, cell.column.id),
+                width: getColumnWidth(cell.column.id),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1532,7 +1511,7 @@ const TD = ({
       )}
       style={{
         ...getCommonPinningStyles(cell.column),
-        width: getColumnWidth(cell.row.id, cell.column.id),
+        width: getColumnWidth(cell.column.id),
         height: rowHeight,
       }}
       onMouseDown={(e) => {

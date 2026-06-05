@@ -2,15 +2,7 @@ export { TableFooter } from './TableFooter'
 export { classifyColumnSummary } from './classifyColumnSummary'
 export { useColumnSummaries } from './useColumnSummaries'
 export type { ColumnSummariesResult } from './useColumnSummaries'
-export {
-  mapColumnStatsToSummary,
-  mergeFieldStats,
-  combineFieldStats,
-  totalRowsFromStats,
-  normalizeFieldStats,
-} from './mapColumnStats'
+export { mapColumnStatsToSummary } from './mapColumnStats'
 export type { FieldStats } from './mapColumnStats'
 export { mockFieldStats } from './mockFieldStats'
-export { buildMetricTargets } from './metricTargets'
-export type { MetricTarget, StatsEntity } from './metricTargets'
 export * from './summaryTypes'

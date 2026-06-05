@@ -9,7 +9,7 @@ import {
   parseCellId,
   RowId,
 } from '../utils/cellUtils'
-import { DRAG_HANDLE_COLUMN_ID } from '../ProjectTreeTable'
+import { DRAG_HANDLE_COLUMN_ID } from '../utils/pinningUtils'
 import { GridMap, ROW_SELECTION_COLUMN_ID, SelectionCellsContext } from './SelectionCellsContext'
 import { useCheckSelectedCellsVisible } from '../hooks'
 

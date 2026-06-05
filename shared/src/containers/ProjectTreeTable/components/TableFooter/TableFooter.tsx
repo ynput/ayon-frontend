@@ -1,11 +1,15 @@
-import { CSSProperties } from 'react'
-import { Column, Table } from '@tanstack/react-table'
+import { Table } from '@tanstack/react-table'
 import type { Virtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 
 import type { TableRow } from '../../types/table'
 import { BuiltInFieldOptions, ProjectTableAttribute } from '../../types'
 import { ROW_SELECTION_COLUMN_ID } from '../../context/SelectionCellsContext'
+import {
+  DRAG_HANDLE_COLUMN_ID,
+  getCommonPinningStyles,
+  getColumnWidth,
+} from '../../utils/pinningUtils'
 import * as Styled from './TableFooter.styled'
 import { SummaryCell } from './SummaryCell'
 import { classifyColumnSummary } from './classifyColumnSummary'
@@ -16,23 +20,6 @@ import {
   RowScope,
   MainCountLabels,
 } from './summaryTypes'
-
-const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
-
-const pinningStyles = (column: Column<TableRow, unknown>): CSSProperties => {
-  const isPinned = column.getIsPinned()
-  const offset =
-    column.id !== ROW_SELECTION_COLUMN_ID && column.id !== DRAG_HANDLE_COLUMN_ID ? -30 : 0
-  return {
-    left: isPinned === 'left' ? `${column.getStart('left') + offset}px` : undefined,
-    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-    position: isPinned ? 'sticky' : 'relative',
-    width: column.getSize(),
-    zIndex: isPinned ? 100 : 0,
-  }
-}
-
-const columnWidth = (columnId: string) => `calc(var(--col-${columnId}-size) * 1px)`
 
 type OptionLike = { value?: unknown; label?: string | null; color?: string | null; icon?: string | null }
 
@@ -132,7 +119,7 @@ export const TableFooter = ({
             <Styled.FooterCell
               key={column.id}
               className={clsx(column.id, { 'last-pinned-left': isLastPinnedLeft })}
-              style={{ ...pinningStyles(column), width: columnWidth(column.id) }}
+              style={{ ...getCommonPinningStyles(column), width: getColumnWidth(column.id) }}
             >
               {!isUtility && (
                 <SummaryCell

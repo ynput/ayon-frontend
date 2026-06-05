@@ -34,8 +34,7 @@ export type SummaryDistributionItem = {
   count: number
 }
 
-// Mirrors backend ColumnStats (ayon-backend PR #943) plus the distribution +
-// sum fields requested in the column-summary aggregations handoff.
+// Mirrors backend ColumnStats plus pending distribution/sum fields.
 export type ColumnSummary = {
   columnId: string
 
@@ -60,9 +59,9 @@ export type ColumnSummary = {
   distribution?: SummaryDistributionItem[]
   total?: number
 
-  // main/count column: separate folder and task (or product/version) totals
-  folderCount?: number
-  taskCount?: number
+  // main/count column: primary/secondary entity totals (folders/tasks, products/versions)
+  primaryCount?: number
+  secondaryCount?: number
 }
 
 export type ColumnSummaryMap = Record<string, ColumnSummary>

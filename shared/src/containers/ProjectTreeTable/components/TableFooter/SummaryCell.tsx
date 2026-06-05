@@ -4,6 +4,7 @@ import * as Styled from './TableFooter.styled'
 import { ProportionBar } from './ProportionBar'
 import { SummaryBreakdown } from './SummaryBreakdown'
 import { CalcSelector } from './CalcSelector'
+import { useClickOutside } from './useClickOutside'
 import {
   DEFAULT_CALC,
   EditableKind,
@@ -86,7 +87,7 @@ const EditableSummary: FC<{
   )
 }
 
-type MainMode = 'both' | 'folders' | 'tasks'
+type MainMode = 'both' | 'primary' | 'secondary'
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -98,21 +99,14 @@ const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = (
   const [mode, setMode] = useState<MainMode>('both')
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    const handle = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [open])
+  useClickOutside(ref, () => setOpen(false), open)
 
-  const folders = summary.folderCount ?? summary.total ?? summary.filledCount
-  const tasks = summary.taskCount
+  const primary = summary.primaryCount ?? summary.total ?? summary.filledCount
+  const secondary = summary.secondaryCount
 
   // Single-type table (e.g. Lists): one static count, no dual toggle.
   if (!labels.secondary) {
-    const count = folders ?? tasks
+    const count = primary ?? secondary
     if (count == null) return null
     return (
       <Styled.CellContent>
@@ -122,29 +116,29 @@ const MainCountCell: FC<{ summary: ColumnSummary; labels: MainCountLabels }> = (
     )
   }
 
-  if (folders == null && tasks == null) return null
+  if (primary == null && secondary == null) return null
 
   const mainOptions: { value: MainMode; label: string }[] = [
     { value: 'both', label: `${cap(labels.primary)} & ${cap(labels.secondary)}` },
-    { value: 'folders', label: cap(labels.primary) },
-    { value: 'tasks', label: cap(labels.secondary) },
+    { value: 'primary', label: cap(labels.primary) },
+    { value: 'secondary', label: cap(labels.secondary) },
   ]
 
-  const showFolders = (mode === 'both' || mode === 'folders') && folders != null
-  const showTasks = (mode === 'both' || mode === 'tasks') && tasks != null
+  const showPrimary = (mode === 'both' || mode === 'primary') && primary != null
+  const showSecondary = (mode === 'both' || mode === 'secondary') && secondary != null
 
   return (
     <Styled.Clickable onMouseDown={(e) => e.stopPropagation()} onClick={() => setOpen((v) => !v)}>
-      {showFolders && (
+      {showPrimary && (
         <>
-          <span className="value">{folders}</span>
+          <span className="value">{primary}</span>
           <span className="label">{labels.primary}</span>
         </>
       )}
-      {showFolders && showTasks && <span className="label">|</span>}
-      {showTasks && (
+      {showPrimary && showSecondary && <span className="label">|</span>}
+      {showSecondary && (
         <>
-          <span className="value">{tasks}</span>
+          <span className="value">{secondary}</span>
           <span className="label">{labels.secondary}</span>
         </>
       )}

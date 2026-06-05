@@ -17,7 +17,7 @@ import {
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
 import { UpdateViewSettingsFn } from '../../utils/viewUpdateHelper'
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -56,33 +56,24 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
 
-  // Per-column summary footer state. The backend currently drops summary /
-  // summaryScope from ColumnItemModel, so the post-PATCH refetch of the working
-  // view would otherwise revert the user's choice. Hold the selections here and
-  // layer them over server columns so they survive the refetch (session only —
-  // they do not persist across reload until the backend stores the fields).
+  // Backend drops summary/summaryScope from ColumnItemModel, so the post-save
+  // refetch would revert them — hold the selections here, session only.
   const { selectedView, workingView, isViewWorking, editingViewId } = useViewsContext()
   const [summaryOverrides, setSummaryOverrides] = useState<{
     summaries: Record<string, SummaryCalc>
     scopes: Record<string, RowScope>
   }>({ summaries: {}, scopes: {} })
 
-  // Identity of the view whose settings are on screen. Editing a named view
-  // forks to the working view (selectedView.id flips), but editingViewId still
-  // points at the origin — so the key stays stable and editing keeps overrides.
+  // Editing a named view forks to the working view (selectedView.id flips), but
+  // editingViewId keeps pointing at the origin, so the key stays stable while editing.
   const viewKey = isViewWorking
     ? editingViewId || workingView?.id || 'working'
     : selectedView?.id
-  const prevViewKeyRef = useRef<string | undefined>(viewKey)
-  if (prevViewKeyRef.current !== viewKey) {
-    prevViewKeyRef.current = viewKey
-    if (
-      Object.keys(summaryOverrides.summaries).length ||
-      Object.keys(summaryOverrides.scopes).length
-    ) {
-      setSummaryOverrides({ summaries: {}, scopes: {} })
-    }
-  }
+
+  // Reset overrides when a different view's settings come on screen
+  useEffect(() => {
+    setSummaryOverrides({ summaries: {}, scopes: {} })
+  }, [viewKey])
 
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings

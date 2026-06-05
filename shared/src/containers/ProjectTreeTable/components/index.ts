@@ -4,10 +4,4 @@ export { default as RowSelectionHeader } from './RowSelectionHeader'
 export { SelectionCell } from './SelectionCell'
 export { ColumnHeaderMenu } from './ColumnHeaderMenu'
 export { default as ColumnDndProvider } from './ColumnDndProvider'
-export type { FieldStats, MetricTarget, StatsEntity } from './TableFooter'
-export {
-  mockFieldStats,
-  mergeFieldStats,
-  buildMetricTargets,
-  totalRowsFromStats,
-} from './TableFooter'
+export { mockFieldStats } from './TableFooter'

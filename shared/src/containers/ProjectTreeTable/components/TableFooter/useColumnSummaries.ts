@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
-import { combineFieldStats, mapColumnStatsToSummary, FieldStats } from './mapColumnStats'
+import { combineFieldStats } from '@shared/api'
+import type { FieldStats } from '@shared/api'
+import { mapColumnStatsToSummary } from './mapColumnStats'
 import { ColumnSummaryMap } from './summaryTypes'
 
 type Args = {

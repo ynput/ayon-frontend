@@ -1,4 +1,4 @@
-# Column summary stats returned by calculateSpecificStatistics (ayon-backend PR #943)
+# Column summary stats returned by calculateSpecificStatistics
 fragment ColumnStatsFragment on ColumnStats {
   columnName
   min

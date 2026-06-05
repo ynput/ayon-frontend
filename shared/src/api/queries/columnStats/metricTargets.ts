@@ -23,9 +23,6 @@ export const hasNewTargetFields = (current?: TargetsArg, previous?: TargetsArg):
   return targetFields(current).some((t) => !prevFields.has(t.field))
 }
 
-// tags/assignees stats need ayon-backend PR #943, older servers fail the whole query
-export const ARRAY_STATS_READY = true
-
 const COUNTS: StatsOperation[] = [StatsOperation.Filled, StatsOperation.NotFilled]
 // FILLED rides along so combined-scope averages can be weighted exactly
 const NUMERIC: StatsOperation[] = [
@@ -44,7 +41,7 @@ const ENUM: StatsOperation[] = [
 ]
 
 // The table's unified subType column per entity (result columnName maps back
-// to subType via COLUMN_ALIASES in mapColumnStats).
+// to subType via COLUMN_ALIASES in columnStats).
 const SUB_TYPE_FIELD: Record<StatsEntity, string | null> = {
   folder: 'folder_type',
   task: 'task_type',
@@ -71,7 +68,7 @@ type BuildMetricTargetsArgs = {
 // Targets for the footer over the columns the user can actually see.
 // Skipped on purpose (backend SQL can't aggregate them safely yet):
 // datetime (numeric cast fails), boolean attribs (text-vs-bool compare on
-// JSONB), array columns (assignees/tags) and list-type attribs.
+// JSONB), and list-type attribs.
 export const buildMetricTargets = ({
   entity,
   attribs,
@@ -91,11 +88,9 @@ export const buildMetricTargets = ({
     targets.push({ field: 'name', aggregations: COUNTS })
     if (isVisible('status')) targets.push({ field: 'status', aggregations: ENUM })
   }
-  if (ARRAY_STATS_READY) {
-    if (isVisible('tags')) targets.push({ field: 'tags', aggregations: ENUM })
-    if (entity === 'task' && isVisible('assignees')) {
-      targets.push({ field: 'assignees', aggregations: ENUM })
-    }
+  if (isVisible('tags')) targets.push({ field: 'tags', aggregations: ENUM })
+  if (entity === 'task' && isVisible('assignees')) {
+    targets.push({ field: 'assignees', aggregations: ENUM })
   }
 
   const subTypeField = SUB_TYPE_FIELD[entity]

@@ -13,7 +13,7 @@ import {
   RowScope,
 } from '@shared/containers/ProjectTreeTable/components/TableFooter/summaryTypes'
 
-
+// Backend doesn't store summary/summaryScope on ColumnItemModel yet
 type ColumnItem = ColumnItemModel & { summary?: SummaryCalc; summaryScope?: RowScope }
 
 /**

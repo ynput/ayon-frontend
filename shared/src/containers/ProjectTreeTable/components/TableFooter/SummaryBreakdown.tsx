@@ -1,7 +1,8 @@
-import { FC, useEffect, useRef } from 'react'
+import { FC, useRef } from 'react'
 import * as Styled from './TableFooter.styled'
 import { SummaryDistributionItem, SummaryFillCounts } from './summaryTypes'
 import { colorForValue } from './summaryColor'
+import { useClickOutside } from './useClickOutside'
 
 type Props = {
   items: SummaryDistributionItem[]
@@ -15,13 +16,7 @@ type Props = {
 export const SummaryBreakdown: FC<Props> = ({ items, total, counts, onClose }) => {
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const handle = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [onClose])
+  useClickOutside(ref, onClose)
 
   const sorted = [...items].sort((a, b) => b.count - a.count)
 
