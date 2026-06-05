@@ -32,6 +32,7 @@ export interface EnumEditorItemProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   item: AttributeData
   onChange?: (attr: (keyof AttributeData)[], value: (boolean | string | undefined)[]) => void
+  onCommit?: (attr: (keyof AttributeData)[], value: (boolean | string | undefined)[]) => void
   onRemove?: () => void
   onDuplicate?: () => void
   showRemoveButton?: boolean
@@ -44,6 +45,7 @@ export interface EnumEditorItemProps
 const EnumEditorItem = ({
   item,
   onChange,
+  onCommit,
   onRemove,
   onDuplicate,
   showRemoveButton = true,
@@ -101,6 +103,31 @@ const EnumEditorItem = ({
             onChange &&
               onChange(['label', 'value'], [event.target.value, kebabCase(event.target.value)])
           }}
+          onBlur={(event) => {
+            if (!isNewAttribute) {
+              onCommit && onCommit(['label'], [event.target.value])
+            } else {
+              onCommit &&
+                onCommit(['label', 'value'], [event.target.value, kebabCase(event.target.value)])
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.stopPropagation()
+              if (!isNewAttribute) {
+                onCommit && onCommit(['label'], [(event.target as HTMLInputElement).value])
+              } else {
+                onCommit &&
+                  onCommit(
+                    ['label', 'value'],
+                    [
+                      (event.target as HTMLInputElement).value,
+                      kebabCase((event.target as HTMLInputElement).value),
+                    ],
+                  )
+              }
+            }
+          }}
           placeholder="Enter label"
         />
       </Styled.Row>
@@ -113,6 +140,13 @@ const EnumEditorItem = ({
           {...pt?.value?.input}
           className={clsx(pt?.value?.input?.className)}
           onChange={(event) => onChange && onChange(['value'], [event.target.value])}
+          onBlur={(event) => onCommit && onCommit(['value'], [event.target.value])}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.stopPropagation()
+              onCommit && onCommit(['value'], [(event.target as HTMLInputElement).value])
+            }
+          }}
           placeholder="Enter value"
         />
       </Styled.Row>
@@ -142,7 +176,8 @@ const EnumEditorItem = ({
               ...pt?.icon?.input?.style,
             }}
             onChange={(value) => {
-              return onChange && onChange(['icon'], [value[0]])
+              onChange && onChange(['icon'], [value[0]])
+              onCommit && onCommit(['icon'], [value[0]])
             }}
           />
           {icon && (
@@ -173,9 +208,10 @@ const EnumEditorItem = ({
               value={color || '#000000'}
               {...pt?.color?.input}
               className={clsx(pt?.color?.input?.className)}
-              onChange={(event) =>
+              onChange={(event) => {
                 onChange && onChange(['color'], [event?.target.value.toString()])
-              }
+                onCommit && onCommit(['color'], [event?.target.value.toString()])
+              }}
             />
           </Styled.ColorPicker>
           {color && (

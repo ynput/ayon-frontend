@@ -316,6 +316,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           return { error }
         }
       },
+      providesTags: (_r, _e, { projectName }) => [{ type: 'tasksFolder', id: projectName }],
     }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<

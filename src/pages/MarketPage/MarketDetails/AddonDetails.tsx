@@ -15,7 +15,7 @@ import MetaPanelRow from './MetaPanelRow'
 import remarkGfm from 'remark-gfm'
 import emoji from 'remark-emoji'
 import SubChip from '@components/SubChip/SubChip'
-import { PricingLink } from '@shared/components/Powerpack/PricingLink'
+import { FreeTrialLink } from '@shared/components/Powerpack'
 import { toast } from 'react-toastify'
 
 type ExtendedAddonDetail = AddonDetail & {
@@ -179,11 +179,11 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
     )
   } else if (subRequired) {
     actionButton = (
-      <PricingLink style={{ width: '100%' }}>
+      <FreeTrialLink style={{ width: '100%' }} addon={name}>
         <Button variant="tertiary" style={{ width: '100%' }}>
           Subscribe
         </Button>
-      </PricingLink>
+      </FreeTrialLink>
     )
   }
 

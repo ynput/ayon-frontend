@@ -300,6 +300,8 @@ export type ReviewsSettings = {
   sortDesc?: boolean
   filter?: QueryFilter
   columns?: ColumnItemModel[]
+  gridHeight?: number
+  displayStyle?: 'cards' | 'table' | 'playlist'
 }
 export type ReviewsViewPostModel = {
   /** Unique identifier for the view within the given scope. */

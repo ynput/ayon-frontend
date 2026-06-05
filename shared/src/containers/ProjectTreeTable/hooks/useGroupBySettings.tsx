@@ -4,13 +4,16 @@ import { useGetGroupedFields } from '..'
 import { TableGroupBy } from '@shared/containers'
 
 const HIERARCHY_ID = 'hierarchy'
+const FOLDER_ID = 'folder'
+const NAME_SORT_COLUMN = 'name'
 
 interface UseGroupBySettingsProps {
   scope?: string
 }
 
 export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
-  const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig } = useColumnSettingsContext()
+  const { groupBy, groupByConfig, updateGroupBy, updateGroupByConfig, sorting, updateSorting } =
+    useColumnSettingsContext()
   const { modules, showHierarchy, updateShowHierarchy, hierarchyOptions: customHierarchyOptions, hierarchyActive, } = useProjectTableContext()
   const groupByFields = useGetGroupedFields({ scope })
   if (!modules) return null
@@ -30,17 +33,32 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
   // so the GroupSettings component highlights the hierarchy option as selected
   // hierarchyActive overrides showHierarchy for panel display when table behavior differs
   const isHierarchyActive = hierarchyActive ?? showHierarchy
-  const virtualGroupBy =
+  const baseVirtualGroupBy =
     groupBy ?? (hasHierarchy && isHierarchyActive ? { id: HIERARCHY_ID, desc: false } : undefined)
+  const nameSortDesc =
+    sorting?.[0]?.id === NAME_SORT_COLUMN ? !!sorting[0].desc : false
+  const virtualGroupBy =
+    baseVirtualGroupBy?.id === FOLDER_ID || baseVirtualGroupBy?.id === HIERARCHY_ID
+      ? { ...baseVirtualGroupBy, desc: nameSortDesc }
+      : baseVirtualGroupBy
 
-  // Wrap updateGroupBy to intercept "hierarchy" and "none" selection
+  // Wrap updateGroupBy to intercept "hierarchy", "folder" and "none" selection
   const handleUpdateGroupBy = useCallback(
     (newGroupBy: TableGroupBy | undefined) => {
-      if (newGroupBy?.id === HIERARCHY_ID) {
-        // Hierarchy selected: delegate entirely to updateShowHierarchy
-        // which routes through onUpdateViewGroupBy('hierarchy') and also
-        // sets localColumns.groupBy = undefined — no need to call updateGroupBy separately
-        updateShowHierarchy?.(true)
+      if (newGroupBy?.id === HIERARCHY_ID || newGroupBy?.id === FOLDER_ID) {
+        const isAlreadyActive =
+          newGroupBy.id === HIERARCHY_ID ? isHierarchyActive : groupBy?.id === FOLDER_ID
+        if (isAlreadyActive) {
+          if (newGroupBy.desc !== nameSortDesc) {
+            updateSorting([{ id: NAME_SORT_COLUMN, desc: !!newGroupBy.desc }])
+          }
+          return
+        }
+        if (newGroupBy.id === HIERARCHY_ID) {
+          updateShowHierarchy?.(true)
+        } else {
+          updateGroupBy(newGroupBy)
+        }
         return
       }
       if (!newGroupBy) {
@@ -57,7 +75,7 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
       }
       updateGroupBy(newGroupBy)
     },
-    [updateGroupBy, updateShowHierarchy],
+    [updateGroupBy, updateShowHierarchy, updateSorting, groupBy, nameSortDesc, isHierarchyActive],
   )
 
   const preview = virtualGroupBy
@@ -77,7 +95,6 @@ export const useGroupBySettings = ({ scope }: UseGroupBySettingsProps) => {
         updateGroupBy={handleUpdateGroupBy}
         config={groupByConfig}
         onConfigChange={updateGroupByConfig}
-        sortDisabled={virtualGroupBy?.id === 'hierarchy' || virtualGroupBy?.id === 'folder'}
       />
     ),
   }

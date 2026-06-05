@@ -10,7 +10,10 @@ query WorkfilesByTask($projectName: String!, $taskIds: [String!]!) {
           taskId
           name
           path
+          createdAt
           updatedAt
+          createdBy
+          updatedBy 
         }
       }
     }
@@ -33,12 +36,7 @@ const getWorkfiles = api.injectEndpoints({
         },
       }),
       transformResponse: (response) =>
-        response.data.project.workfiles.edges.map((edge) => ({
-          id: edge.node.id,
-          taskId: edge.node.taskId,
-          name: edge.node.name,
-          path: edge.node.path,
-        })),
+        response.data.project.workfiles.edges.map((edge) => ({ ...edge.node })),
       transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       providesTags: () => [{ type: 'workfile', id: 'LIST' }],
     }),

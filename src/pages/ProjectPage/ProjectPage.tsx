@@ -14,6 +14,7 @@ import ProjectListsPage from '../ProjectListsPage'
 
 import { selectProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
+import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@shared/containers/Slicer'
@@ -31,7 +32,8 @@ import { productSelected } from '@state/context'
 import useGetBundleAddonVersions from '@hooks/useGetBundleAddonVersions'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
-import ReportsPage from '@pages/ReportsPage/ReportsPage'
+import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
+import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
@@ -39,8 +41,27 @@ import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from '@shared/components'
+import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPage'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
+
+// Addon modules that are always shown in the nav.
+// When the addon remote page is available it is used; otherwise the Splash is shown.
+interface AddonPageConfig {
+  name: string
+  module: string
+  viewType?: string
+  Splash: React.ComponentType
+}
+
+const ADDON_PAGES: AddonPageConfig[] = [
+  {
+    name: 'Scheduler',
+    module: 'scheduler',
+    viewType: 'scheduler',
+    Splash: SchedulerSplashscreen,
+  },
+]
 
 const ProjectContextInfo = () => {
   /**
@@ -69,7 +90,7 @@ const ProjectPageInner = () => {
    */
   const { siteInfo } = useGlobalContext()
   const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
-  const { projectName, isLoading, error } = useProjectContext()
+  const { projectName, label: projectLabel, isLoading, error } = useProjectContext()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
@@ -99,7 +120,7 @@ const ProjectPageInner = () => {
 
   // find out if and what version of the review addon is installed
   const { isLoading: isLoadingAddons, addonVersions: matchedAddons } = useGetBundleAddonVersions({
-    addons: ['review', 'planner', 'reports'],
+    addons: ['review', 'planner', 'reports', 'storyboards'],
   })
 
   useEffect(() => {
@@ -121,6 +142,8 @@ const ProjectPageInner = () => {
     remotePages: RemoteAddonProject[]
     isLoading: boolean
   }
+
+  const hasStoryboards = useMemo(() => matchedAddons.has('storyboards'), [matchedAddons])
 
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
@@ -166,12 +189,27 @@ const ProjectPageInner = () => {
         module: 'reviews',
         viewType: 'reviews',
       },
+      ...(hasStoryboards
+        ? [
+            {
+              name: 'Storyboards',
+              path: `/projects/${projectName}/storyboards`,
+              module: 'storyboards',
+              viewType: 'storyboards',
+            },
+          ]
+        : []),
+      ...ADDON_PAGES.map(({ name, module: addonModule, viewType }) => ({
+        name,
+        path: `/projects/${projectName}/${addonModule}`,
+        module: addonModule,
+        viewType,
+      })),
       {
         name: 'Reports',
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
-        enabled: !!matchedAddons?.get('reports'), // hide the report tab until the addon is out of development
       },
       {
         name: 'Workfiles',
@@ -179,12 +217,14 @@ const ProjectPageInner = () => {
         module: 'workfiles',
         uriSync: true,
       },
-      ...remotePages.map((remote) => ({
-        name: remote.name || remote.module,
-        module: remote.module,
-        path: `/projects/${projectName}/${remote.module}`,
-        viewType: remote.viewType,
-      })),
+      ...remotePages
+        .filter((remote) => !ADDON_PAGES.some((p) => p.module === remote.module))
+        .map((remote) => ({
+          name: remote.name || remote.module,
+          module: remote.module,
+          path: `/projects/${projectName}/${remote.module}`,
+          viewType: remote.viewType,
+        })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -212,14 +252,18 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, matchedAddons, module],
+    [addonsData, projectName, remotePages, matchedAddons, module, hasStoryboards],
   )
 
   const activeLink = useMemo(() => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
 
-  const title = useTitle(module, links, projectName || 'AYON')
+  const title = useTitle(
+    module,
+    links,
+    getProjectDisplayName({ name: projectName, label: projectLabel }) || 'AYON',
+  )
 
   const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
   const isAddon = !!addonName // Check if we're on an addon page
@@ -255,10 +299,24 @@ const ProjectPageInner = () => {
           hasReviewAddon={!!matchedAddons.has('review')}
         />
       )
+    } else if (module === 'storyboards' && hasStoryboards) {
+      component = (
+        <ProjectStoryboardsPage
+          projectName={projectName}
+          isLoadingAccess={isLoadingAddons}
+          hasStoryboardsAddon={!!matchedAddons.has('storyboards')}
+        />
+      )
     } else if (module === 'workfiles') {
       component = <WorkfilesPage />
     } else if (module === 'reports') {
-      component = <ReportsPage projectName={projectName} />
+      component = (
+        <ProjectReportsPage
+          projectName={projectName}
+          isLoadingAccess={isLoadingAddons}
+          hasReportsAddon={!!matchedAddons.has('reports')}
+        />
+      )
     } else if (foundAddon) {
       component = (
         <ProjectAddon
@@ -282,9 +340,15 @@ const ProjectPageInner = () => {
         </main>
       )
     } else {
-      console.log('addon not found, redirecting to overview')
-      // Fallback to versions page if no addon matches addonName
-      component = null
+      // If this is a known addon page but the remote page isn't loaded, show its splash
+      const addonPage = ADDON_PAGES.find((p) => p.module === module)
+      if (addonPage) {
+        component = <addonPage.Splash />
+      } else {
+        console.log('addon not found, redirecting to overview')
+        // Fallback to versions page if no addon matches addonName
+        component = null
+      }
     }
 
     return { component, viewType }
@@ -346,7 +410,7 @@ const ProjectPageInner = () => {
         dispatch={dispatch}
         onVersionCreated={handleNewVersionUploaded}
       >
-        <EntityListsProvider {...{ projectName, entityTypes: ['folder', 'task', 'version'] }}>
+        <EntityListsProvider projectName={projectName}>
           <SlicerProvider>
             <WithViews viewType={page.viewType} projectName={projectName}>
               {page.component}

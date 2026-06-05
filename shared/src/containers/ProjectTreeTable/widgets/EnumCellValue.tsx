@@ -74,6 +74,7 @@ const StyledValue = styled.span`
   padding: 0px 2px;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 100%;
 
   &.placeholder {
@@ -204,9 +205,10 @@ export const EnumCellValue = ({
             {(showLabels || !option.icon) && (
               <StyledValue
                 style={{
-                  color: backgroundColor && option.color
-                    ? getTextColor(option.color)
-                    : iconOnlyColor && option.icon
+                  color:
+                    backgroundColor && option.color
+                      ? getTextColor(option.color)
+                      : iconOnlyColor && option.icon
                       ? undefined
                       : option.color,
                   backgroundColor: backgroundColor

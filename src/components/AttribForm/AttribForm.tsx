@@ -10,6 +10,7 @@ interface Field {
   title?: string
   format?: string
   enumLabels?: Record<string, string>
+  disabled?: boolean
 }
 
 type Fields = Record<string, Field>
@@ -24,6 +25,7 @@ interface AttribFormProps {
   form?: Record<string, any>
   onChange: (key: string, value: any) => void
   fields: Fields
+  topLevelFields?: Fields
   isLoading: boolean
 }
 
@@ -43,7 +45,13 @@ export const getDefaultFromType = (type: FieldType): any => {
   }
 }
 
-const AttribForm: React.FC<AttribFormProps> = ({ form = {}, onChange, fields, isLoading }) => {
+const AttribForm: React.FC<AttribFormProps> = ({
+  form = {},
+  onChange,
+  fields,
+  topLevelFields,
+  isLoading,
+}) => {
   //   we build the attrib form data based on the schema, trying to match the data types
   // we do this in case form.attrib is missing any fields
   // and so that formData is always in the same format (we don't get uncontrolled inputs)
@@ -60,19 +68,19 @@ const AttribForm: React.FC<AttribFormProps> = ({ form = {}, onChange, fields, is
       //   check if we need to use the default value
       switch (field.type) {
         case 'string':
-          value = value ?? field.default ?? ''
+          value = value ?? field['default'] ?? ''
           break
         case 'number':
-          value = value ?? field.default ?? 0
+          value = value ?? field['default'] ?? 0
           break
         case 'boolean':
-          value = value ?? field.default ?? false
+          value = value ?? field['default'] ?? false
           break
         case 'array':
-          value = value ?? field.default ?? []
+          value = value ?? field['default'] ?? []
           break
         default:
-          value = value ?? field.default ?? undefined
+          value = value ?? field['default'] ?? undefined
           break
       }
 
@@ -99,7 +107,9 @@ const AttribForm: React.FC<AttribFormProps> = ({ form = {}, onChange, fields, is
   return (
     <Styled.FormContainer>
       {formFields.map(({ key, id, value }) => {
-        const { title = key, type = typeof value, format, enumLabels } = fields[key] || {}
+        const isNested = id.includes('.')
+        const fieldDef = (!isNested && topLevelFields?.[key]) || fields[key] || {}
+        const { title = key, type = typeof value, format, enumLabels, disabled } = fieldDef
         return (
           <Styled.Row key={id}>
             <label>{title}</label>
@@ -111,6 +121,7 @@ const AttribForm: React.FC<AttribFormProps> = ({ form = {}, onChange, fields, is
                 value={value}
                 onChange={onChange}
                 enumLabels={enumLabels}
+                disabled={disabled}
               />
             </Styled.Field>
           </Styled.Row>

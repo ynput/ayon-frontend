@@ -1,4 +1,4 @@
-import { createContext, useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
+import { useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
 import { type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
 import {
   GetDefaultViewApiResponse,
@@ -32,6 +32,7 @@ export type CollapsedViewState = Record<string, boolean>
 export interface ViewsContextValue {
   // State
   viewType?: ViewType
+  viewAlias: string
   projectName?: string
   currentUser?: UserModel
   isMenuOpen: boolean
@@ -86,11 +87,12 @@ export interface ViewsContextValue {
   dispatch: any // dispatch is used to dispatch api mutations in pp like the share one.
 }
 
-const ViewsContext = createContext<ViewsContextValue | null>(null)
+const DEFAULT_VIEW_ALIAS = 'view'
 
 export interface ViewsProviderProps {
   children: ReactNode
   viewType?: string
+  viewAlias?: string
   projectName?: string
   dispatch?: any
   debug?: {
@@ -101,6 +103,7 @@ export interface ViewsProviderProps {
 export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
   viewType,
+  viewAlias = DEFAULT_VIEW_ALIAS,
   projectName,
   dispatch,
   debug,
@@ -275,6 +278,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     viewsList,
     workingView,
     viewType,
+    viewAlias,
     projectName,
     currentUser,
     useWorkingView: !powerLicense,
@@ -296,6 +300,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const value: ViewsContextValue = {
     viewType,
+    viewAlias,
     projectName,
     isMenuOpen,
     editingView,
@@ -350,4 +355,5 @@ export const useViewsContext = (): ViewsContextValue => {
 }
 
 import { isViewStudioScope } from '../utils/isViewStudioScope'
+import { ViewsContext } from './ViewsContextInstance'
 export { isViewStudioScope }

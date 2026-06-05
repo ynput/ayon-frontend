@@ -17,6 +17,7 @@ import { Actions } from '@shared/containers/Actions/Actions'
 import {
   getCellId,
   ROW_SELECTION_COLUMN_ID,
+  useColumnSettingsContext,
   useGetGroupedFields,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
@@ -31,12 +32,22 @@ import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
+import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
 
 // Configure scope-specific filter types for the search filter
-const scopesConfig: ScopeWithFilterTypes[] = [
+const SCOPES: ScopeWithFilterTypes[] = [
   {
     scope: 'task',
-    filterTypes: ['status', 'tags', 'taskType', 'assignees', 'attributes', 'name', 'createdAt', 'updatedAt'],
+    filterTypes: [
+      'status',
+      'tags',
+      'taskType',
+      'assignees',
+      'attributes',
+      'name',
+      'createdAt',
+      'updatedAt',
+    ],
   },
   {
     scope: 'folder',
@@ -89,6 +100,9 @@ const ProjectOverviewPage: FC = () => {
     updateExpanded,
   } = useProjectOverviewContext()
 
+  const { sorting, updateSorting } = useColumnSettingsContext()
+  const nameSortDesc = sorting?.[0]?.id === 'name' ? sorting[0].desc : false
+
   // Build group-by dropdown options
   const groupedFields = useGetGroupedFields({ scope: 'task' })
   const viewGroupByOptions = useMemo(() => {
@@ -104,26 +118,39 @@ const ProjectOverviewPage: FC = () => {
     ]
   }, [groupedFields])
 
-  const viewGroupByValue = useMemo(
-    () =>
-      viewGroupByOptions
-        .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
-        .map((o) => ({ ...o, sortOrder: !viewGroupByDesc })),
-    [viewGroupBy, viewGroupByOptions, viewGroupByDesc],
-  )
+  const viewGroupByValue = useMemo(() => {
+    // undefined = view settings not loaded yet — keep dropdown empty so the
+    // user doesn't see a "Hierarchy" default flicker before the saved value arrives.
+    if (viewGroupBy === undefined) return []
+    return viewGroupByOptions
+      .filter((o) => o.id === (viewGroupBy === 'none' ? undefined : viewGroupBy ?? 'hierarchy'))
+      .map((o) => ({
+        ...o,
+        sortOrder: o.id === 'folder' || o.id === 'hierarchy' ? !nameSortDesc : !viewGroupByDesc,
+      }))
+  }, [viewGroupBy, viewGroupByOptions, viewGroupByDesc, nameSortDesc])
 
   const handleViewGroupByChange = (values: { id: string; sortOrder?: boolean }[]) => {
     const value = values[0]
     if (!value) {
       // X clicked — flat list (no grouping)
       updateViewGroupBy('none')
-    } else if (value.id === 'hierarchy') {
-      updateViewGroupBy(null)
-    } else {
-      // sortOrder: true = ascending, desc: false = ascending
-      const desc = value.sortOrder === false
-      updateViewGroupBy(value.id, desc)
+      return
     }
+    const desc = value.sortOrder === false
+    if (value.id === 'hierarchy' || value.id === 'folder') {
+      const targetView = value.id === 'hierarchy' ? null : 'folder'
+      if (viewGroupBy === targetView) {
+        if (desc !== nameSortDesc) {
+          updateSorting([{ id: 'name', desc }])
+        }
+        return
+      }
+      updateViewGroupBy(targetView)
+      return
+    }
+    // sortOrder: true = ascending, desc: false = ascending
+    updateViewGroupBy(value.id, desc)
   }
 
   const { isPanelOpen } = useSettingsPanel()
@@ -161,7 +188,7 @@ const ProjectOverviewPage: FC = () => {
   const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
-  const handleUriOpen = (entity: DetailsPanelEntityData) => {
+  const handleUriOpen = (entity: DetailsPanelEntityData, source: 'uri' | 'url') => {
     console.debug('URI found, selecting and expanding folders to entity:', entity.name)
 
     // Get the data needed to navigate to this entity
@@ -169,9 +196,11 @@ const ProjectOverviewPage: FC = () => {
       folder: entity.folder?.id,
     })
 
-    // Reset view state
-    setQueryFilters({})
-    updateViewGroupBy(null) // switches to hierarchy and syncs groupBy in one server call
+    // Only reset view state
+    if (source === 'uri') {
+      setQueryFilters({})
+      updateViewGroupBy(null) // switches to hierarchy and syncs groupBy in one server call
+    }
 
     // Expand folders in both table and slicer
     updateExpanded(data.expandedFolders)
@@ -212,7 +241,7 @@ const ProjectOverviewPage: FC = () => {
               <SearchFilterWrapper
                 queryFilters={displayFilters}
                 onChange={handleFiltersChange}
-                scopes={scopesConfig}
+                scopes={SCOPES}
                 projectNames={projectName ? [projectName] : []}
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
@@ -221,13 +250,13 @@ const ProjectOverviewPage: FC = () => {
               />
               <ReloadButton />
               <GroupByDropdown
-                $disableSortOrder={viewGroupBy === null || viewGroupBy === 'folder'}
                 title="Group by"
                 options={viewGroupByOptions}
                 value={viewGroupByValue}
                 onChange={handleViewGroupByChange}
                 multiSelect={false}
               />
+              <ImportDialogButton importContext="hierarchy" projectName={projectName} />
               <Actions
                 entities={[]}
                 entityType={undefined}

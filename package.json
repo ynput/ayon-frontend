@@ -13,7 +13,7 @@
     "generate-token": "node --env-file=.env.local ./gen/getAuth.js",
     "download-openapi": "node ./gen/download-schema.js",
     "generate-rest-all": "yarn download-openapi && npx @rtk-query/codegen-openapi ./gen/openapi-config.ts && node ./gen/process-api-types.js",
-    "generate-rest": " npx @rtk-query/codegen-openapi ./gen/openapi-config.ts",
+    "generate-rest": " yarn download-openapi && npx @rtk-query/codegen-openapi ./gen/openapi-config.ts",
     "generate-gql": "cd gen && graphql-codegen --require dotenv/config",
     "test": "npx playwright test",
     "test-ui": "npx playwright test --ui",
@@ -39,8 +39,8 @@
     "@tanstack/react-table": "8.21.3",
     "@tanstack/react-virtual": "3.13.23",
     "@uiw/react-textarea-code-editor": "2.1.9",
-    "@ynput/ayon-react-components": "1.17.1",
-    "axios": "1.15.0",
+    "@ynput/ayon-react-components": "^1.17.2",
+    "axios": "1.16.1",
     "chart.js": "4.5.1",
     "clsx": "2.1.1",
     "custom-protocol-check": "1.4.0",
@@ -53,10 +53,11 @@
     "lodash": "4.18.1",
     "match-sorter": "6.4.0",
     "object-scan": "19.0.5",
+    "papaparse": "^5.5.3",
     "primeicons": "7.0.0",
     "primereact": "9.6.2",
     "primereact-context": "npm:primereact@9.2.3",
-    "quill-magic-url": "4.2.0",
+    "quill-magic-url": "^4.2.0",
     "react": "18.3.1",
     "react-datepicker": "4.25.0",
     "react-dom": "18.3.1",
@@ -66,7 +67,7 @@
     "react-intersection-observer": "9.16.0",
     "react-markdown": "10.1.0",
     "react-perfect-scrollbar": "1.5.8",
-    "react-quill-ayon": "2.0.3",
+    "react-quill-ayon": "2.0.2",
     "react-redux": "9.2.0",
     "react-router": "6.30.3",
     "react-router-dom": "6.30.3",
@@ -87,7 +88,7 @@
     "styled-components": "6.4.0",
     "turndown": "7.2.4",
     "use-query-params": "2.2.2",
-    "uuid": "9.0.1"
+    "uuid": "14.0.0"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
@@ -106,6 +107,7 @@
     "@playwright/test": "1.59.1",
     "@types/lodash": "4.17.24",
     "@types/node": "20.19.39",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "18.3.28",
     "@types/react-dom": "18.3.7",
     "@types/semver": "7.7.1",
@@ -132,6 +134,9 @@
     "typescript-eslint": "8.58.1",
     "vite": "7.3.2",
     "vite-plugin-linter": "3.1.1"
+  },
+  "resolutions": {
+    "graphql-request": "7.4.0"
   },
   "lint-staged": {
     "src/**/*.{js,jsx}": [

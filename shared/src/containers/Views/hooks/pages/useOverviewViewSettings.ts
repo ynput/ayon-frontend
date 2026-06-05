@@ -34,6 +34,8 @@ type Return = {
   // Column management
   columns: ColumnsConfig
   onUpdateColumns: (columns: ColumnsConfig, allColumnIds?: string[]) => void
+  // Atomic groupBy + showHierarchy update (avoids 2-PATCH race)
+  onUpdateGroupBy: (groupBy: string | undefined, showHierarchy: boolean, desc?: boolean) => void
   // Slicer type management
   sliceType: string | undefined
   onUpdateSliceType: (sliceType: string) => void
@@ -156,6 +158,48 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     [updateViewSettings],
   )
 
+  // Atomic groupBy + showHierarchy update.
+  // Merges both fields into a single PATCH to avoid a race where two sequential
+  // updateViewSettings calls both capture the same pre-update viewSettings snapshot
+  // and the second overwrites the first.
+  const onUpdateGroupBy = useCallback(
+    async (groupBy: string | undefined, newShowHierarchy: boolean, desc?: boolean) => {
+      const updates: Partial<OverviewSettings> = {
+        showHierarchy: newShowHierarchy,
+        groupBy: groupBy,
+        groupSortByDesc: groupBy ? desc ?? false : undefined,
+      }
+
+      const baseColumns = columns as ColumnsConfig
+      const newLocalColumns: ColumnsConfig = {
+        ...baseColumns,
+        groupBy: groupBy ? { id: groupBy, desc: desc ?? false } : undefined,
+      }
+
+      // Combined setter lets updateViewSettings manage optimism/reset for both
+      // local states atomically (so error paths don't leave one stale).
+      const combinedSetter = (
+        value: { showHierarchy: boolean; columns: ColumnsConfig } | null,
+      ) => {
+        if (value === null) {
+          setLocalHierarchy(null)
+          setLocalColumns(null)
+        } else {
+          setLocalHierarchy(value.showHierarchy)
+          setLocalColumns(value.columns)
+        }
+      }
+
+      await updateViewSettings(
+        updates,
+        combinedSetter,
+        { showHierarchy: newShowHierarchy, columns: newLocalColumns },
+        { errorMessage: 'Failed to update grouping' },
+      )
+    },
+    [updateViewSettings, columns],
+  )
+
   return {
     filters,
     onUpdateFilters,
@@ -163,6 +207,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     onUpdateHierarchy,
     columns,
     onUpdateColumns,
+    onUpdateGroupBy,
     sliceType: serverSliceType,
     onUpdateSliceType,
   }

@@ -19,6 +19,7 @@ import useGoToEntity from '@hooks/useGoToEntity'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
 import { useSlicerContext } from '@shared/containers/Slicer'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 
 type VPDetailsPanelProps = {}
 
@@ -84,7 +85,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
-  const handleUriOpen = (entity: DetailsPanelEntityData) => {
+  const handleUriOpen = (entity: DetailsPanelEntityData, source: 'uri' | 'url') => {
     console.debug('URI found, selecting and expanding folders to entity:', entity.name)
 
     // Get the data needed to navigate to this entity
@@ -93,9 +94,11 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
       product: entity.product?.id,
     })
 
-    // Reset view state
-    onUpdateFilters({})
-    onUpdateViewGroupBy(undefined)
+    // Only reset view state
+    if (source === 'uri') {
+      onUpdateFilters({})
+      onUpdateViewGroupBy(undefined)
+    }
 
     // Expand folders in slicer
     slicer.setExpanded(data.expandedFolders)
@@ -116,25 +119,30 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
   }
 
   return (
-    <>
-      <DetailsPanel
-        isOpen={showVersionDetails}
-        entityType={'version'}
-        entities={entities}
-        projectsInfo={projectsInfo}
-        projectNames={[projectName]}
-        tagsOptions={projectInfo?.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="overview"
-        onClose={handleClose}
-        onOpenViewer={handleOpenViewer}
-        onOpen={handleDetailsOpen}
-        onUriOpen={handleUriOpen}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          <DetailsPanel
+            isOpen={showVersionDetails}
+            entityType={'version'}
+            entities={entities}
+            projectsInfo={projectsInfo}
+            projectNames={[projectName]}
+            tagsOptions={projectInfo?.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="overview"
+            entityListsContext={entityListsContext}
+            onClose={handleClose}
+            onOpenViewer={handleOpenViewer}
+            onOpen={handleDetailsOpen}
+            onUriOpen={handleUriOpen}
+          />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="overview" />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

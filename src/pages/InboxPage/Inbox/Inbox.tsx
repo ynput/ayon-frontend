@@ -22,8 +22,7 @@ import useGroupMessages from '../hooks/useGroupMessages'
 import useKeydown from '../hooks/useKeydown'
 import useUpdateInboxMessage from '../hooks/useUpdateInboxMessage'
 import useInboxRefresh from '../hooks/useInboxRefresh'
-import { useListProjectsQuery } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context'
+import { useDetailsPanelContext, useGlobalContext } from '@shared/context'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import { useAppSelector } from '@state/store'
@@ -58,10 +57,11 @@ interface InboxProps {
 const Inbox = ({ filter }: InboxProps) => {
   const dispatch = useDispatch()
   const { setHighlightedActivities } = useDetailsPanelContext()
+  const {
+    projects: { all: projects },
+  } = useGlobalContext()
 
   // get all project names
-  const { data: projects = [] } = useListProjectsQuery({})
-
   const user = useAppSelector((state) => state.user.name)
 
   const last = 100

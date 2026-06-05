@@ -1,36 +1,9 @@
-import { Button } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
-import { useRef } from 'react'
 import { useMenuContext } from '@shared/context'
 import { useColumnSettingsContext } from '../context'
 import { useColumnGroupBy } from '../hooks'
-import { Menu, MenuContainer } from '@shared/components'
-
-const MenuButton = styled(Button)<{ $isOpen: boolean }>`
-  background-color: unset !important;
-  z-index: 110;
-  position: relative;
-  padding: 2px;
-  width: 24px;
-  height: 24px;
-
-  &.hasIcon {
-    padding: 2px;
-  }
-
-  &:hover,
-  &.active {
-    background-color: var(--md-sys-color-surface-container-hover) !important;
-  }
-
-  ${({ $isOpen }) =>
-    $isOpen &&
-    `
-    background-color: var(--md-sys-color-surface-container-hover) !important;
-  `}
-`
+import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components'
 
 interface ColumnHeaderMenuProps {
   header: Header<TableRow, unknown>
@@ -57,7 +30,6 @@ export const ColumnHeaderMenu = ({
   const columnId = String(column.id)
   const { toggleMenuOpen } = useMenuContext()
   const { updateGroupBy, groupBy } = useColumnSettingsContext()
-  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } =
     useColumnGroupBy(columnId)
@@ -76,17 +48,7 @@ export const ColumnHeaderMenu = ({
   const isVisible = column.getIsVisible()
   const isSorted = column.getIsSorted()
 
-  // helpers for group by logic
-
-  const menuItems: Array<{
-    id: string
-    label?: string
-    icon?: string
-    className?: string
-    onClick?: () => void
-    type?: 'divider'
-    selected?: boolean
-  }> = []
+  const menuItems: ColumnMenuItemType[] = []
 
   if (canPin) {
     const isPinnedLeft = isPinned === 'left'
@@ -182,29 +144,10 @@ export const ColumnHeaderMenu = ({
   }
 
   return (
-    <>
-      <MenuButton
-        ref={buttonRef}
-        className={className}
-        onClick={(e) => {
-          e.stopPropagation()
-          handleMenuToggle()
-        }}
-        icon="more_horiz"
-        id={menuId}
-        $isOpen={isOpen || false}
-      />
-      <MenuContainer
-        target={buttonRef.current}
-        id={menuId}
-        align="left"
-        onClose={(e: any) => {
-          e.stopPropagation()
-          handleMenuToggle(false)
-        }}
-      >
-        <Menu menu={menuItems} onClose={() => handleMenuToggle(false)} />
-      </MenuContainer>
-    </>
+    <ColumnHeaderMenuUI
+      className={className}
+      menuItems={menuItems}
+      menuId={menuId || `column-menu-${header.id}`}
+    />
   )
 }

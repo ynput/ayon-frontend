@@ -11,7 +11,7 @@ import {
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { AttributeEditor } from '@shared/components'
+import { AttributeEditor, getUiTypeLabel } from '@shared/components'
 import { useGetAttributeListQuery, useSetAttributeListMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useSearchFilter from '@hooks/useSearchFilter'
@@ -215,7 +215,21 @@ const Attributes = () => {
                 style={{ maxWidth: 330 }}
                 sortable
               />
-              <Column field="data.type" header="Type" style={{ maxWidth: 150 }} sortable />
+              <Column
+                header="Type"
+                style={{ maxWidth: 150 }}
+                sortable
+                sortField="data.type"
+                body={(rowData) => getUiTypeLabel(rowData.data?.type, rowData.data?.enum)}
+                sortFunction={(e) => {
+                  const dir = e.order ?? 1
+                  return [...e.data].sort((a, b) => {
+                    const la = getUiTypeLabel(a.data?.type, a.data?.enum)
+                    const lb = getUiTypeLabel(b.data?.type, b.data?.enum)
+                    return la.localeCompare(lb) * dir
+                  })
+                }}
+              />
               <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
               <Column field="data.description" header="Description" sortable />
               <Column field="data.inherit" header="Inherit" sortable style={{ maxWidth: 80 }} />

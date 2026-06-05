@@ -33,13 +33,14 @@ const DialogStyled = styled(Dialog)`
   }
 `
 
-const DetailHeader = ({ children, onClose, style, context, dialogTitle = '' }) => {
+const DetailHeader = ({ children, onClose, style, context, dialogTitle = '', rightActions }) => {
   const [showContext, setShowContext] = useState(false)
 
   return (
     <HeaderStyled style={style}>
       <div style={{ overflow: 'hidden' }}>{children}</div>
-      {context && (
+      {rightActions}
+      {context && !rightActions && (
         <Button
           icon="more_vert"
           variant="text"
@@ -65,6 +66,7 @@ DetailHeader.propTypes = {
   onClose: PropTypes.func,
   style: PropTypes.object,
   dialogTitle: PropTypes.string,
+  rightActions: PropTypes.node,
 }
 
 export default DetailHeader

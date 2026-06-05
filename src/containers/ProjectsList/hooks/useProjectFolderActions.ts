@@ -3,10 +3,12 @@ import {
   useAssignProjectsToFolderMutation,
   useDeleteProjectFolderMutation,
   useUpdateProjectFolderMutation,
+  useUpdateProjectMutation,
   ProjectFolderModel,
 } from '@shared/api'
 import { getErrorMessage, handleDeleteFolders } from '@shared/util'
 import { ProjectFolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import { toast } from 'react-toastify'
 
 interface UseProjectFolderActionsProps {
   folders?: ProjectFolderModel[]
@@ -23,9 +25,12 @@ export const useProjectFolderActions = ({
   const [assignFolderToFolder] = useUpdateProjectFolderMutation()
   const [deleteProjectFolder] = useDeleteProjectFolderMutation()
   const [updateProjectFolder] = useUpdateProjectFolderMutation()
+  const [updateProject] = useUpdateProjectMutation()
 
   // Folder renaming state
   const [renamingFolder, setRenamingFolder] = useState<string | null>(null)
+  // Project label inline-editing state (row id = project.name)
+  const [renamingProject, setRenamingProject] = useState<string | null>(null)
 
   const onPutProjectsInFolder = useCallback(
     async (projectNames: string[], projectFolderId?: string) => {
@@ -133,6 +138,38 @@ export const useProjectFolderActions = ({
     [openRenameFolder],
   )
 
+  // Project label rename
+  const onRenameProject = useCallback(
+    (projectName: string) => {
+      setRenamingProject(projectName)
+      onSelect([projectName])
+    },
+    [onSelect],
+  )
+
+  const closeRenameProject = useCallback(() => {
+    setRenamingProject(null)
+  }, [])
+
+  const onSubmitRenameProject = useCallback(
+    (newLabel: string) => {
+      if (!renamingProject) return
+      const projectName = renamingProject
+      const trimmed = newLabel.trim()
+
+      closeRenameProject()
+      updateProject({
+        projectName,
+        projectPatchModel: { label: trimmed },
+      })
+        .unwrap()
+        .catch((error: any) => {
+          toast.error(getErrorMessage(error, 'Failed to update project label'))
+        })
+    },
+    [renamingProject, updateProject, closeRenameProject],
+  )
+
   return {
     onPutProjectsInFolder,
     onPutFolderInFolder,
@@ -143,5 +180,9 @@ export const useProjectFolderActions = ({
     renamingFolder,
     onSubmitRenameFolder,
     closeRenameFolder,
+    onRenameProject,
+    renamingProject,
+    onSubmitRenameProject,
+    closeRenameProject,
   }
 }

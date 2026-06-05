@@ -147,6 +147,9 @@ export { api as bundlesApi } from './bundles'
 export * from './configuration'
 export { api as configurationApi } from './configuration'
 
+// dataImport
+export { api as dataImportApi } from './dataImport'
+
 // desktop
 export * from './desktop'
 export { api as desktopApi } from './desktop'

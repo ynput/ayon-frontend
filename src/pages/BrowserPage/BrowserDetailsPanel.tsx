@@ -7,6 +7,7 @@ import { openViewer } from '@state/viewer'
 // shared
 import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
 import { useGetUsersAssigneeQuery, useGetProjectsInfoQuery, ProjectModel } from '@shared/api'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import {
   setFocusedVersions,
   setSelectedVersions,
@@ -58,28 +59,33 @@ const BrowserDetailsPanel = () => {
   }
 
   return (
-    <>
-      <DetailsPanel
-        isOpen={!!entities.length}
-        entitySubTypes={subTypes}
-        entityType={entityType}
-        entities={entities}
-        projectsInfo={projectsInfo as Record<string, ProjectModel>}
-        projectNames={[projectName]}
-        tagsOptions={projectInfo?.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        style={{ boxShadow: 'none' }}
-        scope="project"
-        onOpenViewer={handleOpenViewer}
-        onEntityFocus={updateFocusedVersion}
-        onClose={handleDetailsPanelClose}
-      />
-      <DetailsPanelSlideOut
-        projectsInfo={projectsInfo as Record<string, ProjectModel>}
-        scope="project"
-      />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+        <>
+          <DetailsPanel
+            isOpen={!!entities.length}
+            entitySubTypes={subTypes}
+            entityType={entityType}
+            entities={entities}
+            projectsInfo={projectsInfo as Record<string, ProjectModel>}
+            projectNames={[projectName]}
+            tagsOptions={projectInfo?.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            style={{ boxShadow: 'none' }}
+            scope="project"
+            entityListsContext={entityListsContext}
+            onOpenViewer={handleOpenViewer}
+            onEntityFocus={updateFocusedVersion}
+            onClose={handleDetailsPanelClose}
+          />
+          <DetailsPanelSlideOut
+            projectsInfo={projectsInfo as Record<string, ProjectModel>}
+            scope="project"
+          />
+        </>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

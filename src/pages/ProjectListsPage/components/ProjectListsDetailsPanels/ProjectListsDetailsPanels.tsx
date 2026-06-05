@@ -14,14 +14,16 @@ import { useProjectContext } from "@shared/context"
 import { useEffect, useMemo, useState } from "react"
 import ListDetailsPanel from "../ListDetailsPanel/ListDetailsPanel"
 import useReviewSessionCardsModules from "@pages/ProjectListsPage/hooks/useReviewSessionCardsModules"
-import { ReviewPageView } from "@pages/ProjectListsPage/ProjectListsPage"
+import useStoryboardsCardsModules from "@pages/ProjectListsPage/hooks/useStoryboardsCardsModules"
+import { ReviewsSettings } from "@shared/api"
 
 type Props = {
   isReview: boolean
-  view: ReviewPageView
+  isStoryboards: boolean
+  displayStyle: ReviewsSettings['displayStyle']
 }
 
-export default function ProjectListsDetailsPanels({ isReview, view }: Props) {
+export default function ProjectListsDetailsPanels({ isReview, isStoryboards, displayStyle }: Props) {
   const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
   const { selectedList, listDetailsOpen } = useListsContext()
@@ -88,21 +90,26 @@ export default function ProjectListsDetailsPanels({ isReview, view }: Props) {
     (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
 
+
+  const useModules = isStoryboards
+    ? useStoryboardsCardsModules
+    : useReviewSessionCardsModules
+
   const {
     useReviewSessionCards
-  } = useReviewSessionCardsModules({ skip: !isReview })
+  } = useModules({ skip: !isReview })
 
   const { clearHighlighted } = useReviewSessionCards()
 
   // For review session lists, closing the details panel
   // should also clear the state in the addon component.
   const onClose = useMemo(() => {
-    if (!clearHighlighted || view !== "cards") return
+    if (!clearHighlighted || displayStyle !== "cards") return
 
     return () => {
       clearHighlighted()
     }
-  }, [clearHighlighted, view])
+  }, [clearHighlighted, displayStyle])
 
   return (
     <>

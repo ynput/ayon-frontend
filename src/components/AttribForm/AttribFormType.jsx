@@ -8,7 +8,16 @@ import {
 import { isEmpty, isEqual } from 'lodash'
 import React from 'react'
 
-const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ...props }) => {
+const AttribFormType = ({
+  type,
+  value,
+  onChange,
+  id,
+  enumLabels = {},
+  format,
+  disabled,
+  ...props
+}) => {
   let options = []
   for (const key in enumLabels) {
     options.push({ label: enumLabels[key], value: key })
@@ -30,7 +39,14 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ..
     onChange(id, newValue)
   }
 
-  const sharedProps = { value, onChange: handleChange, id, ...props, autoComplete: 'off' }
+  const sharedProps = {
+    value,
+    onChange: handleChange,
+    id,
+    ...props,
+    disabled,
+    autoComplete: 'off',
+  }
 
   if (format === 'date-time') type = 'date'
   if (!isEmpty(enumLabels) && type !== 'array') type = 'array-single'
@@ -43,7 +59,13 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ..
     case 'integer':
       return <InputNumber {...sharedProps} step={1} min={0} />
     case 'boolean':
-      return <InputSwitch checked={value} onChange={() => handleChange(null, !value)} />
+      return (
+        <InputSwitch
+          checked={value}
+          onChange={() => !disabled && handleChange(null, !value)}
+          disabled={disabled}
+        />
+      )
     case 'date':
       return (
         <InputDate
@@ -63,6 +85,7 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ..
           search={options.length > 5}
           onClear={value?.length ? () => handleChange(null, []) : false}
           multiSelect
+          disabled={disabled}
           style={{ width: '100%' }}
         />
       )
@@ -75,6 +98,7 @@ const AttribFormType = ({ type, value, onChange, id, enumLabels = {}, format, ..
           search={options.length > 5}
           multiple={false}
           onClear={() => handleChange(null, null)}
+          disabled={disabled}
           style={{ width: '100%' }}
         />
       )

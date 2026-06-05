@@ -19,6 +19,7 @@ const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) 
     onCreateBaseView,
     onDeleteBaseView,
     onLoadBaseView,
+    viewAlias,
   } = useViewsContext()
 
   const { powerLicense, setPowerpackDialog } = usePowerpack()
@@ -37,8 +38,8 @@ const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) 
       if (remove || disabled) {
         // remove button clicked, ask to remove the base view
         confirmDialog({
-          message: `Are you sure you want to remove this default view?`,
-          header: `Remove Default View`,
+          message: `Are you sure you want to remove this default ${viewAlias.toLowerCase()}?`,
+          header: `Remove Default ${viewAlias}`,
           acceptLabel: 'Remove',
           rejectLabel: 'Cancel',
           accept: async () => {
@@ -61,7 +62,7 @@ const BaseViewsTagContainer: FC<BaseViewsTagContainerProps> = ({ projectName }) 
         onClick={() => setCollapsed(!collapsed)}
         collapsed={collapsed}
         id="default-views"
-        title="Default views"
+        title={`Default ${viewAlias.toLowerCase()}`}
         style={{ marginBottom: '10px' }}
       />
       {!collapsed && (

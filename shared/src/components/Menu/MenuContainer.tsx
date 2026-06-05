@@ -5,6 +5,11 @@ import clsx from 'clsx'
 import * as Styled from './Menu.styled'
 import { useMenuPosition } from './useMenuPosition'
 
+// DOM ids of the menu portal — exported so other menu code (mouse-leave heuristics,
+// hit-testing, etc.) can reference them by constant instead of magic strings.
+export const MENU_PORTAL_DIALOG_ID = 'ayon-menu-dialog'
+export const MENU_PORTAL_CONTENT_ID = 'ayon-menu-content'
+
 type AlignType = 'left' | 'right'
 type ThemeType = 'light' | 'dark'
 
@@ -98,7 +103,7 @@ const MenuInner: React.FC<MenuInnerProps> = ({
 
   // Click outside handling
   const handleOnClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-    if ((e.target as HTMLElement).id === 'dialog') handleClose()
+    if ((e.target as HTMLElement).id === MENU_PORTAL_DIALOG_ID) handleClose()
   }
 
   // Attach props to children
@@ -121,10 +126,10 @@ const MenuInner: React.FC<MenuInnerProps> = ({
       onClick={handleOnClick}
       onKeyDown={handleKeyDown}
       {...props}
-      id="dialog"
+      id={MENU_PORTAL_DIALOG_ID}
     >
       <Styled.DialogContent
-        id="content"
+        id={MENU_PORTAL_CONTENT_ID}
         style={menuPosition}
         className={clsx(align)}
         ref={menuRef as any}

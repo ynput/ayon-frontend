@@ -12,7 +12,7 @@ const StyledDropdown = styled(Dropdown)`
 `
 
 export interface EnumWidgetProps
-  extends Omit<DropdownProps, 'onChange' | 'value'>,
+  extends Omit<DropdownProps, 'onChange' | 'value' | 'pt'>,
     WidgetBaseProps {
   value: (string | number | boolean)[]
   options: AttributeEnumItem[]

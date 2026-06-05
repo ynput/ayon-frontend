@@ -13,6 +13,7 @@ import NewProjectDialog from './NewProjectDialog'
 
 import { selectProject } from '@state/context'
 import { useDeleteProjectMutation, useUpdateProjectMutation } from '@shared/api'
+import { getProjectDisplayName } from '@shared/util'
 import TeamsPage from '../TeamsPage'
 import ProjectManagerPageContainer from './ProjectManagerPageContainer'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
@@ -24,7 +25,7 @@ import ProjectPermissions from './ProjectPermissions'
 import { isActiveDecider, projectSorter, Module, ModuleList, ModulePath } from './mappers'
 import { replaceQueryParams } from '@helpers/url'
 import HelpButton from '@components/HelpButton/HelpButton'
-import { ProjectContextProvider } from '@shared/context'
+import { ProjectContextProvider, useGlobalContext } from '@shared/context'
 
 const ProjectSettings = ({ projectList, projectManager, projectName }) => {
   return (
@@ -44,6 +45,9 @@ const SiteSettings = ({ projectList, projectManager, projectName }) => {
 const ProjectManagerPage = () => {
   const isUser = useSelector((state) => state.user.data.isUser)
   const projectName = useSelector((state) => state.project.name)
+  const {
+    projects: { all: allProjects },
+  } = useGlobalContext()
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
@@ -80,8 +84,12 @@ const ProjectManagerPage = () => {
   const [deleteProject] = useDeleteProjectMutation()
 
   const handleDeleteProject = (sel) => {
+    const project = allProjects.find((p) => p.name === sel)
+    const displayName = project ? getProjectDisplayName(project) : sel
+    const confirmLabel =
+      displayName && displayName !== sel ? `Project: ${displayName} (${sel})` : `Project: ${sel}`
     confirmDelete({
-      label: `Project: ${sel}`,
+      label: confirmLabel,
       accept: async () => {
         await deleteProject({ projectName: sel }).unwrap()
         setSelectedProject(null)

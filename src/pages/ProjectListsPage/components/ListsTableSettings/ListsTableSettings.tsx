@@ -18,7 +18,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   extraColumns,
   highlightedSetting,
 }) => {
-  const { selectedList } = useListsContext()
+  const { selectedList, isReview } = useListsContext()
   const { listAttributes, entityAttribFields, updateAttributes, isUpdating, isLoadingNewList } =
     useListsAttributesContext()
   const { ListsAttributesSettings, requiredVersion } = useListsModuleContext()
@@ -36,6 +36,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
       hiddenColumns={['folder']}
       highlighted={highlightedSetting}
       hiddenSettings={['group-by']}
+      hideSortBy={isReview}
       settings={[
         {
           id: 'list_attributes',

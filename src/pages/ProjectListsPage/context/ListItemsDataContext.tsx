@@ -59,13 +59,20 @@ interface ListItemsDataProviderProps {
   children: ReactNode
 }
 
+const reviewSortKeys = new Map([
+  ["task", "task_id"],
+  ["product", "product_id"],
+  ["path", "name"],
+  ["versionAuthor", "author"],
+])
+
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
   // Get project data from the new context
   const { projectName } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
-  const { selectedList } = useListsContext()
+  const { selectedList, isReview } = useListsContext()
   const selectedListId = selectedList?.id
 
   // TODO: finish setting up settings for lists
@@ -96,6 +103,20 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     setListItemsFilters({ conditions: [], operator: 'and' })
   }, [setListItemsFilters])
 
+  // For review sessions, we use the sorting setting stored in the entity list's `data`.
+  // This allows us to use the sorting in the review session itself, too.
+  const reviewSorting: SortingState | null = useMemo(() => {
+    if (!isReview) return null
+
+    const sorting = selectedList?.data.sorting
+    if (!sorting) return null
+
+    return [{
+      id: reviewSortKeys.get(sorting.property) ?? sorting.property,
+      desc: sorting.order,
+    }]
+  }, [isReview, selectedList?.data.sorting])
+
   const {
     data: listItemsData,
     isLoading,
@@ -107,7 +128,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     projectName,
     entityType: selectedList?.entityType,
     listId: selectedListId,
-    sorting: columns.sorting || [],
+    sorting: reviewSorting ?? columns.sorting ?? [],
     filters: listItemsFilters,
   })
 

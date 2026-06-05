@@ -42,6 +42,7 @@ const getDescriptionModules = ({
 
 interface DescriptionSectionProps {
   description: string
+  isLarge: boolean
   isMixed: boolean
   enableEditing: boolean
   onChange: (description: string) => void
@@ -50,6 +51,7 @@ interface DescriptionSectionProps {
 
 export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   description,
+  isLarge = true,
   isMixed,
   enableEditing,
   onChange,
@@ -128,11 +130,9 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
       showHeader={!isEditing}
       enableHover={!isEditing}
       onClick={!isEditing ? handleStartEditing : undefined}
+      description={isLarge}
     >
-      <StyledContent
-        className={clsx({ editing: isEditing })}
-        onClick={handleContentClick}
-      >
+      <StyledContent className={clsx({ editing: isEditing })} onClick={handleContentClick}>
         <StyledEditor className="block-shortcuts">
           <QuillListStyles style={isEditing ? { height: 'auto' } : undefined}>
             <StyledQuillContainer style={isEditing ? { height: 'auto' } : undefined}>
@@ -165,10 +165,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
         )}
       </StyledContent>
       <StyledHiddenMarkdown ref={markdownRef}>
-        <InputMarkdownConvert
-          typeOptions={mentionTypeOptions}
-          initValue={description || ''}
-        />
+        <InputMarkdownConvert typeOptions={mentionTypeOptions} initValue={description || ''} />
       </StyledHiddenMarkdown>
     </BorderedSection>
   )

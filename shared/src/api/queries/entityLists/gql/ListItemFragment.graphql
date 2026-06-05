@@ -45,6 +45,8 @@ fragment ListItemFragment on BaseNode {
     status
     tags
     hasReviewables
+    author
+    version
     product {
       id
       name

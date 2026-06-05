@@ -20,6 +20,7 @@ import ErrorPage from '@pages/ErrorPage'
 import LoadingPage from '@pages/LoadingPage'
 import OnBoardingPage from '@pages/OnBoarding'
 const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
+const AcceptInvitePage = lazy(() => import('@pages/AcceptInvitePage'))
 
 // components
 import ShareDialog from '@components/ShareDialog'
@@ -71,6 +72,8 @@ import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
 import type { DetailsPanelProviderProps } from '@shared/context'
+import { ImportDialogProvider } from '@containers/ImportDialog/context/ImportDialogProvider'
+import ImportDialog from '@containers/ImportDialog/ImportDialog'
 
 // Wrapper component to get SubtasksManager from SubtasksModulesContext and pass it to DetailsPanelProvider
 const DetailsPanelProviderWithSubtasks = (
@@ -228,18 +231,21 @@ const App = () => {
                                     <NotificationsProvider>
                                       <ShortcutsProvider>
                                         <PiPProvider>
-                                          <Header />
-                                          <ShareDialog />
-                                          <ViewerDialog />
-                                          <ConfirmDialog />
-                                          <FileUploadPreviewContainer />
-                                          <ReleaseInstallerDialog />
-                                          <CompleteProfilePrompt />
-                                          <AppRoutes />
-                                          <DetailsPanelFloating />
-                                          <PowerpackDialog />
-                                          <AppRemoteLoader />
-                                          <TrialBanner />
+                                          <ImportDialogProvider>
+                                            <Header />
+                                            <ShareDialog />
+                                            <ViewerDialog />
+                                            <ConfirmDialog />
+                                            <ImportDialog />
+                                            <FileUploadPreviewContainer />
+                                            <ReleaseInstallerDialog />
+                                            <CompleteProfilePrompt />
+                                            <AppRoutes />
+                                            <DetailsPanelFloating />
+                                            <PowerpackDialog />
+                                            <AppRemoteLoader />
+                                            <TrialBanner />
+                                          </ImportDialogProvider>
                                         </PiPProvider>
                                       </ShortcutsProvider>
                                     </NotificationsProvider>
@@ -308,6 +314,9 @@ const App = () => {
 
   if (window.location.pathname.startsWith('/passwordReset')) {
     if (!user.name) return <PasswordResetPage />
+    else window.history.replaceState({}, document.title, '/')
+  } else if (window.location.pathname.startsWith('/acceptInvite')) {
+    if (!user.name) return <AcceptInvitePage />
     else window.history.replaceState({}, document.title, '/')
   }
 

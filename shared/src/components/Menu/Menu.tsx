@@ -1,6 +1,7 @@
 import React, { useState, ReactNode } from 'react'
 import * as Styled from './Menu.styled'
 import { MenuList } from './MenuList'
+import { MENU_PORTAL_CONTENT_ID } from './MenuContainer'
 import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
 import { PowerpackFeature, useMenuContext, usePowerpack } from '@shared/context'
@@ -32,6 +33,7 @@ interface SubMenu {
   level: number
   parentRef?: HTMLElement
   style?: React.CSSProperties
+  placement?: 'left' | 'right'
 }
 
 interface MenuProps {
@@ -61,20 +63,27 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
     if (!disableClose && onClose) onClose()
   }
 
-  const onMenuEnter = (e: React.MouseEvent, menu: Partial<SubMenu> & { items: MenuItemType[] }) => {
+  const onMenuEnter = (
+    e: React.MouseEvent,
+    menu: Partial<SubMenu> & { items: MenuItemType[]; parentEl?: HTMLElement | null },
+  ) => {
     // check to see if we need to open a submenu
     if (menu.items.length) {
       // yes, there is a submenu
       // open it if it is not already open
       if (!subMenus.find((m) => m.id === menu.id)) {
         // also close any other submenus on the same level
+        // Prefer the explicit element passed from the source MenuItem ref; fall back to
+        // currentTarget (the <li>) over target (which can be a nested span/icon).
+        const parentEl =
+          menu.parentEl ?? (e.currentTarget as HTMLElement) ?? (e.target as HTMLElement)
         setSubMenus([
           ...subMenus.filter((m) => m.level < (menu.level || 0) + 1),
           {
             ...menu,
             id: menu.id!,
             level: (menu.level || 0) + 1,
-            parentRef: e.target as HTMLElement,
+            parentRef: parentEl,
           } as SubMenu,
         ])
       }
@@ -85,16 +94,28 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
   }
 
   const onMenuLeave = (e: React.MouseEvent, menu: Partial<SubMenu> = {}) => {
-    // target where we are going
-    const relatedTargetId = (e.relatedTarget as HTMLElement)?.id
-    const relatedTargetSubMenu = subMenus.find((m) => m.id === relatedTargetId)
+    const related = e.relatedTarget as HTMLElement | null
 
-    if ((e.relatedTarget as HTMLElement)?.tagName === 'DIALOG') return setSubMenus([])
+    // Mouse exited the document entirely — keep menus open, user might come back.
+    if (!related) return
 
-    if (!relatedTargetSubMenu) {
-      setSubMenus(subMenus.filter((m) => m.level <= (menu.level || 0) + 1))
-    }
-    //   if (menu.items.length) {
+    // Mouse moved onto the dialog backdrop itself — close everything.
+    if (related.tagName === 'DIALOG') return setSubMenus([])
+
+    // Mouse is still inside the menu portal (the DialogContent or any descendant).
+    // The user is most likely traveling across a small gap toward an adjacent sub-menu.
+    // Don't close anything — the next mouseenter will reconcile state.
+    if (
+      typeof related.closest === 'function' &&
+      related.closest(`#${MENU_PORTAL_CONTENT_ID}`)
+    )
+      return
+
+    // Mouse is targeting a known sub-menu element directly (id match) — keep open.
+    const relatedTargetSubMenu = subMenus.find((m) => m.id === related.id)
+    if (relatedTargetSubMenu) return
+
+    setSubMenus(subMenus.filter((m) => m.level <= (menu.level || 0) + 1))
   }
 
   const handleSubMenu = (
@@ -103,6 +124,16 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
   ) => {
     if (e.type === 'mouseenter' || e.type === 'keydown') onMenuEnter(e, menu)
     else if (e.type === 'mouseleave') onMenuLeave(e, menu)
+  }
+
+  const handleSubMenuLayout = (
+    id: string,
+    style: React.CSSProperties,
+    placement: 'left' | 'right',
+  ) => {
+    setSubMenus((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, style, placement } : m)),
+    )
   }
 
   return (
@@ -133,6 +164,7 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
           handleClick={handleClick}
           subMenu
           onSubMenu={handleSubMenu}
+          onSubMenuLayout={handleSubMenuLayout}
           onClose={() => setSubMenus(subMenus.filter((m) => m.id !== menu.id))}
           onMenuClose={() => setMenuOpen(false)}
           onChange={onMenuEnter}

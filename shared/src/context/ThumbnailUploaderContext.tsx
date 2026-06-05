@@ -1,60 +1,81 @@
-import { createContext, useState } from 'react'
-
+import { createContext, ReactNode, RefObject, useState } from 'react'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 
 export const ThumbnailUploadContext = createContext<{
-  onContextMenu?: Function
   resetFileUploadState?: Function
-  inputRef?: HTMLInputElement
+  triggerThumbnailUpload?: () => void
+  triggerVersionUpload?: () => void
+  canUploadVersion?: boolean
+  onContextMenu?: (event: MouseEvent) => void
 }>({})
 
 export type ThumbnailUploadProviderProps = {
-  handleThumbnailUpload: (thumbnails: any[]) => {}
-  entities: any
-  thumbnailInputRef: any
-  versionsInputRef?: any
-  children?: JSX.Element | JSX.Element[]
+  thumbnailInputRef: RefObject<HTMLInputElement>
+  versionsInputRef?: RefObject<HTMLInputElement>
+  /** Whether version upload is supported for the current selection. Passed explicitly
+   *  by the host — don't infer from `!!versionsInputRef` because a ref object is
+   *  always truthy regardless of whether the input is mounted. */
+  canUploadVersion?: boolean
+  children?: ReactNode
 }
 
 export const ThumbnailUploadProvider = ({
-  children = [],
+  children,
   thumbnailInputRef,
   versionsInputRef,
+  canUploadVersion = false,
 }: ThumbnailUploadProviderProps) => {
-  const [_, setFileUploadInProgress] = useState(false)
+  const [, setFileUploadInProgress] = useState(false)
   const [ctxMenuShow] = useCreateContextMenu()
   const resetFileUploadState = () => setFileUploadInProgress(false)
 
-  const ctxMenuItems = () => [
-    {
-      label: 'Upload thumbnail',
-      icon: 'add_photo_alternate',
-      command: () => {
-        if (thumbnailInputRef) {
-          thumbnailInputRef.current!.click()
-        }
-        return setFileUploadInProgress(true)
-      },
-    },
-    {
-      label: 'Upload version',
-      icon: 'layers',
-      command: () => {
-        if (versionsInputRef) {
-          versionsInputRef.current!.click()
-        }
-        return setFileUploadInProgress(true)
-      },
-    },
-  ]
+  const triggerThumbnailUpload = () => {
+    if (thumbnailInputRef?.current) {
+      thumbnailInputRef.current.click()
+      setFileUploadInProgress(true)
+    }
+  }
 
+  const triggerVersionUpload = () => {
+    if (versionsInputRef?.current) {
+      versionsInputRef.current.click()
+      setFileUploadInProgress(true)
+    }
+  }
+
+  // Right-click on thumbnails opens the same upload actions exposed in the more-menu.
+  // Kept after the more-menu refactor because Innders relies on the muscle memory.
   const onContextMenu = (event: MouseEvent) => {
-    // @ts-expect-error - I just can't do this right now
-    ctxMenuShow(event, ctxMenuItems())
+    const items = [
+      {
+        label: 'Upload thumbnail',
+        icon: 'add_photo_alternate',
+        command: triggerThumbnailUpload,
+      },
+      ...(canUploadVersion
+        ? [
+            {
+              label: 'Upload version',
+              icon: 'upload',
+              command: triggerVersionUpload,
+            },
+          ]
+        : []),
+    ]
+    // @ts-expect-error - primereact ContextMenu typing
+    ctxMenuShow(event, items)
   }
 
   return (
-    <ThumbnailUploadContext.Provider value={{ onContextMenu, resetFileUploadState }}>
+    <ThumbnailUploadContext.Provider
+      value={{
+        resetFileUploadState,
+        triggerThumbnailUpload,
+        triggerVersionUpload,
+        canUploadVersion,
+        onContextMenu,
+      }}
+    >
       {children}
     </ThumbnailUploadContext.Provider>
   )

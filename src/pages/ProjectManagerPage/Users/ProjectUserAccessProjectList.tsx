@@ -6,6 +6,7 @@ import useTableLoadingData from '@hooks/useTableLoadingData'
 import { $Any } from '@types'
 import { TablePanel } from '@ynput/ayon-react-components'
 import { ProjectNode } from '@shared/api'
+import { getProjectDisplayName } from '@shared/util'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 
 const StyledProjectName = styled.div`
@@ -42,7 +43,7 @@ const formatName = (rowData: ProjectNode, userPermissions: UserPermissions) => {
   const readOnly =
     !userPermissions.canEdit(UserPermissionsEntity.access, rowData.name) &&
     userPermissions.canView(UserPermissionsEntity.access, rowData.name)
-  return rowData.name + (readOnly ? ' (read only)' : '')
+  return getProjectDisplayName(rowData) + (readOnly ? ' (read only)' : '')
 }
 
 type Props = {
@@ -76,7 +77,7 @@ const ProjectUserAccessProjectList = ({
             return mainComparison
           }
 
-          return a.name.localeCompare(b.name)
+          return getProjectDisplayName(a).localeCompare(getProjectDisplayName(b))
         })}
         selection={selected}
         multiple={true}

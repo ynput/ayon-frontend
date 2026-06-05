@@ -16,6 +16,7 @@ function FallbackReviewCardsProvider({ children }: RemoteAddonProjectProps & Pro
   headerContentEnd?: JSX.Element
   api?: any
   gridSize?: number
+  playlistView?: boolean
 }) { return <>{children}</> }
 
 function FallbackReviewCardsControlsRight({ }: {

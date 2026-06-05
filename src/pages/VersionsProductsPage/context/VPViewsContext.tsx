@@ -31,7 +31,7 @@ export type VPViewsContextValue = {
 
   // View mode management
   viewGroupBy: string | undefined
-  onUpdateViewGroupBy: (viewGroupBy: string | undefined) => void
+  onUpdateViewGroupBy: (viewGroupBy: string | undefined) => Promise<void>
 
   showProducts: boolean
   onUpdateShowProducts: (showProducts: boolean) => void

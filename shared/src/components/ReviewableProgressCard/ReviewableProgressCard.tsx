@@ -17,7 +17,7 @@ export interface ReviewableProgressCardProps
     Omit<HTMLProps<HTMLDivElement>, 'name' | 'children' | 'as' | 'ref'> {
   onRemove?: () => void
   tooltip?: string
-  type: 'upload' | 'processing' | 'unsupported' | 'queued' | 'waiting'
+  type: 'upload' | 'processing' | 'unsupported' | 'queued' | 'waiting' | 'importing' | 'validating'
 }
 
 export const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
@@ -57,6 +57,14 @@ export const ReviewableProgressCard: FC<ReviewableProgressCardProps> = ({
     case 'waiting':
       message = 'Waiting for upload'
       icon = 'schedule'
+      break
+    case 'importing':
+      message = 'Importing'
+      icon = 'upload_file'
+      break
+    case 'validating':
+      message = 'Validating'
+      icon = 'checklist'
       break
     default:
       break

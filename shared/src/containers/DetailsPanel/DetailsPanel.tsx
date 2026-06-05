@@ -12,6 +12,7 @@ import { extractEntityHierarchyFromParents } from '@shared/util'
 import {
   ProjectContextProvider,
   ProjectModelWithProducts,
+  ThumbnailUploadProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
   useURIContext,
@@ -20,6 +21,10 @@ import {
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
+import {
+  DetailsPanelMoreMenu,
+  type DetailsPanelEntityListsContext,
+} from './components/DetailsPanelMoreMenu'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './containers/FeedWrapper'
@@ -52,13 +57,20 @@ export type DetailsPanelProps = {
   onOpenViewer?: (entity: any) => void
   onEntityFocus?: (id: string, entityType: DetailsPanelEntityType) => void
   onOpen?: () => void
-  onUriOpen?: (entity: DetailsPanelEntityData) => void
+  onUriOpen?: (entity: DetailsPanelEntityData, source: 'uri' | 'url') => void
   // annotations
   annotations?: any
   removeAnnotation?: (id: string) => void
   exportAnnotationComposite?: (id: string) => Promise<Blob | null>
   entityListId?: string
   guestCategories?: Record<string, string> // only used for guests to find if they have access to any categories
+  /** Optional EntityListsContext for the "Add to list" sub-menu in the more-menu.
+   *  Hosts that already mount EntityListsProvider can pass the resolved context here;
+   *  otherwise wrap the panel with EntityListsContextBoundary. The shape mirrors
+   *  `EntityListsContextType` from `src/pages/ProjectListsPage/context` — it lives as a
+   *  structural type in shared/ so the layering rule (shared cannot import src/pages)
+   *  is preserved. */
+  entityListsContext?: DetailsPanelEntityListsContext
   // optional tab state for independent tab management
 }
 
@@ -92,6 +104,7 @@ const DetailsPanelInner = ({
   exportAnnotationComposite,
   entityListId,
   guestCategories = {},
+  entityListsContext,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -210,8 +223,7 @@ DetailsPanelProps) => {
     if (isFetchingEntitiesDetails) return
 
     if (
-      contextEntities?.source &&
-      ['uri', 'url'].includes(contextEntities.source) &&
+      (contextEntities?.source === 'uri' || contextEntities?.source === 'url') &&
       contextEntities?.entities?.length &&
       !!onUriOpen
     ) {
@@ -220,7 +232,7 @@ DetailsPanelProps) => {
       )
       if (!uriEntity) return
 
-      onUriOpen(uriEntity)
+      onUriOpen(uriEntity, contextEntities.source)
     }
   }, [entityDetailsData, isFetchingEntitiesDetails])
 
@@ -322,6 +334,35 @@ DetailsPanelProps) => {
 
   const { requestPipWindow } = usePiPWindow()
 
+  // Hoisted so ThumbnailUploadProvider (wrapping the toolbar) and EntityPanelUploader
+  // (inside DetailsPanelHeader) share the same ref identity — otherwise the toolbar's
+  // more-menu, which sits as a sibling above the header, can't reach the inputs.
+  const thumbnailInputRef = useRef<HTMLInputElement>(null)
+  const versionsInputRef = useRef<HTMLInputElement>(null)
+  const canUploadVersion = entityDetailsData.length === 1 && activeEntityType !== 'representation'
+
+  const shareEntityLabel = useMemo(() => {
+    const name = firstEntityData?.label || firstEntityData?.name || ''
+    const parents: string[] = firstEntityData?.parents || []
+    const parts: (string | undefined)[] = [firstProject]
+    switch (activeEntityType) {
+      case 'folder':
+      case 'task':
+      case 'product':
+        parts.push(parents.at(-1), name)
+        break
+      case 'version':
+        parts.push(parents.at(-2), parents.at(-1), name)
+        break
+      case 'representation':
+        parts.push(parents.at(-3), parents.at(-2), parents.at(-1), name)
+        break
+      default:
+        parts.push(name)
+    }
+    return parts.filter(Boolean).join(' - ')
+  }, [firstEntityData, activeEntityType, firstProject])
+
   const handleOpenPip = () => {
     openPip({
       entityType: activeEntityType,
@@ -348,7 +389,11 @@ DetailsPanelProps) => {
   }
 
   return (
-    <>
+    <ThumbnailUploadProvider
+      thumbnailInputRef={thumbnailInputRef}
+      versionsInputRef={versionsInputRef}
+      canUploadVersion={canUploadVersion}
+    >
       <Styled.Panel className="details-panel">
         <Styled.Toolbar>
           {/* TODO FIX PATH */}
@@ -364,18 +409,32 @@ DetailsPanelProps) => {
             entityTypeIcons={entityTypeIcons}
           />
           <Styled.RightTools className="right-tools">
+            <DetailsPanelMoreMenu
+              entityType={activeEntityType}
+              entityId={firstEntityData?.id}
+              entityIds={entitiesToQuery.map((e) => e.id).filter(Boolean)}
+              entityLabel={shareEntityLabel}
+              projectName={firstProject}
+              selectedEntities={entityDetailsData
+                .filter((e) => !!e?.id)
+                .map((e) => ({
+                  entityId: e.id,
+                  entityType: e.entityType || activeEntityType,
+                  hasReviewables: !!e.hasReviewables,
+                }))}
+              entityListsContext={entityListsContext}
+              onOpenPip={handleOpenPip}
+              onOpenViewer={onOpenViewer}
+              productId={firstEntityData?.product?.id}
+              taskId={firstEntityData?.task?.id}
+              folderId={firstEntityData?.folder?.id}
+            />
             <Watchers
               entities={entitiesToQuery}
               entityType={activeEntityType}
               options={projectUsers || []}
               onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
               userName={user.name}
-            />
-            <Button
-              icon="picture_in_picture"
-              variant={'text'}
-              data-tooltip="Picture in Picture"
-              onClick={handleOpenPip}
             />
 
             {onClose && (
@@ -404,6 +463,8 @@ DetailsPanelProps) => {
           entityTypeIcons={entityTypeIcons}
           onOpenViewer={(args) => onOpenViewer?.(args)}
           onEntityFocus={onEntityFocus}
+          thumbnailInputRef={thumbnailInputRef}
+          versionsInputRef={versionsInputRef}
         />
 
         <ProjectContextProvider projectName={firstProject}>
@@ -468,7 +529,7 @@ DetailsPanelProps) => {
           )}
         </ProjectContextProvider>
       </Styled.Panel>
-    </>
+    </ThumbnailUploadProvider>
   )
 }
 

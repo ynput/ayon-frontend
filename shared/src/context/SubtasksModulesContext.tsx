@@ -1,7 +1,8 @@
-import { FC, ReactNode, createContext, useContext, useEffect } from 'react'
+import { FC, ReactNode, useContext, useEffect } from 'react'
 import { useLoadModule } from '@shared/hooks'
 import { SubtasksManagerProps } from '@shared/components'
 import { usePowerpack } from './PowerpackContext'
+import { SubtasksModulesContext } from './SubtasksModulesContextInstance'
 
 const SubtasksManagerFallback: FC<SubtasksManagerProps> = (props) => {
   const { setPowerpackDialog } = usePowerpack()
@@ -15,13 +16,11 @@ const SubtasksManagerFallback: FC<SubtasksManagerProps> = (props) => {
   return null
 }
 
-interface SubtasksModulesContextType {
+export interface SubtasksModulesContextType {
   SubtasksManager: typeof SubtasksManagerFallback
   requiredVersion: string | undefined
   isLoading: boolean
 }
-
-const SubtasksModulesContext = createContext<SubtasksModulesContextType | undefined>(undefined)
 
 export const SubtasksModulesProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [SubtasksManager, { outdated, isLoading }] = useLoadModule({

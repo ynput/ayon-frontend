@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 
 export interface ConfirmDeleteOptions extends Omit<ConfirmDialogOptions, 'accept'> {
   label?: string
-  message?: string
+  message?: string | React.ReactNode
   deleteLabel?: string
   accept?: () => Promise<any>
   showToasts?: boolean

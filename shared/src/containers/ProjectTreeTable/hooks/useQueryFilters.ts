@@ -92,8 +92,9 @@ export const useQueryFilters = ({
         return true
       })
 
-      // Join multiple search conditions into one space-separated fuzzy search string
-      fuzzySearchFilter = searchValues.join(' ')
+      // Join chips with commas — backend resolvers split on comma for OR semantics
+      // (each chip = one AND-group, chips are OR'd). Space-join would AND all terms.
+      fuzzySearchFilter = searchValues.join(', ')
 
       // If there are remaining conditions, keep them; otherwise set empty conditions
       combinedQueryFilter = remainingConditions.length

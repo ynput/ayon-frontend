@@ -162,7 +162,7 @@ const YnputConnector = ({
       </Styled.DropdownContainer>
       {showStudioLink && isConnected && (
         <Styled.Links>
-          <Link to={`https://ynput.cloud/org/${connectData.orgName}`} target="_blank">
+          <Link to={`https://ynput.cloud/orgs/${connectData.orgId}`} target="_blank">
             <Button variant="tertiary">
               Ynput Cloud Account
               <Icon icon="arrow_right_alt" />

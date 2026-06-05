@@ -7,12 +7,14 @@ const useDraggable = <T extends { id: string }, U>({
   creator,
   initialData,
   onChange,
+  onCommit,
   normalizer,
   mergeIncomingData,
 }: {
   creator: () => T
   initialData: T[]
   onChange: (data: U[]) => void
+  onCommit?: (data: U[]) => void
   normalizer: (data: T[]) => U[]
   mergeIncomingData?: (currentData: T[], incomingData: T[]) => T[]
 }) => {
@@ -58,6 +60,16 @@ const useDraggable = <T extends { id: string }, U>({
       updateAndSync([...items.slice(0, idx), updatedItem, ...items.slice(idx + 1)])
     }
 
+  const handleCommitItem =
+    (idx: number) => (attrs: (keyof T)[], values: (boolean | string | undefined)[]) => {
+      if (!onCommit) return
+      let updatedItem: T = { ...items[idx] }
+      //@ts-ignore
+      attrs.map((attr, index) => (updatedItem[attr] = values[index]))
+      const nextItems = [...items.slice(0, idx), updatedItem, ...items.slice(idx + 1)]
+      onCommit(normalizer(nextItems))
+    }
+
   const handleDuplicateItem = (idx: number, overrides: Partial<T>) => {
     updateAndSync([
       ...items.slice(0, idx + 1),
@@ -98,6 +110,7 @@ const useDraggable = <T extends { id: string }, U>({
     handleAddItem,
     handleRemoveItem,
     handleChangeItem,
+    handleCommitItem,
     handleDuplicateItem,
     handleDraggableEnd,
   }

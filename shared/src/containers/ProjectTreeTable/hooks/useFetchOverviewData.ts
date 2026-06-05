@@ -111,7 +111,7 @@ export const useFetchOverviewData = ({
   const {
     data: foldersByTaskFilter,
     isUninitialized,
-    isFetching: isFetchingTasksFolders,
+    isLoading: isLoadingTasksFolders,
     isUninitialized: isUninitializedTasksFolders,
     refetch: refetchTasksFolders,
   } = useGetSearchFoldersQuery(
@@ -119,9 +119,8 @@ export const useFetchOverviewData = ({
       projectName,
       folderSearchRequest: {
         taskFilter: taskFilters.filter?.conditions?.length ? taskFilters.filter : undefined,
-        taskSearch: taskFilters.search,
         folderFilter: folderFilters.filter?.conditions?.length ? folderFilters.filter : undefined,
-        folderSearch: folderFilters.search,
+        search: taskFilters.search,
       },
     },
     {
@@ -206,9 +205,15 @@ export const useFetchOverviewData = ({
         }
       }
 
-      // Process each filtered folder to add its parents
-      for (const folderId of foldersByTaskFilter) {
-        addParents(folderId)
+      // In flat folder view folders are shown as top-level rows — ancestors are
+      // not needed and would bring in unrelated subtrees (e.g. showing the root
+      // "assets" node which then exposes all its children).
+      // In hierarchy mode ancestors ARE needed so the tree path is navigable.
+      if (!isFlatFolderView) {
+        const matchedIds = [...relevantFolderIds]
+        for (const folderId of matchedIds) {
+          addParents(folderId)
+        }
       }
 
       // Third pass: Build the final map using only relevant folders
@@ -263,7 +268,7 @@ export const useFetchOverviewData = ({
     }
 
     return map
-  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders, foldersLinks])
+  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders, foldersLinks, isFlatFolderView])
 
   // calculate partial loading states
   const loadingTasksForParents = useMemo(() => {
@@ -462,7 +467,10 @@ export const useFetchOverviewData = ({
       }
 
       if (tasksByFolderMap.has(folderId)) {
-        tasksByFolderMap.get(folderId)!.push(taskId)
+        // dedup like tasksMap — resolvedTasks can contain the same task twice
+        // (overlapping infinite-query pages, or a task in multiple groups)
+        const folderTaskIds = tasksByFolderMap.get(folderId)!
+        if (!folderTaskIds.includes(taskId)) folderTaskIds.push(taskId)
       } else {
         tasksByFolderMap.set(folderId, [taskId])
       }
@@ -525,7 +533,7 @@ export const useFetchOverviewData = ({
     tasksMap: tasksMap,
     tasksByFolderMap: tasksByFolderMap,
     isLoadingAll:
-      isLoadingFolders || isLoadingTasksList || isFetchingTasksFolders || isLoadingModules, // these all show a full loading state
+      isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders || isLoadingModules, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     fetchNextPage: handleFetchNextPage,

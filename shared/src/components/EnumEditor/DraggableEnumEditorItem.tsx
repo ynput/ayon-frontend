@@ -22,6 +22,7 @@ export interface DraggableEnumEditorItemProps
   item: AttributeData
   isBeingDragged?: boolean
   onChange?: (attr: (keyof AttributeData)[], value: (boolean | string | undefined)[]) => void
+  onCommit?: (attr: (keyof AttributeData)[], value: (boolean | string | undefined)[]) => void
   onRemove?: () => void
   onDuplicate?: () => void
   pt?: DraggableEnumEditorItemPt
@@ -31,6 +32,7 @@ const DraggableEnumEditorItem = ({
   item,
   isBeingDragged,
   onChange,
+  onCommit,
   onRemove,
   onDuplicate,
   pt,
@@ -82,6 +84,7 @@ const DraggableEnumEditorItem = ({
         <EnumEditorItem
           item={item}
           onChange={onChange}
+          onCommit={onCommit}
           onRemove={onRemove}
           onDuplicate={onDuplicate}
           showRemoveButton={true}

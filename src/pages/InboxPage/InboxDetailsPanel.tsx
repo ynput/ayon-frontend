@@ -6,6 +6,10 @@ import { useGetUsersAssigneeQuery } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { openViewer } from '@state/viewer'
+import { productSelected } from '@state/context'
+import { UploadVersionDialog, VersionUploadProvider } from '@shared/components'
+import { ProjectContextProvider } from '@shared/context'
+import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import type { GroupedMessage, ProjectsInfo } from './types'
 
 interface InboxDetailsPanelProps {
@@ -38,32 +42,49 @@ const InboxDetailsPanel = ({
 
   const projectInfo = projectName ? projectsInfo[projectName] : undefined
 
+  const handleNewVersionUploaded = (productId: string, versionId: string) => {
+    dispatch(productSelected({ products: [productId], versions: [versionId] }))
+  }
+
   return (
-    <>
-      <DetailsPanel
-        isOpen={!!selected.length}
-        entities={[{ id: entityId ?? '', projectName: projectName ?? '' }]}
-        tagsOptions={projectInfo?.tags || []}
-        projectUsers={users}
-        activeProjectUsers={users}
-        disabledProjectUsers={[]}
-        projectsInfo={projectsInfo as Record<string, any>}
-        projectNames={projectName ? [projectName] : []}
-        onClose={onClose}
-        entityType={entityType as 'folder' | 'task' | 'version' | 'representation' | undefined}
-        entitySubTypes={entitySubType ? [entitySubType] : undefined}
-        scope="inbox"
-        onWatchersUpdate={(added) => {
-          if (user && added.includes(user)) {
-            const name = selectedMessage?.messages?.[0]?.origin?.name
-            toast.success(`All future updates for ${name} will appear in your important inbox.`)
-          }
-        }}
-        style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
-        onOpenViewer={handleOpenViewer}
-      />
-      <DetailsPanelSlideOut projectsInfo={projectsInfo as Record<string, any>} scope="inbox" />
-    </>
+    <EntityListsContextBoundary projectName={projectName}>
+      {(entityListsContext) => (
+
+        <ProjectContextProvider key={projectName ?? ''} projectName={projectName ?? ''}>
+          <VersionUploadProvider
+            projectName={projectName ?? ''}
+            dispatch={dispatch}
+            onVersionCreated={handleNewVersionUploaded}
+          >
+          <DetailsPanel
+            isOpen={!!selected.length}
+            entities={[{ id: entityId ?? '', projectName: projectName ?? '' }]}
+            tagsOptions={projectInfo?.tags || []}
+            projectUsers={users}
+            activeProjectUsers={users}
+            disabledProjectUsers={[]}
+            projectsInfo={projectsInfo as Record<string, any>}
+            projectNames={projectName ? [projectName] : []}
+            onClose={onClose}
+            entityType={entityType as 'folder' | 'task' | 'version' | 'representation' | undefined}
+            entitySubTypes={entitySubType ? [entitySubType] : undefined}
+            scope="inbox"
+            entityListsContext={entityListsContext}
+            onWatchersUpdate={(added) => {
+              if (user && added.includes(user)) {
+                const name = selectedMessage?.messages?.[0]?.origin?.name
+                toast.success(`All future updates for ${name} will appear in your important inbox.`)
+              }
+            }}
+            style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
+            onOpenViewer={handleOpenViewer}
+          />
+          <DetailsPanelSlideOut projectsInfo={projectsInfo as Record<string, any>} scope="inbox" />
+            <UploadVersionDialog />
+          </VersionUploadProvider>
+        </ProjectContextProvider>
+      )}
+    </EntityListsContextBoundary>
   )
 }
 

@@ -1,5 +1,5 @@
 import { AttributeField } from '@shared/components'
-import { SortCardType, SettingsSortingDropdown } from '@ynput/ayon-react-components'
+import { SortCardType, SortingDropdown as SettingsSortingDropdown } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 
 interface VPTableSortingSettingProps {

@@ -195,6 +195,8 @@ const UserDetail = ({
   setShowRenameUser,
   selectedUsers,
   setShowSetPassword,
+  setShowDeleteUser,
+  setShowInviteUser,
   setSelectedUsers,
   isSelfSelected,
   selectedUserList,
@@ -273,7 +275,25 @@ const UserDetail = ({
   // check if any users have the userLevel of service
   const hasServiceUser = formUsers.some((user) => user.isService)
 
+  const deleteLabel = formUsers.length === 1 ? 'Delete user' : 'Delete users'
+
+  const headerMenuItems = [
+    {
+      id: 'delete',
+      label: deleteLabel,
+      icon: 'delete',
+      danger: true,
+      disabled: !selectedUsers.length || isSelfSelected || managerDisabled,
+      onClick: () => setShowDeleteUser?.(selectedUsers),
+    },
+  ]
+
   const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation()
+
+  const handleInvite = () => {
+    if (!singleUserEdit) return
+    setShowInviteUser?.(true)
+  }
 
   //
   // API
@@ -392,6 +412,7 @@ const UserDetail = ({
         users={formUsers}
         onClose={onClose}
         subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
+        menuItems={headerMenuItems}
       />
       {hasServiceUser && singleUserEdit ? (
         <FormsStyled>
@@ -436,6 +457,9 @@ const UserDetail = ({
                 isPoolMixed={formData._mixedFields.includes('userPool')}
                 onPoolChange={(value) => setFormData({ ...formData, userPool: value })}
                 isDisabled={isSelfSelected}
+                user={singleUserEdit}
+                onInvite={handleInvite}
+                inviteDisabled={managerDisabled}
               />
             </Panel>
           )}

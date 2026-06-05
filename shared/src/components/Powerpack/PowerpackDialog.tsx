@@ -1,10 +1,9 @@
 import * as Styled from './PowerpackDialog.styled'
 import { FC, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
-import { PricingLink } from './PricingLink'
+import { FreeTrialLink } from './FreeTrialLink'
 import { powerpackFeatureOrder, powerpackFeatures, usePowerpack } from '@shared/context'
 import type { PowerpackDialogType } from '@shared/context/PowerpackContext'
-import { useFeedback } from '@shared/components'
 import { CTAButton } from './CTAButton'
 
 export interface PowerpackDialogProps {
@@ -13,6 +12,7 @@ export interface PowerpackDialogProps {
   features?: Record<string, Pick<PowerpackDialogType, 'bullet' | 'icon'>>
   isCloseable?: boolean
   addon?: {
+    name: string
     icon: string
   }
 }
@@ -26,7 +26,6 @@ export const PowerpackDialog: FC<PowerpackDialogProps> = ({
 }) => {
   const [showAll, setShowAll] = useState(false)
   const { setPowerpackDialog, selectedPowerPack, powerpackDialog, addonDialog } = usePowerpack()
-  const { openSupport, messengerLoaded } = useFeedback()
 
   // Determine if we're showing an addon dialog (from context or props)
   const isAddon = !!addon || !!addonDialog
@@ -43,12 +42,6 @@ export const PowerpackDialog: FC<PowerpackDialogProps> = ({
   const activeIcon = addon?.icon ?? (addonDialog ? addonDialog.icon : 'bolt')
 
   if (!powerpackDialog && !addonDialog && (!label || !description)) return null
-
-  // Dynamic support message
-  const featureLabel = activeLabel ?? (isAddon ? 'this addon' : 'this feature')
-  const SUPPORT_MESSAGE = isAddon
-    ? `I would like to know how I can try out the "${featureLabel}" addon?`
-    : `I would like to know how I can try out the "${featureLabel}" power feature?`
 
   // Resolve the features list and sort it
   const resolveFeatures = (): [string, Pick<PowerpackDialogType, 'bullet' | 'icon'>][] => {
@@ -146,13 +139,9 @@ export const PowerpackDialog: FC<PowerpackDialogProps> = ({
           <Styled.ShowAll onClick={() => setShowAll(true)}>Show all</Styled.ShowAll>
         )}
       </Styled.FeaturesList>
-      {messengerLoaded ? (
-        <CTAButton onClick={() => openSupport('NewMessage', SUPPORT_MESSAGE)} />
-      ) : (
-        <PricingLink>
-          <CTAButton />
-        </PricingLink>
-      )}
+      <FreeTrialLink addon={addon?.name}>
+        <CTAButton />
+      </FreeTrialLink>
     </Styled.PowerpackDialog>
   )
 }

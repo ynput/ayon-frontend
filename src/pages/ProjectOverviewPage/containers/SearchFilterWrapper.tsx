@@ -1,17 +1,13 @@
-import styled from 'styled-components'
 import { BuildFilterOptions, useBuildFilterOptions, ScopeWithFilterTypes } from '@shared/components'
 import { FC, useMemo, useState, useEffect, useRef } from 'react'
 import {
-  Dialog,
   Filter,
-  FormRow,
   Icon,
-  InputDate,
-  SaveButton,
   SearchFilter,
   SearchFilterProps,
   SearchFilterRef,
   SEARCH_FILTER_ID,
+  buildFilterId,
 } from '@ynput/ayon-react-components'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
@@ -22,18 +18,9 @@ import {
   queryFilterToClientFilter,
   clientFilterToQueryFilter,
 } from '@shared/containers/ProjectTreeTable/utils'
-import {
-  CUSTOM_RANGE_ID,
-  CUSTOM_RANGE_ICON,
-  detectRelativeDatePattern,
-} from '@shared/components/SearchFilter/filterDates'
-import { startOfDay, endOfDay, format, parse } from 'date-fns'
-
-const DialogBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`
+import { useDateRangeFilter } from '@components/SearchFilter/useDateRangeFilter'
+import { CustomDateRangeDialog } from '@components/SearchFilter/CustomDateRangeDialog'
+import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 
 interface SearchFilterWrapperProps
   extends Omit<BuildFilterOptions, 'scope' | 'scopes' | 'data' | 'power'>,
@@ -114,14 +101,20 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   const searchFilterRef = useRef<SearchFilterRef>(null)
 
-  // Custom date range picker state
-  const [customRangeFilterId, setCustomRangeFilterId] = useState<string | null>(null)
-  const [customStartDate, setCustomStartDate] = useState('')
-  const [customEndDate, setCustomEndDate] = useState('')
+  // Custom date range
+  const dateRange = useDateRangeFilter()
 
   // Track which datetime filter the user is currently interacting with
-  const activeDatetimeFilterRef = useRef<string | null>(null)
   const lastInteractedFilterRef = useRef<string | null>(null)
+
+  // Active search-chip edit: set when user clicks a search chip to edit it.
+  // The dropdown opens in edit mode; our Enter interceptor updates/removes the chip.
+  const editingSearchChipRef = useRef<string | null>(null)
+
+  // Mirror of localFilters for use inside async DOM event handlers (keydown on
+  // the dropdown input) that need the latest filters without stale closures.
+  const localFiltersRef = useRef<Filter[]>(localFilters)
+  localFiltersRef.current = localFilters
 
   useEffect(() => {
     setLocalFilters(filters)
@@ -129,18 +122,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   // Track the active datetime filter from onChange events
   const handleFilterChange = (newFilters: Filter[]) => {
-    // Track the most recently added/modified datetime filter
-    const datetimeFilter = newFilters.find(
-      (f) => f.type === 'datetime' && !localFilters.some((lf) => lf.id === f.id),
-    )
-    if (datetimeFilter) {
-      activeDatetimeFilterRef.current = datetimeFilter.id
-    }
-
     // Check if a relative date filter is being clicked to edit it
     // If so, auto-open the edit dialog instead of allowing dropdown
-    const modifiedDatetimeFilter = newFilters.find((f) => f.type === 'datetime' && f.id !== lastInteractedFilterRef.current)
-    if (modifiedDatetimeFilter && modifiedDatetimeFilter.values && modifiedDatetimeFilter.values.length > 0) {
+    const modifiedDatetimeFilter = newFilters.find(
+      (f) => f.type === 'datetime' && f.id !== lastInteractedFilterRef.current,
+    )
+    if (
+      modifiedDatetimeFilter &&
+      modifiedDatetimeFilter.values &&
+      modifiedDatetimeFilter.values.length > 0
+    ) {
       const rangeValue = modifiedDatetimeFilter.values[0]
       if (rangeValue.id && rangeValue.id.startsWith('custom-')) {
         // This is a custom date range — check if it matches a relative pattern
@@ -162,148 +153,40 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     }
     lastInteractedFilterRef.current = null
 
-    // Strip any custom-range values that might slip through, but keep empty datetime
-    // filters so SearchFilter can maintain its intermediate state (user selected the
-    // filter type but hasn't picked a preset yet)
-    const cleanedFilters = newFilters.map((f) => {
-      if (f.type === 'datetime' && f.values?.some((v) => v.id === CUSTOM_RANGE_ID)) {
-        return {
-          ...f,
-          values: f.values?.filter((v) => v.id !== CUSTOM_RANGE_ID),
-        }
-      }
-      return f
-    })
-
-    validateFilters(cleanedFilters, setLocalFilters)
+    dateRange.wrapFilterChange(newFilters, localFilters, (cleaned) =>
+      validateFilters(cleaned, setLocalFilters),
+    )
   }
 
-  const handleCustomRangeApply = () => {
-    if (!customRangeFilterId || !customStartDate || !customEndDate) return
+  const handleCustomRangeApply = () =>
+    dateRange.handleCustomRangeApply(localFilters, options, handleFinish, searchFilterRef)
 
-    const baseFilterId = customRangeFilterId.split('__')[0]
-    const filterOption = options.find((o) => o.id === baseFilterId)
-    if (!filterOption) return
+  const handleCustomRangeClose = () => dateRange.handleCustomRangeClose()
 
-    // Parse as local dates (not UTC) to avoid off-by-one timezone issues
-    const start = startOfDay(parse(customStartDate, 'yyyy-MM-dd', new Date()))
-    const end = endOfDay(parse(customEndDate, 'yyyy-MM-dd', new Date()))
-
-    // Validate the range
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return
-
-    const currentYear = new Date().getFullYear()
-    const endDateFormat = end.getFullYear() === currentYear ? 'MMM d' : 'MMM d, yyyy'
-    const dateValue = {
-      id: `custom-${start.toISOString()}-${end.toISOString()}`,
-      label: `${format(start, 'MMM d')} – ${format(end, endDateFormat)}`,
-      values: [
-        { id: start.toISOString(), label: format(start, 'MMM d, yyyy') },
-        { id: end.toISOString(), label: format(end, 'MMM d, yyyy') },
-      ],
-    }
-
-    const newFilter: Filter = {
-      id: customRangeFilterId,
-      type: 'datetime',
-      label: filterOption.label,
-      icon: filterOption.icon,
-      values: [dateValue],
-      singleSelect: true,
-    }
-
-    const updatedFilters = [
-      ...localFilters.filter((f) => f.id !== customRangeFilterId),
-      newFilter,
-    ]
-
-    handleFinish(updatedFilters)
-
-    setCustomRangeFilterId(null)
-    setCustomStartDate('')
-    setCustomEndDate('')
-
-    // Close the SearchFilter dropdown
-    searchFilterRef.current?.close()
-  }
-
-  const handleCustomRangeClose = () => {
-    setCustomRangeFilterId(null)
-    setCustomStartDate('')
-    setCustomEndDate('')
-  }
-
-  // Find which datetime filter the custom-range click belongs to
-  const findActiveDatetimeFilterId = (): string | null => {
-    // First check the ref (set when a new datetime filter was added/modified)
-    if (activeDatetimeFilterRef.current) {
-      return activeDatetimeFilterRef.current
-    }
-
-    // Check localFilters for datetime filters — prefer one without values (being edited),
-    // then fall back to the most recently added one
-    const datetimeFilters = localFilters.filter((f) => f.type === 'datetime')
-    const emptyDatetime = datetimeFilters.find((f) => !f.values || f.values.length === 0)
-    if (emptyDatetime) return emptyDatetime.id
-    if (datetimeFilters.length > 0) return datetimeFilters[datetimeFilters.length - 1].id
-
-    // Last resort: return the first datetime option from available options
-    const datetimeOption = options.find((o) => o.type === 'datetime')
-    return datetimeOption?.id || null
-  }
-
-  // Parse custom date range ID and populate form fields
-  const handleOpenCustomRangeForFilter = (filterId: string) => {
-    const filter = localFilters.find((f) => f.id === filterId)
-    if (!filter || filter.type !== 'datetime' || !filter.values || filter.values.length === 0) {
-      // No existing values — open fresh dialog
-      setCustomRangeFilterId(filterId)
-      setCustomStartDate('')
-      setCustomEndDate('')
-      return
-    }
-
-    const rangeValue = filter.values[0]
-    // Check if it's a custom date range (ID format: custom-${startISO}-${endISO})
-    if (rangeValue.id && rangeValue.id.startsWith('custom-')) {
-      // Extract ISO strings from the custom date ID
-      const customId = rangeValue.id as string
-      const isoStrings = customId.replace('custom-', '').split('-')
-
-      // Handle the ISO format which contains dashes in the date part
-      // Format: 2025-03-05T00:00:00.000Z-2025-03-10T23:59:59.999Z
-      // We need to find the split point (the T separates date from time)
-      if (isoStrings.length >= 2) {
-        // Find where the second ISO date starts (after the first Z)
-        const customIdContent = customId.replace('custom-', '')
-        const firstEndIndex = customIdContent.indexOf('Z')
-        if (firstEndIndex > 0) {
-          const startISO = customIdContent.substring(0, firstEndIndex + 1)
-          const endISO = customIdContent.substring(firstEndIndex + 2) // skip the dash after Z
-
-          if (startISO && endISO) {
-            // Convert to yyyy-MM-dd format for the date input
-            const startDate = parse(startISO, "yyyy-MM-dd'T'HH:mm:ss.SSSx", new Date())
-            const endDate = parse(endISO, "yyyy-MM-dd'T'HH:mm:ss.SSSx", new Date())
-
-            setCustomStartDate(format(startDate, 'yyyy-MM-dd'))
-            setCustomEndDate(format(endDate, 'yyyy-MM-dd'))
-            setCustomRangeFilterId(filterId)
-            return
-          }
-        }
-      }
-    }
-
-    // For non-custom values or if parsing fails, open fresh dialog
-    setCustomRangeFilterId(filterId)
-    setCustomStartDate('')
-    setCustomEndDate('')
-  }
+  const handleOpenCustomRangeForFilter = (filterId: string) =>
+    dateRange.openCustomRangeForFilter(filterId, localFilters)
 
   const validateFilters = (filters: Filter[], callback: (filters: Filter[]) => void) => {
-    // if a filter is a date then check we have power features
     let validFilters = [...filters]
+
+    // Expand comma-separated custom values into individual values so pasted lists
+    // from spreadsheets (newlines/tabs are normalised to commas on paste) become
+    // multiple OR-ed conditions rather than a single LIKE on the joined string.
+    validFilters = validFilters.map((f) => {
+      if (!f.values?.length) return f
+      const expanded = f.values.flatMap((v) => {
+        const id = (v as any).id
+        const isCustom = (v as any).isCustom === true
+        if (!isCustom || typeof id !== 'string' || !id.includes(',')) return [v]
+        return id
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((p) => ({ ...(v as any), id: p, label: p }))
+      })
+      const deduped = Array.from(new Map(expanded.map((v) => [String((v as any).id), v])).values())
+      return { ...f, values: deduped }
+    })
 
     // Merge multiple text search filters (SEARCH_FILTER_ID) into one filter
     const searchFilters = validFilters.filter((f) => f.id.startsWith(SEARCH_FILTER_ID))
@@ -326,6 +209,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   }
 
   const handleFinish = (filters: Filter[]) => {
+    // Dropdown closed (or filters committed) — search-chip edit session ends
+    editingSearchChipRef.current = null
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
       const queryFilter = clientFilterToQueryFilter(validFilters)
@@ -335,7 +220,112 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   const { dropdown, searchBar, ...ptRest } = pt || {}
 
-  // Intercept clicks on datetime filter chips to open the edit dialog
+  // Spreadsheet paste: replace newlines/tabs with commas so the list becomes
+  // multiple OR-ed values (downstream split happens in validateFilters and the
+  // auto-fill onClick path). The input is React-controlled, so we preventDefault
+  // and inject via the native setter to trigger its onChange.
+  const handleDropdownPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    if (!(target instanceof HTMLInputElement)) return
+    const text = e.clipboardData?.getData('text') ?? ''
+    if (!/[\r\n\t]/.test(text)) return
+    e.preventDefault()
+    e.stopPropagation()
+
+    const normalized = text
+      .replace(/[\r\n\t]+/g, ',')
+      .replace(/,+/g, ',')
+      .replace(/^,|,$/g, '')
+
+    const input = target
+    const start = input.selectionStart ?? input.value.length
+    const end = input.selectionEnd ?? input.value.length
+    const newValue = input.value.slice(0, start) + normalized + input.value.slice(end)
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+    if (nativeSetter) {
+      nativeSetter.call(input, newValue)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    const caret = start + normalized.length
+    input.setSelectionRange(caret, caret)
+  }
+
+  // Set the dropdown search input value via native setter to trigger React's
+  // controlled onChange inside SearchFilterDropdown
+  const prefillDropdownSearch = (text: string) => {
+    const container = searchFilterRef.current?.getContainerElement()
+    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    if (!input) return
+    const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+    if (nativeSetter) {
+      nativeSetter.call(input, text)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    input.focus()
+    input.select()
+  }
+
+  // Commit the current dropdown input value to the chip being edited.
+  // Empty input removes the chip; non-empty input replaces its single value.
+  const commitSearchChipEdit = (chipId: string, input: HTMLInputElement) => {
+    const text = input.value.trim()
+    const currentFilters = localFiltersRef.current
+    if (!text) {
+      handleFinish(currentFilters.filter((f) => f.id !== chipId))
+    } else {
+      const updated = currentFilters.map((f) =>
+        f.id === chipId ? { ...f, values: [{ id: text, label: text }] } : f,
+      )
+      handleFinish(updated)
+    }
+    editingSearchChipRef.current = null
+    searchFilterRef.current?.close()
+  }
+
+  // While editing a search chip, intercept Enter on the dropdown input AND clicks
+  // on the dropdown's Confirm button so the chip's value gets updated (or removed
+  // if cleared). Without these intercepts the default Confirm path passes the
+  // chip's original values to onConfirmAndClose, discarding the typed edit.
+  const attachSearchEditCommitHandlers = (chipId: string) => {
+    const container = searchFilterRef.current?.getContainerElement()
+    const input = container?.querySelector('ul .search input') as HTMLInputElement | null
+    if (!container || !input) return
+
+    // Confirm button: match the child <span icon="check"> and climb to <button>.
+    // textContent equality fails because it concatenates the icon's "check" text.
+    const confirmBtn = container
+      .querySelector('.toolbar span[icon="check"]')
+      ?.closest('button') as HTMLButtonElement | null
+
+    const cleanup = () => {
+      input.removeEventListener('keydown', onKeyDown, true)
+      confirmBtn?.removeEventListener('click', onConfirmClick, true)
+    }
+
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key !== 'Enter') return
+      if (editingSearchChipRef.current !== chipId) return
+      ev.preventDefault()
+      ev.stopPropagation()
+      cleanup()
+      commitSearchChipEdit(chipId, input)
+    }
+
+    const onConfirmClick = (ev: MouseEvent) => {
+      if (editingSearchChipRef.current !== chipId) return
+      ev.preventDefault()
+      ev.stopPropagation()
+      cleanup()
+      commitSearchChipEdit(chipId, input)
+    }
+
+    input.addEventListener('keydown', onKeyDown, true) // capture phase: run before React's bubble handler
+    confirmBtn?.addEventListener('click', onConfirmClick, true)
+  }
+
+  // Intercept clicks on filter chips (search prefill + datetime edit dialog)
   const handleSearchBarClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
 
@@ -344,6 +334,24 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
     const chipEl = target.closest('.search-filter-item')
     if (!chipEl) return
+
+    // Edit a search chip: let the default edit-mode dropdown open, prefill its
+    // input with the chip's current value, and mark this chip as being edited
+    // so the input's Enter handler updates it instead of creating a new filter.
+    const chipId = chipEl.id
+    if (chipId === SEARCH_FILTER_ID || chipId.startsWith(SEARCH_FILTER_ID + '__')) {
+      const filter = localFilters.find((f) => f.id === chipId)
+      if (filter?.values?.length) {
+        const text = (filter.values[0].label || String(filter.values[0].id)).replace(/%/g, '')
+        editingSearchChipRef.current = chipId
+        // Wait for the dropdown to render (after default click handlers fire)
+        requestAnimationFrame(() => {
+          prefillDropdownSearch(text)
+          attachSearchEditCommitHandlers(chipId)
+        })
+      }
+      return
+    }
 
     // Find the label text from the chip (format: "Created At:")
     const labelEl = chipEl.querySelector('.label')
@@ -389,6 +397,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         enableMultipleSameFilters={false}
         enableGlobalSearch={true}
         disabledFilters={disabledFilters}
+        onPasteCapture={handleDropdownPaste}
         pt={{
           searchBar: {
             style: {
@@ -413,12 +422,47 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                   }
 
                   // Custom range: intercept click and open date picker instead
-                  if (listItem.querySelector(`span[icon="${CUSTOM_RANGE_ICON}"]`)) {
-                    const filterId = findActiveDatetimeFilterId()
-                    if (filterId) {
-                      handleOpenCustomRangeForFilter(filterId)
-                    }
+                  if (!dateRange.handleDropdownItemClick(event, localFilters, options)) {
                     return false // prevent SearchFilter from selecting this value
+                  }
+
+                  // Auto-fill: if user typed text and then clicked a filter type,
+                  // create the filter with that text as value and prevent normal flow
+                  // (which would reopen the dropdown to the values panel)
+                  const searchInput = listItem.parentElement?.querySelector(
+                    '.search input',
+                  ) as HTMLInputElement
+                  const searchText = searchInput?.value?.trim() || ''
+
+                  if (searchText) {
+                    const optionId = listItem.id
+                    // Only for top-level filter types (no data-parent = not a value item)
+                    const parentAttr = listItem.getAttribute('data-parent')
+                    if (!parentAttr) {
+                      const matchingOption = options.find((o) => o.id === optionId)
+                      if (matchingOption?.allowsCustomValues) {
+                        const newId = buildFilterId(optionId)
+                        const parts = searchText
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                        const values =
+                          parts.length > 1
+                            ? parts.map((v) => ({ id: v, label: v, isCustom: true }))
+                            : [{ id: searchText, label: searchText, isCustom: true }]
+                        const newFilter: Filter = {
+                          id: newId,
+                          label: matchingOption.label,
+                          type: matchingOption.type,
+                          icon: matchingOption.icon,
+                          values,
+                        }
+
+                        handleFinish([...localFilters, newFilter])
+                        searchFilterRef.current?.close()
+                        return false // prevent SearchFilter from reopening values panel
+                      }
+                    }
                   }
 
                   return true
@@ -437,42 +481,19 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         }}
         {...props}
       />
-      <Dialog
-        isOpen={!!customRangeFilterId}
-        onClose={handleCustomRangeClose}
-        header={options.find((o) => o.id === customRangeFilterId?.split('__')[0])?.label || 'Custom range'}
-        size="sm"
-        hideCancelButton
-        footer={
-          <SaveButton
-            label="Confirm"
-            icon="check"
-            onClick={handleCustomRangeApply}
-            active={!!customStartDate && !!customEndDate && customEndDate >= customStartDate}
-          />
+      <CustomDateRangeDialog
+        isOpen={!!dateRange.customRangeFilterId}
+        header={
+          options.find((o) => o.id === dateRange.customRangeFilterId?.split('__')[0])?.label ??
+          'Custom range'
         }
-      >
-        <DialogBody>
-          <FormRow label="Start date">
-            <InputDate
-              {...{
-                selected: customStartDate ? new Date(customStartDate) : undefined,
-                onChange: (date: Date | null) => setCustomStartDate(date ? format(date, 'yyyy-MM-dd') : ''),
-                autoFocus: true,
-              } as any}
-            />
-          </FormRow>
-          <FormRow label="End date">
-            <InputDate
-              {...{
-                selected: customEndDate ? new Date(customEndDate) : undefined,
-                onChange: (date: Date | null) => setCustomEndDate(date ? format(date, 'yyyy-MM-dd') : ''),
-                openToDate: customStartDate ? new Date(customStartDate) : undefined,
-              } as any}
-            />
-          </FormRow>
-        </DialogBody>
-      </Dialog>
+        startDate={dateRange.customStartDate}
+        endDate={dateRange.customEndDate}
+        onStartDateChange={dateRange.setCustomStartDate}
+        onEndDateChange={dateRange.setCustomEndDate}
+        onApply={handleCustomRangeApply}
+        onClose={handleCustomRangeClose}
+      />
     </>
   )
 }

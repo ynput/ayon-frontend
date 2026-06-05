@@ -10,7 +10,7 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
 import { useGetUsersQuery } from '@shared/api'
-import { useListProjectsQuery } from '@shared/api'
+import { useGlobalContext } from '@shared/context'
 
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import {
@@ -87,7 +87,9 @@ const ProjectUserAccess = () => {
     isError: usersFetchError,
   } = useGetUsersQuery({ selfName })
 
-  const users = userList.filter((user: UserNode) => !user.isAdmin && !user.isManager && user.active && !user.isService)
+  const users = userList.filter(
+    (user: UserNode) => !user.isAdmin && !user.isManager && user.active && !user.isService,
+  )
   const mappedUsers = mapUsersByAccessGroups(projectUsers)
 
   const [actionedUsers, setActionedUsers] = useState<string[]>([])
@@ -96,10 +98,10 @@ const ProjectUserAccess = () => {
     SelectedAccessGroupUsers | undefined
   >()
 
-  const { data: projects, isLoading: isLoadingProjects, isError, error } = useListProjectsQuery({})
-  if (isError) {
-    console.error(error)
-  }
+  const {
+    projects: { all: projects = [] },
+    isLoading,
+  } = useGlobalContext()
 
   const { setDisabled } = useShortcutsContext()
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
@@ -302,8 +304,7 @@ const ProjectUserAccess = () => {
       {
         key: 'a',
         action: () => {
-          if (
-            (!selectedAccessGroupUsers?.users || selectedAccessGroupUsers!.users.length == 0)) {
+          if (!selectedAccessGroupUsers?.users || selectedAccessGroupUsers!.users.length == 0) {
             return
           }
 
@@ -337,7 +338,7 @@ const ProjectUserAccess = () => {
       <ProjectUserAccessProjectList
         selection={filteredSelectedProjects}
         projects={filteredProjects}
-        isLoading={isLoadingProjects}
+        isLoading={isLoading.projects}
         // @ts-ignore
         userPermissions={userPermissions}
         onSelectionChange={setSelectedProjects}
@@ -415,7 +416,7 @@ const ProjectUserAccess = () => {
     </>
   )
 
-  if (permissionsLoading || isLoadingUsers || isLoadingProjects) {
+  if (permissionsLoading || isLoadingUsers || isLoading.projects) {
     return <LoadingPage message={''} children={''} />
   }
 

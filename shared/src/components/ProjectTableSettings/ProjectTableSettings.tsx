@@ -9,7 +9,7 @@ import { FC } from 'react'
 import styled from 'styled-components'
 import { SettingHighlightedId, useProjectContext, useSettingsPanel } from '@shared/context'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
-import ColumnsSettings from './ColumnsSettings'
+import { ColumnsSettingsWithContext } from './ColumnsSettings'
 import { SizeSlider } from '@shared/components'
 import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
@@ -46,6 +46,7 @@ export type ProjectTableSettingsProps = {
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId
   includeLinks?: boolean
+  hideSortBy?: boolean
   order?: string[]
   scope?: string
 }
@@ -57,6 +58,7 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   hiddenSettings = [],
   highlighted,
   includeLinks = true,
+  hideSortBy = false,
   order,
   scope,
 }) => {
@@ -166,9 +168,9 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${visibleColumns.length}`,
-      component: <ColumnsSettings columns={visibleColumns} highlighted={highlighted} />,
+      component: <ColumnsSettingsWithContext columns={visibleColumns} highlighted={highlighted} />,
     },
-    sortBySettings,
+    hideSortBy ? null : sortBySettings,
     groupBySettings,
     {
       id: 'row-height',

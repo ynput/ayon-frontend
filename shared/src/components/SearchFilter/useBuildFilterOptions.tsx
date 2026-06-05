@@ -36,6 +36,7 @@ export type FilterFieldType =
   | 'folderType'
   | 'taskType'
   | 'productType'
+  | 'productBaseType'
   | ('users' | 'assignees' | 'author')
   | 'attributes'
   | 'status'
@@ -78,6 +79,7 @@ export type BuildFilterOptions = {
     assignees?: string[]
     productTypes?: ProductType[]
     productNames?: string[]
+    productBaseTypes?: string[]
   }
   columnOrder?: ColumnOrderState
   config?: FilterConfig
@@ -138,6 +140,16 @@ export const useBuildFilterOptions = ({
       empty: true,
     },
     { skip: !projectNames?.length || !fieldInScopes('productType') },
+  )
+
+  const { data: { groups: productBaseTypes = [] } = {} } = useGetEntityGroupsQuery(
+    {
+      entityType: 'product',
+      groupingKey: 'productBaseType',
+      projectName: projectNames[0],
+      empty: true,
+    },
+    { skip: !projectNames?.length || !fieldInScopes('productBaseType') },
   )
 
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
@@ -232,6 +244,43 @@ export const useBuildFilterOptions = ({
         let subTypes = getSubTypes({ projectsInfo, productTypes }, 'product')
         entitySubTypeOption.values?.push(...subTypes)
         options.push(entitySubTypeOption)
+      }
+    }
+
+    // PRODUCT BASE TYPE
+    // add productBaseType option
+    if (scopeFilterTypes.includes('productBaseType') && currentScope !== 'user') {
+      const productBaseTypeOption = getOptionRoot(
+        'productBaseType',
+        {
+          ...config,
+          enableOperatorChange: false,
+        },
+        scopePrefix,
+        scopeLabel,
+      )
+      if (productBaseTypeOption) {
+        productBaseTypes.forEach(({ icon, label, value }) => {
+          if (!productBaseTypeOption.values?.some((v) => v.id === value)) {
+            productBaseTypeOption.values?.push({
+              id: value,
+              type: 'string',
+              label: label || value,
+              icon: icon || getEntityTypeIcon('product'),
+              inverted: false,
+              values: [],
+            })
+          }
+        })
+        data.productBaseTypes?.forEach((name) => {
+          if (!productBaseTypeOption.values?.some((v) => v.id === name)) {
+            productBaseTypeOption.values?.push({
+              id: name,
+              label: name,
+            })
+          }
+        })
+        options.push(productBaseTypeOption)
       }
     }
     // PRODUCT NAME
@@ -731,6 +780,22 @@ const getOptionRoot = (
         operator: 'OR',
         values: [],
         allowsCustomValues: false,
+        allowHasValue: false,
+        allowNoValue: false,
+        allowExcludes: config?.enableExcludes,
+        operatorChangeable: false,
+      }
+      break
+    case 'productBaseType':
+      rootOption = {
+        id: getRootIdWithPrefix(`productBaseType`),
+        type: 'string',
+        label: formatLabelWithScope(`Product Base Type`),
+        icon: getAttributeIcon('product'),
+        inverted: false,
+        operator: 'OR',
+        values: [],
+        allowsCustomValues: true,
         allowHasValue: false,
         allowNoValue: false,
         allowExcludes: config?.enableExcludes,

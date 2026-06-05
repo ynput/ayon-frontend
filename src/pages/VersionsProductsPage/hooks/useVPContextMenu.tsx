@@ -282,7 +282,11 @@ export const useVPContextMenu = (callbacks?: {
       const selectedEntityIds = meta.selectedRows.length > 0 ? meta.selectedRows : [cell.entityId]
 
       // Filter to only version entities, converting products to their featuredVersion
-      const versionEntities: { entityId: string; entityType: string | undefined }[] = []
+      const versionEntities: {
+        entityId: string
+        entityType: string | undefined
+        hasReviewables?: boolean
+      }[] = []
       let singleVersionName: string | undefined
 
       for (const entityId of selectedEntityIds) {
@@ -290,7 +294,11 @@ export const useVPContextMenu = (callbacks?: {
         if (!entity) continue
 
         if (entity.entityType === 'version') {
-          versionEntities.push({ entityId: entity.id, entityType: 'version' })
+          versionEntities.push({
+            entityId: entity.id,
+            entityType: 'version',
+            hasReviewables: (entity as any).hasReviewables,
+          })
           if (versionEntities.length === 1) {
             singleVersionName = entity.name
           }
@@ -300,6 +308,7 @@ export const useVPContextMenu = (callbacks?: {
             versionEntities.push({
               entityId: product.featuredVersion.id,
               entityType: 'version',
+              hasReviewables: product.featuredVersion.hasReviewables,
             })
             if (versionEntities.length === 1) {
               singleVersionName = product.featuredVersion.name
@@ -319,11 +328,17 @@ export const useVPContextMenu = (callbacks?: {
         }
       }
 
+      // Review sessions only accept versions with reviewables — disable when any selected lacks them
+      const hasAnyNonReviewable = versionEntities.some((v) => v.hasReviewables === false)
+
       // Build the menu items for add to list using versions and reviews data
       const combined = [...versions, ...reviews]
-      const menuItems = buildHierarchicalMenuItems(combined, versionEntities, (list) => {
-        return list.entityListType === 'review-session' ? true : !!reviews.length
-      })
+      const menuItems = buildHierarchicalMenuItems(
+        combined,
+        versionEntities,
+        (list) => (list.entityListType === 'review-session' ? true : !!reviews.length),
+        (list) => list.entityListType === 'review-session' && hasAnyNonReviewable,
+      )
       menuItems.push(newListMenuItem('version', versionEntities))
 
       // Include version name in label if only one version

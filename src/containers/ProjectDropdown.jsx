@@ -1,14 +1,14 @@
-import { useListProjectsQuery } from '@shared/api'
 import { useMemo } from 'react'
+import { useGlobalContext } from '@shared/context'
 import { Dropdown } from '@ynput/ayon-react-components'
 
 const ProjectDropdown = ({ projectName, setProjectName, disabled, style }) => {
-  const { data, isLoading, isError } = useListProjectsQuery({ active: true })
+  const { projects, isLoading, error } = useGlobalContext()
 
   const projectOptions = useMemo(() => {
-    if (isLoading || isError) return []
-    return data.map((i) => ({ value: i.name }))
-  }, [data])
+    if (isLoading || error) return []
+    return projects.active.map((i) => ({ value: i.name }))
+  }, [projects.active, isLoading, error])
 
   let dropwdownStyle = {}
   if (style) dropwdownStyle = style
