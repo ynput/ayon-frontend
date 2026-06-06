@@ -12,7 +12,7 @@ import {
   SummaryCalc,
   SummaryFormat,
   RowScope,
-} from '@shared/containers/ProjectTreeTable/components/TableFooter/summaryTypes'
+} from '@shared/containers/ProjectTreeTable/types/summaryTypes'
 
 // Backend doesn't store summary/summaryScope/summaryFormat on ColumnItemModel yet
 type ColumnItem = ColumnItemModel & {

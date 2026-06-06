@@ -25,7 +25,7 @@ import {
   SummaryCalc,
   SummaryFormat,
   RowScope,
-} from '@shared/containers/ProjectTreeTable/components/TableFooter/summaryTypes'
+} from '@shared/containers/ProjectTreeTable/types/summaryTypes'
 
 type Return = {
   // Filter management

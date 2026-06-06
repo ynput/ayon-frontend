@@ -10,7 +10,7 @@ import {
   ProjectTreeTable,
 } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@context/NewEntityContext'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, usePowerpack } from '@shared/context'
 import { useViewsContext } from '@shared/containers'
 import {
   mergeFieldStats,
@@ -32,6 +32,8 @@ const ProjectOverviewTable = ({}: Props) => {
   const { columnVisibility } = useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
+  // column summaries are a powerpack feature — don't fetch stats without a license
+  const { powerLicense } = usePowerpack()
   const { folderFilters, taskFilters, selectedFolders, selectedTaskIds, foldersMap } =
     useProjectOverviewContext()
 
@@ -69,7 +71,7 @@ const ProjectOverviewTable = ({}: Props) => {
       folderIds: statsFolderIds,
       targets: folderTargets,
     },
-    { skip: !projectName || isLoadingViews },
+    { skip: !projectName || isLoadingViews || !powerLicense },
   )
   const { data: liveTaskStats } = useGetTaskColumnStatsQuery(
     {
@@ -81,7 +83,7 @@ const ProjectOverviewTable = ({}: Props) => {
       taskIds: statsTaskIds,
       targets: taskTargets,
     },
-    { skip: !projectName || isLoadingViews },
+    { skip: !projectName || isLoadingViews || !powerLicense },
   )
   // Primary scope = tasks (the table rows); folder stats feed the
   // "include groups & folders" row scope via groupFieldStats.

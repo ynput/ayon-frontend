@@ -7,6 +7,7 @@ import {
 } from '@shared/containers'
 import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { useProjectDataContext, useViewsContext } from '@shared/containers'
+import { usePowerpack } from '@shared/context'
 import {
   mergeFieldStats,
   buildMetricTargets,
@@ -33,6 +34,8 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   const { columnVisibility } = useColumnSettingsContext()
   // hold stats queries until views load, otherwise targets cover every column
   const { isLoadingViews } = useViewsContext()
+  // column summaries are a powerpack feature — don't fetch stats without a license
+  const { powerLicense } = usePowerpack()
 
   const productTargets = useMemo(
     () =>
@@ -53,11 +56,11 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
   // cells without backend data render blank.
   const { data: productStats } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
-    { skip: !columnStatsArgs.projectName || isLoadingViews },
+    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
   )
   const { data: versionStats } = useGetVersionsColumnStatsQuery(
     { ...columnStatsArgs, targets: versionTargets },
-    { skip: !columnStatsArgs.projectName || isLoadingViews },
+    { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
   )
 
   // Primary scope = versions; product stats feed the "include groups & folders"

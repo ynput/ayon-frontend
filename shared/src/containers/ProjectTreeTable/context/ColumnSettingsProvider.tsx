@@ -12,7 +12,7 @@ import { ROW_SELECTION_COLUMN_ID } from './SelectionCellsContext'
 import { DRAG_HANDLE_COLUMN_ID } from '../utils/pinningUtils'
 import { ColumnsConfig, ColumnSettingsContext, TableGroupBy } from './ColumnSettingsContext'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
-import { SummaryCalc, SummaryFormat, RowScope } from '../components/TableFooter/summaryTypes'
+import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 import { isEqual } from 'lodash'
 
 interface ColumnSettingsProviderProps {

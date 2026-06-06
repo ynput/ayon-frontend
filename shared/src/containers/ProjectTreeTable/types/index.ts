@@ -1,7 +1,15 @@
 export * from './table'
 export * from './overviewContext'
 export * from './operations'
+export * from './summaryTypes'
 
+import type { FieldStats } from '@shared/api'
+import type {
+  MainCountLabels,
+  RowScope,
+  SummaryCalc,
+  SummaryFormat,
+} from './summaryTypes'
 import { OperationModel } from './operations'
 
 export type AttributeEnumItem = {
@@ -82,4 +90,24 @@ type BuiltInFieldOptionKey = TreeTableSubType | 'status' | 'assignee' | 'tag'
 
 export type BuiltInFieldOptions = {
   [key in BuiltInFieldOptionKey]: EnumOption[]
+}
+
+// Props contract for one summary footer cell's content, implemented by the
+// powerpack `summaries/SummaryCellContent` remote module. The host owns the
+// footer row structure (borders, widths, pinning); the remote renders only
+// what's inside a cell. Both sides import this type — changes break the addon.
+export interface SummaryCellContentProps {
+  columnId: string
+  attribs: ProjectTableAttribute[]
+  // raw backend stats; the remote derives per-scope summaries itself
+  fieldStats?: FieldStats[]
+  groupFieldStats?: FieldStats[]
+  calc?: SummaryCalc
+  onCalcChange: (calc: SummaryCalc) => void
+  format?: SummaryFormat
+  onFormatChange: (format: SummaryFormat) => void
+  scope?: RowScope
+  onScopeChange: (scope: RowScope) => void
+  mainCountLabels?: MainCountLabels
+  fieldOptions?: BuiltInFieldOptions
 }

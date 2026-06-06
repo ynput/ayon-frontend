@@ -8,7 +8,7 @@ import {
   SortingState,
 } from '@tanstack/react-table'
 import { GroupByConfig } from '../components/GroupSettingsFallback'
-import { SummaryCalc, SummaryFormat, RowScope } from '../components/TableFooter/summaryTypes'
+import { SummaryCalc, SummaryFormat, RowScope } from '../types/summaryTypes'
 
 export interface TableGroupBy {
   desc: boolean

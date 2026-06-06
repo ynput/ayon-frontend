@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, UIEventHandler } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, memo, CSSProperties, useCallback, useContext, UIEventHandler, FC } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -32,8 +32,8 @@ import buildTreeTableColumns, {
 } from './buildTreeTableColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
-import { TableFooter, useColumnSummaries } from './components/TableFooter'
-import type { FieldStats, MainCountLabels } from './components/TableFooter'
+import { TableFooterRow } from './components/TableFooterRow'
+import type { FieldStats } from '@shared/api'
 import {
   DRAG_HANDLE_COLUMN_ID,
   getCommonPinningStyles,
@@ -73,7 +73,13 @@ import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUti
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import {
+  AttributeEnumItem,
+  ProjectTableAttribute,
+  BuiltInFieldOptions,
+  MainCountLabels,
+  SummaryCellContentProps,
+} from './types'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
@@ -90,6 +96,8 @@ import { SortableContext, verticalListSortingStrategy, useSortable, horizontalLi
 import { CSS } from '@dnd-kit/utilities'
 
 import { useProjectContext } from '@shared/context'
+import { PowerpackContext } from '@shared/context/PowerpackContextInstance'
+import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { EntityMoveData } from '@shared/context/MoveEntityContext'
@@ -100,6 +108,9 @@ type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'>,
   config?: { selection?: string[] },
 ) => Promise<void>
+
+// rendered while the powerpack summaries remote is unavailable (no license / old addon)
+const SummaryCellContentFallback: FC<SummaryCellContentProps> = () => null
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -492,12 +503,22 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  // Column summaries footer data, derived from the fieldStats props.
-  const columnSummaryData = useColumnSummaries({
-    enabled: showColumnSummaries,
-    fieldStats,
-    groupFieldStats,
+  // Summary footer is a powerpack feature: the whole UI lives in the
+  // powerpack `summaries` remote module, gated by the license.
+  // Read the context directly — consumers outside PowerpackProvider must not crash.
+  const powerLicense = useContext(PowerpackContext)?.powerLicense ?? false
+  // load in parallel with the license check (render is still license-gated below),
+  // otherwise the cells pop in only after license -> module -> render resolve serially
+  const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded }] = useLoadModule<
+    FC<SummaryCellContentProps>
+  >({
+    addon: 'powerpack',
+    remote: 'summaries',
+    module: 'SummaryCellContent',
+    fallback: SummaryCellContentFallback,
+    skip: !showColumnSummaries,
   })
+  const summariesEnabled = showColumnSummaries && powerLicense && isFooterLoaded
 
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
@@ -623,10 +644,10 @@ export const ProjectTreeTable = ({
               ...columnSizeVars,
               width: table.getTotalSize(),
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
-              // keep the summary footer pinned to the bottom even when rows don't fill the view
-              ...(showColumnSummaries
-                ? { minHeight: '100%', gridTemplateRows: 'auto 1fr auto' }
-                : {}),
+              // stretch tbody to the container so the column dividers fill the empty
+              // space below the rows; also pins the summary footer to the bottom
+              minHeight: '100%',
+              gridTemplateRows: 'auto 1fr auto',
             }}
           >
             <TableHead
@@ -659,24 +680,28 @@ export const ProjectTreeTable = ({
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
             />
-            {showColumnSummaries && columnSummaryData && (
-              <TableFooter
+            {summariesEnabled && (
+              <TableFooterRow
                 columnVirtualizer={columnVirtualizer}
                 table={table}
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
-                attribs={attribFields}
-                summaries={columnSummaryData.summaries}
-                allScopeSummaries={columnSummaryData.allScopeSummaries}
-                groupScopeSummaries={columnSummaryData.groupScopeSummaries}
-                calcByColumn={columnSummaries}
-                onCalcChange={updateColumnSummary}
-                formatByColumn={columnSummaryFormats}
-                onFormatChange={updateColumnSummaryFormat}
-                scopeByColumn={columnSummaryScopes}
-                onScopeChange={updateColumnSummaryScope}
-                mainCountLabels={mainCountLabels}
-                fieldOptions={options}
+                renderCellContent={(columnId) => (
+                  <RemoteSummaryCellContent
+                    columnId={columnId}
+                    attribs={attribFields}
+                    fieldStats={fieldStats}
+                    groupFieldStats={groupFieldStats}
+                    calc={columnSummaries[columnId]}
+                    onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
+                    format={columnSummaryFormats[columnId]}
+                    onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
+                    scope={columnSummaryScopes[columnId]}
+                    onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
+                    mainCountLabels={mainCountLabels}
+                    fieldOptions={options}
+                  />
+                )}
               />
             )}
           </table>
