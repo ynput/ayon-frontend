@@ -1,19 +1,21 @@
 import { FC, useEffect, useMemo, useState } from 'react'
-import { SearchFilter, Filter, Option } from '@ynput/ayon-react-components'
+import { SearchFilter, Filter, Option, SearchFilterQuickAction } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import type { QueryFilter, ActivityCategory } from '@shared/api'
+import { type QueryFilter, type ActivityCategory, ChecklistCount } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 import { feedFilterToClientFilters, clientFiltersToFeedFilter } from '../helpers/feedFilterAdapter'
 
 const Wrapper = styled.div`
   padding: 4px 8px;
+  padding-bottom: 0;
+  /* filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.25)); */
+  /* z-index: 1; */
 
   &.loading {
     opacity: 0.5;
     pointer-events: none;
   }
 `
-
 
 interface FeedSearchFilterProps {
   feedFilter: QueryFilter
@@ -22,6 +24,8 @@ interface FeedSearchFilterProps {
   categories: ActivityCategory[]
   supportsReviewSession: boolean
   isLoading?: boolean
+  checklistCount?: ChecklistCount | undefined
+  onSearchTextChange?: (text: string) => void
 }
 
 const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
@@ -31,6 +35,8 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
   categories,
   supportsReviewSession,
   isLoading,
+  checklistCount,
+  onSearchTextChange,
 }) => {
   const options: Option[] = useMemo(() => {
     // no values -> ARC adds it in one click (select "Yes"), no value-panel prompt
@@ -45,12 +51,12 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
 
     const opts: Option[] = [
       boolean('comments', 'Comments', 'chat'),
-      boolean('versions', 'Published versions', 'layers'),
-      boolean('updates', 'Entity updates', 'arrow_circle_right'),
-      boolean('checklists', 'Checklists', 'checklist'),
-      boolean('has_attachments', 'Has attachments', 'attach_file'),
+      boolean('versions', 'Versions', 'layers'),
+      boolean('updates', 'Updates', 'arrow_circle_right'),
+      boolean('checklists', 'Checklists', 'check_circle'),
+      boolean('has_attachments', 'Attachments', 'attach_file'),
       ...(supportsReviewSession
-        ? [boolean('in_review_session', 'In review session', 'subscriptions')]
+        ? [boolean('in_review_session', 'Review session', 'subscriptions')]
         : []),
       ...(categories.length
         ? [
@@ -89,7 +95,21 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
     return opts
   }, [users, categories, supportsReviewSession])
 
-  const filters = useMemo(() => feedFilterToClientFilters(feedFilter, options), [feedFilter, options])
+  let checklistsLabel: string = ''
+  if (checklistCount?.total && checklistCount.total > 0) {
+    checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
+  }
+
+  // @ts-expect-error - using string is fine
+  const quickActions: SearchFilterQuickAction[] = useMemo(
+    () => ['comments', { id: 'checklists', label: checklistsLabel, tooltip: 'Checklists' }],
+    [checklistsLabel],
+  )
+
+  const filters = useMemo(
+    () => feedFilterToClientFilters(feedFilter, options),
+    [feedFilter, options],
+  )
 
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
   useEffect(() => {
@@ -98,6 +118,13 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
 
   const handleFinish = (newFilters: Filter[]) => {
     setFeedFilter(clientFiltersToFeedFilter(newFilters))
+    onSearchTextChange?.('')
+  }
+
+  const handleLiveSearch = (value: string, filter: string | null) => {
+    // only for root level searching
+    if (!!filter) return
+    onSearchTextChange?.(value)
   }
 
   return (
@@ -110,6 +137,9 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
         onFinish={handleFinish}
         enableGlobalSearch
         enableMultipleSameFilters={false}
+        enableAutosuggestion={true}
+        onSearchChange={handleLiveSearch}
+        quickActions={quickActions}
       />
     </Wrapper>
   )

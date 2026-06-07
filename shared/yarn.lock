@@ -1320,10 +1320,10 @@
   dependencies:
     short-uuid "^5.2.0"
 
-"@ynput/ayon-react-components@^1.18.0":
-  version "1.18.0"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.18.0.tgz#8845c0b5c5aaf9ca59a3189ac08d80026cc8a422"
-  integrity sha512-XT8UP2FFjQRDSRede2unzOPWxOvPJVZ9RCU5EsbCelVUmBjhzJUOHD5DU0vx6rToCPm8J3+1pUuMICmp3QK7Xg==
+"@ynput/ayon-react-components@^1.18.5":
+  version "1.18.5"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.18.5.tgz#a99326b2977bbbcbc8366ee91dd42a6298ded4dd"
+  integrity sha512-Nwt98Le5cNqphfGGbWTi4cyjYdg4v//cust6VueGwqbxiw2CWdsVzzK/WJrq9iF/Dc5aNyg2zvm7GPTCS/aSKA==
   dependencies:
     short-uuid "^5.2.0"
 

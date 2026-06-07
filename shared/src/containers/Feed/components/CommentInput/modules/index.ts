@@ -19,7 +19,7 @@ icons['underline'] = getIcon('format_underlined')
 icons['link'] = getIcon('link')
 icons['list']['ordered'] = getIcon('format_list_numbered')
 icons['list']['bullet'] = getIcon('format_list_bulleted')
-icons['list']['check'] = getIcon('checklist')
+icons['list']['check'] = getIcon('check_circle')
 icons['image'] = getIcon('attach_file')
 icons['code-block'] = getIcon('code')
 

@@ -6,7 +6,6 @@ import * as Styled from './TabHeaderAndFilters.styled'
 import { QueryFilter, QueryCondition } from '@shared/api'
 import { AttributeEnumItem } from '../../../../containers/ProjectTreeTable/types'
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { useDebouncedValue } from '@shared/hooks'
 import clsx from 'clsx'
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -42,9 +41,7 @@ const renderIcon = (icon?: string, color?: string, className?: string) => {
   if (isImageIcon(icon)) {
     return <img src={icon} className={clsx('row-avatar', className)} alt="" />
   }
-  return (
-    <Icon icon={icon} className={className} style={color ? { color } : undefined} />
-  )
+  return <Icon icon={icon} className={className} style={color ? { color } : undefined} />
 }
 
 const isSearchItem = (c: QueryCondition | QueryFilter, filterId: string): boolean => {
@@ -154,7 +151,11 @@ const TabHeaderAndFilters = <T, K = string>({
     const opts = activeEnumFilter.options || []
     const q = searchValue.trim().toLowerCase()
     if (!q) return opts
-    return opts.filter((o) => String(o.label ?? o.value).toLowerCase().includes(q))
+    return opts.filter((o) =>
+      String(o.label ?? o.value)
+        .toLowerCase()
+        .includes(q),
+    )
   }, [activeEnumFilter, searchValue])
 
   useEffect(() => {
@@ -252,14 +253,13 @@ const TabHeaderAndFilters = <T, K = string>({
   const pendingSearchFilterRef = useRef<FilterItem<K> | null>(null)
   const handleToggleRef = useRef(handleToggle)
   handleToggleRef.current = handleToggle
-  const debouncedSearchValue = useDebouncedValue(searchValue, SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
     const filter = pendingSearchFilterRef.current
     if (!filter) return
-    handleToggleRef.current(filter, debouncedSearchValue)
+    handleToggleRef.current(filter, searchValue)
     pendingSearchFilterRef.current = null
-  }, [debouncedSearchValue])
+  }, [searchValue])
 
   const handleSearchChange = (filter: FilterItem<K>, value: string) => {
     setSearchValue(value)
@@ -318,8 +318,7 @@ const TabHeaderAndFilters = <T, K = string>({
         <Styled.SearchFilterContainer
           ref={dropdownContainerRef}
           className={clsx('panel-filter', 'panel-filter-search', {
-            selected:
-              activeChips.length > 0 || (searchFilter && !!getIsSelected(searchFilter)),
+            selected: activeChips.length > 0 || (searchFilter && !!getIsSelected(searchFilter)),
             open: filtersOpen,
           })}
         >
@@ -368,9 +367,7 @@ const TabHeaderAndFilters = <T, K = string>({
                   else handleSearchClear(searchFilter)
                 }
               }}
-              placeholder={
-                activeChips.length ? '' : searchFilter.placeholder || 'Search...'
-              }
+              placeholder={activeChips.length ? '' : searchFilter.placeholder || 'Search...'}
             />
           ) : (
             <Spacer />
