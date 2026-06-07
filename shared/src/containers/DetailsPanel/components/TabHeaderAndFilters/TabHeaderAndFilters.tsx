@@ -1,14 +1,13 @@
 // Tab-specific header with label and filters
 // Currently only Feed has filters: activity, comments, versions, checklists
 
-import { Icon, Spacer } from '@ynput/ayon-react-components'
+import { Spacer } from '@ynput/ayon-react-components'
 import * as Styled from './TabHeaderAndFilters.styled'
 import { QueryFilter, QueryCondition } from '@shared/api'
 import { AttributeEnumItem } from '../../../../containers/ProjectTreeTable/types'
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { EnumWidget } from '../../../../containers/ProjectTreeTable/widgets/EnumWidget'
+import { useState, useRef, useEffect } from 'react'
 import clsx from 'clsx'
-
-const SEARCH_DEBOUNCE_MS = 300
 
 export interface FilterItem<T = string> {
   id: T
@@ -18,11 +17,10 @@ export interface FilterItem<T = string> {
   options?: AttributeEnumItem[]
   placeholder?: string
   operator?: QueryCondition['operator']
-  isShortcut?: boolean
 }
 
 interface TabHeaderAndFiltersProps<T, K = string> {
-  label?: string
+  label: string
   filters: FilterItem<K>[]
   currentFilter: T
   onFilterChange: (filter: T) => void
@@ -31,17 +29,6 @@ interface TabHeaderAndFiltersProps<T, K = string> {
 
 const isCondition = (c: QueryCondition | QueryFilter): c is QueryCondition => {
   return !!c && 'key' in c
-}
-
-const isImageIcon = (icon?: string): boolean =>
-  !!icon && (icon.startsWith('/') || icon.startsWith('http'))
-
-const renderIcon = (icon?: string, color?: string, className?: string) => {
-  if (!icon) return null
-  if (isImageIcon(icon)) {
-    return <img src={icon} className={clsx('row-avatar', className)} alt="" />
-  }
-  return <Icon icon={icon} className={className} style={color ? { color } : undefined} />
 }
 
 const isSearchItem = (c: QueryCondition | QueryFilter, filterId: string): boolean => {
@@ -115,82 +102,29 @@ const TabHeaderAndFilters = <T, K = string>({
   onFilterChange,
   isLoading,
 }: TabHeaderAndFiltersProps<T, K>) => {
-  const searchFilterId = filters.find((f) => (f.type || 'boolean') === 'search')?.id
-  const searchFilterIdStr = searchFilterId !== undefined ? String(searchFilterId) : null
+  const [expandedSearchId, setExpandedSearchId] = useState<string | null>(null)
   const [searchValue, setSearchValue] = useState<string>('')
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const [activeEnumFilterId, setActiveEnumFilterId] = useState<string | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const dropdownContainerRef = useRef<HTMLDivElement>(null)
-
-  const nonSearchFilters = useMemo(
-    () => filters.filter((f) => (f.type || 'boolean') !== 'search'),
-    [filters],
-  )
-
-  const shortcutFilters = useMemo(() => filters.filter((f) => f.isShortcut), [filters])
-
-  const dropdownFilters = useMemo(() => {
-    const q = searchValue.trim().toLowerCase()
-    if (!q) return nonSearchFilters
-    return nonSearchFilters.filter((f) => f.tooltip.toLowerCase().includes(q))
-  }, [nonSearchFilters, searchValue])
-
-  const activeEnumFilter = useMemo(() => {
-    if (!activeEnumFilterId) return null
-    const f = filters.find((f) => String(f.id) === activeEnumFilterId)
-    return f && (f.type || 'boolean') === 'enum' ? f : null
-  }, [activeEnumFilterId, filters])
-
-  useEffect(() => {
-    if (!filtersOpen) setActiveEnumFilterId(null)
-  }, [filtersOpen])
-
-  const activeEnumOptions = useMemo(() => {
-    if (!activeEnumFilter) return []
-    const opts = activeEnumFilter.options || []
-    const q = searchValue.trim().toLowerCase()
-    if (!q) return opts
-    return opts.filter((o) =>
-      String(o.label ?? o.value)
-        .toLowerCase()
-        .includes(q),
-    )
-  }, [activeEnumFilter, searchValue])
-
-  useEffect(() => {
-    if (!filtersOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setFiltersOpen(false)
-    }
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as HTMLElement | null
-      if (!target) return
-      if (dropdownContainerRef.current?.contains(target)) return
-      // Keep open if click landed on a portaled list/option popup (e.g. enum picker)
-      if (target.closest('ul[role="listbox"], li[role="option"], [class*="dropdown"]')) return
-      setFiltersOpen(false)
-    }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onPointerDown, true)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.removeEventListener('pointerdown', onPointerDown, true)
-    }
-  }, [filtersOpen])
 
   const isQueryFilter = (f: any): f is QueryFilter => {
     return typeof f === 'object' && f !== null && !Array.isArray(f)
   }
 
+  // Focus input when search expands
+  useEffect(() => {
+    if (expandedSearchId && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [expandedSearchId])
+
   // Sync search value with current filter
   useEffect(() => {
-    if (searchFilterIdStr && isQueryFilter(currentFilter)) {
+    if (expandedSearchId && isQueryFilter(currentFilter)) {
       if (document.activeElement === searchInputRef.current) return
-      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, searchFilterIdStr))
+      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, expandedSearchId))
       setSearchValue(searchItem ? stringifySearchFilter(searchItem) : '')
     }
-  }, [searchFilterIdStr, currentFilter])
+  }, [expandedSearchId, currentFilter])
 
   const handleToggle = (filter: FilterItem<K>, value?: any) => {
     if (!isQueryFilter(currentFilter)) {
@@ -250,29 +184,27 @@ const TabHeaderAndFilters = <T, K = string>({
     onFilterChange(newFilter as T)
   }
 
-  const pendingSearchFilterRef = useRef<FilterItem<K> | null>(null)
-  const handleToggleRef = useRef(handleToggle)
-  handleToggleRef.current = handleToggle
-
-  useEffect(() => {
-    const filter = pendingSearchFilterRef.current
-    if (!filter) return
-    handleToggleRef.current(filter, searchValue)
-    pendingSearchFilterRef.current = null
-  }, [searchValue])
+  const handleSearchClick = (filter: FilterItem<K>) => {
+    const filterId = String(filter.id)
+    if (expandedSearchId === filterId) {
+      return // Already expanded
+    }
+    setExpandedSearchId(filterId)
+    // Load existing value if any
+    if (isQueryFilter(currentFilter)) {
+      const searchItem = currentFilter.conditions?.find((c) => isSearchItem(c, filterId))
+      setSearchValue(searchItem ? stringifySearchFilter(searchItem) : '')
+    }
+  }
 
   const handleSearchChange = (filter: FilterItem<K>, value: string) => {
     setSearchValue(value)
-    if (activeEnumFilterId) {
-      pendingSearchFilterRef.current = null
-      return
-    }
-    pendingSearchFilterRef.current = filter
+    handleToggle(filter, value)
   }
 
   const handleSearchClear = (filter: FilterItem<K>) => {
     setSearchValue('')
-    pendingSearchFilterRef.current = null
+    setExpandedSearchId(null)
     handleToggle(filter, '')
   }
 
@@ -291,194 +223,88 @@ const TabHeaderAndFilters = <T, K = string>({
     return (condition?.value as string[]) || []
   }
 
-  const searchFilter = filters.find((f) => (f.type || 'boolean') === 'search')
-  const activeChips = filters
-    .filter((f) => (f.type || 'boolean') !== 'search')
-    .map((f) => {
-      const type = f.type || 'boolean'
-      if (type === 'enum') {
-        const values = getEnumValue(f)
-        if (!values.length) return null
-        return { filter: f, type, values }
-      }
-      if (getIsSelected(f)) return { filter: f, type, values: [] as string[] }
-      return null
-    })
-    .filter(Boolean) as Array<{ filter: FilterItem<K>; type: string; values: string[] }>
-
   return (
     <Styled.HeaderContainer className={clsx('panel-tabs', { loading: isLoading })}>
-      {label ? (
-        <>
-          <Styled.HeaderLabel className="panel-header-label">{label}</Styled.HeaderLabel>
-          <Spacer />
-        </>
-      ) : null}
+      <Styled.HeaderLabel className="panel-header-label">{label}</Styled.HeaderLabel>
+      <Spacer />
       <Styled.FiltersContainer className="panel-header-filters">
-        <Styled.SearchFilterContainer
-          ref={dropdownContainerRef}
-          className={clsx('panel-filter', 'panel-filter-search', {
-            selected: activeChips.length > 0 || (searchFilter && !!getIsSelected(searchFilter)),
-            open: filtersOpen,
-          })}
-        >
-          <Icon icon="search" className="search-icon" />
-          {activeChips.map(({ filter, type, values }) => (
-            <Styled.FilterChip
-              key={String(filter.id)}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (type === 'enum') {
-                  setFiltersOpen(true)
-                  setActiveEnumFilterId(String(filter.id))
-                } else {
-                  handleToggle(filter, undefined)
-                }
-              }}
-              data-tooltip={type === 'enum' ? 'Edit filter' : 'Remove filter'}
-              data-tooltip-delay={0}
-            >
-              <Icon icon={filter.icon} />
-              <span className="chip-label">
-                {filter.tooltip}
-                {type === 'enum' && values.length ? ` (${values.length})` : ''}
-              </span>
-              <Icon
-                icon="close"
-                className="chip-remove"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation()
-                  handleToggle(filter, type === 'enum' ? [] : undefined)
-                }}
-              />
-            </Styled.FilterChip>
-          ))}
-          {searchFilter ? (
-            <Styled.SearchInput
-              ref={searchInputRef}
-              value={searchValue}
-              onChange={(e) => handleSearchChange(searchFilter, e.target.value)}
-              onFocus={() => nonSearchFilters.length > 0 && setFiltersOpen(true)}
-              onClick={() => nonSearchFilters.length > 0 && setFiltersOpen(true)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  if (activeEnumFilterId) setActiveEnumFilterId(null)
-                  else if (filtersOpen) setFiltersOpen(false)
-                  else handleSearchClear(searchFilter)
-                }
-              }}
-              placeholder={activeChips.length ? '' : searchFilter.placeholder || 'Search...'}
-            />
-          ) : (
-            <Spacer />
-          )}
-          {searchFilter && searchValue ? (
-            <Styled.ClearButton
-              icon="close"
-              onClick={() => handleSearchClear(searchFilter)}
-              data-tooltip="Clear"
-              data-tooltip-delay={0}
-            />
-          ) : null}
+        {filters.map((filter) => {
+          const isSelected = getIsSelected(filter)
+          const type = filter.type || 'boolean'
 
-          {/* dropdown panels */}
-          {filtersOpen && activeEnumFilter ? (
-            <Styled.FilterDropdown>
-              <Styled.FilterDropdownHeader>
-                <Styled.BackButton
-                  icon="arrow_back"
-                  onClick={() => setActiveEnumFilterId(null)}
-                  data-tooltip="Back"
+          if (type === 'enum') {
+            return (
+              <Styled.Options
+                key={String(filter.id)}
+                options={filter.options || []}
+                value={getEnumValue(filter)}
+                onChange={(val) => handleToggle(filter, val)}
+                isEditing
+                autoOpen={false}
+                align="right"
+                type="list_of_strings"
+                valueTemplate={() => (
+                  <Styled.FilterButton
+                    selected={isSelected}
+                    icon={filter.icon}
+                    data-tooltip={filter.tooltip}
+                    data-tooltip-delay={0}
+                  />
+                )}
+                widthExpand
+                className="panel-filter panel-filter-enum"
+              />
+            )
+          }
+
+          if (type === 'search') {
+            const isExpanded = expandedSearchId === String(filter.id)
+            return (
+              <Styled.SearchFilterContainer
+                key={String(filter.id)}
+                className={clsx('panel-filter', 'panel-filter-search', { expanded: isExpanded })}
+              >
+                <Styled.FilterButton
+                  selected={isSelected || isExpanded}
+                  onClick={() => handleSearchClick(filter)}
+                  icon={filter.icon}
+                  data-tooltip={!isExpanded ? filter.tooltip : undefined}
                   data-tooltip-delay={0}
                 />
-                <Icon icon={activeEnumFilter.icon} />
-                <span className="header-label">{activeEnumFilter.tooltip}</span>
-              </Styled.FilterDropdownHeader>
-              {activeEnumOptions.map((opt) => {
-                const currentValues = getEnumValue(activeEnumFilter).map(String)
-                const optId = String(opt.value)
-                const isSelected = currentValues.includes(optId)
-                const label = String(opt.label ?? opt.value)
-                return (
-                  <Styled.FilterDropdownRow
-                    key={optId}
-                    className={clsx({ selected: isSelected })}
-                    onClick={() => {
-                      const next = isSelected
-                        ? currentValues.filter((v) => v !== optId)
-                        : [...currentValues, optId]
-                      handleToggle(activeEnumFilter, next)
-                    }}
-                  >
-                    {renderIcon(opt.icon, opt.color)}
-                    <span className="row-label">{label}</span>
-                    {isSelected ? <Icon icon="check" className="check-icon" /> : null}
-                  </Styled.FilterDropdownRow>
-                )
-              })}
-            </Styled.FilterDropdown>
-          ) : filtersOpen && nonSearchFilters.length > 0 && dropdownFilters.length > 0 ? (
-            <Styled.FilterDropdown>
-              {dropdownFilters.map((filter) => {
-                const isSelected = !!getIsSelected(filter)
-                const type = filter.type || 'boolean'
+                {isExpanded && (
+                  <>
+                    <Styled.SearchInput
+                      ref={searchInputRef}
+                      value={searchValue}
+                      onChange={(e) => handleSearchChange(filter, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          handleSearchClear(filter)
+                        }
+                      }}
+                      placeholder={filter.placeholder || 'Search...'}
+                    />
+                    <Styled.ClearButton
+                      icon="close"
+                      onClick={() => handleSearchClear(filter)}
+                      data-tooltip="Clear"
+                      data-tooltip-delay={0}
+                    />
+                  </>
+                )}
+              </Styled.SearchFilterContainer>
+            )
+          }
 
-                if (type === 'enum') {
-                  const enumValue = getEnumValue(filter)
-                  return (
-                    <Styled.FilterDropdownRow
-                      key={String(filter.id)}
-                      className={clsx({ selected: enumValue.length > 0 })}
-                      onClick={() => setActiveEnumFilterId(String(filter.id))}
-                    >
-                      <Icon icon={filter.icon} />
-                      <span className="row-label">
-                        {filter.tooltip}
-                        {enumValue.length ? ` (${enumValue.length})` : ''}
-                      </span>
-                      <Icon icon="chevron_right" className="chevron-icon" />
-                    </Styled.FilterDropdownRow>
-                  )
-                }
-
-                return (
-                  <Styled.FilterDropdownRow
-                    key={String(filter.id)}
-                    className={clsx({ selected: isSelected })}
-                    onClick={() => handleToggle(filter)}
-                  >
-                    <Icon icon={filter.icon} />
-                    <span className="row-label">{filter.tooltip}</span>
-                    {isSelected ? <Icon icon="check" className="check-icon" /> : null}
-                  </Styled.FilterDropdownRow>
-                )
-              })}
-            </Styled.FilterDropdown>
-          ) : null}
-        </Styled.SearchFilterContainer>
-        {shortcutFilters.map((filter) => {
-          const type = filter.type || 'boolean'
-          const isActive =
-            type === 'enum' ? getEnumValue(filter).length > 0 : !!getIsSelected(filter)
           return (
-            <Styled.ShortcutButton
+            <Styled.FilterButton
               key={String(filter.id)}
+              selected={isSelected}
+              onClick={() => handleToggle(filter)}
               icon={filter.icon}
-              className={clsx({ active: isActive })}
-              onClick={() => {
-                if (type === 'enum') {
-                  if (isActive) {
-                    handleToggle(filter, [])
-                  } else {
-                    setFiltersOpen(true)
-                    setActiveEnumFilterId(String(filter.id))
-                  }
-                } else {
-                  handleToggle(filter)
-                }
-              }}
               data-tooltip={filter.tooltip}
               data-tooltip-delay={0}
+              className="panel-filter panel-filter-boolean"
             />
           )
         })}
