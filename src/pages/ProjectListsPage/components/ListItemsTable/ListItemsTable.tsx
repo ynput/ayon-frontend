@@ -28,7 +28,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
 }) => {
   const { projectName } = useProjectContext()
   const { selectedLists, selectedList } = useListsContext()
-  const { isError, fetchNextPage, resetFilters, setLinksVisible } = useListItemsDataContext()
+  const { isError, error, fetchNextPage, resetFilters, setLinksVisible } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = useMemo(
@@ -46,12 +46,17 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   if (selectedLists.length > 1)
     return <EmptyPlaceholder message="Please select one list to view its items." />
 
-  if (isError)
+  if (isError) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : (error as any)?.message ?? 'Error loading list items.'
     return (
-      <EmptyPlaceholder error={'Error loading list items.'}>
+      <EmptyPlaceholder error={errorMessage} ynputError={false}>
         <Button label="Reset" icon="replay" onClick={resetFilters} />
       </EmptyPlaceholder>
     )
+  }
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

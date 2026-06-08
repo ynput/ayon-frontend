@@ -42,6 +42,7 @@ export interface ListItemsDataContextValue {
   isLoadingAll: boolean
   isLoadingMore: boolean
   isError?: boolean
+  error?: unknown
   isInitialized: boolean
   // filters
   listItemsFilters: QueryFilter
@@ -166,6 +167,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     isLoading,
     isFetchingNextPage,
     isError,
+    error,
     fetchNextPage,
     refetch,
   } = useGetListItemsData({
@@ -250,6 +252,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         isLoadingAll: isLoading || isLoadingData,
         isLoadingMore: isFetchingNextPage,
         isError,
+        error,
         fetchNextPage,
         // filters
         listItemsFilters,

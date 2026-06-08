@@ -1,4 +1,5 @@
-import { AttributeData, ProjectTableAttribute } from '../types'
+import { ProjectTableAttribute } from '../types'
+import { AttributeData } from '@shared/api'
 import { EntityUpdate } from '../hooks/useUpdateTableData'
 
 const validateUpdateEntities = (

@@ -67,7 +67,8 @@ import { generateLoadingRows, generateDummyAttributes } from './utils/loadingUti
 import { isEntityRestricted, isTargetReadOnly } from './utils/restrictedEntity'
 import { createPortal } from 'react-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { AttributeEnumItem, ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import { ProjectTableAttribute, BuiltInFieldOptions } from './types'
+import { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
 import {
   checkColumnVisibility,
@@ -569,7 +570,7 @@ export const ProjectTreeTable = ({
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
-    return attribFields.reduce((acc: Record<string, AttributeEnumItem[]>, attrib) => {
+    return attribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
       if (attrib.data?.enum?.length) {
         acc[attrib.name] = attrib.data?.enum
       }

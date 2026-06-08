@@ -5,13 +5,13 @@ import { EntityCard } from '@ynput/ayon-react-components'
 
 // types
 import type { EntityCardProps } from '@ynput/ayon-react-components'
-import type { Status, AttributeEnumItem } from '@shared/api'
+import type { Status, EnumItem } from '@shared/api'
 import type { ProgressTask } from '@queries/tasksProgress/getTasksProgress'
 import type { TaskFieldChange } from '../TasksProgressTable/TasksProgressTable'
 
 interface TaskTypeCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   statuses: Status[]
-  priorities: AttributeEnumItem[]
+  priorities: EnumItem[]
   task: ProgressTask
   selectedAssignees: string[]
   assigneeOptions: EntityCardProps['assigneeOptions']

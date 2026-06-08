@@ -14,7 +14,7 @@ import {
 import { camelCase, upperFirst } from 'lodash'
 import { MinMaxField } from './components'
 import { EnumEditor } from '@shared/components/EnumEditor'
-import { AttributeData, AttributeModel, AttributeEnumItem } from '@shared/api'
+import { AttributeData, AttributeModel } from '@shared/api'
 import {
   UIAttributeType,
   UI_TYPE_OPTIONS,
@@ -22,7 +22,16 @@ import {
   UI_TYPE_EXCLUDE,
   backendToUiType,
   uiTypeToBackend,
+  WIDGET_UNDEFINED_KEY,
 } from './attributeTypeMap'
+import styled from 'styled-components'
+
+const RowFieldGroup = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: var(--base-gap-large);
+  align-items: center;
+`
 
 const SCOPE_OPTIONS = [
   { value: 'project', label: 'Project' },
@@ -38,13 +47,12 @@ const SCOPE_OPTIONS = [
 // Define types for constants
 interface GlobalFieldEntry {
   value: keyof AttributeData
-  scope: (AttributeModel['scope'] | '')[] | null
+  scope: NonNullable<AttributeModel['scope']>[number][] | null
 }
 
 const GLOBAL_FIELDS: GlobalFieldEntry[] = [
   { value: 'description', scope: null },
   { value: 'example', scope: null },
-  // @ts-expect-error - project is not a scope?
   { value: 'default', scope: ['project'] },
   {
     value: 'inherit',
@@ -69,6 +77,7 @@ const initFormData: AttributeForm = {
     example: '',
     default: undefined,
     enum: undefined,
+    widget: undefined,
     minLength: undefined,
     maxLength: undefined,
     regex: '',
@@ -248,7 +257,6 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
 
   // add global fields, only if scope are null (all) or the scope is included
   GLOBAL_FIELDS.forEach((globalField) => {
-    // @ts-expect-error - project scope will never be found here?
     if (!globalField?.scope || globalField?.scope?.some((s) => formData?.scope?.includes(s))) {
       dataFields.push(globalField.value)
     }
@@ -266,7 +274,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   } = {
     enum: (value = [], onChange) => (
       <EnumEditor
-        values={value as AttributeEnumItem[]}
+        values={value}
         onChange={(val) => {
           onChange(val?.length ? val : undefined)
         }}
@@ -308,7 +316,13 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
     if (newUiType !== 'text' && formData?.data?.regex) {
       setData('regex', '')
     }
+
+    // Clear widget
+    setData('widget', undefined)
   }
+
+  const selectedOption = UI_TYPE_OPTIONS.find((o) => o.value === uiType)
+  const widgets = selectedOption?.widgets
 
   return (
     <Dialog
@@ -357,15 +371,34 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
           )}
           {!excludes.includes('type') && (
             <FormRow label="Type">
-              <Dropdown
-                value={[uiType]}
-                disabled={formData.builtin || !isNew}
-                valueIcon={UI_TYPE_OPTIONS.find((o) => o.value === uiType)?.icon}
-                options={UI_TYPE_OPTIONS}
-                onChange={handleUiTypeChange}
-                minSelected={1}
-                widthExpand
-              />
+              <RowFieldGroup>
+                <Dropdown
+                  value={[uiType]}
+                  disabled={formData.builtin || !isNew}
+                  valueIcon={UI_TYPE_OPTIONS.find((o) => o.value === uiType)?.icon}
+                  options={UI_TYPE_OPTIONS}
+                  onChange={handleUiTypeChange}
+                  minSelected={1}
+                  widthExpand
+                  style={{ flex: 1 }}
+                />
+                {widgets && widgets.length > 0 && (
+                  <Dropdown
+                    value={[
+                      formData.data.widget ||
+                        widgets.find((w) => w.isDefault)?.value ||
+                        WIDGET_UNDEFINED_KEY,
+                    ]}
+                    disabled={formData.builtin}
+                    dataKey="value"
+                    options={widgets}
+                    onChange={(v) =>
+                      setData('widget', v[0] === WIDGET_UNDEFINED_KEY ? undefined : v[0])
+                    }
+                    style={{ flex: 0.5 }}
+                  />
+                )}
+              </RowFieldGroup>
             </FormRow>
           )}
           {!excludes.includes('type') && uiType === 'number' && (
@@ -386,7 +419,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
             if (excludes.includes(field)) return null
 
             let fieldComp = null
-            let fieldLabel = upperFirst(field)
+            let fieldLabel: string = upperFirst(field)
 
             if (field === 'enum' || field === 'inherit') {
               const renderer = customFields[field as 'enum' | 'inherit']

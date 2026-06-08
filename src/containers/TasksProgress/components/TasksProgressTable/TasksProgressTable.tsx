@@ -26,7 +26,7 @@ import type {
   TaskTypeRow,
   TaskTypeStatusBar,
 } from '../../helpers/formatTaskProgressForTable'
-import type { Assignees, Status, TaskType, AttributeEnumItem } from '@shared/api'
+import type { Assignees, Status, TaskType, EnumItem } from '@shared/api'
 
 // Hooks
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react'
@@ -63,7 +63,7 @@ interface TasksProgressTableProps
   taskStatuses: Status[]
   folderStatuses: Status[]
   taskTypes: TaskType[]
-  priorities: AttributeEnumItem[]
+  priorities: EnumItem[]
   users: Assignees
   allExpanded: boolean
   expandedRows: string[]

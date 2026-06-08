@@ -75,12 +75,20 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
   const reviewVersion = matchedAddons.get('review')
 
   const rowSelection = useMemo(
-    () => (isReview
-      ? isStoryboards ? unstableStoryboardSelection : unstableReviewSelection
-      : unstableListSelection
-    ),
+    () =>
+      isReview
+        ? isStoryboards
+          ? unstableStoryboardSelection
+          : unstableReviewSelection
+        : unstableListSelection,
     // Simpler dependencies: unstableListSelection and unstableReviewSelection are stable state references
-    [unstableListSelection, unstableReviewSelection, unstableStoryboardSelection, isReview, isStoryboards],
+    [
+      unstableListSelection,
+      unstableReviewSelection,
+      unstableStoryboardSelection,
+      isReview,
+      isStoryboards,
+    ],
   )
 
   const setRowSelection = useCallback(
@@ -105,7 +113,10 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
     [JSON.stringify(rowSelection)],
   )
 
-  const selectedLists = selectedRows.filter((id) => !parseListFolderRowId(id)).map((id) => listsMap.get(id)).filter((list) => !!list)
+  const selectedLists = selectedRows
+    .filter((id) => !parseListFolderRowId(id))
+    .map((id) => listsMap.get(id))
+    .filter((list) => !!list)
 
   // we can only ever fetch one list at a time
   const selectedList = selectedLists[0]
@@ -211,12 +222,15 @@ export const ListsProvider = ({ children, isReview, isStoryboards }: ListsProvid
           enhancedInit.entityListFolderIds = selectedFolderIds
           // also remove entityListFolderId if it exists
           delete enhancedInit.entityListFolderId
+        } else if (selectedList?.entityListFolderId) {
+          // If a list is selected, inherit its folder id
+          enhancedInit.entityListFolderId = selectedList.entityListFolderId || undefined
         }
       }
 
       rawOpenNewList(enhancedInit)
     },
-    [rawOpenNewList, selectedRows],
+    [rawOpenNewList, selectedRows, selectedList],
   )
 
   // UPDATE/EDIT LIST
