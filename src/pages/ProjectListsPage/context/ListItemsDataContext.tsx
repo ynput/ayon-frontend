@@ -30,6 +30,7 @@ export interface ListItemsDataContextValue {
   isLoadingAll: boolean
   isLoadingMore: boolean
   isError?: boolean
+  error?: unknown
   isInitialized: boolean
   // filters
   listItemsFilters: QueryFilter
@@ -60,10 +61,10 @@ interface ListItemsDataProviderProps {
 }
 
 const reviewSortKeys = new Map([
-  ["task", "task_id"],
-  ["product", "product_id"],
-  ["path", "name"],
-  ["versionAuthor", "author"],
+  ['task', 'task_id'],
+  ['product', 'product_id'],
+  ['path', 'name'],
+  ['versionAuthor', 'author'],
 ])
 
 // fetch all items and provide methods to update the items
@@ -111,10 +112,12 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     const sorting = selectedList?.data.sorting
     if (!sorting) return null
 
-    return [{
-      id: reviewSortKeys.get(sorting.property) ?? sorting.property,
-      desc: sorting.order,
-    }]
+    return [
+      {
+        id: reviewSortKeys.get(sorting.property) ?? sorting.property,
+        desc: sorting.order,
+      },
+    ]
   }, [isReview, selectedList?.data.sorting])
 
   const {
@@ -122,6 +125,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     isLoading,
     isFetchingNextPage,
     isError,
+    error,
     fetchNextPage,
     refetch,
   } = useGetListItemsData({
@@ -204,6 +208,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         isLoadingAll: isLoading || isLoadingData,
         isLoadingMore: isFetchingNextPage,
         isError,
+        error,
         fetchNextPage,
         // filters
         listItemsFilters,

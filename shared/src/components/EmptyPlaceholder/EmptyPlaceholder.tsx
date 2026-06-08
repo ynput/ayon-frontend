@@ -52,6 +52,7 @@ export interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivEleme
   icon?: string
   message?: string
   error?: any
+  ynputError?: boolean
   pt?: {
     error?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -61,6 +62,7 @@ export const EmptyPlaceholder: FC<EmptyPlaceholderProps> = ({
   icon,
   message,
   error,
+  ynputError = true,
   children,
   pt,
   className,
@@ -74,7 +76,9 @@ export const EmptyPlaceholder: FC<EmptyPlaceholderProps> = ({
         <span className="error-message" {...pt?.error}>
           ERROR: {JSON.stringify(error)}
         </span>
-        <span>This should not happen. Please send a screenshot to the Ynput team!</span>
+        {ynputError && (
+          <span>This should not happen. Please send a screenshot to the Ynput team!</span>
+        )}
         {children}
       </Placeholder>
     )
