@@ -503,17 +503,13 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  // Summary footer is a powerpack feature: the whole UI lives in the
-  // powerpack `summaries` remote module, gated by the license.
-  // Read the context directly — consumers outside PowerpackProvider must not crash.
+  // Summary footer is a powerpack feature
   const powerLicense = useContext(PowerpackContext)?.powerLicense ?? false
-  // load in parallel with the license check (render is still license-gated below),
-  // otherwise the cells pop in only after license -> module -> render resolve serially
   const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded }] = useLoadModule<
     FC<SummaryCellContentProps>
   >({
     addon: 'powerpack',
-    remote: 'summaries',
+    remote: 'views',
     module: 'SummaryCellContent',
     fallback: SummaryCellContentFallback,
     skip: !showColumnSummaries,

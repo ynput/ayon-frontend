@@ -52,8 +52,6 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     [attribFields, columnVisibility],
   )
 
-  // Live product/version stats over the filtered set — no mock fallback,
-  // cells without backend data render blank.
   const { data: productStats } = useGetProductsColumnStatsQuery(
     { ...columnStatsArgs, targets: productTargets },
     { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
@@ -63,18 +61,14 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     { skip: !columnStatsArgs.projectName || isLoadingViews || !powerLicense },
   )
 
-  // Primary scope = versions; product stats feed the "include groups & folders"
-  // row scope via groupFieldStats.
   const fieldStats = useMemo(() => {
     const products = productStats ?? []
     const versions = versionStats ?? []
-    // undefined (not 0) while stats are missing/failed so the cell stays blank
     const mainCount: FieldStats = {
       columnName: 'name',
       primaryCount: productStats ? totalRowsFromStats(products) : undefined,
       secondaryCount: versionStats ? totalRowsFromStats(versions) : undefined,
     }
-    // mergeFieldStats also unifies the duplicate `name` entries field-wise
     return mergeFieldStats([...versions, mainCount])
   }, [productStats, versionStats])
   const {

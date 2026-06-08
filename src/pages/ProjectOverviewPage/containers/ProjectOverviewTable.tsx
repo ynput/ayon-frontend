@@ -50,10 +50,6 @@ const ProjectOverviewTable = ({}: Props) => {
 
   const scope = `overview-${projectName}`
 
-  // Live folder + task stats (backend fieldStats) — no mock fallback, cells
-  // without backend data render blank. Folder stats feed folder columns +
-  // folder count; task stats feed task columns + task count (filters mirror
-  // each entity's list query).
   const folderTargets = useMemo(
     () => buildMetricTargets({ entity: 'folder', attribs: attribFields, columnVisibility }),
     [attribFields, columnVisibility],
@@ -63,7 +59,7 @@ const ProjectOverviewTable = ({}: Props) => {
     [attribFields, columnVisibility],
   )
 
-  const { data: liveFolderStats } = useGetFolderColumnStatsQuery(
+  const { data: folderStats } = useGetFolderColumnStatsQuery(
     {
       projectName,
       filter: folderFilters?.filterString || undefined,
@@ -73,7 +69,7 @@ const ProjectOverviewTable = ({}: Props) => {
     },
     { skip: !projectName || isLoadingViews || !powerLicense },
   )
-  const { data: liveTaskStats } = useGetTaskColumnStatsQuery(
+  const { data: taskStats } = useGetTaskColumnStatsQuery(
     {
       projectName,
       filter: taskFilters?.filterString || undefined,
@@ -85,20 +81,18 @@ const ProjectOverviewTable = ({}: Props) => {
     },
     { skip: !projectName || isLoadingViews || !powerLicense },
   )
-  // Primary scope = tasks (the table rows); folder stats feed the
-  // "include groups & folders" row scope via groupFieldStats.
+
   const fieldStats = useMemo(() => {
-    const folders = liveFolderStats ?? []
-    const tasks = liveTaskStats ?? []
-    // undefined (not 0) while stats are missing/failed so the cell stays blank
+    const folders = folderStats ?? []
+    const tasks = taskStats ?? []
+
     const mainCount: FieldStats = {
       columnName: 'name',
-      primaryCount: liveFolderStats ? totalRowsFromStats(folders) : undefined,
-      secondaryCount: liveTaskStats ? totalRowsFromStats(tasks) : undefined,
+      primaryCount: folderStats ? totalRowsFromStats(folders) : undefined,
+      secondaryCount: taskStats ? totalRowsFromStats(tasks) : undefined,
     }
-    // mergeFieldStats also unifies the duplicate `name` entries field-wise
     return mergeFieldStats([...tasks, mainCount])
-  }, [liveFolderStats, liveTaskStats])
+  }, [folderStats, taskStats])
 
   const handleScrollBottomGroupBy = useCallback(
     (groupValue: string) => {
@@ -125,7 +119,7 @@ const ProjectOverviewTable = ({}: Props) => {
         clientSorting={showHierarchy || isFlatFolderView}
         showColumnSummaries
         fieldStats={fieldStats}
-        groupFieldStats={liveFolderStats}
+        groupFieldStats={folderStats}
       />
     </Section>
   )
