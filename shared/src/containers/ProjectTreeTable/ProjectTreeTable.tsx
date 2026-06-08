@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, CSSProperties, useCallback, useContext, UIEventHandler, FC } from 'react' // Added useCallback
+import { useMemo, useRef, useEffect, CSSProperties, useCallback, UIEventHandler, FC } from 'react' // Added useCallback
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -95,8 +95,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable, horizontalListSortingStrategy, } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { useProjectContext } from '@shared/context'
-import { PowerpackContext } from '@shared/context/PowerpackContextInstance'
+import { useProjectContext, usePowerpack } from '@shared/context'
 import { useLoadModule } from '@shared/hooks'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
@@ -503,8 +502,8 @@ export const ProjectTreeTable = ({
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
-  // Summary footer is a powerpack feature
-  const powerLicense = useContext(PowerpackContext)?.powerLicense ?? false
+  // Summary footer is a powerpack feature.
+  const { powerLicense, setPowerpackDialog } = usePowerpack()
   const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded }] = useLoadModule<
     FC<SummaryCellContentProps>
   >({
@@ -512,9 +511,9 @@ export const ProjectTreeTable = ({
     remote: 'views',
     module: 'SummaryCellContent',
     fallback: SummaryCellContentFallback,
-    skip: !showColumnSummaries,
+    skip: !showColumnSummaries || !powerLicense,
   })
-  const summariesEnabled = showColumnSummaries && powerLicense && isFooterLoaded
+  const summariesEnabled = showColumnSummaries
 
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
@@ -682,22 +681,29 @@ export const ProjectTreeTable = ({
                 table={table}
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
-                renderCellContent={(columnId) => (
-                  <RemoteSummaryCellContent
-                    columnId={columnId}
-                    attribs={attribFields}
-                    fieldStats={fieldStats}
-                    groupFieldStats={groupFieldStats}
-                    calc={columnSummaries[columnId]}
-                    onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
-                    format={columnSummaryFormats[columnId]}
-                    onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
-                    scope={columnSummaryScopes[columnId]}
-                    onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
-                    mainCountLabels={mainCountLabels}
-                    fieldOptions={options}
-                  />
-                )}
+                onClick={
+                  powerLicense ? undefined : () => setPowerpackDialog('columnSummaries')
+                }
+                renderCellContent={
+                  powerLicense && isFooterLoaded
+                    ? (columnId) => (
+                        <RemoteSummaryCellContent
+                          columnId={columnId}
+                          attribs={attribFields}
+                          fieldStats={fieldStats}
+                          groupFieldStats={groupFieldStats}
+                          calc={columnSummaries[columnId]}
+                          onCalcChange={(calc) => updateColumnSummary(columnId, calc)}
+                          format={columnSummaryFormats[columnId]}
+                          onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
+                          scope={columnSummaryScopes[columnId]}
+                          onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
+                          mainCountLabels={mainCountLabels}
+                          fieldOptions={options}
+                        />
+                      )
+                    : undefined
+                }
               />
             )}
           </table>

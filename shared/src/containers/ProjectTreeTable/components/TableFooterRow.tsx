@@ -23,6 +23,10 @@ const Footer = styled.tfoot`
 const FooterRowEl = styled.tr`
   display: flex;
   background-color: var(--md-sys-color-surface-container-low);
+
+  &.clickable {
+    cursor: pointer;
+  }
 `
 
 const FooterCell = styled.td`
@@ -58,6 +62,8 @@ export interface TableFooterRowProps {
   virtualPaddingRight: number | undefined
   // cell content, provided by the powerpack summaries remote
   renderCellContent?: (columnId: string) => ReactNode
+  // when set, the whole row is clickable (used for the locked/upsell state)
+  onClick?: () => void
 }
 
 // Structural summary footer: the host owns the row, cell borders, widths and
@@ -68,6 +74,7 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
   virtualPaddingLeft,
   virtualPaddingRight,
   renderCellContent,
+  onClick,
 }) => {
   const visibleColumns = [
     ...table.getLeftVisibleLeafColumns(),
@@ -78,7 +85,11 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
 
   return (
     <Footer>
-      <FooterRowEl>
+      <FooterRowEl
+        className={clsx({ clickable: !!onClick })}
+        onClick={onClick}
+        data-tooltip={onClick ? 'Power feature' : undefined}
+      >
         {virtualPaddingLeft ? <td style={{ display: 'flex', width: virtualPaddingLeft }} /> : null}
         {virtualColumns.map((vc) => {
           const column = visibleColumns[vc.index]
