@@ -107,6 +107,10 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
     },
     GetListItems: {
       transformResponse: (response: GetListItemsQuery): GetListItemsResult => {
+        const firstEdge = response.project.entityLists.edges[0]
+        if (!firstEdge) {
+          throw new Error('List does not exist, was it deleted?')
+        }
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
             listEdge.node.items.edges.map(({ node, ...edge }) => {
@@ -117,7 +121,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
               } as GetListItemsResult['items'][number]
             }),
           ),
-          pageInfo: response.project.entityLists.edges[0].node.items.pageInfo,
+          pageInfo: firstEdge.node.items.pageInfo,
         }
       },
     },
