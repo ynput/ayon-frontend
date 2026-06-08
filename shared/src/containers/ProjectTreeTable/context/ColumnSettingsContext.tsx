@@ -25,6 +25,7 @@ export type ColumnsConfig = {
     showEmpty?: boolean
   }
   rowHeight?: number
+  defaultColumnVisibility?: VisibilityState
 }
 
 export interface ColumnSettingsContextType {
@@ -33,6 +34,7 @@ export interface ColumnSettingsContextType {
 
   // Column Visibility
   columnVisibility: VisibilityState
+  defaultColumnVisibility?: VisibilityState
   setColumnVisibility: (columnVisibility: VisibilityState) => void
   updateColumnVisibility: (columnVisibility: VisibilityState) => void
   columnVisibilityOnChange: OnChangeFn<VisibilityState>

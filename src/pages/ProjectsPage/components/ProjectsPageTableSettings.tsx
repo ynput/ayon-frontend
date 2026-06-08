@@ -6,6 +6,7 @@ import {
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table'
+import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable'
 import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
 import { ColumnsSettings } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SettingsPanelItem } from '@shared/components/SettingsPanel'
@@ -32,6 +33,7 @@ interface ProjectsPageTableSettingsProps {
   grouping: string[]
   groupSortByDesc: boolean
   groupOptions: ProjectGroupOption[]
+  defaultColumnVisibility?: VisibilityState
   onColumnVisibilityChange: (visibility: VisibilityState) => void
   onColumnsConfigChange: (order: ColumnOrderState, visibility: VisibilityState) => void
   onSortingChange: (sorting: SortingState) => void
@@ -47,6 +49,7 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
   grouping,
   groupSortByDesc,
   groupOptions,
+  defaultColumnVisibility,
   onColumnVisibilityChange,
   onColumnsConfigChange,
   onSortingChange,
@@ -63,8 +66,8 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
     [columns],
   )
 
-  const visibleCount = settingsColumns.filter(
-    (col) => !(col.value in columnVisibility) || columnVisibility[col.value] !== false,
+  const visibleCount = settingsColumns.filter((col) =>
+    checkColumnVisibility(columnVisibility, col.value, defaultColumnVisibility),
   ).length
 
   const sortValue = useMemo<SortCardType[]>(
@@ -111,6 +114,7 @@ export const ProjectsPageTableSettings: FC<ProjectsPageTableSettingsProps> = ({
         <ColumnsSettings
           columns={settingsColumns}
           columnVisibility={columnVisibility}
+          defaultColumnVisibility={defaultColumnVisibility}
           updateColumnVisibility={onColumnVisibilityChange}
           columnPinning={{}}
           updateColumnPinning={() => {}}

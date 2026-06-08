@@ -1,5 +1,9 @@
-import { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'
-import { ProjectDataContextProps, useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import { createContext, useContext, ReactNode, useMemo, useCallback, useState } from 'react'
+import {
+  checkColumnVisibility,
+  ProjectDataContextProps,
+  useProjectDataContext,
+} from '@shared/containers/ProjectTreeTable'
 import useGetListItemsData, { EntityListItemWithLinks } from '../hooks/useGetListItemsData'
 import { useListsContext } from './ListsContext'
 import { FolderNodeMap, TableRow, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
@@ -10,8 +14,15 @@ import useReorderListItem, { UseReorderListItemReturn } from '../hooks/useReorde
 import useBuildListItemsTableData from '../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { ListsViewSettings, useListsViewSettings } from '@shared/containers'
-import { SortingState } from '@tanstack/react-table'
+import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext } from '@shared/context'
+import { useReviewCardsSettingsContext } from './ReviewCardsSettingsContext'
+import {
+  DEFAULT_COLUMNS_FOLDER,
+  DEFAULT_COLUMNS_PRODUCT,
+  DEFAULT_COLUMNS_TASK,
+  DEFAULT_COLUMNS_VERSION,
+} from '@pages/ProjectsPage/constants'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 
@@ -21,6 +32,7 @@ export interface ListItemsDataContextValue {
   selectedListId?: string
   // Attributes
   attribFields: ProjectDataContextProps['attribFields']
+  defaultColumnVisibility?: VisibilityState
 
   // LIST ITEMS DATA
   listItemsData: EntityListItemWithLinks[]
@@ -52,6 +64,8 @@ export interface ListItemsDataContextValue {
   // reset filters
   resetFilters: () => void
   refetch: () => void
+  // links visibility
+  setLinksVisible: (visible: boolean) => void
 }
 
 const ListItemsDataContext = createContext<ListItemsDataContextValue | undefined>(undefined)
@@ -67,14 +81,35 @@ const reviewSortKeys = new Map([
   ['versionAuthor', 'author'],
 ])
 
+const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
+  'link_*': false,
+  tags: true,
+}
+
+export const DEFAULT_COLUMNS_BY_TYPE: Record<string, VisibilityState> = {
+  folder: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_FOLDER },
+  task: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_TASK },
+  version: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_VERSION },
+  product: { ...DEFAULT_COLUMN_VISIBILITY, ...DEFAULT_COLUMNS_PRODUCT },
+}
+
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
   // Get project data from the new context
   const { projectName } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
+  const { displayStyle } = useReviewCardsSettingsContext()
 
   const { selectedList, isReview } = useListsContext()
   const selectedListId = selectedList?.id
+  const listEntityType = selectedList?.entityType
+
+  const defaultColumnVisibility = useMemo(
+    () => (listEntityType ? DEFAULT_COLUMNS_BY_TYPE[listEntityType] : DEFAULT_COLUMN_VISIBILITY),
+    [listEntityType],
+  )
+
+  const [linksVisible, setLinksVisible] = useState(false)
 
   // TODO: finish setting up settings for lists
   const {
@@ -83,6 +118,13 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     columns,
     onUpdateColumns,
   } = useListsViewSettings()
+
+  const hasLinkColumn = useMemo(
+    () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
+    [columns, defaultColumnVisibility],
+  )
+
+  const skipLinks = displayStyle !== 'table' || !hasLinkColumn || !linksVisible
 
   const updateSorting = (sorting: SortingState) => {
     onUpdateColumns(
@@ -134,6 +176,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listId: selectedListId,
     sorting: reviewSorting ?? columns.sorting ?? [],
     filters: listItemsFilters,
+    skipLinks: skipLinks,
   })
 
   // convert to a Map for easier access
@@ -201,6 +244,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         selectedListId,
         attribFields: scopedAttribFields,
         users,
+        defaultColumnVisibility,
         // list items
         listItemsData,
         listItemsTableData,
@@ -229,6 +273,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         reorderListItem,
         resetFilters,
         refetch,
+        setLinksVisible,
       }}
     >
       {children}

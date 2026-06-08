@@ -52,6 +52,7 @@ type Params = {
   isFlatFolderView?: boolean
   attribFields: ProjectTableAttribute[]
   modules: ProjectTableModulesType
+  skipLinks?: boolean
 }
 
 export const useFetchOverviewData = ({
@@ -69,6 +70,7 @@ export const useFetchOverviewData = ({
   isFlatFolderView = false,
   attribFields,
   modules,
+  skipLinks,
 }: Params): useFetchOverviewDataData => {
   const { getGroupQueries, isLoading: isLoadingModules } = modules
 
@@ -159,11 +161,14 @@ export const useFetchOverviewData = ({
     data: foldersLinks = [],
     refetch: refetchFoldersLinks,
     isUninitialized: isUninitializedFoldersLinks,
-  } = useGetEntityLinksQuery({
-    projectName,
-    entityIds: Array.from(visibleFolders),
-    entityType: 'folder',
-  })
+  } = useGetEntityLinksQuery(
+    {
+      projectName,
+      entityIds: Array.from(visibleFolders),
+      entityType: 'folder',
+    },
+    { skip: skipLinks },
+  )
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
@@ -268,7 +273,14 @@ export const useFetchOverviewData = ({
     }
 
     return map
-  }, [folders, foldersByTaskFilter, isUninitialized, selectedFolders, foldersLinks, isFlatFolderView])
+  }, [
+    folders,
+    foldersByTaskFilter,
+    isUninitialized,
+    selectedFolders,
+    foldersLinks,
+    isFlatFolderView,
+  ])
 
   // calculate partial loading states
   const loadingTasksForParents = useMemo(() => {
@@ -318,7 +330,7 @@ export const useFetchOverviewData = ({
     },
     {
       // Use flat task list when entity list provides specific task IDs, even in hierarchy mode
-      skip: (showHierarchy || isFlatFolderView) && !(taskIds?.length),
+      skip: (showHierarchy || isFlatFolderView) && !taskIds?.length,
       initialPageParam: {
         cursor: '',
         desc: !!singleSort?.desc,
@@ -401,7 +413,15 @@ export const useFetchOverviewData = ({
     if (showHierarchy || isFlatFolderView) return expandedFoldersTasks
     if (groupBy) return groupTasks
     return tasksList
-  }, [taskIds, showHierarchy, isFlatFolderView, groupBy, tasksList, expandedFoldersTasks, groupTasks])
+  }, [
+    taskIds,
+    showHierarchy,
+    isFlatFolderView,
+    groupBy,
+    tasksList,
+    expandedFoldersTasks,
+    groupTasks,
+  ])
 
   // Get visible tasks for link fetching
   const visibleTasks = useMemo(() => {
@@ -420,7 +440,7 @@ export const useFetchOverviewData = ({
       entityType: 'task',
     },
     {
-      skip: visibleTasks.size === 0,
+      skip: visibleTasks.size === 0 || skipLinks,
     },
   )
 

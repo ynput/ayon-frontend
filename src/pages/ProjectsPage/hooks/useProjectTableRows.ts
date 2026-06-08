@@ -192,7 +192,7 @@ export const useProjectTableRows = ({
       projects.map((project) => ({
         id: project.name,
         name: project.name,
-        label: project.label,
+        label: project.label || project.name,
         code: project.code,
         active: project.active,
         library: project.library,

@@ -89,6 +89,7 @@ export interface ListTableProps<TData> {
   // Column visibility
   enableColumnVisibility?: boolean
   columnVisibility?: VisibilityState
+  defaultColumnVisibility?: VisibilityState
   onColumnVisibilityChange?: (visibility: VisibilityState) => void
   // Column resizing
   enableColumnResizing?: boolean

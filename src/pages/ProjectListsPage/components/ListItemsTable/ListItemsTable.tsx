@@ -28,7 +28,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
 }) => {
   const { projectName } = useProjectContext()
   const { selectedLists, selectedList } = useListsContext()
-  const { isError, error, fetchNextPage, resetFilters } = useListItemsDataContext()
+  const { isError, error, fetchNextPage, resetFilters, setLinksVisible } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
   const [hiddenColumns, readOnly] = useMemo(
@@ -72,6 +72,15 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         sortableRows={!viewOnly}
         enableSorting={!isReview}
         dndActiveId={dndActiveId} // Pass prop
+        onColumnVisibleChangeSubscribed={['link_*']}
+        onColumnVisibleChange={(changes) => {
+          if (Object.values(changes).some((v) => v)) {
+            // If any link_ column is visible, we set linksVisible to true
+            setLinksVisible(true)
+          } else {
+            setLinksVisible(false)
+          }
+        }}
       />
       <ListItemsShortcuts />
       <ListsAttributesShortcutButton />

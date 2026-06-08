@@ -70,7 +70,12 @@ import { Button, Icon } from '@ynput/ayon-react-components'
 import { ProjectTableAttribute, BuiltInFieldOptions } from './types'
 import { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext } from './context/ProjectTableContext'
-import { getEntityViewierIds, getReadOnlyLists, getTableFieldOptions } from './utils'
+import {
+  checkColumnVisibility,
+  getEntityViewierIds,
+  getReadOnlyLists,
+  getTableFieldOptions,
+} from './utils'
 import { EntityUpdate } from './hooks/useUpdateTableData'
 
 // dnd-kit imports
@@ -133,7 +138,20 @@ const getCommonPinningStyles = (column: Column<TableRow, unknown>): CSSPropertie
 const getColumnWidth = (rowId: string, columnId: string) => {
   return `calc(var(--col-${columnId}-size) * 1px)`
 }
-// test
+
+const matchesColumnId = (id: string, subscribers: string[]) => {
+  return subscribers.some((sub) => {
+    if (sub.includes('*')) {
+      // Escape all regex special characters
+      const escaped = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // Replace escaped '*' (\*) with regex '.*'
+      const pattern = '^' + escaped.replace(/\\\*/g, '.*') + '$'
+      const regex = new RegExp(pattern)
+      return regex.test(id)
+    }
+    return id === sub
+  })
+}
 
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 
@@ -157,6 +175,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   columnsConfig?: ColumnsConfig // Configure column behavior (display, styling, etc.)
   onScrollBottomGroupBy?: (groupValue: string) => void // Handle scroll to bottom for grouped data
   contextMenuItems?: ContextMenuItemConstructors // Additional context menu items to merge with defaults
+  onColumnVisibleChange?: (changes: Record<string, boolean>) => void
+  onColumnVisibleChangeSubscribed?: string[]
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -184,6 +204,8 @@ export const ProjectTreeTable = ({
   columnsConfig,
   onScrollBottomGroupBy, // Destructure new prop for group-by load more
   contextMenuItems: propsContextMenuItems, // Additional context menu items from props
+  onColumnVisibleChange,
+  onColumnVisibleChangeSubscribed,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -197,6 +219,7 @@ export const ProjectTreeTable = ({
     sortingOnChange,
     columnPinningOnChange,
     columnSizingOnChange,
+    defaultColumnVisibility,
     columnVisibilityOnChange,
     columnOrderOnChange,
     groupBy,
@@ -395,6 +418,16 @@ export const ProjectTreeTable = ({
     setAllColumns(ids)
   }, [columns, setAllColumns])
 
+  const resolvedColumnVisibility = useMemo(() => {
+    const merged = { ...columnVisibility }
+    columns.forEach((col) => {
+      if (col.id && merged[col.id] === undefined) {
+        merged[col.id] = checkColumnVisibility({}, col.id, defaultColumnVisibility)
+      }
+    })
+    return merged
+  }, [columnVisibility, defaultColumnVisibility, columns])
+
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
@@ -450,7 +483,7 @@ export const ProjectTreeTable = ({
         }
       })(),
       columnSizing,
-      columnVisibility,
+      columnVisibility: resolvedColumnVisibility,
       columnOrder,
     },
     meta: {
@@ -499,6 +532,37 @@ export const ProjectTreeTable = ({
     columnSizing,
     columnOrder,
   })
+
+  // Track column visibility changes for subscribed columns
+  const prevVisibleRef = useRef<Record<string, boolean>>({})
+  const virtualItems = columnVirtualizer.getVirtualItems()
+
+  // Subscribe to column visibility changes
+  useEffect(() => {
+    if (!onColumnVisibleChange || !onColumnVisibleChangeSubscribed?.length) return
+
+    const visibleColumnIds = new Set(virtualItems.map((item) => visibleColumns[item.index]?.id))
+    const changes: Record<string, boolean> = {}
+    let hasChanged = false
+
+    // We only care about columns that match the subscription patterns
+    const subscribedColumns = table
+      .getAllLeafColumns()
+      .filter((col) => matchesColumnId(col.id, onColumnVisibleChangeSubscribed))
+
+    subscribedColumns.forEach((col) => {
+      const isVisible = visibleColumnIds.has(col.id)
+      if (prevVisibleRef.current[col.id] !== isVisible) {
+        changes[col.id] = isVisible
+        hasChanged = true
+        prevVisibleRef.current[col.id] = isVisible
+      }
+    })
+
+    if (hasChanged) {
+      onColumnVisibleChange(changes)
+    }
+  }, [virtualItems, onColumnVisibleChange, onColumnVisibleChangeSubscribed, visibleColumns, table])
 
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
