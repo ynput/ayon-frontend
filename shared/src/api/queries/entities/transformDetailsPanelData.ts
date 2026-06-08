@@ -9,7 +9,7 @@ import {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/api/generated'
-import { parseAllAttribs } from '@shared/api'
+import { parseAllAttribs } from '../overview'
 
 type DetailsPanelTask = NonNullable<GetDetailsPanelTaskQuery['project']['task']>
 type DetailsPanelRepresentation = NonNullable<

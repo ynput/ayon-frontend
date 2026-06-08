@@ -1,4 +1,5 @@
-import { api, detailsPanelQueries } from '@shared/api'
+import { api } from '@shared/api/generated'
+import { detailsPanelQueries } from './getEntityPanel'
 import { DetailsPanelEntityData, DetailsPanelEntityType } from './transformDetailsPanelData'
 import { RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'

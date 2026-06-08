@@ -1,4 +1,4 @@
-import { SubTaskNode } from '@shared/api'
+import type { SubTaskNode } from '@shared/api/generated'
 import { api } from '@shared/api/generated/tasks'
 import { PatchOperation, patchOverviewTasks } from '../overview/updateOverview'
 import { patchDetailsPanel } from '../entities/patchDetailsPanel'

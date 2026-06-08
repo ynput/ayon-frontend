@@ -1,18 +1,14 @@
-import {
-  foldersQueries,
-  detailsPanelQueries,
-  operationsApi,
-  entityListsQueriesGql,
-  api,
-} from '@shared/api'
-import type { OperationsResponseModel, OperationModel, OperationsApiArg } from '@shared/api'
+import { foldersQueries } from '../folders'
+import { detailsPanelQueries } from '../entities/getEntityPanel'
+import { operationsApi } from '@shared/api/generated'
+import { entityListsQueriesGql } from '../entityLists/updateLists'
+import type {
+  OperationsResponseModel,
+  OperationModel,
+  OperationsApiArg,
+} from '@shared/api/generated'
 import getOverviewApi from './getOverview'
-import {
-  DetailsPanelEntityData,
-  DetailsPanelEntityType,
-  patchDetailsPanel,
-  patchDetailsPanelEntity,
-} from '@shared/api/queries/entities'
+import { patchDetailsPanelEntity } from '@shared/api/queries/entities'
 import { FetchBaseQueryError, RootState } from '@reduxjs/toolkit/query'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
@@ -662,7 +658,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           }
           if ((op.data as any)?.attrib) hasAttribOp = true
         })
-        
+
         if (hasAttribOp) {
           tasksFolderTags.push({ type: 'tasksFolder', id: projectName })
         }
