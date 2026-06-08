@@ -133,11 +133,56 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
+        let fetchQueue: { taskIds: string[]; projects: string[] }[] = []
+        let fetchTimeout: any = null
         try {
           // wait for the initial query to resolve before proceeding
           await cacheDataLoaded
 
-          const patchKanbanTask = async ({
+          const processFetchQueue = async () => {
+            const batch = [...fetchQueue]
+            fetchQueue = []
+            fetchTimeout = null
+
+            const taskIds = Array.from(new Set(batch.flatMap((b) => b.taskIds)))
+            const projects = Array.from(new Set(batch.flatMap((b) => b.projects)))
+
+            if (taskIds.length === 0) return
+
+            const tasks = await getKanbanTasks({ projects, taskIds }, dispatch)
+
+            // get all tasks that have been ADDED to the assignees
+            const tasksWithArgAssignees = tasks.filter((task) =>
+              task.assignees.some((assignee) => assignees?.includes(assignee)),
+            )
+            // get all tasks that have been REMOVED from the assignees
+            const tasksWithoutArgAssignees = tasks.filter(
+              (task) => !task.assignees.some((assignee) => assignees?.includes(assignee)),
+            )
+
+            // patch the kanban query by adding new tasks and remove old tasks
+            updateCachedData((draft) => {
+              // add new tasks
+              tasksWithArgAssignees.forEach((task) => {
+                const index = draft.findIndex((t) => t.id === task.id)
+                if (index === -1) {
+                  draft.push(task)
+                } else {
+                  // update the task
+                  draft[index] = task
+                }
+              })
+              // remove old tasks
+              tasksWithoutArgAssignees.forEach((task) => {
+                const index = draft.findIndex((t) => t.id === task.id)
+                if (index !== -1) {
+                  draft.splice(index, 1)
+                }
+              })
+            })
+          }
+
+          const patchKanbanTask = ({
             projects = [],
             taskIds = [],
             payload,
@@ -177,37 +222,14 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
 
             if (!needsFetch) return
 
-            const tasks = await getKanbanTasks({ projects, taskIds }, dispatch)
+            // add to queue
+            fetchQueue.push({ projects, taskIds })
 
-            // get all tasks that have been ADDED to the assignees
-            const tasksWithArgAssignees = tasks.filter((task) =>
-              task.assignees.some((assignee) => assignees?.includes(assignee)),
-            )
-            // get all tasks that have been REMOVED from the assignees
-            const tasksWithoutArgAssignees = tasks.filter(
-              (task) => !task.assignees.some((assignee) => assignees?.includes(assignee)),
-            )
-
-            // patch the kanban query by adding new tasks and remove old tasks
-            updateCachedData((draft) => {
-              // add new tasks
-              tasksWithArgAssignees.forEach((task) => {
-                const index = draft.findIndex((t) => t.id === task.id)
-                if (index === -1) {
-                  draft.push(task)
-                } else {
-                  // update the task
-                  draft[index] = task
-                }
-              })
-              // remove old tasks
-              tasksWithoutArgAssignees.forEach((task) => {
-                const index = draft.findIndex((t) => t.id === task.id)
-                if (index !== -1) {
-                  draft.splice(index, 1)
-                }
-              })
-            })
+            // debounce the fetch with a random offset
+            if (!fetchTimeout) {
+              const delay = Math.random() * 5000
+              fetchTimeout = setTimeout(processFetchQueue, delay)
+            }
           }
 
           const handlePubSub = async (_topic: string, message: Message) => {
@@ -261,6 +283,7 @@ const enhancedDashboardGraphqlApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDef
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
         PubSub.unsubscribe(token)
+        if (fetchTimeout) clearTimeout(fetchTimeout)
       },
       // // there is only one cache for kanban
       // serializeQueryArgs: () => '',
