@@ -24,15 +24,14 @@ export const formatHasPercent = (f: SummaryFormat): boolean => f === 'percent' |
 export const buildSummaryFormat = (count: boolean, percent: boolean): SummaryFormat =>
   count && percent ? 'both' : count ? 'count' : percent ? 'percent' : 'none'
 
-// Which row sets feed the aggregation, driven by the Folders/Tasks (or
-// Products/Versions) toggles: groups = folders/products, rows = tasks/versions.
-export type RowScope = 'all' | 'tasks' | 'folders' | 'none'
+
+export type RowScope = 'all' | 'primary' | 'secondary' | 'none'
 export const DEFAULT_ROW_SCOPE: RowScope = 'all'
 
-export const scopeHasGroups = (s: RowScope): boolean => s === 'all' || s === 'folders'
-export const scopeHasRows = (s: RowScope): boolean => s === 'all' || s === 'tasks'
+export const scopeHasGroups = (s: RowScope): boolean => s === 'all' || s === 'primary'
+export const scopeHasRows = (s: RowScope): boolean => s === 'all' || s === 'secondary'
 export const buildRowScope = (groups: boolean, rows: boolean): RowScope =>
-  groups && rows ? 'all' : groups ? 'folders' : rows ? 'tasks' : 'none'
+  groups && rows ? 'all' : groups ? 'primary' : rows ? 'secondary' : 'none'
 
 export type SummaryDistributionItem = {
   value: string
