@@ -559,3 +559,17 @@ export const AnimatedEmptyPlaceholder = styled.div`
     }
   }
 `
+
+export const SummaryUpsellHint = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  color: var(--md-sys-color-on-surface);
+  white-space: nowrap;
+
+  .icon {
+    font-size: 18px;
+    color: var(--md-sys-color-tertiary);
+  }
+`

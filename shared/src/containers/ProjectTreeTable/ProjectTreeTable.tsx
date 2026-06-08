@@ -503,7 +503,7 @@ export const ProjectTreeTable = ({
   const columnSizeVars = useCustomColumnWidthVars(table, columnSizing)
 
   // Summary footer is a powerpack feature.
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const { powerLicense, setPowerpackDialog, isLoading: isLicenseLoading } = usePowerpack()
   const [RemoteSummaryCellContent, { isLoaded: isFooterLoaded }] = useLoadModule<
     FC<SummaryCellContentProps>
   >({
@@ -514,6 +514,9 @@ export const ProjectTreeTable = ({
     skip: !showColumnSummaries || !powerLicense,
   })
   const summariesEnabled = showColumnSummaries
+  // only show the upsell once the license check resolves, so licensed users
+  // don't see the bolt flash before the addon loads
+  const showSummaryUpsell = !isLicenseLoading && !powerLicense
 
   // Calculate dynamic row height based on user setting from Customize panel
   const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
@@ -682,7 +685,7 @@ export const ProjectTreeTable = ({
                 virtualPaddingLeft={virtualPaddingLeft}
                 virtualPaddingRight={virtualPaddingRight}
                 onClick={
-                  powerLicense ? undefined : () => setPowerpackDialog('columnSummaries')
+                  showSummaryUpsell ? () => setPowerpackDialog('columnSummaries') : undefined
                 }
                 renderCellContent={
                   powerLicense && isFooterLoaded
@@ -702,7 +705,13 @@ export const ProjectTreeTable = ({
                           fieldOptions={options}
                         />
                       )
-                    : undefined
+                    : (columnId) =>
+                        showSummaryUpsell && columnId === 'name' ? (
+                          <Styled.SummaryUpsellHint>
+                            <Icon icon="bolt" filled />
+                            Summaries
+                          </Styled.SummaryUpsellHint>
+                        ) : null
                 }
               />
             )}
