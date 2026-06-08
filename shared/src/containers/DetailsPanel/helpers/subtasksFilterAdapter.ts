@@ -9,55 +9,61 @@ import type { QueryCondition, QueryFilter } from '@shared/api'
 import { tryMergeDatetimeRange } from '@shared/containers/ProjectTreeTable/utils/queryFilterToClientFilter'
 import { convertDateFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils/clientFilterToQueryFilter'
 
-// On/off filters stored as boolean conditions ({ key, eq, true }). Activity-type
-// keys drive getFilterActivityTypes; has_attachments / in_review_session are
-// translated by buildBackendFilter. All shown as dropdown chips.
-export const FEED_BOOLEAN_KEYS = [
-  'comments',
-  'versions',
-  'updates',
-  'checklists',
-  'has_attachments',
-  'in_review_session',
-]
+export const SUBTASKS_BOOLEAN_KEYS = ['done', 'isDone']
 
 const isCondition = (c: QueryCondition | QueryFilter): c is QueryCondition => !!c && 'key' in c
 
-// QueryFilter (feedFilter) -> Filter[] for SearchFilter.
-// body -> global-search chips, boolean keys -> single-value "Yes" chips,
-// author/category -> enum chips.
-export const feedFilterToClientFilters = (
-  feedFilter: QueryFilter | undefined,
+// QueryFilter -> Filter[] for SearchFilter.
+// search conditions -> global-search chips, done -> boolean chips, assignees -> enum chips.
+export const subtasksFilterToClientFilters = (
+  queryFilter: QueryFilter | undefined,
   options: Option[],
 ): Filter[] => {
   const filters: Filter[] = []
-  const bodyValues: { id: string; label: string }[] = []
+  const searchValues: { id: string; label: string }[] = []
 
   const walk = (node: QueryCondition | QueryFilter) => {
     if (!node) return
     if (isCondition(node)) {
       const key = node.key
-      if (key === 'body') {
+      if (key === 'search') {
         const value = String(node.value ?? '')
-        if (value) bodyValues.push({ id: value, label: value })
+        if (value) searchValues.push({ id: value, label: value })
         return
       }
       const option = options.find((o) => o.id === key)
       if (!option) return
 
-      if (FEED_BOOLEAN_KEYS.includes(key)) {
-        if (node.value === true) {
+      if (SUBTASKS_BOOLEAN_KEYS.includes(key)) {
+        if (node.value !== undefined) {
           filters.push({
             id: buildFilterId(key),
             label: option.label,
             icon: option.icon,
             type: 'boolean',
             singleSelect: true,
-            // value label = filter name so the compact chip (label hidden) reads
-            // e.g. "Checklists" instead of "Yes"
-            values: [{ id: 'true', label: option.label }],
+            values: [{ id: String(node.value), label: node.value ? 'Done' : 'Not Done' }],
           })
         }
+        return
+      }
+
+      if (option.type === 'datetime') {
+        const value = Array.isArray(node.value) ? node.value[0] : node.value
+        filters.push({
+          id: buildFilterId(key),
+          label: option.label,
+          type: 'datetime',
+          icon: option.icon,
+          values: [
+            {
+              id: String(value),
+              label: String(value),
+              // @ts-expect-error - values is okay
+              values: [{ id: String(value) }],
+            },
+          ],
+        })
         return
       }
 
@@ -85,19 +91,19 @@ export const feedFilterToClientFilters = (
     node.conditions?.forEach(walk)
   }
 
-  feedFilter?.conditions?.forEach(walk)
+  queryFilter?.conditions?.forEach(walk)
 
-  if (bodyValues.length) {
-    filters.push({ id: SEARCH_FILTER_ID, label: '', values: bodyValues })
+  if (searchValues.length) {
+    filters.push({ id: SEARCH_FILTER_ID, label: '', values: searchValues })
   }
 
   return filters
 }
 
-// Filter[] from SearchFilter -> QueryFilter (feedFilter UI representation).
-export const clientFiltersToFeedFilter = (clientFilters: Filter[]): QueryFilter => {
+// Filter[] from SearchFilter -> QueryFilter.
+export const clientFiltersToSubtasksFilter = (clientFilters: Filter[]): QueryFilter => {
   const conditions: (QueryCondition | QueryFilter)[] = []
-  const bodyConditions: QueryCondition[] = []
+  const searchConditions: QueryCondition[] = []
 
   clientFilters.forEach((filter) => {
     const key = getFilterFromId(filter.id)
@@ -106,10 +112,11 @@ export const clientFiltersToFeedFilter = (clientFilters: Filter[]): QueryFilter 
 
     if (key === SEARCH_FILTER_ID) {
       values.forEach((v) =>
-        bodyConditions.push({ key: 'body', operator: 'like', value: String(v) }),
+        searchConditions.push({ key: 'search', operator: 'like', value: String(v) }),
       )
-    } else if (FEED_BOOLEAN_KEYS.includes(key)) {
-      if (values.includes('true')) conditions.push({ key, operator: 'eq', value: true })
+    } else if (SUBTASKS_BOOLEAN_KEYS.includes(key)) {
+      const val = values[0] === 'true'
+      conditions.push({ key, operator: 'eq', value: val })
     } else if (filter.type === 'datetime') {
       const dateQueryFilter = convertDateFilterToQueryFilter(key, filter)
       if (dateQueryFilter) {
@@ -120,9 +127,9 @@ export const clientFiltersToFeedFilter = (clientFilters: Filter[]): QueryFilter 
     }
   })
 
-  if (bodyConditions.length === 1) conditions.push(bodyConditions[0])
-  else if (bodyConditions.length > 1)
-    conditions.push({ operator: 'or', conditions: bodyConditions })
+  if (searchConditions.length === 1) conditions.push(searchConditions[0])
+  else if (searchConditions.length > 1)
+    conditions.push({ operator: 'or', conditions: searchConditions })
 
   return { operator: 'and', conditions }
 }

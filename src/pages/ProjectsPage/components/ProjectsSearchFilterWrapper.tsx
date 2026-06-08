@@ -6,8 +6,7 @@ import {
   queryFilterToClientFilter,
 } from '@shared/containers/ProjectTreeTable'
 import { useBuildProjectFilterOptions } from '../hooks/useBuildProjectFilterOptions'
-import { useDateRangeFilter } from '@components/SearchFilter/useDateRangeFilter'
-import { CustomDateRangeDialog } from '@components/SearchFilter/CustomDateRangeDialog'
+import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 
 interface ProjectsSearchFilterWrapperProps {
   queryFilters: QueryFilter

@@ -1,9 +1,17 @@
-import { FC, useEffect, useMemo, useState } from 'react'
-import { SearchFilter, Filter, Option, SearchFilterQuickAction } from '@ynput/ayon-react-components'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  SearchFilter,
+  Filter,
+  Option,
+  SearchFilterQuickAction,
+  SearchFilterRef,
+} from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { type QueryFilter, type ActivityCategory, ChecklistCount } from '@shared/api'
 import { ActivityUser } from '../helpers/groupMinorActivities'
 import { feedFilterToClientFilters, clientFiltersToFeedFilter } from '../helpers/feedFilterAdapter'
+import { generateDateOptions } from '@shared/components/SearchFilter/filterDates'
+import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 
 const Wrapper = styled.div`
   padding: 4px 8px;
@@ -90,6 +98,13 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
           img: `/api/users/${u.name}/avatar`,
         })),
       },
+      {
+        id: 'createdAt',
+        label: 'Posted',
+        icon: 'calendar_today',
+        type: 'datetime',
+        values: generateDateOptions(),
+      },
     ]
 
     return opts
@@ -112,6 +127,10 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
   )
 
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
+  const searchFilterRef = useRef<SearchFilterRef>(null)
+
+  const dateRange = useDateRangeFilter()
+
   useEffect(() => {
     setLocalFilters(filters)
   }, [JSON.stringify(filters)])
@@ -119,6 +138,10 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
   const handleFinish = (newFilters: Filter[]) => {
     setFeedFilter(clientFiltersToFeedFilter(newFilters))
     onSearchTextChange?.('')
+  }
+
+  const handleFilterChange = (newFilters: Filter[]) => {
+    dateRange.wrapFilterChange(newFilters, localFilters, setLocalFilters)
   }
 
   const handleLiveSearch = (value: string, filter: string | null) => {
@@ -130,16 +153,45 @@ const FeedSearchFilter: FC<FeedSearchFilterProps> = ({
   return (
     <Wrapper className={isLoading ? 'loading' : undefined}>
       <SearchFilter
+        ref={searchFilterRef}
         compact
         options={options}
         filters={localFilters}
-        onChange={setLocalFilters}
+        onChange={handleFilterChange}
         onFinish={handleFinish}
         enableGlobalSearch
         enableMultipleSameFilters={false}
         enableAutosuggestion={true}
         onSearchChange={handleLiveSearch}
         quickActions={quickActions}
+        placeholder="Search and filter feed..."
+        pt={{
+          searchBar: {
+            onClickCapture: (e) => dateRange.handleSearchBarClickCapture(e, localFilters),
+          },
+          dropdown: {
+            pt: {
+              item: {
+                onClick: (e) => dateRange.handleDropdownItemClick(e, localFilters, options),
+              },
+            },
+          },
+        }}
+      />
+      <CustomDateRangeDialog
+        isOpen={!!dateRange.customRangeFilterId}
+        header={
+          options.find((o) => o.id === dateRange.customRangeFilterId?.split('__')[0])?.label ??
+          'Custom range'
+        }
+        startDate={dateRange.customStartDate}
+        endDate={dateRange.customEndDate}
+        onStartDateChange={dateRange.setCustomStartDate}
+        onEndDateChange={dateRange.setCustomEndDate}
+        onApply={() =>
+          dateRange.handleCustomRangeApply(localFilters, options, handleFinish, searchFilterRef)
+        }
+        onClose={dateRange.handleCustomRangeClose}
       />
     </Wrapper>
   )

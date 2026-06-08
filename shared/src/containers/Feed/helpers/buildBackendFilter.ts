@@ -1,11 +1,10 @@
 import type { QueryCondition, QueryFilter } from '@shared/api'
 import { filterActivityTypes } from '@shared/api'
+import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
 
 // UI chip keys handled by getFilterActivityTypes → activityTypes arg.
 // Must not leak into the QueryFilter (not in backend whitelist).
-const UI_ONLY_KEYS = new Set(
-  Object.keys(filterActivityTypes).filter((k) => k !== 'activity'),
-)
+const UI_ONLY_KEYS = new Set(Object.keys(filterActivityTypes).filter((k) => k !== 'activity'))
 
 const UI_KEY_TO_BACKEND_KEY: Record<string, string> = {
   has_attachments: 'activity_data.files',
@@ -85,7 +84,8 @@ const translate = (node: QueryCondition | QueryFilter): QueryCondition | QueryFi
 export const buildBackendFilter = (filter: QueryFilter | undefined): string | undefined => {
   if (!filter || !filter.conditions?.length) return undefined
 
-  const translated = translate(filter)
+  const expanded = expandRelativeDates(filter as any) as QueryFilter
+  const translated = translate(expanded)
   if (!translated) return undefined
 
   return JSON.stringify(translated)

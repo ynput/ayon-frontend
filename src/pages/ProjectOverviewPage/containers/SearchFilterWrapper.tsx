@@ -18,8 +18,7 @@ import {
   queryFilterToClientFilter,
   clientFilterToQueryFilter,
 } from '@shared/containers/ProjectTreeTable/utils'
-import { useDateRangeFilter } from '@components/SearchFilter/useDateRangeFilter'
-import { CustomDateRangeDialog } from '@components/SearchFilter/CustomDateRangeDialog'
+import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 
 interface SearchFilterWrapperProps
